@@ -1,1 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Tableau de bord · Cristallographie interactive</title>
+    <!-- MathJax 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            background: #eef2ff;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            padding: 28px 24px;
+            line-height: 1.5;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0a2b3b, #1e4a6e);
+            color: white;
+            padding: 28px 32px;
+        }
+        .hero h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .hero p {
+            margin-top: 8px;
+            opacity: 0.85;
+        }
+        .badge-set {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: rgba(255,255,240,0.2);
+            backdrop-filter: blur(4px);
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 2px solid #cbd5e1;
+            gap: 4px;
+            padding: 0 20px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #334155;
+            border-radius: 40px 40px 0 0;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #1e4a6e;
+            border-bottom: 3px solid #1e4a6e;
+        }
+        .tab-pane {
+            display: none;
+            padding: 28px 32px;
+            animation: fade 0.2s ease;
+        }
+        .tab-pane.active-pane {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(5px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* cartes outils */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            margin-top: 20px;
+        }
+        .card-tool {
+            background: #ffffff;
+            border-radius: 28px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+        .card-tool:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background: #f8fafc;
+            padding: 18px 22px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .card-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .card-body {
+            padding: 22px;
+        }
+        .peda-text {
+            color: #1e293b;
+            margin: 12px 0;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .formula-mini {
+            background: #fef9e3;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            margin: 12px 0;
+        }
+        .btn-access {
+            display: inline-block;
+            background: #1e4a6e;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 12px;
+            transition: 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-access:hover {
+            background: #0f3b57;
+            transform: scale(0.97);
+        }
+
+        /* zone graphe améliorée - marges et lisibilité */
+        .graph-container {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            text-align: center;
+        }
+        .concept-canvas {
+            display: block;
+            margin: 0 auto;
+            background: #fefefe;
+            border-radius: 24px;
+            width: 100%;
+            height: auto;
+            border: 1px solid #e2e8f0;
+            cursor: default;
+        }
+        .legend-box {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 14px 24px;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            font-size: 0.8rem;
+            align-items: center;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 4px;
+        }
+        .info-badge {
+            background: #e2e8f0;
+            border-radius: 30px;
+            padding: 4px 14px;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: none;
+        }
+        .info-badge:hover {
+            background: #cbd5e1;
+        }
+        .tooltip-graph {
+            position: fixed;
+            background: #1e293b;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            max-width: 280px;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: opacity 0.15s;
+            font-family: monospace;
+            backdrop-filter: blur(4px);
+            border-left: 4px solid #facc15;
+        }
+        footer {
+            background: #f8fafc;
+            padding: 20px 32px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+            color: #475569;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-copyright {
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        /* modales */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            max-width: 550px;
+            width: 90%;
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            border-top: 8px solid #1e4a6e;
+            position: relative;
+            animation: fadeModal 0.2s;
+        }
+        @keyframes fadeModal {
+            from { opacity: 0; transform: scale(0.96);}
+            to { opacity: 1; transform: scale(1);}
+        }
+        .modal-content h4 {
+            font-size: 1.6rem;
+            color: #1e4a6e;
+            margin-bottom: 10px;
+        }
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .close-modal:hover { color: #dc2626; }
+        @media (max-width: 780px) {
+            .tab-btn { padding: 10px 16px; font-size: 0.85rem; }
+            .cards-grid { gap: 20px; }
+            .hero h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="hero">
+        <h1>📚 Cristallographie · Laboratoire numérique</h1>
+        <p>Trois ressources interactives pour explorer structures, diffraction RX et identification des matériaux</p>
+        <div class="badge-set">
+            <span class="badge">🔬 CS / CC / CFC</span>
+            <span class="badge">📐 Loi de Bragg</span>
+            <span class="badge">📊 Compacité & ρ</span>
+            <span class="badge">🧪 Quiz & défis</span>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="resources">📖 Outils pédagogiques</button>
+        <button class="tab-btn" data-tab="conceptmap">🧭 Carte conceptuelle (formules & liens)</button>
+    </div>
+
+    <!-- ONGLET 1 : Présentation des 3 outils -->
+    <div id="resources" class="tab-pane active-pane">
+        <h2 style="margin-bottom: 8px;">🎯 Accès aux simulateurs & modules</h2>
+        <p style="margin-bottom: 24px; color: #334155;">Chaque outil développe une compétence spécifique : visualisation 3D, calculs progressifs, identification par diffraction.</p>
+        <div class="cards-grid">
+            <div class="card-tool">
+                <div class="card-header"><h3>💎 Cristaux 3D · Quiz dynamique</h3></div>
+                <div class="card-body">
+                    <div class="peda-text"><strong>📄 Contenu :</strong> Visualisation Three.js de mailles (CS, CC, CFC, NaCl), rayons atomiques, paramètre de maille. Quiz aléatoire sur structure, rayon, masse volumique, compacité.</div>
+                    <div class="peda-text"><strong>🎓 Apport :</strong> Relier géométrie et formules \(a = f(R)\). Comprendre compacité et masse volumique par l'expérience visuelle.</div>
+                    <div class="formula-mini">📌 CFC → \(a = \frac{4R}{\sqrt{2}}\), \(Z=4\), \(C \approx 0,74\)</div>
+                    <a href="CRISTAUX_CALCULS.html" class="btn-access" target="_blank">🔗 Explorer le visualiseur 3D →</a>
+                </div>
+            </div>
+            <div class="card-tool">
+                <div class="card-header"><h3>🏆 Mission 4 niveaux · Défi aléatoire</h3></div>
+                <div class="card-body">
+                    <div class="peda-text"><strong>📄 Contenu :</strong> Niveaux progressifs : fondamentaux → diffraction RX → cristaux mystères → identification aléatoire parmi 20 cristaux.</div>
+                    <div class="peda-text"><strong>🎓 Apport :</strong> Renforcement par paliers, simulation de diffractogramme, reconnaissance des extinctions, utilisation de \(\rho = \frac{Z M}{N_A a^3}\).</div>
+                    <div class="formula-mini">📌 \(\rho = \frac{Z \cdot M}{N_A \cdot a^3}\) · Séquences CS / CC / CFC</div>
+                    <a href="CRISTAUX_ENTRAINEMENTS.html" class="btn-access" target="_blank">🔗 Relever le défi →</a>
+                </div>
+            </div>
+            <div class="card-tool">
+                <div class="card-header"><h3>📡 Diffraction RX · Identification CS/CC/CFC</h3></div>
+                <div class="card-body">
+                    <div class="peda-text"><strong>📄 Contenu :</strong> Simulateur réaliste d’acquisition de diffractogramme (λ Cu Kα). Détection des pics, calcul des rapports \(\sin^2\theta\), mode comparatif.</div>
+                    <div class="peda-text"><strong>🎓 Apport :</strong> Maîtrise de la loi de Bragg et de \(\sin^2\theta \propto (h^2+k^2+l^2)\). Visualiser l’impact des extinctions.</div>
+                    <div class="formula-mini">📌 \(\sin^2\theta = \frac{\lambda^2}{4a^2}(h^2+k^2+l^2)\) → rapports \(\frac{N_i}{N_1}\) signature.</div>
+                    <a href="CRISTAUX_SIMULATEUR.html" class="btn-access" target="_blank">🔗 Simuler la diffraction →</a>
+                </div>
+            </div>
+        </div>
+        <div style="background: #e6f0fa; border-radius: 24px; padding: 18px; margin-top: 28px;">
+            <p style="font-weight: 600;">✨ Synergie entre les trois ressources :</p>
+            <p>• <strong>3D & Quiz</strong> → ancre la géométrie et les relations a/R.<br>• <strong>Mission niveaux + aléatoire</strong> → applique les formules et affine l’identification.<br>• <strong>Simulateur RX</strong> → interprète les diffractogrammes et valide les lois d'extinction.</p>
+        </div>
+    </div>
+
+    <!-- ONGLET 2 : GRAPHE CONCEPTUEL AMÉLIORÉ – TOUS LES TEXTES LISIBLES -->
+    <div id="conceptmap" class="tab-pane">
+        <h2>🧠 Carte conceptuelle interactive</h2>
+        <p style="margin-bottom: 20px;">Survolez les nœuds pour voir les formules détaillées. Les flèches montrent les dépendances théoriques et les applications dans les trois simulateurs.</p>
+        <div class="graph-container">
+            <canvas id="conceptCanvas" class="concept-canvas" width="1200" height="700" style="width:100%; height:auto; max-width:1200px; border-radius: 20px;"></canvas>
+        </div>
+        <div class="legend-box">
+            <div class="legend-item"><div class="legend-color" style="background:#2563eb; width:18px; height:3px;"></div> Lien théorique (formule)</div>
+            <div class="legend-item"><div class="legend-color" style="background:#dc2626; width:18px; height:3px;"></div> Utilisation dans les outils</div>
+            <div class="legend-item"><span style="background:#facc15; padding:2px 12px; border-radius:20px;">⭐ Nœud central</span></div>
+            <div class="legend-item"><span class="info-badge" id="openModalGraphHelp">📘 Voir tableau des extinctions</span></div>
+            <div class="legend-item"><span class="info-badge" id="resetGraphView">🔄 Recentrer le graphe</span></div>
+        </div>
+    </div>
+
+    <footer>
+        <span>© 2025 · Yann Merdy · Utilisation pédagogique non commerciale</span>
+        <button id="openCopyrightModal" class="btn-copyright">📜 Droits d'auteur & licence</button>
+    </footer>
+</div>
+
+<!-- MODALES -->
+<div id="copyrightModal" class="modal"><div class="modal-content"><span class="close-modal">&times;</span><h4>⚖️ Droits d'Auteur</h4><p><strong>Auteur : Yann Merdy</strong> (yann.merdy@gmail.com) - Décembre 2025</p><p>Licence non commerciale : utilisation privée et éducative autorisée, diffusion commerciale interdite.</p></div></div>
+<div id="extinctionModal" class="modal"><div class="modal-content"><span class="close-modal">&times;</span><h4>🔎 Règles d'extinction (CS / CC / CFC)</h4><p><strong>CS</strong> : aucune extinction → N = 1,2,3,4,5,6,8... (pas de 7)</p><p><strong>CC</strong> : h+k+l pair → N = 2,4,6,8,10... rapports 1,2,3,4,5,6,7...</p><p><strong>CFC</strong> : h,k,l même parité → N = 3,4,8,11,12,16... rapports 1.33 , 2.67 , 3.67...</p></div></div>
+
+<script>
+    // ----- Gestion des onglets -----
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            panes.forEach(pane => pane.classList.remove('active-pane'));
+            document.getElementById(tabId).classList.add('active-pane');
+            if (tabId === 'conceptmap') setTimeout(() => drawConceptGraph(), 20);
+            if (window.MathJax) MathJax.typesetPromise();
+        });
+    });
+
+    // ----- Graphe amélioré : positions ajustées pour éviter toute troncature -----
+    const canvas = document.getElementById('conceptCanvas');
+    let ctx = null;
+    let nodes = [];
+    let edges = [];
+    const tooltipDiv = document.createElement('div');
+    tooltipDiv.className = 'tooltip-graph';
+    tooltipDiv.style.opacity = '0';
+    document.body.appendChild(tooltipDiv);
+
+    // Définition des nœuds avec des coordonnées largement dégagées des bords
+    function initNodesAndEdges() {
+        nodes = [
+            { id: "cubic", label: "Structures cubiques\nCS / CC / CFC", x: 600, y: 80, color: "#facc15", type: "central", tooltip: "Trois réseaux de Bravais cubiques : Cubique Simple, Centré, Faces Centrées." },
+            { id: "geometrie", label: "Relations géométriques\na = f(R)", x: 220, y: 200, color: "#d9e6f5", tooltip: "CS: a = 2R ; CC: a = 4R/√3 ; CFC: a = 4R/√2" },
+            { id: "compacite", label: "Compacité C", x: 430, y: 230, color: "#d9e6f5", tooltip: "C = (Z · 4/3 π R³) / a³ ; CS≈0.52, CC≈0.68, CFC≈0.74" },
+            { id: "massevol", label: "Masse volumique ρ", x: 800, y: 210, color: "#d9e6f5", tooltip: "ρ = (Z·M) / (N_A·a³) → identification de l'élément" },
+            { id: "bragg", label: "Loi de Bragg", x: 600, y: 270, color: "#e0f2fe", tooltip: "nλ = 2d sinθ ; d_hkl = a / √(h²+k²+l²)" },
+            { id: "sin2", label: "sin²θ ∝ N", x: 330, y: 380, color: "#e0f2fe", tooltip: "sin²θ = (λ²/(4a²))·(h²+k²+l²) ; N = h²+k²+l²" },
+            { id: "extinction", label: "Règles d'extinction", x: 820, y: 400, color: "#e0f2fe", tooltip: "CS : tous N ; CC : h+k+l pair ; CFC : h,k,l même parité" },
+            { id: "rapports", label: "Rapports sin²θ\nN_i / N₁", x: 580, y: 500, color: "#fef9c3", tooltip: "Signature structurale : CS (1,2,3,4,5,6,8...), CC (1,2,3,4,5,6,7...), CFC (1, 1.33, 2.67, 3.67...)" },
+            { id: "outil3d", label: "🔬 Cristaux 3D\nQuiz", x: 110, y: 600, color: "#c7d2fe", tooltip: "Visualise les mailles, calcule a/R, compacité, quiz aléatoire" },
+            { id: "outilniveaux", label: "🏆 Mission 4 niveaux\nDéfi aléatoire", x: 540, y: 630, color: "#c7d2fe", tooltip: "Niveaux progressifs + identification cristal mystère" },
+            { id: "outilrx", label: "📡 Simulateur RX\nDiffraction", x: 980, y: 610, color: "#c7d2fe", tooltip: "Simulation diffractogramme, détection des pics, identification structurale" }
+        ];
+        
+        edges = [
+            { from: "cubic", to: "geometrie", color: "#2563eb", curved: true, label: "définit" },
+            { from: "cubic", to: "compacite", color: "#2563eb", curved: false, label: "dépend" },
+            { from: "cubic", to: "massevol", color: "#2563eb", curved: true, label: "définit" },
+            { from: "geometrie", to: "compacite", color: "#2563eb", curved: false, label: "C" },
+            { from: "geometrie", to: "massevol", color: "#2563eb", curved: false, label: "a" },
+            { from: "bragg", to: "sin2", color: "#2563eb", curved: false, label: "combinaison" },
+            { from: "sin2", to: "extinction", color: "#2563eb", curved: true, label: "règles" },
+            { from: "extinction", to: "rapports", color: "#2563eb", curved: false, label: "N_i/N₁" },
+            { from: "rapports", to: "outilrx", color: "#dc2626", curved: true, label: "identification" },
+            { from: "geometrie", to: "outil3d", color: "#dc2626", curved: false, label: "visualisé" },
+            { from: "compacite", to: "outil3d", color: "#dc2626", curved: false, label: "quiz" },
+            { from: "massevol", to: "outilniveaux", color: "#dc2626", curved: false, label: "ρ → élément" },
+            { from: "rapports", to: "outilniveaux", color: "#dc2626", curved: true, label: "défi" },
+            { from: "bragg", to: "outilrx", color: "#dc2626", curved: false, label: "simulation" },
+            { from: "cubic", to: "bragg", color: "#2563eb", curved: false, label: "plan réticulaire" }
+        ];
+    }
+
+    // Helper pour arrondir les rectangles
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.moveTo(x+r, y);
+            this.lineTo(x+w-r, y);
+            this.quadraticCurveTo(x+w, y, x+w, y+r);
+            this.lineTo(x+w, y+h-r);
+            this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+            this.lineTo(x+r, y+h);
+            this.quadraticCurveTo(x, y+h, x, y+h-r);
+            this.lineTo(x, y+r);
+            this.quadraticCurveTo(x, y, x+r, y);
+            return this;
+        };
+    }
+
+    function drawConceptGraph() {
+        if (!canvas) return;
+        ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#fefefe';
+        ctx.fillRect(0, 0, w, h);
+        
+        initNodesAndEdges();
+        
+        // Dessiner les arêtes avec courbes pour éviter les chevauchements
+        for (let edge of edges) {
+            const fromNode = nodes.find(n => n.id === edge.from);
+            const toNode = nodes.find(n => n.id === edge.to);
+            if (!fromNode || !toNode) continue;
+            const fromX = fromNode.x, fromY = fromNode.y;
+            const toX = toNode.x, toY = toNode.y;
+            ctx.beginPath();
+            ctx.strokeStyle = edge.color;
+            ctx.lineWidth = 2.2;
+            if (edge.curved) {
+                const midX = (fromX + toX) / 2;
+                const cpX = midX + (edge.from === "cubic" ? -35 : 35);
+                const cpY = (fromY + toY) / 2 - 30;
+                ctx.moveTo(fromX, fromY);
+                ctx.quadraticCurveTo(cpX, cpY, toX, toY);
+            } else {
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX, toY);
+            }
+            ctx.stroke();
+            
+            // Flèche
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            const arrowX = toX - 13 * Math.cos(angle);
+            const arrowY = toY - 13 * Math.sin(angle);
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowY);
+            ctx.lineTo(arrowX - 6 * Math.cos(angle - Math.PI/6), arrowY - 6 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(arrowX - 6 * Math.cos(angle + Math.PI/6), arrowY - 6 * Math.sin(angle + Math.PI/6));
+            ctx.fillStyle = edge.color;
+            ctx.fill();
+            
+            // Label de l'arête (position décalée pour ne pas couper)
+            if (edge.label) {
+                let midX = (fromX + toX) / 2;
+                let midY = (fromY + toY) / 2;
+                if (edge.curved) midY -= 18;
+                else midY -= 12;
+                ctx.font = "italic 10px 'Segoe UI'";
+                ctx.fillStyle = "#2c3e5f";
+                ctx.shadowBlur = 0;
+                ctx.fillText(edge.label, midX - 12, midY);
+            }
+        }
+        
+        // Dessiner les nœuds avec dimensions adaptées
+        for (let node of nodes) {
+            const lines = node.label.split("\n");
+            const maxLineLen = Math.max(...lines.map(l => l.length));
+            const boxWidth = Math.max(140, maxLineLen * 7.5) + 20;
+            const boxHeight = lines.length * 22 + 16;
+            const x = node.x - boxWidth/2;
+            const y = node.y - boxHeight/2;
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "rgba(0,0,0,0.08)";
+            ctx.fillStyle = node.color;
+            ctx.strokeStyle = "#334155";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.roundRect(x, y, boxWidth, boxHeight, 12);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "500 12px 'Segoe UI', system-ui";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const startY = node.y - (lines.length-1)*11;
+            for (let i=0; i<lines.length; i++) {
+                ctx.fillText(lines[i], node.x, startY + i*22);
+            }
+            // icône info pour les nœuds théoriques
+            if (node.tooltip && node.id !== "outil3d" && node.id !== "outilniveaux" && node.id !== "outilrx") {
+                ctx.fillStyle = "#1e4a6e";
+                ctx.font = "bold 12px monospace";
+                ctx.fillText("ⓘ", node.x + boxWidth/2 - 16, y + 14);
+            }
+        }
+        ctx.shadowBlur = 0;
+        
+        // Titre principal bien visible
+        ctx.font = "bold 15px 'Segoe UI'";
+        ctx.fillStyle = "#0b3b5f";
+        ctx.fillText("🔗 Dépendances théoriques et applications dans les simulateurs", 250, 45);
+    }
+    
+    // Gestion des tooltips au survol
+    function handleCanvasMousemove(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+        let hit = null;
+        for (let node of nodes) {
+            const lines = node.label.split("\n");
+            const maxLineLen = Math.max(...lines.map(l => l.length));
+            const boxWidth = Math.max(140, maxLineLen * 7.5) + 20;
+            const boxHeight = lines.length * 22 + 16;
+            const x = node.x - boxWidth/2;
+            const y = node.y - boxHeight/2;
+            if (mouseX >= x && mouseX <= x+boxWidth && mouseY >= y && mouseY <= y+boxHeight) {
+                hit = node;
+                break;
+            }
+        }
+        if (hit && hit.tooltip) {
+            tooltipDiv.style.opacity = '1';
+            tooltipDiv.innerHTML = `<strong>${hit.label.replace(/\n/g, ' ')}</strong><br>${hit.tooltip}`;
+            tooltipDiv.style.left = (e.clientX + 15) + 'px';
+            tooltipDiv.style.top = (e.clientY - 30) + 'px';
+            canvas.style.cursor = 'help';
+        } else {
+            tooltipDiv.style.opacity = '0';
+            canvas.style.cursor = 'default';
+        }
+    }
+    
+    function resetGraph() {
+        drawConceptGraph();
+        tooltipDiv.style.opacity = '0';
+    }
+    
+    // événements canvas
+    canvas.addEventListener('mousemove', handleCanvasMousemove);
+    canvas.addEventListener('mouseleave', () => { tooltipDiv.style.opacity = '0'; });
+    window.addEventListener('resize', () => {
+        if (document.getElementById('conceptmap').classList.contains('active-pane')) drawConceptGraph();
+    });
+    
+    // modales
+    const copyrightModal = document.getElementById('copyrightModal');
+    const extinctionModal = document.getElementById('extinctionModal');
+    const openCopyright = document.getElementById('openCopyrightModal');
+    const openExtinction = document.getElementById('openModalGraphHelp');
+    const resetBtn = document.getElementById('resetGraphView');
+    if (openCopyright) openCopyright.onclick = () => copyrightModal.style.display = 'flex';
+    if (openExtinction) openExtinction.onclick = () => extinctionModal.style.display = 'flex';
+    if (resetBtn) resetBtn.onclick = () => resetGraph();
+    
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.onclick = () => {
+            copyrightModal.style.display = 'none';
+            extinctionModal.style.display = 'none';
+        };
+    });
+    window.onclick = (e) => {
+        if (e.target === copyrightModal) copyrightModal.style.display = 'none';
+        if (e.target === extinctionModal) extinctionModal.style.display = 'none';
+    };
+    
+    // initialisation
+    window.addEventListener('load', () => {
+        drawConceptGraph();
+        if (window.MathJax) MathJax.typesetPromise();
+    });
+    // force redraw si onglet activé après
+    document.querySelector('.tab-btn[data-tab="conceptmap"]').addEventListener('click', () => setTimeout(drawConceptGraph, 30));
+</script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PBL Cristallographie · 4 niveaux · Défi aléatoire final</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #eef2ff;
+            font-family: 'Segoe UI', system-ui, 'Inter', sans-serif;
+            padding: 24px;
+            line-height: 1.5;
+        }
+        .master-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #0b2b3b, #1e4a6e);
+            color: white;
+            padding: 28px 32px;
+        }
+        header h1 { font-size: 2.2rem; font-weight: 700; }
+        .badge-level {
+            display: inline-block;
+            background: #facc15;
+            color: #0f172a;
+            border-radius: 40px;
+            padding: 4px 16px;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+        .tabs-wrapper {
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #f1f5f9;
+            border-bottom: 2px solid #cbd5e1;
+            scrollbar-width: thin;
+        }
+        .tabs {
+            display: inline-flex;
+            width: 100%;
+            min-width: max-content;
+        }
+        .tab {
+            flex: 0 0 auto;
+            text-align: center;
+            padding: 16px 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #f8fafc;
+            border: none;
+            font-size: 1rem;
+            border-right: 1px solid #e2e8f0;
+        }
+        .tab.active {
+            background: white;
+            color: #1e4a6e;
+            border-bottom: 3px solid #1e4a6e;
+        }
+        .panel {
+            display: none;
+            padding: 28px;
+            animation: fade 0.2s;
+        }
+        .panel.active-panel {
+            display: block;
+        }
+        @keyframes fade { from { opacity:0; } to { opacity:1; } }
+        .card-niveau {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .card-header {
+            background: #f8fafc;
+            padding: 16px 24px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .formula-block {
+            background: #fef9e3;
+            padding: 16px;
+            border-radius: 20px;
+            margin: 16px 0;
+            border-left: 6px solid #f59e0b;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .quiz-input {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 16px 0;
+        }
+        input, select {
+            padding: 8px 12px;
+            border-radius: 28px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+        }
+        select {
+            background: white;
+            cursor: pointer;
+        }
+        button {
+            background: #2c5f8a;
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 32px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background: #1e405e; transform: scale(0.97);}
+        .feedback {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #e0f2fe; color: #0c4a6e; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #cbd5e1;
+            text-align: center;
+        }
+        .canvas-3d-small {
+            width: 100%;
+            height: 280px;
+            background: #fefefe;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            margin: 12px 0;
+        }
+        .crystal-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 16px 0;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+        .crystal-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .crystal-btn.active {
+            background: #1e4a6e;
+            color: white;
+        }
+        hr { margin: 20px 0; }
+        .challenge-badge {
+            background: #8b5cf6;
+            color: white;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+        .random-indice {
+            background: #f1f0ff;
+            padding: 16px;
+            border-radius: 24px;
+            margin: 16px 0;
+        }
+        /* MODALE */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            max-width: 550px;
+            width: 90%;
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+            border-top: 8px solid #1e4a6e;
+            position: relative;
+            animation: modalFade 0.2s ease-out;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-content h3 {
+            color: #1e4a6e;
+            margin-bottom: 12px;
+            font-size: 1.6rem;
+        }
+        .modal-content p {
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .modal-content .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #64748b;
+            transition: 0.2s;
+        }
+        .modal-content .close-modal:hover {
+            color: #dc2626;
+        }
+        footer {
+            background: #f1f5f9;
+            text-align: center;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn-copyright {
+            background: #475569;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+        }
+        @media (max-width: 800px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .tab { padding: 12px 16px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="master-container">
+    <header>
+        <h1>🧪 Mission Cristallographie : 4 Niveaux</h1>
+        <p>Calculs, diffraction RX & identification aléatoire · Défi 2h</p>
+        <div class="badge-level">⭐ Niveau 1 → Niveau 4 : difficulté croissante + aléatoire</div>
+    </header>
+
+    <div class="tabs-wrapper">
+        <div class="tabs">
+            <button class="tab active" data-tab="niveau1">📘 Niveau 1 · Fondamentaux</button>
+            <button class="tab" data-tab="niveau2">🔬 Niveau 2 · Applications & Diffraction</button>
+            <button class="tab" data-tab="niveau3">🏆 Niveau 3 · Défi Mystère + 3D</button>
+            <button class="tab" data-tab="niveau4">🎲 Niveau 4 · Identification aléatoire</button>
+        </div>
+    </div>
+
+    <!-- NIVEAU 1 -->
+    <div id="niveau1" class="panel active-panel">
+        <div class="card-niveau">
+            <div class="card-header">📐 Étape 1 – Maîtriser les relations géométriques</div>
+            <div class="card-body">
+                <div class="formula-block">
+                    <strong>✍️ Rappels fondamentaux</strong><br>
+                    ▪ CS : \(a = 2R\) ; \(Z_{maille}=1\) ; Compacité \(C \approx 0,52\)<br>
+                    ▪ CC : \(a = \frac{4R}{\sqrt{3}}\) ; \(Z_{maille}=2\) ; \(C \approx 0,68\)<br>
+                    ▪ CFC : \(a = \frac{4R}{\sqrt{2}}\) ; \(Z_{maille}=4\) ; \(C \approx 0,74\)<br>
+                    Masse volumique \(\rho = \frac{Z_{maille} \times M}{N_A \times a^3}\) (N_A = 6,022×10²³, a en mètres)
+                </div>
+                <div class="grid-2">
+                    <div><h3>🎯 Exercice 1.1</h3><p>Cuivre (CFC) : a = 361 pm. Calculez R (pm).</p><input type="number" id="n1R" placeholder="R (pm)"><button id="checkN1">Vérifier</button><div id="fbN1" class="feedback"></div></div>
+                    <div><h3>🎯 Exercice 1.2</h3><p>Fer α (CC) : a=287 pm, R=124 pm. Calculez compacité.</p><input type="number" id="n1C" placeholder="Compacité"><button id="checkCompacite">Vérifier</button><div id="fbComp" class="feedback"></div></div>
+                </div>
+                <hr>
+                <h3>📊 Tableau à compléter</h3>
+                <table id="table1"><thead><tr><th>Cristal</th><th>Structure</th><th>a (pm)</th><th>R (pm)</th><th>Compacité</th></tr></thead><tbody>
+                    <tr><td>Polonium</td><td>CS</td><td>335</td><td><input id="tPoR" size="6"></td><td><input id="tPoC" size="6"></td></tr>
+                    <tr><td>Aluminium</td><td>CFC</td><td>405</td><td><input id="tAlR" size="6"></td><td><input id="tAlC" size="6"></td></tr>
+                    <tr><td>Tungstène</td><td>CC</td><td>316</td><td><input id="tWR" size="6"></td><td><input id="tWC" size="6"></td></tr>
+                </tbody></table>
+                <button id="validerTableau">✅ Valider le tableau</button><div id="fbTableau" class="feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NIVEAU 2 -->
+    <div id="niveau2" class="panel">
+        <div class="card-niveau">
+            <div class="card-header">🔎 Niveau 2 – Loi de Bragg & Identification structurale</div>
+            <div class="card-body">
+                <div class="formula-block">🌟 \(\lambda\)(Cu Kα)=1,5406 Å. \(\sin^2\theta = \frac{\lambda^2}{4a^2}(h^2+k^2+l^2)\). Séquences : CS (1,2,3,4,5,6,8...), CC (1,2,3,4,5,6,7...), CFC (1, 1.33, 2.67...)</div>
+                <div class="grid-2">
+                    <div><h3>📡 Simulateur</h3><div class="crystal-selector" id="crystalSelectorN2"></div><button id="simulXRD">⚡ Lancer acquisition</button><canvas id="xrdCanvasN2" width="550" height="220" style="width:100%; background:#fff; border-radius:16px; margin-top:12px; border:1px solid #cbd5e1;"></canvas><div id="peaksListN2"></div></div>
+                    <div><h3>🧪 Analyse</h3><div id="analyseN2" class="info" style="padding:12px;">Cliquez sur "Lancer l'acquisition".</div><select id="guessStructN2"><option value="">-- Choisir structure --</option><option value="CS">CS</option><option value="CC">CC</option><option value="CFC">CFC</option></select><button id="verifStructN2">🔍 Vérifier</button><div id="fbStructN2" class="feedback"></div><hr><h3>📦 Masse volumique</h3><p>Nickel (CFC) a=352 pm, M=58,7 g/mol. Calculez ρ (g/cm³).</p><input type="number" id="rhoNi" step="0.01"><button id="checkRho">Vérifier</button><div id="fbRho" class="feedback"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NIVEAU 3 -->
+    <div id="niveau3" class="panel">
+        <div class="card-niveau">
+            <div class="card-header">🏆 Niveau 3 – Enquête cristallographique & reconstruction 3D</div>
+            <div class="card-body">
+                <p><span class="challenge-badge">🔥 DÉFI MYSTÈRE 🔥</span> Deux cristaux inconnus (Rhodium et Baryum). À vous de jouer.</p>
+                <div class="grid-2">
+                    <div><div class="card-header" style="background:#fff0db;">❓ Cristal A (Rhodium)</div><p>M=102,9 g/mol, ρ=12,41 g/cm³. Angles 2θ simulés : 19,2° ; 22,3° ; 32,4° ; 38,7°. Identifiez structure.</p><button id="simulMystA">📡 Simuler diffractogramme A</button><canvas id="canvasMystA" width="500" height="180" style="width:100%; background:#fff; border-radius:16px; border:1px solid #ccc;"></canvas><input type="text" id="guessStructA" placeholder="Structure A (CS/CC/CFC)"><button id="validerA">Valider A</button><div id="fbMystA" class="feedback"></div></div>
+                    <div><div class="card-header" style="background:#e6f7ec;">❓ Cristal B (Baryum)</div><p>a=502 pm, ρ=3,62 g/cm³, M=137,3 g/mol. Trouvez structure.</p><button id="simulMystB">📡 Simuler diffractogramme B</button><canvas id="canvasMystB" width="500" height="180" style="width:100%; background:#fff; border-radius:16px; border:1px solid #ccc;"></canvas><input type="text" id="guessStructB" placeholder="Structure B (CS/CC/CFC)"><button id="validerB">Valider B</button><div id="fbMystB" class="feedback"></div></div>
+                </div>
+                <button id="unlock3D" disabled style="background:#94a3b8;">🔒 Débloquer 3D (validez A et B)</button>
+                <div id="container3D" style="display:none; margin-top:16px;"><div class="canvas-3d-small" id="view3D"></div><div style="display:flex; gap:12px;"><button id="showCrystalA3D">Afficher A (Rhodium)</button><button id="showCrystalB3D">Afficher B (Baryum)</button></div><p id="info3D"></p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NIVEAU 4 : Identification aléatoire avec liste déroulante -->
+    <div id="niveau4" class="panel">
+        <div class="card-niveau">
+            <div class="card-header">🎲 Niveau 4 – Défi ultime : cristal mystère aléatoire</div>
+            <div class="card-body">
+                <p>À chaque réinitialisation, un cristal inconnu (parmi une vingtaine) est choisi aléatoirement. Des informations variables vous sont données : paramètre de maille, rayon, masse volumique, structure, température de fusion, etc. À vous de trouver le <strong>nom exact</strong> du cristal en le choisissant dans la liste ci-dessous. Vous pouvez simuler la diffraction pour obtenir des indices supplémentaires.</p>
+                
+                <div class="random-indice" id="randomIndices">
+                    <h3>🔮 Indices pour le cristal mystère :</h3>
+                    <div id="mysteryIndicesList">Cliquez sur "Nouveau tirage" pour démarrer.</div>
+                </div>
+                
+                <div class="quiz-input">
+                    <select id="crystalGuessSelect" style="flex:2; min-width: 200px;">
+                        <option value="">-- Sélectionnez un cristal --</option>
+                    </select>
+                    <button id="verifyMystery">✅ Vérifier ma réponse</button>
+                    <button id="newRandomCrystal">🔄 Nouveau tirage aléatoire</button>
+                </div>
+                <div id="mysteryFeedback" class="feedback"></div>
+                <hr>
+                <div>
+                    <button id="simulMysteryXRD">📡 Simuler diffractogramme du cristal mystère</button>
+                    <canvas id="canvasMysteryXRD" width="600" height="200" style="width:100%; background:#fff; border-radius:16px; border:1px solid #cbd5e1; margin-top:12px;"></canvas>
+                    <div id="peaksMystery" style="font-size:0.8rem; margin-top:8px;"></div>
+                </div>
+                <div class="formula-block" style="margin-top:16px;">
+                    💡 <strong>Astuce finale :</strong> Utilisez les relations \(a = f(R)\) et \(\rho = \frac{Z M}{N_A a^3}\) pour identifier l'élément. La diffraction confirme la structure. Bonne chance !
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <span>© 2025 - PBL Cristallographie</span>
+        <button id="openCopyrightModal" class="btn-copyright">📜 Droits d'auteur & licence</button>
+    </footer>
+</div>
+
+<!-- MODALE COPYRIGHT -->
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>⚖️ Droits d'Auteur et Licence d'Utilisation</h3>
+        <p><strong>Auteur : Yann Merdy</strong> (yann.merdy@gmail.com) - Décembre 2025</p>
+        <p><strong>Licence d'Utilisation Non Commerciale</strong><br>
+        Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+        <p><strong>Conditions :</strong><br>
+        ✅ <strong>Utilisation Privée et Éducative (Autorisée)</strong> : Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.<br>
+        ❌ <strong>Utilisation Commerciale (Interdite)</strong> : Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.<br>
+        📝 <strong>Attribution</strong> : Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.<br>
+        ✉️ Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <strong>yann.merdy@gmail.com</strong>.</p>
+    </div>
+</div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    
+    // ---------- BASE DE DONNÉES ÉTENDUE (20 cristaux) pour le niveau aléatoire ----------
+    const crystalsDB = [
+        { id:"polonium", nom:"Polonium", type:"CS", a_pm:335, rayon_pm:167, compacite:0.52, masse_vol:9.20, fusion:254, M:209 },
+        { id:"fer_alpha", nom:"Fer α", type:"CC", a_pm:287, rayon_pm:124, compacite:0.68, masse_vol:7.87, fusion:1538, M:56 },
+        { id:"cuivre", nom:"Cuivre", type:"CFC", a_pm:361, rayon_pm:128, compacite:0.74, masse_vol:8.96, fusion:1085, M:64 },
+        { id:"aluminium", nom:"Aluminium", type:"CFC", a_pm:405, rayon_pm:143, compacite:0.74, masse_vol:2.70, fusion:660, M:27 },
+        { id:"nickel", nom:"Nickel", type:"CFC", a_pm:352, rayon_pm:124, compacite:0.74, masse_vol:8.91, fusion:1455, M:58.7 },
+        { id:"tungstene", nom:"Tungstène", type:"CC", a_pm:316, rayon_pm:139, compacite:0.68, masse_vol:19.25, fusion:3422, M:184 },
+        { id:"rhodium", nom:"Rhodium", type:"CFC", a_pm:380, rayon_pm:134, compacite:0.74, masse_vol:12.41, fusion:1964, M:102.9 },
+        { id:"baryum", nom:"Baryum", type:"CC", a_pm:502, rayon_pm:217, compacite:0.68, masse_vol:3.62, fusion:727, M:137.3 },
+        { id:"or", nom:"Or", type:"CFC", a_pm:408, rayon_pm:144, compacite:0.74, masse_vol:19.30, fusion:1064, M:197 },
+        { id:"argent", nom:"Argent", type:"CFC", a_pm:409, rayon_pm:145, compacite:0.74, masse_vol:10.49, fusion:962, M:108 },
+        { id:"platine", nom:"Platine", type:"CFC", a_pm:392, rayon_pm:139, compacite:0.74, masse_vol:21.45, fusion:1768, M:195 },
+        { id:"plomb", nom:"Plomb", type:"CFC", a_pm:495, rayon_pm:175, compacite:0.74, masse_vol:11.34, fusion:327, M:207 },
+        { id:"cobalt", nom:"Cobalt", type:"CFC", a_pm:354, rayon_pm:125, compacite:0.74, masse_vol:8.90, fusion:1495, M:59 },
+        { id:"iridium", nom:"Iridium", type:"CFC", a_pm:383, rayon_pm:136, compacite:0.74, masse_vol:22.56, fusion:2446, M:192 },
+        { id:"molybdene", nom:"Molybdène", type:"CC", a_pm:315, rayon_pm:136, compacite:0.68, masse_vol:10.22, fusion:2623, M:96 },
+        { id:"chrome", nom:"Chrome", type:"CC", a_pm:288, rayon_pm:125, compacite:0.68, masse_vol:7.19, fusion:1907, M:52 },
+        { id:"lithium", nom:"Lithium", type:"CC", a_pm:351, rayon_pm:152, compacite:0.68, masse_vol:0.53, fusion:180, M:7 },
+        { id:"vanadium", nom:"Vanadium", type:"CC", a_pm:303, rayon_pm:131, compacite:0.68, masse_vol:6.11, fusion:1910, M:51 },
+        { id:"cesium", nom:"Césium", type:"CS", a_pm:614, rayon_pm:267, compacite:0.52, masse_vol:1.93, fusion:28.5, M:133 },
+        { id:"fer_gamma", nom:"Fer γ (Austénite)", type:"CFC", a_pm:365, rayon_pm:129, compacite:0.74, masse_vol:8.10, fusion:1394, M:56 }
+    ];
+    
+    // Remplir la liste déroulante du niveau 4 avec tous les noms
+    const selectCrystalGuess = document.getElementById('crystalGuessSelect');
+    crystalsDB.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.nom;
+        option.textContent = c.nom;
+        selectCrystalGuess.appendChild(option);
+    });
+    
+    // Variables globales
+    let currentRandomCrystal = null;
+    
+    // Helper diffraction
+    const LAMBDA = 1.5406;
+    function getTheoreticalPeaks(crystal) {
+        const a = crystal.a_pm / 100.0;
+        const structure = crystal.type;
+        let peaks = [];
+        for(let h=0;h<=5;h++) for(let k=0;k<=5;k++) for(let l=0;l<=5;l++){
+            if(h===0 && k===0 && l===0) continue;
+            const N = h*h+k*k+l*l;
+            if(N>28) continue;
+            let allowed = false;
+            if(structure === 'CS') allowed = true;
+            if(structure === 'CC') allowed = (h+k+l)%2===0;
+            if(structure === 'CFC') allowed = (h%2===0 && k%2===0 && l%2===0) || (h%2===1 && k%2===1 && l%2===1);
+            if(allowed){
+                const sinTheta = LAMBDA * Math.sqrt(N) / (2 * a);
+                if(sinTheta <= 1){
+                    const twoTheta = 2 * Math.asin(sinTheta) * 180 / Math.PI;
+                    if(twoTheta >= 10 && twoTheta <= 95) peaks.push({N, twoTheta});
+                }
+            }
+        }
+        return peaks.sort((a,b)=>a.twoTheta-b.twoTheta);
+    }
+    function simulatePattern(crystal){
+        const peaks = getTheoreticalPeaks(crystal);
+        const points = [];
+        for(let tth=10; tth<=95; tth+=0.3){
+            let I = 0.08;
+            for(let p of peaks) I += 0.6 * Math.exp(-0.5*((tth-p.twoTheta)/0.4)**2);
+            points.push({twoTheta:tth, intensity:Math.min(1.6, I)});
+        }
+        return points;
+    }
+    function detectPeaksFromPoints(points){
+        let pks=[];
+        for(let i=2;i<points.length-2;i++){
+            if(points[i].intensity > points[i-1].intensity && points[i].intensity > points[i+1].intensity && points[i].intensity > 0.15)
+                pks.push({twoTheta:points[i].twoTheta, intensity:points[i].intensity});
+        }
+        return pks.slice(0,8);
+    }
+    function drawXRD(canvas, points, detected){
+        const w=canvas.width, h=canvas.height;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+        const margin={l:40, r:20, t:20, b:30};
+        const pw=w-margin.l-margin.r, ph=h-margin.t-margin.b;
+        const maxI = Math.max(...points.map(p=>p.intensity),0.3);
+        const toX = th => margin.l + ((th-10)/85)*pw;
+        const toY = I => margin.t+ph - (I/maxI)*ph;
+        ctx.beginPath(); ctx.strokeStyle="#2563eb"; ctx.lineWidth=1.6;
+        for(let i=0;i<points.length;i++){
+            let x=toX(points[i].twoTheta), y=toY(points[i].intensity);
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        if(detected) detected.forEach(p=>{ let x=toX(p.twoTheta), y=toY(p.intensity); ctx.fillStyle="#dc2626"; ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fill(); ctx.fillStyle="#0f172a"; ctx.font="bold 9px monospace"; ctx.fillText(`${p.twoTheta.toFixed(1)}°`, x+4,y-4); });
+        ctx.fillStyle="#334155"; ctx.fillText("2θ (°)", margin.l+pw/2, h-8);
+    }
+    
+    // Niveau 4 : aléatoire avec indices
+    function getRandomIndices(crystal){
+        const props = [];
+        if(crystal.a_pm) props.push(`📏 Paramètre de maille \(a = ${crystal.a_pm}\) pm`);
+        if(crystal.rayon_pm) props.push(`⚛️ Rayon atomique \(R = ${crystal.rayon_pm}\) pm`);
+        if(crystal.masse_vol) props.push(`⚖️ Masse volumique \(\\rho = ${crystal.masse_vol}\) g/cm³`);
+        if(crystal.fusion) props.push(`🔥 Température de fusion \(T_f = ${crystal.fusion}\) °C`);
+        if(crystal.type) props.push(`🧬 Système cristallin : ${crystal.type === 'CS' ? 'Cubique Simple' : (crystal.type==='CC'?'Cubique Centré':'Cubique Faces Centrées')}`);
+        if(crystal.compacite) props.push(`📦 Compacité théorique \(C = ${crystal.compacite}`);
+        if(crystal.M) props.push(`💎 Masse molaire approximative \(M \\approx ${crystal.M}\) g/mol`);
+        for(let i=props.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [props[i],props[j]]=[props[j],props[i]]; }
+        return props.slice(0, Math.min(4, props.length));
+    }
+    
+    function updateRandomCrystalDisplay(){
+        if(!currentRandomCrystal) return;
+        const indices = getRandomIndices(currentRandomCrystal);
+        let html = `<ul style="margin-left:20px;">`;
+        indices.forEach(i=> html += `<li>${i}</li>`);
+        html += `</ul><p><em>💡 Indice supplémentaire : utilisez le bouton "Simuler diffractogramme" pour obtenir les angles de diffraction.</em></p>`;
+        document.getElementById('mysteryIndicesList').innerHTML = html;
+        selectCrystalGuess.value = "";
+        document.getElementById('mysteryFeedback').innerHTML = '';
+        document.getElementById('peaksMystery').innerHTML = '';
+        const canvas = document.getElementById('canvasMysteryXRD');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle="#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        if(window.MathJax) MathJax.typesetPromise();
+    }
+    
+    function newRandomCrystal(){
+        const randomIndex = Math.floor(Math.random() * crystalsDB.length);
+        currentRandomCrystal = { ...crystalsDB[randomIndex] };
+        updateRandomCrystalDisplay();
+    }
+    
+    function verifyMystery(){
+        if(!currentRandomCrystal){ alert("Cliquez d'abord sur 'Nouveau tirage'"); return; }
+        const selectedValue = selectCrystalGuess.value;
+        if(!selectedValue){
+            document.getElementById('mysteryFeedback').innerHTML = '<div class="error">Veuillez sélectionner un cristal dans la liste.</div>';
+            return;
+        }
+        const isCorrect = (selectedValue === currentRandomCrystal.nom);
+        if(isCorrect){
+            document.getElementById('mysteryFeedback').innerHTML = `<div class="success">🎉 Bravo ! Il s'agit bien de ${currentRandomCrystal.nom}. Vous maîtrisez l'identification !</div>`;
+        } else {
+            document.getElementById('mysteryFeedback').innerHTML = `<div class="error">❌ Ce n'est pas "${selectedValue}". Le cristal mystère était <strong>${currentRandomCrystal.nom}</strong>. Rechargez-en un nouveau pour continuer.</div>`;
+        }
+    }
+    
+    function simulateMysteryXRD(){
+        if(!currentRandomCrystal) return;
+        const pts = simulatePattern(currentRandomCrystal);
+        const detected = detectPeaksFromPoints(pts);
+        drawXRD(document.getElementById('canvasMysteryXRD'), pts, detected);
+        let angles = detected.map(p=>p.twoTheta.toFixed(2)).join(' ; ');
+        document.getElementById('peaksMystery').innerHTML = `<strong>Pics principaux simulés (2θ) :</strong> ${angles}<br><small>Comparez ces angles avec les valeurs théoriques d'une structure.</small>`;
+    }
+    
+    // ---- Initialisation des autres niveaux (compatibilité) ----
+    // Niveau 1
+    document.getElementById('checkN1').onclick = () => { let val=parseFloat(document.getElementById('n1R').value); let Rcalc=361*Math.sqrt(2)/4; if(Math.abs(val-Rcalc)<1) document.getElementById('fbN1').innerHTML="✔️ Correct ! R ≈ 127.6 pm"; else document.getElementById('fbN1').innerHTML=`❌ R = a√2/4 = ${Rcalc.toFixed(1)} pm.`; };
+    document.getElementById('checkCompacite').onclick = ()=>{ let comp=parseFloat(document.getElementById('n1C').value); let Ccalc=(2*(4/3)*Math.PI*124**3)/(287**3); if(Math.abs(comp-Ccalc)<0.01) document.getElementById('fbComp').innerHTML="✔️ Compacité ≈ 0.68"; else document.getElementById('fbComp').innerHTML=`❌ C = ${Ccalc.toFixed(3)}`; };
+    document.getElementById('validerTableau').onclick = ()=>{ let ok=true; if(Math.abs(parseFloat(document.getElementById('tPoR').value)-167)>1) ok=false; if(Math.abs(parseFloat(document.getElementById('tPoC').value)-0.52)>0.01) ok=false; if(Math.abs(parseFloat(document.getElementById('tAlR').value)-143)>1) ok=false; if(Math.abs(parseFloat(document.getElementById('tAlC').value)-0.74)>0.01) ok=false; if(Math.abs(parseFloat(document.getElementById('tWR').value)-136.8)>2) ok=false; if(Math.abs(parseFloat(document.getElementById('tWC').value)-0.68)>0.01) ok=false; document.getElementById('fbTableau').innerHTML = ok ? "✅ Tableau juste !" : "❌ Erreur, vérifiez formules."; };
+    
+    // Niveau 2
+    let currentCrystalN2 = crystalsDB.find(c=>c.id==="cuivre");
+    function buildSelectorN2(){ const cont=document.getElementById('crystalSelectorN2'); cont.innerHTML=''; crystalsDB.slice(0,8).forEach(c=>{ let btn=document.createElement('button'); btn.className='crystal-btn'; if(c.id===currentCrystalN2.id) btn.classList.add('active'); btn.innerText=c.nom; btn.onclick=()=>{ document.querySelectorAll('#crystalSelectorN2 .crystal-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentCrystalN2=c; }; cont.appendChild(btn); }); }
+    buildSelectorN2();
+    document.getElementById('simulXRD').onclick = ()=>{ const pts=simulatePattern(currentCrystalN2); const raw=detectPeaksFromPoints(pts); drawXRD(document.getElementById('xrdCanvasN2'), pts, raw); let html='<tr><th>Pic</th><th>2θ(°)</th><th>sin²θ</th><th>Rapport</th></tr>'; let sin2vals=raw.map(p=>Math.sin(p.twoTheta*Math.PI/360)**2); let r0=sin2vals[0]; raw.forEach((p,i)=>{ let ratio=sin2vals[i]/r0; html+=`<tr><td>${i+1}</td><td>${p.twoTheta.toFixed(2)}</td><td>${sin2vals[i].toFixed(5)}</td><td>${ratio.toFixed(4)}</td></tr>`; }); html+='</table>'; document.getElementById('peaksListN2').innerHTML=html; document.getElementById('analyseN2').innerHTML="Observez les rapports."; };
+    document.getElementById('verifStructN2').onclick = ()=>{ let guess=document.getElementById('guessStructN2').value; let expected=currentCrystalN2.type; if(guess===expected) document.getElementById('fbStructN2').innerHTML='<span class="success">✔️ Bonne identification.</span>'; else document.getElementById('fbStructN2').innerHTML=`<span class="error">❌ Non, c'est ${expected}.</span>`; };
+    document.getElementById('checkRho').onclick = ()=>{ let M=58.7,a=352e-12,Z=4,Na=6.022e23; let rhoCalc = (Z*M/1000)/(Na*a**3)*1000; let user=parseFloat(document.getElementById('rhoNi').value); if(Math.abs(user-rhoCalc)<0.2) document.getElementById('fbRho').innerHTML=`✔️ ρ ≈ ${rhoCalc.toFixed(2)} g/cm³`; else document.getElementById('fbRho').innerHTML=`❌ ρ = ${rhoCalc.toFixed(2)} g/cm³`; };
+    
+    // Niveau 3
+    const mystA = crystalsDB.find(c=>c.id==='rhodium'), mystB = crystalsDB.find(c=>c.id==='baryum');
+    let validA=false, validB=false;
+    function updateUnlock(){ if(validA && validB){ document.getElementById('unlock3D').disabled=false; document.getElementById('unlock3D').style.background='#10b981'; document.getElementById('unlock3D').innerText='🔓 Débloquer 3D'; } }
+    document.getElementById('simulMystA').onclick = ()=>{ const pts=simulatePattern(mystA); const raw=detectPeaksFromPoints(pts); drawXRD(document.getElementById('canvasMystA'), pts, raw); };
+    document.getElementById('simulMystB').onclick = ()=>{ const pts=simulatePattern(mystB); const raw=detectPeaksFromPoints(pts); drawXRD(document.getElementById('canvasMystB'), pts, raw); };
+    document.getElementById('validerA').onclick = ()=>{ let guess=document.getElementById('guessStructA').value.toUpperCase(); if(guess==='CFC'){ validA=true; document.getElementById('fbMystA').innerHTML='<span class="success">✔️ Rhodium = CFC</span>'; } else document.getElementById('fbMystA').innerHTML='<span class="error">❌ CFC attendu</span>'; updateUnlock(); };
+    document.getElementById('validerB').onclick = ()=>{ let guess=document.getElementById('guessStructB').value.toUpperCase(); if(guess==='CC'){ validB=true; document.getElementById('fbMystB').innerHTML='<span class="success">✔️ Baryum = CC</span>'; } else document.getElementById('fbMystB').innerHTML='<span class="error">❌ CC attendu</span>'; updateUnlock(); };
+    let scene3D,camera3D,renderer3D,controls3D,group3D;
+    function initThree(containerId){ const container=document.getElementById(containerId); const w=container.clientWidth,h=280; scene3D=new THREE.Scene(); scene3D.background=new THREE.Color(0xf8fafc); camera3D=new THREE.PerspectiveCamera(45,w/h,0.1,1000); camera3D.position.set(2,1.5,2.5); renderer3D=new THREE.WebGLRenderer({antialias:true}); renderer3D.setSize(w,h); container.appendChild(renderer3D.domElement); controls3D=new OrbitControls(camera3D,renderer3D.domElement); controls3D.enableDamping=true; const light=new THREE.DirectionalLight(0xffffff,1); light.position.set(1,2,1); scene3D.add(light); scene3D.add(new THREE.AmbientLight(0x404060)); group3D=new THREE.Group(); scene3D.add(group3D); function animate(){ requestAnimationFrame(animate); controls3D.update(); renderer3D.render(scene3D,camera3D); } animate(); }
+    function displayCrystal3D(crystal){ while(group3D.children.length) group3D.remove(group3D.children[0]); const scale=0.008; const L=crystal.a_pm*scale; const wire=new THREE.Mesh(new THREE.BoxGeometry(L,L,L), new THREE.MeshBasicMaterial({color:0xf97316,wireframe:true})); group3D.add(wire); const positions=[]; if(crystal.type==='CS') for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) for(let k=0;k<=1;k++) positions.push([i,j,k]); if(crystal.type==='CC') { for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) for(let k=0;k<=1;k++) positions.push([i,j,k]); positions.push([0.5,0.5,0.5]); } if(crystal.type==='CFC') { for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) for(let k=0;k<=1;k++) positions.push([i,j,k]); [[0.5,0.5,0],[0.5,0.5,1],[0.5,0,0.5],[0.5,1,0.5],[0,0.5,0.5],[1,0.5,0.5]].forEach(p=>positions.push(p)); } positions.forEach(pos=>{ const sphere=new THREE.Mesh(new THREE.SphereGeometry(0.12,24,24), new THREE.MeshPhongMaterial({color:0xef4444})); sphere.position.set((pos[0]-0.5)*L,(pos[1]-0.5)*L,(pos[2]-0.5)*L); group3D.add(sphere); }); camera3D.position.set(L*1.8, L*1.2, L*1.8); controls3D.target.set(0,0,0); }
+    document.getElementById('unlock3D').addEventListener('click',()=>{ if(validA&&validB){ document.getElementById('container3D').style.display='block'; initThree('view3D'); document.getElementById('showCrystalA3D').onclick=()=>displayCrystal3D(mystA); document.getElementById('showCrystalB3D').onclick=()=>displayCrystal3D(mystB); document.getElementById('info3D').innerHTML="✔️ Visualisation active."; } });
+    
+    // Level 4 event handlers
+    document.getElementById('newRandomCrystal').addEventListener('click', newRandomCrystal);
+    document.getElementById('verifyMystery').addEventListener('click', verifyMystery);
+    document.getElementById('simulMysteryXRD').addEventListener('click', simulateMysteryXRD);
+    
+    // Initialisation aléatoire
+    newRandomCrystal();
+    
+    // Gestion de la modale copyright
+    const modal = document.getElementById('copyrightModal');
+    const openBtn = document.getElementById('openCopyrightModal');
+    const closeSpan = document.querySelector('.close-modal');
+    function openModal() { modal.style.display = 'flex'; }
+    function closeModal() { modal.style.display = 'none'; }
+    openBtn.addEventListener('click', openModal);
+    closeSpan.addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab=>{ tab.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active-panel')); document.getElementById(tab.dataset.tab).classList.add('active-panel'); if(window.MathJax) MathJax.typesetPromise(); }); });
+    if(window.MathJax) MathJax.typesetPromise();
+</script>
+</body>
+</html>

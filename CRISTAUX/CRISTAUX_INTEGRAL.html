@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Cristallographie intégrale – Maille, empilements, histoire & outils</title>
+    <!-- MathJax 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #eef2ff;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            padding: 28px 24px;
+            line-height: 1.5;
+        }
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #0a2b3b, #1e4a6e);
+            color: white;
+            padding: 28px 32px;
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        header p {
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .badge-set {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: rgba(255,255,240,0.2);
+            backdrop-filter: blur(4px);
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 2px solid #cbd5e1;
+            gap: 4px;
+            padding: 0 20px;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #334155;
+            border-radius: 40px 40px 0 0;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #1e4a6e;
+            border-bottom: 3px solid #1e4a6e;
+        }
+        .tab-pane {
+            display: none;
+            padding: 28px 32px;
+            animation: fade 0.2s ease;
+        }
+        .tab-pane.active-pane {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(5px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        /* styles généraux */
+        h2 {
+            color: #1e4a6e;
+            border-left: 5px solid #facc15;
+            padding-left: 18px;
+            margin: 28px 0 16px 0;
+            font-size: 1.7rem;
+        }
+        h3 {
+            color: #2c5f8a;
+            margin: 20px 0 12px 0;
+            font-size: 1.3rem;
+        }
+        .card-note {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+        }
+        .flex-2col {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin: 20px 0;
+        }
+        .col {
+            flex: 1;
+            min-width: 260px;
+        }
+        canvas {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+        .formula-block {
+            background: #e6f0fa;
+            padding: 12px 18px;
+            border-radius: 20px;
+            margin: 12px 0;
+            font-family: monospace;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #e2e8f0;
+            font-weight: 600;
+        }
+        .interactive-panel {
+            background: #fef9e3;
+            border-radius: 24px;
+            padding: 18px;
+            margin: 20px 0;
+        }
+        .timeline {
+            background: #f1f5f9;
+            border-radius: 28px;
+            padding: 18px;
+        }
+        .timeline-item {
+            margin-bottom: 12px;
+            border-left: 3px solid #facc15;
+            padding-left: 16px;
+        }
+        .footer {
+            background: #f8fafc;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        button {
+            background: #1e4a6e;
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0f3b57;
+            transform: scale(0.97);
+        }
+        .btn-copyright {
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+        }
+        /* Modale */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            max-width: 550px;
+            width: 90%;
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            border-top: 8px solid #1e4a6e;
+            position: relative;
+            animation: fadeModal 0.2s;
+        }
+        @keyframes fadeModal {
+            from { opacity: 0; transform: scale(0.96);}
+            to { opacity: 1; transform: scale(1);}
+        }
+        .modal-content h4 {
+            font-size: 1.6rem;
+            color: #1e4a6e;
+            margin-bottom: 10px;
+        }
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .close-modal:hover { color: #dc2626; }
+        @media (max-width: 700px) {
+            .tab-pane { padding: 20px; }
+            h2 { font-size: 1.4rem; }
+            .tab-btn { padding: 10px 16px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <header>
+        <h1>📚 Cristallographie intégrale : maille, empilements, histoire & outils</h1>
+        <p>Des bases géométriques à la conjecture de Kepler – tout pour maîtriser la cristallographie</p>
+        <div class="badge-set">
+            <span class="badge">🔬 CS / CC / CFC</span>
+            <span class="badge">📐 Compacité & ρ</span>
+            <span class="badge">🧩 Empilements 2D → 3D</span>
+            <span class="badge">📜 Kepler · Hilbert · Hales</span>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="maille">📦 La maille cristalline</button>
+        <button class="tab-btn" data-tab="empilements">🔘 Empilements & perspective</button>
+        <button class="tab-btn" data-tab="histoire">📜 Histoire de la cristallographie</button>
+        <button class="tab-btn" data-tab="liens">🔗 Liens & synthèse</button>
+    </div>
+
+    <!-- ==================== ONGLET 1 : MAILLE CRISTALLINE ==================== -->
+    <div id="maille" class="tab-pane active-pane">
+        <div class="card-note">
+            <p>🔍 <strong>Qu’est-ce qu’une maille ?</strong> C’est le plus petit parallélépipède (souvent un cube) qui, répété par translations dans les trois directions de l’espace, permet de reconstruire tout le cristal. La maille contient toute l’information sur l’arrangement périodique des atomes.</p>
+        </div>
+
+        <h2>📐 1. Définition et paramètres de maille</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <p>Une maille est définie par trois vecteurs <strong>\(\vec{a}, \vec{b}, \vec{c}\)</strong> et les angles entre eux. Pour les cristaux cubiques (les plus simples), on a \(a = b = c\) et \(\alpha = \beta = \gamma = 90^\circ\). Le paramètre de maille \(a\) (en picomètres ou angströms) est la longueur de l’arête du cube.</p>
+                <p>Le <strong>réseau</strong> est l’ensemble des points (nœuds) obtenus par combinaisons linéaires entières des vecteurs. La maille contient des atomes positionnés soit aux nœuds, soit en des positions particulières (centre, faces).</p>
+            </div>
+            <div class="col">
+                <canvas id="simpleCubeCanvas" width="240" height="200" style="width:100%; max-width:240px; background:#fff;"></canvas>
+                <p style="text-align:center">Maille cubique simple : atomes aux 8 sommets.</p>
+            </div>
+        </div>
+
+        <h2>🧱 2. Les trois mailles cubiques fondamentales</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <h3>◻️ Cubique Simple (CS)</h3>
+                <p>Atomes uniquement aux sommets. Chaque sommet est partagé par 8 mailles adjacentes. Ainsi, chaque maille contient \(8 \times \frac{1}{8} = 1\) atome.</p>
+                <div class="formula-block">\(Z_{\text{CS}} = 1\) &nbsp;&nbsp; \(a = 2R\)</div>
+                <p>Compacité ≈ 0,52. Exemple : polonium α.</p>
+            </div>
+            <div class="col">
+                <h3>🔴 Cubique Centré (CC)</h3>
+                <p>Sommets + 1 atome au centre du cube. L’atome central n’est pas partagé. Donc \(Z = 8 \times \frac{1}{8} + 1 = 2\).</p>
+                <div class="formula-block">\(Z_{\text{CC}} = 2\) &nbsp;&nbsp; \(a = \frac{4R}{\sqrt{3}}\)</div>
+                <p>Compacité ≈ 0,68. Exemples : fer α, tungstène.</p>
+            </div>
+            <div class="col">
+                <h3>🟢 Cubique Faces Centrées (CFC)</h3>
+                <p>Sommets + atomes au centre de chaque face. Chaque atome de face est partagé par 2 mailles. Donc \(Z = 8 \times \frac{1}{8} + 6 \times \frac{1}{2} = 4\).</p>
+                <div class="formula-block">\(Z_{\text{CFC}} = 4\) &nbsp;&nbsp; \(a = \frac{4R}{\sqrt{2}}\)</div>
+                <p>Compacité ≈ 0,74 (maximale). Exemples : cuivre, aluminium, or.</p>
+            </div>
+        </div>
+
+        <div class="interactive-panel">
+            <h3 style="margin-top: 0;">🎨 Visualisation des mailles (2D)</h3>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+                <canvas id="csMailleCanvas" width="200" height="200" style="width:200px; height:200px; background:#fff;"></canvas>
+                <canvas id="ccMailleCanvas" width="200" height="200" style="width:200px; height:200px; background:#fff;"></canvas>
+                <canvas id="cfcMailleCanvas" width="200" height="200" style="width:200px; height:200px; background:#fff;"></canvas>
+            </div>
+            <p style="text-align:center">🔵 CS (1 atome/maille) &nbsp;|&nbsp; 🔴 CC (2 atomes/maille) &nbsp;|&nbsp; 🟢 CFC (4 atomes/maille)</p>
+        </div>
+
+        <h2>⚖️ 3. Compacité et masse volumique à partir de la maille</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <h3>📦 Compacité C</h3>
+                <p>Fraction du volume de la maille occupée par les atomes (sphères dures de rayon \(R\)).</p>
+                <div class="formula-block">\[ C = \frac{Z \times \frac{4}{3}\pi R^3}{a^3} \]</div>
+                <p>Pour CS : \(C = \frac{\pi}{6} \approx 0,52\)<br>Pour CC : \(C = \frac{\pi\sqrt{3}}{8} \approx 0,68\)<br>Pour CFC : \(C = \frac{\pi}{3\sqrt{2}} \approx 0,74\)</p>
+            </div>
+            <div class="col">
+                <h3>🏷️ Masse volumique ρ</h3>
+                <p>Connaissant la masse molaire \(M\) (g/mol) et \(N_A = 6,022\times10^{23}\ \text{mol}^{-1}\) :</p>
+                <div class="formula-block">\[ \rho = \frac{Z \times M}{N_A \times a^3} \]</div>
+                <p>avec \(a\) en mètres (1 pm = \(10^{-12}\) m). Résultat en kg/m³ ; diviser par 1000 pour g/cm³.</p>
+                <p>💡 Exemple : Cuivre (CFC, \(a = 361\) pm, \(M = 63,5\) g/mol) → \(\rho \approx 8,96\ \text{g/cm}^3\).</p>
+            </div>
+        </div>
+
+        <h2>🧂 4. Maille du chlorure de sodium (NaCl)</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <p>NaCl cristallise dans une structure dérivée du CFC : les ions Cl⁻ (chlorure) occupent les nœuds d’un réseau CFC, et les ions Na⁺ (sodium) occupent tous les sites octaédriques (centres des arêtes et centre du cube). La maille contient \(4\ \text{Na}^+\) et \(4\ \text{Cl}^-\).</p>
+                <div class="formula-block">\(a = 2(R_{\text{Na}^+} + R_{\text{Cl}^-})\)</div>
+            </div>
+            <div class="col">
+                <canvas id="naclCanvas" width="220" height="200" style="width:100%; max-width:220px;"></canvas>
+                <p style="text-align:center">NaCl : Na⁺ (rouge) et Cl⁻ (vert).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ONGLET 2 : EMPILEMENTS & PERSPECTIVE ==================== -->
+    <div id="empilements" class="tab-pane">
+        <h2>🔘 1. Empilements de disques – De la 2D vers la 3D</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <h3>📌 Réseau carré (CS en 3D)</h3>
+                <p>Disques aux nœuds d’un quadrillage carré. Rayon \(R = a/2\). Chaque maille contient 1 disque.</p>
+                <div class="formula-block">Compacité 2D = \(\frac{\pi R^2}{a^2} = \frac{\pi}{4} \approx 78,5\%\)</div>
+                <p>→ Cubique simple par superposition.</p>
+            </div>
+            <div class="col">
+                <h3>🍯 Réseau hexagonal (plus compact)</h3>
+                <p>Disques en “nid d’abeille”. Maille losange de côté \(a=2R\), aire \(\frac{\sqrt{3}}{2}a^2\).</p>
+                <div class="formula-block">Compacité 2D = \(\frac{\pi}{2\sqrt{3}} \approx 90,7\%\)</div>
+                <p>→ Conduit aux structures CFC et HC en 3D.</p>
+            </div>
+        </div>
+
+        <div class="interactive-panel">
+            <h3>🎨 Empilements plans</h3>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+                <canvas id="squarePacking" width="320" height="320" style="width:320px; height:320px; background:#fff;"></canvas>
+                <canvas id="hexPacking" width="320" height="320" style="width:320px; height:320px; background:#fff;"></canvas>
+            </div>
+            <p style="text-align:center">🔵 Carré (78,5%) &nbsp;|&nbsp; 🟠 Hexagonal (90,7%) – disques tangents.</p>
+        </div>
+
+        <h2>📦 2. Des disques au CFC : couches A-B-C</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <p>Empilement de couches hexagonales compactes :</p>
+                <ul>
+                    <li><strong>ABAB…</strong> → hexagonal compact (HC).</li>
+                    <li><strong>ABCABC…</strong> → cubique faces centrées (CFC).</li>
+                </ul>
+                <p>Le motif ABC correspond aux trois positions de couches décalées. La maille CFC est directement liée à cet empilement tétraédrique.</p>
+                <div class="formula-block">CFC : \(a = \frac{4R}{\sqrt{2}}\), \(Z=4\), \(C\approx0,74\).</div>
+            </div>
+            <div class="col">
+                <canvas id="abclayersCanvas" width="300" height="200" style="width:100%; max-width:300px;"></canvas>
+                <p class="text-center">Couches A (bleu), B (rouge), C (vert) → empilement ABC = CFC.</p>
+            </div>
+        </div>
+
+        <h2>✏️ 3. Perspective cavalière – visualiser un cube</h2>
+        <div class="flex-2col">
+            <div class="col">
+                <p>La perspective cavalière garde le parallélisme. Une maille cubique se dessine avec une face avant carrée, une face arrière décalée et des fuyantes (angle 30° ou 45°, rapport de fuite ~0,5).</p>
+                <p>Cette technique aide à comprendre l’agencement spatial des atomes.</p>
+            </div>
+            <div class="col">
+                <canvas id="cavaliereCanvas" width="280" height="240" style="width:100%; max-width:280px;"></canvas>
+                <p style="text-align:center">Maille cubique en perspective cavalière (arête \(a\)).</p>
+            </div>
+        </div>
+
+        <div class="card-note">
+            <h3>⚛️ Pour aller plus loin : cubique centré (CC) et hexagonal compact (HC)</h3>
+            <p><strong>Cubique centré</strong> : \(a = \frac{4R}{\sqrt{3}}\), \(Z=2\), compacité 0,68. La tangence se fait selon la grande diagonale du cube.<br>
+            <strong>Hexagonal compact</strong> : empilement ABAB, compacité maximale 0,74, paramètres \(a=2R\), \(c=\sqrt{\frac{8}{3}}a\). Exemples : magnésium, zinc.</p>
+        </div>
+    </div>
+
+    <!-- ==================== ONGLET 3 : HISTOIRE ==================== -->
+    <div id="histoire" class="tab-pane">
+        <h2>📜 La conjecture de Kepler – une saga mathématique</h2>
+        <div class="timeline">
+            <div class="timeline-item"><strong>1611 – Johannes Kepler</strong> : émet la conjecture que la compacité maximale d’un empilement de sphères identiques est \(\frac{\pi}{3\sqrt{2}} \approx 0,74048\) (celle du CFC et HC). Il s’appuie sur l’observation des piles de boulets de canon et des fruits.</div>
+            <div class="timeline-item"><strong>1831 – Carl Friedrich Gauss</strong> : démontre la conjecture pour les empilements périodiques (réseaux cristallins). Mais le cas général reste ouvert.</div>
+            <div class="timeline-item"><strong>1900 – David Hilbert</strong> : inclut la conjecture de Kepler dans sa célèbre liste des 23 problèmes mathématiques pour le XX<sup>e</sup> siècle (18<sup>e</sup> problème).</div>
+            <div class="timeline-item"><strong>1998 – Thomas C. Hales</strong> : annonce une preuve assistée par ordinateur, analysant plus de 100 000 configurations. La preuve est longue et complexe.</div>
+            <div class="timeline-item"><strong>2014 – Projet Flyspeck</strong> : la preuve de Hales est formellement certifiée par des logiciels de vérification automatique.</div>
+        </div>
+        <div class="card-note" style="margin-top: 20px;">
+            <p>💡 <strong>Enjeux et contextes :</strong> La conjecture de Kepler relie physique (structure des cristaux), mathématiques (géométrie, optimisation) et informatique (preuve formelle). Elle montre comment un problème concret (empiler des sphères) a motivé des siècles de recherches et abouti à une démonstration assistée par ordinateur, validant la compacité maximale des réseaux CFC et HC.</p>
+            <p>📌 <strong>Personnages clés :</strong> Kepler (astronome, mathématicien), Gauss (prince des mathématiciens), Hilbert (leader des mathématiques du début XXe), Hales (mathématicien contemporain).</p>
+        </div>
+
+        <h2>📖 Autres jalons historiques</h2>
+        <ul>
+            <li><strong>1912 – Laue, Friedrich, Knipping</strong> : première diffraction des rayons X par un cristal, naissance de la cristallographie moderne.</li>
+            <li><strong>1913 – W.H. Bragg et W.L. Bragg</strong> : établissent la loi de Bragg \(n\lambda = 2d\sin\theta\) et résolvent les premières structures cristallines (NaCl, diamant).</li>
+            <li><strong>XXe siècle</strong> : développement des méthodes de diffraction, tables internationales de cristallographie, découverte de l’ADN (Rosalind Franklin, Watson & Crick) grâce à la diffraction X.</li>
+        </ul>
+    </div>
+
+    <!-- ==================== ONGLET 4 : LIENS & SYNTHÈSE ==================== -->
+    <div id="liens" class="tab-pane">
+        <h2>📊 Synthèse des compacités (2D et 3D)</h2>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead><tr><th>Structure</th><th>Compacité</th><th>Valeur</th><th>Relation a / R</th><th>Z (atomes/maille)</th></tr></thead>
+                <tbody>
+                    <tr><td>Réseau carré (plan)</td><td>\(\pi/4\)</td><td>≈ 78,5 %</td><td>\(a = 2R\)</td><td>1 disque</td></tr>
+                    <tr><td>Réseau hexagonal (plan)</td><td>\(\pi/(2\sqrt{3})\)</td><td>≈ 90,7 %</td><td>\(a = 2R\)</td><td>1 disque</td></tr>
+                    <tr><td>Cubique simple (CS)</td><td>\(\pi/6\)</td><td>≈ 0,52</td><td>\(a = 2R\)</td><td>1</td></tr>
+                    <tr><td>Cubique centré (CC)</td><td>\(\pi\sqrt{3}/8\)</td><td>≈ 0,68</td><td>\(a = 4R/\sqrt{3}\)</td><td>2</td></tr>
+                    <tr><td>Cubique faces centrées (CFC)</td><td>\(\pi/(3\sqrt{2})\)</td><td>≈ 0,74</td><td>\(a = 4R/\sqrt{2}\)</td><td>4</td></tr>
+                    <tr><td>Hexagonal compact (HC)</td><td>\(\pi/(3\sqrt{2})\)</td><td>≈ 0,74</td><td>\(a = 2R,\ c = \sqrt{8/3}a\)</td><td>2 (par maille)</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>🎯 Le CFC et l’HC partagent la même compacité maximale (0,74048), la plus élevée possible pour des sphères identiques.</p>
+
+        <h2>🔗 Complémentarité avec les trois simulateurs interactifs</h2>
+        <div class="card-note" style="background:#e6f0fa;">
+            <p>• <strong><a href="CRISTAUX_CALCULS.html" target="_blank" style="color:#1e4a6e; font-weight:600;">Cristaux 3D – Quiz dynamique</a></strong> : visualisation Three.js des mailles CS, CC, CFC, NaCl. Quiz sur a, R, ρ, compacité.<br>
+            • <strong><a href="CRISTAUX_ENTRAINEMENTS.html" target="_blank" style="color:#1e4a6e; font-weight:600;">Mission 4 niveaux</a></strong> : calculs progressifs, identification de cristaux mystères par ρ et a, simulation de diffraction.<br>
+            • <strong><a href="CRISTAUX_SIMULATEUR.html" target="_blank" style="color:#1e4a6e; font-weight:600;">Simulateur RX</a></strong> : acquisition de diffractogramme, calcul des rapports sin²θ, identification CS/CC/CFC.</p>
+            <p>📌 Ce document rassemble les bases théoriques (maille, compacité, empilements) et l’histoire pour approfondir la compréhension avant d’utiliser les outils.</p>
+        </div>
+
+        <div class="card-note">
+            <h3>📐 Rappels des formules clés</h3>
+            <ul>
+                <li><strong>CS</strong> : \(a = 2R\), \(Z=1\), \(C=\pi/6\)</li>
+                <li><strong>CC</strong> : \(a = 4R/\sqrt{3}\), \(Z=2\), \(C=\pi\sqrt{3}/8\)</li>
+                <li><strong>CFC</strong> : \(a = 4R/\sqrt{2}\), \(Z=4\), \(C=\pi/(3\sqrt{2})\)</li>
+                <li><strong>Masse volumique</strong> : \(\rho = \frac{Z\cdot M}{N_A \cdot a^3}\)</li>
+                <li><strong>Loi de Bragg</strong> : \(n\lambda = 2d\sin\theta\) avec \(d_{hkl}=a/\sqrt{h^2+k^2+l^2}\)</li>
+                <li><strong>Rapports sin²θ</strong> : \(\frac{\sin^2\theta_i}{\sin^2\theta_1} = \frac{N_i}{N_1}\) – signatures CS (entiers sauf 7), CC (tous entiers), CFC (fractions 1,33 – 2,67 – 3,67…)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>© 2026 – Ressource pédagogique libre</span>
+        <button id="copyrightModalBtn" class="btn-copyright">📜 Droits d'auteur & licence</button>
+    </div>
+</div>
+
+<!-- MODALE COPYRIGHT -->
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h4>⚖️ Droits d'Auteur et Licence d'Utilisation</h4>
+        <p><strong>Auteur : Yann Merdy</strong> (yann.merdy@gmail.com) - juin 2026</p>
+        <p><strong>Licence d'Utilisation Non Commerciale</strong><br>
+        Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+        <p><strong>Conditions :</strong><br>
+        ✅ <strong>Utilisation Privée et Éducative (Autorisée)</strong> : Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.<br>
+        ❌ <strong>Utilisation Commerciale (Interdite)</strong> : Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.<br>
+        📝 <strong>Attribution</strong> : Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.<br>
+        ✉️ Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <strong>yann.merdy@gmail.com</strong>.</p>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- dessins pour l'onglet maille ----------
+        const csCanvas = document.getElementById('csMailleCanvas');
+        if(csCanvas) {
+            const ctx = csCanvas.getContext('2d');
+            csCanvas.width = 200; csCanvas.height = 200;
+            ctx.clearRect(0,0,200,200);
+            ctx.fillStyle = "#fff"; ctx.fillRect(0,0,200,200);
+            const w = 140, h = 140, ox = 30, oy = 30;
+            ctx.strokeStyle = "#1e4a6e";
+            ctx.strokeRect(ox, oy, w, h);
+            ctx.fillStyle = "#3b82f6";
+            for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) { ctx.beginPath(); ctx.arc(ox + i*w, oy + j*h, 8, 0, 2*Math.PI); ctx.fill(); }
+            ctx.fillStyle = "#0f172a"; ctx.font = "bold 12px sans-serif"; ctx.fillText("CS", 80, 180);
+        }
+        const ccCanvas = document.getElementById('ccMailleCanvas');
+        if(ccCanvas) {
+            const ctx = ccCanvas.getContext('2d');
+            ccCanvas.width = 200; ccCanvas.height = 200;
+            ctx.clearRect(0,0,200,200); ctx.fillStyle="#fff"; ctx.fillRect(0,0,200,200);
+            const w=140,h=140,ox=30,oy=30;
+            ctx.strokeRect(ox,oy,w,h);
+            ctx.fillStyle="#ef4444";
+            for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) { ctx.beginPath(); ctx.arc(ox+i*w, oy+j*h, 8, 0, 2*Math.PI); ctx.fill(); }
+            ctx.beginPath(); ctx.arc(ox+w/2, oy+h/2, 8, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle="#0f172a"; ctx.fillText("CC", 80, 180);
+        }
+        const cfcCanvas = document.getElementById('cfcMailleCanvas');
+        if(cfcCanvas) {
+            const ctx = cfcCanvas.getContext('2d');
+            cfcCanvas.width = 200; cfcCanvas.height = 200;
+            ctx.clearRect(0,0,200,200); ctx.fillStyle="#fff"; ctx.fillRect(0,0,200,200);
+            const w=140,h=140,ox=30,oy=30;
+            ctx.strokeRect(ox,oy,w,h);
+            ctx.fillStyle="#10b981";
+            for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) { ctx.beginPath(); ctx.arc(ox+i*w, oy+j*h, 7, 0, 2*Math.PI); ctx.fill(); }
+            ctx.beginPath(); ctx.arc(ox+w/2, oy, 7, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w/2, oy+h, 7, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox, oy+h/2, 7, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w, oy+h/2, 7, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle="#0f172a"; ctx.fillText("CFC", 80, 180);
+        }
+        const naclCanvas = document.getElementById('naclCanvas');
+        if(naclCanvas) {
+            const ctx = naclCanvas.getContext('2d');
+            naclCanvas.width = 220; naclCanvas.height = 200;
+            ctx.fillStyle="#fff"; ctx.fillRect(0,0,220,200);
+            const w=140,h=140,ox=40,oy=30;
+            ctx.strokeRect(ox,oy,w,h);
+            ctx.fillStyle="#4ecdc4";
+            for(let i=0;i<=1;i++) for(let j=0;j<=1;j++) { ctx.beginPath(); ctx.arc(ox+i*w, oy+j*h, 6, 0, 2*Math.PI); ctx.fill(); }
+            ctx.beginPath(); ctx.arc(ox+w/2, oy, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w/2, oy+h, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox, oy+h/2, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w, oy+h/2, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle="#ff6b6b";
+            ctx.beginPath(); ctx.arc(ox+w/2, oy+h/2, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w/2, oy, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w/2, oy+h, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox, oy+h/2, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.beginPath(); ctx.arc(ox+w, oy+h/2, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle="#0f172a"; ctx.fillText("NaCl (type CFC)", 60, 190);
+        }
+        const simpleCube = document.getElementById('simpleCubeCanvas');
+        if(simpleCube) {
+            const ctx = simpleCube.getContext('2d');
+            simpleCube.width = 240; simpleCube.height = 200;
+            ctx.clearRect(0,0,240,200); ctx.fillStyle="#fff"; ctx.fillRect(0,0,240,200);
+            const ox=60,oy=40,a=100,dec=40;
+            ctx.strokeRect(ox,oy,a,a);
+            ctx.strokeRect(ox+dec,oy-dec,a,a);
+            ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox+dec,oy-dec); ctx.stroke();
+            ctx.moveTo(ox+a,oy); ctx.lineTo(ox+dec+a,oy-dec); ctx.stroke();
+            ctx.moveTo(ox,oy+a); ctx.lineTo(ox+dec,oy-dec+a); ctx.stroke();
+            ctx.moveTo(ox+a,oy+a); ctx.lineTo(ox+dec+a,oy-dec+a); ctx.stroke();
+            ctx.fillStyle="#1e4a6e"; ctx.font="italic 11px sans-serif";
+            ctx.fillText("a", ox+a/2, oy+a+12); ctx.fillText("a", ox+a+12, oy+a/2);
+        }
+
+        // ---------- dessins pour l'onglet empilements ----------
+        const canvasSquare = document.getElementById('squarePacking');
+        if(canvasSquare) {
+            const ctx = canvasSquare.getContext('2d');
+            const size = 320; canvasSquare.width = size; canvasSquare.height = size;
+            const R=30, a=2*R;
+            const cols = Math.floor(size/a), rows = Math.floor(size/a);
+            ctx.fillStyle="#fff"; ctx.fillRect(0,0,size,size);
+            for(let i=0;i<=cols;i++) for(let j=0;j<=rows;j++) {
+                ctx.beginPath(); ctx.arc(i*a, j*a, R-1, 0, 2*Math.PI);
+                ctx.fillStyle="#3b82f6"; ctx.fill(); ctx.strokeStyle="#1e3a5f"; ctx.stroke();
+            }
+            ctx.beginPath(); ctx.strokeStyle="#facc15"; ctx.lineWidth=1.5;
+            for(let i=0;i<=cols;i++) { ctx.moveTo(i*a,0); ctx.lineTo(i*a,size); ctx.stroke(); ctx.moveTo(0,i*a); ctx.lineTo(size,i*a); ctx.stroke(); }
+        }
+        const canvasHex = document.getElementById('hexPacking');
+        if(canvasHex) {
+            const ctx = canvasHex.getContext('2d');
+            const size=320; canvasHex.width=size; canvasHex.height=size;
+            const R=28, a=2*R;
+            ctx.fillStyle="#fff"; ctx.fillRect(0,0,size,size);
+            for(let i=0;i<8;i++) for(let j=0;j<8;j++) {
+                let x=i*a, y=j*a*Math.sqrt(3)/2;
+                if(j%2===1) x+=a/2;
+                if(x+R>size || y+R>size) continue;
+                ctx.beginPath(); ctx.arc(x,y,R-1,0,2*Math.PI);
+                ctx.fillStyle="#f97316"; ctx.fill(); ctx.strokeStyle="#b45309"; ctx.stroke();
+            }
+        }
+        const layersCanvas = document.getElementById('abclayersCanvas');
+        if(layersCanvas) {
+            const ctx = layersCanvas.getContext('2d');
+            layersCanvas.width=300; layersCanvas.height=200;
+            ctx.fillStyle="#f8fafc"; ctx.fillRect(0,0,300,200);
+            const centers=[[70,70],[150,70],[230,70],[110,130],[190,130],[70,190],[150,190],[230,190]];
+            ctx.fillStyle="#3b82f6"; for(let i=0;i<centers.length;i+=3) { ctx.beginPath(); ctx.arc(centers[i][0],centers[i][1],12,0,2*Math.PI); ctx.fill(); }
+            ctx.fillStyle="#ef4444"; for(let i=1;i<centers.length;i+=3) { ctx.beginPath(); ctx.arc(centers[i][0],centers[i][1],12,0,2*Math.PI); ctx.fill(); }
+            ctx.fillStyle="#10b981"; for(let i=2;i<centers.length;i+=3) { ctx.beginPath(); ctx.arc(centers[i][0],centers[i][1],12,0,2*Math.PI); ctx.fill(); }
+            ctx.fillStyle="#0f172a"; ctx.font="bold 11px 'Segoe UI'"; ctx.fillText("Couches A (bleu), B (rouge), C (vert)", 30, 175); ctx.fillText("→ empilement ABC = CFC", 30, 192);
+        }
+        const cavCanvas = document.getElementById('cavaliereCanvas');
+        if(cavCanvas) {
+            const ctx = cavCanvas.getContext('2d');
+            cavCanvas.width=280; cavCanvas.height=240;
+            ctx.fillStyle="#fff"; ctx.fillRect(0,0,280,240);
+            const a=100, ox=60, oy=100, dx=55, dy=-35;
+            ctx.strokeStyle="#1e4a6e"; ctx.lineWidth=2;
+            ctx.strokeRect(ox,oy,a,a); ctx.strokeRect(ox+dx,oy+dy,a,a);
+            ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox+dx,oy+dy); ctx.stroke();
+            ctx.moveTo(ox+a,oy); ctx.lineTo(ox+dx+a,oy+dy); ctx.stroke();
+            ctx.moveTo(ox,oy+a); ctx.lineTo(ox+dx,oy+dy+a); ctx.stroke();
+            ctx.moveTo(ox+a,oy+a); ctx.lineTo(ox+dx+a,oy+dy+a); ctx.stroke();
+            ctx.fillStyle="#2c3e50"; ctx.font="italic 12px sans-serif";
+            ctx.fillText("a", ox+a/2, oy+a+12); ctx.fillText("a", ox+a+12, oy+a/2); ctx.fillText("a", ox+dx+a/2-5, oy+dy-8);
+        }
+    })();
+
+    // Gestion des onglets
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            panes.forEach(pane => pane.classList.remove('active-pane'));
+            document.getElementById(tabId).classList.add('active-pane');
+            if(window.MathJax) MathJax.typesetPromise();
+        });
+    });
+    if(window.MathJax) MathJax.typesetPromise();
+
+    // Modale copyright
+    const modal = document.getElementById('copyrightModal');
+    const openBtn = document.getElementById('copyrightModalBtn');
+    const closeSpan = modal.querySelector('.close-modal');
+    if (openBtn) openBtn.onclick = () => modal.style.display = 'flex';
+    if (closeSpan) closeSpan.onclick = () => modal.style.display = 'none';
+    window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+</script>
+</body>
+</html>

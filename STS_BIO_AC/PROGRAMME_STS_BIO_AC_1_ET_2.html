@@ -55,7 +55,7 @@
             background: #f1f5f9;
             padding: 0.75rem 1.5rem;
             border-radius: 60px;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
             font-size: 0.95rem;
             align-items: center;
         }
@@ -102,6 +102,57 @@
 
         .btn-reset:hover {
             background: #cbd5e1;
+        }
+
+        /* ---------- JSON TOOLBAR ---------- */
+        .json-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            align-items: center;
+            background: #f8fafc;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .json-toolbar button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        .json-toolbar button:hover {
+            background: #e9edf2;
+            border-color: #94a3b8;
+        }
+
+        .json-toolbar .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .json-toolbar .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .json-status {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-left: 0.5rem;
         }
 
         /* ---------- ANNÉES ---------- */
@@ -283,6 +334,19 @@
             .module {
                 padding: 1rem 1rem;
             }
+            .json-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                border-radius: 20px;
+                padding: 0.8rem 1rem;
+            }
+            .json-toolbar .file-input-wrapper {
+                width: 100%;
+            }
+            .json-toolbar button {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -297,6 +361,16 @@
             <span class="legend-item"><span class="dot red"></span> Non traitée</span>
             <span class="legend-item"><span class="dot gray"></span> Indéterminé (par défaut)</span>
             <button class="btn-reset" id="resetAll">Réinitialiser tout</button>
+        </div>
+
+        <!-- BARRE D'OUTILS JSON -->
+        <div class="json-toolbar">
+            <button id="exportJson">📤 Exporter le JSON</button>
+            <span class="file-input-wrapper">
+                <button>📥 Importer un JSON</button>
+                <input type="file" id="importJsonInput" accept=".json">
+            </span>
+            <span id="jsonStatus" class="json-status">✅ Sauvegarde automatique</span>
         </div>
 
         <!-- 1ÈRE ANNÉE -->
@@ -566,6 +640,8 @@
 
             function saveState(state) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                // Mettre à jour le statut
+                document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
             }
 
             function applyState(state) {
@@ -617,17 +693,84 @@
                 }
                 saveState(state);
                 applyState(state);
+                document.getElementById('jsonStatus').textContent = '🔄 Réinitialisé';
             }
 
+            // --- Export JSON ---
+            function exportJson() {
+                const state = loadState();
+                const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'bts_math_suivi.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                document.getElementById('jsonStatus').textContent = '📤 Export effectué';
+                setTimeout(() => {
+                    document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+                }, 2000);
+            }
+
+            // --- Import JSON ---
+            function importJson(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        // Vérifier que c'est bien un objet plat
+                        if (typeof imported === 'object' && imported !== null) {
+                            // On ne conserve que les clés existantes dans le DOM
+                            const currentKeys = Object.keys(getDefaultState());
+                            const validState = {};
+                            currentKeys.forEach(key => {
+                                validState[key] = (imported[key] && (imported[key] === 'green' || imported[
+                                key] === 'red')) ? imported[key] : 'none';
+                            });
+                            saveState(validState);
+                            applyState(validState);
+                            document.getElementById('jsonStatus').textContent = '✅ Import réussi';
+                            setTimeout(() => {
+                                document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+                            }, 2000);
+                        } else {
+                            throw new Error('Format JSON invalide');
+                        }
+                    } catch (err) {
+                        document.getElementById('jsonStatus').textContent = '❌ Erreur lors de l\'import';
+                        setTimeout(() => {
+                            document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+                        }, 2000);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            // --- Initialisation ---
             function init() {
                 const state = loadState();
                 applyState(state);
 
+                // Gestion des clics sur les cases
                 document.querySelectorAll('.notion-check').forEach(check => {
                     check.addEventListener('click', handleCheckClick);
                 });
 
+                // Réinitialisation
                 document.getElementById('resetAll').addEventListener('click', resetAll);
+
+                // Export
+                document.getElementById('exportJson').addEventListener('click', exportJson);
+
+                // Import
+                document.getElementById('importJsonInput').addEventListener('change', function(e) {
+                    if (this.files.length > 0) {
+                        importJson(this.files[0]);
+                        this.value = ''; // Réinitialiser pour permettre le même fichier
+                    }
+                });
             }
 
             if (document.readyState === 'loading') {

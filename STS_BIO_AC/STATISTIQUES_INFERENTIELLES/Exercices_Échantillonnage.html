@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercices - Échantillonnage (STS BIO-AC 2e année)</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['$$', '$$']]
+            },
+            svg: { fontCache: 'global' },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    if (window.initExercises) initExercises();
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #dbeafe;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 2rem 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+        }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 0.5rem; }
+        .student-info {
+            display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;
+            background: #f1f5f9; padding: 1rem 1.5rem; border-radius: 0.5rem; align-items: center;
+        }
+        .student-info label { font-weight: 600; }
+        .student-info input { padding: 0.4rem; border: 1px solid var(--border); border-radius: 0.3rem; }
+        .exercise {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .exercise h3 { color: var(--primary); margin-bottom: 1rem; }
+        .question { margin: 1rem 0; }
+        .question p { margin-bottom: 0.4rem; }
+        .answer-area { margin: 0.5rem 0 0.5rem 1.5rem; }
+        .answer-area input[type="number"] {
+            width: 120px; padding: 0.3rem; border: 1px solid #cbd5e1; border-radius: 0.3rem;
+        }
+        .answer-area select { padding: 0.3rem; }
+        .btn {
+            background: var(--primary); color: white; border: none; padding: 0.5rem 1.2rem;
+            border-radius: 0.4rem; cursor: pointer; font-weight: 600; margin-top: 0.5rem;
+        }
+        .btn:hover { background: #1e3a8a; }
+        .btn-repeat {
+            background: #ffffff; color: var(--primary); border: 2px solid var(--primary);
+            padding: 0.3rem 0.8rem; border-radius: 0.4rem; font-weight: 600; margin-left: 0.5rem;
+        }
+        .feedback {
+            margin-top: 1rem; padding: 0.8rem; border-radius: 0.5rem;
+            background: #f8fafc; border-left: 4px solid var(--primary);
+        }
+        .history { margin-top: 1rem; font-size: 0.9rem; }
+        .history table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+        .history th, .history td { border: 1px solid #cbd5e1; padding: 0.4rem; text-align: center; }
+        .history th { background: #f1f5f9; }
+        .score-good { color: var(--success); font-weight: bold; }
+        .score-bad { color: var(--danger); font-weight: bold; }
+        canvas.evol-graph { display: block; margin: 0.5rem 0; }
+        .download-area { text-align: center; margin-top: 2rem; }
+        hr { margin: 2rem 0; }
+        .explanation {
+            margin-top: 1rem;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .explanation h4 { margin: 0 0 0.5rem; color: var(--primary); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 Exercices : Échantillonnage</h1>
+    <p style="text-align:center;">STS BIO-AC 2ᵉ année – Distributions d’échantillonnage, TCL, proportions</p>
+
+    <div class="student-info">
+        <label>Nom : <input type="text" id="nom" placeholder="Dupont"></label>
+        <label>Prénom : <input type="text" id="prenom" placeholder="Jean"></label>
+        <span style="margin-left:auto; font-size:0.85rem; color:#475569;">Réponses enregistrées localement. Fichier JSON téléchargeable.</span>
+    </div>
+
+    <!-- Exercice 1 -->
+    <div class="exercise" id="ex1">
+        <h3>Exercice 1 – Distribution d’échantillonnage de la moyenne</h3>
+        <div class="question">
+            <p>Une population a pour moyenne \(\mu =\) <span id="ex1_mu"></span> et pour écart-type \(\sigma =\) <span id="ex1_sigma"></span>. On prélève un échantillon aléatoire simple de taille \(n =\) <span id="ex1_n"></span>.</p>
+            <p><strong>1a.</strong> Quelle est l’espérance de la moyenne d’échantillon \(\bar{X}\) ?</p>
+            <div class="answer-area"><label>\(\mathbb{E}(\bar{X}) = \) <input type="number" id="ex1a" step="any"></label></div>
+            <p><strong>1b.</strong> Quel est l’écart-type de \(\bar{X}\) (erreur standard) ?</p>
+            <div class="answer-area"><label>\(\sigma_{\bar{X}} = \) <input type="number" id="ex1b" step="any"></label></div>
+        </div>
+        <button class="btn" onclick="validateExercise('ex1')">✔ Valider</button>
+        <button class="btn-repeat" onclick="repeatExercise('ex1')">🔄 Nouvelle version</button>
+        <div id="ex1-feedback" class="feedback" style="display:none;"></div>
+        <div id="ex1-history" class="history" style="display:none;"></div>
+    </div>
+
+    <!-- Exercice 2 -->
+    <div class="exercise" id="ex2">
+        <h3>Exercice 2 – Théorème central limite (TCL)</h3>
+        <div class="question">
+            <p>On prélève un échantillon de taille \(n =\) <span id="ex2_n"></span> d’une population de loi quelconque, de moyenne \(\mu =\) <span id="ex2_mu"></span> et d’écart-type \(\sigma =\) <span id="ex2_sigma"></span>.</p>
+            <p><strong>2a.</strong> Selon le TCL, la loi de \(\bar{X}\) est approximativement normale. Quels sont ses paramètres ?</p>
+            <div class="answer-area">
+                <label>\(\mu_{\bar{X}} = \) <input type="number" id="ex2a_mu" step="any"></label>
+                <label style="margin-left:1rem;">\(\sigma_{\bar{X}} = \) <input type="number" id="ex2a_sigma" step="any"></label>
+            </div>
+            <p><strong>2b.</strong> On s’intéresse à la probabilité que la moyenne d’échantillon dépasse la valeur seuil \(x_0 =\) <span id="ex2_threshold"></span>. Calculez \(P(\bar{X} > x_0)\). (Arrondir à 4 décimales)</p>
+            <div class="answer-area"><label>Probabilité \(\approx\) <input type="number" id="ex2b" step="0.0001"></label></div>
+        </div>
+        <button class="btn" onclick="validateExercise('ex2')">✔ Valider</button>
+        <button class="btn-repeat" onclick="repeatExercise('ex2')">🔄 Nouvelle version</button>
+        <div id="ex2-feedback" class="feedback" style="display:none;"></div>
+        <div id="ex2-history" class="history" style="display:none;"></div>
+    </div>
+
+    <!-- Exercice 3 -->
+    <div class="exercise" id="ex3">
+        <h3>Exercice 3 – Distribution d’échantillonnage d’une proportion</h3>
+        <div class="question">
+            <p>Dans une population, la proportion d’individus possédant un caractère est \(p =\) <span id="ex3_p"></span>. On tire un échantillon de taille \(n =\) <span id="ex3_n"></span>.</p>
+            <p><strong>3a.</strong> Donnez l’espérance et l’écart-type de la proportion empirique \(\hat{p}\).</p>
+            <div class="answer-area">
+                <label>\(\mathbb{E}(\hat{p}) = \) <input type="number" id="ex3a_mu" step="any"></label>
+                <label style="margin-left:1rem;">\(\sigma_{\hat{p}} = \) <input type="number" id="ex3a_sigma" step="any"></label>
+            </div>
+            <p><strong>3b.</strong> Les conditions d’approximation par la loi normale sont-elles vérifiées ?</p>
+            <div class="answer-area">
+                <select id="ex3b">
+                    <option value="">-- Choisir --</option>
+                    <option value="oui">Oui, car \(n p \ge 5\) et \(n(1-p) \ge 5\)</option>
+                    <option value="non">Non, l’échantillon est trop petit</option>
+                </select>
+            </div>
+            <p><strong>3c.</strong> On donne les bornes \(a =\) <span id="ex3_a"></span> et \(b =\) <span id="ex3_b"></span>. En utilisant l’approximation normale, calculez \(P(a \le \hat{p} \le b)\). (Arrondir à 4 décimales)</p>
+            <div class="answer-area"><label>Probabilité \(\approx\) <input type="number" id="ex3c" step="0.0001"></label></div>
+        </div>
+        <button class="btn" onclick="validateExercise('ex3')">✔ Valider</button>
+        <button class="btn-repeat" onclick="repeatExercise('ex3')">🔄 Nouvelle version</button>
+        <div id="ex3-feedback" class="feedback" style="display:none;"></div>
+        <div id="ex3-history" class="history" style="display:none;"></div>
+    </div>
+
+    <!-- Exercice 4 -->
+    <div class="exercise" id="ex4">
+        <h3>Exercice 4 – Intervalle de confiance pour une moyenne (\(\sigma\) connu)</h3>
+        <div class="question">
+            <p>On mesure la glycémie (mg/dL) chez <span id="ex4_n"></span> patients. La moyenne observée est \(\bar{x} =\) <span id="ex4_xbar"></span>, l’écart-type populationnel est connu \(\sigma =\) <span id="ex4_sigma"></span>.</p>
+            <p><strong>4a.</strong> Déterminez l’intervalle de confiance à 95 % pour la moyenne vraie \(\mu\). (Arrondir à une décimale)</p>
+            <div class="answer-area">
+                <label>Borne inférieure : <input type="number" id="ex4a_low" step="0.1"></label>
+                <label style="margin-left:1rem;">Borne supérieure : <input type="number" id="ex4a_high" step="0.1"></label>
+            </div>
+            <p><strong>4b.</strong> Interprétation correcte de l’IC à 95 % :</p>
+            <div class="answer-area">
+                <select id="ex4b">
+                    <option value="">-- Choisir --</option>
+                    <option value="A">A. Il y a 95 % de chances que \(\mu\) appartienne à cet intervalle.</option>
+                    <option value="B">B. Si l’on répète l’expérience, 95 % des intervalles calculés contiendront \(\mu\).</option>
+                    <option value="C">C. 95 % des valeurs individuelles sont dans l’intervalle.</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn" onclick="validateExercise('ex4')">✔ Valider</button>
+        <button class="btn-repeat" onclick="repeatExercise('ex4')">🔄 Nouvelle version</button>
+        <div id="ex4-feedback" class="feedback" style="display:none;"></div>
+        <div id="ex4-history" class="history" style="display:none;"></div>
+    </div>
+
+    <!-- Exercice 5 -->
+    <div class="exercise" id="ex5">
+        <h3>Exercice 5 – Simulation et TCL</h3>
+        <div class="question">
+            <p>On simule 1000 échantillons de taille \(n =\) <span id="ex5_n"></span> issus d’une loi exponentielle de moyenne \(\mu =\) <span id="ex5_mu"></span> (donc \(\sigma =\) <span id="ex5_mu2"></span>).<br>
+            La moyenne des 1000 moyennes observées est \(\bar{\bar{x}} =\) <span id="ex5_obs_mu"></span> et leur écart-type est \(s_{\bar{x}} =\) <span id="ex5_obs_sigma"></span>.</p>
+            <p><strong>5a.</strong> Calculez l’écart-type théorique de la distribution d’échantillonnage de la moyenne. (Arrondir à 3 décimales)</p>
+            <div class="answer-area"><label>\(\sigma_{\bar{X}} = \dfrac{\sigma}{\sqrt{n}} = \) <input type="number" id="ex5a" step="0.001"></label></div>
+            <p><strong>5b.</strong> Les résultats simulés sont-ils cohérents avec la théorie ?</p>
+            <div class="answer-area">
+                <select id="ex5b">
+                    <option value="">-- Choisir --</option>
+                    <option value="oui">Oui, l'écart-type observé est proche de la valeur théorique</option>
+                    <option value="non">Non, la moyenne observée devrait être exactement \(\mu\)</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn" onclick="validateExercise('ex5')">✔ Valider</button>
+        <button class="btn-repeat" onclick="repeatExercise('ex5')">🔄 Nouvelle version</button>
+        <div id="ex5-feedback" class="feedback" style="display:none;"></div>
+        <div id="ex5-history" class="history" style="display:none;"></div>
+    </div>
+
+    <hr>
+    <div class="download-area">
+        <p>Téléchargez le fichier de toutes vos réponses (format JSON).</p>
+        <button class="btn" onclick="downloadJSON()">📥 Télécharger le fichier de réponses</button>
+        <p style="font-size:0.85rem; color:#475569;">Le fichier sera nommé <em>NOM_Prénom_AAAA-MM-JJ_HHhMMmSSs.json</em></p>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Utilitaires mathématiques
+    function erf(x) {
+        const sign = x >= 0 ? 1 : -1;
+        x = Math.abs(x);
+        const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027;
+        const a5 = 1.061405429, p = 0.3275911;
+        const t = 1.0 / (1.0 + p * x);
+        const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+        return sign * y;
+    }
+    function phi(x) { return 0.5 * (1 + erf(x / Math.sqrt(2))); }
+
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function randFloat(min, max, decimals = 0) {
+        const val = Math.random() * (max - min) + min;
+        return decimals > 0 ? +val.toFixed(decimals) : val;
+    }
+
+    const allAttempts = [];
+    const currentParams = {};
+
+    function typesetElement(element) {
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise([element]);
+        }
+    }
+
+    function generateEx1() {
+        const mu = randInt(20, 100);
+        const sigma = randInt(5, 20);
+        const n = randInt(10, 50);
+        document.getElementById('ex1_mu').textContent = mu;
+        document.getElementById('ex1_sigma').textContent = sigma;
+        document.getElementById('ex1_n').textContent = n;
+        currentParams['ex1'] = { mu, sigma, n };
+        clearInputs('ex1');
+    }
+    function generateEx2() {
+        const mu = randInt(50, 200);
+        const sigma = randInt(10, 30);
+        const n = randInt(30, 100);
+        const sem = sigma / Math.sqrt(n);
+        const k = randFloat(1.2, 2.5, 1);
+        const threshold = +(mu + k * sem).toFixed(1);
+        document.getElementById('ex2_mu').textContent = mu;
+        document.getElementById('ex2_sigma').textContent = sigma;
+        document.getElementById('ex2_n').textContent = n;
+        document.getElementById('ex2_threshold').textContent = threshold;
+        currentParams['ex2'] = { mu, sigma, n, threshold };
+        clearInputs('ex2');
+    }
+    function generateEx3() {
+        const p = randFloat(0.1, 0.4, 2);
+        const n = randInt(50, 200);
+        const sem = Math.sqrt(p * (1 - p) / n);
+        const z = randFloat(1.0, 1.5, 1);
+        const a = +(p - z * sem).toFixed(3);
+        const b = +(p + z * sem).toFixed(3);
+        document.getElementById('ex3_p').textContent = p.toFixed(2);
+        document.getElementById('ex3_n').textContent = n;
+        document.getElementById('ex3_a').textContent = a;
+        document.getElementById('ex3_b').textContent = b;
+        currentParams['ex3'] = { p, n, a, b };
+        clearInputs('ex3');
+    }
+    function generateEx4() {
+        const xbar = randInt(100, 200);
+        const sigma = randInt(10, 30);
+        const n = randInt(20, 60);
+        document.getElementById('ex4_xbar').textContent = xbar;
+        document.getElementById('ex4_sigma').textContent = sigma;
+        document.getElementById('ex4_n').textContent = n;
+        currentParams['ex4'] = { xbar, sigma, n };
+        clearInputs('ex4');
+    }
+    function generateEx5() {
+        const mu = randInt(1, 5);
+        const n = randInt(20, 50);
+        const theo = mu / Math.sqrt(n);
+        const obs_mu = +(mu + randFloat(-0.15, 0.15, 2)).toFixed(2);
+        const obs_sigma = +(theo + randFloat(-0.04, 0.04, 3)).toFixed(3);
+        document.getElementById('ex5_mu').textContent = mu;
+        document.getElementById('ex5_mu2').textContent = mu;
+        document.getElementById('ex5_n').textContent = n;
+        document.getElementById('ex5_obs_mu').textContent = obs_mu;
+        document.getElementById('ex5_obs_sigma').textContent = obs_sigma;
+        currentParams['ex5'] = { mu, n, theo, obs_mu, obs_sigma };
+        clearInputs('ex5');
+    }
+
+    function clearInputs(exId) {
+        const exDiv = document.getElementById(exId);
+        exDiv.querySelectorAll('input[type="number"]').forEach(inp => inp.value = '');
+        exDiv.querySelectorAll('select').forEach(sel => sel.value = '');
+        document.getElementById(exId+'-feedback').style.display = 'none';
+        document.getElementById(exId+'-history').style.display = 'none';
+    }
+
+    window.initExercises = function() {
+        generateEx1(); generateEx2(); generateEx3(); generateEx4(); generateEx5();
+    };
+    if (window.MathJax && MathJax.startup && MathJax.startup.outputReady) initExercises();
+
+    window.repeatExercise = function(exId) {
+        switch(exId) {
+            case 'ex1': generateEx1(); break;
+            case 'ex2': generateEx2(); break;
+            case 'ex3': generateEx3(); break;
+            case 'ex4': generateEx4(); break;
+            case 'ex5': generateEx5(); break;
+        }
+    };
+
+    function getAnswers(exId) {
+        const ans = {};
+        const exDiv = document.getElementById(exId);
+        exDiv.querySelectorAll('input[type="number"]').forEach(inp => {
+            ans[inp.id] = inp.value.trim() === '' ? null : parseFloat(inp.value);
+        });
+        exDiv.querySelectorAll('select').forEach(sel => { ans[sel.id] = sel.value; });
+        return ans;
+    }
+
+    // Corrections avec formules LaTeX correctement échappées (double backslash)
+    function correctEx1(params, answers) {
+        const correct = {
+            ex1a: params.mu,
+            ex1b: +(params.sigma / Math.sqrt(params.n)).toFixed(4)
+        };
+        const tol = 0.01;
+        const ok1 = answers.ex1a !== null && Math.abs(answers.ex1a - correct.ex1a) < tol;
+        const ok2 = answers.ex1b !== null && Math.abs(answers.ex1b - correct.ex1b) < tol;
+        const score = (ok1 ? 0.5 : 0) + (ok2 ? 0.5 : 0);
+        const details = {
+            '1a': { reponse: answers.ex1a, correct: correct.ex1a, ok: ok1 },
+            '1b': { reponse: answers.ex1b, correct: correct.ex1b, ok: ok2 }
+        };
+        const explanation = `
+            <div class="explanation">
+                <h4>📘 Rappel et explication</h4>
+                <p><strong>Propriété fondamentale :</strong> Pour un échantillon aléatoire simple, l’espérance de la moyenne empirique est égale à la moyenne de la population : \\(\\mathbb{E}(\\bar{X}) = \\mu\\).</p>
+                <p>L’écart‑type de la moyenne (appelé <em>erreur standard</em>) est donné par \\(\\sigma_{\\bar{X}} = \\dfrac{\\sigma}{\\sqrt{n}}\\).</p>
+                <p><strong>Application :</strong> \\(\\mu = ${params.mu}\\), \\(\\sigma = ${params.sigma}\\), \\(n = ${params.n}\\).</p>
+                <ul>
+                    <li>\\(\\mathbb{E}(\\bar{X}) = ${params.mu}\\)</li>
+                    <li>\\(\\sigma_{\\bar{X}} = \\dfrac{${params.sigma}}{\\sqrt{${params.n}}} = ${correct.ex1b}\\)</li>
+                </ul>
+            </div>`;
+        return { score, details, maxScore: 1, explanation };
+    }
+
+    function correctEx2(params, answers) {
+        const sem = +(params.sigma / Math.sqrt(params.n)).toFixed(4);
+        const correct = {
+            ex2a_mu: params.mu,
+            ex2a_sigma: sem,
+            ex2b: +(1 - phi((params.threshold - params.mu) / sem)).toFixed(4)
+        };
+        const tol = 0.015;
+        const okMu = answers.ex2a_mu !== null && Math.abs(answers.ex2a_mu - correct.ex2a_mu) < tol;
+        const okSigma = answers.ex2a_sigma !== null && Math.abs(answers.ex2a_sigma - correct.ex2a_sigma) < tol;
+        const okProb = answers.ex2b !== null && Math.abs(answers.ex2b - correct.ex2b) < 0.001;
+        const score = (okMu ? 0.3 : 0) + (okSigma ? 0.3 : 0) + (okProb ? 0.4 : 0);
+        const details = {
+            '2a_mu': { reponse: answers.ex2a_mu, correct: correct.ex2a_mu, ok: okMu },
+            '2a_sigma': { reponse: answers.ex2a_sigma, correct: correct.ex2a_sigma, ok: okSigma },
+            '2b': { reponse: answers.ex2b, correct: correct.ex2b, ok: okProb }
+        };
+        const z = ((params.threshold - params.mu) / sem).toFixed(2);
+        const explanation = `
+            <div class="explanation">
+                <h4>📘 Rappel et explication</h4>
+                <p><strong>Théorème central limite (TCL) :</strong> pour \\(n\\) suffisamment grand, \\(\\bar{X}\\) suit approximativement une loi normale \\(\\mathcal{N}(\\mu_{\\bar{X}} = \\mu,\\; \\sigma_{\\bar{X}} = \\sigma/\\sqrt{n})\\).</p>
+                <p>Ici : \\(\\mu = ${params.mu}\\), \\(\\sigma = ${params.sigma}\\), \\(n = ${params.n}\\).</p>
+                <ul>
+                    <li>\\(\\mu_{\\bar{X}} = ${params.mu}\\)</li>
+                    <li>\\(\\sigma_{\\bar{X}} = \\dfrac{${params.sigma}}{\\sqrt{${params.n}}} = ${sem}\\)</li>
+                </ul>
+                <p><strong>Probabilité :</strong> \\(P(\\bar{X} > ${params.threshold}) = P\\!\\left(Z > \\dfrac{${params.threshold} - ${params.mu}}{${sem}}\\right) = P(Z > ${z})\\) où \\(Z \\sim \\mathcal{N}(0,1)\\).</p>
+                <p>En utilisant la table ou la calculatrice : \\(P(Z > ${z}) \\approx ${correct.ex2b}\\).</p>
+            </div>`;
+        return { score, details, maxScore: 1, explanation };
+    }
+
+    function correctEx3(params, answers) {
+        const sem = +Math.sqrt(params.p * (1 - params.p) / params.n).toFixed(4);
+        const correct = {
+            ex3a_mu: +params.p.toFixed(2),
+            ex3a_sigma: sem,
+            ex3b: 'oui',
+            ex3c: +(2 * phi((params.b - params.p) / sem) - 1).toFixed(4)
+        };
+        const tol = 0.005;
+        const okMu = answers.ex3a_mu !== null && Math.abs(answers.ex3a_mu - correct.ex3a_mu) < tol;
+        const okSigma = answers.ex3a_sigma !== null && Math.abs(answers.ex3a_sigma - correct.ex3a_sigma) < 0.001;
+        const okCond = answers.ex3b === correct.ex3b;
+        const okProb = answers.ex3c !== null && Math.abs(answers.ex3c - correct.ex3c) < 0.002;
+        const score = (okMu ? 0.2 : 0) + (okSigma ? 0.2 : 0) + (okCond ? 0.2 : 0) + (okProb ? 0.4 : 0);
+        const details = {
+            '3a_mu': { reponse: answers.ex3a_mu, correct: correct.ex3a_mu, ok: okMu },
+            '3a_sigma': { reponse: answers.ex3a_sigma, correct: correct.ex3a_sigma, ok: okSigma },
+            '3b': { reponse: answers.ex3b, correct: correct.ex3b, ok: okCond },
+            '3c': { reponse: answers.ex3c, correct: correct.ex3c, ok: okProb }
+        };
+        const np = (params.n * params.p).toFixed(1);
+        const nq = (params.n * (1 - params.p)).toFixed(1);
+        const z1 = ((params.a - params.p) / sem).toFixed(2);
+        const z2 = ((params.b - params.p) / sem).toFixed(2);
+        const explanation = `
+            <div class="explanation">
+                <h4>📘 Rappel et explication</h4>
+                <p><strong>Proportion empirique :</strong> \\(\\hat{p} = X/n\\) où \\(X \\sim \\mathcal{B}(n,p)\\).</p>
+                <p>\\(\\mathbb{E}(\\hat{p}) = p\\), \\(\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{p(1-p)}{n}}\\).</p>
+                <p>Ici : \\(p = ${params.p.toFixed(2)}\\), \\(n = ${params.n}\\) ⇒ \\(np = ${np} \\ge 5\\), \\(n(1-p) = ${nq} \\ge 5\\) → conditions d’approximation normale vérifiées.</p>
+                <ul>
+                    <li>\\(\\mathbb{E}(\\hat{p}) = ${correct.ex3a_mu}\\)</li>
+                    <li>\\(\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{${params.p.toFixed(2)}\\times${(1-params.p).toFixed(2)}}{${params.n}}} = ${sem}\\)</li>
+                </ul>
+                <p><strong>Probabilité :</strong> \\(P(${params.a} \\le \\hat{p} \\le ${params.b}) = P\\!\\left(\\dfrac{${params.a}-${params.p.toFixed(2)}}{${sem}} \\le Z \\le \\dfrac{${params.b}-${params.p.toFixed(2)}}{${sem}}\\right) = P(${z1} \\le Z \\le ${z2})\\).</p>
+                <p>D'après la table normale, cette probabilité vaut environ ${correct.ex3c}.</p>
+            </div>`;
+        return { score, details, maxScore: 1, explanation };
+    }
+
+    function correctEx4(params, answers) {
+        const sem = +(params.sigma / Math.sqrt(params.n)).toFixed(4);
+        const z95 = 1.96;
+        const low = +(params.xbar - z95 * sem).toFixed(1);
+        const high = +(params.xbar + z95 * sem).toFixed(1);
+        const correct = { ex4a_low: low, ex4a_high: high, ex4b: 'B' };
+        const tol = 0.2;
+        const okLow = answers.ex4a_low !== null && Math.abs(answers.ex4a_low - correct.ex4a_low) < tol;
+        const okHigh = answers.ex4a_high !== null && Math.abs(answers.ex4a_high - correct.ex4a_high) < tol;
+        const okInterp = answers.ex4b === correct.ex4b;
+        const score = (okLow ? 0.3 : 0) + (okHigh ? 0.3 : 0) + (okInterp ? 0.4 : 0);
+        const details = {
+            '4a_low': { reponse: answers.ex4a_low, correct: correct.ex4a_low, ok: okLow },
+            '4a_high': { reponse: answers.ex4a_high, correct: correct.ex4a_high, ok: okHigh },
+            '4b': { reponse: answers.ex4b, correct: correct.ex4b, ok: okInterp }
+        };
+        const explanation = `
+            <div class="explanation">
+                <h4>📘 Rappel et explication</h4>
+                <p><strong>Intervalle de confiance pour \\(\\mu\\) quand \\(\\sigma\\) est connu :</strong></p>
+                <p>\\[ \\bar{x} \\pm z_{\\alpha/2} \\cdot \\frac{\\sigma}{\\sqrt{n}} \\]</p>
+                <p>Pour un niveau de confiance de 95 %, \\(z_{\\alpha/2} = 1{,}96\\).</p>
+                <p>Ici : \\(\\bar{x} = ${params.xbar}\\), \\(\\sigma = ${params.sigma}\\), \\(n = ${params.n}\\).</p>
+                <p>Erreur standard : \\(\\sigma/\\sqrt{n} = ${sem}\\). Marge d’erreur : \\(1{,}96 \\times ${sem} = ${(1.96*sem).toFixed(1)}\\).</p>
+                <p>Borne inférieure : ${params.xbar} - ${(1.96*sem).toFixed(1)} = ${correct.ex4a_low}</p>
+                <p>Borne supérieure : ${params.xbar} + ${(1.96*sem).toFixed(1)} = ${correct.ex4a_high}</p>
+                <p><strong>Interprétation correcte :</strong> L’intervalle de confiance à 95 % signifie que si l’on répétait l’expérience un grand nombre de fois, environ 95 % des intervalles ainsi construits contiendraient la vraie moyenne \\(\\mu\\). Ce n’est pas une probabilité sur \\(\\mu\\) elle-même (option B).</p>
+            </div>`;
+        return { score, details, maxScore: 1, explanation };
+    }
+
+    function correctEx5(params, answers) {
+        const theo = +params.theo.toFixed(3);
+        const correct = { ex5a: theo, ex5b: 'oui' };
+        const okTheo = answers.ex5a !== null && Math.abs(answers.ex5a - correct.ex5a) < 0.005;
+        const okCoh = answers.ex5b === correct.ex5b;
+        const score = (okTheo ? 0.5 : 0) + (okCoh ? 0.5 : 0);
+        const details = {
+            '5a': { reponse: answers.ex5a, correct: correct.ex5a, ok: okTheo },
+            '5b': { reponse: answers.ex5b, correct: correct.ex5b, ok: okCoh }
+        };
+        const explanation = `
+            <div class="explanation">
+                <h4>📘 Rappel et explication</h4>
+                <p><strong>Écart-type théorique de la distribution d’échantillonnage :</strong> \\(\\sigma_{\\bar{X}} = \\dfrac{\\sigma}{\\sqrt{n}}\\).</p>
+                <p>Pour une loi exponentielle, \\(\\sigma = \\mu\\) car l’écart-type est égal à la moyenne.</p>
+                <p>Ici : \\(\\mu = ${params.mu}\\), donc \\(\\sigma = ${params.mu}\\) et \\(n = ${params.n}\\).</p>
+                <p>\\(\\sigma_{\\bar{X}} = \\dfrac{${params.mu}}{\\sqrt{${params.n}}} = ${theo}\\).</p>
+                <p>L’écart-type observé sur les 1000 simulations est \\(s_{\\bar{x}} = ${params.obs_sigma}\\), très proche de la valeur théorique. La légère différence est due aux fluctuations d’échantillonnage. La simulation est donc cohérente avec le TCL.</p>
+            </div>`;
+        return { score, details, maxScore: 1, explanation };
+    }
+
+    window.validateExercise = function(exId) {
+        const params = currentParams[exId];
+        if (!params) return;
+        const answers = getAnswers(exId);
+        let correction;
+        switch(exId) {
+            case 'ex1': correction = correctEx1(params, answers); break;
+            case 'ex2': correction = correctEx2(params, answers); break;
+            case 'ex3': correction = correctEx3(params, answers); break;
+            case 'ex4': correction = correctEx4(params, answers); break;
+            case 'ex5': correction = correctEx5(params, answers); break;
+            default: return;
+        }
+        const timestamp = new Date().toISOString();
+        const attempt = {
+            exercise: exId,
+            timestamp,
+            params,
+            answers,
+            score: correction.score,
+            details: correction.details,
+            explanation: correction.explanation
+        };
+        allAttempts.push(attempt);
+        const exAttempts = allAttempts.filter(a => a.exercise === exId);
+        const idx = exAttempts.length - 1;
+        showFeedback(exId, correction, idx);
+        showHistory(exId);
+    };
+
+    function showFeedback(exId, correction, attemptIndex) {
+        const fbDiv = document.getElementById(exId + '-feedback');
+        const details = correction.details;
+        let html = `<strong>📋 Bilan de la tentative n°${attemptIndex+1}</strong><br>`;
+        html += `<span class="${correction.score===1?'score-good':'score-bad'}">Score : ${(correction.score*100).toFixed(0)}%</span><br>`;
+        for (let key in details) {
+            const d = details[key];
+            const icon = d.ok ? '✅' : '❌';
+            html += `${icon} <strong>${key}</strong> : votre réponse = ${d.reponse ?? 'vide'} | attendu = ${d.correct} ${d.ok ? '' : '(incorrect)'}<br>`;
+        }
+        html += correction.explanation;
+        fbDiv.innerHTML = html;
+        fbDiv.style.display = 'block';
+        typesetElement(fbDiv);
+    }
+
+    function showHistory(exId) {
+        const histDiv = document.getElementById(exId + '-history');
+        const attempts = allAttempts.filter(a => a.exercise === exId);
+        if (attempts.length <= 1) {
+            histDiv.style.display = 'none';
+            return;
+        }
+        histDiv.style.display = 'block';
+        let html = '<strong>📈 Évolution des scores</strong>';
+        html += '<table><tr><th>Tentative</th><th>Date</th><th>Score</th></tr>';
+        attempts.forEach((att, idx) => {
+            const date = new Date(att.timestamp);
+            const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            html += `<tr><td>${idx+1}</td><td>${timeStr}</td><td>${(att.score*100).toFixed(0)}%</td></tr>`;
+        });
+        html += '</table>';
+        html += '<canvas class="evol-graph" id="' + exId + '-canvas" width="300" height="80"></canvas>';
+        histDiv.innerHTML = html;
+        const canvas = document.getElementById(exId + '-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            if (attempts.length < 2) return;
+            const scores = attempts.map(a => a.score);
+            const barWidth = (w - 40) / scores.length;
+            ctx.fillStyle = '#1e40af';
+            scores.forEach((s, i) => {
+                const barH = (s / 1) * (h - 20);
+                ctx.fillRect(20 + i * barWidth, h - barH - 10, barWidth - 4, barH);
+                ctx.fillStyle = '#0f172a';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(i+1, 20 + i * barWidth + (barWidth-4)/2 - 5, h - 2);
+                ctx.fillStyle = '#1e40af';
+            });
+        }
+    }
+
+    window.downloadJSON = function() {
+        const nom = document.getElementById('nom').value.trim() || 'Inconnu';
+        const prenom = document.getElementById('prenom').value.trim() || 'Inconnu';
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const dateStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+        const timeStr = pad(now.getHours()) + 'h' + pad(now.getMinutes()) + 'm' + pad(now.getSeconds()) + 's';
+        const filename = `${nom}_${prenom}_${dateStr}_${timeStr}.json`;
+        const data = {
+            identite: { nom, prenom },
+            date_export: now.toISOString(),
+            tentatives: allAttempts
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    function saveLocal() {
+        try { localStorage.setItem('exos_echantillonnage_v6', JSON.stringify(allAttempts)); } catch(e) {}
+    }
+    window.addEventListener('beforeunload', saveLocal);
+    try {
+        const saved = localStorage.getItem('exos_echantillonnage_v6');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+                parsed.forEach(a => allAttempts.push(a));
+                ['ex1','ex2','ex3','ex4','ex5'].forEach(exId => {
+                    const exAtt = allAttempts.filter(a => a.exercise === exId);
+                    if (exAtt.length > 0) {
+                        const last = exAtt[exAtt.length-1];
+                        showFeedback(exId, last, exAtt.length-1);
+                        if (exAtt.length > 1) showHistory(exId);
+                    }
+                });
+            }
+        }
+    } catch(e) {}
+})();
+</script>
+</body>
+</html>

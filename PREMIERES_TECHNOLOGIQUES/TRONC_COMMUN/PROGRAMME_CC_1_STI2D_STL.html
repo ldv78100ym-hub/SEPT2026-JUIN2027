@@ -1,1 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi du programme de mathématiques – Première technologique</title>
+    <!-- MathJax pour le rendu LaTeX -->
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f6f9fc;
+            color: #1e293b;
+            padding: 2rem 1.5rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem 2rem 3rem;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            border-left: 6px solid #0b6e4f;
+            padding-left: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: #475569;
+            margin-left: 1.8rem;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+            border-bottom: 1px solid #e9edf2;
+            padding-bottom: 1rem;
+        }
+
+        /* ---------- LÉGENDE ---------- */
+        .legend {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            background: #f1f5f9;
+            padding: 0.75rem 1.5rem;
+            border-radius: 60px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            border: 1px solid #94a3b8;
+        }
+
+        .dot.green {
+            background: #22c55e;
+            border-color: #16a34a;
+        }
+        .dot.red {
+            background: #ef4444;
+            border-color: #dc2626;
+        }
+        .dot.gray {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+
+        .btn-reset {
+            margin-left: auto;
+            background: #e2e8f0;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-reset:hover {
+            background: #cbd5e1;
+        }
+
+        /* ---------- JSON TOOLBAR ---------- */
+        .json-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            align-items: center;
+            background: #f8fafc;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .json-toolbar button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        .json-toolbar button:hover {
+            background: #e9edf2;
+            border-color: #94a3b8;
+        }
+
+        .json-toolbar .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .json-toolbar .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .json-status {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-left: 0.5rem;
+        }
+
+        /* ---------- ANNÉE ---------- */
+        .year-section {
+            margin-top: 2.5rem;
+        }
+
+        .year-title {
+            font-size: 1.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .year-badge {
+            font-size: 0.85rem;
+            background: #1e293b;
+            color: white;
+            padding: 0.1rem 1rem;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+
+        .year-badge.first {
+            background: #0b6e4f;
+        }
+
+        .module {
+            background: #fafcff;
+            border-radius: 18px;
+            padding: 1.2rem 1.8rem 1.5rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid #e9edf2;
+            transition: box-shadow 0.15s;
+        }
+
+        .module:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .module-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.5rem 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .module-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .module-ref {
+            font-size: 0.85rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 0.1rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        .module-desc {
+            color: #334155;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            border-left: 3px solid #cbd5e1;
+            padding-left: 1rem;
+        }
+
+        /* ---------- LISTE DES NOTIONS ---------- */
+        .notion-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.2rem 1.2rem;
+        }
+
+        .notion-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.25rem 0.2rem;
+            border-radius: 8px;
+            transition: background 0.1s;
+        }
+
+        .notion-item:hover {
+            background: #f8fafc;
+        }
+
+        .notion-check {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #94a3b8;
+            background: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            line-height: 1;
+            color: white;
+            font-weight: 700;
+            user-select: none;
+        }
+
+        .notion-check.green {
+            background: #22c55e;
+            border-color: #16a34a;
+        }
+
+        .notion-check.red {
+            background: #ef4444;
+            border-color: #dc2626;
+        }
+
+        .notion-check.green::after {
+            content: "✓";
+        }
+
+        .notion-check.red::after {
+            content: "✗";
+        }
+
+        .notion-label {
+            font-size: 0.92rem;
+            color: #0f172a;
+        }
+
+        .notion-label small {
+            color: #64748b;
+            font-size: 0.75rem;
+            margin-left: 0.4rem;
+        }
+
+        /* ---------- FOOTER ---------- */
+        .footer {
+            margin-top: 3rem;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            border-top: 1px solid #e9edf2;
+            padding-top: 1.5rem;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 700px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+            .container {
+                padding: 1.5rem 1rem;
+            }
+            .notion-list {
+                grid-template-columns: 1fr;
+            }
+            .legend {
+                border-radius: 20px;
+                padding: 0.75rem 1rem;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+            .btn-reset {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
+            .module {
+                padding: 1rem 1rem;
+            }
+            .json-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                border-radius: 20px;
+                padding: 0.8rem 1rem;
+            }
+            .json-toolbar .file-input-wrapper {
+                width: 100%;
+            }
+            .json-toolbar button {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Programme de mathématiques – Première technologique</h1>
+        <div class="subtitle">Suivi des notions pour les séries STD2A, STHR, STI2D, STL, STMG et ST2S – cliquer sur une case pour basculer l’état</div>
+
+        <!-- LÉGENDE -->
+        <div class="legend">
+            <span class="legend-item"><span class="dot green"></span> Notion traitée</span>
+            <span class="legend-item"><span class="dot red"></span> Non traitée</span>
+            <span class="legend-item"><span class="dot gray"></span> Indéterminé (par défaut)</span>
+            <button class="btn-reset" id="resetAll">Réinitialiser tout</button>
+        </div>
+
+        <!-- BARRE D'OUTILS JSON -->
+        <div class="json-toolbar">
+            <button id="exportJson">📤 Exporter le JSON</button>
+            <span class="file-input-wrapper">
+                <button>📥 Importer un JSON</button>
+                <input type="file" id="importJsonInput" accept=".json">
+            </span>
+            <span id="jsonStatus" class="json-status">✅ Sauvegarde automatique</span>
+        </div>
+
+        <!-- 1ʳᵉ ANNÉE (unique) -->
+        <div class="year-section">
+            <div class="year-title">
+                <span>📘 Première technologique</span>
+                <span class="year-badge first">Cycle terminal</span>
+            </div>
+
+            <!-- Module 1 : Vocabulaire ensembliste et logique -->
+            <div class="module" data-module="ens-log">
+                <div class="module-header">
+                    <span class="module-name">Vocabulaire ensembliste et logique</span>
+                    <span class="module-ref">transversal</span>
+                </div>
+                <div class="module-desc">Notions d’éléments, sous‑ensembles, appartenance, inclusion, réunion, intersection, complémentaire ; connecteurs logiques, contre‑exemple, réciproque, conditions nécessaires et suffisantes.</div>
+                <ul class="notion-list" data-module="ens-log">
+                    <li class="notion-item" data-key="ens-element"><span class="notion-check"></span><span class="notion-label">Élément d’un ensemble et symboles \( \in \), \( \notin \)</span></li>
+                    <li class="notion-item" data-key="ens-subset"><span class="notion-check"></span><span class="notion-label">Sous‑ensemble et inclusion \( \subset \), \( \not\subset \)</span></li>
+                    <li class="notion-item" data-key="ens-union"><span class="notion-check"></span><span class="notion-label">Réunion \( \cup \) et intersection \( \cap \)</span></li>
+                    <li class="notion-item" data-key="ens-complement"><span class="notion-check"></span><span class="notion-label">Complémentaire \( \bar{A} \) ou \( E \setminus A \)</span></li>
+                    <li class="notion-item" data-key="ens-intervals"><span class="notion-check"></span><span class="notion-label">Intervalles et ensembles de nombres</span></li>
+                    <li class="notion-item" data-key="ens-logic-connect"><span class="notion-check"></span><span class="notion-label">Connecteurs « et », « ou » (ET, OU)</span></li>
+                    <li class="notion-item" data-key="ens-equation-status"><span class="notion-check"></span><span class="notion-label">Statut d’une égalité (identité / équation)</span></li>
+                    <li class="notion-item" data-key="ens-counterex"><span class="notion-check"></span><span class="notion-label">Contre‑exemple pour infirmer une proposition</span></li>
+                    <li class="notion-item" data-key="ens-reciprocal"><span class="notion-check"></span><span class="notion-label">Distinction proposition / réciproque</span></li>
+                    <li class="notion-item" data-key="ens-cond-nec-suff"><span class="notion-check"></span><span class="notion-label">Condition nécessaire / suffisante / équivalence</span></li>
+                    <li class="notion-item" data-key="ens-quantifiers"><span class="notion-check"></span><span class="notion-label">Quantificateurs (langage naturel)</span></li>
+                    <li class="notion-item" data-key="ens-reasoning-types"><span class="notion-check"></span><span class="notion-label">Types de raisonnement (disjonction, contraposée, absurde)</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 2 : Algorithmique et programmation -->
+            <div class="module" data-module="algo">
+                <div class="module-header">
+                    <span class="module-name">Algorithmique et programmation</span>
+                    <span class="module-ref">sauf série STD2A – langage Python</span>
+                </div>
+                <div class="module-desc">Variables, instructions conditionnelles, boucles, fonctions ; génération et manipulation de listes ; sélection de données et tableaux croisés.</div>
+                <ul class="notion-list" data-module="algo">
+                    <li class="notion-item" data-key="algo-random"><span class="notion-check"></span><span class="notion-label">Générateur aléatoire (loi de Bernoulli)</span></li>
+                    <li class="notion-item" data-key="algo-counter"><span class="notion-check"></span><span class="notion-label">Principe de compteur</span></li>
+                    <li class="notion-item" data-key="algo-accumulator"><span class="notion-check"></span><span class="notion-label">Accumulateur (somme, produit)</span></li>
+                    <li class="notion-item" data-key="algo-functions"><span class="notion-check"></span><span class="notion-label">Fonctions : entrées / sorties, modularité</span></li>
+                    <li class="notion-item" data-key="algo-lists-gen"><span class="notion-check"></span><span class="notion-label">Génération de listes (extension, compréhension)</span></li>
+                    <li class="notion-item" data-key="algo-lists-manip"><span class="notion-check"></span><span class="notion-label">Manipulation d’éléments et indices</span></li>
+                    <li class="notion-item" data-key="algo-lists-iter"><span class="notion-check"></span><span class="notion-label">Itération sur une liste</span></li>
+                    <li class="notion-item" data-key="algo-data-file"><span class="notion-check"></span><span class="notion-label">Traitement de fichiers de données réelles</span></li>
+                    <li class="notion-item" data-key="algo-cross-table"><span class="notion-check"></span><span class="notion-label">Tableau croisé à partir de données brutes</span></li>
+                    <li class="notion-item" data-key="algo-filters"><span class="notion-check"></span><span class="notion-label">Filtrage avec ET, OU, NON</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 3 : Activités géométriques (STD2A) -->
+            <div class="module" data-module="geom">
+                <div class="module-header">
+                    <span class="module-name">Activités géométriques</span>
+                    <span class="module-ref">uniquement série STD2A</span>
+                </div>
+                <div class="module-desc">Géométrie plane (polygones réguliers, frises, pavages) et géométrie dans l’espace (repérage, perspective cavalière, sections planes, ellipses).</div>
+                <ul class="notion-list" data-module="geom">
+                    <li class="notion-item" data-key="geom-reg-poly"><span class="notion-check"></span><span class="notion-label">Polygones réguliers (analyse et construction)</span></li>
+                    <li class="notion-item" data-key="geom-frieze"><span class="notion-check"></span><span class="notion-label">Frises et pavages (motif élémentaire)</span></li>
+                    <li class="notion-item" data-key="geom-transf"><span class="notion-check"></span><span class="notion-label">Transformations simples (répétition de motif)</span></li>
+                    <li class="notion-item" data-key="geom-calc-plane"><span class="notion-check"></span><span class="notion-label">Calculs : distances, angles, aires, périmètres</span></li>
+                    <li class="notion-item" data-key="geom-tangent"><span class="notion-check"></span><span class="notion-label">Tangente à un cercle (raccordements)</span></li>
+                    <li class="notion-item" data-key="geom-coords"><span class="notion-check"></span><span class="notion-label">Coordonnées dans un repère orthonormé de l’espace</span></li>
+                    <li class="notion-item" data-key="geom-distance"><span class="notion-check"></span><span class="notion-label">Distance entre deux points de l’espace</span></li>
+                    <li class="notion-item" data-key="geom-cavalier"><span class="notion-check"></span><span class="notion-label">Perspective cavalière (projection parallèle)</span></li>
+                    <li class="notion-item" data-key="geom-prop-conserv"><span class="notion-check"></span><span class="notion-label">Propriétés conservées / non conservées</span></li>
+                    <li class="notion-item" data-key="geom-cylinder"><span class="notion-check"></span><span class="notion-label">Cylindre de révolution (représentation)</span></li>
+                    <li class="notion-item" data-key="geom-sections"><span class="notion-check"></span><span class="notion-label">Sections planes (cube, cylindre) et ellipse</span></li>
+                    <li class="notion-item" data-key="geom-ellipse"><span class="notion-check"></span><span class="notion-label">Parallélogramme circonscrit à une ellipse</span></li>
+                    <li class="notion-item" data-key="geom-perspective-circle"><span class="notion-check"></span><span class="notion-label">Image perspective d’un cercle</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 4 : Automatismes -->
+            <div class="module" data-module="auto">
+                <div class="module-header">
+                    <span class="module-name">Automatismes</span>
+                    <span class="module-ref">entraînement régulier</span>
+                </div>
+                <div class="module-desc">Proportions, pourcentages, évolutions, indices ; calcul numérique et algébrique ; fonctions, droites, représentations graphiques.</div>
+                <ul class="notion-list" data-module="auto">
+                    <li class="notion-item" data-key="auto-prop-calc"><span class="notion-check"></span><span class="notion-label">Proportion (décimale, fractionnaire, pourcentage)</span></li>
+                    <li class="notion-item" data-key="auto-prop-of-prop"><span class="notion-check"></span><span class="notion-label">Proportion d’une proportion</span></li>
+                    <li class="notion-item" data-key="auto-evol-add-mult"><span class="notion-check"></span><span class="notion-label">Passage additif ↔ multiplicatif (taux)</span></li>
+                    <li class="notion-item" data-key="auto-evol-apply"><span class="notion-check"></span><span class="notion-label">Appliquer un taux d’évolution</span></li>
+                    <li class="notion-item" data-key="auto-evol-rate"><span class="notion-check"></span><span class="notion-label">Calculer un taux d’évolution en %</span></li>
+                    <li class="notion-item" data-key="auto-index"><span class="notion-check"></span><span class="notion-label">Indice base 100 – calcul et interprétation</span></li>
+                    <li class="notion-item" data-key="auto-evol-successive"><span class="notion-check"></span><span class="notion-label">Taux équivalent à plusieurs évolutions</span></li>
+                    <li class="notion-item" data-key="auto-evol-recip"><span class="notion-check"></span><span class="notion-label">Taux d’évolution réciproque</span></li>
+                    <li class="notion-item" data-key="auto-frac-ops"><span class="notion-check"></span><span class="notion-label">Opérations et comparaisons de fractions</span></li>
+                    <li class="notion-item" data-key="auto-powers"><span class="notion-check"></span><span class="notion-label">Opérations sur les puissances</span></li>
+                    <li class="notion-item" data-key="auto-num-forms"><span class="notion-check"></span><span class="notion-label">Changements d’écriture (décimale, fraction, scientifique)</span></li>
+                    <li class="notion-item" data-key="auto-magnitude"><span class="notion-check"></span><span class="notion-label">Ordre de grandeur, conversions</span></li>
+                    <li class="notion-item" data-key="auto-eq-ineq-1st"><span class="notion-check"></span><span class="notion-label">Équations / inéquations du \( 1^{\text{er}} \) degré</span></li>
+                    <li class="notion-item" data-key="auto-eq-x2"><span class="notion-check"></span><span class="notion-label">Équation \( x^2 = a \)</span></li>
+                    <li class="notion-item" data-key="auto-sign-1st"><span class="notion-check"></span><span class="notion-label">Signe d’une expression du \( 1^{\text{er}} \) degré</span></li>
+                    <li class="notion-item" data-key="auto-sign-factor"><span class="notion-check"></span><span class="notion-label">Signe d’une expression factorisée du \( 2^{\text{nd}} \) degré</span></li>
+                    <li class="notion-item" data-key="auto-isolate"><span class="notion-check"></span><span class="notion-label">Isoler une variable dans une égalité / inégalité</span></li>
+                    <li class="notion-item" data-key="auto-num-formula"><span class="notion-check"></span><span class="notion-label">Application numérique d’une formule</span></li>
+                    <li class="notion-item" data-key="auto-algebra"><span class="notion-check"></span><span class="notion-label">Développer, factoriser, réduire</span></li>
+                    <li class="notion-item" data-key="auto-graph-image"><span class="notion-check"></span><span class="notion-label">Images et antécédents par lecture graphique</span></li>
+                    <li class="notion-item" data-key="auto-graph-solve"><span class="notion-check"></span><span class="notion-label">Résolution graphique \( f(x)=k \), \( f(x) &lt; k \) …</span></li>
+                    <li class="notion-item" data-key="auto-graph-sign"><span class="notion-check"></span><span class="notion-label">Signe d’une fonction / tableau de variations</span></li>
+                    <li class="notion-item" data-key="auto-curve-eq"><span class="notion-check"></span><span class="notion-label">Équation de courbe (appartenance, coordonnées)</span></li>
+                    <li class="notion-item" data-key="auto-line-draw"><span class="notion-check"></span><span class="notion-label">Tracé d’une droite (équation réduite, point + coeff)</span></li>
+                    <li class="notion-item" data-key="auto-line-read"><span class="notion-check"></span><span class="notion-label">Lecture de l’équation réduite d’une droite</span></li>
+                    <li class="notion-item" data-key="auto-line-from-points"><span class="notion-check"></span><span class="notion-label">Équation réduite à partir de deux points</span></li>
+                    <li class="notion-item" data-key="auto-graph-read"><span class="notion-check"></span><span class="notion-label">Lecture de graphiques, histogrammes, diagrammes</span></li>
+                    <li class="notion-item" data-key="auto-graph-data"><span class="notion-check"></span><span class="notion-label">Passage données ↔ graphique</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 5 : Suites numériques -->
+            <div class="module" data-module="suites">
+                <div class="module-header">
+                    <span class="module-name">Suites numériques</span>
+                    <span class="module-ref">analyse</span>
+                </div>
+                <div class="module-desc">Modélisation d’évolutions discrètes, modes de génération, sens de variation, suites arithmétiques et géométriques, représentation graphique.</div>
+                <ul class="notion-list" data-module="suites">
+                    <li class="notion-item" data-key="suite-gen"><span class="notion-check"></span><span class="notion-label">Modes de génération (fonctionnelle / récurrence)</span></li>
+                    <li class="notion-item" data-key="suite-var"><span class="notion-check"></span><span class="notion-label">Sens de variation</span></li>
+                    <li class="notion-item" data-key="suite-graph"><span class="notion-check"></span><span class="notion-label">Représentation graphique (nuage de points)</span></li>
+                    <li class="notion-item" data-key="suite-arithm"><span class="notion-check"></span><span class="notion-label">Suite arithmétique (relation de récurrence)</span></li>
+                    <li class="notion-item" data-key="suite-geom"><span class="notion-check"></span><span class="notion-label">Suite géométrique (relation de récurrence)</span></li>
+                    <li class="notion-item" data-key="suite-arith-geom-var"><span class="notion-check"></span><span class="notion-label">Variation d’une suite arith. ou géom. (raison)</span></li>
+                    <li class="notion-item" data-key="suite-model"><span class="notion-check"></span><span class="notion-label">Modéliser une situation par une suite</span></li>
+                    <li class="notion-item" data-key="suite-recognize"><span class="notion-check"></span><span class="notion-label">Reconnaître croissance linéaire / exponentielle</span></li>
+                    <li class="notion-item" data-key="suite-term-calc"><span class="notion-check"></span><span class="notion-label">Calcul d’un terme de rang donné</span></li>
+                    <li class="notion-item" data-key="suite-conjecture"><span class="notion-check"></span><span class="notion-label">Conjecturer la nature arithmétique / géométrique</span></li>
+                    <li class="notion-item" data-key="suite-demonstrate"><span class="notion-check"></span><span class="notion-label">Démontrer qu’une suite est arith. ou géom.</span></li>
+                    <li class="notion-item" data-key="suite-examples"><span class="notion-check"></span><span class="notion-label">Exemples de suites ni arith. ni géom.</span></li>
+                    <li class="notion-item" data-key="suite-algo-term"><span class="notion-check"></span><span class="notion-label">Algo : calcul d’un terme / somme finie</span></li>
+                    <li class="notion-item" data-key="suite-algo-list"><span class="notion-check"></span><span class="notion-label">Algo : liste de termes et représentation</span></li>
+                    <li class="notion-item" data-key="suite-algo-seuil"><span class="notion-check"></span><span class="notion-label">Algo : recherche de seuil (comparaison)</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 6 : Fonctions de la variable réelle -->
+            <div class="module" data-module="fonctions">
+                <div class="module-header">
+                    <span class="module-name">Fonctions de la variable réelle</span>
+                    <span class="module-ref">analyse</span>
+                </div>
+                <div class="module-desc">Modélisation d’évolutions continues, taux de variation, fonctions polynômes de degré 2 et 3, racines, signe, représentations graphiques.</div>
+                <ul class="notion-list" data-module="fonctions">
+                    <li class="notion-item" data-key="fct-model"><span class="notion-check"></span><span class="notion-label">Modéliser une dépendance par une fonction</span></li>
+                    <li class="notion-item" data-key="fct-notations"><span class="notion-check"></span><span class="notion-label">Notations \( y=f(x) \) et \( x \mapsto f(x) \)</span></li>
+                    <li class="notion-item" data-key="fct-rate"><span class="notion-check"></span><span class="notion-label">Taux de variation (pente de la sécante)</span></li>
+                    <li class="notion-item" data-key="fct-monotone"><span class="notion-check"></span><span class="notion-label">Fonctions monotones, lien avec le signe du taux</span></li>
+                    <li class="notion-item" data-key="fct-poly2-graph"><span class="notion-check"></span><span class="notion-label">Paraboles définies par : \( x \mapsto x^2 \), \( x \mapsto x^2 + b \), \( x \mapsto a(x-x_1)(x-x_2) \)</span></li>
+                    <li class="notion-item" data-key="fct-poly2-axis"><span class="notion-check"></span><span class="notion-label">Axe de symétrie d’une parabole</span></li>
+                    <li class="notion-item" data-key="fct-poly2-roots"><span class="notion-check"></span><span class="notion-label">Racines et signe (forme factorisée)</span></li>
+                    <li class="notion-item" data-key="fct-poly2-extremum"><span class="notion-check"></span><span class="notion-label">Extremum, allure, axe de symétrie</span></li>
+                    <li class="notion-item" data-key="fct-poly3-graph"><span class="notion-check"></span><span class="notion-label">Courbes définies par : \( x \mapsto ax^3 \), \( x \mapsto ax^3 + b \)</span></li>
+                    <li class="notion-item" data-key="fct-poly3-roots"><span class="notion-check"></span><span class="notion-label">Racines et signe (forme factorisée degré 3)</span></li>
+                    <li class="notion-item" data-key="fct-cube-root"><span class="notion-check"></span><span class="notion-label">Équation \( x^3 = c \), racine cubique \( \sqrt[3]{c} \)</span></li>
+                    <li class="notion-item" data-key="fct-graph-solve"><span class="notion-check"></span><span class="notion-label">Résolution graphique \( f(x)=k \), \( f(x) &lt; k \), \( f(x) &gt; k \)</span></li>
+                    <li class="notion-item" data-key="fct-factor-simple"><span class="notion-check"></span><span class="notion-label">Factoriser un polynôme (racine connue)</span></li>
+                    <li class="notion-item" data-key="fct-algo-sweep"><span class="notion-check"></span><span class="notion-label">Algo : résolution par balayage (approximation)</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 7 : Dérivation -->
+            <div class="module" data-module="derivation">
+                <div class="module-header">
+                    <span class="module-name">Dérivation</span>
+                    <span class="module-ref">analyse</span>
+                </div>
+                <div class="module-desc">Approche graphique du nombre dérivé, tangente, fonction dérivée (\( x \mapsto x^2 \), \( x \mapsto x^3 \), combinaisons), lien avec les variations, extremums.</div>
+                <ul class="notion-list" data-module="derivation">
+                    <li class="notion-item" data-key="deriv-secant"><span class="notion-check"></span><span class="notion-label">Sécantes à une courbe en un point</span></li>
+                    <li class="notion-item" data-key="deriv-tangent"><span class="notion-check"></span><span class="notion-label">Tangente comme position limite des sécantes</span></li>
+                    <li class="notion-item" data-key="deriv-number"><span class="notion-check"></span><span class="notion-label">Nombre dérivé (limite du taux de variation)</span></li>
+                    <li class="notion-item" data-key="deriv-geom-interp"><span class="notion-check"></span><span class="notion-label">Interprétation géométrique : coefficient directeur de la tangente</span></li>
+                    <li class="notion-item" data-key="deriv-tangent-eq"><span class="notion-check"></span><span class="notion-label">Équation réduite de la tangente</span></li>
+                    <li class="notion-item" data-key="deriv-derivative-x2"><span class="notion-check"></span><span class="notion-label">Dérivée de \( x \mapsto x^2 \) et \( x \mapsto x^3 \)</span></li>
+                    <li class="notion-item" data-key="deriv-sum"><span class="notion-check"></span><span class="notion-label">Dérivée d’une somme</span></li>
+                    <li class="notion-item" data-key="deriv-kf"><span class="notion-check"></span><span class="notion-label">Dérivée de \( k \cdot f \) (\( k \) réel)</span></li>
+                    <li class="notion-item" data-key="deriv-poly"><span class="notion-check"></span><span class="notion-label">Dérivée d’un polynôme de degré \( \leq 3 \)</span></li>
+                    <li class="notion-item" data-key="deriv-var-link"><span class="notion-check"></span><span class="notion-label">Lien signe de la dérivée ↔ variations</span></li>
+                    <li class="notion-item" data-key="deriv-table"><span class="notion-check"></span><span class="notion-label">Tableau de variations</span></li>
+                    <li class="notion-item" data-key="deriv-extrema"><span class="notion-check"></span><span class="notion-label">Recherche d’extremums</span></li>
+                    <li class="notion-item" data-key="deriv-context"><span class="notion-check"></span><span class="notion-label">Contextes : vitesse, coût marginal</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 8 : Statistiques – Croisement de deux variables catégorielles -->
+            <div class="module" data-module="stats-categ">
+                <div class="module-header">
+                    <span class="module-name">Statistiques – variables catégorielles</span>
+                    <span class="module-ref">statistiques</span>
+                </div>
+                <div class="module-desc">Tableau croisé d’effectifs, fréquences conditionnelles et marginales, complétion, travail sur données réelles (OpenData).</div>
+                <ul class="notion-list" data-module="stats-categ">
+                    <li class="notion-item" data-key="stat-cross-tab"><span class="notion-check"></span><span class="notion-label">Tableau croisé d’effectifs</span></li>
+                    <li class="notion-item" data-key="stat-cond-freq"><span class="notion-check"></span><span class="notion-label">Fréquence conditionnelle</span></li>
+                    <li class="notion-item" data-key="stat-marg-freq"><span class="notion-check"></span><span class="notion-label">Fréquence marginale</span></li>
+                    <li class="notion-item" data-key="stat-complete-table"><span class="notion-check"></span><span class="notion-label">Compléter un tableau par raisonnement sur les effectifs</span></li>
+                    <li class="notion-item" data-key="stat-complete-cond"><span class="notion-check"></span><span class="notion-label">Compléter à l’aide de fréquences conditionnelles</span></li>
+                    <li class="notion-item" data-key="stat-variable-types"><span class="notion-check"></span><span class="notion-label">Variables nominales, ordinales, par intervalles</span></li>
+                    <li class="notion-item" data-key="stat-real-data"><span class="notion-check"></span><span class="notion-label">Traitement de données réelles (OpenData…)</span></li>
+                    <li class="notion-item" data-key="stat-algo-filters"><span class="notion-check"></span><span class="notion-label">Algo : filtre sur critères (ET, OU, NON)</span></li>
+                    <li class="notion-item" data-key="stat-algo-cross"><span class="notion-check"></span><span class="notion-label">Algo : tableau croisé à partir d’un fichier</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 9 : Probabilités conditionnelles -->
+            <div class="module" data-module="prob-cond">
+                <div class="module-header">
+                    <span class="module-name">Probabilités conditionnelles</span>
+                    <span class="module-ref">probabilités</span>
+                </div>
+                <div class="module-desc">Probabilité conditionnelle \( P_A(B) \), calcul à partir de tableaux croisés, application aux tests diagnostiques (faux positifs, sensibilité…).</div>
+                <ul class="notion-list" data-module="prob-cond">
+                    <li class="notion-item" data-key="pcond-def"><span class="notion-check"></span><span class="notion-label">Définition : \( P_A(B) = \dfrac{\operatorname{Card}(A \cap B)}{\operatorname{Card}(A)} \)</span></li>
+                    <li class="notion-item" data-key="pcond-calc-table"><span class="notion-check"></span><span class="notion-label">Calcul à partir d’un tableau croisé</span></li>
+                    <li class="notion-item" data-key="pcond-notations"><span class="notion-check"></span><span class="notion-label">Notation \( P_A(B) \) et interprétation</span></li>
+                    <li class="notion-item" data-key="pcond-diagnostic"><span class="notion-check"></span><span class="notion-label">Vocabulaire des tests : faux positifs, faux négatifs</span></li>
+                    <li class="notion-item" data-key="pcond-sens-spec"><span class="notion-check"></span><span class="notion-label">Sensibilité et spécificité d’un test</span></li>
+                    <li class="notion-item" data-key="pcond-context"><span class="notion-check"></span><span class="notion-label">Situations issues de domaines variés (médical, industriel…)</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 10 : Épreuves indépendantes -->
+            <div class="module" data-module="prob-indep">
+                <div class="module-header">
+                    <span class="module-name">Épreuves indépendantes</span>
+                    <span class="module-ref">probabilités</span>
+                </div>
+                <div class="module-desc">Expérience à deux épreuves indépendantes, arbre de probabilités, répétition d’épreuves de Bernoulli (\( n &lt; 4 \)).</div>
+                <ul class="notion-list" data-module="prob-indep">
+                    <li class="notion-item" data-key="indep-two-steps"><span class="notion-check"></span><span class="notion-label">Probabilité produit pour deux épreuves indépendantes</span></li>
+                    <li class="notion-item" data-key="indep-tree"><span class="notion-check"></span><span class="notion-label">Arbre de probabilités (2 épreuves)</span></li>
+                    <li class="notion-item" data-key="indep-bernoulli-repeat"><span class="notion-check"></span><span class="notion-label">Répétition de \( n \) épreuves de Bernoulli (\( n &lt; 4 \))</span></li>
+                    <li class="notion-item" data-key="indep-tree-bernoulli"><span class="notion-check"></span><span class="notion-label">Arbre pour répétition de Bernoulli</span></li>
+                    <li class="notion-item" data-key="indep-prod-rule"><span class="notion-check"></span><span class="notion-label">Probabilité d’un chemin = produit des probabilités</span></li>
+                    <li class="notion-item" data-key="indep-analogy"><span class="notion-check"></span><span class="notion-label">Analogies avec les proportions de proportions</span></li>
+                </ul>
+            </div>
+
+            <!-- Module 11 : Variables aléatoires -->
+            <div class="module" data-module="var-aleat">
+                <div class="module-header">
+                    <span class="module-name">Variables aléatoires</span>
+                    <span class="module-ref">probabilités</span>
+                </div>
+                <div class="module-desc">Variable aléatoire discrète, loi, espérance, loi de Bernoulli, simulation d’échantillons, fluctuation d’échantillonnage.</div>
+                <ul class="notion-list" data-module="var-aleat">
+                    <li class="notion-item" data-key="va-def"><span class="notion-check"></span><span class="notion-label">Variable aléatoire discrète (loi, espérance)</span></li>
+                    <li class="notion-item" data-key="va-events"><span class="notion-check"></span><span class="notion-label">Événements \( \{X=a\} \), \( \{X &lt; a\} \)</span></li>
+                    <li class="notion-item" data-key="va-bernoulli"><span class="notion-check"></span><span class="notion-label">Loi de Bernoulli de paramètre \( p \)</span></li>
+                    <li class="notion-item" data-key="va-bernoulli-mean"><span class="notion-check"></span><span class="notion-label">Espérance d’une loi de Bernoulli</span></li>
+                    <li class="notion-item" data-key="va-simulate"><span class="notion-check"></span><span class="notion-label">Simulation d’échantillons de taille \( n \)</span></li>
+                    <li class="notion-item" data-key="va-histogram"><span class="notion-check"></span><span class="notion-label">Histogramme / nuage de points des fréquences</span></li>
+                    <li class="notion-item" data-key="va-fluctuation"><span class="notion-check"></span><span class="notion-label">Fluctuation d’échantillonnage (distance à \( p \))</span></li>
+                    <li class="notion-item" data-key="va-std-interp"><span class="notion-check"></span><span class="notion-label">Écart‑type des fréquences, lien avec \( \sqrt{\dfrac{p(1-p)}{n}} \)</span></li>
+                    <li class="notion-item" data-key="va-interval-count"><span class="notion-check"></span><span class="notion-label">Comptage dans \( [p-ks \, ; \, p+ks] \) (\( k=1,2,3 \))</span></li>
+                    <li class="notion-item" data-key="va-algo-sim"><span class="notion-check"></span><span class="notion-label">Algo : simulation de Bernoulli (générateur 0‑1)</span></li>
+                    <li class="notion-item" data-key="va-algo-hist"><span class="notion-check"></span><span class="notion-label">Algo : représentation des fréquences</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            Les cases sont sauvegardées automatiquement dans le navigateur – chaque notion peut être suivie individuellement.
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const STORAGE_KEY = 'premiere_techno_math_notions';
+
+            function getDefaultState() {
+                const items = document.querySelectorAll('.notion-item');
+                const state = {};
+                items.forEach(item => {
+                    const key = item.dataset.key;
+                    if (key) state[key] = 'none';
+                });
+                return state;
+            }
+
+            function loadState() {
+                let stored;
+                try {
+                    stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                } catch (_) { stored = null; }
+                if (!stored || typeof stored !== 'object') {
+                    stored = getDefaultState();
+                }
+                const defaultState = getDefaultState();
+                for (const key in defaultState) {
+                    if (!(key in stored)) {
+                        stored[key] = 'none';
+                    }
+                }
+                return stored;
+            }
+
+            function saveState(state) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+            }
+
+            function applyState(state) {
+                const items = document.querySelectorAll('.notion-item');
+                items.forEach(item => {
+                    const key = item.dataset.key;
+                    if (!key) return;
+                    const check = item.querySelector('.notion-check');
+                    if (!check) return;
+                    check.classList.remove('green', 'red');
+                    const val = state[key] || 'none';
+                    if (val === 'green') {
+                        check.classList.add('green');
+                    } else if (val === 'red') {
+                        check.classList.add('red');
+                    }
+                });
+            }
+
+            function handleCheckClick(e) {
+                const check = e.currentTarget;
+                const item = check.closest('.notion-item');
+                if (!item) return;
+                const key = item.dataset.key;
+                if (!key) return;
+
+                let current = 'none';
+                if (check.classList.contains('green')) current = 'green';
+                else if (check.classList.contains('red')) current = 'red';
+
+                let next;
+                if (current === 'none') next = 'green';
+                else if (current === 'green') next = 'red';
+                else next = 'none';
+
+                check.classList.remove('green', 'red');
+                if (next === 'green') check.classList.add('green');
+                else if (next === 'red') check.classList.add('red');
+
+                const state = loadState();
+                state[key] = next;
+                saveState(state);
+            }
+
+            function resetAll() {
+                const state = getDefaultState();
+                for (const key in state) {
+                    state[key] = 'none';
+                }
+                saveState(state);
+                applyState(state);
+                document.getElementById('jsonStatus').textContent = '🔄 Réinitialisé';
+            }
+
+            // --- Export JSON ---
+            function exportJson() {
+                const state = loadState();
+                const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'premiere_techno_math_suivi.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                document.getElementById('jsonStatus').textContent = '📤 Export effectué';
+                setTimeout(() => {
+                    document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+                }, 2000);
+            }
+
+            // --- Import JSON ---
+            function importJson(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (typeof imported === 'object' && imported !== null) {
+                            const currentKeys = Object.keys(getDefaultState());
+                            const validState = {};
+                            currentKeys.forEach(key => {
+                                validState[key] = (imported[key] && (imported[key] === 'green' || imported[
+                                key] === 'red')) ? imported[key] : 'none';
+                            });
+                            saveState(validState);
+                            applyState(validState);
+                            document.getElementById('jsonStatus').textContent = '✅ Import réussi';
+                            setTimeout(() => {
+                                document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+                            }, 2000);
+                        } else {
+                            throw new Error('Format JSON invalide');
+                        }
+                    } catch (err) {
+                        document.getElementById('jsonStatus').textContent = '❌ Erreur lors de l\'import';
+                        setTimeout(() => {
+                            document.getElementById('jsonStatus').textContent = '✅ Sauvegarde automatique';
+                        }, 2000);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            // --- Initialisation ---
+            function init() {
+                const state = loadState();
+                applyState(state);
+
+                document.querySelectorAll('.notion-check').forEach(check => {
+                    check.addEventListener('click', handleCheckClick);
+                });
+
+                document.getElementById('resetAll').addEventListener('click', resetAll);
+                document.getElementById('exportJson').addEventListener('click', exportJson);
+
+                document.getElementById('importJsonInput').addEventListener('change', function(e) {
+                    if (this.files.length > 0) {
+                        importJson(this.files[0]);
+                        this.value = '';
+                    }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>

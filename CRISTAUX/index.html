@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Roue Cristallographique 3D · Graphe orienté 3D fonctionnel</title>
     <!-- MathJax 3 -->
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
@@ -11,6 +11,7 @@
             margin: 0;
             overflow: hidden;
             font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            touch-action: none; /* évite les gestes par défaut du navigateur */
         }
         #info {
             position: absolute;
@@ -38,6 +39,7 @@
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(3px);
+            touch-action: pan-y; /* permet de scroller dans la modale */
         }
         .modal-content {
             background: #ffffff;
@@ -50,6 +52,7 @@
             box-shadow: 0 25px 45px -12px black;
             border-top: 8px solid #2c5f8a;
             position: relative;
+            touch-action: pan-y;
         }
         .modal-content h2 {
             color: #1e4a6e;
@@ -66,6 +69,7 @@
             font-weight: bold;
             cursor: pointer;
             color: #64748b;
+            touch-action: manipulation;
         }
         .close-modal:hover { color: #dc2626; }
         .btn-doc {
@@ -87,21 +91,24 @@
             position: relative;
             overflow: hidden;
             border: 1px solid #2c5f8a;
+            touch-action: none;
         }
         .graph-toolbar {
             display: flex;
             justify-content: center;
             gap: 15px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .reset-graph-btn {
             background: #475569;
             border: none;
             color: white;
-            padding: 6px 18px;
+            padding: 8px 20px;
             border-radius: 30px;
             cursor: pointer;
             font-weight: 600;
+            touch-action: manipulation;
         }
         .reset-graph-btn:hover { background: #334155; }
         footer {
@@ -110,9 +117,17 @@
             margin-top: 15px;
             color: #94a3b8;
         }
+        /* adaptations mobiles */
         @media (max-width: 700px) {
             .modal-content { padding: 15px; }
             .graph-3d-container { height: 400px; }
+            .modal-content h2 { font-size: 1.4rem; padding-left: 12px; }
+            #info { font-size: 0.7rem; bottom: 10px; left: 10px; padding: 5px 12px; }
+        }
+        @media (max-width: 480px) {
+            .graph-3d-container { height: 300px; }
+            .modal-content { padding: 10px; }
+            .btn-doc { padding: 6px 14px; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -125,12 +140,12 @@
     <div id="modalDoc3" class="modal"><div class="modal-content"><span class="close-modal" data-modal="modalDoc3">&times;</span><h2>📚 Cristallographie intégrale · Histoire</h2><p><strong>Fichier :</strong> <code>CRISTAUX_INTEGRAL.html</code></p><p>Paramètres de maille, empilements compacts, conjecture de Kepler, frise historique.</p>\[ C_{\text{CFC}} = \frac{\pi}{3\sqrt{2}} \approx 0,74048 \]<a href="CRISTAUX_INTEGRAL.html" target="_blank" class="btn-doc">📖 Explorer →</a></div></div>
     <div id="modalDoc4" class="modal"><div class="modal-content"><span class="close-modal" data-modal="modalDoc4">&times;</span><h2>🔬 Simulateur RX · Identification</h2><p><strong>Fichier :</strong> <code>CRISTAUX_SIMULATEUR.html</code></p><p>Simulateur de diffractogramme, détection de pics, rapports \(\frac{\sin^2\theta_i}{\sin^2\theta_1}\).</p><div style="background:#e6f0fa; padding:8px; border-radius:12px;">\(\lambda_{\text{Cu Kα}} = 1,5406\ \text{Å}\)</div><a href="CRISTAUX_SIMULATEUR.html" target="_blank" class="btn-doc">🎛️ Lancer →</a></div></div>
 
-    <!-- MODALE GRAPHE 3D ORIENTÉ RÉVISÉ -->
+    <!-- MODALE GRAPHE 3D ORIENTÉ -->
     <div id="modalGraph" class="modal">
         <div class="modal-content">
             <span class="close-modal" data-modal="modalGraph">&times;</span>
             <h2>🕸️ Graphe conceptuel 3D orienté – nœuds déplaçables</h2>
-            <p>Chaque sphère colorée est un concept. <strong>Cliquez-glissez</strong> sur une sphère pour la déplacer. Les arêtes sont <strong>orientées (flèches directionnelles)</strong> et se mettent à jour en temps réel. Sphères volontairement plus petites pour meilleure lisibilité.</p>
+            <p>Chaque sphère colorée est un concept. <strong>Cliquez-glissez</strong> (ou touchez-glissez) sur une sphère pour la déplacer. Les arêtes sont <strong>orientées (flèches directionnelles)</strong> et se mettent à jour en temps réel.</p>
             <div class="graph-3d-container" id="graph3dContainer"></div>
             <div class="graph-toolbar">
                 <button id="resetGraph3DBtn" class="reset-graph-btn">⟳ Réinitialiser les positions</button>
@@ -176,6 +191,8 @@
         const controlsMain = new OrbitControls(camera, renderer.domElement);
         controlsMain.enableDamping = true;
         controlsMain.enableZoom = true;
+        controlsMain.touchRotate = true;
+        controlsMain.touchZoom = true;
         
         const ambientLight = new THREE.AmbientLight(0x404060);
         scene.add(ambientLight);
@@ -303,9 +320,18 @@
         
         const raycaster = new THREE.Raycaster();
         const mouseVec = new THREE.Vector2();
-        window.addEventListener('click', (event) => {
-            mouseVec.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-            mouseVec.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+        function handleClick(event) {
+            let clientX, clientY;
+            if (event.touches) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+                event.preventDefault();
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            mouseVec.x = (clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouseVec.y = -(clientY / renderer.domElement.clientHeight) * 2 + 1;
             raycaster.setFromCamera(mouseVec, camera);
             const intersects = raycaster.intersectObjects(sectors);
             if (intersects.length) {
@@ -318,10 +344,16 @@
                     }
                 }
             }
-        });
+        }
+        renderer.domElement.addEventListener('click', handleClick);
+        renderer.domElement.addEventListener('touchstart', handleClick, { passive: false });
         
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                const modalDiv = btn.closest('.modal');
+                if (modalDiv) modalDiv.style.display = 'none';
+            });
+            btn.addEventListener('touchend', (e) => {
                 const modalDiv = btn.closest('.modal');
                 if (modalDiv) modalDiv.style.display = 'none';
             });
@@ -329,10 +361,14 @@
         window.addEventListener('click', (e) => {
             if (e.target.classList && e.target.classList.contains('modal')) e.target.style.display = 'none';
         });
+        window.addEventListener('touchend', (e) => {
+            if (e.target.classList && e.target.classList.contains('modal')) e.target.style.display = 'none';
+        });
         
-        // ---------- 2. GRAPHE 3D AVEC FLÈCHES ORIENTÉES FONCTIONNELLES ----------
+        // ---------- 2. GRAPHE 3D AVEC DRAG SOURIS + TOUCH ----------
         let graphScene, graphCamera, graphRenderer, graphLabelRenderer, graphControls;
-        let arrowObjects = []; // contiendra { cylinder, cone, fromId, toId }
+        let arrowObjects = [];
+        let isDragging = false; // pour désactiver OrbitControls pendant le drag
         
         const concepts = [
             { id: "cs_cc_cfc", label: "Structures cubiques\nCS · CC · CFC", color: 0x3b82f6, initPos: new THREE.Vector3(-1.2, 1.0, -0.5) },
@@ -357,7 +393,6 @@
             { from: "visu_3d", to: "formules_aR" }
         ];
         
-        // Fonction pour créer une flèche orientée (cylindre + cône) et la positionner correctement
         function createArrowBetween(pointA, pointB, color = 0x88aaff, headLength = 0.28, headRadius = 0.09) {
             const group = new THREE.Group();
             const direction = new THREE.Vector3().subVectors(pointB, pointA);
@@ -365,7 +400,6 @@
             if (length < 0.05) return group;
             
             const cylinderLength = Math.max(0, length - headLength);
-            // Cylindre
             const cylinderGeo = new THREE.CylinderGeometry(0.065, 0.065, cylinderLength, 6);
             const material = new THREE.MeshStandardMaterial({ color: color, emissive: 0x224466 });
             const cylinder = new THREE.Mesh(cylinderGeo, material);
@@ -374,7 +408,6 @@
             cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
             group.add(cylinder);
             
-            // Cône (tête)
             const coneGeo = new THREE.ConeGeometry(headRadius, headLength, 8);
             const cone = new THREE.Mesh(coneGeo, material);
             const conePos = pointA.clone().add(direction.clone().normalize().multiplyScalar(length - headLength / 2));
@@ -416,6 +449,8 @@
             graphControls.dampingFactor = 0.05;
             graphControls.zoomSpeed = 1.2;
             graphControls.rotateSpeed = 1.0;
+            graphControls.touchRotate = true;
+            graphControls.touchZoom = true;
             
             const ambient = new THREE.AmbientLight(0x404060);
             graphScene.add(ambient);
@@ -429,9 +464,9 @@
             fillLight2.position.set(1, 2, 2);
             graphScene.add(fillLight2);
             
-            // Création des nœuds (sphères) et étiquettes
+            // Nœuds
             const nodeMap = new Map();
-            const sphereRadius = 0.32; // diamètre réduit
+            const sphereRadius = 0.32;
             
             concepts.forEach(concept => {
                 const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
@@ -464,14 +499,11 @@
                 nodeMap.set(concept.id, { sphere, label: labelObj, pos: concept.initPos.clone(), color: concept.color });
             });
             
-            // Fonction de mise à jour de toutes les flèches (supprime et recrée)
             function updateAllArrows() {
-                // Supprimer les anciennes flèches
                 arrowObjects.forEach(item => {
                     if (item.group) graphScene.remove(item.group);
                 });
                 arrowObjects = [];
-                // Créer les nouvelles flèches selon les positions actuelles
                 edgesDef.forEach(edge => {
                     const fromNode = nodeMap.get(edge.from);
                     const toNode = nodeMap.get(edge.to);
@@ -482,24 +514,43 @@
                     }
                 });
             }
-            
             updateAllArrows();
             
-            // Gestion du drag & drop sur les sphères
+            // Gestion du drag (souris + tactile)
             let selectedNode = null;
             let dragPlane = null;
             let dragOffsetLocal = new THREE.Vector3();
             
-            function onMouseDown(event) {
-                const rect = graphRenderer.domElement.getBoundingClientRect();
-                const mouse = new THREE.Vector2();
-                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            function getPointerPosition(event) {
+                let rect = graphRenderer.domElement.getBoundingClientRect();
+                let clientX, clientY;
+                if (event.touches) {
+                    clientX = event.touches[0].clientX;
+                    clientY = event.touches[0].clientY;
+                    event.preventDefault();
+                } else {
+                    clientX = event.clientX;
+                    clientY = event.clientY;
+                }
+                return {
+                    x: ((clientX - rect.left) / rect.width) * 2 - 1,
+                    y: -((clientY - rect.top) / rect.height) * 2 + 1
+                };
+            }
+            
+            function onPointerDown(event) {
+                // Ne pas capturer si on clique sur un bouton ou autre
+                if (event.target.closest && event.target.closest('button')) return;
+                const pos = getPointerPosition(event);
+                const mouse = new THREE.Vector2(pos.x, pos.y);
                 const raycasterGraph = new THREE.Raycaster();
                 raycasterGraph.setFromCamera(mouse, graphCamera);
-                const intersects = raycasterGraph.intersectObjects(Array.from(nodeMap.values()).map(n => n.sphere));
+                const sphereMeshes = Array.from(nodeMap.values()).map(n => n.sphere);
+                const intersects = raycasterGraph.intersectObjects(sphereMeshes);
                 if (intersects.length > 0) {
                     selectedNode = intersects[0].object;
+                    isDragging = true;
+                    graphControls.enabled = false; // désactiver OrbitControls pendant le drag
                     const cameraDirection = graphCamera.getWorldDirection(new THREE.Vector3());
                     const planeNormal = cameraDirection.clone().normalize();
                     dragPlane = new THREE.Plane(planeNormal, 0);
@@ -514,17 +565,16 @@
                 }
             }
             
-            function onMouseMove(event) {
+            function onPointerMove(event) {
                 if (!selectedNode || !dragPlane) return;
-                const rect = graphRenderer.domElement.getBoundingClientRect();
-                const mouse = new THREE.Vector2();
-                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                const pos = getPointerPosition(event);
+                const mouse = new THREE.Vector2(pos.x, pos.y);
                 const raycasterGraph = new THREE.Raycaster();
                 raycasterGraph.setFromCamera(mouse, graphCamera);
                 const intersectionPoint = new THREE.Vector3();
                 if (dragPlane.intersectLine(new THREE.Line3(graphCamera.position, raycasterGraph.ray.direction.clone().multiplyScalar(10).add(graphCamera.position)), intersectionPoint)) {
                     let newPos = intersectionPoint.clone().add(dragOffsetLocal);
+                    // Limiter les déplacements
                     newPos.x = Math.min(Math.max(newPos.x, -2.5), 2.5);
                     newPos.y = Math.min(Math.max(newPos.y, -1.8), 2.2);
                     newPos.z = Math.min(Math.max(newPos.z, -2.5), 2.5);
@@ -534,19 +584,31 @@
                         nodeEntry.label.position.copy(newPos);
                         nodeEntry.label.position.y += 0.55;
                     }
-                    updateAllArrows(); // recréation complète des flèches
+                    updateAllArrows();
+                }
+                event.preventDefault();
+            }
+            
+            function onPointerUp(event) {
+                if (selectedNode) {
+                    selectedNode = null;
+                    dragPlane = null;
+                    isDragging = false;
+                    graphControls.enabled = true;
+                    graphRenderer.domElement.style.cursor = 'grab';
                 }
             }
             
-            function onMouseUp() {
-                selectedNode = null;
-                dragPlane = null;
-                if (graphRenderer) graphRenderer.domElement.style.cursor = 'grab';
-            }
+            // Événements souris
+            graphRenderer.domElement.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
             
-            graphRenderer.domElement.addEventListener('mousedown', onMouseDown);
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
+            // Événements tactiles
+            graphRenderer.domElement.addEventListener('touchstart', onPointerDown, { passive: false });
+            window.addEventListener('touchmove', onPointerMove, { passive: false });
+            window.addEventListener('touchend', onPointerUp, { passive: false });
+            
             graphRenderer.domElement.style.cursor = 'grab';
             
             const resetBtn = document.getElementById('resetGraph3DBtn');
@@ -562,6 +624,7 @@
                     });
                     updateAllArrows();
                 };
+                resetBtn.ontouchend = resetBtn.onclick;
             }
             
             function animateGraph() {

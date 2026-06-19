@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statistique inférentielle – 2ᵉ année (Cours complet)</title>
+
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+    <style>
+        :root {
+            --primary: #1a6b4b;
+            --primary-light: #e8f5e9;
+            --secondary: #0d3b2e;
+            --accent: #4caf84;
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --radius: 14px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(160deg, #f0f7f4 0%, #eaf5ef 30%, #f9fafb 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #c8e6d4;
+        }
+
+        .header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            color: var(--secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .header .accent-line {
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            margin: 1rem auto 0;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            justify-content: center;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 0.8rem 1.2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .nav-tabs button {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .nav-tabs button:hover {
+            background: var(--primary-light);
+            color: var(--secondary);
+        }
+
+        .nav-tabs button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            transition: box-shadow var(--transition), transform var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .card h4 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin: 1.2rem 0 0.4rem 0;
+        }
+
+        .card .content p {
+            margin-bottom: 0.8rem;
+        }
+
+        .card .content ul,
+        .card .content ol {
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .card .content li {
+            margin-bottom: 0.3rem;
+        }
+
+        .card .content .formula-box {
+            background: #f8fafc;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            margin: 0.8rem 0;
+            text-align: center;
+            font-size: 1.05rem;
+        }
+
+        .card .content .highlight {
+            background: #fff8e1;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border-left: 4px solid #ffb300;
+            margin: 0.8rem 0;
+        }
+
+        .card .content .note {
+            background: #e3f2fd;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border-left: 4px solid #1565c0;
+            margin: 0.8rem 0;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            margin-right: 0.3rem;
+            text-transform: uppercase;
+        }
+
+        .tag-important {
+            background: #fce4ec;
+            color: #c62828;
+        }
+        .tag-tip {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 107, 75, 0.25);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.3rem 0;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .checkbox-item.checked label {
+            text-decoration: line-through;
+            color: var(--text-light);
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 50px;
+            height: 10px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            background: var(--accent);
+            height: 100%;
+            border-radius: 50px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-align: right;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ---- MODALE ---- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: var(--radius);
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+            animation: modalFade 0.3s ease;
+        }
+
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.2rem;
+            font-size: 1.8rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary);
+        }
+
+        .modal-box h2 {
+            font-size: 1.6rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .modal-box h3 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin: 1.2rem 0 0.5rem 0;
+        }
+
+        .modal-box p,
+        .modal-box li {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .modal-box ul {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .modal-box .badge-license {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-box .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .modal-box .tech-list span {
+            background: #f3f4f6;
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs button {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+            }
+            .card {
+                padding: 1.2rem;
+            }
+            .modal-box {
+                padding: 1.5rem;
+            }
+        }
+
+        .checklist .item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .checklist .item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist .item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checklist .item label {
+            cursor: pointer;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .checklist .item.done label {
+            text-decoration: line-through;
+            color: var(--text-light);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.8rem 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid var(--border);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .comparison-table th {
+            background: var(--primary-light);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ========== HEADER ========== -->
+        <header class="header">
+            <span class="badge">📊 STS Bio-AC – 2ᵉ année</span>
+            <h1>📈 Statistique inférentielle</h1>
+            <p>
+                Échantillonnage, estimation, intervalles de confiance, tests d'hypothèses,
+                cartes de contrôle — cours complet avec progression interactive.
+            </p>
+            <span class="accent-line"></span>
+        </header>
+
+        <!-- ========== NAVIGATION ========== -->
+        <nav class="nav-tabs" role="tablist">
+            <button class="active" data-section="section-intro">📖 Introduction</button>
+            <button data-section="section-echantillonnage">🎯 Échantillonnage</button>
+            <button data-section="section-estimation">📊 Estimation</button>
+            <button data-section="section-tests">🧪 Tests d'hypothèses</button>
+            <button data-section="section-applications">⚙️ Applications</button>
+            <button data-section="section-progression">✅ Progression</button>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- SECTION : INTRODUCTION                                        -->
+        <!-- ============================================================ -->
+        <section id="section-intro" class="section active">
+            <h2 class="section-title">📖 Introduction à la statistique inférentielle</h2>
+            <p class="section-subtitle">Du particulier au général : inférer sur une population à partir d'un échantillon</p>
+
+            <div class="card">
+                <h3>🔹 Qu'est-ce que la statistique inférentielle ?</h3>
+                <div class="content">
+                    <p>
+                        La statistique inférentielle regroupe l'ensemble des méthodes permettant de
+                        <strong>généraliser</strong> les conclusions obtenues sur un échantillon à
+                        l'ensemble de la population dont il est issu.
+                    </p>
+                    <p>
+                        Elle repose sur deux piliers :
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>L'estimation</strong> : à partir des données de l'échantillon,
+                            on estime un paramètre inconnu de la population (moyenne, proportion, variance…).
+                        </li>
+                        <li>
+                            <strong>Le test d'hypothèses</strong> : on confronte une hypothèse sur la
+                            population aux données observées, pour valider ou infirmer une conjecture.
+                        </li>
+                    </ul>
+                    <div class="highlight">
+                        <strong>💡 Enjeu en Bio-AC :</strong> valider une méthode de dosage, contrôler la
+                        qualité d'un lot, comparer des résultats expérimentaux, surveiller un procédé
+                        de fabrication.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Les deux lois fondamentales</h3>
+                <div class="content">
+                    <p>
+                        La statistique inférentielle s'appuie sur deux lois de probabilité principales :
+                        la <strong>loi normale</strong> et la <strong>loi de Student</strong>.
+                        Le choix entre elles dépend <strong>uniquement</strong> de la connaissance
+                        de l'écart-type de la population ($\sigma$).
+                    </p>
+
+                    <h4>📌 Loi normale centrée réduite $\mathcal{N}(0,1)$</h4>
+                    <ul>
+                        <li>
+                            <strong>Condition d'utilisation :</strong> L'écart-type de la population
+                            $\sigma$ est <strong>connu</strong> (certification d'instrument, données
+                            historiques, hypothèse de travail).
+                        </li>
+                        <li>
+                            <strong>Outil mathématique :</strong> La variable standardisée
+                            $Z = \dfrac{\bar{X} - \mu}{\sigma / \sqrt{n}}$ suit exactement (ou
+                            approximativement via le TCL) une loi normale centrée réduite.
+                        </li>
+                        <li>
+                            <strong>Ce qu'elle apporte :</strong> Des quantiles fixes
+                            ($z_{0.975} = 1.96$ pour un IC à 95 %). L'intervalle de confiance est
+                            $\bar{x} \pm 1.96 \dfrac{\sigma}{\sqrt{n}}$. Elle est <strong>optimiste</strong> :
+                            elle suppose une connaissance parfaite de la variance.
+                        </li>
+                    </ul>
+
+                    <h4>📌 Loi de Student $t_{\nu}$ (à $\nu = n-1$ degrés de liberté)</h4>
+                    <ul>
+                        <li>
+                            <strong>Condition d'utilisation :</strong> L'écart-type de la population
+                            $\sigma$ est <strong>inconnu</strong> et doit être estimé par l'écart-type
+                            empirique $S$. C'est le cas <strong>ultra-majoritaire</strong> en biologie
+                            et en laboratoire.
+                        </li>
+                        <li>
+                            <strong>Outil mathématique :</strong> La variable
+                            $T = \dfrac{\bar{X} - \mu}{S / \sqrt{n}}$ suit une loi de Student à
+                            $\nu = n-1$ degrés de liberté. Cette loi a des queues plus épaisses que
+                            la normale pour les petits échantillons.
+                        </li>
+                        <li>
+                            <strong>Ce qu'elle apporte :</strong> Elle intègre l'incertitude supplémentaire
+                            liée à l'estimation de $\sigma$ par $S$. Pour $n$ petit, le quantile
+                            $t_{0.975; n-1}$ est plus grand que $1.96$ (ex. $t_{0.975; 10} \approx 2.23$),
+                            ce qui élargit l'intervalle. Elle est <strong>prudente/réaliste</strong>.
+                        </li>
+                    </ul>
+
+                    <div class="comparison-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Critère</th>
+                                    <th>Loi normale $\mathcal{N}(0,1)$</th>
+                                    <th>Loi de Student $t_{\nu}$</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>$\sigma$ connu ?</strong></td>
+                                    <td>Oui</td>
+                                    <td>Non (estimé par $S$)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Variable</strong></td>
+                                    <td>$Z = \dfrac{\bar{X} - \mu}{\sigma / \sqrt{n}}$</td>
+                                    <td>$T = \dfrac{\bar{X} - \mu}{S / \sqrt{n}}$</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Quantile 95 % (bilatéral)</strong></td>
+                                    <td>$z_{0.975} = 1.96$ (fixe)</td>
+                                    <td>$t_{0.975; n-1}$ (dépend de $n$)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Largeur de l'IC</strong></td>
+                                    <td>Plus étroite (optimiste)</td>
+                                    <td>Plus large pour $n$ petit (prudent)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Convergence</strong></td>
+                                    <td>—</td>
+                                    <td>$t_{\nu} \to \mathcal{N}(0,1)$ quand $n \to \infty$</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="highlight">
+                        <strong>💡 À retenir :</strong> En biologie médicale et en Bio-AC, on utilise
+                        <strong>quasi-exclusivement la loi de Student</strong> car $\sigma$ n'est
+                        jamais connu avec certitude. La loi normale est réservée aux proportions
+                        (via l'approximation de la binomiale) ou lorsque l'énoncé précise explicitement
+                        que $\sigma$ est connu.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Notations et vocabulaire</h3>
+                <div class="content">
+                    <ul>
+                        <li><strong>Population</strong> : ensemble de référence (ex. : tous les lots d'un médicament).</li>
+                        <li><strong>Échantillon</strong> : sous-ensemble de la population, prélevé aléatoirement.</li>
+                        <li><strong>Paramètre</strong> : caractéristique numérique de la population (ex. : $\mu$, $\sigma$, $p$).</li>
+                        <li><strong>Statistique</strong> : caractéristique numérique calculée sur l'échantillon (ex. : $\bar{X}$, $S$, $\hat{p}$).</li>
+                        <li><strong>Estimateur</strong> : statistique utilisée pour estimer un paramètre.</li>
+                        <li><strong>Estimation</strong> : valeur numérique prise par l'estimateur sur un échantillon donné.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION : ÉCHANTILLONNAGE                                     -->
+        <!-- ============================================================ -->
+        <section id="section-echantillonnage" class="section">
+            <h2 class="section-title">🎯 Échantillonnage</h2>
+            <p class="section-subtitle">Distribution d'échantillonnage et théorème central limite</p>
+
+            <div class="card">
+                <h3>🔹 Principe de l'échantillonnage</h3>
+                <div class="content">
+                    <p>
+                        L'échantillonnage consiste à sélectionner une partie d'une population pour
+                        en inférer des caractéristiques. Un échantillon aléatoire simple de taille $n$
+                        est noté $(X_1, X_2, \dots, X_n)$.
+                    </p>
+                    <p>
+                        La <strong>distribution d'échantillonnage</strong> est la loi de probabilité
+                        d'une statistique calculée sur tous les échantillons possibles de même taille.
+                        Elle est fondamentale pour l'inférence.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Distribution d'échantillonnage de la moyenne</h3>
+                <div class="content">
+                    <p>
+                        Soit $X_1, \dots, X_n$ des variables aléatoires indépendantes et identiquement
+                        distribuées (i.i.d.) avec $E(X_i) = \mu$ et $V(X_i) = \sigma^2$.
+                        La moyenne empirique $\bar{X} = \dfrac{1}{n}\sum_{i=1}^n X_i$ vérifie :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        E(\bar{X}) = \mu, \qquad V(\bar{X}) = \dfrac{\sigma^2}{n}, \qquad
+                        \sigma_{\bar{X}} = \dfrac{\sigma}{\sqrt{n}}
+                        $$
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>Estimateur sans biais</strong> : $E(\bar{X}) = \mu$ (la moyenne des
+                            moyennes tend vers $\mu$).
+                        </li>
+                        <li>
+                            <strong>Précision</strong> : l'écart-type de $\bar{X}$, appelé
+                            <strong>erreur standard</strong>, diminue en $1/\sqrt{n}$.
+                        </li>
+                        <li>
+                            Si $X_i \sim \mathcal{N}(\mu, \sigma^2)$, alors
+                            $\bar{X} \sim \mathcal{N}(\mu, \sigma^2/n)$ <strong>exactement</strong>.
+                        </li>
+                    </ul>
+
+                    <h4>📌 Théorème central limite (TCL)</h4>
+                    <p>
+                        Pour $n$ suffisamment grand ($n \ge 30$), quelle que soit la distribution
+                        des $X_i$ (pourvu que $\sigma^2$ existe) :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        \bar{X} \approx \mathcal{N}\left(\mu, \dfrac{\sigma^2}{n}\right)
+                        $$
+                    </div>
+                    <div class="highlight">
+                        <strong>💡 Pourquoi le TCL est-il si important ?</strong> En laboratoire, on
+                        ignore souvent la loi sous-jacente des mesures. Le TCL nous permet d'utiliser
+                        les propriétés de la loi normale (intervalles de confiance, tests) sans
+                        connaître la loi exacte, à condition d'avoir un échantillon de taille
+                        raisonnable.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Distribution d'échantillonnage de la proportion</h3>
+                <div class="content">
+                    <p>
+                        Pour une proportion $p$ dans la population, on définit $\hat{p} = X/n$,
+                        où $X \sim \mathcal{B}(n,p)$ est le nombre de succès dans l'échantillon.
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        E(\hat{p}) = p, \qquad V(\hat{p}) = \dfrac{p(1-p)}{n}, \qquad
+                        \sigma_{\hat{p}} = \sqrt{\dfrac{p(1-p)}{n}}
+                        $$
+                    </div>
+                    <p>
+                        Si $np \ge 5$ et $n(1-p) \ge 5$, alors l'approximation normale est valable :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        \hat{p} \approx \mathcal{N}\left(p, \dfrac{p(1-p)}{n}\right)
+                        $$
+                    </div>
+                    <div class="note">
+                        <strong>📝 À retenir :</strong> Les conditions $np \ge 5$ et $n(1-p) \ge 5$
+                        garantissent que l'approximation de la loi binomiale par la loi normale
+                        est satisfaisante. C'est un prérequis pour utiliser les intervalles de
+                        confiance et les tests sur proportions.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION : ESTIMATION                                          -->
+        <!-- ============================================================ -->
+        <section id="section-estimation" class="section">
+            <h2 class="section-title">📊 Estimation</h2>
+            <p class="section-subtitle">Estimation ponctuelle et par intervalle de confiance</p>
+
+            <div class="card">
+                <h3>🔹 Estimation ponctuelle</h3>
+                <div class="content">
+                    <p>
+                        Un <strong>estimateur</strong> $\hat{\theta}$ est une statistique utilisée
+                        pour estimer un paramètre $\theta$ inconnu de la population.
+                    </p>
+
+                    <h4>📌 Estimation ponctuelle de la moyenne</h4>
+                    <p>Estimateur naturel : $\hat{\mu} = \bar{X}$. Il est sans biais : $E(\bar{X}) = \mu$.</p>
+
+                    <h4>📌 Estimation ponctuelle de la variance</h4>
+                    <p>
+                        La variance empirique <strong>corrigée</strong> (ou variance échantillonnale)
+                        est :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        S^2 = \dfrac{1}{n-1} \sum_{i=1}^n (X_i - \bar{X})^2
+                        $$
+                    </div>
+                    <p>
+                        Elle est sans biais : $E(S^2) = \sigma^2$. On utilise $n-1$ au dénominateur
+                        (et non $n$) pour compenser le fait que $\bar{X}$ est estimé.
+                    </p>
+                    <div class="note">
+                        <strong>📝 Pourquoi $n-1$ ?</strong> On « perd » un degré de liberté car
+                        la moyenne $\bar{X}$ est estimée à partir des données. La variance non
+                        corrigée $\frac{1}{n}\sum (X_i - \bar{X})^2$ sous-estime systématiquement
+                        $\sigma^2$.
+                    </div>
+
+                    <h4>📌 Estimation ponctuelle d'une proportion</h4>
+                    <p>
+                        $\hat{p} = \dfrac{\text{nombre de succès}}{n}$. Il est sans biais :
+                        $E(\hat{p}) = p$.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Estimation par intervalle de confiance (IC)</h3>
+                <div class="content">
+                    <p>
+                        Un intervalle de confiance de niveau $1-\alpha$ (souvent 95 %) est un
+                        intervalle aléatoire qui contient le paramètre inconnu avec une probabilité
+                        $1-\alpha$ (au sens fréquentiste).
+                    </p>
+                    <div class="highlight">
+                        <strong>💡 Interprétation correcte :</strong> Si l'expérience est répétée un
+                        grand nombre de fois, environ $(1-\alpha)\times 100$ % des intervalles
+                        construits contiendront le paramètre. Ce n'est <strong>pas</strong> une
+                        probabilité sur le paramètre (qui est fixe), mais une mesure de confiance
+                        dans la procédure.
+                    </div>
+
+                    <h4>📌 IC pour la moyenne ($\sigma$ connu)</h4>
+                    <p>
+                        Si la population est normale ou si $n \ge 30$ (TCL), l'intervalle de
+                        confiance de niveau $1-\alpha$ pour $\mu$ est :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        IC_{1-\alpha}(\mu) = \left[
+                        \bar{X} - z_{\alpha/2} \dfrac{\sigma}{\sqrt{n}},\;
+                        \bar{X} + z_{\alpha/2} \dfrac{\sigma}{\sqrt{n}}
+                        \right]
+                        $$
+                    </div>
+                    <p>
+                        où $z_{\alpha/2}$ est le quantile d'ordre $1-\alpha/2$ de la loi normale
+                        centrée réduite. Pour un niveau de confiance de 95 %, $z_{0.025} = 1.96$.
+                    </p>
+
+                    <h4>📌 IC pour la moyenne ($\sigma$ inconnu)</h4>
+                    <p>
+                        On estime $\sigma$ par $S$ et on utilise la loi de Student à $\nu = n-1$
+                        degrés de liberté :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        IC_{1-\alpha}(\mu) = \left[
+                        \bar{X} - t_{\alpha/2, n-1} \dfrac{S}{\sqrt{n}},\;
+                        \bar{X} + t_{\alpha/2, n-1} \dfrac{S}{\sqrt{n}}
+                        \right]
+                        $$
+                    </div>
+                    <p>
+                        Pour $n$ grand, $t_{\alpha/2, n-1} \approx z_{\alpha/2}$. La loi de Student
+                        converge vers la loi normale lorsque $n \to \infty$.
+                    </p>
+
+                    <h4>📌 IC pour une proportion</h4>
+                    <p>
+                        Si $n\hat{p} \ge 5$ et $n(1-\hat{p}) \ge 5$, l'intervalle de confiance
+                        de niveau $1-\alpha$ pour $p$ est :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        IC_{1-\alpha}(p) = \left[
+                        \hat{p} - z_{\alpha/2} \sqrt{\dfrac{\hat{p}(1-\hat{p})}{n}},\;
+                        \hat{p} + z_{\alpha/2} \sqrt{\dfrac{\hat{p}(1-\hat{p})}{n}}
+                        \right]
+                        $$
+                    </div>
+                    <div class="note">
+                        <strong>📝 Alternative :</strong> L'intervalle de Wilson est plus précis
+                        pour les petits échantillons et est recommandé en pratique.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION : TESTS D'HYPOTHÈSES                                 -->
+        <!-- ============================================================ -->
+        <section id="section-tests" class="section">
+            <h2 class="section-title">🧪 Tests d'hypothèses</h2>
+            <p class="section-subtitle">Valider ou infirmer une conjecture sur la population</p>
+
+            <div class="card">
+                <h3>🔹 Principe du test d'hypothèses</h3>
+                <div class="content">
+                    <p>
+                        On confronte deux hypothèses :
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>$H_0$</strong> : hypothèse nulle (statut quo, égalité).
+                            C'est l'hypothèse que l'on cherche à rejeter.
+                        </li>
+                        <li>
+                            <strong>$H_1$</strong> : hypothèse alternative (ce que l'on cherche à
+                            prouver). Elle peut être bilatérale ($\neq$) ou unilatérale ($>$ ou $<$).
+                        </li>
+                    </ul>
+                    <p>
+                        On choisit un <strong>seuil de signification</strong> $\alpha$ (souvent 5 %).
+                        La règle de décision est :
+                    </p>
+                    <div class="formula-box">
+                        Si p-valeur $\le \alpha$, on rejette $H_0$ (résultat significatif).
+                        <br />
+                        Sinon, on ne rejette pas $H_0$ (pas de preuve suffisante).
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Risques et puissance</h3>
+                <div class="content">
+                    <ul>
+                        <li>
+                            <strong>Risque de première espèce ($\alpha$)</strong> :
+                            $P(\text{rejeter } H_0 \mid H_0 \text{ vraie})$. C'est le risque de
+                            conclure à tort à un effet.
+                        </li>
+                        <li>
+                            <strong>Risque de deuxième espèce ($\beta$)</strong> :
+                            $P(\text{ne pas rejeter } H_0 \mid H_1 \text{ vraie})$. C'est le risque de
+                            passer à côté d'un effet réel.
+                        </li>
+                        <li>
+                            <strong>Puissance ($1-\beta$)</strong> : probabilité de rejeter $H_0$
+                            lorsque $H_1$ est vraie. C'est la capacité du test à détecter un effet.
+                        </li>
+                    </ul>
+                    <div class="highlight">
+                        <strong>💡 En pratique :</strong> On fixe $\alpha$ (souvent 5 %) et on
+                        cherche à maximiser la puissance (en augmentant $n$ par exemple).
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 p‑valeur</h3>
+                <div class="content">
+                    <p>
+                        La <strong>p‑valeur</strong> est la probabilité, sous l'hypothèse $H_0$,
+                        d'observer une statistique de test aussi extrême (ou plus extrême) que celle
+                        calculée à partir de l'échantillon.
+                    </p>
+                    <p>
+                        Si la p‑valeur est inférieure à $\alpha$, on rejette $H_0$. Plus la p‑valeur
+                        est petite, plus la preuve contre $H_0$ est forte.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Test sur la moyenne (comparaison à une valeur de référence)</h3>
+                <div class="content">
+                    <p>
+                        Contexte : on dispose d'un échantillon de taille $n$, de moyenne $\bar{X}$
+                        et d'écart-type $S$. On teste $H_0: \mu = \mu_0$ contre
+                        $H_1: \mu \neq \mu_0$ (ou $>$ ou $<$).
+                    </p>
+
+                    <h4>📌 Cas où $\sigma$ est connu</h4>
+                    <p>
+                        Sous $H_0$, la statistique de test est :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        Z = \dfrac{\bar{X} - \mu_0}{\sigma / \sqrt{n}} \sim \mathcal{N}(0,1)
+                        $$
+                    </div>
+                    <p>
+                        On rejette $H_0$ si $|Z| > z_{\alpha/2}$ (test bilatéral) ou si
+                        la p‑valeur $< \alpha$.
+                    </p>
+
+                    <h4>📌 Cas où $\sigma$ est inconnu</h4>
+                    <p>
+                        Sous $H_0$, la statistique de test est :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        T = \dfrac{\bar{X} - \mu_0}{S / \sqrt{n}} \sim t_{n-1}
+                        $$
+                    </div>
+                    <p>
+                        On rejette $H_0$ si $|T| > t_{\alpha/2, n-1}$ (test bilatéral) ou si
+                        la p‑valeur $< \alpha$.
+                    </p>
+                    <div class="note">
+                        <strong>📝 Pourquoi Student ?</strong> On ne connaît pas $\sigma$, on
+                        l'estime par $S$. L'incertitude supplémentaire est prise en compte par
+                        la loi de Student, qui a des queues plus épaisses que la normale.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Test sur une proportion</h3>
+                <div class="content">
+                    <p>
+                        On teste $H_0: p = p_0$ contre $H_1: p \neq p_0$ (ou $>$ ou $<$).
+                        Sous $H_0$, la statistique de test est :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        Z = \dfrac{\hat{p} - p_0}{\sqrt{p_0(1-p_0)/n}} \approx \mathcal{N}(0,1)
+                        $$
+                    </div>
+                    <p>
+                        Valide si $np_0 \ge 5$ et $n(1-p_0) \ge 5$.
+                    </p>
+                    <div class="highlight">
+                        <strong>⚠️ Attention :</strong> Pour le test, on utilise l'écart-type
+                        <strong>sous $H_0$</strong> (avec $p_0$), et non l'écart-type estimé
+                        $\sqrt{\hat{p}(1-\hat{p})/n}$ (qui est utilisé pour l'intervalle de
+                        confiance). Cela permet de contrôler le risque de première espèce.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION : APPLICATIONS                                        -->
+        <!-- ============================================================ -->
+        <section id="section-applications" class="section">
+            <h2 class="section-title">⚙️ Applications : cartes de contrôle, conformité et qualité</h2>
+            <p class="section-subtitle">Surveiller et améliorer les processus en laboratoire</p>
+
+            <div class="card">
+                <h3>🔹 Cartes de contrôle de Shewhart</h3>
+                <div class="content">
+                    <p>
+                        Les cartes de contrôle permettent de surveiller un processus dans le temps
+                        et de détecter des dérives. La carte $\bar{X}$ (moyenne) est la plus courante.
+                    </p>
+                    <p>
+                        Si le processus est stable avec une moyenne $\mu_0$ et un écart-type $\sigma$,
+                        les limites de contrôle (à $3\sigma$) sont :
+                    </p>
+                    <div class="formula-box">
+                        $$
+                        LSC = \mu_0 + 3 \dfrac{\sigma}{\sqrt{n}}, \qquad
+                        LIC = \mu_0 - 3 \dfrac{\sigma}{\sqrt{n}}
+                        $$
+                    </div>
+                    <p>
+                        En pratique, $\sigma$ est estimé à partir de l'étendue moyenne $\bar{R}$
+                        par $\sigma \approx \bar{R}/d_2$, où $d_2$ dépend de $n$.
+                    </p>
+                    <div class="highlight">
+                        <strong>💡 Pourquoi $3\sigma$ ?</strong> Dans un processus normal, 99,73 %
+                        des points se situent dans l'intervalle $\mu \pm 3\sigma$. Le risque de
+                        fausse alarme est de 0,27 %.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 Conformité et qualité</h3>
+                <div class="content">
+                    <p>
+                        En contrôle qualité, on utilise les tests d'hypothèses pour vérifier la
+                        conformité à une spécification :
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>Test de conformité de la moyenne :</strong>
+                            $H_0: \mu = \mu_{\text{cible}}$ contre $H_1: \mu \neq \mu_{\text{cible}}$.
+                            Le rejet indique un déréglage.
+                        </li>
+                        <li>
+                            <strong>Test sur la proportion de défauts :</strong>
+                            $H_0: p \le p_{\text{acceptable}}$ contre
+                            $H_1: p > p_{\text{acceptable}}$. Permet de détecter une dégradation
+                            de la qualité.
+                        </li>
+                    </ul>
+                    <p>
+                        Les intervalles de confiance permettent de quantifier l'incertitude sur les
+                        indicateurs qualité (moyenne, proportion de non-conformes).
+                    </p>
+                    <p>
+                        La <strong>capabilité processus</strong> ($C_p$, $C_{pk}$) mesure si le
+                        processus est capable de produire dans les limites de spécification.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION : PROGRESSION                                         -->
+        <!-- ============================================================ -->
+        <section id="section-progression" class="section">
+            <h2 class="section-title">✅ Progression – Cochez les notions maîtrisées</h2>
+            <p class="section-subtitle">L'état est sauvegardé automatiquement dans votre navigateur.</p>
+
+            <div class="card">
+                <h3>📋 Liste des notions</h3>
+                <div class="content">
+                    <div id="checklist-container">
+                        <div class="checklist" id="checklist">
+                            <!-- Les éléments sont générés par JavaScript -->
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="fill" id="progress-fill" style="width:0%;"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0 %</div>
+                    <button class="btn btn-outline btn-sm" id="reset-progress">🔄 Réinitialiser la progression</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== FOOTER ========== -->
+        <footer class="footer">
+            <span>
+                Ressources pédagogiques – STS Biotechnologies Bio-AC – 2026-2027
+            </span>
+            <a id="copyright-btn">📜 Droits d'auteur</a>
+        </footer>
+
+    </div>
+
+    <!-- ========== MODALE ========== -->
+    <div class="modal-overlay" id="copyright-modal">
+        <div class="modal-box">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <h2>📜 Droits d'auteur &amp; À propos</h2>
+            <p><strong>Cours de Statistique Inférentielle – STS Bio-AC – v1.0</strong></p>
+            <p>
+                Ce cours interactif est conçu pour l'enseignement et l'apprentissage de la
+                <strong>Statistique Inférentielle</strong> en STS Biotechnologies option Bio-Analyses et Contrôles.
+                Il permet de visualiser et de simuler les concepts clés : échantillonnage, estimation,
+                intervalles de confiance, tests d'hypothèses et cartes de contrôle, avec des exercices
+                interactifs et une progression intégrée.
+            </p>
+
+            <h3>👤 Auteur</h3>
+            <p>
+                <strong>Yann Merdy</strong> – <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>
+                <br />
+                <span style="font-size:0.9rem; color:var(--text-light);">Juin 2026</span>
+            </p>
+
+            <h3>📄 Licence d'utilisation</h3>
+            <p>
+                Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la
+                propriété intellectuelle exclusive de l'auteur, Yann Merdy.
+            </p>
+            <ul>
+                <li>
+                    <strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé·e
+                    à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des
+                    fins personnelles, éducatives et non lucratives.
+                </li>
+                <li>
+                    <strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation,
+                    distribution, intégration ou reproduction du code ou du contenu (total ou partiel)
+                    à des fins commerciales, lucratives ou professionnelles est strictement interdite
+                    sans un accord écrit préalable et explicite de l'auteur.
+                </li>
+                <li>
+                    <strong>Attribution :</strong> Toute reproduction ou modification doit conserver
+                    la mention de l'auteur originale (Yann Merdy) et la présente notice de droits
+                    d'auteur. Pour toute demande d'utilisation commerciale ou de licence spécifique,
+                    veuillez contacter l'auteur à l'adresse indiquée ci-dessus.
+                </li>
+            </ul>
+
+            <h3>🛠️ Technologies utilisées</h3>
+            <div class="tech-list">
+                <span>HTML5</span>
+                <span>CSS3</span>
+                <span>Vanilla JavaScript</span>
+                <span>MathJax (rendu LaTeX)</span>
+            </div>
+
+            <h3>⚖️ Licence</h3>
+            <p>
+                Usage libre à des fins pédagogiques.<br />
+                Tous droits réservés.
+            </p>
+            <div style="margin-top:0.5rem;">
+                <span class="badge-license">© 2026 – Outil de simulation pédagogique</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT                                                    -->
+    <!-- ============================================================ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ---- GESTION DES ONGLETS ----
+            const tabs = document.querySelectorAll('.nav-tabs button');
+            const sections = document.querySelectorAll('.section');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetId = this.dataset.section;
+                    tabs.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    sections.forEach(s => s.classList.remove('active'));
+                    document.getElementById(targetId).classList.add('active');
+                    if (window.MathJax && MathJax.typesetPromise) {
+                        MathJax.typesetPromise();
+                    }
+                });
+            });
+
+            // ---- MODALE DROITS D'AUTEUR ----
+            const modal = document.getElementById('copyright-modal');
+            const openBtn = document.getElementById('copyright-btn');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            function openModal() {
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modal.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('open')) {
+                    closeModal();
+                }
+            });
+
+            // ---- CHECKLIST ----
+            const checklistItems = [
+                { id: 'c1', label: 'Comprendre la différence entre population et échantillon' },
+                { id: 'c2', label: 'Connaître la distribution d\'échantillonnage de la moyenne ($\\bar{X}$)' },
+                { id: 'c3', label: 'Maîtriser le théorème central limite (TCL)' },
+                { id: 'c4', label: 'Connaître la distribution d\'échantillonnage de la proportion ($\\hat{p}$)' },
+                { id: 'c5', label: 'Savoir estimer ponctuellement une moyenne, une variance et une proportion' },
+                { id: 'c6', label: 'Construire un intervalle de confiance pour la moyenne ($\\sigma$ connu)' },
+                { id: 'c7', label: 'Construire un intervalle de confiance pour la moyenne ($\\sigma$ inconnu)' },
+                { id: 'c8', label: 'Construire un intervalle de confiance pour une proportion' },
+                { id: 'c9', label: 'Interpréter correctement un intervalle de confiance' },
+                { id: 'c10', label: 'Comprendre le principe d\'un test d\'hypothèses ($H_0$, $H_1$, $\\alpha$)' },
+                { id: 'c11', label: 'Distinguer risque de première espèce, risque de deuxième espèce et puissance' },
+                { id: 'c12', label: 'Savoir interpréter une p‑valeur' },
+                { id: 'c13', label: 'Réaliser un test Z sur la moyenne ($\\sigma$ connu)' },
+                { id: 'c14', label: 'Réaliser un test T de Student sur la moyenne ($\\sigma$ inconnu)' },
+                { id: 'c15', label: 'Réaliser un test Z sur une proportion' },
+                { id: 'c16', label: 'Connaître les limites de contrôle d\'une carte $\\bar{X}$' },
+                { id: 'c17', label: 'Savoir utiliser les tests et IC pour le contrôle qualité' },
+                { id: 'c18', label: 'Choisir entre loi normale et loi de Student selon les conditions' },
+            ];
+
+            const checklistContainer = document.getElementById('checklist');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+
+            let savedState = {};
+            try {
+                const stored = localStorage.getItem('stats_checklist');
+                if (stored) {
+                    savedState = JSON.parse(stored);
+                }
+            } catch (e) {
+                savedState = {};
+            }
+
+            function renderChecklist() {
+                checklistContainer.innerHTML = '';
+                checklistItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    if (savedState[item.id]) {
+                        div.classList.add('done');
+                    }
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = item.id;
+                    checkbox.checked = !!savedState[item.id];
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            div.classList.add('done');
+                            savedState[this.id] = true;
+                        } else {
+                            div.classList.remove('done');
+                            savedState[this.id] = false;
+                        }
+                        localStorage.setItem('stats_checklist', JSON.stringify(savedState));
+                        updateProgress();
+                    });
+                    const label = document.createElement('label');
+                    label.htmlFor = item.id;
+                    let labelText = item.label;
+                    labelText = labelText.replace(/\\bar{X}/g, 'X̄');
+                    labelText = labelText.replace(/\\hat{p}/g, 'p̂');
+                    labelText = labelText.replace(/\\sigma/g, 'σ');
+                    labelText = labelText.replace(/\\mu/g, 'μ');
+                    labelText = labelText.replace(/\\alpha/g, 'α');
+                    labelText = labelText.replace(/\$([^$]+)\$/g, (match, p1) => p1);
+                    label.textContent = labelText;
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    checklistContainer.appendChild(div);
+                });
+                updateProgress();
+            }
+
+            function updateProgress() {
+                const total = checklistItems.length;
+                const done = checklistItems.filter(item => savedState[item.id]).length;
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                progressFill.style.width = pct + '%';
+                progressText.textContent = pct + ' % (' + done + '/' + total + ')';
+            }
+
+            document.getElementById('reset-progress').addEventListener('click', function() {
+                if (confirm('Réinitialiser toute la progression ?')) {
+                    savedState = {};
+                    localStorage.setItem('stats_checklist', JSON.stringify(savedState));
+                    renderChecklist();
+                }
+            });
+
+            renderChecklist();
+
+            // ---- RENDU MATHJAX APRÈS CHANGEMENT D'ONGLET ----
+            // Déjà fait dans la gestion des onglets
+
+        });
+    </script>
+
+</body>
+</html>

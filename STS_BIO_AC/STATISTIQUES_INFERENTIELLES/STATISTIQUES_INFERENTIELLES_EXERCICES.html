@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statistiques inférentielles – STS Bio-AC 2e année</title>
+
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+    <style>
+        :root {
+            --primary: #1a6b4b;
+            --primary-light: #e8f5e9;
+            --secondary: #0d3b2e;
+            --accent: #4caf84;
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --radius: 14px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(160deg, #f0f7f4 0%, #eaf5ef 30%, #f9fafb 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #c8e6d4;
+        }
+
+        .header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            color: var(--secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .header .accent-line {
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            margin: 1rem auto 0;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            justify-content: center;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 0.8rem 1.2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .nav-tabs button {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .nav-tabs button:hover {
+            background: var(--primary-light);
+            color: var(--secondary);
+        }
+
+        .nav-tabs button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            transition: box-shadow var(--transition), transform var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .card .meta {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .card .content p {
+            margin-bottom: 0.8rem;
+        }
+
+        .card .content ul,
+        .card .content ol {
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .card .content li {
+            margin-bottom: 0.3rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 107, 75, 0.25);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .answer-box {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+            border-left: 4px solid var(--accent);
+        }
+
+        .answer-box.show {
+            display: block;
+        }
+
+        .answer-box .math {
+            font-size: 1.05rem;
+        }
+        .answer-box strong {
+            color: var(--secondary);
+        }
+        .answer-box .highlight {
+            background: #fff8e1;
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+        }
+
+        .canvas-wrapper {
+            background: #fafafa;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 6px;
+        }
+
+        .sim-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+
+        .sim-controls label {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .sim-controls input[type="range"] {
+            width: 150px;
+        }
+
+        .sim-controls span {
+            font-weight: 600;
+            min-width: 40px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            margin-right: 0.3rem;
+            text-transform: uppercase;
+        }
+
+        .tag-pbl {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .tag-exercice {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .tag-probleme {
+            background: #fce4ec;
+            color: #c62828;
+        }
+        .tag-activite {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .statement {
+            background: #f8fafc;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-light);
+            margin-bottom: 1rem;
+        }
+
+        /* ---- MODALE ---- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: var(--radius);
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+            animation: modalFade 0.3s ease;
+        }
+
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.2rem;
+            font-size: 1.8rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary);
+        }
+
+        .modal-box h2 {
+            font-size: 1.6rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .modal-box h3 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin: 1.2rem 0 0.5rem 0;
+        }
+
+        .modal-box p,
+        .modal-box li {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .modal-box ul {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .modal-box .badge-license {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-box .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .modal-box .tech-list span {
+            background: #f3f4f6;
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs button {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+            }
+            .card {
+                padding: 1.2rem;
+            }
+            .modal-box {
+                padding: 1.5rem;
+            }
+            .sim-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .sim-controls input[type="range"] {
+                width: 100%;
+            }
+        }
+
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <header class="header">
+            <span class="badge">📊 STS Bio-AC 2e année</span>
+            <h1>📈 Statistiques inférentielles</h1>
+            <p>
+                Échantillonnage, estimation, intervalles de confiance, tests d'hypothèses,
+                cartes de contrôle — activités, exercices, problèmes et PBL
+            </p>
+            <span class="accent-line"></span>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="nav-tabs" role="tablist">
+            <button class="active" data-section="section-intro">📖 Introduction</button>
+            <button data-section="section-activite">🧪 Activités</button>
+            <button data-section="section-exercices">✏️ Exercices</button>
+            <button data-section="section-problemes">📝 Problèmes</button>
+            <button data-section="section-pbl">🧩 PBL</button>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- SECTION INTRODUCTION                                          -->
+        <!-- ============================================================ -->
+        <section id="section-intro" class="section active">
+            <h2 class="section-title">📖 Notions clés</h2>
+            <p class="section-subtitle">Rappels des concepts fondamentaux de la statistique inférentielle</p>
+
+            <div class="card">
+                <h3>🔹 1. Échantillonnage</h3>
+                <div class="content">
+                    <p>
+                        L'échantillonnage consiste à sélectionner une partie d'une population pour en inférer
+                        des caractéristiques. Un échantillon aléatoire simple de taille $n$ est noté
+                        $(X_1, X_2, \dots, X_n)$.
+                    </p>
+                    <p>
+                        <strong>Distribution d'échantillonnage de la moyenne :</strong><br />
+                        Si $X_1, \dots, X_n$ sont i.i.d. avec $E(X_i) = \mu$ et $V(X_i) = \sigma^2$, alors
+                        $\bar{X} = \dfrac{1}{n}\sum X_i$ vérifie :
+                        \[
+                        E(\bar{X}) = \mu, \qquad V(\bar{X}) = \dfrac{\sigma^2}{n}, \qquad \sigma_{\bar{X}} = \dfrac{\sigma}{\sqrt{n}}
+                        \]
+                        Si $X_i \sim \mathcal{N}(\mu, \sigma^2)$, alors $\bar{X} \sim \mathcal{N}(\mu, \sigma^2/n)$.
+                        D'après le <strong>théorème central limite (TCL)</strong>, pour $n \ge 30$,
+                        $\bar{X} \approx \mathcal{N}(\mu, \sigma^2/n)$ quelle que soit la loi de $X_i$.
+                    </p>
+                    <p>
+                        <strong>Distribution d'échantillonnage de la proportion :</strong><br />
+                        Pour une proportion $p$, $\hat{p} = X/n$ avec $X \sim \mathcal{B}(n,p)$.
+                        \[
+                        E(\hat{p}) = p, \qquad V(\hat{p}) = \dfrac{p(1-p)}{n}, \qquad \sigma_{\hat{p}} = \sqrt{\dfrac{p(1-p)}{n}}
+                        \]
+                        Si $np \ge 5$ et $n(1-p) \ge 5$, alors $\hat{p} \approx \mathcal{N}(p, p(1-p)/n)$.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 2. Estimation ponctuelle</h3>
+                <div class="content">
+                    <ul>
+                        <li><strong>Moyenne :</strong> $\hat{\mu} = \bar{X}$ (estimateur sans biais).</li>
+                        <li><strong>Variance :</strong> $S^2 = \dfrac{1}{n-1}\sum (X_i - \bar{X})^2$ (variance empirique corrigée).</li>
+                        <li><strong>Proportion :</strong> $\hat{p} = \dfrac{\text{nombre de succès}}{n}$.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 3. Estimation par intervalle de confiance (IC)</h3>
+                <div class="content">
+                    <ul>
+                        <li>
+                            <strong>IC pour la moyenne ($\sigma$ connu) :</strong>
+                            \[
+                            IC_{1-\alpha}(\mu) = \left[ \bar{X} - z_{\alpha/2} \dfrac{\sigma}{\sqrt{n}},\;
+                            \bar{X} + z_{\alpha/2} \dfrac{\sigma}{\sqrt{n}} \right]
+                            \]
+                            avec $z_{\alpha/2}$ le quantile de la loi normale centrée réduite.
+                        </li>
+                        <li>
+                            <strong>IC pour la moyenne ($\sigma$ inconnu) :</strong>
+                            \[
+                            IC_{1-\alpha}(\mu) = \left[ \bar{X} - t_{\alpha/2, n-1} \dfrac{S}{\sqrt{n}},\;
+                            \bar{X} + t_{\alpha/2, n-1} \dfrac{S}{\sqrt{n}} \right]
+                            \]
+                        </li>
+                        <li>
+                            <strong>IC pour une proportion :</strong>
+                            \[
+                            IC_{1-\alpha}(p) = \left[ \hat{p} - z_{\alpha/2} \sqrt{\dfrac{\hat{p}(1-\hat{p})}{n}},\;
+                            \hat{p} + z_{\alpha/2} \sqrt{\dfrac{\hat{p}(1-\hat{p})}{n}} \right]
+                            \]
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 4. Tests d'hypothèses</h3>
+                <div class="content">
+                    <ul>
+                        <li>
+                            <strong>Principe :</strong> on confronte $H_0$ (hypothèse nulle) et $H_1$ (hypothèse alternative).
+                            On choisit un seuil de signification $\alpha$ (souvent 5 %). Si la p-valeur $\le \alpha$,
+                            on rejette $H_0$.
+                        </li>
+                        <li>
+                            <strong>Risques :</strong>
+                            <ul>
+                                <li>Risque de première espèce $\alpha = P(\text{rejeter } H_0 \mid H_0 \text{ vraie})$.</li>
+                                <li>Risque de deuxième espèce $\beta = P(\text{ne pas rejeter } H_0 \mid H_1 \text{ vraie})$.</li>
+                                <li>Puissance $= 1 - \beta$.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Test sur la moyenne :</strong>
+                            \[
+                            Z = \dfrac{\bar{X} - \mu_0}{\sigma / \sqrt{n}} \sim \mathcal{N}(0,1) \quad (\sigma \text{ connu})
+                            \qquad
+                            T = \dfrac{\bar{X} - \mu_0}{S / \sqrt{n}} \sim t_{n-1} \quad (\sigma \text{ inconnu})
+                            \]
+                        </li>
+                        <li>
+                            <strong>Test sur une proportion :</strong>
+                            \[
+                            Z = \dfrac{\hat{p} - p_0}{\sqrt{p_0(1-p_0)/n}} \sim \mathcal{N}(0,1)
+                            \]
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ========== NOUVELLE CARD : LOI NORMALE vs STUDENT ========== -->
+            <div class="card">
+                <h3>🔹 Loi Normale $\mathcal{N}(0,1)$ vs Loi de Student $t_{\nu}$</h3>
+                <div class="content">
+                    <p>
+                        En statistique inférentielle, ces deux lois sont les piliers des intervalles de confiance
+                        et des tests d'hypothèses sur la moyenne. Le choix entre elles dépend
+                        <strong>uniquement de la connaissance de l'écart-type de la population</strong> ($\sigma$).
+                    </p>
+
+                    <p><strong>📌 1. Loi normale centrée réduite $\mathcal{N}(0,1)$</strong></p>
+                    <ul>
+                        <li>
+                            <strong>Condition d'utilisation :</strong> L'écart-type de la population $\sigma$ est
+                            <strong>connu</strong> (par exemple, issu de données historiques, d'une certification
+                            d'instrument, ou d'une hypothèse de travail).
+                        </li>
+                        <li>
+                            <strong>Outil mathématique :</strong> La variable standardisée
+                            $Z = \dfrac{\bar{X} - \mu}{\sigma / \sqrt{n}}$ suit exactement (ou approximativement
+                            via le TCL) une loi normale centrée réduite.
+                        </li>
+                        <li>
+                            <strong>Ce qu'elle apporte :</strong> Elle fournit des quantiles fixes (ex. $z_{0.975} = 1.96$
+                            pour un IC à 95 %). L'intervalle de confiance est alors
+                            $\bar{x} \pm 1.96 \dfrac{\sigma}{\sqrt{n}}$. Elle est <strong>optimiste</strong> :
+                            elle considère que l'estimation de la variance est parfaite, ce qui conduit à des
+                            intervalles plus étroits.
+                        </li>
+                    </ul>
+
+                    <p><strong>📌 2. Loi de Student $t_{\nu}$ (à $\nu = n-1$ degrés de liberté)</strong></p>
+                    <ul>
+                        <li>
+                            <strong>Condition d'utilisation :</strong> L'écart-type de la population $\sigma$ est
+                            <strong>inconnu</strong> et doit être estimé par l'écart-type empirique $S$.
+                            C'est le cas <strong>ultra-majoritaire</strong> en biologie et en laboratoire.
+                        </li>
+                        <li>
+                            <strong>Outil mathématique :</strong> La variable
+                            $T = \dfrac{\bar{X} - \mu}{S / \sqrt{n}}$ suit une loi de Student à $\nu = n-1$
+                            degrés de liberté. Cette loi a des queues plus épaisses que la normale pour les
+                            petits échantillons.
+                        </li>
+                        <li>
+                            <strong>Ce qu'elle apporte :</strong> Elle intègre l'incertitude supplémentaire
+                            liée au fait que $S$ est une estimation de $\sigma$ (et non sa valeur vraie).
+                            Pour $n$ petit, le quantile $t_{0.975; n-1}$ est beaucoup plus grand que $1.96$
+                            (ex. $t_{0.975; 10} \approx 2.23$), ce qui élargit l'intervalle de confiance.
+                            Elle est <strong>prudente/réaliste</strong>.
+                        </li>
+                    </ul>
+
+                    <p><strong>⚖️ Quand utiliser l'une plutôt que l'autre ?</strong></p>
+                    <ul>
+                        <li>
+                            <strong>Si $\sigma$ est connu</strong> (par ex. grâce à un grand nombre de mesures
+                            préalables ou une certification) → on utilise la <strong>loi normale</strong> (test Z
+                            ou IC basé sur Z).
+                        </li>
+                        <li>
+                            <strong>Si $\sigma$ est inconnu</strong> (cas quasi-systématique en pratique) →
+                            on utilise la <strong>loi de Student</strong> (test T ou IC basé sur T). En pratique
+                            de laboratoire, on utilise presque toujours Student, car on ne connaît jamais
+                            parfaitement l'écart-type de la population.
+                        </li>
+                        <li>
+                            <strong>Convergence :</strong> Lorsque $n$ devient grand (généralement $n \ge 30$),
+                            la loi de Student se rapproche de la loi normale. Les quantiles $t$ tendent vers
+                            les quantiles $z$. C'est pourquoi certains manuels disent que pour $n \ge 30$,
+                            on peut utiliser la normale même si $\sigma$ est inconnu (c'est une simplification
+                            pédagogique, mais en bio-AC, on préfère rester rigoureux avec Student).
+                        </li>
+                    </ul>
+
+                    <p><strong>🔎 Que nous apprend chacune concrètement ?</strong></p>
+                    <ul>
+                        <li>
+                            <strong>Normale ($Z$) :</strong> Elle donne la marge d'erreur minimale théorique.
+                            Elle sert de référence pour définir les limites lorsqu'on a une excellente connaissance
+                            du système de mesure.
+                        </li>
+                        <li>
+                            <strong>Student ($T$) :</strong> Elle donne la marge d'erreur réelle compte tenu
+                            du fait qu'on estime la variance. Elle protège contre le risque de sous-estimer
+                            l'incertitude lorsque l'effectif est faible. C'est l'outil de référence pour les
+                            bilans d'incertitude en laboratoire (ex. validation de méthode, contrôle qualité).
+                        </li>
+                    </ul>
+                    <div class="highlight" style="margin-top:0.8rem;">
+                        <strong>💡 À retenir :</strong> En biologie médicale et en bio-AC, <strong>on utilise
+                        quasi-exclusivement la loi de Student</strong> car $\sigma$ n'est jamais connu avec
+                        certitude. La loi normale est réservée aux proportions (via l'approximation de la
+                        binomiale) ou lorsque l'énoncé précise explicitement que $\sigma$ est connu.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔹 5. Cartes de contrôle et conformité</h3>
+                <div class="content">
+                    <p>
+                        Les cartes de contrôle (Shewhart) permettent de surveiller un processus.
+                        Pour une carte $\bar{X}$, les limites de contrôle sont :
+                        \[
+                        LSC = \mu_0 + 3 \dfrac{\sigma}{\sqrt{n}}, \qquad LIC = \mu_0 - 3 \dfrac{\sigma}{\sqrt{n}}
+                        \]
+                        En contrôle qualité, on utilise les tests d'hypothèses pour vérifier la conformité
+                        (moyenne, proportion de défauts). Les intervalles de confiance quantifient l'incertitude
+                        sur les indicateurs qualité.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION ACTIVITÉS                                             -->
+        <!-- ============================================================ -->
+        <section id="section-activite" class="section">
+            <h2 class="section-title">🧪 Activités interactives</h2>
+            <p class="section-subtitle">Visualisez et manipulez les concepts clés</p>
+
+            <!-- Activité 1 : TCL -->
+            <div class="card">
+                <h3>📊 Activité 1 – Théorème central limite (TCL)</h3>
+                <span class="tag tag-activite">Simulation</span>
+                <div class="content">
+                    <div class="statement" id="tcl-statement">
+                        Population exponentielle de paramètre $\lambda = 1$ ($\mu = 1, \sigma = 1$).
+                    </div>
+                    <div class="sim-controls">
+                        <label>Taille d'échantillon $n$ : <span id="tcl-n-value">5</span></label>
+                        <input type="range" id="tcl-n-slider" min="2" max="100" step="1" value="5" />
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" id="tcl-sim-btn">🔄 Lancer la simulation</button>
+                        <button class="btn btn-outline btn-sm" id="tcl-random-params">🎲 Paramètres aléatoires</button>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="tclCanvas" width="700" height="300"></canvas>
+                    </div>
+                    <div id="tcl-stats" style="font-size:0.95rem; margin-top:0.5rem;">
+                        <p>Moyenne des $\bar{X}$ : <span id="tcl-mean">—</span> &nbsp;|&nbsp;
+                        Écart-type des $\bar{X}$ : <span id="tcl-std">—</span></p>
+                        <p>Écart-type théorique (population) : <span id="tcl-theo">—</span></p>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="show-tcl-answers">Afficher les éléments d'analyse</button>
+                    <div class="answer-box" id="tcl-answers">
+                        <p><strong>🔍 Analyse pédagogique du TCL :</strong></p>
+                        <ul>
+                            <li><strong>Outil :</strong> Théorème Central Limite (TCL). Il stipule que, quelle que soit la forme de la distribution parente, la moyenne d'échantillon $\bar{X}$ suit approximativement une loi normale lorsque $n$ est suffisamment grand ($n \ge 30$).</li>
+                            <li><strong>Pourquoi cet outil ?</strong> En laboratoire, on ignore souvent la loi sous-jacente des mesures. Le TCL nous permet d'utiliser les propriétés de la loi normale (intervalles de confiance, tests) sans connaître la loi exacte, à condition d'avoir un échantillon de taille raisonnable.</li>
+                            <li><strong>Observation :</strong> Pour $n$ petit (ex. 5), la distribution des moyennes est encore asymétrique (comme la loi exponentielle). Quand $n$ augmente, la distribution devient symétrique et se rapproche d'une courbe en cloche. L'écart-type diminue en $\sigma/\sqrt{n}$ : plus l'échantillon est grand, plus la moyenne est précise.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activité 2 : IC -->
+            <div class="card">
+                <h3>📊 Activité 2 – Visualisation d'un intervalle de confiance</h3>
+                <span class="tag tag-activite">Simulation</span>
+                <div class="content">
+                    <div class="statement" id="ic-statement">
+                        Population $\mathcal{N}(\mu = 10, \sigma = 2)$.
+                    </div>
+                    <div class="sim-controls">
+                        <label>Taille d'échantillon $n$ : <span id="ic-n-value">30</span></label>
+                        <input type="range" id="ic-n-slider" min="5" max="100" step="5" value="30" />
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" id="ic-sim-btn">🔄 Lancer la simulation</button>
+                        <button class="btn btn-outline btn-sm" id="ic-random-params">🎲 Paramètres aléatoires</button>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="icCanvas" width="700" height="300"></canvas>
+                    </div>
+                    <div id="ic-stats" style="font-size:0.95rem; margin-top:0.5rem;">
+                        <p>Intervalles contenant $\mu$ : <span id="ic-count">—</span> / 100</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="show-ic-answers">Afficher les éléments d'analyse</button>
+                    <div class="answer-box" id="ic-answers">
+                        <p><strong>🔍 Analyse pédagogique de l'intervalle de confiance :</strong></p>
+                        <ul>
+                            <li><strong>Outil :</strong> Intervalle de confiance (IC) de niveau 95 % pour la moyenne $\mu$ avec $\sigma$ connu. On utilise le quantile $z_{0.025} = 1.96$ de la loi normale.</li>
+                            <li><strong>Pourquoi la loi normale ?</strong> La quantité $\frac{\bar{X} - \mu}{\sigma/\sqrt{n}}$ suit exactement une loi $\mathcal{N}(0,1)$ lorsque la population est normale, ou approximativement via le TCL. Cela permet de construire un intervalle centré sur $\bar{X}$.</li>
+                            <li><strong>Interprétation fréquentiste :</strong> Si l'expérience est répétée un grand nombre de fois, environ 95 % des intervalles construits contiendront la vraie moyenne $\mu$. Ce n'est pas une probabilité sur $\mu$ (qui est fixe), mais une mesure de confiance dans la procédure.</li>
+                            <li><strong>Effet de $n$ :</strong> Plus $n$ est grand, plus l'intervalle est étroit. La largeur est proportionnelle à $1/\sqrt{n}$ : quadrupler $n$ divise la largeur par 2.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION EXERCICES                                             -->
+        <!-- ============================================================ -->
+        <section id="section-exercices" class="section">
+            <h2 class="section-title">✏️ Exercices interactifs</h2>
+            <p class="section-subtitle">Entraînez-vous avec des corrigés détaillés et pédagogiques</p>
+
+            <!-- Exercice 1 -->
+            <div class="card" id="card-exo1">
+                <h3>Exercice 1 – Distribution d'échantillonnage de la moyenne</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo1-statement"></div>
+                    <ol>
+                        <li>Quelle est l'espérance de la moyenne d'échantillon $\bar{X}$ ?</li>
+                        <li>Quel est l'écart-type de $\bar{X}$ ?</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo1">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo1-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo1-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 2 -->
+            <div class="card" id="card-exo2">
+                <h3>Exercice 2 – Théorème central limite</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo2-statement"></div>
+                    <ol>
+                        <li>Selon le TCL, quelle est la loi approchée de $\bar{X}$ ?</li>
+                        <li>Calculer $P(\bar{X} > x_0)$.</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo2">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo2-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo2-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 3 -->
+            <div class="card" id="card-exo3">
+                <h3>Exercice 3 – Distribution d'une proportion</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo3-statement"></div>
+                    <ol>
+                        <li>Donner l'espérance et l'écart-type de $\hat{p}$.</li>
+                        <li>Les conditions d'approximation par la loi normale sont-elles vérifiées ?</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo3">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo3-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo3-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 4 -->
+            <div class="card" id="card-exo4">
+                <h3>Exercice 4 – IC pour la moyenne ($\sigma$ connu)</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo4-statement"></div>
+                    <ol>
+                        <li>Déterminer l'intervalle de confiance à 95 % pour la moyenne vraie $\mu$.</li>
+                        <li>Donner une interprétation correcte de cet intervalle.</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo4">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo4-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo4-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 5 -->
+            <div class="card" id="card-exo5">
+                <h3>Exercice 5 – IC pour la moyenne ($\sigma$ inconnu)</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo5-statement"></div>
+                    <ol>
+                        <li>Calculer l'intervalle de confiance à 95 % pour $\mu$.</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo5">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo5-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo5-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 6 -->
+            <div class="card" id="card-exo6">
+                <h3>Exercice 6 – IC pour une proportion</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo6-statement"></div>
+                    <ol>
+                        <li>Déterminer l'intervalle de confiance à 95 % pour $p$.</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo6">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo6-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo6-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 7 -->
+            <div class="card" id="card-exo7">
+                <h3>Exercice 7 – Test d'hypothèses (principe)</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo7-statement"></div>
+                    <ol>
+                        <li>Quelle est la conclusion correcte ?</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo7">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo7-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo7-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 8 -->
+            <div class="card" id="card-exo8">
+                <h3>Exercice 8 – Test sur la moyenne ($\sigma$ connu)</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo8-statement"></div>
+                    <ol>
+                        <li>Calculer la statistique de test $Z$.</li>
+                        <li>Conclure (seuil 5 %).</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo8">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo8-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo8-answer"></div>
+                </div>
+            </div>
+
+            <!-- Exercice 9 -->
+            <div class="card" id="card-exo9">
+                <h3>Exercice 9 – Test sur une proportion</h3>
+                <span class="tag tag-exercice">Exercice</span>
+                <div class="content">
+                    <div class="statement" id="exo9-statement"></div>
+                    <ol>
+                        <li>Calculer la statistique de test $Z$.</li>
+                        <li>Conclure.</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="exo9">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="exo9-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="exo9-answer"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION PROBLÈMES                                             -->
+        <!-- ============================================================ -->
+        <section id="section-problemes" class="section">
+            <h2 class="section-title">📝 Problèmes de synthèse</h2>
+            <p class="section-subtitle">Mobilisez plusieurs notions sur des cas concrets</p>
+
+            <!-- Problème 1 -->
+            <div class="card" id="card-prob1">
+                <h3>Problème 1 – Estimation de la teneur en principe actif</h3>
+                <span class="tag tag-probleme">Problème</span>
+                <div class="content">
+                    <div class="statement" id="prob1-statement"></div>
+                    <ol>
+                        <li>Calculer la moyenne et l'écart-type de l'échantillon.</li>
+                        <li>Donner un intervalle de confiance à 95 % pour la teneur moyenne $\mu$ (on supposera $\sigma$ inconnu).</li>
+                        <li>Le cahier des charges exige une moyenne comprise entre $[L_{cahier}, U_{cahier}]$. Que conclure ?</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="prob1">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="prob1-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="prob1-answer"></div>
+                </div>
+            </div>
+
+            <!-- Problème 2 -->
+            <div class="card" id="card-prob2">
+                <h3>Problème 2 – Contrôle de conformité d'un procédé</h3>
+                <span class="tag tag-probleme">Problème</span>
+                <div class="content">
+                    <div class="statement" id="prob2-statement"></div>
+                    <ol>
+                        <li>Formuler $H_0$ et $H_1$.</li>
+                        <li>Calculer la statistique de test.</li>
+                        <li>Conclure (donner la p-valeur approchée).</li>
+                        <li>Que dire du risque de première espèce et de la puissance ?</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="prob2">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="prob2-answer">Voir la correction</button>
+                    </div>
+                    <div class="answer-box" id="prob2-answer"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION PBL                                                   -->
+        <!-- ============================================================ -->
+        <section id="section-pbl" class="section">
+            <h2 class="section-title">🧩 Problem-Based Learning (PBL)</h2>
+            <p class="section-subtitle">Mise en situation professionnelle</p>
+
+            <!-- PBL 1 -->
+            <div class="card" id="card-pbl1">
+                <h3>🔬 Cas : Mise en place d'un contrôle qualité par cartes de contrôle</h3>
+                <span class="tag tag-pbl">PBL</span>
+                <div class="content">
+                    <div class="statement" id="pbl1-statement"></div>
+                    <ol>
+                        <li>Calculer les limites de contrôle (LSC et LIC) pour la carte $\bar{X}$.</li>
+                        <li>Interpréter ces limites en termes d'incertitudes et de risque.</li>
+                        <li>Un nouveau lot donne une moyenne de $x_{new}$ mg. Que conclure ?</li>
+                        <li>Proposer une démarche pour améliorer la capabilité du processus.</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="pbl1">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="pbl1-answer">Voir les pistes</button>
+                    </div>
+                    <div class="answer-box" id="pbl1-answer"></div>
+                </div>
+            </div>
+
+            <!-- PBL 2 -->
+            <div class="card" id="card-pbl2">
+                <h3>📋 Cas : Test de conformité et proportion de défauts</h3>
+                <span class="tag tag-pbl">PBL</span>
+                <div class="content">
+                    <div class="statement" id="pbl2-statement"></div>
+                    <ol>
+                        <li>Donner une estimation ponctuelle du taux de défauts.</li>
+                        <li>Construire un intervalle de confiance à 95 % pour le vrai taux de défauts.</li>
+                        <li>Tester $H_0: p \le p_0$ contre $H_1: p > p_0$ au seuil $\alpha = 0.05$. Conclure.</li>
+                        <li>Quelles actions proposeriez-vous si le test est significatif ?</li>
+                    </ol>
+                    <div class="btn-group">
+                        <button class="btn btn-outline btn-sm regenerate" data-target="pbl2">🎲 Nouveaux nombres</button>
+                        <button class="btn btn-outline btn-sm toggle-correction" data-target="pbl2-answer">Voir les pistes</button>
+                    </div>
+                    <div class="answer-box" id="pbl2-answer"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== FOOTER ========== -->
+        <footer class="footer">
+            <span>
+                Ressources pédagogiques – STS Biotechnologies Bio-AC – 2026-2027
+            </span>
+            <a id="copyright-btn">📜 Droits d'auteur</a>
+        </footer>
+
+    </div>
+
+    <!-- ========== MODALE DROITS D'AUTEUR ========== -->
+    <div class="modal-overlay" id="copyright-modal">
+        <div class="modal-box">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <h2>📜 Droits d'auteur &amp; À propos</h2>
+            <p><strong>Statistiques inférentielles – STS Bio-AC – v1.0</strong></p>
+            <p>
+                Cet outil interactif est conçu pour l'enseignement et l'apprentissage de la
+                <strong>Statistique Inférentielle</strong> en STS Biotechnologies option Bio-Analyses et Contrôles.
+                Il permet de visualiser et de simuler les concepts clés : échantillonnage, estimation,
+                intervalles de confiance, tests d'hypothèses et cartes de contrôle, avec des exercices
+                interactifs et des corrigés détaillés.
+            </p>
+
+            <h3>👤 Auteur</h3>
+            <p>
+                <strong>Yann Merdy</strong> – <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>
+                <br />
+                <span style="font-size:0.9rem; color:var(--text-light);">Juin 2026</span>
+            </p>
+
+            <h3>📄 Licence d'utilisation</h3>
+            <p>
+                Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la
+                propriété intellectuelle exclusive de l'auteur, Yann Merdy.
+            </p>
+            <ul>
+                <li>
+                    <strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé·e
+                    à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des
+                    fins personnelles, éducatives et non lucratives.
+                </li>
+                <li>
+                    <strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation,
+                    distribution, intégration ou reproduction du code ou du contenu (total ou partiel)
+                    à des fins commerciales, lucratives ou professionnelles est strictement interdite
+                    sans un accord écrit préalable et explicite de l'auteur.
+                </li>
+                <li>
+                    <strong>Attribution :</strong> Toute reproduction ou modification doit conserver
+                    la mention de l'auteur originale (Yann Merdy) et la présente notice de droits
+                    d'auteur. Pour toute demande d'utilisation commerciale ou de licence spécifique,
+                    veuillez contacter l'auteur à l'adresse indiquée ci-dessus.
+                </li>
+            </ul>
+
+            <h3>🛠️ Technologies utilisées</h3>
+            <div class="tech-list">
+                <span>HTML5</span>
+                <span>CSS3</span>
+                <span>Vanilla JavaScript</span>
+                <span>MathJax (rendu LaTeX)</span>
+            </div>
+
+            <h3>⚖️ Licence</h3>
+            <p>
+                Usage libre à des fins pédagogiques.<br />
+                Tous droits réservés.
+            </p>
+            <div style="margin-top:0.5rem;">
+                <span class="badge-license">© 2026 – Outil de simulation pédagogique</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT                                                    -->
+    <!-- ============================================================ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ---- GESTION DE LA MODALE ----
+            const modal = document.getElementById('copyright-modal');
+            const openBtn = document.getElementById('copyright-btn');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            function openModal() {
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modal.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('open')) {
+                    closeModal();
+                }
+            });
+
+            // ---- UTILITAIRES ----
+            const rand = (min, max) => Math.random() * (max - min) + min;
+            const randInt = (min, max) => Math.floor(rand(min, max + 1));
+            const randFixed = (min, max, decimals = 2) => parseFloat(rand(min, max).toFixed(decimals));
+            const normalCDF = (x) => {
+                const a1 = 0.254829592,
+                    a2 = -0.284496736,
+                    a3 = 1.421413741,
+                    a4 = -1.453152027,
+                    a5 = 1.061405429,
+                    p = 0.3275911;
+                const sign = x < 0 ? -1 : 1;
+                x = Math.abs(x);
+                const t = 1 / (1 + p * x);
+                const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x / 2);
+                return 0.5 * (1 + sign * (y - 0.5));
+            };
+            const randNormal = () => {
+                let u = 0,
+                    v = 0;
+                while (u === 0) u = Math.random();
+                while (v === 0) v = Math.random();
+                return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+            };
+
+            // ---- GESTION DES ONGLETS ----
+            const tabs = document.querySelectorAll('.nav-tabs button');
+            const sections = document.querySelectorAll('.section');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetId = this.dataset.section;
+                    tabs.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    sections.forEach(s => s.classList.remove('active'));
+                    document.getElementById(targetId).classList.add('active');
+                    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+                });
+            });
+
+            // ---- ÉTATS GLOBAUX ----
+            const states = {};
+
+            // ---- FONCTIONS DE GÉNÉRATION ALÉATOIRE ----
+            function generateExo1() {
+                const mu = randFixed(10, 25);
+                const sigma = randFixed(2, 8);
+                const n = randInt(10, 50);
+                const se = sigma / Math.sqrt(n);
+                const state = { mu, sigma, n, se };
+                states.exo1 = state;
+                document.getElementById('exo1-statement').innerHTML =
+                    `Une population a pour moyenne $\\mu = ${mu}$ et écart-type $\\sigma = ${sigma}$. On prélève un échantillon aléatoire simple de taille $n = ${n}$.`;
+                resetCorrection('exo1-answer');
+                return state;
+            }
+
+            function generateExo2() {
+                const mu = randFixed(5, 15);
+                const sigma = randFixed(1, 5);
+                const n = randInt(15, 60);
+                const threshold = randFixed(mu + 0.5, mu + 2.5);
+                const se = sigma / Math.sqrt(n);
+                const z = (threshold - mu) / se;
+                const p = 1 - normalCDF(z);
+                const state = { mu, sigma, n, threshold, se, z, p };
+                states.exo2 = state;
+                document.getElementById('exo2-statement').innerHTML =
+                    `On prélève un échantillon de taille $n = ${n}$ dans une population de moyenne $\\mu = ${mu}$ et d'écart-type $\\sigma = ${sigma}$. Calculer $P(\\bar{X} > ${threshold})$.`;
+                resetCorrection('exo2-answer');
+                return state;
+            }
+
+            function generateExo3() {
+                const p = randFixed(0.2, 0.8);
+                const n = randInt(30, 150);
+                const se = Math.sqrt(p * (1 - p) / n);
+                const cond1 = n * p >= 5;
+                const cond2 = n * (1 - p) >= 5;
+                const state = { p, n, se, cond1, cond2 };
+                states.exo3 = state;
+                document.getElementById('exo3-statement').innerHTML =
+                    `Dans une population, la proportion d'individus possédant un caractère est $p = ${p}$. On prélève un échantillon de taille $n = ${n}$.`;
+                resetCorrection('exo3-answer');
+                return state;
+            }
+
+            function generateExo4() {
+                const xbar = randFixed(90, 110);
+                const sigma = randFixed(10, 25);
+                const n = randInt(20, 80);
+                const z = 1.96;
+                const margin = z * sigma / Math.sqrt(n);
+                const lower = xbar - margin;
+                const upper = xbar + margin;
+                const state = { xbar, sigma, n, lower, upper };
+                states.exo4 = state;
+                document.getElementById('exo4-statement').innerHTML =
+                    `On mesure une grandeur chez ${n} patients. La moyenne observée est $\\bar{x} = ${xbar}$, et l'écart-type est connu $\\sigma = ${sigma}$.`;
+                resetCorrection('exo4-answer');
+                return state;
+            }
+
+            function generateExo5() {
+                const xbar = randFixed(60, 90);
+                const s = randFixed(5, 15);
+                const n = randInt(15, 40);
+                const t = 2.064;
+                const margin = t * s / Math.sqrt(n);
+                const lower = xbar - margin;
+                const upper = xbar + margin;
+                const state = { xbar, s, n, t, lower, upper };
+                states.exo5 = state;
+                document.getElementById('exo5-statement').innerHTML =
+                    `Un échantillon de taille $n = ${n}$ donne $\\bar{x} = ${xbar}$ et $s = ${s}$. On donne $t_{0.025;${n-1}} \\approx ${t}$.`;
+                resetCorrection('exo5-answer');
+                return state;
+            }
+
+            function generateExo6() {
+                const n = randInt(40, 250);
+                const phat = randFixed(0.1, 0.9);
+                const x = Math.round(phat * n);
+                const realPhat = x / n;
+                const z = 1.96;
+                const se = Math.sqrt(realPhat * (1 - realPhat) / n);
+                const margin = z * se;
+                const lower = realPhat - margin;
+                const upper = realPhat + margin;
+                const state = { n, x, phat: realPhat, lower, upper };
+                states.exo6 = state;
+                document.getElementById('exo6-statement').innerHTML =
+                    `Sur $n = ${n}$ individus, $x = ${x}$ présentent le caractère étudié.`;
+                resetCorrection('exo6-answer');
+                return state;
+            }
+
+            function generateExo7() {
+                const pval = randFixed(0.001, 0.1);
+                const alpha = [0.05, 0.01][randInt(0, 1)];
+                const reject = pval <= alpha;
+                const state = { pval, alpha, reject };
+                states.exo7 = state;
+                document.getElementById('exo7-statement').innerHTML =
+                    `On teste $H_0: \\mu = \\mu_0$ contre $H_1: \\mu \\neq \\mu_0$ au seuil $\\alpha = ${alpha}$. La p-valeur obtenue est $${pval}$.`;
+                resetCorrection('exo7-answer');
+                return state;
+            }
+
+            function generateExo8() {
+                const mu0 = randFixed(50, 60);
+                const xbar = randFixed(mu0 - 5, mu0 + 5);
+                const sigma = randFixed(10, 20);
+                const n = randInt(20, 50);
+                const Z = (xbar - mu0) / (sigma / Math.sqrt(n));
+                const pval = 2 * (1 - normalCDF(Math.abs(Z)));
+                const reject = pval < 0.05;
+                const state = { mu0, xbar, sigma, n, Z, pval, reject };
+                states.exo8 = state;
+                document.getElementById('exo8-statement').innerHTML =
+                    `On teste $H_0: \\mu = ${mu0}$ contre $H_1: \\mu \\neq ${mu0}$ avec $\\bar{x} = ${xbar}$, $\\sigma = ${sigma}$, $n = ${n}$, $\\alpha = 0.05$.`;
+                resetCorrection('exo8-answer');
+                return state;
+            }
+
+            function generateExo9() {
+                const p0 = randFixed(0.2, 0.5);
+                const phat = randFixed(Math.max(0.05, p0 - 0.15), Math.min(0.95, p0 + 0.15));
+                const n = randInt(50, 200);
+                const Z = (phat - p0) / Math.sqrt(p0 * (1 - p0) / n);
+                const pval = 2 * (1 - normalCDF(Math.abs(Z)));
+                const reject = pval < 0.05;
+                const state = { p0, phat, n, Z, pval, reject };
+                states.exo9 = state;
+                document.getElementById('exo9-statement').innerHTML =
+                    `On teste $H_0: p = ${p0}$ contre $H_1: p \\neq ${p0}$ au seuil $\\alpha = 0.05$. On observe $\\hat{p} = ${phat}$ avec $n = ${n}$.`;
+                resetCorrection('exo9-answer');
+                return state;
+            }
+
+            function generateProb1() {
+                const n = 20;
+                const trueMean = randFixed(48, 52);
+                const trueStd = randFixed(1, 3);
+                const data = [];
+                for (let i = 0; i < n; i++) {
+                    data.push(parseFloat((trueMean + trueStd * randNormal()).toFixed(2)));
+                }
+                const mean = data.reduce((a, b) => a + b, 0) / n;
+                const variance = data.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
+                const std = Math.sqrt(variance);
+                const t = 2.093;
+                const margin = t * std / Math.sqrt(n);
+                const lower = mean - margin;
+                const upper = mean + margin;
+                const lowerCahier = randFixed(48, 49.5);
+                const upperCahier = randFixed(50.5, 52);
+                const ok = (lower >= lowerCahier && upper <= upperCahier);
+                const state = { data, n, mean, std, lower, upper, lowerCahier, upperCahier, ok };
+                states.prob1 = state;
+                document.getElementById('prob1-statement').innerHTML =
+                    `Un échantillon de ${n} comprimés donne les teneurs (mg) : ${data.join(', ')}. Cahier des charges : moyenne comprise entre ${lowerCahier} et ${upperCahier} mg.`;
+                resetCorrection('prob1-answer');
+                return state;
+            }
+
+            function generateProb2() {
+                const mu0 = randFixed(100, 110);
+                const xbar = randFixed(mu0 - 5, mu0 + 5);
+                const s = randFixed(3, 8);
+                const n = randInt(20, 50);
+                const T = (xbar - mu0) / (s / Math.sqrt(n));
+                const pval = 2 * (1 - normalCDF(Math.abs(T)));
+                const reject = pval < 0.05;
+                const state = { mu0, xbar, s, n, T, pval, reject };
+                states.prob2 = state;
+                document.getElementById('prob2-statement').innerHTML =
+                    `Un procédé doit produire des pièces de longueur moyenne $\\mu_0 = ${mu0}$ mm. Échantillon $n = ${n}$ : $\\bar{x} = ${xbar}$ mm, $s = ${s}$ mm. Test bilatéral $\\alpha = 0.05$.`;
+                resetCorrection('prob2-answer');
+                return state;
+            }
+
+            function generatePBL1() {
+                const xbar = randFixed(49, 51);
+                const Rbar = randFixed(0.5, 1.2);
+                const A2 = 0.729;
+                const d2 = 2.059;
+                const sigma = Rbar / d2;
+                const n = 4;
+                const LSC = xbar + 3 * sigma / Math.sqrt(n);
+                const LIC = xbar - 3 * sigma / Math.sqrt(n);
+                const new_mean = randFixed(xbar - 2, xbar + 2);
+                const out = (new_mean > LSC || new_mean < LIC);
+                const state = { xbar, Rbar, A2, sigma, n, LSC, LIC, new_mean, out };
+                states.pbl1 = state;
+                document.getElementById('pbl1-statement').innerHTML =
+                    `Moyenne générale $\\bar{\\bar{x}} = ${xbar}$ mg, étendue moyenne $\\bar{R} = ${Rbar}$ mg, $n=4$. Un nouveau lot donne $\\bar{x} = ${new_mean}$ mg.`;
+                resetCorrection('pbl1-answer');
+                return state;
+            }
+
+            function generatePBL2() {
+                const n = randInt(100, 300);
+                const p0 = randFixed(0.02, 0.08);
+                const phat = randFixed(p0 - 0.02, p0 + 0.06);
+                const x = Math.round(phat * n);
+                const realPhat = x / n;
+                const z = 1.96;
+                const se = Math.sqrt(realPhat * (1 - realPhat) / n);
+                const lower = realPhat - z * se;
+                const upper = realPhat + z * se;
+                const Z = (realPhat - p0) / Math.sqrt(p0 * (1 - p0) / n);
+                const pval = 1 - normalCDF(Z);
+                const reject = pval < 0.05;
+                const state = { n, x, phat: realPhat, p0, lower, upper, Z, pval, reject };
+                states.pbl2 = state;
+                document.getElementById('pbl2-statement').innerHTML =
+                    `Sur un échantillon de ${n} gélules, on dénombre ${x} défauts. Le taux maximal autorisé est $p_0 = ${p0}$ (soit ${(p0*100).toFixed(0)} %).`;
+                resetCorrection('pbl2-answer');
+                return state;
+            }
+
+            // ---- RÉINITIALISATION D'UNE CORRECTION ----
+            function resetCorrection(targetId) {
+                const box = document.getElementById(targetId);
+                if (box) {
+                    box.classList.remove('show');
+                    box.dataset.filled = 'false';
+                    box.innerHTML = '';
+                    const btn = document.querySelector(`.toggle-correction[data-target="${targetId}"]`);
+                    if (btn) btn.textContent = 'Voir la correction';
+                }
+            }
+
+            // ---- BOUTONS "NOUVEAUX NOMBRES" ----
+            document.querySelectorAll('.regenerate').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const target = this.dataset.target;
+                    switch (target) {
+                        case 'exo1':
+                            generateExo1();
+                            break;
+                        case 'exo2':
+                            generateExo2();
+                            break;
+                        case 'exo3':
+                            generateExo3();
+                            break;
+                        case 'exo4':
+                            generateExo4();
+                            break;
+                        case 'exo5':
+                            generateExo5();
+                            break;
+                        case 'exo6':
+                            generateExo6();
+                            break;
+                        case 'exo7':
+                            generateExo7();
+                            break;
+                        case 'exo8':
+                            generateExo8();
+                            break;
+                        case 'exo9':
+                            generateExo9();
+                            break;
+                        case 'prob1':
+                            generateProb1();
+                            break;
+                        case 'prob2':
+                            generateProb2();
+                            break;
+                        case 'pbl1':
+                            generatePBL1();
+                            break;
+                        case 'pbl2':
+                            generatePBL2();
+                            break;
+                        default:
+                            break;
+                    }
+                    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+                });
+            });
+
+            // ---- CORRECTIONS DYNAMIQUES (VERSION PÉDAGOGIQUE DÉTAILLÉE) ----
+            const correctionButtons = document.querySelectorAll('.toggle-correction');
+
+            function buildCorrection(targetId) {
+                const state = states[targetId.replace('-answer', '')];
+                if (!state) return '<p>Générez d\'abord de nouvelles données.</p>';
+                let html = '<div class="highlight"><strong>📘 Correction détaillée</strong></div>';
+
+                const id = targetId;
+
+                if (id === 'exo1-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\mu = ${state.mu}$, $\\sigma = ${state.sigma}$, $n = ${state.n}$.</p>
+                        <p><strong>2. Outil utilisé :</strong> La distribution d'échantillonnage de la moyenne. D'après le cours, si les $X_i$ sont indépendantes et de même loi, la moyenne empirique $\\bar{X}$ a pour espérance $\\mu$ et pour variance $\\sigma^2/n$.</p>
+                        <p><strong>Pourquoi cet outil ?</strong> On cherche les caractéristiques de $\\bar{X}$ (espérance et écart-type). C'est la base de toute la statistique inférentielle : la moyenne d'échantillon est un estimateur sans biais de $\\mu$, et sa précision est mesurée par l'écart-type $\\sigma/\\sqrt{n}$ (appelé <em>erreur standard</em>).</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$E(\\bar{X}) = \\mu = ${state.mu}$</li>
+                            <li>$\\sigma_{\\bar{X}} = \\dfrac{\\sigma}{\\sqrt{n}} = \\dfrac{${state.sigma}}{\\sqrt{${state.n}}} = ${state.se.toFixed(3)}$</li>
+                        </ul>
+                        <p><strong>4. Interprétation :</strong> Si l'on répète l'échantillonnage, la moyenne des moyennes tend vers $\\mu$. L'erreur standard $\\sigma_{\\bar{X}}$ quantifie la dispersion de $\\bar{X}$ autour de $\\mu$. Elle diminue lorsque $n$ augmente.</p>
+                    `;
+                } else if (id === 'exo2-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\mu = ${state.mu}$, $\\sigma = ${state.sigma}$, $n = ${state.n}$, seuil $x_0 = ${state.threshold}$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Théorème Central Limite (TCL). Comme $n = ${state.n} \\ge 30$ (ou approximation), $\\bar{X}$ suit approximativement une loi normale.</p>
+                        <p><strong>Pourquoi le TCL ?</strong> Même si la population n'est pas normale, le TCL garantit que la moyenne standardisée suit une loi normale. On peut ainsi utiliser les tables de la loi normale pour calculer des probabilités sur $\\bar{X}$.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$\\sigma_{\\bar{X}} = \\dfrac{${state.sigma}}{\\sqrt{${state.n}}} = ${state.se.toFixed(3)}$</li>
+                            <li>Standardisation : $Z = \\dfrac{x_0 - \\mu}{\\sigma_{\\bar{X}}} = \\dfrac{${state.threshold} - ${state.mu}}{${state.se.toFixed(3)}} = ${state.z.toFixed(3)}$</li>
+                            <li>$P(\\bar{X} > ${state.threshold}) = 1 - \\Phi(${state.z.toFixed(3)}) = ${state.p.toFixed(4)}$</li>
+                        </ul>
+                        <p><strong>4. Interprétation :</strong> La probabilité d'observer une moyenne d'échantillon supérieure à ${state.threshold} est de ${(state.p*100).toFixed(2)} %. Cette probabilité est d'autant plus petite que $n$ est grand (effet du TCL).</p>
+                    `;
+                } else if (id === 'exo3-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $p = ${state.p}$, $n = ${state.n}$.</p>
+                        <p><strong>2. Outil :</strong> Distribution d'échantillonnage de la proportion. Le nombre de succès $X \\sim \\mathcal{B}(n,p)$. La proportion $\\hat{p} = X/n$.</p>
+                        <p><strong>Pourquoi cet outil ?</strong> Pour une proportion, l'estimation est basée sur la loi binomiale. Lorsque $n$ est grand, on peut approcher la loi binomiale par une loi normale, ce qui facilite les calculs (intervalles de confiance, tests).</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$E(\\hat{p}) = p = ${state.p}$</li>
+                            <li>$\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{p(1-p)}{n}} = \\sqrt{\\dfrac{${state.p} \\times ${(1-state.p).toFixed(3)}}{${state.n}}} = ${state.se.toFixed(4)}$</li>
+                            <li>Vérification des conditions d'approximation normale :
+                                <ul>
+                                    <li>$np = ${(state.n * state.p).toFixed(1)} \\ge 5$ ${state.cond1 ? '✔ (vérifiée)' : '✘ (non vérifiée)'}</li>
+                                    <li>$n(1-p) = ${(state.n * (1 - state.p)).toFixed(1)} \\ge 5$ ${state.cond2 ? '✔ (vérifiée)' : '✘ (non vérifiée)'}</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p><strong>4. Conclusion :</strong> Les conditions sont ${(state.cond1 && state.cond2) ? 'vérifiées' : 'non vérifiées'}. ${(state.cond1 && state.cond2) ? 'On peut donc approximer la distribution de $\\hat{p}$ par une loi normale.' : 'L\'approximation normale n\'est pas valable, il faut utiliser la loi binomiale exacte.'}</p>
+                    `;
+                } else if (id === 'exo4-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\bar{x} = ${state.xbar}$, $\\sigma = ${state.sigma}$ (connu), $n = ${state.n}$, niveau de confiance $95\\%$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Intervalle de confiance pour la moyenne avec $\\sigma$ connu. On utilise la loi normale : $\\dfrac{\\bar{X} - \\mu}{\\sigma/\\sqrt{n}} \\sim \\mathcal{N}(0,1)$.</p>
+                        <p><strong>Pourquoi la loi normale ?</strong> La moyenne standardisée suit exactement une loi normale centrée réduite lorsque la population est normale, ou approximativement via le TCL. Le quantile $z_{0.025} = 1.96$ donne l'intervalle centré sur $\\bar{x}$ contenant 95 % des valeurs.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>Marge d'erreur : $1.96 \\times \\dfrac{\\sigma}{\\sqrt{n}} = 1.96 \\times \\dfrac{${state.sigma}}{\\sqrt{${state.n}}} = ${(1.96*state.sigma/Math.sqrt(state.n)).toFixed(2)}$</li>
+                            <li>$IC_{95\\%}(\\mu) = [${state.xbar} - ${(1.96*state.sigma/Math.sqrt(state.n)).toFixed(2)}; ${state.xbar} + ${(1.96*state.sigma/Math.sqrt(state.n)).toFixed(2)}]$</li>
+                            <li>Soit $IC_{95\\%}(\\mu) = [${state.lower.toFixed(2)}; ${state.upper.toFixed(2)}]$</li>
+                        </ul>
+                        <p><strong>4. Interprétation :</strong> Nous sommes confiants à 95 % que la vraie moyenne $\\mu$ se situe entre ${state.lower.toFixed(2)} et ${state.upper.toFixed(2)}. Cela ne signifie pas qu'il y a 95 % de chances que $\\mu$ soit dans cet intervalle (car $\\mu$ est fixe), mais que la procédure produit un intervalle correct dans 95 % des cas.</p>
+                    `;
+                } else if (id === 'exo5-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\bar{x} = ${state.xbar}$, $s = ${state.s}$ (écart-type empirique), $n = ${state.n}$, $t_{0.025;${state.n-1}} = ${state.t}$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Intervalle de confiance pour la moyenne avec $\\sigma$ inconnu. On utilise la loi de Student à $\\nu = n-1$ degrés de liberté.</p>
+                        <p><strong>Pourquoi Student plutôt que la normale ?</strong> On ne connaît pas $\\sigma$ ; on l'estime par $s$. Cette estimation ajoute une source d'incertitude supplémentaire. La quantité $\\dfrac{\\bar{X} - \\mu}{S/\\sqrt{n}}$ suit une loi de Student (et non une loi normale). Plus $n$ est petit, plus la distribution de Student est dispersée (queues épaisses), ce qui élargit l'intervalle de confiance par rapport à la normale.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>Marge d'erreur : $t_{0.025;${state.n-1}} \\times \\dfrac{s}{\\sqrt{n}} = ${state.t} \\times \\dfrac{${state.s}}{\\sqrt{${state.n}}} = ${(state.t*state.s/Math.sqrt(state.n)).toFixed(2)}$</li>
+                            <li>$IC_{95\\%}(\\mu) = [${state.xbar} - ${(state.t*state.s/Math.sqrt(state.n)).toFixed(2)}; ${state.xbar} + ${(state.t*state.s/Math.sqrt(state.n)).toFixed(2)}]$</li>
+                            <li>Soit $IC_{95\\%}(\\mu) = [${state.lower.toFixed(2)}; ${state.upper.toFixed(2)}]$</li>
+                        </ul>
+                        <p><strong>4. Interprétation :</strong> L'intervalle est plus large que si $\\sigma$ était connu, car on a intégré l'incertitude liée à l'estimation de $\\sigma$ par $s$.</p>
+                    `;
+                } else if (id === 'exo6-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $n = ${state.n}$, $x = ${state.x}$, $\\hat{p} = ${state.phat.toFixed(3)}$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Intervalle de confiance pour une proportion (méthode de Wald). On utilise l'approximation normale de la binomiale.</p>
+                        <p><strong>Pourquoi cet outil ?</strong> Pour $n$ grand, $\\hat{p}$ suit approximativement une loi normale. L'écart-type de $\\hat{p}$ est estimé par $\\sqrt{\\hat{p}(1-\\hat{p})/n}$. L'intervalle de confiance est construit autour de $\\hat{p}$.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$\\hat{p} = ${state.phat.toFixed(3)}$</li>
+                            <li>$\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{\\hat{p}(1-\\hat{p})}{n}} = \\sqrt{\\dfrac{${state.phat.toFixed(3)} \\times ${(1-state.phat).toFixed(3)}}{${state.n}}} = ${Math.sqrt(state.phat*(1-state.phat)/state.n).toFixed(4)}$</li>
+                            <li>$IC_{95\\%}(p) = \\hat{p} \\pm 1.96 \\times \\sigma_{\\hat{p}} = [${state.lower.toFixed(3)}; ${state.upper.toFixed(3)}]$</li>
+                        </ul>
+                        <p><strong>4. Interprétation :</strong> La vraie proportion $p$ a 95 % de chances d'être comprise entre ${state.lower.toFixed(3)} et ${state.upper.toFixed(3)}. En biologie, cela permet de quantifier l'incertitude sur une proportion (ex. : % de contamination, % de patients répondant au traitement).</p>
+                    `;
+                } else if (id === 'exo7-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> p-valeur $= ${state.pval}$, seuil $\\alpha = ${state.alpha}$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Principe du test d'hypothèses. La p-valeur est la probabilité d'observer une statistique aussi extrême que celle calculée, sous l'hypothèse $H_0$.</p>
+                        <p><strong>Pourquoi comparer p-valeur et $\\alpha$ ?</strong> $\\alpha$ est le risque de première espèce (rejeter $H_0$ alors qu'elle est vraie). Si la p-valeur est inférieure à $\\alpha$, l'observation est trop improbable sous $H_0$, on rejette $H_0$.</p>
+                        <p><strong>3. Règle de décision :</strong></p>
+                        <ul>
+                            <li>p-valeur $= ${state.pval} \\; \\alpha = ${state.alpha}$</li>
+                            <li>${state.pval <= state.alpha ? 'p-valeur ≤ α' : 'p-valeur > α'}</li>
+                            <li>${state.reject ? 'On rejette $H_0$ (différence statistiquement significative).' : 'On ne rejette pas $H_0$ (pas de preuve suffisante).'}</li>
+                        </ul>
+                        <p><strong>4. Interprétation :</strong> ${state.reject ? 'Il y a moins de ' + (state.alpha*100) + ' % de chances d\'observer un tel résultat si $H_0$ est vraie. La moyenne est significativement différente.' : 'L\'écart observé par rapport à $\\mu_0$ n\'est pas suffisamment grand pour conclure à une différence au seuil de ' + (state.alpha*100) + ' %.'}</p>
+                    `;
+                } else if (id === 'exo8-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\mu_0 = ${state.mu0}$, $\\bar{x} = ${state.xbar}$, $\\sigma = ${state.sigma}$ (connu), $n = ${state.n}$, $\\alpha = 0.05$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Test Z pour la moyenne ($\\sigma$ connu). La statistique $Z = \\dfrac{\\bar{X} - \\mu_0}{\\sigma/\\sqrt{n}}$ suit une loi normale centrée réduite sous $H_0$.</p>
+                        <p><strong>Pourquoi le test Z ?</strong> On compare la moyenne observée à la valeur théorique $\\mu_0$. L'écart est standardisé par l'erreur standard. La loi normale permet de calculer la probabilité d'observer un écart aussi grand (p-valeur).</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$Z = \\dfrac{${state.xbar} - ${state.mu0}}{${state.sigma}/\\sqrt{${state.n}}} = ${state.Z.toFixed(3)}$</li>
+                            <li>p-valeur (bilatérale) $= 2 \\times (1 - \\Phi(|Z|)) = ${state.pval.toFixed(4)}$</li>
+                        </ul>
+                        <p><strong>4. Décision :</strong></p>
+                        <ul>
+                            <li>${state.pval < 0.05 ? 'p-valeur < 0.05' : 'p-valeur ≥ 0.05'}</li>
+                            <li>${state.reject ? 'On rejette $H_0$' : 'On ne rejette pas $H_0$'}</li>
+                        </ul>
+                        <p><strong>5. Interprétation :</strong> Au seuil de 5 %, la moyenne observée est ${state.reject ? 'significativement différente' : 'non significativement différente'} de $\\mu_0 = ${state.mu0}$. Le risque de première espèce est maîtrisé à 5 %.</p>
+                    `;
+                } else if (id === 'exo9-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $p_0 = ${state.p0}$, $\\hat{p} = ${state.phat}$, $n = ${state.n}$, $\\alpha = 0.05$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Test Z pour une proportion. Sous $H_0$, la statistique $Z = \\dfrac{\\hat{p} - p_0}{\\sqrt{p_0(1-p_0)/n}}$ suit approximativement une loi normale.</p>
+                        <p><strong>Attention au dénominateur !</strong> Pour le test, on utilise l'écart-type sous $H_0$ (avec $p_0$), et non l'écart-type estimé $\\sqrt{\\hat{p}(1-\\hat{p})/n}$ (qui est utilisé pour l'intervalle de confiance). Cela permet de contrôler le risque de première espèce.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$Z = \\dfrac{${state.phat} - ${state.p0}}{\\sqrt{${state.p0} \\times ${(1-state.p0).toFixed(3)} / ${state.n}}} = ${state.Z.toFixed(3)}$</li>
+                            <li>p-valeur (bilatérale) $= 2 \\times (1 - \\Phi(|Z|)) = ${state.pval.toFixed(4)}$</li>
+                        </ul>
+                        <p><strong>4. Décision :</strong></p>
+                        <ul>
+                            <li>${state.pval < 0.05 ? 'p-valeur < 0.05' : 'p-valeur ≥ 0.05'}</li>
+                            <li>${state.reject ? 'On rejette $H_0$' : 'On ne rejette pas $H_0$'}</li>
+                        </ul>
+                        <p><strong>5. Interprétation :</strong> La proportion observée ${state.phat} est ${state.reject ? 'significativement différente' : 'non significativement différente'} de $p_0 = ${state.p0}$.</p>
+                    `;
+                } else if (id === 'prob1-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> Échantillon $n = ${state.n}$ : ${state.data.join(', ')} mg.</p>
+                        <p><strong>2. Outils utilisés :</strong> Estimation ponctuelle (moyenne, écart-type) et intervalle de confiance avec $\\sigma$ inconnu (loi de Student).</p>
+                        <p><strong>Pourquoi Student ?</strong> L'écart-type de la population $\\sigma$ est inconnu, on l'estime par $s$. L'incertitude sur cette estimation est prise en compte par la loi de Student.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>Moyenne : $\\bar{x} = ${state.mean.toFixed(2)}$ mg</li>
+                            <li>Écart-type empirique : $s = ${state.std.toFixed(2)}$ mg</li>
+                            <li>Degrés de liberté : $\\nu = n-1 = ${state.n-1}$</li>
+                            <li>$t_{0.025;${state.n-1}} = 2.093$</li>
+                            <li>Marge d'erreur : $2.093 \\times \\dfrac{${state.std.toFixed(2)}}{\\sqrt{${state.n}}} = ${(2.093*state.std/Math.sqrt(state.n)).toFixed(2)}$</li>
+                            <li>$IC_{95\\%}(\\mu) = [${state.lower.toFixed(2)}; ${state.upper.toFixed(2)}]$</li>
+                        </ul>
+                        <p><strong>4. Comparaison avec le cahier des charges :</strong></p>
+                        <ul>
+                            <li>Spécifications : [$ ${state.lowerCahier}$ ; $ ${state.upperCahier}$ ]</li>
+                            <li>L'intervalle de confiance ${state.ok ? 'est entièrement contenu' : 'n\'est pas entièrement contenu'} dans les spécifications.</li>
+                            <li>La moyenne est ${state.ok ? 'conforme' : 'non conforme'}.</li>
+                        </ul>
+                        <p><strong>5. Interprétation :</strong> ${state.ok ? 'Le procédé est sous contrôle du point de vue de la teneur moyenne.' : 'Il y a une dérive de la teneur moyenne par rapport à la cible. Il faut recalibrer le procédé.'}</p>
+                    `;
+                } else if (id === 'prob2-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\mu_0 = ${state.mu0}$, $\\bar{x} = ${state.xbar}$, $s = ${state.s}$, $n = ${state.n}$, $\\alpha = 0.05$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Test T de Student (bilatéral, $\\sigma$ inconnu).</p>
+                        <p><strong>Pourquoi T plutôt que Z ?</strong> L'écart-type $\\sigma$ est inconnu et estimé par $s$. La statistique $T = \\dfrac{\\bar{X} - \\mu_0}{s/\\sqrt{n}}$ suit une loi de Student à $n-1$ degrés de liberté.</p>
+                        <p><strong>3. Hypothèses :</strong></p>
+                        <ul>
+                            <li>$H_0: \\mu = ${state.mu0}$ (le procédé est réglé)</li>
+                            <li>$H_1: \\mu \\neq ${state.mu0}$ (le procédé est déréglé)</li>
+                        </ul>
+                        <p><strong>4. Calculs :</strong></p>
+                        <ul>
+                            <li>$T = \\dfrac{${state.xbar} - ${state.mu0}}{${state.s}/\\sqrt{${state.n}}} = ${state.T.toFixed(3)}$</li>
+                            <li>p-valeur (bilatérale, $\\nu = ${state.n-1}$) $\\approx ${state.pval.toFixed(4)}$</li>
+                        </ul>
+                        <p><strong>5. Décision :</strong></p>
+                        <ul>
+                            <li>${state.pval < 0.05 ? 'p-valeur < 0.05' : 'p-valeur ≥ 0.05'}</li>
+                            <li>${state.reject ? 'On rejette $H_0$' : 'On ne rejette pas $H_0$'}</li>
+                        </ul>
+                        <p><strong>6. Interprétation :</strong></p>
+                        <ul>
+                            <li>Risque de première espèce ($\\alpha$) = 5 % : probabilité de rejeter $H_0$ à tort.</li>
+                            <li>Puissance ($1-\\beta$) : capacité à détecter un écart significatif si $H_1$ est vraie. Elle dépend de la taille d'effet et de $n$. Pour améliorer la puissance, on peut augmenter $n$.</li>
+                            <li>${state.reject ? 'Le procédé est significativement déréglé. Une action corrective est nécessaire.' : 'Le procédé est statistiquement sous contrôle (pas de preuve de dérèglement).'}</li>
+                        </ul>
+                    `;
+                } else if (id === 'pbl1-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $\\bar{\\bar{x}} = ${state.xbar}$ mg, $\\bar{R} = ${state.Rbar}$ mg, $n = ${state.n}$.</p>
+                        <p><strong>2. Outil utilisé :</strong> Cartes de contrôle de Shewhart. On estime $\\sigma$ par $\\sigma \\approx \\bar{R}/d_2$, où $d_2 = 2.059$ pour $n=4$. Les limites de contrôle sont fixées à $\\bar{\\bar{x}} \\pm 3\\sigma_{\\bar{x}}$.</p>
+                        <p><strong>Pourquoi $3\\sigma$ ?</strong> Dans un processus normal, 99,73 % des points se situent dans l'intervalle $\\mu \\pm 3\\sigma$. Le risque de fausse alarme (point hors limite alors que le processus est stable) est de 0,27 %.</p>
+                        <p><strong>3. Calculs :</strong></p>
+                        <ul>
+                            <li>$\\sigma \\approx \\dfrac{\\bar{R}}{d_2} = \\dfrac{${state.Rbar}}{2.059} = ${state.sigma.toFixed(3)}$</li>
+                            <li>$\\sigma_{\\bar{x}} = \\dfrac{\\sigma}{\\sqrt{n}} = \\dfrac{${state.sigma.toFixed(3)}}{\\sqrt{${state.n}}} = ${(state.sigma/Math.sqrt(state.n)).toFixed(3)}$</li>
+                            <li>$LSC = \\bar{\\bar{x}} + 3\\sigma_{\\bar{x}} = ${state.xbar} + ${(3*state.sigma/Math.sqrt(state.n)).toFixed(2)} = ${state.LSC.toFixed(2)}$ mg</li>
+                            <li>$LIC = \\bar{\\bar{x}} - 3\\sigma_{\\bar{x}} = ${state.xbar} - ${(3*state.sigma/Math.sqrt(state.n)).toFixed(2)} = ${state.LIC.toFixed(2)}$ mg</li>
+                        </ul>
+                        <p><strong>4. Interprétation et décision :</strong></p>
+                        <ul>
+                            <li>Le nouveau lot a une moyenne de $${state.new_mean}$ mg.</li>
+                            <li>Ce point est ${state.out ? 'hors' : 'dans'} les limites de contrôle.</li>
+                            <li>${state.out ? 'Le processus est hors contrôle. Il faut rechercher une cause assignable (dérive de l\'instrument, changement de lot de matière première, etc.).' : 'Le processus est sous contrôle. Aucune action corrective immédiate n\'est nécessaire.'}</li>
+                        </ul>
+                        <p><strong>5. Amélioration de la capabilité :</strong> Pour réduire la largeur des limites, il faut diminuer $\\sigma$ (améliorer la répétabilité du procédé) ou augmenter $n$ (taille des sous-groupes).</p>
+                    `;
+                } else if (id === 'pbl2-answer') {
+                    html += `
+                        <p><strong>1. Données :</strong> $n = ${state.n}$, $x = ${state.x}$ défauts, taux cible $p_0 = ${state.p0}$.</p>
+                        <p><strong>2. Outils utilisés :</strong> Estimation ponctuelle, intervalle de confiance de Wald, test Z unilatéral pour une proportion.</p>
+                        <p><strong>3. Estimation ponctuelle :</strong> $\\hat{p} = \\dfrac{${state.x}}{${state.n}} = ${state.phat.toFixed(3)}$ (soit ${(state.phat*100).toFixed(1)} % de défauts).</p>
+                        <p><strong>4. Intervalle de confiance (95 %) :</strong></p>
+                        <ul>
+                            <li>$\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{\\hat{p}(1-\\hat{p})}{n}} = ${Math.sqrt(state.phat*(1-state.phat)/state.n).toFixed(4)}$</li>
+                            <li>$IC_{95\\%}(p) = [${state.lower.toFixed(3)}; ${state.upper.toFixed(3)}]$</li>
+                        </ul>
+                        <p><strong>5. Test d'hypothèse :</strong></p>
+                        <ul>
+                            <li>$H_0: p \\le ${state.p0}$ (taux acceptable)</li>
+                            <li>$H_1: p > ${state.p0}$ (taux trop élevé)</li>
+                        </ul>
+                        <p><strong>Attention :</strong> L'écart-type utilisé pour le test est $\\sqrt{p_0(1-p_0)/n}$ (sous $H_0$), et non l'écart-type estimé.</p>
+                        <ul>
+                            <li>$Z = \\dfrac{\\hat{p} - p_0}{\\sqrt{p_0(1-p_0)/n}} = ${state.Z.toFixed(3)}$</li>
+                            <li>p-valeur (unilatérale) $= 1 - \\Phi(Z) = ${state.pval.toFixed(4)}$</li>
+                        </ul>
+                        <p><strong>6. Décision :</strong></p>
+                        <ul>
+                            <li>${state.pval < 0.05 ? 'p-valeur < 0.05' : 'p-valeur ≥ 0.05'}</li>
+                            <li>${state.reject ? 'On rejette $H_0$' : 'On ne rejette pas $H_0$'}</li>
+                        </ul>
+                        <p><strong>7. Interprétation et actions :</strong></p>
+                        <ul>
+                            <li>${state.reject ? 'Le taux de défauts est significativement supérieur à ' + (state.p0*100).toFixed(0) + ' %. Il faut enquêter sur les causes (matière première, réglage des machines, formation des opérateurs).' : 'Le taux de défauts observé n\'est pas significativement supérieur à ' + (state.p0*100).toFixed(0) + ' %. Le procédé est acceptable.'}</li>
+                        </ul>
+                    `;
+                }
+
+                html += `<div class="highlight" style="margin-top:1rem;"><strong>💡 Point pédagogique :</strong> Les calculs ont été réalisés en utilisant les lois théoriques (Normale, Student). En laboratoire, ces outils sont systématiquement appliqués pour valider les méthodes de dosage et contrôler la qualité.</div>`;
+                return html;
+            }
+
+            correctionButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.dataset.target;
+                    const answerBox = document.getElementById(targetId);
+                    if (!answerBox) return;
+                    if (answerBox.classList.contains('show')) {
+                        answerBox.classList.remove('show');
+                        this.textContent = 'Voir la correction';
+                        return;
+                    }
+                    if (!answerBox.dataset.filled || answerBox.dataset.filled === 'false') {
+                        const html = buildCorrection(targetId);
+                        answerBox.innerHTML = html;
+                        answerBox.dataset.filled = 'true';
+                    }
+                    answerBox.classList.add('show');
+                    this.textContent = 'Masquer la correction';
+                    if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+                });
+            });
+
+            // ---- ACTIVITÉS (TCL & IC) ----
+            const tclCanvas = document.getElementById('tclCanvas');
+            const tclCtx = tclCanvas.getContext('2d');
+            const tclNSlider = document.getElementById('tcl-n-slider');
+            const tclNValue = document.getElementById('tcl-n-value');
+            const tclSimBtn = document.getElementById('tcl-sim-btn');
+            let tclLambda = 1;
+
+            function runTCL() {
+                const n = parseInt(tclNSlider.value);
+                tclNValue.textContent = n;
+                const nSim = 1000;
+                const means = [];
+                for (let i = 0; i < nSim; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < n; j++) {
+                        sum += -Math.log(1 - Math.random()) / tclLambda;
+                    }
+                    means.push(sum / n);
+                }
+                const mean = means.reduce((a, b) => a + b, 0) / nSim;
+                const variance = means.reduce((a, b) => a + (b - mean) ** 2, 0) / (nSim - 1);
+                const std = Math.sqrt(variance);
+                const theoMean = 1 / tclLambda;
+                const theoStd = 1 / (tclLambda * Math.sqrt(n));
+
+                document.getElementById('tcl-mean').textContent = mean.toFixed(3);
+                document.getElementById('tcl-std').textContent = std.toFixed(3);
+                document.getElementById('tcl-theo').textContent = theoStd.toFixed(3);
+
+                const w = tclCanvas.width,
+                    h = tclCanvas.height;
+                tclCtx.clearRect(0, 0, w, h);
+                const minVal = Math.min(...means);
+                const maxVal = Math.max(...means);
+                const range = maxVal - minVal || 1;
+                const bins = 30;
+                const binWidth = range / bins;
+                const hist = new Array(bins).fill(0);
+                means.forEach(val => {
+                    const idx = Math.min(bins - 1, Math.floor((val - minVal) / binWidth));
+                    hist[idx]++;
+                });
+                const maxCount = Math.max(...hist);
+                const margin = { top: 20, bottom: 40, left: 50, right: 20 };
+                const plotW = w - margin.left - margin.right;
+                const plotH = h - margin.top - margin.bottom;
+
+                tclCtx.fillStyle = '#4caf84';
+                tclCtx.strokeStyle = '#1a6b4b';
+                tclCtx.lineWidth = 1;
+                for (let i = 0; i < bins; i++) {
+                    const x = margin.left + (i / bins) * plotW;
+                    const barH = (hist[i] / maxCount) * plotH;
+                    tclCtx.fillRect(x, margin.top + plotH - barH, plotW / bins - 1, barH);
+                    tclCtx.strokeRect(x, margin.top + plotH - barH, plotW / bins - 1, barH);
+                }
+
+                tclCtx.beginPath();
+                tclCtx.strokeStyle = '#c62828';
+                tclCtx.lineWidth = 2;
+                const steps = 100;
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const xVal = minVal + t * range;
+                    const pdf = (1 / (theoStd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((xVal - theoMean) / theoStd) ** 2);
+                    const y = margin.top + plotH - (pdf / (1 / (theoStd * Math.sqrt(2 * Math.PI)))) * plotH * 0.9;
+                    const px = margin.left + (t) * plotW;
+                    if (i === 0) tclCtx.moveTo(px, y);
+                    else tclCtx.lineTo(px, y);
+                }
+                tclCtx.stroke();
+
+                tclCtx.fillStyle = '#1f2937';
+                tclCtx.font = '12px sans-serif';
+                tclCtx.textAlign = 'center';
+                tclCtx.fillText('Moyenne d\'échantillon', w / 2, h - 5);
+                tclCtx.textAlign = 'right';
+                tclCtx.fillText('Fréquence', margin.left - 10, margin.top + plotH / 2);
+                tclCtx.fillStyle = '#c62828';
+                tclCtx.fillText('Normale théorique', w - 100, margin.top + 15);
+                tclCtx.fillStyle = '#4caf84';
+                tclCtx.fillText('Simulation', w - 100, margin.top + 35);
+            }
+
+            tclSimBtn.addEventListener('click', runTCL);
+            tclNSlider.addEventListener('input', runTCL);
+            document.getElementById('tcl-random-params').addEventListener('click', function() {
+                tclLambda = randFixed(0.5, 2.0);
+                document.getElementById('tcl-statement').innerHTML =
+                    `Population exponentielle de paramètre $\\lambda = ${tclLambda.toFixed(2)}$ ($\\mu = ${(1/tclLambda).toFixed(2)}, \\sigma = ${(1/tclLambda).toFixed(2)}$).`;
+                const n = randInt(5, 50);
+                tclNSlider.value = n;
+                runTCL();
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+            });
+            runTCL();
+
+            // ---- ACTIVITÉ 2 : IC ----
+            const icCanvas = document.getElementById('icCanvas');
+            const icCtx = icCanvas.getContext('2d');
+            const icNSlider = document.getElementById('ic-n-slider');
+            const icNValue = document.getElementById('ic-n-value');
+            const icSimBtn = document.getElementById('ic-sim-btn');
+            let icMu = 10,
+                icSigma = 2;
+
+            function runIC() {
+                const n = parseInt(icNSlider.value);
+                icNValue.textContent = n;
+                const nSim = 100;
+                const z = 1.96;
+                let count = 0;
+                const intervals = [];
+                for (let i = 0; i < nSim; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < n; j++) {
+                        sum += icMu + icSigma * randNormal();
+                    }
+                    const xbar = sum / n;
+                    const margin = z * icSigma / Math.sqrt(n);
+                    const lower = xbar - margin;
+                    const upper = xbar + margin;
+                    const contains = (lower <= icMu && icMu <= upper);
+                    if (contains) count++;
+                    intervals.push({ lower, upper, contains });
+                }
+                document.getElementById('ic-count').textContent = count;
+
+                const w = icCanvas.width,
+                    h = icCanvas.height;
+                icCtx.clearRect(0, 0, w, h);
+                const margin = { top: 20, bottom: 20, left: 30, right: 30 };
+                const plotW = w - margin.left - margin.right;
+                const plotH = h - margin.top - margin.bottom;
+
+                intervals.sort((a, b) => (a.lower + a.upper) / 2 - (b.lower + b.upper) / 2);
+                let minVal = Infinity,
+                    maxVal = -Infinity;
+                intervals.forEach(ic => {
+                    if (ic.lower < minVal) minVal = ic.lower;
+                    if (ic.upper > maxVal) maxVal = ic.upper;
+                });
+                const range = maxVal - minVal || 1;
+                const muX = margin.left + ((icMu - minVal) / range) * plotW;
+                icCtx.strokeStyle = '#ccc';
+                icCtx.lineWidth = 1;
+                icCtx.beginPath();
+                icCtx.setLineDash([4, 4]);
+                icCtx.moveTo(muX, margin.top);
+                icCtx.lineTo(muX, margin.top + plotH);
+                icCtx.stroke();
+                icCtx.setLineDash([]);
+                icCtx.fillStyle = '#c62828';
+                icCtx.font = '12px sans-serif';
+                icCtx.textAlign = 'center';
+                icCtx.fillText('μ', muX, margin.top - 5);
+
+                for (let i = 0; i < intervals.length; i++) {
+                    const ic = intervals[i];
+                    const x1 = margin.left + ((ic.lower - minVal) / range) * plotW;
+                    const x2 = margin.left + ((ic.upper - minVal) / range) * plotW;
+                    const y = margin.top + (i / intervals.length) * plotH;
+                    icCtx.strokeStyle = ic.contains ? '#1a6b4b' : '#c62828';
+                    icCtx.lineWidth = 2;
+                    icCtx.beginPath();
+                    icCtx.moveTo(x1, y);
+                    icCtx.lineTo(x2, y);
+                    icCtx.stroke();
+                    icCtx.fillStyle = ic.contains ? '#1a6b4b' : '#c62828';
+                    icCtx.beginPath();
+                    icCtx.arc((x1 + x2) / 2, y, 3, 0, 2 * Math.PI);
+                    icCtx.fill();
+                }
+                icCtx.fillStyle = '#1f2937';
+                icCtx.font = '12px sans-serif';
+                icCtx.textAlign = 'center';
+                icCtx.fillText('Intervalles de confiance (95 %)', w / 2, h - 5);
+                icCtx.textAlign = 'left';
+                icCtx.fillStyle = '#1a6b4b';
+                icCtx.fillText('Contient μ', margin.left, margin.top + plotH + 20);
+                icCtx.fillStyle = '#c62828';
+                icCtx.fillText('Ne contient pas μ', margin.left + 120, margin.top + plotH + 20);
+            }
+
+            icSimBtn.addEventListener('click', runIC);
+            icNSlider.addEventListener('input', runIC);
+            document.getElementById('ic-random-params').addEventListener('click', function() {
+                icMu = randFixed(8, 15);
+                icSigma = randFixed(1.5, 4);
+                document.getElementById('ic-statement').innerHTML =
+                    `Population $\\mathcal{N}(\\mu = ${icMu}, \\sigma = ${icSigma})$.`;
+                const n = randInt(10, 60);
+                icNSlider.value = n;
+                runIC();
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+            });
+            runIC();
+
+            // ---- BOUTONS ACTIVITÉS ----
+            document.getElementById('show-tcl-answers').addEventListener('click', function() {
+                const box = document.getElementById('tcl-answers');
+                box.classList.toggle('show');
+                this.textContent = box.classList.contains('show') ? 'Masquer les éléments d\'analyse' :
+                    'Afficher les éléments d\'analyse';
+            });
+            document.getElementById('show-ic-answers').addEventListener('click', function() {
+                const box = document.getElementById('ic-answers');
+                box.classList.toggle('show');
+                this.textContent = box.classList.contains('show') ? 'Masquer les éléments d\'analyse' :
+                    'Afficher les éléments d\'analyse';
+            });
+
+            // ---- INITIALISATION ----
+            generateExo1();
+            generateExo2();
+            generateExo3();
+            generateExo4();
+            generateExo5();
+            generateExo6();
+            generateExo7();
+            generateExo8();
+            generateExo9();
+            generateProb1();
+            generateProb2();
+            generatePBL1();
+            generatePBL2();
+
+            if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+
+        }); // fin DOMContentLoaded
+    </script>
+
+</body>
+</html>

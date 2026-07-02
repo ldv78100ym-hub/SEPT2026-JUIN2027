@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calcul d'erreur – BTS BioAC (version fusionnée corrigée)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <style>
+        /* Styles additionnels pour le canvas et les contrôles */
+        .canvas-wrapper {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: var(--bg-card);
+            border-radius: 12px;
+            touch-action: none;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1.2rem;
+        }
+        .control-group {
+            background: var(--bg-card);
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            color: var(--text);
+        }
+        .control-group .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.2rem 0;
+        }
+        .control-group .slider-row input[type="range"] {
+            flex: 1;
+            accent-color: #0b6e4f;
+        }
+        .control-group .slider-row span {
+            min-width: 2.4rem;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .control-group .badge-status {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.3rem;
+        }
+        .badge-status.true { background: #dcfce7; color: #166534; }
+        .badge-status.false { background: #fee2e2; color: #991b1b; }
+        .reset-btn {
+            grid-column: 1 / -1;
+            justify-self: center;
+            padding: 0.5rem 2rem;
+            background: #0b6e4f;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .reset-btn:hover { background: #095a3f; }
+        .info-panel {
+            margin-top: 1.2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+        .info-panel .case-label {
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            text-align: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+        .info-panel .case-label .title {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .info-panel .case-label .desc {
+            font-size: 0.75rem;
+            color: var(--text);
+            margin-top: 0.2rem;
+        }
+        @media (max-width: 700px) {
+            .controls-grid { grid-template-columns: 1fr 1fr; }
+            .info-panel { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 500px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .info-panel { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-flask"></i>
+            <span>BTS BioAC</span>
+        </div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="introduction.html"><i class="fas fa-home"></i><span>Introduction</span></a></li>
+                <li><a href="types-erreurs.html"><i class="fas fa-exclamation-triangle"></i><span>Types d'erreurs</span></a></li>
+                <li><a href="schema-erreurs.html"><i class="fas fa-chart-pie"></i><span>Schéma récapitulatif</span></a></li>
+                <li><a href="justesse-fidelite.html" class="active"><i class="fas fa-bullseye"></i><span>Justesse &amp; Fidélité</span></a></li>
+                <li><a href="propagation.html"><i class="fas fa-project-diagram"></i><span>Propagation</span></a></li>
+                <li><a href="mesures-experimentales.html"><i class="fas fa-flask"></i><span>Mesures exp.</span></a></li>
+                <li><a href="incertitudes.html"><i class="fas fa-balance-scale"></i><span>Incertitudes</span></a></li>
+                <li><a href="dof.html"><i class="fas fa-calculator"></i><span>Pourquoi (n−1) ?</span></a></li>
+                <li><a href="exercices.html"><i class="fas fa-vial"></i><span>Exercices</span></a></li>
+                <li><a href="glossaire.html"><i class="fas fa-book-open"></i><span>Glossaire</span></a></li>
+            </ul>
+        </div>
+        <div class="theme-toggle" id="copyrightToggle" role="button" tabindex="0" aria-label="Droits d'auteur">
+            <i class="fas fa-copyright"></i><span>Droits d'auteur</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Basculer le mode sombre">
+            <i class="fas fa-moon"></i><span>Mode sombre</span>
+        </div>
+    </nav>
+
+    <div class="copyright-modal" id="copyrightModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <button class="close-btn" id="modalCloseBtn" aria-label="Fermer la modale">&times;</button>
+            <h2 id="modalTitle"><i class="fas fa-balance-scale"></i> Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>) – Juin 2026</p>
+            <div style="margin-top:1.2rem;">
+                <span class="badge-licence">Licence Non Commerciale</span>
+                <p style="margin-top:0.8rem;">Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            </div>
+            <h4 style="margin-top:1.5rem; font-weight:600;">Conditions :</h4>
+            <ul>
+                <li><strong>✅ Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>❌ Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>📝 Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+                <li><strong>✉️ Contact :</strong> Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>.</li>
+            </ul>
+            <div class="licence-footer">
+                <i class="fas fa-info-circle"></i> Ce fichier <strong>justesse-fidelite.html</strong> est mis à disposition selon les termes de cette licence non commerciale.
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 style="font-size:2.2rem; font-weight:700; border-left:8px solid #0b6e4f; padding-left:1.2rem; margin-bottom:0.2rem; color:var(--text);">
+            🧪 Calcul d'erreur – BTS BioAC
+        </h1>
+        
+        <section id="justesse-fidelite" class="section">
+            <div class="section-title"><span>🎯 4. Justesse et fidélité – illustration</span><span class="badge green">Explication détaillée</span></div>
+            <div class="card">
+                <div style="background: var(--info); padding:0.8rem 1.5rem; border-radius:12px; margin-bottom:1.5rem;">
+                    <p style="font-size:1.1rem; font-weight:600; color:var(--text); margin-bottom:0.3rem;"><i class="fas fa-lightbulb" style="color:#0b6e4f;"></i> Pourquoi ces deux notions sont-elles si importantes ?</p>
+                    <p style="color:var(--text);">En laboratoire, on veut à la fois <strong>toucher la cible</strong> (justesse) et être <strong>répétable</strong> (fidélité). Un bon résultat doit être <strong>juste ET fidèle</strong>. Les 4 cas ci-dessous vous montrent ce qui se passe quand l'un ou l'autre manque.</p>
+                </div>
+
+                <!-- Canvas interactif + contrôles -->
+                <div class="canvas-wrapper">
+                    <canvas id="targetCanvas" width="800" height="300"></canvas>
+                    <div class="controls-grid" id="controlsContainer"></div>
+                    <button class="reset-btn" id="resetDefaults">↺ Réinitialiser les exemples</button>
+                    <div class="info-panel" id="infoPanel"></div>
+                </div>
+
+                <!-- Explications complémentaires (inchangées) -->
+                <div style="margin-top:1.8rem; background: var(--bg-card); border: 2px solid #94a3b8; border-radius: 12px; padding: 1.2rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <p style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:0.5rem;">🔍 Le point clé : Juste et fidèle VS Pas juste mais fidèle</p>
+                    <p style="color:var(--text); margin-bottom:0.8rem;">Dans les deux cas, les tirs sont <strong>regroupés</strong> (la mesure est fidèle). La seule différence est l’<strong>emplacement du groupe</strong> :</p>
+                    <div class="row" style="gap:1rem; margin-top:0.5rem;">
+                        <div style="flex:1; background: var(--success); padding:0.8rem 1.2rem; border-radius:10px; border-left:6px solid #16a34a;">
+                            <p style="font-weight:700; color:#166534; margin:0;">✅ Juste et fidèle</p>
+                            <p style="margin:0.2rem 0 0 0; font-size:0.95rem; color:var(--text);">Le groupe est <strong>centré sur la cible</strong>. La moyenne est égale à la valeur vraie.</p>
+                            <p style="margin:0.5rem 0 0 0; font-size:0.9rem; color:var(--text-light);"><strong>Exemple :</strong> Pesée d'un échantillon de 10,00 g → 10,01 ; 9,99 ; 10,00 ; 10,02 ; 9,98. Moyenne = 10,00.</p>
+                        </div>
+                        <div style="flex:1; background: #e0f2fe; padding:0.8rem 1.2rem; border-radius:10px; border-left:6px solid #0284c7;">
+                            <p style="font-weight:700; color:#0369a1; margin:0;">⚠️ Pas juste mais fidèle</p>
+                            <p style="margin:0.2rem 0 0 0; font-size:0.95rem; color:var(--text);">Le groupe est <strong>décalé</strong> par rapport à la cible (biais systématique).</p>
+                            <p style="margin:0.5rem 0 0 0; font-size:0.9rem; color:var(--text-light);"><strong>Exemple :</strong> Balance mal étalonnée (+0,20 g) → 10,21 ; 10,19 ; 10,20 ; 10,22 ; 10,18. Moyenne = 10,20.</p>
+                        </div>
+                    </div>
+                    <p style="margin-top:0.8rem; font-size:0.95rem; color:var(--text-light);">👉 <strong>Conclusion :</strong> La <strong>justesse</strong> se joue sur la <strong>moyenne</strong> (centrage), la <strong>fidélité</strong> sur la <strong>dispersion</strong> (regroupement). Un appareil peut être très fidèle (donne toujours le même résultat) mais complètement faux (mal étalonné).</p>
+                </div>
+
+                <div style="margin-top:1.8rem; background: var(--bg-card); border: 2px solid #94a3b8; border-radius: 12px; padding: 1.2rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <p style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:0.5rem;">🔍 Le point clé : Juste mais pas fidèle VS Ni juste ni fidèle</p>
+                    <p style="color:var(--text); margin-bottom:0.8rem;">Dans les deux cas, les tirs sont <strong>dispersés</strong> (la mesure n'est PAS fidèle). La seule différence est l’<strong>emplacement du centre</strong> (la moyenne) :</p>
+                    <div class="row" style="gap:1rem; margin-top:0.5rem;">
+                        <div style="flex:1; background: #fef3c7; padding:0.8rem 1.2rem; border-radius:10px; border-left:6px solid #f59e0b;">
+                            <p style="font-weight:700; color:#92400e; margin:0;">⚠️ Juste mais pas fidèle</p>
+                            <p style="margin:0.2rem 0 0 0; font-size:0.95rem; color:var(--text);">La <strong>moyenne</strong> est sur la cible (juste), mais les tirs sont dispersés.</p>
+                            <p style="margin:0.5rem 0 0 0; font-size:0.9rem; color:var(--text-light);"><strong>Exemple :</strong> Dosage à 10 mg/L → 9,2 ; 10,8 ; 9,5 ; 10,5 ; 10,0. Moyenne = 10,0 (juste).</p>
+                        </div>
+                        <div style="flex:1; background: #fee2e2; padding:0.8rem 1.2rem; border-radius:10px; border-left:6px solid #dc2626;">
+                            <p style="font-weight:700; color:#991b1b; margin:0;">❌ Ni juste ni fidèle</p>
+                            <p style="margin:0.2rem 0 0 0; font-size:0.95rem; color:var(--text);">La <strong>moyenne</strong> est décalée (pas juste) ET les tirs sont dispersés.</p>
+                            <p style="margin:0.5rem 0 0 0; font-size:0.9rem; color:var(--text-light);"><strong>Exemple :</strong> 8,2 ; 11,8 ; 9,5 ; 12,5 ; 9,0. Moyenne = 10,2 (fausse) et dispersion élevée.</p>
+                        </div>
+                    </div>
+                    <p style="margin-top:0.8rem; font-size:0.95rem; color:var(--text-light);">👉 <strong>Conclusion :</strong> La <strong>justesse</strong> se joue sur la <strong>moyenne</strong>, la <strong>fidélité</strong> sur la <strong>dispersion</strong>. Si les tirs sont dispersés, on peut quand même avoir une moyenne correcte (juste), ou une moyenne fausse (pas juste).</p>
+                </div>
+
+                <div style="margin-top:1.5rem; background:var(--formula-bg); padding:1rem 1.5rem; border-radius:12px;">
+                    <p style="font-weight:600; margin-bottom:0.3rem; color:var(--text);">🔗 Comment relier tout cela aux erreurs ?</p>
+                    <ul style="margin-top:0.2rem;">
+                        <li><span style="color:#dc2626; font-weight:700;">Erreurs systématiques</span> → elles <strong>décalent</strong> le groupe (pas juste).</li>
+                        <li><span style="color:#3b82f6; font-weight:700;">Erreurs aléatoires</span> → elles <strong>étalent</strong> le groupe (pas fidèle).</li>
+                        <li>Un bon laboratoire doit <strong>corriger</strong> les erreurs systématiques (étalonnage) et <strong>réduire</strong> les erreurs aléatoires (répétitions, meilleurs instruments).</li>
+                    </ul>
+                </div>
+
+                <div class="summary-box"><strong>💡 Ce qu'il faut retenir :</strong> La <strong>justesse</strong> est une question de <strong>moyenne</strong>, la <strong>fidélité</strong> est une question de <strong>dispersion</strong>. Un résultat parfait est à la fois juste et fidèle. En laboratoire, on contrôle la justesse avec des étalons, et la fidélité avec des répétitions et des calculs d'écart-type.</div>
+            </div>
+        </section>
+
+        <div class="footer">
+            Outil pédagogique complet – fusion des versions théorie et interactive.
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Configuration des 4 cas
+            const CASES = [
+                { id: 0, label: "Juste et fidèle", defaultBiasX: 0, defaultBiasY: 0, defaultSigma: 8, color: '#16a34a' },
+                { id: 1, label: "Juste mais pas fidèle", defaultBiasX: 0, defaultBiasY: 0, defaultSigma: 25, color: '#16a34a' },
+                { id: 2, label: "Pas juste mais fidèle", defaultBiasX: 35, defaultBiasY: -20, defaultSigma: 8, color: '#dc2626' },
+                { id: 3, label: "Ni juste ni fidèle", defaultBiasX: -30, defaultBiasY: 25, defaultSigma: 25, color: '#dc2626' }
+            ];
+
+            const N_POINTS = 20;
+            const CENTER_X = 60; // position de la cible dans chaque colonne
+            const CENTER_Y = 150;
+            const COL_WIDTH = 200; // largeur de chaque colonne
+            const OFFSET_X = [60, 260, 460, 660]; // centres des colonnes
+
+            let currentParams = CASES.map(c => ({
+                biasX: c.defaultBiasX,
+                biasY: c.defaultBiasY,
+                sigma: c.defaultSigma
+            }));
+
+            const canvas = document.getElementById('targetCanvas');
+            const ctx = canvas.getContext('2d');
+
+            function generatePoints(biasX, biasY, sigma, n) {
+                const pts = [];
+                for (let i = 0; i < n; i++) {
+                    let x = gaussianRandom() * sigma + biasX;
+                    let y = gaussianRandom() * sigma + biasY;
+                    pts.push({ x, y });
+                }
+                return pts;
+            }
+
+            function gaussianRandom() {
+                let u = 0, v = 0;
+                while (u === 0) u = Math.random();
+                while (v === 0) v = Math.random();
+                return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            }
+
+            function computeStats(pts) {
+                const n = pts.length;
+                let sx = 0, sy = 0;
+                for (let p of pts) { sx += p.x; sy += p.y; }
+                const mx = sx / n, my = sy / n;
+                let varx = 0, vary = 0;
+                for (let p of pts) {
+                    varx += (p.x - mx) ** 2;
+                    vary += (p.y - my) ** 2;
+                }
+                const sigmaX = Math.sqrt(varx / n);
+                const sigmaY = Math.sqrt(vary / n);
+                const sigma = Math.sqrt((varx + vary) / n); // écart-type radial
+                return { mx, my, sigmaX, sigmaY, sigma };
+            }
+
+            function isJuste(mx, my) {
+                const dist = Math.sqrt(mx * mx + my * my);
+                return dist < 15; // seuil pour considérer juste
+            }
+
+            function isFidele(sigma) {
+                return sigma < 15; // seuil pour fidèle
+            }
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                // Dessiner les 4 cibles
+                for (let i = 0; i < 4; i++) {
+                    const cx = OFFSET_X[i];
+                    const cy = CENTER_Y;
+                    // Cibles
+                    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#ccc';
+                    ctx.lineWidth = 1.5;
+                    for (let r of [60, 40, 20]) {
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+                        ctx.stroke();
+                    }
+                    // Centre
+                    ctx.fillStyle = '#0b6e4f';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+
+                    // Générer les points
+                    const p = currentParams[i];
+                    const pts = generatePoints(p.biasX, p.biasY, p.sigma, N_POINTS);
+                    const stats = computeStats(pts);
+                    const juste = isJuste(stats.mx, stats.my);
+                    const fidele = isFidele(stats.sigma);
+
+                    // Dessiner les points
+                    for (let pt of pts) {
+                        const x = cx + pt.x;
+                        const y = cy + pt.y;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                        ctx.fillStyle = juste ? '#16a34a' : '#dc2626';
+                        ctx.fill();
+                        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+
+                    // Moyenne (croix)
+                    const mx = cx + stats.mx;
+                    const my = cy + stats.my;
+                    ctx.strokeStyle = juste ? '#16a34a' : '#dc2626';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(mx - 8, my - 8);
+                    ctx.lineTo(mx + 8, my + 8);
+                    ctx.moveTo(mx + 8, my - 8);
+                    ctx.lineTo(mx - 8, my + 8);
+                    ctx.stroke();
+
+                    // Cercle d'écart-type (rayon = sigma)
+                    ctx.strokeStyle = '#3b82f6';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.arc(mx, my, stats.sigma, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Étiquette en haut de la colonne
+                    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#222';
+                    ctx.font = 'bold 13px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    let status = '';
+                    if (juste && fidele) status = '✅ Juste et fidèle';
+                    else if (juste && !fidele) status = '⚠️ Juste mais pas fidèle';
+                    else if (!juste && fidele) status = '⚠️ Pas juste mais fidèle';
+                    else status = '❌ Ni juste ni fidèle';
+                    ctx.fillText(status, cx, 8);
+
+                    // Indicateurs numériques
+                    ctx.font = '11px sans-serif';
+                    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-light').trim() || '#666';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText('moy. (' + stats.mx.toFixed(1) + ', ' + stats.my.toFixed(1) + ')', cx, cy + 85);
+                    ctx.fillText('σ = ' + stats.sigma.toFixed(1), cx, cy + 100);
+                }
+            }
+
+            // Créer les contrôles
+            function buildControls() {
+                const container = document.getElementById('controlsContainer');
+                container.innerHTML = '';
+                for (let i = 0; i < 4; i++) {
+                    const c = CASES[i];
+                    const div = document.createElement('div');
+                    div.className = 'control-group';
+                    div.innerHTML = `
+                        <label>${c.label}</label>
+                        <div class="slider-row">
+                            <span style="min-width:1.8rem;">Biais</span>
+                            <input type="range" min="-50" max="50" value="${currentParams[i].biasX}" step="1" data-case="${i}" data-param="biasX">
+                            <span id="biasXVal${i}">${currentParams[i].biasX}</span>
+                        </div>
+                        <div class="slider-row">
+                            <span style="min-width:1.8rem;">Disp.</span>
+                            <input type="range" min="3" max="45" value="${currentParams[i].sigma}" step="0.5" data-case="${i}" data-param="sigma">
+                            <span id="sigmaVal${i}">${currentParams[i].sigma}</span>
+                        </div>
+                        <div style="margin-top:0.3rem;">
+                            <span class="badge-status" id="statusBadge${i}">●</span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+
+                    // Événements
+                    const sliders = div.querySelectorAll('input[type="range"]');
+                    sliders.forEach(sl => {
+                        sl.addEventListener('input', function(e) {
+                            const idx = parseInt(this.dataset.case);
+                            const param = this.dataset.param;
+                            const val = parseFloat(this.value);
+                            currentParams[idx][param] = val;
+                            // Mettre à jour l'affichage
+                            const spanId = param === 'biasX' ? `biasXVal${idx}` : `sigmaVal${idx}`;
+                            document.getElementById(spanId).textContent = val;
+                            draw();
+                            updateInfoPanel();
+                            updateBadges();
+                        });
+                    });
+                }
+
+                // Bouton reset
+                document.getElementById('resetDefaults').addEventListener('click', function() {
+                    for (let i = 0; i < 4; i++) {
+                        currentParams[i].biasX = CASES[i].defaultBiasX;
+                        currentParams[i].biasY = CASES[i].defaultBiasY;
+                        currentParams[i].sigma = CASES[i].defaultSigma;
+                        // Mettre à jour les sliders
+                        const sliders = document.querySelectorAll(`input[data-case="${i}"]`);
+                        sliders.forEach(sl => {
+                            if (sl.dataset.param === 'biasX') sl.value = CASES[i].defaultBiasX;
+                            else if (sl.dataset.param === 'sigma') sl.value = CASES[i].defaultSigma;
+                        });
+                        document.getElementById(`biasXVal${i}`).textContent = CASES[i].defaultBiasX;
+                        document.getElementById(`sigmaVal${i}`).textContent = CASES[i].defaultSigma;
+                    }
+                    draw();
+                    updateInfoPanel();
+                    updateBadges();
+                });
+            }
+
+            function updateBadges() {
+                for (let i = 0; i < 4; i++) {
+                    const p = currentParams[i];
+                    const pts = generatePoints(p.biasX, p.biasY, p.sigma, N_POINTS);
+                    const stats = computeStats(pts);
+                    const juste = isJuste(stats.mx, stats.my);
+                    const fidele = isFidele(stats.sigma);
+                    const badge = document.getElementById(`statusBadge${i}`);
+                    if (badge) {
+                        let text = '';
+                        let cls = 'badge-status ';
+                        if (juste && fidele) { text = '✅ Juste & fidèle'; cls += 'true'; }
+                        else if (juste && !fidele) { text = '⚠️ Juste mais pas fidèle'; cls += 'false'; }
+                        else if (!juste && fidele) { text = '⚠️ Pas juste mais fidèle'; cls += 'false'; }
+                        else { text = '❌ Ni juste ni fidèle'; cls += 'false'; }
+                        badge.textContent = text;
+                        badge.className = cls;
+                    }
+                }
+            }
+
+            function updateInfoPanel() {
+                const panel = document.getElementById('infoPanel');
+                panel.innerHTML = '';
+                for (let i = 0; i < 4; i++) {
+                    const p = currentParams[i];
+                    const pts = generatePoints(p.biasX, p.biasY, p.sigma, N_POINTS);
+                    const stats = computeStats(pts);
+                    const juste = isJuste(stats.mx, stats.my);
+                    const fidele = isFidele(stats.sigma);
+                    const div = document.createElement('div');
+                    div.className = 'case-label';
+                    let statusText = '';
+                    if (juste && fidele) statusText = '✅ Juste et fidèle';
+                    else if (juste && !fidele) statusText = '⚠️ Juste mais pas fidèle';
+                    else if (!juste && fidele) statusText = '⚠️ Pas juste mais fidèle';
+                    else statusText = '❌ Ni juste ni fidèle';
+                    div.innerHTML = `
+                        <div class="title">${CASES[i].label}</div>
+                        <div class="desc" style="font-weight:600;color:${juste?'#16a34a':'#dc2626'};">${statusText}</div>
+                        <div class="desc" style="font-size:0.7rem;">moy (${stats.mx.toFixed(1)}, ${stats.my.toFixed(1)}) | σ = ${stats.sigma.toFixed(1)}</div>
+                        <div class="desc" style="font-size:0.7rem;">Juste: ${juste ? '✅' : '❌'}  Fidèle: ${fidele ? '✅' : '❌'}</div>
+                    `;
+                    panel.appendChild(div);
+                }
+            }
+
+            // Initialisation
+            buildControls();
+            draw();
+            updateInfoPanel();
+            updateBadges();
+
+            // Redessiner à chaque changement de thème (optionnel)
+            // On peut aussi écouter le changement de mode sombre via un événement personnalisé
+            // mais on va simplement redessiner lors des interactions.
+
+            // Ajustement pour le redimensionnement (pas de changement de taille, on garde 800x300)
+        })();
+    </script>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

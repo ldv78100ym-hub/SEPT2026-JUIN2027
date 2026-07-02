@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calcul d'erreur – BTS BioAC (version fusionnée corrigée)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+
+    <script>
+        MathJax = {
+            tex: { inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-flask"></i>
+            <span>BTS BioAC</span>
+        </div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="introduction.html"><i class="fas fa-home"></i><span>Introduction</span></a></li>
+                <li><a href="types-erreurs.html"><i class="fas fa-exclamation-triangle"></i><span>Types d'erreurs</span></a></li>
+                <li><a href="schema-erreurs.html"><i class="fas fa-chart-pie"></i><span>Schéma récapitulatif</span></a></li>
+                <li><a href="justesse-fidelite.html"><i class="fas fa-bullseye"></i><span>Justesse &amp; Fidélité</span></a></li>
+                <li><a href="propagation.html"><i class="fas fa-project-diagram"></i><span>Propagation</span></a></li>
+                <li><a href="mesures-experimentales.html"><i class="fas fa-flask"></i><span>Mesures exp.</span></a></li>
+                <li><a href="incertitudes.html"><i class="fas fa-balance-scale"></i><span>Incertitudes</span></a></li>
+                <li><a href="dof.html"><i class="fas fa-calculator"></i><span>Pourquoi (n−1) ?</span></a></li>
+                <li><a href="exercices.html" class="active"><i class="fas fa-vial"></i><span>Exercices</span></a></li>
+		<li><a href="glossaire.html"><i class="fas fa-book-open"></i><span>Glossaire</span></a></li>
+            </ul>
+        </div>
+        <div class="theme-toggle" id="copyrightToggle" role="button" tabindex="0" aria-label="Droits d'auteur">
+            <i class="fas fa-copyright"></i><span>Droits d'auteur</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Basculer le mode sombre">
+            <i class="fas fa-moon"></i><span>Mode sombre</span>
+        </div>
+    </nav>
+
+    <div class="copyright-modal" id="copyrightModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <button class="close-btn" id="modalCloseBtn" aria-label="Fermer la modale">&times;</button>
+            <h2 id="modalTitle"><i class="fas fa-balance-scale"></i> Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>) – Juin 2026</p>
+            <div style="margin-top:1.2rem;">
+                <span class="badge-licence">Licence Non Commerciale</span>
+                <p style="margin-top:0.8rem;">Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            </div>
+            <h4 style="margin-top:1.5rem; font-weight:600;">Conditions :</h4>
+            <ul>
+                <li><strong>✅ Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>❌ Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>📝 Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+                <li><strong>✉️ Contact :</strong> Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>.</li>
+            </ul>
+            <div class="licence-footer">
+                <i class="fas fa-info-circle"></i> Ce fichier <strong>exercices.html</strong> est mis à disposition selon les termes de cette licence non commerciale.
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 style="font-size:2.2rem; font-weight:700; border-left:8px solid #0b6e4f; padding-left:1.2rem; margin-bottom:0.2rem; color:var(--text);">
+            🧪 Calcul d'erreur – BTS BioAC
+        </h1>
+        <div class="subtitle" style="color:var(--text-light); margin-left:2rem; margin-bottom:2rem; font-size:1.05rem; border-bottom:2px solid var(--border); padding-bottom:1rem;">
+            Cours complet + exercices interactifs – version fusionnée
+        </div>
+        <div class="section-title">
+            <span>📐 9. Exercices</span>
+        </div>
+
+        <section id="ex1" class="section">
+            <div class="card">
+                <h3>Exercice 1 – Série de mesures (pH)</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> Un pH-mètre a effectué une série de mesures sur une même solution. Vous devez calculer la <strong>valeur moyenne</strong> de ces mesures et estimer l'<strong>incertitude élargie</strong> (avec un facteur d'élargissement k=2) pour donner un intervalle de confiance à 95 %. L'objectif est de maîtriser le calcul de l'<strong>écart-type expérimental</strong> et de l'<strong>incertitude-type sur la moyenne</strong>.
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex1_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex1_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex1_calc">Lancer le calcul</button>
+                    <span class="calc-status" id="ex1_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex1_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Calcul détaillé</p>
+                    <div class="step-title">🔢 Moyenne</div>
+                    <p id="ex1_sol_mean_para"></p>
+                    <div class="step-title">📏 Écarts</div>
+                    <ul id="ex1_sol_ecarts"></ul>
+                    <div class="step-title">📐 Carrés</div>
+                    <ul id="ex1_sol_carres"></ul>
+                    <p id="ex1_sol_sumSq_para"></p>
+                    <div class="step-title">📊 Écart-type</div>
+                    <p id="ex1_sol_std_para"></p>
+                    <div class="step-title">🎯 Incertitude-type</div>
+                    <p id="ex1_sol_sem_para"></p>
+                    <div class="step-title">🔒 Incertitude élargie (k=2)</div>
+                    <p id="ex1_sol_u_para"></p>
+                    <p id="ex1_sol_final_para" class="result"></p>
+                    <details class="confidence-explanation">
+                        <summary>📖 Pourquoi k=2 ?</summary>
+                        <div class="detail">Pour avoir 95% de confiance (règle de la courbe en cloche).</div>
+                    </details>
+                    <details class="confidence-explanation">
+                        <summary>📖 Comprendre "95% de confiance" (analogie de la pêche)</summary>
+                        <div class="detail">
+                            <p>🔬 La valeur VRAIE est comme un <strong>poisson</strong> caché dans l'eau. Votre mesure (la moyenne) est l'endroit où vous lancez votre <strong>filet</strong>. L'incertitude élargie (U) est la <strong>taille du filet</strong>.</p>
+                            <p>📊 "95% de confiance" signifie que si vous lancez votre filet <strong>100 fois</strong> de la même manière, il attrapera le poisson <strong>95 fois sur 100</strong>.</p>
+                            <p>⚠️ Il y a <strong>5 fois sur 100 (1 fois sur 20)</strong> où le poisson s'échappe. C'est le petit risque que l'on accepte en laboratoire.</p>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Valeurs (séparées par des virgules) :</label>
+                        <input type="text" id="ex1_values" value="7.02, 7.04, 7.01, 7.03, 7.02">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">Moyenne :</span> <span class="value" id="ex1_mean">—</span></div>
+                            <div><span class="label">Écart-type :</span> <span class="value" id="ex1_std">—</span></div>
+                            <div><span class="label">Incertitude-type :</span> <span class="value" id="ex1_sem">—</span></div>
+                            <div><span class="label">Incertitude élargie :</span> <span class="value" id="ex1_u">—</span></div>
+                            <div><span class="label">Résultat :</span> <span class="value" id="ex1_result">—</span></div>
+                            <div style="margin-top:8px; font-size:0.9rem; color:var(--text-light);" id="ex1_detail"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ex2" class="section">
+            <div class="card">
+                <h3>Exercice 2 – Dilution et propagation</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> En laboratoire, vous devez préparer une solution fille en diluant une solution mère. La concentration finale est donnée par la formule $C_f = (C_m \times V_m) / V_f$. Chaque grandeur mesurée ($C_m$, $V_m$, $V_f$) comporte une incertitude. Votre objectif est de calculer la <strong>concentration finale $C_f$</strong> et son <strong>incertitude absolue $\Delta C_f$</strong> en combinant les incertitudes relatives.
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex2_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex2_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex2_calc">Calculer</button>
+                    <span class="calc-status" id="ex2_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex2_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Dilution : $C_f = \dfrac{C_m \times V_m}{V_f}$</p>
+                    <div class="step-title">📌 Concentration finale</div>
+                    <p id="ex2_sol_cf_para"></p>
+                    <div class="step-title">📏 Incertitudes relatives</div>
+                    <ul id="ex2_sol_rel_list"></ul>
+                    <div class="step-title">📐 Combinaison</div>
+                    <p id="ex2_sol_relTotal_para"></p>
+                    <div class="step-title">🔒 Incertitude absolue</div>
+                    <p id="ex2_sol_dcf_para"></p>
+                    <p id="ex2_sol_final_para" class="result"></p>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>🧪 $C_m$ (concentration mère, mg/L) :</label>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:-0.2rem; margin-bottom:0.2rem;">Valeur > 0 (ex: 10.0)</p>
+                        <input type="number" id="ex2_cm" value="10.0" step="0.1" min="0.001">
+                        <label>📏 $\Delta C_m$ (incertitude, mg/L) :</label>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:-0.2rem; margin-bottom:0.2rem;">≥ 0 (ex: 0.2)</p>
+                        <input type="number" id="ex2_dcm" value="0.2" step="0.01" min="0">
+                        <label>💧 $V_m$ (volume prélevé, mL) :</label>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:-0.2rem; margin-bottom:0.2rem;">> 0 (ex: 5.0)</p>
+                        <input type="number" id="ex2_vm" value="5.0" step="0.1" min="0.001">
+                        <label>📏 $\Delta V_m$ (incertitude, mL) :</label>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:-0.2rem; margin-bottom:0.2rem;">≥ 0</p>
+                        <input type="number" id="ex2_dvm" value="0.1" step="0.01" min="0">
+                        <label>🧴 $V_f$ (volume final, mL) :</label>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:-0.2rem; margin-bottom:0.2rem;">> 0 (ex: 100.0)</p>
+                        <input type="number" id="ex2_vf" value="100.0" step="0.1" min="0.001">
+                        <label>📏 $\Delta V_f$ (incertitude, mL) :</label>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:-0.2rem; margin-bottom:0.2rem;">≥ 0</p>
+                        <input type="number" id="ex2_dvf" value="0.5" step="0.01" min="0">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">$C_f$ :</span> <span class="value" id="ex2_cf">—</span> mg/L</div>
+                            <div><span class="label">$\Delta C_f$ :</span> <span class="value" id="ex2_dcf">—</span> mg/L</div>
+                            <div><span class="label">Incertitude relative :</span> <span class="value" id="ex2_rel">—</span> %</div>
+                            <div style="margin-top:8px; font-size:0.9rem; color:var(--text-light);" id="ex2_detail"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ex3" class="section">
+            <div class="card">
+                <h3>Exercice 3 – Intervalle de confiance</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> Vous disposez d'une série de $n$ mesures d'absorbance d'un échantillon. Vous connaissez la moyenne $\bar{x}$ et l'écart-type $s$ de cette série. Vous devez construire un <strong>intervalle de confiance à 95 %</strong> autour de la moyenne. Vous vérifierez ensuite si la <strong>valeur cible</strong> <span id="ex3_target_annonce" style="font-weight:700; color:#0b6e4f;">0.460</span> est compatible avec cet intervalle.
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex3_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex3_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex3_calc">Calculer</button>
+                    <span class="calc-status" id="ex3_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex3_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Intervalle de confiance</p>
+                    <div class="step-title">📌 Erreur standard</div>
+                    <p id="ex3_sol_sem_para"></p>
+                    <div class="step-title">📏 Marge d'erreur</div>
+                    <p id="ex3_sol_marge_para"></p>
+                    <div class="step-title">📐 Intervalle</div>
+                    <p id="ex3_sol_ic_para"></p>
+                    <div class="step-title">🔍 Compatibilité avec la cible</div>
+                    <p id="ex3_sol_compat_para"></p>
+                    <details class="confidence-explanation">
+                        <summary>📖 D'où vient 1.96 ?</summary>
+                        <div class="detail">C'est la valeur exacte pour 95% de confiance (on arrondit souvent à 2).</div>
+                    </details>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>📊 Moyenne $\bar{x}$ (≥ 0) :</label>
+                        <input type="number" id="ex3_mean" value="0.450" step="0.001" min="0">
+                        <label>📏 Écart-type $s$ (≥ 0) :</label>
+                        <input type="number" id="ex3_std" value="0.015" step="0.001" min="0">
+                        <label>🔢 Effectif $n$ (≥ 2) :</label>
+                        <input type="number" id="ex3_n" value="10" step="1" min="2">
+                        <label>📈 Quantile $z$ (> 0) :</label>
+                        <input type="number" id="ex3_z" value="1.96" step="0.01" min="0.01">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">Erreur standard :</span> <span class="value" id="ex3_sem">—</span></div>
+                            <div><span class="label">IC à 95 % :</span> <span class="value" id="ex3_ic">—</span></div>
+                            <div><span class="label">Cible :</span> <span class="value" id="ex3_target_display">—</span></div>
+                            <div><span class="label">Compatibilité :</span> <span class="value" id="ex3_compat">—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="exercices" class="section">
+            <div class="card">
+                <div class="goal-box">
+                    <strong>📌 Objectif :</strong> Cette section propose des exercices classiques de biologie et chimie pour appliquer les notions de <strong>propagation des erreurs</strong>, d'<strong>incertitude élargie</strong> et de <strong>chiffres significatifs</strong>. Chaque exercice génère des valeurs aléatoires. Lisez attentivement chaque énoncé, effectuez le calcul, puis vérifiez votre raisonnement en affichant le corrigé.
+                </div>
+            </div>
+
+            <div class="card" id="ex4">
+                <h3>Exercice 4 : Aire d'un rectangle</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> On mesure les côtés d'un rectangle : $a$ et $b$. Chaque mesure comporte une incertitude. Calculez l'aire $A$ et son incertitude $\Delta A$. Utilisez la propagation des erreurs pour une multiplication.
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex4_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex4_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex4_calc">Calculer</button>
+                    <span class="calc-status" id="ex4_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex4_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Calcul détaillé</p>
+                    <div class="step-title">📌 Données</div>
+                    <p id="ex4_sol_data"></p>
+                    <div class="step-title">🔢 Aire</div>
+                    <p id="ex4_sol_area"></p>
+                    <div class="step-title">📏 Incertitude relative</div>
+                    <p id="ex4_sol_rel"></p>
+                    <div class="step-title">🔒 Incertitude absolue</div>
+                    <p id="ex4_sol_delta"></p>
+                    <p id="ex4_sol_final" class="result"></p>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>📏 Côté $a$ (cm) :</label>
+                        <input type="number" id="ex4_a" value="10.0" step="0.1" min="0.1">
+                        <label>📏 Incertitude $\Delta a$ (cm) :</label>
+                        <input type="number" id="ex4_da" value="0.1" step="0.01" min="0">
+                        <label>📏 Côté $b$ (cm) :</label>
+                        <input type="number" id="ex4_b" value="5.0" step="0.1" min="0.1">
+                        <label>📏 Incertitude $\Delta b$ (cm) :</label>
+                        <input type="number" id="ex4_db" value="0.1" step="0.01" min="0">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">Aire $A$ :</span> <span class="value" id="ex4_area">—</span> cm²</div>
+                            <div><span class="label">Incertitude $\Delta A$ :</span> <span class="value" id="ex4_delta">—</span> cm²</div>
+                            <div><span class="label">Résultat :</span> <span class="value" id="ex4_result">—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="ex5">
+                <h3>Exercice 5 : Moyenne et incertitude élargie</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> Vous avez effectué une série de mesures de masse. Calculez la moyenne $\bar{x}$ et l'incertitude élargie $U$ (avec k=2) pour donner un intervalle de confiance à 95 %.
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex5_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex5_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex5_calc">Calculer</button>
+                    <span class="calc-status" id="ex5_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex5_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Calcul détaillé</p>
+                    <div class="step-title">📌 Mesures</div>
+                    <p id="ex5_sol_data"></p>
+                    <div class="step-title">🔢 Moyenne</div>
+                    <p id="ex5_sol_mean"></p>
+                    <div class="step-title">📏 Écart-type</div>
+                    <p id="ex5_sol_std"></p>
+                    <div class="step-title">🎯 Incertitude-type sur la moyenne</div>
+                    <p id="ex5_sol_sem"></p>
+                    <div class="step-title">🔒 Incertitude élargie (k=2)</div>
+                    <p id="ex5_sol_u"></p>
+                    <p id="ex5_sol_final" class="result"></p>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>📊 Mesures (séparées par des virgules) :</label>
+                        <input type="text" id="ex5_values" value="10.2, 10.1, 10.3, 10.0, 10.2, 10.1">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">Moyenne :</span> <span class="value" id="ex5_mean">—</span> g</div>
+                            <div><span class="label">Écart-type :</span> <span class="value" id="ex5_std">—</span> g</div>
+                            <div><span class="label">Incertitude élargie (k=2) :</span> <span class="value" id="ex5_u">—</span> g</div>
+                            <div><span class="label">Résultat :</span> <span class="value" id="ex5_result">—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="ex6">
+                <h3>Exercice 6 : Dosage spectrophotométrique</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> On mesure l'absorbance $A$ d'une solution. On connaît le coefficient d'extinction molaire $\epsilon$ et le trajet optique $l$. Calculez la concentration $C$ et son incertitude $\Delta C$ en utilisant la loi de Beer-Lambert $C = A / (\epsilon l)$.
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex6_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex6_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex6_calc">Calculer</button>
+                    <span class="calc-status" id="ex6_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex6_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Calcul détaillé</p>
+                    <div class="step-title">📌 Données</div>
+                    <p id="ex6_sol_data"></p>
+                    <div class="step-title">🔢 Concentration</div>
+                    <p id="ex6_sol_conc"></p>
+                    <div class="step-title">📏 Incertitude relative</div>
+                    <p id="ex6_sol_rel"></p>
+                    <div class="step-title">🔒 Incertitude absolue</div>
+                    <p id="ex6_sol_delta"></p>
+                    <p id="ex6_sol_final" class="result"></p>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>📊 Absorbance $A$ :</label>
+                        <input type="number" id="ex6_A" value="0.600" step="0.001" min="0.001">
+                        <label>📏 $\Delta A$ :</label>
+                        <input type="number" id="ex6_dA" value="0.005" step="0.001" min="0">
+                        <label>📏 $\epsilon$ (M⁻¹cm⁻¹) :</label>
+                        <input type="number" id="ex6_eps" value="2000" step="10" min="1">
+                        <label>📏 $l$ (cm) :</label>
+                        <input type="number" id="ex6_l" value="1.00" step="0.01" min="0.01">
+                        <label>📏 $\Delta l$ (cm) :</label>
+                        <input type="number" id="ex6_dl" value="0.01" step="0.001" min="0">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">Concentration $C$ :</span> <span class="value" id="ex6_C">—</span> M</div>
+                            <div><span class="label">Incertitude $\Delta C$ :</span> <span class="value" id="ex6_dC">—</span> M</div>
+                            <div><span class="label">Résultat :</span> <span class="value" id="ex6_result">—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="ex7">
+                <h3>Exercice 7 : Compatibilité de mesures</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> Deux thermomètres donnent des températures différentes. Déterminez si les mesures sont compatibles en utilisant le critère $|T_1 - T_2| \leq \Delta T_1 + \Delta T_2$.
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex7_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex7_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex7_calc">Vérifier</button>
+                    <span class="calc-status" id="ex7_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex7_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Vérification détaillée</p>
+                    <div class="step-title">📌 Données</div>
+                    <p id="ex7_sol_data"></p>
+                    <div class="step-title">📏 Différence</div>
+                    <p id="ex7_sol_diff"></p>
+                    <div class="step-title">📐 Somme des incertitudes</div>
+                    <p id="ex7_sol_sum"></p>
+                    <div class="step-title">✅ Décision</div>
+                    <p id="ex7_sol_decision" class="result"></p>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>🌡️ $T_1$ (°C) :</label>
+                        <input type="number" id="ex7_T1" value="99.8" step="0.1">
+                        <label>📏 $\Delta T_1$ (°C) :</label>
+                        <input type="number" id="ex7_dT1" value="0.2" step="0.01" min="0">
+                        <label>🌡️ $T_2$ (°C) :</label>
+                        <input type="number" id="ex7_T2" value="100.3" step="0.1">
+                        <label>📏 $\Delta T_2$ (°C) :</label>
+                        <input type="number" id="ex7_dT2" value="0.3" step="0.01" min="0">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">Différence :</span> <span class="value" id="ex7_diff">—</span> °C</div>
+                            <div><span class="label">Somme des incertitudes :</span> <span class="value" id="ex7_sum">—</span> °C</div>
+                            <div><span class="label">Compatibilité :</span> <span class="value" id="ex7_compat">—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="ex8">
+                <h3>Exercice 8 : Chiffres significatifs</h3>
+                <div class="goal-box">
+                    <strong>📝 Énoncé :</strong> Effectuez les calculs suivants en respectant les règles des chiffres significatifs. L'objectif est de maîtriser les règles d'arrondi pour l'addition et la multiplication/division.
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-random" id="ex8_random">🎲 Nouvel exemple</button>
+                    <button class="btn btn-solution" id="ex8_toggle_solution">📖 Afficher la solution</button>
+                    <button class="btn" id="ex8_calc">Calculer</button>
+                    <span class="calc-status" id="ex8_status"></span>
+                </div>
+                <div class="explanation-box hidden-solution" id="ex8_solution">
+                    <p style="font-size:1.2rem; font-weight:600;">📖 Calcul détaillé</p>
+                    <div class="step-title">📌 Données</div>
+                    <p id="ex8_sol_data"></p>
+                    <div class="step-title">a) Addition</div>
+                    <p id="ex8_sol_add"></p>
+                    <div class="step-title">b) Multiplication</div>
+                    <p id="ex8_sol_mul"></p>
+                    <div class="step-title">c) Division</div>
+                    <p id="ex8_sol_div"></p>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>🔢 Nombre 1 :</label>
+                        <input type="number" id="ex8_x" value="12.34" step="0.01">
+                        <label>🔢 Nombre 2 :</label>
+                        <input type="number" id="ex8_y" value="5.678" step="0.001">
+                    </div>
+                    <div class="col">
+                        <div class="result-box">
+                            <div><span class="label">a) $x + y$ :</span> <span class="value" id="ex8_add">—</span></div>
+                            <div><span class="label">b) $x \times y$ :</span> <span class="value" id="ex8_mul">—</span></div>
+                            <div><span class="label">c) $x / y$ :</span> <span class="value" id="ex8_div">—</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer">
+            Outil pédagogique complet – fusion des versions théorie et interactive.
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('copyrightModal');
+        const openBtn = document.getElementById('copyrightToggle');
+        const closeBtn = document.getElementById('modalCloseBtn');
+
+        function openModal() {
+            modal.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
+
+        function formatSci(num) {
+            if (num === 0) return '0';
+            if (!isFinite(num)) return '\\infty';
+            const sign = num < 0 ? '-' : '';
+            const abs = Math.abs(num);
+            let exp = Math.floor(Math.log10(abs));
+            let mant = abs / Math.pow(10, exp);
+            if (mant >= 10) {
+                mant /= 10;
+                exp += 1;
+            }
+            const mantRounded = Math.round(mant * 1000) / 1000;
+            if (exp === 0) {
+                return sign + mantRounded.toFixed(3);
+            }
+            return sign + mantRounded.toFixed(3) + ' \\times 10^{' + exp + '}';
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+        }
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode sombre</span>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+            }
+        });
+
+        function refreshMathJax() {
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise().catch(e => console.log('MathJax error:', e));
+            }
+        }
+
+        function showStatus(id, msg) {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = msg;
+                setTimeout(() => el.textContent = '', 2500); }
+        }
+
+        function ex1_calculate() {
+            const input = document.getElementById('ex1_values').value;
+            const arr = input.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+            if (arr.length < 2) { alert('Au moins 2 valeurs.'); return; }
+            const n = arr.length;
+            const mean = arr.reduce((a, b) => a + b, 0) / n;
+            const sumSq = arr.reduce((s, v) => s + (v - mean) ** 2, 0);
+            const std = Math.sqrt(sumSq / (n - 1));
+            const sem = std / Math.sqrt(n);
+            const u = 2 * sem;
+
+            document.getElementById('ex1_mean').textContent = mean.toFixed(4);
+            document.getElementById('ex1_std').textContent = std.toFixed(4);
+            document.getElementById('ex1_sem').textContent = sem.toFixed(4);
+            document.getElementById('ex1_u').textContent = u.toFixed(4);
+            document.getElementById('ex1_result').textContent = `${mean.toFixed(4)} ± ${u.toFixed(4)}`;
+            document.getElementById('ex1_detail').textContent =
+                `n=${n}, Σx=${arr.reduce((a,b)=>a+b,0).toFixed(4)}, Σ(x-̄x)²=${sumSq.toFixed(4)}`;
+
+            document.getElementById('ex1_sol_mean_para').innerHTML =
+                `Somme = ${arr.reduce((a,b)=>a+b,0).toFixed(4)} → Moyenne = \\( \\bar{x} = ${mean.toFixed(4)} \\)`;
+
+            const devs = arr.map(v => v - mean);
+            let ecartsHtml = '',
+                carresHtml = '';
+            devs.forEach((d, i) => {
+                const isLast = i === devs.length - 1;
+                const cls = isLast ? 'forced-value' : 'free-value';
+                ecartsHtml += `<li>${arr[i].toFixed(4)} − ${mean.toFixed(4)} = <span class="${cls}">${d.toFixed(4)}</span>${isLast ? ' (forcé)' : ''}</li>`;
+                carresHtml += `<li>(${d.toFixed(4)})² = ${(d*d).toFixed(6)}</li>`;
+            });
+            document.getElementById('ex1_sol_ecarts').innerHTML = ecartsHtml;
+            document.getElementById('ex1_sol_carres').innerHTML = carresHtml;
+            document.getElementById('ex1_sol_sumSq_para').innerHTML =
+                `Somme des carrés = \\( \\sum (x_i - \\bar{x})^2 = ${sumSq.toFixed(6)} \\)`;
+
+            document.getElementById('ex1_sol_std_para').innerHTML =
+                `\\( s = \\sqrt{\\dfrac{${sumSq.toFixed(6)}}{${n-1}}} = ${std.toFixed(4)} \\)`;
+            document.getElementById('ex1_sol_sem_para').innerHTML =
+                `\\( s_{\\bar{x}} = \\dfrac{${std.toFixed(4)}}{\\sqrt{${n}}} = ${sem.toFixed(4)} \\)`;
+            document.getElementById('ex1_sol_u_para').innerHTML =
+                `\\( U = 2 \\times ${sem.toFixed(4)} = ${u.toFixed(4)} \\)`;
+            document.getElementById('ex1_sol_final_para').textContent =
+                `Résultat final : ${mean.toFixed(4)} ± ${u.toFixed(4)} (k=2)`;
+
+            refreshMathJax();
+            showStatus('ex1_status', '✔ Calculé');
+        }
+        document.getElementById('ex1_calc').addEventListener('click', ex1_calculate);
+        document.getElementById('ex1_random').addEventListener('click', function() {
+            const base = 7.0 + (Math.random() - 0.5) * 0.2;
+            const vals = [];
+            for (let i = 0; i < 5; i++) vals.push((base + (Math.random() - 0.5) * 0.1).toFixed(3));
+            document.getElementById('ex1_values').value = vals.join(', ');
+            ex1_calculate();
+        });
+        document.getElementById('ex1_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex1_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex1_calculate();
+
+        function ex2_calculate() {
+            const cm = parseFloat(document.getElementById('ex2_cm').value);
+            const dcm = parseFloat(document.getElementById('ex2_dcm').value);
+            const vm = parseFloat(document.getElementById('ex2_vm').value);
+            const dvm = parseFloat(document.getElementById('ex2_dvm').value);
+            const vf = parseFloat(document.getElementById('ex2_vf').value);
+            const dvf = parseFloat(document.getElementById('ex2_dvf').value);
+            if ([cm, dcm, vm, dvm, vf, dvf].some(isNaN)) { alert('Valeurs invalides.'); return; }
+            if (cm <= 0 || vm <= 0 || vf <= 0) { alert('Volumes et concentration > 0.'); return; }
+            if (dcm < 0 || dvm < 0 || dvf < 0) { alert('Incertitudes ≥ 0.'); return; }
+            const cf = (cm * vm) / vf;
+            const relCm = dcm / cm;
+            const relVm = dvm / vm;
+            const relVf = dvf / vf;
+            const relTot = Math.sqrt(relCm ** 2 + relVm ** 2 + relVf ** 2);
+            const dcf = cf * relTot;
+
+            document.getElementById('ex2_cf').textContent = cf.toFixed(4);
+            document.getElementById('ex2_dcf').textContent = dcf.toFixed(4);
+            document.getElementById('ex2_rel').textContent = (relTot * 100).toFixed(2);
+            document.getElementById('ex2_detail').textContent =
+                `Cm ${(relCm*100).toFixed(2)}%, Vm ${(relVm*100).toFixed(2)}%, Vf ${(relVf*100).toFixed(2)}%`;
+
+            document.getElementById('ex2_sol_cf_para').innerHTML =
+                `\\( C_f = \\dfrac{${cm.toFixed(2)} \\times ${vm.toFixed(2)}}{${vf.toFixed(2)}} = ${cf.toFixed(4)} \\) mg/L`;
+
+            document.getElementById('ex2_sol_rel_list').innerHTML = `
+                <li>\\( C_m : \\dfrac{${dcm.toFixed(2)}}{${cm.toFixed(2)}} = ${(relCm*100).toFixed(2)}\\% \\)</li>
+                <li>\\( V_m : \\dfrac{${dvm.toFixed(2)}}{${vm.toFixed(2)}} = ${(relVm*100).toFixed(2)}\\% \\)</li>
+                <li>\\( V_f : \\dfrac{${dvf.toFixed(2)}}{${vf.toFixed(2)}} = ${(relVf*100).toFixed(2)}\\% \\)</li>
+            `;
+
+            document.getElementById('ex2_sol_relTotal_para').innerHTML =
+                `\\( \\sqrt{ (${(relCm*100).toFixed(2)}\\%)^2 + (${(relVm*100).toFixed(2)}\\%)^2 + (${(relVf*100).toFixed(2)}\\%)^2 } = ${(relTot*100).toFixed(2)}\\% \\)`;
+            document.getElementById('ex2_sol_dcf_para').innerHTML =
+                `\\( \\Delta C_f = ${cf.toFixed(4)} \\times ${(relTot*100).toFixed(2)}\\% = ${dcf.toFixed(4)} \\) mg/L`;
+            document.getElementById('ex2_sol_final_para').textContent =
+                `Résultat : ${cf.toFixed(4)} ± ${dcf.toFixed(4)} mg/L`;
+
+            refreshMathJax();
+            showStatus('ex2_status', '✔ Calculé');
+        }
+        document.getElementById('ex2_calc').addEventListener('click', ex2_calculate);
+        document.getElementById('ex2_random').addEventListener('click', function() {
+            document.getElementById('ex2_cm').value = (5 + Math.random() * 15).toFixed(1);
+            document.getElementById('ex2_dcm').value = (0.1 + Math.random() * 0.4).toFixed(2);
+            document.getElementById('ex2_vm').value = (2 + Math.random() * 8).toFixed(1);
+            document.getElementById('ex2_dvm').value = (0.05 + Math.random() * 0.15).toFixed(2);
+            document.getElementById('ex2_vf').value = (80 + Math.random() * 40).toFixed(1);
+            document.getElementById('ex2_dvf').value = (0.3 + Math.random() * 0.8).toFixed(2);
+            ex2_calculate();
+        });
+        document.getElementById('ex2_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex2_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex2_calculate();
+
+        let ex3_target = 0.460;
+
+        function ex3_calculate() {
+            const mean = parseFloat(document.getElementById('ex3_mean').value);
+            const std = parseFloat(document.getElementById('ex3_std').value);
+            const n = parseInt(document.getElementById('ex3_n').value);
+            const z = parseFloat(document.getElementById('ex3_z').value);
+            if ([mean, std, n, z].some(isNaN)) { alert('Valeurs invalides.'); return; }
+            if (mean < 0 || std < 0 || n < 2 || z <= 0) { alert('Valeurs hors limites.'); return; }
+            const sem = std / Math.sqrt(n);
+            const margin = z * sem;
+            const low = mean - margin;
+            const high = mean + margin;
+
+            document.getElementById('ex3_sem').textContent = sem.toFixed(4);
+            document.getElementById('ex3_ic').textContent = `[${low.toFixed(4)} ; ${high.toFixed(4)}]`;
+            document.getElementById('ex3_target_display').textContent = ex3_target.toFixed(4);
+            document.getElementById('ex3_compat').textContent = (ex3_target >= low && ex3_target <= high) ?
+                '✅ Compatible' : '❌ Non compatible';
+
+            document.getElementById('ex3_target_annonce').textContent = ex3_target.toFixed(4);
+
+            document.getElementById('ex3_sol_sem_para').innerHTML =
+                `\\( s_{\\bar{x}} = \\dfrac{${std.toFixed(4)}}{\\sqrt{${n}}} = ${sem.toFixed(4)} \\)`;
+            document.getElementById('ex3_sol_marge_para').innerHTML =
+                `\\( \\text{Marge} = ${z.toFixed(2)} \\times ${sem.toFixed(4)} = ${margin.toFixed(4)} \\)`;
+            document.getElementById('ex3_sol_ic_para').innerHTML =
+                `\\( \\text{IC} = [ ${low.toFixed(4)} ; ${high.toFixed(4)} ] \\)`;
+            document.getElementById('ex3_sol_compat_para').textContent =
+                (ex3_target >= low && ex3_target <= high) ?
+                `✅ Compatible (la cible ${ex3_target.toFixed(4)} est dans l'intervalle)` :
+                `❌ Non compatible (la cible ${ex3_target.toFixed(4)} est en dehors)`;
+
+            refreshMathJax();
+            showStatus('ex3_status', '✔ Calculé');
+        }
+        document.getElementById('ex3_calc').addEventListener('click', ex3_calculate);
+        document.getElementById('ex3_random').addEventListener('click', function() {
+            document.getElementById('ex3_mean').value = (0.4 + Math.random() * 0.15).toFixed(3);
+            document.getElementById('ex3_std').value = (0.01 + Math.random() * 0.025).toFixed(3);
+            document.getElementById('ex3_n').value = Math.floor(8 + Math.random() * 12);
+            ex3_target = 0.4 + Math.random() * 0.12;
+            ex3_calculate();
+        });
+        document.getElementById('ex3_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex3_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex3_calculate();
+
+        function ex4_calculate() {
+            const a = parseFloat(document.getElementById('ex4_a').value);
+            const da = parseFloat(document.getElementById('ex4_da').value);
+            const b = parseFloat(document.getElementById('ex4_b').value);
+            const db = parseFloat(document.getElementById('ex4_db').value);
+            if (isNaN(a) || isNaN(da) || isNaN(b) || isNaN(db)) { alert('Valeurs invalides.'); return; }
+            if (a <= 0 || b <= 0) { alert('Les côtés doivent être positifs.'); return; }
+            if (da < 0 || db < 0) { alert('Incertitudes ≥ 0.'); return; }
+
+            const area = a * b;
+            const rel = da / a + db / b;
+            const delta = area * rel;
+
+            document.getElementById('ex4_area').textContent = area.toFixed(4);
+            document.getElementById('ex4_delta').textContent = delta.toFixed(4);
+            document.getElementById('ex4_result').textContent = `${area.toFixed(4)} ± ${delta.toFixed(4)} cm²`;
+
+            document.getElementById('ex4_sol_data').innerHTML =
+                `\\( a = ${a.toFixed(2)} \\pm ${da.toFixed(2)} \\) cm, \\( b = ${b.toFixed(2)} \\pm ${db.toFixed(2)} \\) cm`;
+            document.getElementById('ex4_sol_area').innerHTML = `\\( A = ${a.toFixed(2)} \\times ${b.toFixed(2)} = ${area.toFixed(4)} \\) cm²`;
+            document.getElementById('ex4_sol_rel').innerHTML =
+                `\\( \\dfrac{\\Delta A}{A} = \\dfrac{${da.toFixed(2)}}{${a.toFixed(2)}} + \\dfrac{${db.toFixed(2)}}{${b.toFixed(2)}} = ${(da/a).toFixed(4)} + ${(db/b).toFixed(4)} = ${rel.toFixed(4)} \\)`;
+            document.getElementById('ex4_sol_delta').innerHTML =
+                `\\( \\Delta A = ${area.toFixed(4)} \\times ${rel.toFixed(4)} = ${delta.toFixed(4)} \\) cm²`;
+            document.getElementById('ex4_sol_final').textContent =
+                `Résultat : ${area.toFixed(4)} ± ${delta.toFixed(4)} cm²`;
+
+            refreshMathJax();
+            showStatus('ex4_status', '✔ Calculé');
+        }
+        document.getElementById('ex4_calc').addEventListener('click', ex4_calculate);
+        document.getElementById('ex4_random').addEventListener('click', function() {
+            const a = 5 + Math.random() * 15;
+            const da = 0.05 + Math.random() * 0.2;
+            const b = 2 + Math.random() * 8;
+            const db = 0.05 + Math.random() * 0.2;
+            document.getElementById('ex4_a').value = a.toFixed(1);
+            document.getElementById('ex4_da').value = da.toFixed(2);
+            document.getElementById('ex4_b').value = b.toFixed(1);
+            document.getElementById('ex4_db').value = db.toFixed(2);
+            ex4_calculate();
+        });
+        document.getElementById('ex4_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex4_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex4_calculate();
+
+        function ex5_calculate() {
+            const input = document.getElementById('ex5_values').value;
+            const arr = input.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+            if (arr.length < 2) { alert('Au moins 2 mesures.'); return; }
+            const n = arr.length;
+            const mean = arr.reduce((a, b) => a + b, 0) / n;
+            const sumSq = arr.reduce((s, v) => s + (v - mean) ** 2, 0);
+            const std = Math.sqrt(sumSq / (n - 1));
+            const sem = std / Math.sqrt(n);
+            const u = 2 * sem;
+
+            document.getElementById('ex5_mean').textContent = mean.toFixed(4);
+            document.getElementById('ex5_std').textContent = std.toFixed(4);
+            document.getElementById('ex5_u').textContent = u.toFixed(4);
+            document.getElementById('ex5_result').textContent = `${mean.toFixed(4)} ± ${u.toFixed(4)} g`;
+
+            document.getElementById('ex5_sol_data').textContent = `Mesures : ${arr.map(v=>v.toFixed(2)).join(' ; ')} g`;
+            document.getElementById('ex5_sol_mean').innerHTML = `\\( \\bar{x} = \\dfrac{${arr.reduce((a,b)=>a+b,0).toFixed(2)}}{${n}} = ${mean.toFixed(4)} \\) g`;
+            document.getElementById('ex5_sol_std').innerHTML =
+                `\\( s = \\sqrt{\\dfrac{\\sum (x_i-\\bar{x})^2}{${n-1}}} = \\sqrt{\\dfrac{${sumSq.toFixed(4)}}{${n-1}}} = ${std.toFixed(4)} \\) g`;
+            document.getElementById('ex5_sol_sem').innerHTML =
+                `\\( u(\\bar{x}) = \\dfrac{${std.toFixed(4)}}{\\sqrt{${n}}} = ${sem.toFixed(4)} \\) g`;
+            document.getElementById('ex5_sol_u').innerHTML =
+                `\\( U = 2 \\times ${sem.toFixed(4)} = ${u.toFixed(4)} \\) g`;
+            document.getElementById('ex5_sol_final').textContent =
+                `Résultat : ${mean.toFixed(4)} ± ${u.toFixed(4)} g (k=2)`;
+
+            refreshMathJax();
+            showStatus('ex5_status', '✔ Calculé');
+        }
+        document.getElementById('ex5_calc').addEventListener('click', ex5_calculate);
+        document.getElementById('ex5_random').addEventListener('click', function() {
+            const base = 10 + Math.random() * 0.3;
+            const vals = [];
+            for (let i = 0; i < 6; i++) vals.push((base + (Math.random() - 0.5) * 0.3).toFixed(2));
+            document.getElementById('ex5_values').value = vals.join(', ');
+            ex5_calculate();
+        });
+        document.getElementById('ex5_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex5_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex5_calculate();
+
+        function ex6_calculate() {
+            const A = parseFloat(document.getElementById('ex6_A').value);
+            const dA = parseFloat(document.getElementById('ex6_dA').value);
+            const eps = parseFloat(document.getElementById('ex6_eps').value);
+            const l = parseFloat(document.getElementById('ex6_l').value);
+            const dl = parseFloat(document.getElementById('ex6_dl').value);
+            if ([A, dA, eps, l, dl].some(isNaN)) { alert('Valeurs invalides.'); return; }
+            if (A <= 0 || eps <= 0 || l <= 0) { alert('A, ε et l doivent être positifs.'); return; }
+            if (dA < 0 || dl < 0) { alert('Incertitudes ≥ 0.'); return; }
+
+            const C = A / (eps * l);
+            const rel = dA / A + dl / l;
+            const dC = C * rel;
+
+            const C_str = formatSci(C);
+            const dC_str = formatSci(dC);
+
+            document.getElementById('ex6_C').innerHTML = `\\( ${C_str} \\)`;
+            document.getElementById('ex6_dC').innerHTML = `\\( ${dC_str} \\)`;
+            document.getElementById('ex6_result').innerHTML = `\\( ${C_str} \\pm ${dC_str} \\) M`;
+
+            document.getElementById('ex6_sol_data').innerHTML =
+                `\\( A = ${A.toFixed(4)} \\pm ${dA.toFixed(4)} \\), \\( \\epsilon = ${eps.toFixed(0)} \\), \\( l = ${l.toFixed(2)} \\pm ${dl.toFixed(3)} \\) cm`;
+            document.getElementById('ex6_sol_conc').innerHTML = `\\( C = ${C_str} \\) M`;
+            document.getElementById('ex6_sol_rel').innerHTML =
+                `\\( \\dfrac{\\Delta C}{C} = \\dfrac{${dA.toFixed(4)}}{${A.toFixed(4)}} + \\dfrac{${dl.toFixed(3)}}{${l.toFixed(2)}} = ${(dA/A).toFixed(4)} + ${(dl/l).toFixed(4)} = ${rel.toFixed(4)} \\)`;
+            document.getElementById('ex6_sol_delta').innerHTML =
+                `\\( \\Delta C = ${C_str} \\times ${rel.toFixed(4)} = ${dC_str} \\) M`;
+            document.getElementById('ex6_sol_final').innerHTML =
+                `Résultat : \\( ${C_str} \\pm ${dC_str} \\) M`;
+
+            refreshMathJax();
+            showStatus('ex6_status', '✔ Calculé');
+        }
+        document.getElementById('ex6_calc').addEventListener('click', ex6_calculate);
+        document.getElementById('ex6_random').addEventListener('click', function() {
+            document.getElementById('ex6_A').value = (0.3 + Math.random() * 0.6).toFixed(3);
+            document.getElementById('ex6_dA').value = (0.003 + Math.random() * 0.008).toFixed(3);
+            document.getElementById('ex6_eps').value = Math.floor(1500 + Math.random() * 1500);
+            document.getElementById('ex6_l').value = (0.8 + Math.random() * 0.4).toFixed(2);
+            document.getElementById('ex6_dl').value = (0.005 + Math.random() * 0.015).toFixed(3);
+            ex6_calculate();
+        });
+        document.getElementById('ex6_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex6_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex6_calculate();
+
+        function ex7_calculate() {
+            const T1 = parseFloat(document.getElementById('ex7_T1').value);
+            const dT1 = parseFloat(document.getElementById('ex7_dT1').value);
+            const T2 = parseFloat(document.getElementById('ex7_T2').value);
+            const dT2 = parseFloat(document.getElementById('ex7_dT2').value);
+            if ([T1, dT1, T2, dT2].some(isNaN)) { alert('Valeurs invalides.'); return; }
+            if (dT1 < 0 || dT2 < 0) { alert('Incertitudes ≥ 0.'); return; }
+
+            const diff = Math.abs(T1 - T2);
+            const sum = dT1 + dT2;
+            const compat = diff <= sum ? '✅ Compatibles' : '❌ Non compatibles';
+
+            document.getElementById('ex7_diff').textContent = diff.toFixed(2);
+            document.getElementById('ex7_sum').textContent = sum.toFixed(2);
+            document.getElementById('ex7_compat').textContent = compat;
+
+            document.getElementById('ex7_sol_data').innerHTML =
+                `\\( T_1 = ${T1.toFixed(1)} \\pm ${dT1.toFixed(1)} \\) °C, \\( T_2 = ${T2.toFixed(1)} \\pm ${dT2.toFixed(1)} \\) °C`;
+            document.getElementById('ex7_sol_diff').innerHTML =
+                `\\( |T_1 - T_2| = |${T1.toFixed(1)} - ${T2.toFixed(1)}| = ${diff.toFixed(2)} \\) °C`;
+            document.getElementById('ex7_sol_sum').innerHTML =
+                `\\( \\Delta T_1 + \\Delta T_2 = ${dT1.toFixed(1)} + ${dT2.toFixed(1)} = ${sum.toFixed(2)} \\) °C`;
+            document.getElementById('ex7_sol_decision').textContent =
+                `${diff.toFixed(2)} ≤ ${sum.toFixed(2)} → ${compat}`;
+
+            refreshMathJax();
+            showStatus('ex7_status', '✔ Calculé');
+        }
+        document.getElementById('ex7_calc').addEventListener('click', ex7_calculate);
+        document.getElementById('ex7_random').addEventListener('click', function() {
+            const T1 = 98 + Math.random() * 4;
+            const dT1 = 0.1 + Math.random() * 0.3;
+            const T2 = T1 + (Math.random() - 0.5) * 1.5;
+            const dT2 = 0.1 + Math.random() * 0.3;
+            document.getElementById('ex7_T1').value = T1.toFixed(1);
+            document.getElementById('ex7_dT1').value = dT1.toFixed(2);
+            document.getElementById('ex7_T2').value = T2.toFixed(1);
+            document.getElementById('ex7_dT2').value = dT2.toFixed(2);
+            ex7_calculate();
+        });
+        document.getElementById('ex7_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex7_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex7_calculate();
+
+        function ex8_calculate() {
+            const x = parseFloat(document.getElementById('ex8_x').value);
+            const y = parseFloat(document.getElementById('ex8_y').value);
+            if (isNaN(x) || isNaN(y)) { alert('Valeurs invalides.'); return; }
+            if (y === 0) { alert('Division par zéro interdite.'); return; }
+
+            const xDec = (x.toString().split('.')[1] || '').length;
+            const yDec = (y.toString().split('.')[1] || '').length;
+            const minDec = Math.min(xDec, yDec);
+            const add = parseFloat((x + y).toFixed(minDec));
+
+            const xSig = x.toExponential().split('e')[0].replace('.', '').replace('-', '').length;
+            const ySig = y.toExponential().split('e')[0].replace('.', '').replace('-', '').length;
+            const minSig = Math.min(xSig, ySig);
+            const mul = parseFloat((x * y).toPrecision(minSig));
+            const div = parseFloat((x / y).toPrecision(minSig));
+
+            document.getElementById('ex8_add').textContent = add.toFixed(minDec);
+            document.getElementById('ex8_mul').textContent = mul.toString();
+            document.getElementById('ex8_div').textContent = div.toString();
+
+            document.getElementById('ex8_sol_data').innerHTML = `\\( x = ${x} \\), \\( y = ${y} \\)`;
+
+            document.getElementById('ex8_sol_add').innerHTML =
+                `\\( x + y = ${(x+y).toFixed(6)} \\). <br><strong>Règle de l'addition :</strong> on conserve le nombre de décimales du terme qui en a le <strong>moins</strong>.<br>
+                \\( ${x} \\) a \\( ${xDec} \\) décimales et \\( ${y} \\) en a \\( ${yDec} \\). Le minimum est \\( ${minDec} \\).<br>
+                <strong>🔍 Pourquoi ce choix ?</strong> L'<strong>incertitude absolue</strong> est limitée par la valeur la moins précise (celle qui a le moins de décimales).<br>
+                Résultat → arrondi à \\( ${minDec} \\) décimales → \\( \\mathbf{${add.toFixed(minDec)}} \\)`;
+
+            document.getElementById('ex8_sol_mul').innerHTML =
+                `\\( x \\times y = ${(x*y).toFixed(6)} \\). <br><strong>Règle de la multiplication :</strong> on conserve le nombre de chiffres significatifs (C.S.) du terme qui en a le <strong>moins</strong>.<br>
+                \\( ${x} \\) a \\( ${xSig} \\) C.S. et \\( ${y} \\) en a \\( ${ySig} \\). Le minimum est \\( ${minSig} \\).<br>
+                <strong>🔍 Pourquoi ce choix ?</strong> L'<strong>incertitude relative</strong> (en pourcentage) est limitée par la valeur la moins précise.<br>
+                Résultat → arrondi à \\( ${minSig} \\) C.S. → \\( \\mathbf{${mul}} \\)`;
+
+            document.getElementById('ex8_sol_div').innerHTML =
+                `\\( x / y = ${(x/y).toFixed(6)} \\). <br><strong>Règle de la division :</strong> même règle que la multiplication : on conserve le nombre de chiffres significatifs du terme qui en a le <strong>moins</strong>.<br>
+                \\( ${x} \\) a \\( ${xSig} \\) C.S. et \\( ${y} \\) en a \\( ${ySig} \\). Le minimum est \\( ${minSig} \\).<br>
+                <strong>🔍 Pourquoi ce choix ?</strong> La division combine les <strong>incertitudes relatives</strong>.<br>
+                Résultat → arrondi à \\( ${minSig} \\) C.S. → \\( \\mathbf{${div}} \\)`;
+
+            refreshMathJax();
+            showStatus('ex8_status', '✔ Calculé');
+        }
+        document.getElementById('ex8_calc').addEventListener('click', ex8_calculate);
+        document.getElementById('ex8_random').addEventListener('click', function() {
+            const x = 10 + Math.random() * 50;
+            const y = 2 + Math.random() * 10;
+            document.getElementById('ex8_x').value = x.toFixed(2 + Math.floor(Math.random() * 3));
+            document.getElementById('ex8_y').value = y.toFixed(2 + Math.floor(Math.random() * 3));
+            ex8_calculate();
+        });
+        document.getElementById('ex8_toggle_solution').addEventListener('click', function() {
+            const sol = document.getElementById('ex8_solution');
+            sol.classList.toggle('hidden-solution');
+            this.textContent = sol.classList.contains('hidden-solution') ? '📖 Afficher la solution' : '📖 Masquer la solution';
+            refreshMathJax();
+        });
+        ex8_calculate();
+
+        refreshMathJax();
+    </script>
+</body>
+</html>

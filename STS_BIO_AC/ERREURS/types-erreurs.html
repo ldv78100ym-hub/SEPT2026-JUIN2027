@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calcul d'erreur – BTS BioAC (version fusionnée corrigée)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+    <!-- ========== SIDEBAR ========== -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-flask"></i>
+            <span>BTS BioAC</span>
+        </div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="introduction.html"><i class="fas fa-home"></i><span>Introduction</span></a></li>
+                <li><a href="types-erreurs.html" class="active"><i class="fas fa-exclamation-triangle"></i><span>Types d'erreurs</span></a></li>
+                <li><a href="schema-erreurs.html"><i class="fas fa-chart-pie"></i><span>Schéma récapitulatif</span></a></li>
+                <li><a href="justesse-fidelite.html"><i class="fas fa-bullseye"></i><span>Justesse &amp; Fidélité</span></a></li>
+                <li><a href="propagation.html"><i class="fas fa-project-diagram"></i><span>Propagation</span></a></li>
+                <li><a href="mesures-experimentales.html"><i class="fas fa-flask"></i><span>Mesures exp.</span></a></li>
+                <li><a href="incertitudes.html"><i class="fas fa-balance-scale"></i><span>Incertitudes</span></a></li>
+                <li><a href="dof.html"><i class="fas fa-calculator"></i><span>Pourquoi (n−1) ?</span></a></li>
+                <li><a href="exercices.html"><i class="fas fa-vial"></i><span>Exercices</span></a></li>
+                <li><a href="glossaire.html"><i class="fas fa-book-open"></i><span>Glossaire</span></a></li>
+            </ul>
+        </div>
+        <div class="theme-toggle" id="copyrightToggle" role="button" tabindex="0" aria-label="Droits d'auteur">
+            <i class="fas fa-copyright"></i><span>Droits d'auteur</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Basculer le mode sombre">
+            <i class="fas fa-moon"></i><span>Mode sombre</span>
+        </div>
+    </nav>
+
+    <!-- ========== MODALE DROITS D'AUTEUR ========== -->
+    <div class="copyright-modal" id="copyrightModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <button class="close-btn" id="modalCloseBtn" aria-label="Fermer la modale">&times;</button>
+            <h2 id="modalTitle"><i class="fas fa-balance-scale"></i> Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>) – Juin 2026</p>
+            <div style="margin-top:1.2rem;">
+                <span class="badge-licence">Licence Non Commerciale</span>
+                <p style="margin-top:0.8rem;">Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            </div>
+            <h4 style="margin-top:1.5rem; font-weight:600;">Conditions :</h4>
+            <ul>
+                <li><strong>✅ Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>❌ Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>📝 Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+                <li><strong>✉️ Contact :</strong> Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>.</li>
+            </ul>
+            <div class="licence-footer">
+                <i class="fas fa-info-circle"></i> Ce fichier <strong>types-erreur.html</strong> est mis à disposition selon les termes de cette licence non commerciale.
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="container">
+        <h1 style="font-size:2.2rem; font-weight:700; border-left:8px solid #0b6e4f; padding-left:1.2rem; margin-bottom:0.2rem; color:var(--text);">
+            🧪 Calcul d'erreur – BTS BioAC
+        </h1>
+        <div class="subtitle" style="color:var(--text-light); margin-left:2rem; margin-bottom:2rem; font-size:1.05rem; border-bottom:2px solid var(--border); padding-bottom:1rem;">
+            Cours complet + exercices interactifs – version fusionnée
+        </div>
+
+        <!-- ========== SECTION TYPES D'ERREURS (ENRICHIE) ========== -->
+        <section id="types-erreurs" class="section">
+            <div class="section-title"><span>⚠️ 2. Types d'erreurs de calcul</span><span class="badge blue">Théorie</span></div>
+            <div class="card">
+                <p>
+                    Une <strong>erreur de calcul</strong> est la différence entre une valeur calculée ou mesurée et la valeur vraie (ou théorique). 
+                    En métrologie, on distingue plusieurs familles d'erreurs, chacune ayant des causes, des comportements et des remèdes spécifiques.
+                    La compréhension fine de ces types est indispensable pour interpréter correctement une mesure et son incertitude.
+                </p>
+
+                <!-- ====== 2.1 ERREURS SYSTÉMATIQUES ====== -->
+                <h4>2.1 Erreurs systématiques (déterminées)</h4>
+                <p>
+                    Les erreurs systématiques sont <strong>répétitives et prévisibles</strong>. Elles proviennent d'un défaut inhérent à l'instrument, 
+                    à la méthode ou à l'opérateur. Elles affectent la <strong>justesse</strong> des mesures (elles décalent la moyenne).
+                </p>
+
+                <div style="background: #fef3c7; border-left: 6px solid #f59e0b; padding: 0.8rem 1.2rem; border-radius: 8px; margin: 1rem 0;">
+                    <p><strong>📌 Le Biais :</strong> Un <strong>biais</strong> est une erreur systématique <strong>constante</strong> en valeur absolue, indépendante de la grandeur mesurée. 
+                    Exemple : une balance qui affiche systématiquement +0,5 g. Toutes les mesures sont décalées de +0,5 g. Le biais est la cause principale de la perte de justesse.</p>
+                </div>
+
+                <p><strong>On distingue plusieurs types d'erreurs systématiques :</strong></p>
+                <ul style="margin-bottom: 0.8rem;">
+                    <li><strong>Biais constant (additif) :</strong> l'erreur est la même quelle que soit la valeur mesurée (ex: zéro mal réglé).</li>
+                    <li><strong>Erreur proportionnelle (multiplicative) :</strong> l'erreur est proportionnelle à la valeur mesurée (ex: facteur d'étalonnage erroné).</li>
+                    <li><strong>Dérive (drift) :</strong> l'erreur varie lentement dans le temps (ex: échauffement de l'électronique, vieillissement des réactifs).</li>
+                    <li><strong>Erreur de méthode :</strong> due à un protocole inadapté (ex: volatilisation, réaction parasite).</li>
+                </ul>
+
+                <div class="highlight-box" style="margin-bottom: 0.5rem;">
+                    <p><strong>Exemple BIO‑AC :</strong> Un spectrophotomètre non étalonné donne une absorbance systématiquement 0,020 unité trop élevée (biais constant). 
+                    Si l'on dose une gamme étalon, l'erreur est la même pour tous les points. La correction consiste à soustraire 0,020 à toutes les lectures.</p>
+                </div>
+
+                <!-- ====== 2.2 ERREURS ALÉATOIRES ====== -->
+                <h4>2.2 Erreurs aléatoires (indéterminées)</h4>
+                <p>
+                    Les erreurs aléatoires sont <strong>imprévisibles</strong> et varient d'une mesure à l'autre, même dans des conditions parfaitement contrôlées. 
+                    Elles sont dues à des fluctuations de l'environnement, de l'opérateur ou de l'instrument. Elles affectent la <strong>fidélité</strong> (elles élargissent la dispersion).
+                </p>
+
+                <ul style="margin-bottom: 0.8rem;">
+                    <li><strong>Causes principales :</strong> bruit électronique, variations de température, vibrations, imprécision de pipetage, variations de l'opérateur.</li>
+                    <li><strong>Caractérisation :</strong> elles suivent généralement une <strong>loi normale (gaussienne)</strong> lorsque le nombre de mesures est grand.</li>
+                    <li><strong>Réduction :</strong> on les diminue en augmentant le nombre de mesures (la moyenne tend vers la valeur vraie et l'erreur-type décroît en \( \frac{1}{\sqrt{n}} \)).</li>
+                </ul>
+
+                <div class="highlight-box" style="margin-bottom: 0.5rem;">
+                    <p><strong>Exemple :</strong> Pour une série de 6 mesures de pH : 7,02 ; 7,05 ; 6,98 ; 7,01 ; 7,03 ; 7,00. 
+                    Les petites variations aléatoires sont dues au bruit de fond et à la précision de l'électrode. L'écart-type \( s \approx 0,024 \) caractérise l'amplitude de cette dispersion.</p>
+                </div>
+
+                <!-- ====== 2.3 ERREURS GROSSIÈRES ====== -->
+                <h4>2.3 Erreurs grossières (ou fautes)</h4>
+                <p>
+                    Les erreurs grossières, également appelées <strong>blunders</strong>, sont des erreurs manifestement anormales, dues à une mauvaise manipulation, 
+                    une lecture erronée, une inversion de chiffres ou un défaut ponctuel de l'instrument. Elles doivent être <strong>détectées et éliminées</strong>.
+                </p>
+                <ul style="margin-bottom: 0.8rem;">
+                    <li><strong>Détection :</strong> tests statistiques comme le test de Grubbs ou de Dixon (rejet des valeurs aberrantes).</li>
+                    <li><strong>Prévention :</strong> double lecture, enregistrement automatique, protocole rigoureux.</li>
+                </ul>
+                <div class="highlight-box" style="margin-bottom: 0.5rem;">
+                    <p><strong>Exemple :</strong> Une série de 5 mesures de concentration : 10,2 ; 10,3 ; 10,1 ; 10,2 ; <strong>12,7</strong> g/L. 
+                    La valeur 12,7 est très éloignée des autres (plus de 3 écarts-types) : c'est très probablement une erreur grossière (pipetage double, lecture erronée). 
+                    Elle doit être écartée avant tout calcul statistique.</p>
+                </div>
+
+                <!-- ====== 2.4 ERREURS DE TRONCATURE / ARRONDI ====== -->
+                <h4>2.4 Erreurs de troncature et d'arrondi</h4>
+                <p>
+                    Ces erreurs sont dues à la <strong>représentation limitée</strong> des nombres (par l'instrument, le logiciel ou le calculateur). 
+                    Elles s'accumulent lors de calculs successifs et peuvent devenir significatives.
+                </p>
+                <ul style="margin-bottom: 0.8rem;">
+                    <li><strong>Troncature :</strong> on coupe les décimales au-delà d'un certain rang (ex: 12,345678 → 12,345).</li>
+                    <li><strong>Arrondi :</strong> on remplace par le nombre le plus proche selon une règle (ex: 12,345678 → 12,35 si on arrondit au centième).</li>
+                    <li><strong>Conséquence :</strong> perte de précision ; il faut respecter les <strong>chiffres significatifs</strong> et ne pas écrire plus de décimales que la mesure ne le permet.</li>
+                </ul>
+                <div class="highlight-box">
+                    <p><strong>Exemple :</strong> Si une pipette graduée donne 12,3 mL (3 chiffres significatifs), le volume ne pourra pas être écrit 12,345 mL, car le 0,045 mL n'a pas de sens physique.</p>
+                </div>
+
+                <!-- ====== 2.5 ERREUR‑TYPE (STANDARD ERROR) – STATISTIQUE ====== -->
+                <h4>2.5 L'erreur‑type (Standard Error, \( s_{\bar{x}} \))</h4>
+                <p>
+                    Au-delà des erreurs individuelles, on utilise souvent le terme <strong>"erreur-type"</strong> en statistique pour désigner l'<strong>écart-type de la distribution d'échantillonnage d'un estimateur</strong>. 
+                    Le plus courant est l'erreur-type de la moyenne (\( s_{\bar{x}} \)), qui estime la précision avec laquelle la moyenne d'un échantillon estime la moyenne de la population.
+                </p>
+                <div class="formula-block" style="background: var(--formula-bg); border-left-color: #3b82f6;">
+                    $$ s_{\bar{x}} = \frac{s}{\sqrt{n}} $$
+                </div>
+                <p style="margin-top: 0.5rem;">
+                    où \( s \) est l'écart-type expérimental de l'échantillon et \( n \) l'effectif. 
+                    L'erreur-type est plus petite que l'écart-type individuel : plus on a de mesures, plus la moyenne est précise.
+                </p>
+                <ul>
+                    <li><strong>Interprétation :</strong> \( s_{\bar{x}} \) représente l'écart probable entre la moyenne de l'échantillon \( \bar{x} \) et la vraie moyenne \( \mu \) de la population.</li>
+                    <li><strong>Usage :</strong> elle sert à construire les <strong>intervalles de confiance</strong> et à calculer l'<strong>incertitude élargie</strong> (avec \( k=2 \)).</li>
+                    <li><strong>Distinction :</strong> \( s \) décrit la dispersion <strong>individuelle</strong> (fidélité des mesures), tandis que \( s_{\bar{x}} \) décrit la dispersion <strong>de la moyenne</strong> (précision de l'estimation).</li>
+                </ul>
+                <div class="highlight-box">
+                    <p><strong>Exemple BIO‑AC :</strong> Si 10 mesures de masse donnent \( s = 0,2 \) g, alors l'erreur-type de la moyenne est \( s_{\bar{x}} = 0,2 / \sqrt{10} \approx 0,063 \) g. 
+                    L'incertitude élargie à 95 % est \( U = 2 \times 0,063 \approx 0,13 \) g. Le résultat final s'écrit \( \bar{x} \pm 0,13 \) g.</p>
+                </div>
+
+                <!-- ====== 2.6 JUSTESSE ET FIDÉLITÉ ====== -->
+                <h4>2.6 Justesse (accuracy) et Fidélité (precision)</h4>
+                <p>
+                    Ces deux notions qualitatives sont les conséquences directes des types d'erreurs :
+                </p>
+                <ul style="margin-bottom: 0.8rem;">
+                    <li><strong>Justesse (accuracy) :</strong> proximité de la moyenne des mesures à la valeur vraie. Elle est <strong>altérée par les erreurs systématiques</strong> (biais, dérive).</li>
+                    <li><strong>Fidélité (precision) :</strong> dispersion des mesures entre elles (écart-type). Elle est <strong>altérée par les erreurs aléatoires</strong>.</li>
+                </ul>
+                <p>
+                    Un résultat idéal doit être à la fois juste et fidèle. En laboratoire, on contrôle la justesse avec des <strong>étalons</strong> (correction du biais) 
+                    et la fidélité par des <strong>répétitions</strong> et des calculs d'écart-type.
+                </p>
+                <div class="highlight-box">
+                    <p><strong>Exemple BIO‑AC :</strong> Un spectrophotomètre donne une absorbance moyenne de 0,480 pour un étalon à 0,500 (biais de -0,020) : il n'est pas juste, même si les triplicats sont très proches (fidèle).</p>
+                </div>
+
+                <!-- ====== 2.7 TABLEAU RÉCAPITULATIF ====== -->
+                <h4 style="margin-top: 1.8rem;">2.7 Synthèse : Tableau comparatif</h4>
+                <div style="overflow-x:auto; margin-top: 0.5rem;">
+                    <table>
+                        <thead>
+                            <tr style="background: var(--table-header, #0b6e4f); color: var(--table-header-text, white);">
+                                <th style="padding:0.5rem 0.8rem;">Type d'erreur</th>
+                                <th style="padding:0.5rem 0.8rem;">Nature</th>
+                                <th style="padding:0.5rem 0.8rem;">Exemples</th>
+                                <th style="padding:0.5rem 0.8rem;">Conséquence</th>
+                                <th style="padding:0.5rem 0.8rem;">Remède</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Systématique</strong></td>
+                                <td>Constante ou proportionnelle, prévisible</td>
+                                <td>Biais d'étalonnage, dérive thermique</td>
+                                <td>Mauvaise justesse (moyenne décalée)</td>
+                                <td>Étalonnage, correction, changement de méthode</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Aléatoire</strong></td>
+                                <td>Imprévisible, fluctuante</td>
+                                <td>Bruit, variations de pipetage</td>
+                                <td>Mauvaise fidélité (dispersion)</td>
+                                <td>Répétition, amélioration de l'instrument</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Grossière</strong></td>
+                                <td>Anormale, ponctuelle</td>
+                                <td>Lecture erronée, inversion de chiffres</td>
+                                <td>Valeur aberrante (outlier)</td>
+                                <td>Détection statistique, élimination</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Troncature / Arrondi</strong></td>
+                                <td>Liée à la représentation numérique</td>
+                                <td>Limite de l'affichage, chiffres significatifs</td>
+                                <td>Perte de précision</td>
+                                <td>Respect des règles des C.S., conservation des décimales utiles</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Erreur‑type (\( s_{\bar{x}} \))</strong></td>
+                                <td>Statistique (dispersion de la moyenne)</td>
+                                <td>Incertitude sur la moyenne</td>
+                                <td>Précision de l'estimation</td>
+                                <td>Augmenter \(n\) pour la réduire</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1.5rem; background: var(--info); padding: 0.8rem 1.5rem; border-radius: 12px; border-left: 6px solid var(--info-border);">
+                    <p style="font-weight: 700; margin-bottom: 0.2rem;">💡 À retenir</p>
+                    <p style="font-size: 0.95rem;">
+                        Une mesure parfaite n'existe pas, mais on peut <strong>identifier</strong> les sources d'erreur, 
+                        <strong>quantifier</strong> leur impact (via l'écart-type, l'erreur-type) et 
+                        <strong>corriger</strong> ou <strong>réduire</strong> leur influence. 
+                        La maîtrise des types d'erreurs est la base de tout raisonnement métrologique.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer">
+            Outil pédagogique complet – fusion des versions théorie et interactive.
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT                                                    -->
+    <!-- ============================================================ -->
+    
+    <script src="scripts.js"></script>
+    <script>
+        // ================================================================
+        // MODALE DROITS D'AUTEUR
+        // ================================================================
+        const modal = document.getElementById('copyrightModal');
+        const openBtn = document.getElementById('copyrightToggle');
+        const closeBtn = document.getElementById('modalCloseBtn');
+
+        function openModal() { modal.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+        function closeModal() { modal.classList.remove('is-open'); document.body.style.overflow = ''; }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
+
+        // ================================================================
+        // THÈME SOMBRE
+        // ================================================================
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+        }
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode sombre</span>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+            }
+        });
+    </script>
+</body>
+</html>

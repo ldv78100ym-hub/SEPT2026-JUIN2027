@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calcul d'erreur – BTS BioAC (version fusionnée corrigée)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-flask"></i>
+            <span>BTS BioAC</span>
+        </div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="introduction.html"><i class="fas fa-home"></i><span>Introduction</span></a></li>
+                <li><a href="types-erreurs.html"><i class="fas fa-exclamation-triangle"></i><span>Types d'erreurs</span></a></li>
+                <li><a href="schema-erreurs.html"><i class="fas fa-chart-pie"></i><span>Schéma récapitulatif</span></a></li>
+                <li><a href="justesse-fidelite.html"><i class="fas fa-bullseye"></i><span>Justesse &amp; Fidélité</span></a></li>
+                <li><a href="propagation.html"><i class="fas fa-project-diagram"></i><span>Propagation</span></a></li>
+                <li><a href="mesures-experimentales.html" class="active"><i class="fas fa-flask"></i><span>Mesures exp.</span></a></li>
+                <li><a href="incertitudes.html"><i class="fas fa-balance-scale"></i><span>Incertitudes</span></a></li>
+                <li><a href="dof.html"><i class="fas fa-calculator"></i><span>Pourquoi (n−1) ?</span></a></li>
+                <li><a href="exercices.html"><i class="fas fa-vial"></i><span>Exercices</span></a></li>
+                <li><a href="glossaire.html"><i class="fas fa-book-open"></i><span>Glossaire</span></a></li>
+            </ul>
+        </div>
+        <div class="theme-toggle" id="copyrightToggle" role="button" tabindex="0" aria-label="Droits d'auteur">
+            <i class="fas fa-copyright"></i><span>Droits d'auteur</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Basculer le mode sombre">
+            <i class="fas fa-moon"></i><span>Mode sombre</span>
+        </div>
+    </nav>
+
+    <div class="copyright-modal" id="copyrightModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <button class="close-btn" id="modalCloseBtn" aria-label="Fermer la modale">&times;</button>
+            <h2 id="modalTitle"><i class="fas fa-balance-scale"></i> Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>) – Juin 2026</p>
+            <div style="margin-top:1.2rem;">
+                <span class="badge-licence">Licence Non Commerciale</span>
+                <p style="margin-top:0.8rem;">Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            </div>
+            <h4 style="margin-top:1.5rem; font-weight:600;">Conditions :</h4>
+            <ul>
+                <li><strong>✅ Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>❌ Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>📝 Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+                <li><strong>✉️ Contact :</strong> Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>.</li>
+            </ul>
+            <div class="licence-footer">
+                <i class="fas fa-info-circle"></i> Ce fichier <strong>mesures-experimentales.html</strong> est mis à disposition selon les termes de cette licence non commerciale.
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 style="font-size:2.2rem; font-weight:700; border-left:8px solid #0b6e4f; padding-left:1.2rem; margin-bottom:0.2rem; color:var(--text);">
+            🧪 Calcul d'erreur – BTS BioAC
+        </h1>
+        <div class="subtitle" style="color:var(--text-light); margin-left:2rem; margin-bottom:2rem; font-size:1.05rem; border-bottom:2px solid var(--border); padding-bottom:1rem;">
+            Cours complet + exercices interactifs – version fusionnée
+        </div>
+
+        <section id="mesures-experimentales" class="section">
+            <div class="section-title">
+                <span>🧪 6. Mesures expérimentales</span>
+                <span class="badge blue">Théorie</span>
+            </div>
+            <div class="card">
+                <h4>6.1 Incertitude de mesure</h4>
+                <div class="formula-block">$$ x = x_{\text{mesuré}} \pm \Delta x $$</div>
+
+                <h4>6.2 Incertitude relative</h4>
+                <div class="formula-block">$$ \text{Incertitude relative} = \frac{\Delta x}{|x_{\text{mesuré}}|} \quad \text{ou} \quad \% = \frac{\Delta x}{|x|} \times 100 $$</div>
+
+                <h4>6.3 Chiffres significatifs (aperçu)</h4>
+                <ul>
+                    <li>Tous les chiffres non nuls sont significatifs.</li>
+                    <li>Les zéros entre chiffres non nuls le sont.</li>
+                    <li>Les zéros finaux d'un décimal le sont.</li>
+                    <li>Les zéros à gauche ne le sont pas.</li>
+                </ul>
+
+                <div id="chiffres-significatifs-cours">
+                    <div class="card">
+                        <h4 style="margin:0;">6.3.1 Définition exacte</h4>
+
+                        <div class="goal-box">
+                            <strong>🎯 Objectif :</strong> Maîtriser parfaitement la notion de <strong>chiffres significatifs (C.S.)</strong> pour exprimer correctement une mesure et ses incertitudes. Chaque règle est expliquée avec des <strong>exemples concrets de laboratoire</strong> et des <strong>analogies</strong> pour bien comprendre l'enjeu.
+                        </div>
+
+                        <div style="background: var(--info); padding:1rem 1.5rem; border-radius:12px; border-left:6px solid var(--info-border);">
+                            <p style="font-size:1.15rem; font-weight:600; margin-bottom:0.3rem;">📐 Définition métrologique :</p>
+                            <p>Les <strong>chiffres significatifs</strong> d'un nombre sont l'ensemble des chiffres qui sont <strong>connus avec certitude</strong> (chiffres exacts), <strong>plus le premier chiffre incertain</strong> (le dernier chiffre estimé ou arrondi). Ils indiquent la <strong>précision</strong> de la mesure.</p>
+                        </div>
+
+                        <div class="analogie-box" style="margin-top:1rem;">
+                            <p><strong>🧠 Analogie du compteur de vitesse :</strong></p>
+                            <p>Imaginez que vous roulez en voiture et que le compteur affiche <strong>95 km/h</strong>. Vous êtes <strong>sûr</strong> de la dizaine (le 9) et de l'unité (le 5). Votre vitesse est donc connue avec <strong>deux chiffres significatifs</strong>. Si le compteur affiche <strong>95,0 km/h</strong>, vous êtes en plus sûr du dixième (le 0) → <strong>trois chiffres significatifs</strong>. Vous avez gagné en précision !</p>
+                        </div>
+
+                        <h4 style="margin-top:1.8rem;">6.3.2 Les 4 règles d'or pour identifier les C.S.</h4>
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:25%;">Règle</th>
+                                        <th style="width:35%;">Exemple</th>
+                                        <th style="width:40%;">Pourquoi ? / Piège</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>1. Tous les chiffres non nuls sont significatifs.</strong></td>
+                                        <td><span class="cs-highlight">1</span><span class="cs-highlight">2</span>3 → 3 C.S.<br><span class="cs-highlight">4</span><span class="cs-highlight">5</span>6 → 3 C.S.</td>
+                                        <td>Ils sont toujours mesurés. Pas de piège ici.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>2. Les zéros entre deux chiffres non nuls sont significatifs.</strong></td>
+                                        <td><span class="cs-highlight">1</span><span class="cs-highlight">0</span><span class="cs-highlight">0</span>2 → 4 C.S.<br><span class="cs-highlight">8</span><span class="cs-highlight">0</span><span class="cs-highlight">5</span> → 3 C.S.</td>
+                                        <td>Le 0 fait partie de la mesure (ex: 102 cm, c'est entre 1 et 2).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>3. Les zéros à gauche du premier chiffre non nul NE sont PAS significatifs.</strong></td>
+                                        <td>0,<span class="cs-highlight">0</span><span class="cs-highlight">2</span><span class="cs-highlight">5</span> → 2 C.S. (le 2 et le 5)<br>0,<span class="cs-highlight">0</span><span class="cs-highlight">0</span><span class="cs-highlight">4</span><span class="cs-highlight">8</span> → 2 C.S.</td>
+                                        <td>Ces zéros ne sont que des marqueurs de position (pour la virgule). <strong>Ils n'apportent aucune information sur la précision.</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>4. Les zéros à droite de la virgule (après un chiffre non nul) SONT significatifs.</strong></td>
+                                        <td>5,<span class="cs-highlight">0</span> → 2 C.S.<br>2,<span class="cs-highlight">3</span><span class="cs-highlight">0</span> → 3 C.S.<br>10,<span class="cs-highlight">0</span> → 3 C.S.</td>
+                                        <td>Si vous écrivez 2,30, c'est que vous avez mesuré au centième près. Le 0 est <strong>important</strong>, il ne faut pas l'enlever !</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h4 style="margin-top:1.8rem;">6.3.3 Exemples illustrés en BIO-AC</h4>
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+                            <button id="new-measures-btn-1" class="btn btn-primary" style="padding: 0.3rem 1rem;">
+                                <i class="fas fa-sync-alt"></i> Nouvelles mesures
+                            </button>
+                        </div>
+                        <div class="row" style="gap:1rem;">
+                            <div class="col" style="flex:1; min-width:200px;">
+                                <div class="highlight-box" style="height:100%;">
+                                    <p style="font-weight:700; font-size:1.05rem;">🧪 Exemple 1 – pH-mètre</p>
+                                    <p>Un pH-mètre affiche <strong><span id="ph-value">7,30</span></strong>.</p>
+                                    <ul id="ph-details"></ul>
+                                    <p id="ph-comment" style="margin-top:0.5rem; background:var(--bg-card); padding:0.3rem 0.6rem; border-radius:4px;"></p>
+                                </div>
+                            </div>
+                            <div class="col" style="flex:1; min-width:200px;">
+                                <div class="highlight-box" style="height:100%;">
+                                    <p style="font-weight:700; font-size:1.05rem;">⚖️ Exemple 2 – Balance</p>
+                                    <p>Une balance analytique affiche <strong><span id="mass-value">0,0500</span> g</strong>.</p>
+                                    <ul id="mass-details"></ul>
+                                    <p id="mass-comment" style="margin-top:0.5rem; background:var(--bg-card); padding:0.3rem 0.6rem; border-radius:4px;"></p>
+                                </div>
+                            </div>
+                            <div class="col" style="flex:1; min-width:200px;">
+                                <div class="highlight-box" style="height:100%;">
+                                    <p style="font-weight:700; font-size:1.05rem;">📊 Exemple 3 – Spectrophotomètre</p>
+                                    <p>L'absorbance lue est <strong><span id="abs-value">0,450</span></strong>.</p>
+                                    <ul id="abs-details"></ul>
+                                    <p id="abs-comment" style="margin-top:0.5rem; background:var(--bg-card); padding:0.3rem 0.6rem; border-radius:4px;"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-top:1.8rem;">6.3.4 ⚠️ Le piège classique : 560, c'est combien de C.S. ?</h4>
+                        <div style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 12px; padding: 1rem 1.5rem; margin:1rem 0;">
+                            <p style="font-weight:700; color:#991b1b; font-size:1.05rem;">❓ Question : Combien de chiffres significatifs dans <strong>560</strong> ?</p>
+                            <p><strong>Réponse :</strong> Cela dépend !</p>
+                            <ul>
+                                <li><strong>Si le 0 est mesuré</strong> (balance qui donne 560 g) → <strong>3 C.S.</strong> (5, 6 et 0).</li>
+                                <li><strong>Si le 0 est un multiple de 10</strong> (environ 5,6 × 10²) → <strong>2 C.S.</strong> (5 et 6).</li>
+                            </ul>
+                            <div class="highlight-box" style="margin-top:0.5rem;">
+                                <p><strong>✅ La solution en laboratoire :</strong> On utilise l'<strong>écriture scientifique</strong> pour lever toute ambiguïté !</p>
+                                <ul>
+                                    <li><strong>5,60 × 10²</strong> → 3 C.S. (le 0 compte).</li>
+                                    <li><strong>5,6 × 10²</strong> → 2 C.S. (le 0 n'est pas écrit).</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- ================================================== -->
+                        <!-- SECTION 6.3.5 – commentaires décomposés en spans    -->
+                        <!-- ================================================== -->
+                        <h4 style="margin-top:1.8rem;">6.3.5 Règles de calcul avec les C.S.
+                            <button id="new-calc-values-btn" class="btn btn-primary" style="padding: 0.2rem 0.8rem; margin-left: 0.8rem; font-size:0.9rem;">
+                                <i class="fas fa-sync-alt"></i> Toutes les valeurs
+                            </button>
+                        </h4>
+
+                        <!-- Ligne 1 : Addition et Soustraction -->
+                        <div class="row" style="gap:1.5rem; margin-bottom:1.5rem;">
+                            <!-- Addition -->
+                            <div class="col" style="flex:1; background: var(--bg-card); border: 2px solid var(--border); border-radius:12px; padding:1rem 1.2rem;">
+                                <h4 style="margin-top:0; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                                    <span>➕ Addition</span>
+                                    <button id="new-add-btn" class="btn btn-primary" style="padding: 0.1rem 0.6rem; font-size:0.8rem;">
+                                        <i class="fas fa-sync-alt"></i> Nouvelles valeurs
+                                    </button>
+                                </h4>
+                                <p>On arrondit le résultat au <strong>nombre de décimales</strong> du terme qui en a le <strong>moins</strong>.</p>
+                                <div class="formula-block" style="background:var(--formula-bg); font-size:1rem; border-left-color:#3b82f6; line-height:1.8;">
+                                    Exemple : <span id="add-a">12,34</span> + <span id="add-b">5,6</span> = <span id="add-raw">17,94</span><br>
+                                    → on arrondit à <span id="add-decimals">1</span> décimale<br>
+                                    → <strong><span id="add-result">17,9</span></strong>
+                                </div>
+                                <p id="add-comment" style="font-size:0.9rem; color:var(--text-light);">
+                                    <i class="fas fa-info-circle"></i> Ici, <span id="add-comment-value">5,6</span> a <span id="add-comment-dec">1</span> décimale(s), donc le résultat en a <span id="add-comment-result">1</span>.
+                                </p>
+                            </div>
+
+                            <!-- Soustraction -->
+                            <div class="col" style="flex:1; background: var(--bg-card); border: 2px solid var(--border); border-radius:12px; padding:1rem 1.2rem;">
+                                <h4 style="margin-top:0; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                                    <span>➖ Soustraction</span>
+                                    <button id="new-sub-btn" class="btn btn-primary" style="padding: 0.1rem 0.6rem; font-size:0.8rem;">
+                                        <i class="fas fa-sync-alt"></i> Nouvelles valeurs
+                                    </button>
+                                </h4>
+                                <p>Même règle que l'addition : on garde le <strong>nombre de décimales</strong> du terme le <strong>moins précis</strong>.</p>
+                                <div class="formula-block" style="background:var(--formula-bg); font-size:1rem; border-left-color:#3b82f6; line-height:1.8;">
+                                    Exemple : <span id="sub-a">25,678</span> − <span id="sub-b">3,2</span> = <span id="sub-raw">22,478</span><br>
+                                    → on arrondit à <span id="sub-decimals">1</span> décimale<br>
+                                    → <strong><span id="sub-result">22,5</span></strong>
+                                </div>
+                                <p id="sub-comment" style="font-size:0.9rem; color:var(--text-light);">
+                                    <i class="fas fa-info-circle"></i> <span id="sub-comment-value">3,2</span> a <span id="sub-comment-dec">1</span> décimale(s), donc le résultat est arrondi à <span id="sub-comment-result">1</span> décimale(s).
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Ligne 2 : Multiplication et Division -->
+                        <div class="row" style="gap:1.5rem;">
+                            <!-- Multiplication -->
+                            <div class="col" style="flex:1; background: var(--bg-card); border: 2px solid var(--border); border-radius:12px; padding:1rem 1.2rem;">
+                                <h4 style="margin-top:0; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                                    <span>✖️ Multiplication</span>
+                                    <button id="new-mul-btn" class="btn btn-primary" style="padding: 0.1rem 0.6rem; font-size:0.8rem;">
+                                        <i class="fas fa-sync-alt"></i> Nouvelles valeurs
+                                    </button>
+                                </h4>
+                                <p>On arrondit le résultat au <strong>nombre de chiffres significatifs</strong> du terme qui en a le <strong>moins</strong>.</p>
+                                <div class="formula-block" style="background:var(--formula-bg); font-size:1rem; border-left-color:#3b82f6; line-height:1.8;">
+                                    Exemple : <span id="mul-a">12,34</span> × <span id="mul-b">5,6</span> = <span id="mul-raw">69,104</span><br>
+                                    → <span id="mul-b-cs">5,6</span> a <span id="mul-b-cs-count">2</span> C.S. (le plus petit)<br>
+                                    → on arrondit à <span id="mul-result-cs">2</span> C.S.<br>
+                                    → <strong><span id="mul-result">69</span></strong>
+                                </div>
+                                <p id="mul-comment" style="font-size:0.9rem; color:var(--text-light);">
+                                    <i class="fas fa-info-circle"></i> On conserve <span id="mul-comment-result-cs">2</span> C.S. car la valeur la moins précise (<span id="mul-comment-value">5,6</span>) en a <span id="mul-comment-precise-cs">2</span>.
+                                </p>
+                            </div>
+
+                            <!-- Division -->
+                            <div class="col" style="flex:1; background: var(--bg-card); border: 2px solid var(--border); border-radius:12px; padding:1rem 1.2rem;">
+                                <h4 style="margin-top:0; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                                    <span>➗ Division</span>
+                                    <button id="new-div-btn" class="btn btn-primary" style="padding: 0.1rem 0.6rem; font-size:0.8rem;">
+                                        <i class="fas fa-sync-alt"></i> Nouvelles valeurs
+                                    </button>
+                                </h4>
+                                <p>Même règle que la multiplication : résultat avec le <strong>nombre de C.S.</strong> du terme le <strong>moins précis</strong>.</p>
+                                <div class="formula-block" style="background:var(--formula-bg); font-size:1rem; border-left-color:#3b82f6; line-height:1.8;">
+                                    Exemple : <span id="div-a">45,6</span> ÷ <span id="div-b">7,89</span> = <span id="div-raw">5,779...</span><br>
+                                    → <span id="div-a-cs">45,6</span> a <span id="div-a-cs-count">3</span> C.S. (le plus petit)<br>
+                                    → on arrondit à <span id="div-result-cs">3</span> C.S.<br>
+                                    → <strong><span id="div-result">5,78</span></strong>
+                                </div>
+                                <p id="div-comment" style="font-size:0.9rem; color:var(--text-light);">
+                                    <i class="fas fa-info-circle"></i> Le terme le moins précis est <span id="div-comment-value">45,6</span> (<span id="div-comment-precise-cs">3</span> C.S.), donc le résultat a <span id="div-comment-result-cs">3</span> C.S.
+                                </p>
+                            </div>
+                        </div>
+                        <!-- ============ FIN SECTION 6.3.5 ================== -->
+
+                        <h4 style="margin-top:1.8rem;">6.3.6 Lien direct avec l'incertitude (le plus important !)</h4>
+                        <div class="summary-box">
+                            <p><strong>📌 Règle fondamentale :</strong> Le <strong>nombre de chiffres significatifs</strong> d'une mesure vous dit <strong>où se situe l'incertitude</strong>.</p>
+                            <ul>
+                                <li><strong>2 C.S.</strong> → l'incertitude est sur le <strong>2ème chiffre</strong> (ex: \( 3,4 \pm 0,1 \)).</li>
+                                <li><strong>3 C.S.</strong> → l'incertitude est sur le <strong>3ème chiffre</strong> (ex: \( 3,45 \pm 0,01 \)).</li>
+                                <li><strong>4 C.S.</strong> → l'incertitude est sur le <strong>4ème chiffre</strong> (ex: \( 3,450 \pm 0,001 \)).</li>
+                            </ul>
+                        </div>
+                        <div class="highlight-box" style="margin-top:0.8rem;">
+                            <p><strong>Exemple BIO-AC :</strong> Un résultat s'écrit \( C = \) <span id="conc-value">0,250</span> \( \pm \) <span id="conc-unc">0,005</span> M.</p>
+                            <ul>
+                                <li><span id="conc-value-cs">0,250</span> a <strong id="conc-cs-count">3</strong> C.S.</li>
+                                <li>L'incertitude est de <span id="conc-unc-cs">0,005</span>, elle porte sur le <strong>3ème chiffre</strong> après la virgule (le dernier 0).</li>
+                                <li>On ne peut pas écrire \( 0,25 \pm 0,005 \) car 0,25 n'a que 2 C.S. et l'incertitude ne porte plus sur le même rang.</li>
+                            </ul>
+                        </div>
+
+                        <!-- ================================================ -->
+                        <!-- SECTION 6.3.7 DYNAMIQUE                          -->
+                        <!-- ================================================ -->
+                        <h4 style="margin-top:1.8rem; display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                            <span>6.3.7 Récapitulatif en un coup d'œil</span>
+                            <button id="new-recap-btn" class="btn btn-primary" style="padding: 0.2rem 0.8rem; font-size:0.9rem;">
+                                <i class="fas fa-sync-alt"></i> Nouvelles valeurs
+                            </button>
+                        </h4>
+
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead>
+                                    <tr><th>Nombre</th><th>C.S.</th><th>Précision (incertitude probable)</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span id="recap-num-1">3,4</span></td>
+                                        <td><span id="recap-cs-1">2</span></td>
+                                        <td><span id="recap-prec-1">± 0,1 (au dixième)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span id="recap-num-2">3,40</span></td>
+                                        <td><span id="recap-cs-2">3</span></td>
+                                        <td><span id="recap-prec-2">± 0,01 (au centième)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span id="recap-num-3">0,0045</span></td>
+                                        <td><span id="recap-cs-3">2</span></td>
+                                        <td><span id="recap-prec-3">± 0,0001 (au 4ème zéro)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span id="recap-num-4">0,00450</span></td>
+                                        <td><span id="recap-cs-4">3</span></td>
+                                        <td><span id="recap-prec-4">± 0,00001 (au 5ème zéro)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span id="recap-num-5">5,6 × 10²</span></td>
+                                        <td><span id="recap-cs-5">2</span></td>
+                                        <td><span id="recap-prec-5">± 10 (à la dizaine)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span id="recap-num-6">5,60 × 10²</span></td>
+                                        <td><span id="recap-cs-6">3</span></td>
+                                        <td><span id="recap-prec-6">± 1 (à l'unité)</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- ============ FIN SECTION 6.3.7 ================== -->
+
+                        <div class="analogie-box" style="margin-top:1.5rem;">
+                            <p><strong>🧠 Dernière analogie : Les invités à la fête</strong></p>
+                            <p>Imaginez que vous listez les invités : "J'ai 50 personnes" (2 C.S. → précision à la dizaine). "J'ai 50,0 personnes" (3 C.S. → vous êtes sûr à l'unité près). Les zéros à gauche comme dans "0,0050" sont comme des placeholders sur la liste : ils ne sont pas des invités, ils disent juste où se trouve la table (la virgule).</p>
+                        </div>
+
+                        <div class="summary-box" style="margin-top:1.5rem;">
+                            <strong>💡 Ce qu'il faut retenir absolument :</strong>
+                            <ul style="margin-top:0.3rem;">
+                                <li>Un chiffre significatif = un chiffre qui apporte une information sur la précision.</li>
+                                <li>Les zéros à gauche ne comptent <strong>jamais</strong>.</li>
+                                <li>Les zéros entre des chiffres comptent <strong>toujours</strong>.</li>
+                                <li>Les zéros à droite comptent <strong>si</strong> il y a une virgule.</li>
+                                <li>Le nombre de C.S. vous indique où se place l'incertitude.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================== -->
+                <!-- SECTION 6.4 MODIFIÉE AVEC STUDENT + EXPLICATION     -->
+                <!-- ================================================== -->
+                <h4 style="margin-top:1.8rem;">6.4 Moyenne et écart-type</h4>
+                <div class="formula-block">
+                    $$ \bar{x} = \frac{1}{n} \sum x_i \quad ; \quad s = \sqrt{ \frac{1}{n-1} \sum (x_i - \bar{x})^2 } \quad ; \quad \Delta \bar{x} = \frac{s}{\sqrt{n}} $$
+                </div>
+
+                <div class="summary-box" style="margin-top:1rem;">
+                    <p><strong>📊 Que signifient ces formules en pratique ?</strong></p>
+                    <p>Voici le rôle de chaque élément pour interpréter correctement vos résultats de laboratoire :</p>
+                </div>
+
+                <table class="formula-legend">
+                    <thead>
+                        <tr style="background: var(--table-header, #0b6e4f); color: var(--table-header-text, white);">
+                            <th style="padding: 0.5rem 0.8rem; text-align:left;">Symbole</th>
+                            <th style="padding: 0.5rem 0.8rem; text-align:left;">Rôle et explication</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="symbol">\( n \)</td>
+                            <td class="role"><strong>Effectif :</strong> le nombre total de mesures que vous avez réalisées. Plus \( n \) est grand, plus votre estimation est fiable (la loi des grands nombres).</td>
+                        </tr>
+                        <tr>
+                            <td class="symbol">\( \sum x_i \)</td>
+                            <td class="role"><strong>Somme des mesures :</strong> on additionne toutes les valeurs \( x_1, x_2, \dots, x_n \) pour obtenir le total.</td>
+                        </tr>
+                        <tr>
+                            <td class="symbol">\( \bar{x} \)</td>
+                            <td class="role"><strong>Moyenne (estimateur de la valeur vraie) :</strong> c'est la <strong>meilleure estimation</strong> de la grandeur que vous cherchez à mesurer. En laboratoire, c'est la valeur que l'on retient comme "résultat central".</td>
+                        </tr>
+                        <tr>
+                            <td class="symbol">\( s \)</td>
+                            <td class="role"><strong>Écart-type expérimental :</strong> il mesure la <strong>dispersion</strong> (la fidélité) des mesures individuelles autour de la moyenne. Un petit \( s \) signifie que les mesures sont très regroupées (bonne répétabilité).</td>
+                        </tr>
+                        <tr>
+                            <td class="symbol">\( n-1 \)</td>
+                            <td class="role"><strong>Degrés de liberté :</strong> on divise par \( n-1 \) (et non par \( n \)) pour obtenir une <strong>estimation non biaisée</strong> de la variance de la population. La moyenne \( \bar{x} \) étant fixée, le dernier écart est "forcé" (cf. section 9 sur les degrés de liberté).</td>
+                        </tr>
+                        <tr>
+                            <td class="symbol">\( \Delta \bar{x} \)</td>
+                            <td class="role"><strong>Incertitude-type sur la moyenne (erreur standard) :</strong> c'est l'incertitude qui s'applique <strong>à la moyenne</strong> (et non aux mesures individuelles). Elle diminue avec \( \sqrt{n} \) : plus vous répétez de mesures, plus la moyenne est précise. C'est cette valeur que l'on utilise pour construire les intervalles de confiance.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="display: flex; justify-content: flex-end; margin: 0.5rem 0;">
+                    <button id="new-measures-btn-2" class="btn btn-primary" style="padding: 0.3rem 1rem;">
+                        <i class="fas fa-sync-alt"></i> Nouvelles mesures
+                    </button>
+                </div>
+
+                <div class="highlight-box" style="margin-top:0.2rem;">
+                    <p><strong>🧪 Exemple BIO-AC :</strong> Vous dosez une protéine et obtenez 5 mesures : <span id="d1">2,1</span> ; <span id="d2">2,3</span> ; <span id="d3">2,0</span> ; <span id="d4">2,2</span> ; <span id="d5">2,4</span> g/L.</p>
+                    <ul>
+                        <li>\( n = 5 \), \( \sum x_i = 11,0 \) → \( \bar{x} =\) <span id="mean-value">2,20</span>  g/L (valeur centrale).</li>
+                        <li>Les écarts \( (x_i - \bar{x}) \) sont faibles → \( s \approx \)<span id="std-value">0,16</span> g/L (bonne fidélité).</li>
+                        <li>L'incertitude sur la moyenne est \( \Delta \bar{x} = s / \sqrt{5} \approx \)<span id="sem-value">0,07</span> g/L.</li>
+                        <li>
+                            Le résultat final s'écrit : <span id="final-mean">2,20</span> \(\pm\) <span id="final-unc">0,19</span> g/L 
+                            <span id="student-info">(avec le coefficient de Student \( t_4 = 2,776 \) pour 95 %)</span>.
+                        </li>
+                    </ul>
+
+                    <!-- ======== NOUVELLE EXPLICATION DYNAMIQUE ======== -->
+                    <div style="background: var(--info); padding:1rem 1.5rem; border-radius:12px; border-left:6px solid var(--info-border); margin-top:0.8rem;">
+                        <p style="font-weight:700; font-size:1.05rem; margin-bottom:0.3rem;">📐 Pourquoi ce choix ? (Détail du calcul)</p>
+                        <ul style="margin-bottom:0;">
+                            <li>L'incertitude-type sur la moyenne est \( \Delta\bar{x} = s/\sqrt{n} = \) <span id="explain-sem">0,07</span> g/L.</li>
+                            <li>Avec \( n=5 \) mesures, le nombre de degrés de liberté est \( \nu = n-1 = 4 \). Pour un intervalle de confiance de 95 %, la loi de Student donne \( t_4 = \) <span id="explain-t">2,776</span>.</li>
+                            <li>On calcule donc l'incertitude élargie :
+                                \( U = t_4 \times \Delta\bar{x} = \) <span id="explain-t-value">2,776</span> \( \times \) <span id="explain-sem-detail">0,07</span> \( \approx \) <span id="explain-u-calc">0,19</span> g/L.
+                            </li>
+                            <li style="margin-top:0.3rem;">
+                                ⚠️ À titre de comparaison, l'approximation simplifiée \( k=2 \) donnerait 
+                                \( U = 2 \times \Delta\bar{x} = \) <span id="explain-approx">0,14</span> g/L (soit \( \bar{x} \pm 0,14 \)), 
+                                ce qui sous-estime l'incertitude réelle pour un petit échantillon.
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- ======== FIN DE L'EXPLICATION ======== -->
+
+                    <p style="margin-top:0.8rem;"><strong>📌 À retenir :</strong> L'écart-type \( s \) décrit la dispersion des mesures brutes, tandis que \( \Delta \bar{x} \) décrit la précision avec laquelle vous connaissez la moyenne. Pour un petit nombre de mesures (\( n < 30 \)), le coefficient d'élargissement rigoureux est donné par la loi de Student, et non par \( k=2 \).</p>
+                </div>
+                <!-- ============ FIN SECTION 6.4 ================== -->
+
+            </div>
+        </section>
+
+        <div class="footer">
+            Outil pédagogique complet – fusion des versions théorie et interactive.
+        </div>
+    </div>
+
+    <script>
+        // Gestion de la modale droits d'auteur
+        const modal = document.getElementById('copyrightModal');
+        const openBtn = document.getElementById('copyrightToggle');
+        const closeBtn = document.getElementById('modalCloseBtn');
+
+        function openModal() {
+            modal.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
+
+        // Gestion du thème sombre
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+        }
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode sombre</span>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+            }
+        });
+
+        // ========== TABLE DE STUDENT POUR 95 % (BILATÉRAL) ==========
+        function getStudentT(df) {
+            const table = {
+                1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
+                6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+                11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131,
+                16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086,
+                21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060,
+                26: 2.056, 27: 2.052, 28: 2.048, 29: 2.045, 30: 2.042
+            };
+            if (df >= 1 && df <= 30) return table[df];
+            if (df > 30) return 2.0;
+            return 2.0;
+        }
+
+        // ========== FONCTIONS UTILITAIRES ==========
+        function randomWithSigFigs(min, max, sigFigs) {
+            let val = Math.random() * (max - min) + min;
+            let str = val.toPrecision(sigFigs);
+            return str;
+        }
+
+        function formatFrStr(str) {
+            return str.replace('.', ',');
+        }
+
+        function getSigDigitsFromStr(str) {
+            let s = str;
+            if (s.startsWith('-')) s = s.substring(1);
+            let digits = s.replace('.', '').split('');
+            while (digits.length > 0 && digits[0] === '0') {
+                digits.shift();
+            }
+            return digits;
+        }
+
+        function roundToSigFigs(str, keep) {
+            let num = parseFloat(str);
+            if (isNaN(num)) return str;
+            let rounded = num.toPrecision(keep);
+            return rounded;
+        }
+
+        // ========== FONCTIONS POUR LES COMMENTAIRES (6.3.3) ==========
+        function generateComment(valueStr, type, sigFigs) {
+            let comment = '';
+            let reducedSig = sigFigs - 1;
+            if (reducedSig < 1) reducedSig = 1;
+            let reducedStr = roundToSigFigs(valueStr, reducedSig);
+            let reducedDisplay = formatFrStr(reducedStr);
+            if (type === 'ph') {
+                let parts = valueStr.split('.');
+                let origDec = parts.length > 1 ? parts[1].length : 0;
+                let redParts = reducedStr.split('.');
+                let redDec = redParts.length > 1 ? redParts[1].length : 0;
+                let perdu = '';
+                if (origDec - redDec === 1) {
+                    if (origDec === 2) perdu = 'centième';
+                    else if (origDec === 3) perdu = 'millième';
+                    else if (origDec === 4) perdu = 'dix-millième';
+                    else perdu = (origDec - redDec) + 'e décimale';
+                } else {
+                    perdu = 'précision (passage de ' + sigFigs + ' à ' + reducedSig + ' C.S.)';
+                }
+                comment = '📌 Si on écrivait ' + reducedDisplay + ', on aurait perdu le ' + perdu + ' → on aurait moins de précision.';
+            } else if (type === 'mass') {
+                let parts = valueStr.split('.');
+                let origDec = parts.length > 1 ? parts[1].length : 0;
+                let redParts = reducedStr.split('.');
+                let redDec = redParts.length > 1 ? redParts[1].length : 0;
+                let perdu = '';
+                if (origDec - redDec === 1) {
+                    if (origDec === 4) perdu = 'dix-millième';
+                    else if (origDec === 3) perdu = 'millième';
+                    else if (origDec === 2) perdu = 'centième';
+                    else perdu = (origDec - redDec) + 'e décimale';
+                } else {
+                    perdu = 'précision (passage de ' + sigFigs + ' à ' + reducedSig + ' C.S.)';
+                }
+                comment = '📌 Ne surtout pas écrire ' + reducedDisplay + ' (1 seul C.S.) car on perdrait la précision de l\'appareil !';
+            } else if (type === 'abs') {
+                let parts = valueStr.split('.');
+                let origDec = parts.length > 1 ? parts[1].length : 0;
+                let redParts = reducedStr.split('.');
+                let redDec = redParts.length > 1 ? redParts[1].length : 0;
+                let perdu = '';
+                if (origDec - redDec === 1) {
+                    if (origDec === 3) perdu = 'millième';
+                    else if (origDec === 4) perdu = 'dix-millième';
+                    else perdu = (origDec - redDec) + 'e décimale';
+                } else {
+                    perdu = 'précision (passage de ' + sigFigs + ' à ' + reducedSig + ' C.S.)';
+                }
+                comment = '📌 Si on arrondit à ' + reducedDisplay + ', on passe à ' + reducedSig + ' C.S. et on perd la précision du ' + perdu + '.';
+            }
+            return comment;
+        }
+
+        function generateDetails(valueStr, type, sigFigs) {
+            const digits = getSigDigitsFromStr(valueStr);
+            const count = sigFigs;
+            const digitsDisplay = digits.join(', ');
+
+            let html = '<li>Chiffres : ' + digitsDisplay + ' → <strong>' + count + ' C.S.</strong></li>';
+
+            let parts = valueStr.split('.');
+            let decimalPlaces = parts.length > 1 ? parts[1].length : 0;
+
+            if (type === 'ph') {
+                if (decimalPlaces >= 2) {
+                    html += '<li>On est sûr du dixième (' + parts[1][0] + ') et du centième (' + parts[1][1] + ').</li>';
+                } else if (decimalPlaces === 1) {
+                    html += '<li>On est sûr du dixième (' + parts[1][0] + ').</li>';
+                } else {
+                    html += '<li>Précision à l\'unité.</li>';
+                }
+                if (digits.includes('0')) {
+                    html += '<li>Les zéros comptent car ils sont après la virgule (ou entre des chiffres).</li>';
+                } else {
+                    html += '<li>Tous les chiffres sont non nuls, ils comptent tous.</li>';
+                }
+            } else if (type === 'mass') {
+                let decPart = parts.length > 1 ? parts[1] : '';
+                let leftZeros = 0;
+                for (let i = 0; i < decPart.length; i++) {
+                    if (decPart[i] === '0') leftZeros++;
+                    else break;
+                }
+                if (leftZeros > 0) {
+                    html += '<li>Les ' + leftZeros + ' premier(s) zéro(s) de la partie décimale sont des marqueurs de virgule (ils ne comptent pas).</li>';
+                }
+                const hasRightZero = digits.some(d => d === '0');
+                if (hasRightZero) {
+                    html += '<li>Les zéros à droite (après un chiffre non nul) sont significatifs.</li>';
+                }
+                html += '<li>On mesure au ' + (1 / Math.pow(10, decimalPlaces)) + ' g près (' + decimalPlaces + ' décimales).</li>';
+            } else if (type === 'abs') {
+                let zeroPos = '';
+                for (let i = 0; i < digits.length; i++) {
+                    if (digits[i] === '0') {
+                        if (i === digits.length - 1) zeroPos = 'droite';
+                        else zeroPos = 'entre';
+                        break;
+                    }
+                }
+                if (zeroPos === 'droite') {
+                    html += '<li>Le zéro de droite compte (après la virgule).</li>';
+                } else if (zeroPos === 'entre') {
+                    html += '<li>Le zéro entre deux chiffres non nuls est significatif.</li>';
+                } else {
+                    html += '<li>Tous les chiffres sont non nuls, ils comptent tous.</li>';
+                }
+                html += '<li>On a une précision au ' + (1 / Math.pow(10, decimalPlaces)) + ' d\'absorbance (' + decimalPlaces + ' décimales).</li>';
+            }
+            return html;
+        }
+
+        // ========== FONCTIONS POUR 6.3.5 (opérations) ==========
+        function updateOperation(op) {
+            if (op === 'add') {
+                const decA = Math.floor(Math.random() * 3) + 1;
+                const decB = Math.floor(Math.random() * 3) + 1;
+                const aAdd = parseFloat((Math.random() * 10 + 5).toFixed(decA));
+                const bAdd = parseFloat((Math.random() * 5 + 2).toFixed(decB));
+                const rawSum = aAdd + bAdd;
+                const minDec = Math.min(decA, decB);
+                const roundedSum = parseFloat(rawSum.toFixed(minDec));
+
+                document.getElementById('add-a').textContent = formatFrStr(aAdd.toFixed(decA));
+                document.getElementById('add-b').textContent = formatFrStr(bAdd.toFixed(decB));
+                document.getElementById('add-raw').textContent = formatFrStr(rawSum.toFixed(Math.max(decA, decB) + 1));
+                document.getElementById('add-decimals').textContent = minDec;
+                document.getElementById('add-result').textContent = formatFrStr(roundedSum.toFixed(minDec));
+
+                let moinsPrecis = (decA < decB) ? aAdd : bAdd;
+                let moinsPrecisDec = Math.min(decA, decB);
+                document.getElementById('add-comment-value').textContent = formatFrStr(moinsPrecis.toFixed(moinsPrecisDec));
+                document.getElementById('add-comment-dec').textContent = moinsPrecisDec;
+                document.getElementById('add-comment-result').textContent = minDec;
+            }
+
+            if (op === 'sub') {
+                const decC = Math.floor(Math.random() * 3) + 1;
+                const decD = Math.floor(Math.random() * 3) + 1;
+                const aSub = parseFloat((Math.random() * 20 + 10).toFixed(decC));
+                const bSub = parseFloat((Math.random() * 8 + 1).toFixed(decD));
+                const rawSub = aSub - bSub;
+                const minDecSub = Math.min(decC, decD);
+                const roundedSub = parseFloat(rawSub.toFixed(minDecSub));
+
+                document.getElementById('sub-a').textContent = formatFrStr(aSub.toFixed(decC));
+                document.getElementById('sub-b').textContent = formatFrStr(bSub.toFixed(decD));
+                document.getElementById('sub-raw').textContent = formatFrStr(rawSub.toFixed(Math.max(decC, decD) + 1));
+                document.getElementById('sub-decimals').textContent = minDecSub;
+                document.getElementById('sub-result').textContent = formatFrStr(roundedSub.toFixed(minDecSub));
+
+                let moinsPrecis = (decC < decD) ? aSub : bSub;
+                let moinsPrecisDec = Math.min(decC, decD);
+                document.getElementById('sub-comment-value').textContent = formatFrStr(moinsPrecis.toFixed(moinsPrecisDec));
+                document.getElementById('sub-comment-dec').textContent = moinsPrecisDec;
+                document.getElementById('sub-comment-result').textContent = minDecSub;
+            }
+
+            if (op === 'mul') {
+                const sigA = Math.floor(Math.random() * 6) + 2;
+                const sigB = Math.floor(Math.random() * 6) + 2;
+                let aMulStr = randomWithSigFigs(1.5, 9.9, sigA);
+                let bMulStr = randomWithSigFigs(1.5, 9.9, sigB);
+                let aMul = parseFloat(aMulStr);
+                let bMul = parseFloat(bMulStr);
+                let rawMul = aMul * bMul;
+                let minSig = Math.min(sigA, sigB);
+                let roundedMul = parseFloat(rawMul.toPrecision(minSig));
+
+                document.getElementById('mul-a').textContent = formatFrStr(aMulStr);
+                document.getElementById('mul-b').textContent = formatFrStr(bMulStr);
+                document.getElementById('mul-raw').textContent = formatFrStr(rawMul.toPrecision(Math.max(sigA, sigB) + 1));
+                document.getElementById('mul-b-cs').textContent = formatFrStr((sigA < sigB) ? aMulStr : bMulStr);
+                document.getElementById('mul-b-cs-count').textContent = minSig;
+                document.getElementById('mul-result-cs').textContent = minSig;
+                document.getElementById('mul-result').textContent = formatFrStr(roundedMul.toPrecision(minSig));
+
+                let moinsPrecis = (sigA < sigB) ? aMulStr : bMulStr;
+                let moinsPrecisSig = Math.min(sigA, sigB);
+                document.getElementById('mul-comment-value').textContent = formatFrStr(moinsPrecis);
+                document.getElementById('mul-comment-precise-cs').textContent = moinsPrecisSig;
+                document.getElementById('mul-comment-result-cs').textContent = minSig;
+            }
+
+            if (op === 'div') {
+                const sigC = Math.floor(Math.random() * 6) + 2;
+                const sigD = Math.floor(Math.random() * 6) + 2;
+                let aDivStr = randomWithSigFigs(2.0, 9.9, sigC);
+                let bDivStr = randomWithSigFigs(1.0, 5.0, sigD);
+                let aDiv = parseFloat(aDivStr);
+                let bDiv = parseFloat(bDivStr);
+                if (bDiv === 0) bDiv = 1.0;
+                let rawDiv = aDiv / bDiv;
+                let minSigDiv = Math.min(sigC, sigD);
+                let roundedDiv = parseFloat(rawDiv.toPrecision(minSigDiv));
+
+                document.getElementById('div-a').textContent = formatFrStr(aDivStr);
+                document.getElementById('div-b').textContent = formatFrStr(bDivStr);
+                document.getElementById('div-raw').textContent = formatFrStr(rawDiv.toPrecision(Math.max(sigC, sigD) + 2));
+                document.getElementById('div-a-cs').textContent = formatFrStr((sigC < sigD) ? aDivStr : bDivStr);
+                document.getElementById('div-a-cs-count').textContent = minSigDiv;
+                document.getElementById('div-result-cs').textContent = minSigDiv;
+                document.getElementById('div-result').textContent = formatFrStr(roundedDiv.toPrecision(minSigDiv));
+
+                let moinsPrecis = (sigC < sigD) ? aDivStr : bDivStr;
+                let moinsPrecisSig = Math.min(sigC, sigD);
+                document.getElementById('div-comment-value').textContent = formatFrStr(moinsPrecis);
+                document.getElementById('div-comment-precise-cs').textContent = moinsPrecisSig;
+                document.getElementById('div-comment-result-cs').textContent = minSigDiv;
+            }
+        }
+
+        function updateCalculations() {
+            updateOperation('add');
+            updateOperation('sub');
+            updateOperation('mul');
+            updateOperation('div');
+        }
+
+        // ========== FONCTIONS POUR 6.3.7 (récapitulatif) ==========
+        function superscript(n) {
+            const superscripts = {
+                '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+                '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+            };
+            return n.toString().split('').map(c => superscripts[c] || c).join('');
+        }
+
+        function generateRecapValue() {
+            const cs = Math.floor(Math.random() * 10) + 1;
+            const type = Math.random() < 0.5 ? 'decimal' : 'scientific';
+            let numberStr, precisionStr;
+
+            if (type === 'decimal') {
+                const intPart = Math.floor(Math.random() * 9) + 1;
+                const decimalDigits = cs - 1;
+                let decPart = '';
+                for (let i = 0; i < decimalDigits; i++) {
+                    decPart += Math.floor(Math.random() * 10);
+                }
+                let numStr = (decimalDigits === 0) ? intPart.toString() : intPart + '.' + decPart;
+                let display = formatFrStr(numStr);
+                let inc;
+                if (decimalDigits === 0) {
+                    inc = 1;
+                    precisionStr = '± 1 (à l\'unité)';
+                } else {
+                    inc = Math.pow(10, -decimalDigits);
+                    let incStr = inc.toFixed(decimalDigits);
+                    let incFr = formatFrStr(incStr);
+                    let unite = '';
+                    if (decimalDigits === 1) unite = 'au dixième';
+                    else if (decimalDigits === 2) unite = 'au centième';
+                    else if (decimalDigits === 3) unite = 'au millième';
+                    else if (decimalDigits === 4) unite = 'au 4ème zéro';
+                    else if (decimalDigits === 5) unite = 'au 5ème zéro';
+                    else unite = 'à la ' + decimalDigits + 'e décimale';
+                    precisionStr = '± ' + incFr + ' (' + unite + ')';
+                }
+                return { number: display, cs: cs, precision: precisionStr };
+            } else {
+                const intPart = Math.floor(Math.random() * 9) + 1;
+                const decimalDigits = cs - 1;
+                let decPart = '';
+                for (let i = 0; i < decimalDigits; i++) {
+                    decPart += Math.floor(Math.random() * 10);
+                }
+                let mantStr = (decimalDigits === 0) ? intPart.toString() : intPart + '.' + decPart;
+                const exp = Math.floor(Math.random() * 30) + 1;
+                let display = formatFrStr(mantStr) + ' × 10' + superscript(exp);
+                let incPower = exp - decimalDigits;
+                let unite = '';
+                if (incPower === 0) unite = 'à l\'unité';
+                else if (incPower === 1) unite = 'à la dizaine';
+                else if (incPower === 2) unite = 'à la centaine';
+                else if (incPower === 3) unite = 'au millier';
+                else if (incPower === 4) unite = 'à la dizaine de milliers';
+                else unite = 'à la puissance 10^' + incPower;
+                let incDisplay;
+                if (incPower === 0) incDisplay = '1';
+                else if (incPower === 1) incDisplay = '10';
+                else if (incPower === 2) incDisplay = '100';
+                else if (incPower === 3) incDisplay = '1000';
+                else if (incPower === 4) incDisplay = '10000';
+                else incDisplay = '10^' + incPower;
+                precisionStr = '± ' + incDisplay + ' (' + unite + ')';
+                return { number: display, cs: cs, precision: precisionStr };
+            }
+        }
+
+        function updateRecap() {
+            for (let i = 1; i <= 6; i++) {
+                const val = generateRecapValue();
+                document.getElementById('recap-num-' + i).textContent = val.number;
+                document.getElementById('recap-cs-' + i).textContent = val.cs;
+                document.getElementById('recap-prec-' + i).textContent = val.precision;
+            }
+        }
+
+        // ========== FONCTION PRINCIPALE generateData (avec Student et explication) ==========
+        function generateData() {
+            // pH
+            const phSig = Math.floor(Math.random() * 5) + 2;
+            let phStr = randomWithSigFigs(6.5, 8.0, phSig);
+            const phDisplay = formatFrStr(phStr);
+            document.getElementById('ph-value').textContent = phDisplay;
+            document.getElementById('ph-details').innerHTML = generateDetails(phStr, 'ph', phSig);
+            document.getElementById('ph-comment').textContent = generateComment(phStr, 'ph', phSig);
+
+            // Masse
+            const massSig = Math.floor(Math.random() * 5) + 2;
+            let massStr = randomWithSigFigs(0.0400, 0.0600, massSig);
+            const massDisplay = formatFrStr(massStr);
+            document.getElementById('mass-value').textContent = massDisplay;
+            document.getElementById('mass-details').innerHTML = generateDetails(massStr, 'mass', massSig);
+            document.getElementById('mass-comment').textContent = generateComment(massStr, 'mass', massSig);
+
+            // Absorbance
+            const absSig = Math.floor(Math.random() * 5) + 2;
+            let absStr = randomWithSigFigs(0.300, 0.600, absSig);
+            const absDisplay = formatFrStr(absStr);
+            document.getElementById('abs-value').textContent = absDisplay;
+            document.getElementById('abs-details').innerHTML = generateDetails(absStr, 'abs', absSig);
+            document.getElementById('abs-comment').textContent = generateComment(absStr, 'abs', absSig);
+
+            // Concentration
+            const concSig = Math.floor(Math.random() * 5) + 2;
+            let concStr = randomWithSigFigs(0.200, 0.300, concSig);
+            const concVal = parseFloat(concStr);
+            let uncVal = concVal * 0.02;
+            const decPlaces = concStr.includes('.') ? concStr.split('.')[1].length : 0;
+            uncVal = parseFloat(uncVal.toFixed(decPlaces));
+            const uncStr = uncVal.toFixed(decPlaces);
+            document.getElementById('conc-value').textContent = formatFrStr(concStr);
+            document.getElementById('conc-unc').textContent = formatFrStr(uncStr);
+            document.getElementById('conc-value-cs').textContent = formatFrStr(concStr);
+            document.getElementById('conc-unc-cs').textContent = formatFrStr(uncStr);
+            document.getElementById('conc-cs-count').textContent = concSig;
+
+            // Série de mesures (section 6.4) avec Student + explication
+            const data = [];
+            for (let i = 0; i < 5; i++) {
+                data.push(parseFloat(randomWithSigFigs(1.8, 2.6, 2)));
+            }
+            data.sort((a, b) => a - b);
+            document.getElementById('d1').textContent = formatFrStr(data[0].toFixed(1));
+            document.getElementById('d2').textContent = formatFrStr(data[1].toFixed(1));
+            document.getElementById('d3').textContent = formatFrStr(data[2].toFixed(1));
+            document.getElementById('d4').textContent = formatFrStr(data[3].toFixed(1));
+            document.getElementById('d5').textContent = formatFrStr(data[4].toFixed(1));
+
+            const n = data.length;
+            const sum = data.reduce((a, b) => a + b, 0);
+            const mean = sum / n;
+            const variance = data.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
+            const std = Math.sqrt(variance);
+            const sem = std / Math.sqrt(n);
+
+            const df = n - 1;
+            const tStudent = getStudentT(df);
+            const uncExpanded = sem * tStudent;
+            const approxExpanded = sem * 2.0;
+
+            const meanDisplay = mean.toFixed(2);
+            const stdDisplay = std.toFixed(2);
+            const semDisplay = sem.toFixed(3); // plus de précision pour l'explication
+            const uncDisplay = uncExpanded.toFixed(2);
+            const approxDisplay = approxExpanded.toFixed(2);
+            const tDisplay = tStudent.toFixed(3);
+
+            document.getElementById('mean-value').textContent = formatFrStr(meanDisplay);
+            document.getElementById('std-value').textContent = formatFrStr(stdDisplay);
+            document.getElementById('sem-value').textContent = formatFrStr(semDisplay);
+            document.getElementById('final-mean').textContent = formatFrStr(meanDisplay);
+            document.getElementById('final-unc').textContent = formatFrStr(uncDisplay);
+
+            // Mise à jour de l'information Student
+            const studentInfo = document.getElementById('student-info');
+            if (df >= 1 && df <= 30) {
+                studentInfo.textContent = `(avec le coefficient de Student \\( t_{${df}} =\\) ${tDisplay} pour 95 %)`;
+            } else {
+                studentInfo.textContent = `(avec l'approximation \( k=2 \) pour 95 %)`;
+            }
+
+            // Mise à jour des éléments de l'explication détaillée
+            document.getElementById('explain-sem').textContent = formatFrStr(semDisplay);
+            document.getElementById('explain-t').textContent = tDisplay;
+            document.getElementById('explain-t-value').textContent = tDisplay;
+            document.getElementById('explain-sem-detail').textContent = formatFrStr(semDisplay);
+            document.getElementById('explain-u-calc').textContent = formatFrStr(uncDisplay);
+            document.getElementById('explain-approx').textContent = formatFrStr(approxDisplay);
+
+            // Mise à jour des opérations (6.3.5) et du récapitulatif (6.3.7)
+            updateCalculations();
+            updateRecap();
+        }
+
+        // ========== INITIALISATION ET ÉVÉNEMENTS ==========
+        document.addEventListener('DOMContentLoaded', generateData);
+
+        document.getElementById('new-measures-btn-1').addEventListener('click', generateData);
+        document.getElementById('new-measures-btn-2').addEventListener('click', generateData);
+        document.getElementById('new-calc-values-btn').addEventListener('click', generateData);
+        document.getElementById('new-recap-btn').addEventListener('click', updateRecap);
+
+        document.getElementById('new-add-btn').addEventListener('click', function() {
+            updateOperation('add');
+        });
+        document.getElementById('new-sub-btn').addEventListener('click', function() {
+            updateOperation('sub');
+        });
+        document.getElementById('new-mul-btn').addEventListener('click', function() {
+            updateOperation('mul');
+        });
+        document.getElementById('new-div-btn').addEventListener('click', function() {
+            updateOperation('div');
+        });
+    </script>
+</body>
+</html>

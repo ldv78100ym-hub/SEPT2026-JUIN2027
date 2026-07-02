@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pourquoi (n−1) ? – BTS BioAC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        MathJax = { tex: { inlineMath: [['$', '$']] }, svg: { fontCache: 'global' } };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand"><i class="fas fa-flask"></i><span>BTS BioAC</span></div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="introduction.html"><i class="fas fa-home"></i><span>Introduction</span></a></li>
+                <li><a href="types-erreurs.html"><i class="fas fa-exclamation-triangle"></i><span>Types d'erreurs</span></a></li>
+                <li><a href="schema-erreurs.html"><i class="fas fa-chart-pie"></i><span>Schéma récapitulatif</span></a></li>
+                <li><a href="justesse-fidelite.html"><i class="fas fa-bullseye"></i><span>Justesse &amp; Fidélité</span></a></li>
+                <li><a href="propagation.html"><i class="fas fa-project-diagram"></i><span>Propagation</span></a></li>
+                <li><a href="mesures-experimentales.html"><i class="fas fa-flask"></i><span>Mesures exp.</span></a></li>
+                <li><a href="incertitudes.html"><i class="fas fa-balance-scale"></i><span>Incertitudes</span></a></li>
+                <li><a href="dof.html" class="active"><i class="fas fa-calculator"></i><span>Pourquoi (n−1) ?</span></a></li>
+                <li><a href="exercices.html"><i class="fas fa-vial"></i><span>Exercices</span></a></li>
+                <li><a href="glossaire.html"><i class="fas fa-book-open"></i><span>Glossaire</span></a></li>
+            </ul>
+        </div>
+        <div class="theme-toggle" id="copyrightToggle" role="button" tabindex="0"><i class="fas fa-copyright"></i><span>Droits d'auteur</span></div>
+        <div class="theme-toggle" id="themeToggle" role="button" tabindex="0"><i class="fas fa-moon"></i><span>Mode sombre</span></div>
+    </nav>
+
+    <!-- MODALE DROITS D'AUTEUR -->
+    <div class="copyright-modal" id="copyrightModal" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <button class="close-btn" id="modalCloseBtn">&times;</button>
+            <h2><i class="fas fa-balance-scale"></i> Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>) – Juin 2026</p>
+            <div><span class="badge-licence">Licence Non Commerciale</span>
+                <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré sont la propriété intellectuelle exclusive de l'auteur.</p>
+            </div>
+            <h4>Conditions :</h4>
+            <ul>
+                <li><strong>✅ Utilisation Privée et Éducative (Autorisée) :</strong> Utilisation, copie, modification et distribution à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>❌ Utilisation Commerciale (Interdite) :</strong> Toute utilisation commerciale ou professionnelle est strictement interdite sans accord écrit.</li>
+                <li><strong>📝 Attribution :</strong> Toute reproduction doit conserver la mention de l'auteur original.</li>
+                <li><strong>✉️ Contact :</strong> Pour toute demande, contacter <a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>.</li>
+            </ul>
+            <div class="licence-footer"><i class="fas fa-info-circle"></i> Ce fichier <strong>dof.html</strong> est mis à disposition selon cette licence non commerciale.</div>
+        </div>
+    </div>
+
+    <!-- CONTENU PRINCIPAL -->
+    <div class="container">
+        <h1 style="font-size:2.2rem;font-weight:700;border-left:8px solid #0b6e4f;padding-left:1.2rem;color:var(--text);">🧪 Calcul d'erreur – BTS BioAC</h1>
+        <div class="subtitle" style="color:var(--text-light);margin-left:2rem;margin-bottom:2rem;border-bottom:2px solid var(--border);padding-bottom:1rem;">Cours complet + exercices interactifs</div>
+
+        <section id="dof" class="section">
+            <div class="section-title">
+                <span>📐 8. Pourquoi on divise par (n−1) ?</span>
+                <span class="badge orange">Simulateur</span>
+            </div>
+            <div class="card">
+                <div class="goal-box">
+                    <strong>🎯 Objectif :</strong> Comprendre la notion de <strong>degré de liberté</strong>. Générez ou saisissez des valeurs pour observer que <strong>la somme des écarts est toujours nulle</strong>. Le dernier écart est <strong>"forcé"</strong>, d'où la division par <strong>(n−1)</strong>.
+                </div>
+
+                <div class="explanation-box" style="border-color:#b45309;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                        <p style="font-size:1.2rem;font-weight:600;">🎯 Exemple changeant</p>
+                        <button class="btn btn-random" id="dynExampleBtn">🎲 Nouvel exemple</button>
+                    </div>
+                    <div id="dynExampleContent">
+                        <p>Valeurs : <strong id="dynValues">—</strong></p>
+                        <div class="step-title">📌 Étape 1 : La moyenne</div>
+                        <p>Somme = <span id="dynSum">—</span> → Moyenne = <span class="result" id="dynMean">—</span></p>
+                        <div class="step-title">📌 Étape 2 : Les écarts</div>
+                        <ul class="dyn-devs" id="dynDevsList"></ul>
+                        <p>👉 Somme des écarts = <span id="dynSumDevs">—</span> (toujours 0)</p>
+                        <div class="step-title">🔍 Pourquoi la somme des écarts est-elle toujours 0 ?</div>
+                        <div class="formula-block" style="font-size:1rem;background:#fef3c7;">
+                            $$ \bar{x} = \frac{1}{n}\sum x_i \quad\Rightarrow\quad \sum (x_i-\bar{x}) = \sum x_i - n\bar{x} = 0 $$
+                        </div>
+                        <div class="step-title">🔓 Combien de libertés ?</div>
+                        <p>Si on connaît $(n-1)$ écarts, le dernier est imposé : <span id="dynForcedDev">—</span></p>
+                        <p>Sur $n=$ <span id="dynN">—</span> mesures, on a $(n-1)=$ <span class="result" id="dynDf">—</span> degrés de liberté.</p>
+                        <div class="comparison-box">
+                            <p><strong>Comparaison :</strong> Somme des carrés = <span id="dynSumSq">—</span></p>
+                            <p><span class="wrong-way">❌ Divisé par n = <span id="dynBiasedVar">—</span></span></p>
+                            <p><span class="right-way">✅ Divisé par (n−1) = <span id="dynUnbiasedVar">—</span></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem;background:var(--bg-card);padding:1rem 1.5rem;border-radius:12px;border:1px solid var(--border);">
+                    <p><strong>🧪 Testez par vous-même :</strong> Entrez des valeurs séparées par des virgules. Le dernier écart sera identifié comme <span class="forced-value">forcé</span>.</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:1rem;">
+                        <div style="flex:1;min-width:150px;">
+                            <label>Valeurs (ex: 2, 4, 9, 10) :</label>
+                            <input type="text" id="dof_input" value="2, 4, 9" placeholder="2, 4, 9, 10...">
+                            <button class="btn" id="dof_calc" style="margin-top:0.5rem;">Voir les degrés de liberté</button>
+                        </div>
+                        <div style="flex:1;min-width:200px;">
+                            <div class="result-box" id="dof_results">
+                                <div><span class="label">Moyenne $\bar{x}$ :</span> <span class="value" id="dof_mean">—</span></div>
+                                <div><span class="label">Écarts :</span> <span class="value" id="dof_devs">—</span></div>
+                                <div><span class="label">Somme des écarts :</span> <span class="value" id="dof_sum">—</span></div>
+                                <div><span class="label">Degrés de liberté :</span> <span class="value" id="dof_df">—</span></div>
+                                <div style="margin-top:0.5rem;font-size:0.95rem;color:var(--text-light);" id="dof_explanation">Cliquez pour voir l'explication.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer">Outil pédagogique complet – fusion des versions théorie et interactive.</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Gestion de la modale ---
+            const modal = document.getElementById('copyrightModal');
+            const openBtn = document.getElementById('copyrightToggle');
+            const closeBtn = document.getElementById('modalCloseBtn');
+            if (openBtn && modal && closeBtn) {
+                const open = () => { modal.classList.add('is-open'); document.body.style.overflow = 'hidden'; };
+                const close = () => { modal.classList.remove('is-open'); document.body.style.overflow = ''; };
+                openBtn.addEventListener('click', open);
+                closeBtn.addEventListener('click', close);
+                modal.addEventListener('click', e => { if (e.target === modal) close(); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('is-open')) close(); });
+            }
+
+            // --- Thème sombre ---
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                const current = localStorage.getItem('theme') || 'light';
+                if (current === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+                }
+                themeToggle.addEventListener('click', function() {
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    if (isDark) {
+                        document.documentElement.removeAttribute('data-theme');
+                        localStorage.setItem('theme', 'light');
+                        themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode sombre</span>';
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                        themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+                    }
+                });
+            }
+
+            function refreshMathJax() {
+                if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(() => {});
+            }
+
+            // --- Exemple dynamique ---
+            const dynBtn = document.getElementById('dynExampleBtn');
+            if (dynBtn) {
+                const generate = () => {
+                    const n = Math.floor(Math.random() * 4) + 3;
+                    const vals = Array.from({ length: n }, () => Math.round((1 + Math.random() * 9) * 10) / 10);
+                    const sum = vals.reduce((a, b) => a + b, 0);
+                    const mean = sum / n;
+                    const devs = vals.map(v => v - mean);
+                    const sumDevs = devs.reduce((a, b) => a + b, 0);
+                    const df = n - 1;
+                    const sumSq = devs.reduce((s, d) => s + d * d, 0);
+                    const biased = sumSq / n;
+                    const unbiased = sumSq / df;
+
+                    document.getElementById('dynValues').textContent = vals.join(' ; ');
+                    document.getElementById('dynSum').textContent = sum.toFixed(2);
+                    document.getElementById('dynMean').textContent = mean.toFixed(2);
+                    document.getElementById('dynSumDevs').textContent = sumDevs.toFixed(4);
+                    document.getElementById('dynN').textContent = n;
+                    document.getElementById('dynDf').textContent = df;
+                    document.getElementById('dynSumSq').textContent = sumSq.toFixed(4);
+                    document.getElementById('dynBiasedVar').textContent = biased.toFixed(4);
+                    document.getElementById('dynUnbiasedVar').textContent = unbiased.toFixed(4);
+
+                    const list = document.getElementById('dynDevsList');
+                    if (list) {
+                        list.innerHTML = devs.map((d, i) => {
+                            const isLast = i === devs.length - 1;
+                            const cls = isLast ? 'forced-value' : 'free-value';
+                            return `<li>Valeur ${vals[i].toFixed(2)} − ${mean.toFixed(2)} = <span class="${cls}">${d.toFixed(2)}</span>${isLast ? ' (forcé)' : ''}</li>`;
+                        }).join('');
+                    }
+
+                    const freeDevs = devs.slice(0, -1);
+                    const sumFree = freeDevs.reduce((a, b) => a + b, 0);
+                    const last = devs[devs.length - 1];
+                    const forcedSpan = document.getElementById('dynForcedDev');
+                    if (forcedSpan) forcedSpan.textContent = `0 − (${sumFree.toFixed(2)}) = ${last.toFixed(2)} (vérification)`;
+                    refreshMathJax();
+                };
+                dynBtn.addEventListener('click', generate);
+                generate();
+            }
+
+            // --- Simulateur saisie libre ---
+            const calcBtn = document.getElementById('dof_calc');
+            const input = document.getElementById('dof_input');
+            if (calcBtn && input) {
+                const compute = () => {
+                    const vals = input.value.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+                    if (vals.length < 2) { alert('Au moins 2 valeurs.'); return; }
+                    const n = vals.length;
+                    const mean = vals.reduce((a, b) => a + b, 0) / n;
+                    const devs = vals.map(v => v - mean);
+                    const sumDevs = devs.reduce((a, b) => a + b, 0);
+
+                    document.getElementById('dof_mean').textContent = mean.toFixed(4);
+                    document.getElementById('dof_devs').textContent = devs.map(d => d.toFixed(2)).join(' ; ');
+                    document.getElementById('dof_sum').textContent = sumDevs.toFixed(4) + ' (0)';
+                    document.getElementById('dof_df').textContent = n - 1;
+                    document.getElementById('dof_explanation').textContent =
+                        `Sur ${n} mesures, la moyenne (${mean.toFixed(2)}) est fixée. Les ${n-1} premiers écarts sont libres, le dernier (${devs[devs.length-1].toFixed(2)}) est forcé.`;
+                    refreshMathJax();
+                };
+                calcBtn.addEventListener('click', compute);
+                compute();
+            }
+
+            refreshMathJax();
+        });
+    </script>
+</body>
+</html>

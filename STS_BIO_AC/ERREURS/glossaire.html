@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calcul d'erreur – BTS BioAC (version fusionnée corrigée)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-flask"></i>
+            <span>BTS BioAC</span>
+        </div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="introduction.html"><i class="fas fa-home"></i><span>Introduction</span></a></li>
+                <li><a href="types-erreurs.html"><i class="fas fa-exclamation-triangle"></i><span>Types d'erreurs</span></a></li>
+                <li><a href="schema-erreurs.html"><i class="fas fa-chart-pie"></i><span>Schéma récapitulatif</span></a></li>
+                <li><a href="justesse-fidelite.html"><i class="fas fa-bullseye"></i><span>Justesse &amp; Fidélité</span></a></li>
+                <li><a href="propagation.html"><i class="fas fa-project-diagram"></i><span>Propagation</span></a></li>
+                <li><a href="mesures-experimentales.html"><i class="fas fa-flask"></i><span>Mesures exp.</span></a></li>
+                <li><a href="incertitudes.html"><i class="fas fa-balance-scale"></i><span>Incertitudes</span></a></li>
+                <li><a href="dof.html"><i class="fas fa-calculator"></i><span>Pourquoi (n−1) ?</span></a></li>
+                <li><a href="exercices.html"><i class="fas fa-vial"></i><span>Exercices</span></a></li>
+                <li><a href="glossaire.html" class="active"><i class="fas fa-book-open"></i><span>Glossaire</span></a></li>
+            </ul>
+        </div>
+        <div class="theme-toggle" id="copyrightToggle" role="button" tabindex="0" aria-label="Droits d'auteur">
+            <i class="fas fa-copyright"></i><span>Droits d'auteur</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Basculer le mode sombre">
+            <i class="fas fa-moon"></i><span>Mode sombre</span>
+        </div>
+    </nav>
+
+    <div class="copyright-modal" id="copyrightModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <button class="close-btn" id="modalCloseBtn" aria-label="Fermer la modale">&times;</button>
+            <h2 id="modalTitle"><i class="fas fa-balance-scale"></i> Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>) – Juin 2026</p>
+            <div style="margin-top:1.2rem;">
+                <span class="badge-licence">Licence Non Commerciale</span>
+                <p style="margin-top:0.8rem;">Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            </div>
+            <h4 style="margin-top:1.5rem; font-weight:600;">Conditions :</h4>
+            <ul>
+                <li><strong>✅ Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>❌ Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>📝 Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+                <li><strong>✉️ Contact :</strong> Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <a href="mailto:yann.merdy@gmail.com" style="color:var(--info-border);">yann.merdy@gmail.com</a>.</li>
+            </ul>
+            <div class="licence-footer">
+                <i class="fas fa-info-circle"></i> Ce fichier <strong>glossaire.html</strong> est mis à disposition selon les termes de cette licence non commerciale.
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 style="font-size:2.2rem; font-weight:700; border-left:8px solid #0b6e4f; padding-left:1.2rem; margin-bottom:0.2rem; color:var(--text);">
+            🧪 Calcul d'erreur – BTS BioAC
+        </h1>
+        <div class="subtitle" style="color:var(--text-light); margin-left:2rem; margin-bottom:2rem; font-size:1.05rem; border-bottom:2px solid var(--border); padding-bottom:1rem;">
+            Cours complet + exercices interactifs – version fusionnée
+        </div>
+
+        <section id="glossaire" class="section">
+            <div class="section-title">
+                <span>📖 10. Glossaire alphabétique</span>
+                <span class="badge blue">Référence</span>
+            </div>
+            <div class="card">
+                <p style="font-size:0.95rem; color:var(--text-light); margin-bottom:1.5rem;">
+                    Cliquez sur le <strong>numéro</strong> d’un terme pour accéder directement à la section correspondante du cours (nouvel onglet).
+                </p>
+
+                <div class="glossary-grid" id="glossaryGrid">
+                </div>
+
+                <div style="margin-top: 2rem; background: var(--bg-card); border-radius: 12px; padding: 1rem 1.5rem; border: 1px solid var(--border);">
+                    <p style="font-weight: 700; font-size: 1.05rem;">📌 Pour aller plus loin</p>
+                    <p style="font-size: 0.95rem; color: var(--text-light);">
+                        Chaque définition est accompagnée d’un lien direct vers la section correspondante du cours.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="footer">
+            Outil pédagogique complet – fusion des versions théorie et interactive.
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('copyrightModal');
+        const openBtn = document.getElementById('copyrightToggle');
+        const closeBtn = document.getElementById('modalCloseBtn');
+
+        function openModal() { modal.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+        function closeModal() { modal.classList.remove('is-open'); document.body.style.overflow = ''; }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
+
+        const themeToggle = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+        }
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode sombre</span>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode clair</span>';
+            }
+        });
+
+        const glossaryData = [
+            { 
+                id: 1,
+                term: "Accuracy",
+                definition: "Voir <strong>Justesse</strong>.",
+                section: "justesse-fidelite.html",
+                anchor: "justesse-fidelite",
+                tooltip: "Synonyme anglais de justesse."
+            },
+            { 
+                id: 2,
+                term: "Addition / Soustraction (propagation)",
+                definition: "L'incertitude absolue de la somme (ou de la différence) est la <strong>somme</strong> des incertitudes absolues : \\(\\Delta(x \\pm y) = \\Delta x + \\Delta y\\).<br><span style='font-size:0.9rem; color:var(--text-light);'>Exemple : (10,0 ± 0,2) + (5,0 ± 0,1) = 15,0 ± 0,3.</span>",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Règle de base pour l’addition."
+            },
+            { 
+                id: 3,
+                term: "Aléatoire (erreur)",
+                definition: "Erreur imprévisible, variant d'une mesure à l'autre, due à des fluctuations (bruit, variations thermiques, etc.). Elle se réduit par répétition et est caractérisée par l'écart-type.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Erreur non systématique."
+            },
+            { 
+                id: 4,
+                term: "Arrondi (erreur d')",
+                definition: "Erreur introduite par la limitation du nombre de décimales lors d'un calcul ou d'une mesure. Exemple : 12,3456 arrondi à 12,35 donne une erreur de +0,0044. Voir aussi <strong>Troncature</strong>.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Liée aux chiffres significatifs."
+            },
+            { 
+                id: 5,
+                term: "Beer‑Lambert (loi de)",
+                definition: "Relation fondamentale en spectrophotométrie : \\(A = \\varepsilon \\cdot l \\cdot C\\) où \\(A\\) est l'absorbance, \\(\\varepsilon\\) le coefficient d'extinction molaire, \\(l\\) la longueur du trajet optique et \\(C\\) la concentration.",
+                section: "exercices.html",
+                anchor: "ex6",
+                tooltip: "Utilisée pour doser des espèces absorbantes."
+            },
+            { 
+                id: 6,
+                term: "Biais",
+                definition: "Écart systématique constant entre la valeur moyenne mesurée et la valeur vraie. Il traduit un défaut de justesse. On distingue le <strong>biais constant</strong> (additif) et le <strong>biais proportionnel</strong> (multiplicatif).",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Cause d’erreur systématique."
+            },
+            { 
+                id: 7,
+                term: "BTS BioAC",
+                definition: "Brevet de Technicien Supérieur en Bioanalyses et Contrôles. Filière de formation en biologie, chimie et contrôle qualité.",
+                section: "introduction.html",
+                anchor: "introduction",
+                tooltip: "Public cible du cours."
+            },
+            { 
+                id: 8,
+                term: "Chiffres significatifs (C.S.)",
+                definition: "Ensemble des chiffres d'un nombre qui sont connus avec certitude, plus le premier chiffre incertain. Règles :<br>- Les chiffres non nuls sont toujours significatifs.<br>- Les zéros entre chiffres non nuls le sont.<br>- Les zéros à gauche ne le sont pas.<br>- Les zéros à droite après la virgule le sont.<br>Le nombre de C.S. indique la précision de la mesure.",
+                section: "mesures-experimentales.html",
+                anchor: "chiffres-significatifs-cours",
+                tooltip: "Voir la section dédiée."
+            },
+            { 
+                id: 9,
+                term: "Compatibilité de mesures",
+                definition: "Deux mesures \\(x_1 \\pm \\Delta x_1\\) et \\(x_2 \\pm \\Delta x_2\\) sont compatibles si leurs intervalles se chevauchent : \\(|x_1 - x_2| \\leq \\Delta x_1 + \\Delta x_2\\).",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "Critère de comparaison."
+            },
+            { 
+                id: 10,
+                term: "Concentration",
+                definition: "Quantité de soluté (en moles, grammes, etc.) par unité de volume de solution. Exprimée en mol/L, g/L, mg/L, etc.",
+                section: "exercices.html",
+                anchor: "ex2",
+                tooltip: "Grandeur centrale en chimie."
+            },
+            { 
+                id: 11,
+                term: "Confiance (intervalle de)",
+                definition: "Intervalle dans lequel on estime que la valeur vraie se trouve avec un niveau de probabilité donné (par exemple 95 %). Pour une moyenne, \\(IC_{95\\%} = \\bar{x} \\pm z \\cdot s/\\sqrt{n}\\) avec \\(z=1,96\\).",
+                section: "exercices.html",
+                anchor: "ex3",
+                tooltip: "Intervalle de confiance à 95%."
+            },
+            { 
+                id: 12,
+                term: "Degrés de liberté (ddl)",
+                definition: "Nombre de valeurs indépendantes dans un calcul. Pour l'écart-type expérimental, on utilise \\(n-1\\) car la moyenne est fixée, ce qui force le dernier écart. \\(ddl = n-1\\).",
+                section: "dof.html",
+                anchor: "dof",
+                tooltip: "Pourquoi (n−1) ?"
+            },
+            { 
+                id: 13,
+                term: "Dérivées partielles",
+                definition: "Utilisées dans la formule générale de propagation des erreurs pour évaluer l'influence de chaque variable sur le résultat. \\( \\frac{\\partial f}{\\partial x_i} \\) mesure la sensibilité de \\(f\\) par rapport à \\(x_i\\).",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Outil de la propagation."
+            },
+            { 
+                id: 14,
+                term: "Dilution",
+                definition: "Opération consistant à ajouter du solvant à une solution pour diminuer sa concentration. La concentration finale est \\(C_f = \\frac{C_m \\times V_m}{V_f}\\).",
+                section: "exercices.html",
+                anchor: "ex2",
+                tooltip: "Calcul de concentration après dilution."
+            },
+            { 
+                id: 15,
+                term: "Dispersion",
+                definition: "Étendue des valeurs autour de la moyenne. Mesurée par l'écart-type ou la variance. Une faible dispersion indique une bonne fidélité.",
+                section: "justesse-fidelite.html",
+                anchor: "justesse-fidelite",
+                tooltip: "Opposé de la fidélité."
+            },
+            { 
+                id: 16,
+                term: "Écart-type expérimental",
+                definition: "Estimateur de la dispersion des mesures : \\( s = \\sqrt{\\frac{1}{n-1} \\sum_{i=1}^n (x_i - \\bar{x})^2 } \\). Il caractérise la fidélité de la série.",
+                section: "mesures-experimentales.html",
+                anchor: "mesures-experimentales",
+                tooltip: "Formule avec (n−1)."
+            },
+            { 
+                id: 17,
+                term: "Élargie (incertitude)",
+                definition: "Incertitude obtenue en multipliant l'incertitude-type par un facteur d'élargissement \\(k\\). \\(U = k \\cdot u_c\\). Pour un niveau de confiance de 95 %, \\(k=2\\) (ou 1,96 si on est plus précis).",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "U = k × u_c"
+            },
+            { 
+                id: 18,
+                term: "Erreur absolue",
+                definition: "Valeur absolue de la différence entre la valeur mesurée (ou calculée) et la valeur vraie. \\(\\Delta x = |x_{\\text{mes}} - x_{\\text{vrai}}|\\).",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Écart en valeur absolue."
+            },
+            { 
+                id: 19,
+                term: "Erreur de calcul",
+                definition: "Différence entre le résultat obtenu et le résultat théorique ou attendu. Elle peut être systématique, aléatoire ou liée à la troncature.",
+                section: "introduction.html",
+                anchor: "introduction",
+                tooltip: "Notion générale."
+            },
+            { 
+                id: 20,
+                term: "Erreur relative",
+                definition: "Rapport de l'erreur absolue sur la valeur de la grandeur (souvent exprimée en %). \\( \\varepsilon_r = \\frac{\\Delta x}{|x|} \\) (ou multiplié par 100 pour un pourcentage).",
+                section: "mesures-experimentales.html",
+                anchor: "mesures-experimentales",
+                tooltip: "Comparaison de précision."
+            },
+            { 
+                id: 21,
+                term: "Facteur d'élargissement",
+                definition: "Coefficient \\(k\\) utilisé pour passer de l'incertitude-type à l'incertitude élargie. \\(k=2\\) correspond à environ 95 % de confiance.",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "k = 2 pour 95%."
+            },
+            { 
+                id: 22,
+                term: "Fidélité (precision)",
+                definition: "Proximité des résultats de mesures répétées entre elles. Une mesure fidèle présente une faible dispersion (écart-type petit). Elle est liée aux erreurs aléatoires.",
+                section: "justesse-fidelite.html",
+                anchor: "justesse-fidelite",
+                tooltip: "Répétabilité."
+            },
+            { 
+                id: 23,
+                term: "Formule de propagation générale",
+                definition: "Pour une fonction \\(f(x_1,\\dots,x_n)\\), l'incertitude combinée est : \\( \\Delta f = \\sqrt{ \\sum_{i=1}^n \\left( \\frac{\\partial f}{\\partial x_i} \\Delta x_i \\right)^2 } \\) (pour des erreurs indépendantes).",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Cas général."
+            },
+            { 
+                id: 24,
+                term: "Incertitude",
+                definition: "Estimation de l'intervalle dans lequel se trouve la valeur vraie, compte tenu des erreurs. Elle est toujours associée à une mesure ou un résultat.",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "Définition métrologique."
+            },
+            { 
+                id: 25,
+                term: "Incertitude absolue",
+                definition: "Valeur positive encadrant la mesure : \\(x = \\bar{x} \\pm \\Delta x\\). Exemple : \\(7,02 \\pm 0,01\\).",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "± Δx"
+            },
+            { 
+                id: 26,
+                term: "Incertitude de mesure",
+                definition: "Paramètre associé au résultat d'une mesure, caractérisant la dispersion des valeurs qui pourraient raisonnablement être attribuées au mesurande.",
+                section: "mesures-experimentales.html",
+                anchor: "mesures-experimentales",
+                tooltip: "Définition standard."
+            },
+            { 
+                id: 27,
+                term: "Incertitude relative",
+                definition: "Rapport de l'incertitude absolue sur la valeur mesurée : \\( \\frac{\\Delta x}{|x|} \\). Elle permet de comparer la précision de mesures de grandeurs différentes.",
+                section: "mesures-experimentales.html",
+                anchor: "mesures-experimentales",
+                tooltip: "Sans unité."
+            },
+            { 
+                id: 28,
+                term: "Incertitude‑type (standard)",
+                definition: "Écart-type de la distribution des valeurs estimées. Pour la moyenne, c'est \\(u(\\bar{x}) = s / \\sqrt{n}\\).",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "u = s/√n"
+            },
+            { 
+                id: 29,
+                term: "Incertitude‑type sur la moyenne",
+                definition: "Incertitude associée à la moyenne d'une série de mesures : \\( s_{\\bar{x}} = \\frac{s}{\\sqrt{n}} \\). Elle diminue lorsque le nombre de mesures \\(n\\) augmente.",
+                section: "mesures-experimentales.html",
+                anchor: "mesures-experimentales",
+                tooltip: "Erreur standard."
+            },
+            { 
+                id: 30,
+                term: "Intervalle de confiance",
+                definition: "Voir <strong>Confiance (intervalle de)</strong>.",
+                section: "exercices.html",
+                anchor: "ex3",
+                tooltip: "IC à 95%."
+            },
+            { 
+                id: 31,
+                term: "Justesse (accuracy)",
+                definition: "Proximité entre la moyenne d'une série de mesures et la valeur vraie. Une mesure juste est exempte d'erreur systématique (biais).",
+                section: "justesse-fidelite.html",
+                anchor: "justesse-fidelite",
+                tooltip: "Proche de la cible."
+            },
+            { 
+                id: 32,
+                term: "Moyenne (échantillonnale)",
+                definition: "Estimateur de la tendance centrale : \\( \\bar{x} = \\frac{1}{n} \\sum_{i=1}^n x_i \\). Elle est utilisée comme meilleure estimation de la valeur vraie.",
+                section: "mesures-experimentales.html",
+                anchor: "mesures-experimentales",
+                tooltip: "x barre."
+            },
+            { 
+                id: 33,
+                term: "Multiplication / Division (propagation)",
+                definition: "Les incertitudes relatives s'ajoutent : \\( \\frac{\\Delta(xy)}{|xy|} = \\frac{\\Delta x}{|x|} + \\frac{\\Delta y}{|y|} \\) (idem pour la division).",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Règle des relatifs."
+            },
+            { 
+                id: 34,
+                term: "pH",
+                definition: "Mesure de l'acidité d'une solution, défini par \\( \\mathrm{pH} = -\\log[\\mathrm{H}^+] \\). Souvent utilisé dans les exercices de mesures expérimentales.",
+                section: "exercices.html",
+                anchor: "ex1",
+                tooltip: "Potentiel hydrogène."
+            },
+            { 
+                id: 35,
+                term: "Précision",
+                definition: "Synonyme de <strong>Fidélité</strong>.",
+                section: "justesse-fidelite.html",
+                anchor: "justesse-fidelite",
+                tooltip: "Répétabilité."
+            },
+            { 
+                id: 36,
+                term: "Propagation des erreurs",
+                definition: "Méthode permettant de calculer l'incertitude sur un résultat à partir des incertitudes des grandeurs d'entrée. On utilise les dérivées partielles ou les règles simplifiées (addition, multiplication, puissance).",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Transmission des incertitudes."
+            },
+            { 
+                id: 37,
+                term: "Puissance (propagation)",
+                definition: "Pour \\(f(x) = x^n\\), l'incertitude relative est \\( \\frac{\\Delta f}{|f|} = |n| \\frac{\\Delta x}{|x|} \\).",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Exposant multiplicateur."
+            },
+            { 
+                id: 38,
+                term: "Quadrature (combinaison en)",
+                definition: "Méthode de combinaison des incertitudes par la racine carrée de la somme des carrés, valable pour des variables indépendantes. \\( \\Delta f = \\sqrt{ \\sum (\\partial f / \\partial x_i \\cdot \\Delta x_i)^2 } \\).",
+                section: "propagation.html",
+                anchor: "propagation",
+                tooltip: "Somme quadratique."
+            },
+            { 
+                id: 39,
+                term: "Quantile",
+                definition: "Valeur de la loi normale (ou de Student) correspondant à un niveau de confiance donné. Pour 95 %, le quantile \\(z = 1,96\\) (souvent arrondi à 2).",
+                section: "exercices.html",
+                anchor: "ex3",
+                tooltip: "z = 1,96 pour 95%."
+            },
+            { 
+                id: 40,
+                term: "Systématique (erreur)",
+                definition: "Erreur constante ou variant selon une loi connue, due à un défaut de l'instrument, de la méthode ou de l'opérateur. Elle affecte la justesse.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Biais constant."
+            },
+            { 
+                id: 41,
+                term: "Troncature (erreur de)",
+                definition: "Erreur résultant de l'élimination de chiffres (par exemple, lors d'une conversion de format). Elle s'accumule dans les calculs successifs. Voir aussi <strong>Arrondi</strong>.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Perte de chiffres."
+            },
+            { 
+                id: 42,
+                term: "U (incertitude élargie)",
+                definition: "Notation de l'incertitude élargie, généralement \\(U = k \\cdot u_c\\). Exemple : \\(U = 2 \\times 0,01 = 0,02\\).",
+                section: "incertitudes.html",
+                anchor: "incertitudes",
+                tooltip: "U majuscule."
+            },
+            { 
+                id: 43,
+                term: "Valeur vraie",
+                definition: "Valeur théorique ou réelle de la grandeur mesurée, que l'on cherche à estimer. Elle est en pratique inconnue et on l'approche par la moyenne.",
+                section: "introduction.html",
+                anchor: "introduction",
+                tooltip: "Cible idéale."
+            },
+            { 
+                id: 44,
+                term: "Variance biaisée",
+                definition: "Estimation de la variance en divisant par \\(n\\) : \\( \\sigma^2_{\\text{biais}} = \\frac{1}{n} \\sum (x_i - \\bar{x})^2 \\). Elle sous-estime la variance de la population.",
+                section: "dof.html",
+                anchor: "dof",
+                tooltip: "Division par n."
+            },
+            { 
+                id: 45,
+                term: "Variance non biaisée",
+                definition: "Estimation correcte en divisant par \\(n-1\\) : \\( s^2 = \\frac{1}{n-1} \\sum (x_i - \\bar{x})^2 \\). C'est celle utilisée en pratique.",
+                section: "dof.html",
+                anchor: "dof",
+                tooltip: "Division par (n−1)."
+            },
+            { 
+                id: 46,
+                term: "Biais constant (additif)",
+                definition: "Type d'erreur systématique où l'erreur est la <strong>même valeur absolue</strong> quelle que soit la grandeur mesurée (ex: zéro mal réglé). Il décale toutes les mesures d'une constante.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Biais indépendant de la valeur."
+            },
+            { 
+                id: 47,
+                term: "Erreur proportionnelle (multiplicative)",
+                definition: "Type d'erreur systématique où l'erreur est <strong>proportionnelle</strong> à la valeur mesurée (ex: facteur d'étalonnage erroné). Elle se traduit par un pourcentage constant.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Biais proportionnel."
+            },
+            { 
+                id: 48,
+                term: "Dérive (drift)",
+                definition: "Variation <strong>lente</strong> de l'erreur systématique au cours du temps (ex: échauffement de l'électronique, vieillissement des réactifs). Elle peut être corrigée par des étalonnages réguliers.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Erreur qui évolue dans le temps."
+            },
+            { 
+                id: 49,
+                term: "Erreur de méthode",
+                definition: "Erreur systématique due à un <strong>protocole inadapté</strong> (ex: volatilisation, réaction parasite, échantillon non représentatif). Elle est souvent corrigée en modifiant la méthode.",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Défaut du protocole."
+            },
+            { 
+                id: 50,
+                term: "Erreur grossière (blunder)",
+                definition: "Erreur <strong>manifestement anormale</strong>, due à une faute de manipulation, une lecture erronée, une inversion de chiffres, etc. Elle doit être <strong>détectée et éliminée</strong> par des tests statistiques (Grubbs, Dixon).",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Valeur aberrante (outlier)."
+            },
+            { 
+                id: 51,
+                term: "Test de Grubbs / de Dixon",
+                definition: "Tests statistiques de détection de <strong>valeurs aberrantes (outliers)</strong> dans une série de mesures répétées. Ils permettent de justifier <strong>objectivement</strong> l'élimination d'une mesure suspecte (erreur grossière).<br><br>" +
+                    "<strong>📊 Test de Dixon (Q-test) :</strong> adapté aux petits échantillons (n ≤ 30, idéalement ≤ 10). La statistique de test est : <br> " +
+                    "\\( Q = \\dfrac{|x_{suspect} - x_{proche}|}{x_{max} - x_{min}} \\) <br>" +
+                    "où \\(x_{suspect}\\) est la valeur suspecte, \\(x_{proche}\\) la valeur la plus proche, et \\(x_{max} - x_{min}\\) l'étendue totale. Si \\(Q_{calculé} > Q_{critique}\\) (lu dans une table pour un seuil de confiance donné, généralement 95 %), on rejette la valeur.<br><br>" +
+                    "<strong>📊 Test de Grubbs (Z-test) :</strong> plus puissant pour des échantillons plus grands (n > 10). La statistique de test est : <br> " +
+                    "\\( G = \\dfrac{|x_{suspect} - \\bar{x}|}{s} \\) <br>" +
+                    "où \\(\\bar{x}\\) est la moyenne de la série et \\(s\\) l'écart-type expérimental. Si \\(G_{calculé} > G_{critique}\\) (valeur tabulée selon n et le seuil de confiance), on rejette la valeur.<br><br>" +
+                    "<strong>⚠️ Règles d'usage :</strong> <br>" +
+                    "• Vérifier d'abord une éventuelle <strong>erreur de saisie</strong> (transcription) avant d'appliquer le test.<br>" +
+                    "• Ces tests sont conçus pour détecter <strong>une seule valeur aberrante</strong> par série. Si plusieurs sont suspectes, il faut répéter la série ou utiliser des méthodes robustes.<br>" +
+                    "• Le seuil de confiance le plus courant en laboratoire est <strong>95 %</strong> (risque de 5 % de rejeter une valeur correcte).",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Outils statistiques pour détecter les outliers."
+            },
+            { 
+                id: 52,
+                term: "Erreur-type (standard error)",
+                definition: "Synonyme d'<strong>incertitude‑type sur la moyenne</strong> : \\( s_{\\bar{x}} = s / \\sqrt{n} \\). Elle quantifie la précision de l'estimation de la moyenne. Ne pas confondre avec l'écart-type individuel \\(s\\).",
+                section: "types-erreurs.html",
+                anchor: "types-erreurs",
+                tooltip: "Précision de la moyenne."
+            }
+        ];
+
+        function buildGlossary() {
+            const grid = document.getElementById('glossaryGrid');
+            grid.innerHTML = '';
+            glossaryData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'glossary-item';
+
+                const link = document.createElement('a');
+                link.className = 'glossary-number';
+                const anchor = item.anchor ? '#' + item.anchor : '';
+                link.href = item.section + anchor;
+                link.target = '_blank';
+                link.title = item.tooltip || 'Cliquez pour accéder à la section';
+                link.textContent = item.id;
+                div.appendChild(link);
+
+                const content = document.createElement('span');
+                content.className = 'glossary-content';
+                content.innerHTML = `<span class="term">${item.term}</span> <span class="def">– ${item.definition}</span>`;
+                div.appendChild(content);
+
+                const iconLink = document.createElement('a');
+                iconLink.href = item.section + anchor;
+                iconLink.target = '_blank';
+                iconLink.className = 'glossary-link';
+                iconLink.innerHTML = '<i class="fas fa-external-link-alt" title="Voir la section"></i>';
+                iconLink.style.marginLeft = '0.5rem';
+                div.appendChild(iconLink);
+
+                grid.appendChild(div);
+            });
+        }
+
+        buildGlossary();
+
+        setTimeout(function() {
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise().catch(e => console.log('MathJax error:', e));
+            }
+        }, 500);
+    </script>
+
+    <style>
+        .glossary-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 6px;
+            margin-bottom: 0.3rem;
+            transition: background 0.2s;
+        }
+        .glossary-item:hover {
+            background: var(--bg-hover, #f1f5f9);
+        }
+        .glossary-number {
+            display: inline-block;
+            min-width: 2rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            background: var(--border);
+            border-radius: 50%;
+            line-height: 2rem;
+            height: 2rem;
+            width: 2rem;
+            text-decoration: none;
+            transition: 0.2s;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .glossary-number:hover {
+            background: var(--primary, #0b6e4f);
+            color: white;
+            transform: scale(1.05);
+        }
+        .glossary-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .glossary-content .term {
+            font-weight: 700;
+            color: var(--text);
+        }
+        .glossary-content .def {
+            color: var(--text-light);
+        }
+        .glossary-link {
+            color: var(--info-border);
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            align-self: center;
+        }
+        .glossary-link:hover {
+            color: var(--primary);
+        }
+        [data-theme="dark"] .glossary-item:hover {
+            background: #1e293b;
+        }
+        [data-theme="dark"] .glossary-number {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        [data-theme="dark"] .glossary-number:hover {
+            background: #0b6e4f;
+            color: white;
+        }
+        .glossary-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        @media (min-width: 768px) {
+            .glossary-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem 1.5rem;
+            }
+        }
+    </style>
+</body>
+</html>

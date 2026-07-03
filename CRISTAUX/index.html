@@ -1,655 +1,400 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roue Cristallographique 3D · Graphe orienté 3D fonctionnel</title>
-    <!-- MathJax 3 -->
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cristaux · Quatre ressources</title>
     <style>
-        body {
+        /* ––––––––––––––––––––––––––––––– */
+        /*  Variables & reset               */
+        /* ––––––––––––––––––––––––––––––– */
+        :root {
+            --bg: #f5f2eb;
+            --card-bg: #ffffff;
+            --text: #2c2416;
+            --text-light: #5c5344;
+            --cristaux: #7b4fbf;
+            --cristaux-light: #ede4f7;
+            --cristaux-glow: rgba(123, 79, 191, 0.25);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
             margin: 0;
-            overflow: hidden;
-            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
-            touch-action: none; /* évite les gestes par défaut du navigateur */
+            padding: 0;
+            box-sizing: border-box;
         }
-        #info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 0.85rem;
-            backdrop-filter: blur(4px);
-            pointer-events: none;
-            z-index: 10;
-            font-weight: 500;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(3px);
-            touch-action: pan-y; /* permet de scroller dans la modale */
-        }
-        .modal-content {
-            background: #ffffff;
-            max-width: 1100px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border-radius: 32px;
-            padding: 20px 25px;
-            box-shadow: 0 25px 45px -12px black;
-            border-top: 8px solid #2c5f8a;
-            position: relative;
-            touch-action: pan-y;
-        }
-        .modal-content h2 {
-            color: #1e4a6e;
-            font-size: 1.8rem;
-            margin-top: 0;
-            border-left: 5px solid #facc15;
-            padding-left: 18px;
-        }
-        .close-modal {
-            position: absolute;
-            top: 18px;
-            right: 24px;
-            font-size: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #64748b;
-            touch-action: manipulation;
-        }
-        .close-modal:hover { color: #dc2626; }
-        .btn-doc {
-            background: #1e4a6e;
-            color: white;
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 40px;
-            display: inline-block;
-            margin-top: 10px;
-            font-weight: 600;
-        }
-        .graph-3d-container {
-            width: 100%;
-            height: 550px;
-            background: #111;
-            border-radius: 24px;
-            margin: 15px 0;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #2c5f8a;
-            touch-action: none;
-        }
-        .graph-toolbar {
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 15% 20%, rgba(123, 79, 191, 0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 80%, rgba(123, 79, 191, 0.05) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 50%, rgba(180, 160, 130, 0.04) 0%, transparent 70%);
+            background-attachment: fixed;
+            min-height: 100vh;
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
+            padding: 2rem 1.5rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ––––––––––––––––––––––––––––––– */
+        /*  En‑tête                         */
+        /* ––––––––––––––––––––––––––––––– */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #1f1a10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             flex-wrap: wrap;
         }
-        .reset-graph-btn {
-            background: #475569;
-            border: none;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 30px;
+
+        .header h1 span {
+            background: var(--cristaux-light);
+            color: var(--cristaux);
+            padding: 0.1rem 0.8rem;
+            border-radius: 40px;
+            font-size: 1.8rem;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-top: 0.3rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        /* ––––––––––––––––––––––––––––––– */
+        /*  Grille de cartes (4 cartes)    */
+        /* ––––––––––––––––––––––––––––––– */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.75rem;
+        }
+
+        /* ––––––––––––––––––––––––––––––– */
+        /*  Carte                           */
+        /* ––––––––––––––––––––––––––––––– */
+        .card {
+            position: relative;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.75rem 1.75rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #e8e0d6;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+            will-change: transform;
+            overflow: hidden;
             cursor: pointer;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            background: radial-gradient(circle at 30% 25%, var(--cristaux-glow) 0%, transparent 60%);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: #d4c4ed;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:focus-visible {
+            outline: 3px solid #a78bfa;
+            outline-offset: 3px;
+            border-color: #a78bfa;
+        }
+
+        /* ––– Icône ––– */
+        .card-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            background: var(--cristaux-light);
+            color: var(--cristaux);
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .card:hover .card-icon {
+            background: var(--cristaux);
+            color: white;
+        }
+
+        /* ––– Contenu ––– */
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            flex: 1;
+            z-index: 1;
+        }
+
+        .card-tag {
+            font-size: 0.75rem;
             font-weight: 600;
-            touch-action: manipulation;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            opacity: 0.7;
         }
-        .reset-graph-btn:hover { background: #334155; }
-        footer {
-            font-size: 0.7rem;
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.3;
+            color: #1f1a10;
+            letter-spacing: -0.01em;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.55;
+            flex: 1;
+        }
+
+        /* ––– Flèche « Ouvrir » ––– */
+        .card-arrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            transition: color var(--transition), gap var(--transition);
+            z-index: 1;
+            margin-top: 0.25rem;
+        }
+
+        .card-arrow svg {
+            width: 16px;
+            height: 16px;
+            transition: transform var(--transition);
+        }
+
+        .card:hover .card-arrow {
+            gap: 0.7rem;
+            color: var(--cristaux);
+        }
+
+        .card:hover .card-arrow svg {
+            transform: translateX(3px);
+        }
+
+        /* ––––––––––––––––––––––––––––––– */
+        /*  Pied de page                   */
+        /* ––––––––––––––––––––––––––––––– */
+        .footer {
             text-align: center;
-            margin-top: 15px;
-            color: #94a3b8;
+            margin-top: 2.5rem;
+            font-size: 0.85rem;
+            color: #a09787;
+            letter-spacing: 0.02em;
         }
-        /* adaptations mobiles */
+
+        .footer span {
+            opacity: 0.7;
+        }
+
+        /* ––––––––––––––––––––––––––––––– */
+        /*  Responsive                     */
+        /* ––––––––––––––––––––––––––––––– */
         @media (max-width: 700px) {
-            .modal-content { padding: 15px; }
-            .graph-3d-container { height: 400px; }
-            .modal-content h2 { font-size: 1.4rem; padding-left: 12px; }
-            #info { font-size: 0.7rem; bottom: 10px; left: 10px; padding: 5px 12px; }
-        }
-        @media (max-width: 480px) {
-            .graph-3d-container { height: 300px; }
-            .modal-content { padding: 10px; }
-            .btn-doc { padding: 6px 14px; font-size: 0.9rem; }
+            .header h1 {
+                font-size: 1.85rem;
+            }
+            .header .subtitle {
+                font-size: 0.95rem;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            .card {
+                padding: 1.5rem 1.35rem 1.35rem;
+                gap: 0.75rem;
+            }
+            .card-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
+                border-radius: 10px;
+            }
+            .card-title {
+                font-size: 1.15rem;
+            }
+            .card-desc {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="info">✨ Roue cristallographique 3D · Cliquez sur un secteur</div>
+    <div class="container">
 
-    <!-- MODALES DES 4 DOCUMENTS -->
-    <div id="modalDoc1" class="modal"><div class="modal-content"><span class="close-modal" data-modal="modalDoc1">&times;</span><h2>📦 Cristaux 3D – Quiz dynamique</h2><p><strong>Fichier :</strong> <code>CRISTAUX_CALCULS.html</code></p><p>Visualisation Three.js des mailles cubiques CS, CC, CFC et NaCl. Quiz aléatoire sur \(a\), \(R\), \(\rho\) et compacité.</p><div style="background:#eef2ff; padding:12px; border-radius:16px; margin:10px 0;">\[ \text{CS: } a = 2R,\; Z=1 \quad;\quad \text{CC: } a = \frac{4R}{\sqrt{3}},\; Z=2 \quad;\quad \text{CFC: } a = \frac{4R}{\sqrt{2}},\; Z=4 \]</div><a href="CRISTAUX_CALCULS.html" target="_blank" class="btn-doc">📂 Ouvrir →</a></div></div>
-    <div id="modalDoc2" class="modal"><div class="modal-content"><span class="close-modal" data-modal="modalDoc2">&times;</span><h2>🧪 Mission 4 niveaux · PBL</h2><p><strong>Fichier :</strong> <code>CRISTAUX_ENTRAINEMENTS.html</code></p><p>Apprentissage progressif : relations \(a/R\), identification de cristaux mystères, simulateur XRD.</p><a href="CRISTAUX_ENTRAINEMENTS.html" target="_blank" class="btn-doc">📂 Lancer →</a></div></div>
-    <div id="modalDoc3" class="modal"><div class="modal-content"><span class="close-modal" data-modal="modalDoc3">&times;</span><h2>📚 Cristallographie intégrale · Histoire</h2><p><strong>Fichier :</strong> <code>CRISTAUX_INTEGRAL.html</code></p><p>Paramètres de maille, empilements compacts, conjecture de Kepler, frise historique.</p>\[ C_{\text{CFC}} = \frac{\pi}{3\sqrt{2}} \approx 0,74048 \]<a href="CRISTAUX_INTEGRAL.html" target="_blank" class="btn-doc">📖 Explorer →</a></div></div>
-    <div id="modalDoc4" class="modal"><div class="modal-content"><span class="close-modal" data-modal="modalDoc4">&times;</span><h2>🔬 Simulateur RX · Identification</h2><p><strong>Fichier :</strong> <code>CRISTAUX_SIMULATEUR.html</code></p><p>Simulateur de diffractogramme, détection de pics, rapports \(\frac{\sin^2\theta_i}{\sin^2\theta_1}\).</p><div style="background:#e6f0fa; padding:8px; border-radius:12px;">\(\lambda_{\text{Cu Kα}} = 1,5406\ \text{Å}\)</div><a href="CRISTAUX_SIMULATEUR.html" target="_blank" class="btn-doc">🎛️ Lancer →</a></div></div>
+        <!-- ====== EN‑TÊTE ====== -->
+        <header class="header">
+            <h1>
+                🔮 Cristaux
+                <span>⏺</span>
+            </h1>
+            <p class="subtitle">
+                Quatre ressources pour maîtriser la cristallographie · de la théorie à la simulation
+            </p>
+        </header>
 
-    <!-- MODALE GRAPHE 3D ORIENTÉ -->
-    <div id="modalGraph" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" data-modal="modalGraph">&times;</span>
-            <h2>🕸️ Graphe conceptuel 3D orienté – nœuds déplaçables</h2>
-            <p>Chaque sphère colorée est un concept. <strong>Cliquez-glissez</strong> (ou touchez-glissez) sur une sphère pour la déplacer. Les arêtes sont <strong>orientées (flèches directionnelles)</strong> et se mettent à jour en temps réel.</p>
-            <div class="graph-3d-container" id="graph3dContainer"></div>
-            <div class="graph-toolbar">
-                <button id="resetGraph3DBtn" class="reset-graph-btn">⟳ Réinitialiser les positions</button>
+        <!-- ====== GRILLE DE 4 CARTES ====== -->
+        <div class="cards-grid">
+
+            <!-- ---- Carte 1 : Cristaux 3D · Quiz ---- -->
+            <a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/CRISTAUX/CRISTAUX_CALCULS.html"
+            class="card card-cristaux"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Cristaux 3D – Quiz dynamique">
+            <div class="card-icon" aria-hidden="true">🧊</div>
+            <div class="card-content">
+                <span class="card-tag">Visualisation &amp; Quiz</span>
+                <h2 class="card-title">Cristaux 3D · Quiz</h2>
+                <p class="card-desc">
+                    Mailles cubiques CS, CC, CFC, NaCl en Three.js. Quiz aléatoire
+                    sur <em>a</em>, <em>R</em>, <em>ρ</em> et la compacité.[reference:0]
+                </p>
             </div>
-            <p><strong>Légende :</strong> 🔵 Structures cubiques &nbsp;|&nbsp; 🟢 Compacité/Masse&nbsp;|&nbsp; 🔴 Diffraction &nbsp;|&nbsp; 🟣 Visualisation/Quiz &nbsp;|&nbsp; 🟠 Histoire/Kepler</p>
-            <footer>Les flèches indiquent la direction des relations (ex: formules → compacité, diffraction → identification).</footer>
+            <span class="card-arrow">
+                Ouvrir
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg>
+            </span>
+        </a>
+
+        <!-- ---- Carte 2 : Mission 4 niveaux ---- -->
+        <a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/CRISTAUX/CRISTAUX_ENTRAINEMENTS.html"
+        class="card card-cristaux"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Mission 4 niveaux – PBL">
+        <div class="card-icon" aria-hidden="true">🎯</div>
+        <div class="card-content">
+            <span class="card-tag">Apprentissage par problèmes</span>
+            <h2 class="card-title">Mission 4 niveaux</h2>
+            <p class="card-desc">
+                Progression PBL : relations <em>a</em>/<em>R</em>, identification
+                de cristaux mystères, simulateur de diffraction XRD.[reference:1][reference:2]
+            </p>
         </div>
+        <span class="card-arrow">
+            Ouvrir
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+            </svg>
+        </span>
+    </a>
+
+    <!-- ---- Carte 3 : Intégrale & Histoire ---- -->
+    <a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/CRISTAUX/CRISTAUX_INTEGRAL.html"
+    class="card card-cristaux"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Cristallographie intégrale – Histoire">
+    <div class="card-icon" aria-hidden="true">📜</div>
+    <div class="card-content">
+        <span class="card-tag">Histoire &amp; Théorie</span>
+        <h2 class="card-title">Intégrale &amp; Histoire</h2>
+        <p class="card-desc">
+            Paramètres de maille, empilements compacts CS/CC/CFC, conjecture de Kepler,
+            frise historique illustrée.[reference:3][reference:4]
+        </p>
     </div>
+    <span class="card-arrow">
+        Ouvrir
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+        </svg>
+    </span>
+</a>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
-            }
-        }
-    </script>
+<!-- ---- Carte 4 : Diffraction XRD ---- -->
+<a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/CRISTAUX/CRISTAUX_SIMULATEUR.html"
+class="card card-cristaux"
+target="_blank"
+rel="noopener noreferrer"
+aria-label="Simulation XRD interactive">
+<div class="card-icon" aria-hidden="true">⚛️</div>
+<div class="card-content">
+    <span class="card-tag">Simulation interactive</span>
+    <h2 class="card-title">Diffraction XRD</h2>
+    <p class="card-desc">
+        Simulez le diagramme de diffraction en fonction du réseau, de la longueur
+        d'onde et de la famille de plans réticulaires.[reference:5][reference:6]
+    </p>
+</div>
+<span class="card-arrow">
+    Ouvrir
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+    </svg>
+</span>
+</a>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+</div>
 
-        // ---------- 1. ROUE 3D PRINCIPALE ----------
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x071a2b);
-        scene.fog = new THREE.FogExp2(0x071a2b, 0.008);
-        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 2.2, 6.8);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
-        
-        const labelRenderer = new CSS2DRenderer();
-        labelRenderer.setSize(window.innerWidth, window.innerHeight);
-        labelRenderer.domElement.style.position = 'absolute';
-        labelRenderer.domElement.style.top = '0px';
-        labelRenderer.domElement.style.left = '0px';
-        labelRenderer.domElement.style.pointerEvents = 'none';
-        document.body.appendChild(labelRenderer.domElement);
-        
-        const controlsMain = new OrbitControls(camera, renderer.domElement);
-        controlsMain.enableDamping = true;
-        controlsMain.enableZoom = true;
-        controlsMain.touchRotate = true;
-        controlsMain.touchZoom = true;
-        
-        const ambientLight = new THREE.AmbientLight(0x404060);
-        scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(2, 4, 3);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
-        const fillLight = new THREE.PointLight(0xffaa66, 0.5);
-        fillLight.position.set(1, 1.5, 2);
-        scene.add(fillLight);
-        
-        const wheelGroup = new THREE.Group();
-        scene.add(wheelGroup);
-        
-        const innerRadius = 0.65, outerRadius = 2.05, thickness = 0.12;
-        const sectorColors = [0x3b82f6, 0xef4444, 0x10b981, 0xf59e0b, 0x8b5cf6];
-        const sectorNames = ["Cristaux 3D\n& Quiz", "Mission\n4 niveaux", "Synthèse\nintégrale", "Simulateur\nRX", "Carte des\ninteractions"];
-        const modalIds = ["modalDoc1", "modalDoc2", "modalDoc3", "modalDoc4", "modalGraph"];
-        
-        function createSectorMesh(startAngle, endAngle, innerR, outerR, height, colorHex, opacity = 0.9) {
-            const vertices = [], indices = [];
-            const segments = 28;
-            const angleStep = (endAngle - startAngle) / segments;
-            const topVerts = [], bottomVerts = [];
-            for (let i = 0; i <= segments; i++) {
-                const angle = startAngle + i * angleStep;
-                const cosA = Math.cos(angle), sinA = Math.sin(angle);
-                topVerts.push(new THREE.Vector3(innerR * cosA, height/2, innerR * sinA));
-                bottomVerts.push(new THREE.Vector3(innerR * cosA, -height/2, innerR * sinA));
-                topVerts.push(new THREE.Vector3(outerR * cosA, height/2, outerR * sinA));
-                bottomVerts.push(new THREE.Vector3(outerR * cosA, -height/2, outerR * sinA));
-            }
-            const topStart = 0, bottomStart = topVerts.length;
-            topVerts.forEach(v => vertices.push(v.x, v.y, v.z));
-            bottomVerts.forEach(v => vertices.push(v.x, v.y, v.z));
-            for (let i = 0; i < segments; i++) {
-                const i0 = i*2, i1 = i0+1, j0 = (i+1)*2, j1 = j0+1;
-                indices.push(topStart+i0, topStart+i1, topStart+j0);
-                indices.push(topStart+j0, topStart+i1, topStart+j1);
-                indices.push(bottomStart+i0, bottomStart+j0, bottomStart+i1);
-                indices.push(bottomStart+j0, bottomStart+j1, bottomStart+i1);
-                indices.push(bottomStart+i0, topStart+i0, bottomStart+j0);
-                indices.push(topStart+i0, topStart+j0, bottomStart+j0);
-                indices.push(bottomStart+i1, bottomStart+j1, topStart+i1);
-                indices.push(topStart+i1, bottomStart+j1, topStart+j1);
-            }
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
-            geometry.setIndex(indices);
-            geometry.computeVertexNormals();
-            const material = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.35, metalness: 0.65, transparent: true, opacity });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.userData = { sectorIndex: Math.floor((startAngle / (Math.PI*2)) * 5) % 5 };
-            return mesh;
-        }
-        
-        const angleStep = (Math.PI * 2) / 5;
-        const sectors = [];
-        for (let i = 0; i < 5; i++) {
-            const sector = createSectorMesh(i*angleStep, (i+1)*angleStep, innerRadius, outerRadius, thickness, sectorColors[i], 0.88);
-            wheelGroup.add(sector);
-            sectors.push(sector);
-        }
-        
-        const hubGeo = new THREE.CylinderGeometry(0.42, 0.42, thickness*1.2, 32);
-        const hubMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.7 });
-        const hub = new THREE.Mesh(hubGeo, hubMat);
-        hub.position.y = 0;
-        wheelGroup.add(hub);
-        
-        for (let i = 0; i < 5; i++) {
-            const midAngle = i * angleStep + angleStep/2;
-            const rad = (innerRadius + outerRadius)/2 + 0.22;
-            const x = Math.cos(midAngle) * rad;
-            const z = Math.sin(midAngle) * rad;
-            const div = document.createElement('div');
-            div.textContent = sectorNames[i];
-            div.style.backgroundColor = 'rgba(10, 25, 45, 0.85)';
-            div.style.color = '#f1f5f9';
-            div.style.fontSize = '0.85rem';
-            div.style.fontWeight = 'bold';
-            div.style.padding = '5px 12px';
-            div.style.borderRadius = '40px';
-            div.style.border = `1px solid ${'#' + sectorColors[i].toString(16).padStart(6,'0')}`;
-            div.style.backdropFilter = 'blur(6px)';
-            div.style.textAlign = 'center';
-            div.style.whiteSpace = 'pre-line';
-            const labelObj = new CSS2DObject(div);
-            labelObj.position.set(x, 0.2, z);
-            wheelGroup.add(labelObj);
-        }
-        
-        const particleCount = 700;
-        const particleGeo = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        for (let i = 0; i < particleCount; i++) {
-            const r = outerRadius + 0.15 + Math.random() * 0.7;
-            const ang = Math.random() * Math.PI * 2;
-            positions[i*3] = Math.cos(ang) * r;
-            positions[i*3+1] = (Math.random() - 0.5) * 0.6;
-            positions[i*3+2] = Math.sin(ang) * r;
-        }
-        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: 0xaaddff, size: 0.022, transparent: true, opacity: 0.5 }));
-        wheelGroup.add(particles);
-        
-        let autoRotate = true;
-        let rotSpeed = 0.005;
-        function animateMain() {
-            requestAnimationFrame(animateMain);
-            if (autoRotate) wheelGroup.rotation.y += rotSpeed;
-            particles.rotation.y += 0.002;
-            controlsMain.update();
-            renderer.render(scene, camera);
-            labelRenderer.render(scene, camera);
-        }
-        animateMain();
-        
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
-        });
-        
-        const raycaster = new THREE.Raycaster();
-        const mouseVec = new THREE.Vector2();
-        function handleClick(event) {
-            let clientX, clientY;
-            if (event.touches) {
-                clientX = event.touches[0].clientX;
-                clientY = event.touches[0].clientY;
-                event.preventDefault();
-            } else {
-                clientX = event.clientX;
-                clientY = event.clientY;
-            }
-            mouseVec.x = (clientX / renderer.domElement.clientWidth) * 2 - 1;
-            mouseVec.y = -(clientY / renderer.domElement.clientHeight) * 2 + 1;
-            raycaster.setFromCamera(mouseVec, camera);
-            const intersects = raycaster.intersectObjects(sectors);
-            if (intersects.length) {
-                const idx = intersects[0].object.userData.sectorIndex;
-                if (idx !== undefined && modalIds[idx]) {
-                    const modal = document.getElementById(modalIds[idx]);
-                    if (modal) {
-                        modal.style.display = 'flex';
-                        if (modalIds[idx] === 'modalGraph') initGraph3D();
-                    }
-                }
-            }
-        }
-        renderer.domElement.addEventListener('click', handleClick);
-        renderer.domElement.addEventListener('touchstart', handleClick, { passive: false });
-        
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modalDiv = btn.closest('.modal');
-                if (modalDiv) modalDiv.style.display = 'none';
-            });
-            btn.addEventListener('touchend', (e) => {
-                const modalDiv = btn.closest('.modal');
-                if (modalDiv) modalDiv.style.display = 'none';
-            });
-        });
-        window.addEventListener('click', (e) => {
-            if (e.target.classList && e.target.classList.contains('modal')) e.target.style.display = 'none';
-        });
-        window.addEventListener('touchend', (e) => {
-            if (e.target.classList && e.target.classList.contains('modal')) e.target.style.display = 'none';
-        });
-        
-        // ---------- 2. GRAPHE 3D AVEC DRAG SOURIS + TOUCH ----------
-        let graphScene, graphCamera, graphRenderer, graphLabelRenderer, graphControls;
-        let arrowObjects = [];
-        let isDragging = false; // pour désactiver OrbitControls pendant le drag
-        
-        const concepts = [
-            { id: "cs_cc_cfc", label: "Structures cubiques\nCS · CC · CFC", color: 0x3b82f6, initPos: new THREE.Vector3(-1.2, 1.0, -0.5) },
-            { id: "formules_aR", label: "Relations a = f(R)\nZ_maille", color: 0x2c5f8a, initPos: new THREE.Vector3(-0.2, 0.5, -1.8) },
-            { id: "compacite_rho", label: "Compacité C\nMasse volumique ρ", color: 0x10b981, initPos: new THREE.Vector3(1.2, 1.2, -0.8) },
-            { id: "loi_bragg", label: "Loi de Bragg\nDiffraction RX", color: 0xf59e0b, initPos: new THREE.Vector3(1.8, -0.2, -0.2) },
-            { id: "extinction", label: "Règles d’extinction\nN = h²+k²+l²", color: 0xef4444, initPos: new THREE.Vector3(1.5, -1.0, 0.5) },
-            { id: "visu_3d", label: "Visualisation 3D\nMaille interactive", color: 0x8b5cf6, initPos: new THREE.Vector3(-1.5, -0.5, 0.8) },
-            { id: "pbl_quiz", label: "Quiz & PBL\nNiveaux progressifs", color: 0xec489a, initPos: new THREE.Vector3(-0.5, -1.2, 1.2) },
-            { id: "kepler", label: "Conjecture de Kepler\nEmpilements HC / CFC", color: 0xd97706, initPos: new THREE.Vector3(0.5, -0.8, -1.0) },
-            { id: "identification", label: "Identification\npar ρ, a & XRD", color: 0x14b8a6, initPos: new THREE.Vector3(1.2, 0.2, 1.5) }
-        ];
-        
-        const edgesDef = [
-            { from: "cs_cc_cfc", to: "formules_aR" }, { from: "formules_aR", to: "compacite_rho" },
-            { from: "compacite_rho", to: "pbl_quiz" }, { from: "cs_cc_cfc", to: "extinction" },
-            { from: "extinction", to: "loi_bragg" }, { from: "loi_bragg", to: "identification" },
-            { from: "cs_cc_cfc", to: "visu_3d" }, { from: "visu_3d", to: "pbl_quiz" },
-            { from: "kepler", to: "compacite_rho" }, { from: "kepler", to: "cs_cc_cfc" },
-            { from: "loi_bragg", to: "extinction" }, { from: "identification", to: "loi_bragg" },
-            { from: "pbl_quiz", to: "identification" }, { from: "formules_aR", to: "cs_cc_cfc" },
-            { from: "visu_3d", to: "formules_aR" }
-        ];
-        
-        function createArrowBetween(pointA, pointB, color = 0x88aaff, headLength = 0.28, headRadius = 0.09) {
-            const group = new THREE.Group();
-            const direction = new THREE.Vector3().subVectors(pointB, pointA);
-            const length = direction.length();
-            if (length < 0.05) return group;
-            
-            const cylinderLength = Math.max(0, length - headLength);
-            const cylinderGeo = new THREE.CylinderGeometry(0.065, 0.065, cylinderLength, 6);
-            const material = new THREE.MeshStandardMaterial({ color: color, emissive: 0x224466 });
-            const cylinder = new THREE.Mesh(cylinderGeo, material);
-            const cylinderPos = pointA.clone().add(direction.clone().normalize().multiplyScalar(cylinderLength / 2));
-            cylinder.position.copy(cylinderPos);
-            cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
-            group.add(cylinder);
-            
-            const coneGeo = new THREE.ConeGeometry(headRadius, headLength, 8);
-            const cone = new THREE.Mesh(coneGeo, material);
-            const conePos = pointA.clone().add(direction.clone().normalize().multiplyScalar(length - headLength / 2));
-            cone.position.copy(conePos);
-            cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
-            group.add(cone);
-            
-            return { group, cylinder, cone };
-        }
-        
-        function initGraph3D() {
-            const container = document.getElementById('graph3dContainer');
-            if (!container) return;
-            while (container.firstChild) container.removeChild(container.firstChild);
-            
-            graphScene = new THREE.Scene();
-            graphScene.background = new THREE.Color(0x0a0f1a);
-            graphScene.fog = new THREE.FogExp2(0x0a0f1a, 0.015);
-            
-            graphCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            graphCamera.position.set(4, 3, 5);
-            graphCamera.lookAt(0, 0, 0);
-            
-            graphRenderer = new THREE.WebGLRenderer({ antialias: true });
-            graphRenderer.setSize(container.clientWidth, container.clientHeight);
-            graphRenderer.shadowMap.enabled = true;
-            container.appendChild(graphRenderer.domElement);
-            
-            graphLabelRenderer = new CSS2DRenderer();
-            graphLabelRenderer.setSize(container.clientWidth, container.clientHeight);
-            graphLabelRenderer.domElement.style.position = 'absolute';
-            graphLabelRenderer.domElement.style.top = '0px';
-            graphLabelRenderer.domElement.style.left = '0px';
-            graphLabelRenderer.domElement.style.pointerEvents = 'none';
-            container.appendChild(graphLabelRenderer.domElement);
-            
-            graphControls = new OrbitControls(graphCamera, graphRenderer.domElement);
-            graphControls.enableDamping = true;
-            graphControls.dampingFactor = 0.05;
-            graphControls.zoomSpeed = 1.2;
-            graphControls.rotateSpeed = 1.0;
-            graphControls.touchRotate = true;
-            graphControls.touchZoom = true;
-            
-            const ambient = new THREE.AmbientLight(0x404060);
-            graphScene.add(ambient);
-            const mainLight = new THREE.DirectionalLight(0xffffff, 1);
-            mainLight.position.set(2, 5, 3);
-            graphScene.add(mainLight);
-            const backLight = new THREE.PointLight(0x6688ff, 0.4);
-            backLight.position.set(-1, 1, -2);
-            graphScene.add(backLight);
-            const fillLight2 = new THREE.PointLight(0xffaa66, 0.3);
-            fillLight2.position.set(1, 2, 2);
-            graphScene.add(fillLight2);
-            
-            // Nœuds
-            const nodeMap = new Map();
-            const sphereRadius = 0.32;
-            
-            concepts.forEach(concept => {
-                const geometry = new THREE.SphereGeometry(sphereRadius, 32, 32);
-                const material = new THREE.MeshStandardMaterial({ color: concept.color, roughness: 0.3, metalness: 0.6, emissive: 0x221133, emissiveIntensity: 0.15 });
-                const sphere = new THREE.Mesh(geometry, material);
-                sphere.userData = { id: concept.id, isNode: true };
-                sphere.position.copy(concept.initPos);
-                graphScene.add(sphere);
-                
-                const div = document.createElement('div');
-                div.textContent = concept.label;
-                div.style.backgroundColor = 'rgba(20, 30, 55, 0.85)';
-                div.style.color = '#f0f4fa';
-                div.style.fontSize = '12px';
-                div.style.fontWeight = 'bold';
-                div.style.padding = '4px 12px';
-                div.style.borderRadius = '20px';
-                div.style.border = `1.5px solid ${new THREE.Color(concept.color).getStyle()}`;
-                div.style.backdropFilter = 'blur(8px)';
-                div.style.textAlign = 'center';
-                div.style.whiteSpace = 'pre-line';
-                div.style.fontFamily = 'Segoe UI, system-ui';
-                div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)';
-                div.style.pointerEvents = 'none';
-                const labelObj = new CSS2DObject(div);
-                labelObj.position.copy(concept.initPos);
-                labelObj.position.y += 0.55;
-                graphScene.add(labelObj);
-                
-                nodeMap.set(concept.id, { sphere, label: labelObj, pos: concept.initPos.clone(), color: concept.color });
-            });
-            
-            function updateAllArrows() {
-                arrowObjects.forEach(item => {
-                    if (item.group) graphScene.remove(item.group);
-                });
-                arrowObjects = [];
-                edgesDef.forEach(edge => {
-                    const fromNode = nodeMap.get(edge.from);
-                    const toNode = nodeMap.get(edge.to);
-                    if (fromNode && toNode) {
-                        const { group } = createArrowBetween(fromNode.sphere.position, toNode.sphere.position, 0x88aaff, 0.28, 0.09);
-                        graphScene.add(group);
-                        arrowObjects.push({ group, fromId: edge.from, toId: edge.to });
-                    }
-                });
-            }
-            updateAllArrows();
-            
-            // Gestion du drag (souris + tactile)
-            let selectedNode = null;
-            let dragPlane = null;
-            let dragOffsetLocal = new THREE.Vector3();
-            
-            function getPointerPosition(event) {
-                let rect = graphRenderer.domElement.getBoundingClientRect();
-                let clientX, clientY;
-                if (event.touches) {
-                    clientX = event.touches[0].clientX;
-                    clientY = event.touches[0].clientY;
-                    event.preventDefault();
-                } else {
-                    clientX = event.clientX;
-                    clientY = event.clientY;
-                }
-                return {
-                    x: ((clientX - rect.left) / rect.width) * 2 - 1,
-                    y: -((clientY - rect.top) / rect.height) * 2 + 1
-                };
-            }
-            
-            function onPointerDown(event) {
-                // Ne pas capturer si on clique sur un bouton ou autre
-                if (event.target.closest && event.target.closest('button')) return;
-                const pos = getPointerPosition(event);
-                const mouse = new THREE.Vector2(pos.x, pos.y);
-                const raycasterGraph = new THREE.Raycaster();
-                raycasterGraph.setFromCamera(mouse, graphCamera);
-                const sphereMeshes = Array.from(nodeMap.values()).map(n => n.sphere);
-                const intersects = raycasterGraph.intersectObjects(sphereMeshes);
-                if (intersects.length > 0) {
-                    selectedNode = intersects[0].object;
-                    isDragging = true;
-                    graphControls.enabled = false; // désactiver OrbitControls pendant le drag
-                    const cameraDirection = graphCamera.getWorldDirection(new THREE.Vector3());
-                    const planeNormal = cameraDirection.clone().normalize();
-                    dragPlane = new THREE.Plane(planeNormal, 0);
-                    const intersectionPoint = new THREE.Vector3();
-                    if (dragPlane.intersectLine(new THREE.Line3(graphCamera.position, selectedNode.position.clone()), intersectionPoint)) {
-                        dragOffsetLocal.copy(selectedNode.position).sub(intersectionPoint);
-                    } else {
-                        dragOffsetLocal.set(0, 0, 0);
-                    }
-                    graphRenderer.domElement.style.cursor = 'grabbing';
-                    event.preventDefault();
-                }
-            }
-            
-            function onPointerMove(event) {
-                if (!selectedNode || !dragPlane) return;
-                const pos = getPointerPosition(event);
-                const mouse = new THREE.Vector2(pos.x, pos.y);
-                const raycasterGraph = new THREE.Raycaster();
-                raycasterGraph.setFromCamera(mouse, graphCamera);
-                const intersectionPoint = new THREE.Vector3();
-                if (dragPlane.intersectLine(new THREE.Line3(graphCamera.position, raycasterGraph.ray.direction.clone().multiplyScalar(10).add(graphCamera.position)), intersectionPoint)) {
-                    let newPos = intersectionPoint.clone().add(dragOffsetLocal);
-                    // Limiter les déplacements
-                    newPos.x = Math.min(Math.max(newPos.x, -2.5), 2.5);
-                    newPos.y = Math.min(Math.max(newPos.y, -1.8), 2.2);
-                    newPos.z = Math.min(Math.max(newPos.z, -2.5), 2.5);
-                    selectedNode.position.copy(newPos);
-                    const nodeEntry = Array.from(nodeMap.values()).find(n => n.sphere === selectedNode);
-                    if (nodeEntry) {
-                        nodeEntry.label.position.copy(newPos);
-                        nodeEntry.label.position.y += 0.55;
-                    }
-                    updateAllArrows();
-                }
-                event.preventDefault();
-            }
-            
-            function onPointerUp(event) {
-                if (selectedNode) {
-                    selectedNode = null;
-                    dragPlane = null;
-                    isDragging = false;
-                    graphControls.enabled = true;
-                    graphRenderer.domElement.style.cursor = 'grab';
-                }
-            }
-            
-            // Événements souris
-            graphRenderer.domElement.addEventListener('mousedown', onPointerDown);
-            window.addEventListener('mousemove', onPointerMove);
-            window.addEventListener('mouseup', onPointerUp);
-            
-            // Événements tactiles
-            graphRenderer.domElement.addEventListener('touchstart', onPointerDown, { passive: false });
-            window.addEventListener('touchmove', onPointerMove, { passive: false });
-            window.addEventListener('touchend', onPointerUp, { passive: false });
-            
-            graphRenderer.domElement.style.cursor = 'grab';
-            
-            const resetBtn = document.getElementById('resetGraph3DBtn');
-            if (resetBtn) {
-                resetBtn.onclick = () => {
-                    concepts.forEach(concept => {
-                        const entry = nodeMap.get(concept.id);
-                        if (entry) {
-                            entry.sphere.position.copy(concept.initPos);
-                            entry.label.position.copy(concept.initPos);
-                            entry.label.position.y += 0.55;
-                        }
-                    });
-                    updateAllArrows();
-                };
-                resetBtn.ontouchend = resetBtn.onclick;
-            }
-            
-            function animateGraph() {
-                if (!graphRenderer || !graphScene) return;
-                requestAnimationFrame(animateGraph);
-                graphControls.update();
-                graphRenderer.render(graphScene, graphCamera);
-                graphLabelRenderer.render(graphScene, graphCamera);
-            }
-            animateGraph();
-            
-            const resizeObserver = new ResizeObserver(() => {
-                if (graphRenderer && graphCamera && container) {
-                    const w = container.clientWidth;
-                    const h = container.clientHeight;
-                    graphCamera.aspect = w / h;
-                    graphCamera.updateProjectionMatrix();
-                    graphRenderer.setSize(w, h);
-                    graphLabelRenderer.setSize(w, h);
-                }
-            });
-            resizeObserver.observe(container);
-        }
-        
-        if (window.MathJax) MathJax.typesetPromise().catch(console.warn);
-    </script>
+<!-- ====== PIED DE PAGE ====== -->
+<footer class="footer">
+    <span>Ressources cristallographie · mises à jour 2026–2027 · 4 modules</span>
+</footer>
+
+</div>
 </body>
 </html>

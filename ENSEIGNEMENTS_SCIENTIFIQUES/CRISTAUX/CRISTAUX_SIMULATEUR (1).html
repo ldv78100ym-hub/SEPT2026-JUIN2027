@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diffraction RX — Identification CS / CC / CFC (version pédagogique)</title>
+
+    <!-- Configuration MathJax -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <!-- Chargement de MathJax (sans async pour garantir l'ordre, mais on utilisera startup.promise) -->
+    <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <style>
+        /* === Styles identiques à l'original === */
+        :root {
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --border: #d0d5dd;
+            --text: #1a1a2e;
+            --accent-cs: #3b82f6;
+            --accent-cc: #ef4444;
+            --accent-cfc: #10b981;
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --radius: 16px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; justify-content: center;
+            align-items: flex-start; padding: 20px 12px 40px;
+        }
+        .main-container {
+            width: 100%; max-width: 1300px;
+            display: flex; flex-direction: column; gap: 18px;
+        }
+        .header { text-align: center; padding: 8px 0; }
+        .header h1 {
+            font-size: 1.8rem; font-weight: 700;
+            background: linear-gradient(135deg, #1e3a5f, #2c5282, #1e3a5f);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header .subtitle { font-size: 0.95rem; color: #64748b; margin-top: 2px; }
+        .card {
+            background: var(--card); border-radius: var(--radius);
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            padding: 16px 18px; transition: var(--transition);
+        }
+        .card-title {
+            font-size: 0.85rem; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #64748b;
+            margin-bottom: 10px; font-weight: 600;
+        }
+        .canvas-row { display: flex; gap: 18px; flex-wrap: wrap; }
+        .canvas-col { flex: 1; min-width: 340px; display: flex; flex-direction: column; align-items: center; }
+        .canvas-col canvas {
+            border-radius: 10px; background: #fafbfc;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+            width: 100%; height: auto; max-width: 480px; aspect-ratio: 1.15 / 1;
+        }
+        .canvas-col.diffracto canvas { max-width: 650px; aspect-ratio: 1.55 / 1; }
+        .comparison-row { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+        .comparison-col { flex: 1; min-width: 250px; max-width: 350px; display: flex; flex-direction: column; align-items: center; }
+        .comparison-col canvas {
+            border-radius: 10px; background: #fafbfc;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+            width: 100%; height: auto; aspect-ratio: 1.25 / 1;
+        }
+        .controls-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
+        select, button {
+            font-family: inherit; font-size: 0.9rem; padding: 10px 18px;
+            border-radius: 30px; border: 1.5px solid var(--border);
+            cursor: pointer; transition: var(--transition);
+            background: #fff; color: var(--text); font-weight: 500; outline: none; white-space: nowrap;
+        }
+        select:hover, button:hover { border-color: #94a3b8; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        select:focus, button:focus-visible { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        .btn-primary { background: #1e3a5f; color: #fff; border-color: #1e3a5f; font-weight: 600; }
+        .btn-primary:hover { background: #243d63; }
+        .btn-primary:disabled { background: #cbd5e1; border-color: #cbd5e1; cursor: not-allowed; color: #94a3b8; }
+        .btn-accent { background: #fff; color: #8b5cf6; border-color: #8b5cf6; font-weight: 600; }
+        .btn-accent:hover { background: #f5f3ff; }
+        .btn-outline { background: #fff; color: #64748b; }
+        .btn-compare { background: #fff; color: #0f172a; border-color: #6366f1; font-weight: 600; }
+        .btn-compare.active { background: #6366f1; color: #fff; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; letter-spacing: 0.03em; transition: var(--transition);
+        }
+        .status-idle { background: #f1f5f9; color: #64748b; }
+        .status-scanning { background: #fef3c7; color: #92400e; animation: pulse-status 1s ease-in-out infinite; }
+        .status-done { background: #dcfce7; color: #166534; }
+        @keyframes pulse-status { 0%,100%{ opacity:1; } 50%{ opacity:0.6; } }
+        
+        .element-card {
+            background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px;
+            padding: 12px 16px; margin-top: 12px; display: none; gap: 16px;
+            font-size: 0.85rem; flex-wrap: wrap; justify-content: space-between;
+        }
+        .element-property { display: flex; flex-direction: column; gap: 2px; min-width: 110px; }
+        .element-property span:first-child { font-weight: 600; color: #64748b; font-size: 0.75rem; text-transform: uppercase; }
+        .element-property span:last-child { font-weight: 500; color: #1e3a5f; }
+
+        .analysis-area { display: flex; flex-wrap: wrap; gap: 16px; }
+        .analysis-col { flex: 1; min-width: 280px; }
+        .table-peaks { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 6px; }
+        .table-peaks th, .table-peaks td { padding: 7px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .table-peaks th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .table-peaks tr:hover td { background: #f1f5f9; }
+        .feedback-box {
+            padding: 14px 18px; border-radius: 12px; margin-top: 10px;
+            font-weight: 600; display: none; text-align: center;
+        }
+        .feedback-correct { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .feedback-wrong { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .pedagogic-box {
+            background: #f8fafc; border-radius: 12px; padding: 14px; margin-top: 10px; font-size: 0.85rem; line-height: 1.6;
+        }
+        .pedagogic-box h3 { font-size: 1rem; margin-bottom: 8px; color: #1e3a5f; }
+        .highlight { background: #fef08a; padding: 2px 6px; border-radius: 4px; }
+
+        /* Styles pour la modale */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            max-width: 600px;
+            width: 90%;
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+            border-top: 6px solid #1e3a5f;
+            position: relative;
+            animation: fadeInModal 0.2s ease-out;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        @keyframes fadeInModal {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-content h3 {
+            color: #1e3a5f;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+        }
+        .modal-content p {
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #888;
+            transition: 0.2s;
+        }
+        .close-modal:hover {
+            color: #e74c3c;
+        }
+        .modal-content strong {
+            color: #1e3a5f;
+        }
+        .footer-copyright {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn-copyright {
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+        }
+        .btn-copyright:hover {
+            background: #334155;
+        }
+
+        @media (max-width: 768px) {
+            .canvas-row { flex-direction: column; gap: 12px; }
+            .canvas-col canvas { max-width: 100%; aspect-ratio: 1.2/1; }
+            .canvas-col.diffracto canvas { max-width: 100%; aspect-ratio: 1.5/1; }
+            .comparison-row { flex-direction: column; align-items: center; }
+            .comparison-col { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="header">
+        <h1>🔬 Diffraction des rayons X sur poudre</h1>
+        <p class="subtitle">Identification de la structure cristalline : CS · CC · CFC</p>
+    </div>
+
+    <div class="canvas-row" id="mainCanvasRow">
+        <div class="canvas-col">
+            <div class="card-title">📐 Schéma du diffractomètre</div>
+            <canvas id="canvasSchema" width="460" height="400"></canvas>
+        </div>
+        <div class="canvas-col diffracto">
+            <div class="card-title">📊 Diffractogramme I = f(2θ)</div>
+            <canvas id="canvasDiffracto" width="620" height="400"></canvas>
+        </div>
+    </div>
+
+    <div class="comparison-row" id="comparisonRow" style="display:none;">
+        <div class="comparison-col">
+            <div class="card-title" style="color:#3b82f6;">🔵 Cubique Simple (CS)</div>
+            <canvas id="canvasCS" width="300" height="250"></canvas>
+        </div>
+        <div class="comparison-col">
+            <div class="card-title" style="color:#ef4444;">🔴 Cubique Centré (CC)</div>
+            <canvas id="canvasCC" width="300" height="250"></canvas>
+        </div>
+        <div class="comparison-col">
+            <div class="card-title" style="color:#10b981;">🟢 Cubique Faces Centrées (CFC)</div>
+            <canvas id="canvasCFC" width="300" height="250"></canvas>
+        </div>
+    </div>
+
+    <div class="card" style="padding:14px 18px;">
+        <div class="controls-row">
+            <label for="selectMode" style="font-weight:600;font-size:0.85rem;">🎯 Mode :</label>
+            <select id="selectMode">
+                <option value="structure">Structure théorique</option>
+                <option value="element">Élément chimique</option>
+            </select>
+
+            <label for="selectStructure" id="lblSelect" style="font-weight:600;font-size:0.85rem;">🧪 Choix :</label>
+            <select id="selectStructure">
+                <option value="cs">Cubique simple (CS)</option>
+                <option value="cc">Cubique centré (CC)</option>
+                <option value="cfc">Cubique faces centrées (CFC)</option>
+                <option value="unknown">❓ Échantillon inconnu</option>
+            </select>
+
+            <select id="selectElement" style="display:none;">
+                <option value="Fe">Fer (Fe)</option>
+                <option value="Cu">Cuivre (Cu)</option>
+                <option value="Al">Aluminium (Al)</option>
+                <option value="Po">Polonium (Po)</option>
+                <option value="Na">Sodium (Na)</option>
+                <option value="Cl">Chlore (Cl)</option>
+                <option value="W">Tungstène (W)</option>
+                <option value="Mo">Molybdène (Mo)</option>
+                <option value="Cr">Chrome (Cr)</option>
+                <option value="Li">Lithium (Li)</option>
+                <option value="V">Vanadium (V)</option>
+                <option value="Au">Or (Au)</option>
+                <option value="Ag">Argent (Ag)</option>
+                <option value="Ni">Nickel (Ni)</option>
+                <option value="Pt">Platine (Pt)</option>
+                <option value="Pb">Plomb (Pb)</option>
+            </select>
+
+            <button id="btnLaunch" class="btn-primary">▶ Lancer l'acquisition</button>
+            <button id="btnReset" class="btn-outline">↺ Réinitialiser</button>
+            <button id="btnCompare" class="btn-compare">📊 Comparer CS / CC / CFC</button>
+            <span id="statusBadge" class="status-badge status-idle">⏸ En attente</span>
+        </div>
+
+        <div class="element-card" id="elementCard">
+            <div class="element-property"><span>Nom complet</span><span id="elNom">-</span></div>
+            <div class="element-property"><span>Numéro Z</span><span id="elZ">-</span></div>
+            <div class="element-property"><span>Configuration</span><span id="elConfig">-</span></div>
+            <div class="element-property"><span>Famille</span><span id="elFamille">-</span></div>
+            <div class="element-property"><span>Fusion / Ébullition</span><span id="elTemp">-</span></div>
+            <div class="element-property"><span>Structure Réelle</span><span id="elStructLabel">-</span></div>
+        </div>
+
+        <div id="guessRow" style="display:none; margin-top:12px; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center;">
+            <span style="font-weight:600;font-size:0.85rem;">🤔 Votre diagnostic :</span>
+            <button class="guess-btn btn-outline" data-guess="cs">CS</button>
+            <button class="guess-btn btn-outline" data-guess="cc">CC</button>
+            <button class="guess-btn btn-outline" data-guess="cfc">CFC</button>
+            <span id="feedbackGuess" class="feedback-box"></span>
+        </div>
+    </div>
+
+    <div class="analysis-area">
+        <div class="card analysis-col">
+            <div class="card-title">📋 Pics détectés & analyse</div>
+            <div id="tableContainer">
+                <p style="color:#94a3b8;font-style:italic;text-align:center;padding:20px;">Lancez une acquisition pour voir les résultats...</p>
+            </div>
+            <div id="diagnosticBox" style="margin-top:12px;"></div>
+        </div>
+        <div class="card analysis-col">
+            <div class="card-title">📝 Formules & rappels</div>
+            <div style="font-size:0.88rem;line-height:1.7;">
+                <p><strong>Loi de Bragg :</strong> \( n\lambda = 2d_{hkl}\sin\theta \)</p>
+                <p><strong>Réseau cubique :</strong> \( d_{hkl} = \dfrac{a}{\sqrt{h^2+k^2+l^2}} \)</p>
+                <p>En combinant : \( \sin^2\theta = \dfrac{\lambda^2}{4a^2}(h^2+k^2+l^2) \)</p>
+                <p>On pose <strong>\(N = h^2+k^2+l^2\)</strong>, un nombre entier.</p>
+
+                <div style="background:#f1f5f9; border-radius:8px; padding:10px; margin:10px 0;">
+                    <p style="font-weight:600; margin-bottom:6px;">🔎 Que sont \(N_1\) et \(N_i\) ?</p>
+                    <ul style="padding-left:18px; margin-bottom:6px;">
+                        <li><strong>\(N_1\)</strong> : valeur de \(N\) pour le <strong>premier pic</strong> (le plus petit angle \(2\theta\)).</li>
+                        <li><strong>\(N_i\)</strong> : valeur de \(N\) pour le <strong>i‑ème pic</strong> (2ᵉ, 3ᵉ, 4ᵉ…).</li>
+                    </ul>
+                    <p>D'après la formule ci‑dessus, pour chaque pic on a :</p>
+                    <p style="text-align:center;">\[ \dfrac{\sin^2\theta_i}{\sin^2\theta_1} = \dfrac{N_i}{N_1} \]</p>
+                    <p>Le rapport des \(\sin^2\theta\) ne dépend donc <strong>que de la structure du cristal</strong> (le paramètre de maille \(a\) se simplifie).</p>
+                    <p style="margin-top:6px;"><strong>Exemple CFC :</strong> \(N_1 = 3\), puis \(N_2=4\), \(N_3=8\)… Les rapports sont :</p>
+                    <p style="text-align:center;">\[ \dfrac{4}{3} \approx 1{,}33 \quad;\quad \dfrac{8}{3} \approx 2{,}67 \quad;\quad \dfrac{11}{3} \approx 3{,}67 \quad\ldots \]</p>
+                </div>
+
+                <hr style="margin:10px 0;border-color:#e2e8f0;">
+                <p><strong>🔑 Séquences caractéristiques des \(N\) :</strong></p>
+                <ul style="padding-left:18px;">
+                    <li><strong style="color:#3b82f6;">CS :</strong> 1, 2, 3, 4, 5, 6, <em>8</em>, 9, 10… <strong>(pas de 7)</strong></li>
+                    <li><strong style="color:#ef4444;">CC :</strong> 2, 4, 6, 8, 10, 12, 14… <strong>(entiers successifs)</strong></li>
+                    <li><strong style="color:#10b981;">CFC :</strong> 3, 4, 8, 11, 12, 16, 19… <strong>(fractions)</strong></li>
+                </ul>
+                <p id="lblLambdaA" style="font-size:0.78rem;color:#64748b;margin-top:6px;">\(\lambda\)(Cu Kα) = 1,5406 Å · \(a\) = 4,00 Å</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-copyright">
+        <button id="copyrightModalBtn" class="btn-copyright">📜 Droits d'auteur & licence</button>
+    </div>
+</div>
+
+<!-- Modale droits d'auteur -->
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>⚖️ Droits d'Auteur et Licence d'Utilisation</h3>
+        <p><strong>Auteur : Yann Merdy</strong> (yann.merdy@gmail.com) - Juin 2026</p>
+        <p><strong>Licence d'Utilisation Non Commerciale</strong><br>
+        Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+        <p><strong>Conditions :</strong><br>
+        ✅ <strong>Utilisation Privée et Éducative (Autorisée)</strong> : Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.<br>
+        ❌ <strong>Utilisation Commerciale (Interdite)</strong> : Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.<br>
+        📝 <strong>Attribution</strong> : Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.<br>
+        ✉️ Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse <strong>yann.merdy@gmail.com</strong>.</p>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ---------- Constantes et données ----------
+    const LAMBDA = 1.5406;
+    const THETA_MIN = 5;
+    const THETA_MAX = 50;
+    const PEAK_SIGMA = 0.22;
+    const NOISE_LEVEL = 0.06;
+    const SCAN_SPEED = 28;
+
+    const elementData = {
+        "Po": { nom:"Polonium", Z:84, symbole:"Po", A:209, EL_MeV:1640, electronégativité:2.0, config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴", etat:"Solide", fusion:254, ebullition:962, oxydations:"+2, +4", famille:"Métal pauvre", structure:"cs", a:3.35 },
+        "Fe": { nom:"Fer", Z:26, symbole:"Fe", A:56, EL_MeV:492, electronégativité:1.83, config:"[Ar] 3d⁶ 4s²", etat:"Solide", fusion:1538, ebullition:2862, oxydations:"+2, +3", famille:"Métal de transition", structure:"cc", a:2.87 },
+        "Cu": { nom:"Cuivre", Z:29, symbole:"Cu", A:64, EL_MeV:560, electronégativité:1.90, config:"[Ar] 3d¹⁰ 4s¹", etat:"Solide", fusion:1085, ebullition:2562, oxydations:"+1, +2", famille:"Métal de transition", structure:"cfc", a:3.61 },
+        "Al": { nom:"Aluminium", Z:13, symbole:"Al", A:27, EL_MeV:225, electronégativité:1.61, config:"[Ne] 3s² 3p¹", etat:"Solide", fusion:660, ebullition:2519, oxydations:"+3", famille:"Métal pauvre", structure:"cfc", a:4.05 },
+        "Na": { nom:"Sodium", Z:11, symbole:"Na", A:23, EL_MeV:186, electronégativité:0.93, config:"[Ne] 3s¹", etat:"Solide", fusion:98, ebullition:883, oxydations:"+1", famille:"Alcalin", structure:"cc", a:4.29 },
+        "Cl": { nom:"Chlore", Z:17, symbole:"Cl", A:35, EL_MeV:289, electronégativité:3.16, config:"[Ne] 3s² 3p⁵", etat:"Gaz", fusion:-101, ebullition:-34, oxydations:"-1, +1, +3, +5, +7", famille:"Halogène", structure:"cc", a:4.05 },
+        "W": { nom:"Tungstène", Z:74, symbole:"W", A:184, EL_MeV:1490, electronégativité:2.36, config:"[Xe] 4f¹⁴ 5d⁴ 6s²", etat:"Solide", fusion:3422, ebullition:5555, oxydations:"+2, +3, +4, +5, +6", famille:"Métal de transition", structure:"cc", a:3.16 },
+        "Mo": { nom:"Molybdène", Z:42, symbole:"Mo", A:96, EL_MeV:830, electronégativité:2.16, config:"[Kr] 4d⁵ 5s¹", etat:"Solide", fusion:2623, ebullition:4639, oxydations:"+2, +3, +4, +5, +6", famille:"Métal de transition", structure:"cc", a:3.15 },
+        "Cr": { nom:"Chrome", Z:24, symbole:"Cr", A:52, EL_MeV:456, electronégativité:1.66, config:"[Ar] 3d⁵ 4s¹", etat:"Solide", fusion:1907, ebullition:2671, oxydations:"+2, +3, +6", famille:"Métal de transition", structure:"cc", a:2.88 },
+        "Li": { nom:"Lithium", Z:3, symbole:"Li", A:7, EL_MeV:39, electronégativité:0.98, config:"[He] 2s¹", etat:"Solide", fusion:180, ebullition:1342, oxydations:"+1", famille:"Alcalin", structure:"cc", a:3.51 },
+        "V": { nom:"Vanadium", Z:23, symbole:"V", A:51, EL_MeV:445, electronégativité:1.63, config:"[Ar] 3d³ 4s²", etat:"Solide", fusion:1910, ebullition:3407, oxydations:"+2, +3, +4, +5", famille:"Métal de transition", structure:"cc", a:3.03 },
+        "Au": { nom:"Or", Z:79, symbole:"Au", A:197, EL_MeV:1560, electronégativité:2.54, config:"[Xe] 4f¹⁴ 5d¹⁰ 6s¹", etat:"Solide", fusion:1064, ebullition:2856, oxydations:"+1, +3", famille:"Métal de transition", structure:"cfc", a:4.08 },
+        "Ag": { nom:"Argent", Z:47, symbole:"Ag", A:108, EL_MeV:915, electronégativité:1.93, config:"[Kr] 4d¹⁰ 5s¹", etat:"Solide", fusion:962, ebullition:2162, oxydations:"+1", famille:"Métal de transition", structure:"cfc", a:4.09 },
+        "Ni": { nom:"Nickel", Z:28, symbole:"Ni", A:59, EL_MeV:510, electronégativité:1.91, config:"[Ar] 3d⁸ 4s²", etat:"Solide", fusion:1455, ebullition:2730, oxydations:"+2, +3", famille:"Métal de transition", structure:"cfc", a:3.52 },
+        "Pt": { nom:"Platine", Z:78, symbole:"Pt", A:195, EL_MeV:1540, electronégativité:2.28, config:"[Xe] 4f¹⁴ 5d⁹ 6s¹", etat:"Solide", fusion:1768, ebullition:3825, oxydations:"+2, +4", famille:"Métal de transition", structure:"cfc", a:3.92 },
+        "Pb": { nom:"Plomb", Z:82, symbole:"Pb", A:207, EL_MeV:1630, electronégativité:2.33, config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²", etat:"Solide", fusion:327, ebullition:1749, oxydations:"+2, +4", famille:"Métal pauvre", structure:"cfc", a:4.95 }
+    };
+
+    // ---------- Éléments DOM ----------
+    const canvasSchema = document.getElementById('canvasSchema');
+    const ctxSchema = canvasSchema.getContext('2d');
+    const canvasDiffracto = document.getElementById('canvasDiffracto');
+    const ctxDiff = canvasDiffracto.getContext('2d');
+
+    const comparisonRow = document.getElementById('comparisonRow');
+    const mainCanvasRow = document.getElementById('mainCanvasRow');
+    const canvasCS = document.getElementById('canvasCS');
+    const ctxCS = canvasCS.getContext('2d');
+    const canvasCC = document.getElementById('canvasCC');
+    const ctxCC = canvasCC.getContext('2d');
+    const canvasCFC = document.getElementById('canvasCFC');
+    const ctxCFC = canvasCFC.getContext('2d');
+
+    const selectMode = document.getElementById('selectMode');
+    const selectStructure = document.getElementById('selectStructure');
+    const selectElement = document.getElementById('selectElement');
+    const elementCard = document.getElementById('elementCard');
+    const lblSelect = document.getElementById('lblSelect');
+    const lblLambdaA = document.getElementById('lblLambdaA');
+
+    const btnLaunch = document.getElementById('btnLaunch');
+    const btnReset = document.getElementById('btnReset');
+    const btnCompare = document.getElementById('btnCompare');
+    const statusBadge = document.getElementById('statusBadge');
+    const guessRow = document.getElementById('guessRow');
+    const feedbackGuess = document.getElementById('feedbackGuess');
+    const tableContainer = document.getElementById('tableContainer');
+    const diagnosticBox = document.getElementById('diagnosticBox');
+    const guessBtns = document.querySelectorAll('.guess-btn');
+
+    // ---------- Variables d'état ----------
+    let currentStructure = 'cs';
+    let currentA = 4.00;
+    let isUnknownMode = false;
+    let unknownTrueStructure = null;
+    let isScanning = false;
+    let scanProgress = 0;
+    let scanCurrent2Theta = 10;
+    let dataPoints = [];
+    let detectedPeaks = [];
+    let animationId = null;
+    let scanStartTime = 0;
+    let compareMode = false;
+
+    // ---------- Fonctions métier (inchangées) ----------
+    function getTheoreticalPeaks(structure) {
+        const nSet = new Set();
+        const peaksInfo = [];
+        for (let h = 0; h <= 5; h++) {
+            for (let k = 0; k <= 5; k++) {
+                for (let l = 0; l <= 5; l++) {
+                    if (h === 0 && k === 0 && l === 0) continue;
+                    const N = h * h + k * k + l * l;
+                    if (N > 24) continue;
+                    let allowed = false;
+                    if (structure === 'cs') allowed = true;
+                    else if (structure === 'cc') allowed = ((h + k + l) % 2 === 0);
+                    else if (structure === 'cfc') {
+                        const allEven = (h % 2 === 0 && k % 2 === 0 && l % 2 === 0);
+                        const allOdd = (h % 2 === 1 && k % 2 === 1 && l % 2 === 1);
+                        allowed = (allEven || allOdd);
+                    }
+                    if (allowed && !nSet.has(N)) {
+                        nSet.add(N);
+                        const sinTheta = LAMBDA * Math.sqrt(N) / (2 * currentA);
+                        if (sinTheta <= 1.0) {
+                            const twoTheta = 2 * Math.asin(sinTheta) * 180 / Math.PI;
+                            if (twoTheta >= 9 && twoTheta <= 102) {
+                                let multiplicity = 6;
+                                if (h === 0 && k === 0) multiplicity = 6;
+                                else if (h === k && k === l) multiplicity = 8;
+                                else if (h === k || k === l || h === l) multiplicity = 24;
+                                else if (h === 0 || k === 0 || l === 0) multiplicity = 12;
+                                else multiplicity = 24;
+                                const s = sinTheta / LAMBDA;
+                                const formFactor = Math.exp(-1.5 * s * s);
+                                peaksInfo.push({ N, twoTheta, sinTheta, multiplicity, formFactor, hkl: `(${h}${k}${l})` });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return peaksInfo.sort((a, b) => a.twoTheta - b.twoTheta);
+    }
+
+    function computeIntensity(twoTheta, structure) {
+        const peaks = getTheoreticalPeaks(structure);
+        let intensity = 0;
+        for (const p of peaks) {
+            const dx = twoTheta - p.twoTheta;
+            intensity += p.multiplicity * p.formFactor * 0.7 * Math.exp(-0.5 * (dx / PEAK_SIGMA) ** 2);
+        }
+        const bg = 0.08 + 0.03 * Math.sin(twoTheta * 0.15) + 0.02 * Math.cos(twoTheta * 0.08);
+        const noise = (Math.random() - 0.5) * 2 * NOISE_LEVEL * (1 + Math.sqrt(Math.max(intensity, 0.01)));
+        return Math.max(0, intensity + bg + noise);
+    }
+
+    function generateFullDiffractogram(structure, numPoints = 900) {
+        const pts = [];
+        const step = (THETA_MAX * 2 - THETA_MIN * 2) / numPoints;
+        for (let i = 0; i <= numPoints; i++) {
+            const tth = THETA_MIN * 2 + i * step;
+            pts.push({ twoTheta: tth, intensity: computeIntensity(tth, structure) });
+        }
+        return pts;
+    }
+
+    function smoothData(data, windowSize = 7) {
+        const smoothed = [];
+        const half = Math.floor(windowSize / 2);
+        for (let i = 0; i < data.length; i++) {
+            let sum = 0, cnt = 0;
+            for (let j = Math.max(0, i - half); j <= Math.min(data.length - 1, i + half); j++) {
+                sum += data[j].intensity; cnt++;
+            }
+            smoothed.push({ twoTheta: data[i].twoTheta, intensity: sum / cnt });
+        }
+        return smoothed;
+    }
+
+    function detectPeaks(data) {
+        const smoothed = smoothData(data, 9);
+        const maxI = Math.max(...smoothed.map(d => d.intensity));
+        const threshold = maxI * 0.12;
+        const deriv = [];
+        for (let i = 1; i < smoothed.length; i++) deriv.push(smoothed[i].intensity - smoothed[i-1].intensity);
+        const peaks = [];
+        for (let i = 1; i < deriv.length; i++) {
+            if (deriv[i-1] > 0 && deriv[i] <= 0 && smoothed[i].intensity > threshold) {
+                const idx = i;
+                if (idx > 0 && idx < smoothed.length - 1) {
+                    const y0 = smoothed[idx-1].intensity, y1 = smoothed[idx].intensity, y2 = smoothed[idx+1].intensity;
+                    const denom = 2 * (2 * y1 - y0 - y2);
+                    if (Math.abs(denom) > 1e-10) {
+                        const delta = (y0 - y2) / denom;
+                        const refined = smoothed[idx].twoTheta + delta * (smoothed[1].twoTheta - smoothed[0].twoTheta);
+                        peaks.push({ twoTheta: refined, intensity: y1 - 0.25 * (y0 - y2) * delta });
+                        continue;
+                    }
+                }
+                peaks.push({ twoTheta: smoothed[i].twoTheta, intensity: smoothed[i].intensity });
+            }
+        }
+        const merged = [];
+        peaks.sort((a, b) => a.twoTheta - b.twoTheta);
+        for (const p of peaks) {
+            if (merged.length === 0 || p.twoTheta - merged[merged.length-1].twoTheta > 1.5) merged.push(p);
+            else if (p.intensity > merged[merged.length-1].intensity) merged[merged.length-1] = p;
+        }
+        return merged;
+    }
+
+    function analyzePeaks(positions, structure) {
+        if (positions.length < 2) return [];
+        const sin2 = positions.map(p => Math.sin(p.twoTheta / 2 * Math.PI / 180) ** 2);
+        const n1 = sin2[0];
+        const ratios = sin2.map(s => s / n1);
+        const theo = getTheoreticalPeaks(structure);
+        const theoN1 = theo.length > 0 ? theo[0].N : 1;
+        const result = [];
+        for (let i = 0; i < positions.length; i++) {
+            const measuredRatio = ratios[i];
+            let bestN = null, bestHkl = '', bestDiff = Infinity;
+            for (const tp of theo) {
+                const diff = Math.abs(measuredRatio - tp.N / theoN1);
+                if (diff < bestDiff && diff < 0.15) { bestDiff = diff; bestN = tp.N; bestHkl = tp.hkl; }
+            }
+            result.push({
+                twoTheta: positions[i].twoTheta,
+                intensity: positions[i].intensity,
+                sin2theta: sin2[i],
+                ratio: measuredRatio,
+                N: bestN,
+                hkl: bestHkl,
+                matched: bestN !== null
+            });
+        }
+        return result;
+    }
+
+    // ---------- Dessins (inchangés) ----------
+    function drawSchema(current2Theta, isActive, highlightDetector = false) {
+        const w = canvasSchema.width, h = canvasSchema.height;
+        const ctx = ctxSchema;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, w, h);
+        const cx = w * 0.48, cy = h * 0.52, R = Math.min(w, h) * 0.38;
+        ctx.strokeStyle = '#dde4ed'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
+        const tubeAngle = Math.PI;
+        const tubeX = cx + R * Math.cos(tubeAngle), tubeY = cy + R * Math.sin(tubeAngle);
+        ctx.save(); ctx.translate(tubeX, tubeY);
+        ctx.fillStyle = '#64748b'; ctx.fillRect(-22, -14, 44, 28);
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.strokeRect(-22, -14, 44, 28);
+        ctx.fillStyle = '#fbbf24'; ctx.fillRect(18, -6, 10, 12);
+        ctx.strokeStyle = '#b45309'; ctx.strokeRect(18, -6, 10, 12);
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 11px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Tube RX', 0, -22); ctx.restore();
+        ctx.fillStyle = '#e2e8f0'; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(cx, cy, 10, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 2*Math.PI); ctx.fill();
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 10px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Échantillon', cx, cy + 22);
+        const detAngleRad = current2Theta * Math.PI / 180;
+        const detX = cx + R * Math.cos(detAngleRad), detY = cy - R * Math.sin(detAngleRad);
+        if (highlightDetector && isActive) {
+            ctx.fillStyle = 'rgba(255,200,50,0.35)';
+            ctx.beginPath(); ctx.arc(detX, detY, 18, 0, 2*Math.PI); ctx.fill();
+        }
+        ctx.save(); ctx.translate(detX, detY); ctx.rotate(-detAngleRad);
+        ctx.fillStyle = '#cbd5e1'; ctx.fillRect(-16, -10, 32, 20);
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.strokeRect(-16, -10, 32, 20);
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(-13, -3, 26, 6);
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 10px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Détecteur', 0, 22); ctx.restore();
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2.5; ctx.shadowColor = 'rgba(251,191,36,0.5)'; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.moveTo(tubeX + 18, tubeY); ctx.lineTo(cx - 10, cy); ctx.stroke(); ctx.shadowBlur = 0;
+        const detDirX = detX - cx, detDirY = detY - cy;
+        const detDist = Math.sqrt(detDirX**2 + detDirY**2);
+        const ux = detDirX/detDist, uy = detDirY/detDist;
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.2; ctx.shadowColor = 'rgba(245,158,11,0.45)'; ctx.shadowBlur = 7;
+        ctx.setLineDash([8, 3]);
+        ctx.beginPath(); ctx.moveTo(cx + ux*10, cy + uy*10); ctx.lineTo(detX - ux*16, detY - uy*16);
+        ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
+        const arcR = R * 0.42;
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.setLineDash([5, 3]);
+        ctx.beginPath(); ctx.arc(cx, cy, arcR, -detAngleRad, 0); ctx.stroke(); ctx.setLineDash([]);
+        const labelAngle = -detAngleRad / 2;
+        const lx = cx + (arcR + 22) * Math.cos(labelAngle), ly = cy + (arcR + 22) * Math.sin(labelAngle);
+        ctx.fillStyle = '#dc2626'; ctx.font = 'bold 13px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(`2θ = ${current2Theta.toFixed(1)}°`, lx, ly);
+    }
+
+    function drawDiffractogramGeneric(canvas, ctx, points, currentIndex, detectedPeaksInfo, drawTheoretical, isScanningNow) {
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, w, h);
+        const margin = { top: 35, right: 30, bottom: 40, left: 50 };
+        const plotW = w - margin.left - margin.right;
+        const plotH = h - margin.top - margin.bottom;
+        ctx.fillStyle = '#fff'; ctx.fillRect(margin.left, margin.top, plotW, plotH);
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.strokeRect(margin.left, margin.top, plotW, plotH);
+        const xMin = THETA_MIN * 2, xMax = THETA_MAX * 2;
+        const toX = val => margin.left + ((val - xMin) / (xMax - xMin)) * plotW;
+        let maxI = 0;
+        for (let i = 0; i <= currentIndex && i < points.length; i++) if (points[i].intensity > maxI) maxI = points[i].intensity;
+        if (detectedPeaksInfo) for (const p of detectedPeaksInfo) if (p.intensity > maxI) maxI = p.intensity;
+        if (maxI < 0.3) maxI = 1.2;
+        maxI *= 1.2;
+        const toY = val => margin.top + plotH - (val / maxI) * plotH;
+        ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 0.6;
+        for (let i = 0; i <= 10; i++) {
+            const x = toX(xMin + (i/10)*(xMax-xMin));
+            ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top+plotH); ctx.stroke();
+        }
+        for (let i = 0; i <= 8; i++) {
+            const y = margin.top + (i/8)*plotH;
+            ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left+plotW, y); ctx.stroke();
+        }
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(margin.left, margin.top); ctx.lineTo(margin.left, margin.top+plotH);
+        ctx.lineTo(margin.left+plotW, margin.top+plotH); ctx.stroke();
+        ctx.fillStyle = '#475569'; ctx.font = '9px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+        for (let i = 0; i <= 10; i+=2) {
+            const val = xMin + (i/10)*(xMax-xMin);
+            ctx.fillText(Math.round(val) + '°', toX(val), margin.top+plotH+14);
+        }
+        ctx.fillText('2θ', margin.left+plotW/2, margin.top+plotH+28);
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 8; i+=4) {
+            const val = (i/8)*maxI;
+            ctx.fillText(val.toFixed(1), margin.left-6, margin.top+plotH - (i/8)*plotH + 3);
+        }
+        if (points.length > 1 && currentIndex >= 1) {
+            const endIdx = Math.min(currentIndex, points.length-1);
+            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+            ctx.beginPath();
+            for (let i = 0; i <= endIdx; i++) {
+                const x = toX(points[i].twoTheta), y = toY(points[i].intensity);
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.lineTo(toX(points[endIdx].twoTheta), margin.top+plotH);
+            ctx.lineTo(toX(points[0].twoTheta), margin.top+plotH);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(59,130,246,0.08)'; ctx.fill();
+        }
+        if (isScanningNow && currentIndex >= 0 && currentIndex < points.length) {
+            const cx = toX(points[currentIndex].twoTheta);
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.8; ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(cx, margin.top); ctx.lineTo(cx, margin.top+plotH); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(cx, toY(points[currentIndex].intensity), 5, 0, 2*Math.PI); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+        if (detectedPeaksInfo && detectedPeaksInfo.length > 0 && !isScanningNow) {
+            for (const p of detectedPeaksInfo) {
+                const px = toX(p.twoTheta), py = toY(p.intensity);
+                ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(px, py, 5, 0, 2*Math.PI); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+                ctx.fillStyle = '#991b1b'; ctx.font = 'bold 10px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(`${p.twoTheta.toFixed(1)}°`, px, margin.top-6);
+                if (p.N !== null) {
+                    ctx.fillStyle = '#1e293b'; ctx.font = 'bold 9px "Segoe UI", sans-serif';
+                    ctx.fillText(`N=${p.N}`, px, py - 14);
+                }
+            }
+        }
+        if (!isScanningNow && drawTheoretical) {
+            const structs = ['cs', 'cc', 'cfc'];
+            const colors = { cs: '#3b82f6', cc: '#ef4444', cfc: '#10b981' };
+            for (const struct of structs) {
+                const theo = getTheoreticalPeaks(struct);
+                ctx.strokeStyle = colors[struct]; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]);
+                for (const tp of theo) {
+                    const x = toX(tp.twoTheta);
+                    if (x >= margin.left && x <= margin.left+plotW) {
+                        ctx.beginPath(); ctx.moveTo(x, margin.top+plotH); ctx.lineTo(x, margin.top+plotH-10); ctx.stroke();
+                        ctx.fillStyle = colors[struct]; ctx.font = '8px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+                        ctx.fillText(tp.N, x, margin.top+plotH+11);
+                    }
+                }
+            }
+            ctx.setLineDash([]);
+        }
+    }
+
+    function drawMainDiffractogram(points, currentIndex, detectedPeaksInfo, drawTheo = false, isScanningNow = isScanning) {
+        drawDiffractogramGeneric(canvasDiffracto, ctxDiff, points, currentIndex, detectedPeaksInfo, drawTheo, isScanningNow);
+    }
+
+    // ---------- Fonctions d'analyse et d'affichage (avec appel MathJax systématique) ----------
+    async function typesetMath() {
+        if (window.MathJax) {
+            try {
+                await MathJax.typesetPromise();
+            } catch (err) {
+                console.warn("MathJax typeset error:", err);
+            }
+        }
+    }
+
+    function buildPedagogicDiagnostic(ratios, allInt, has7, hasFrac) {
+        let structure = '';
+        let details = [];
+        const SEUIL_ENTIER = 0.12;
+        const SEUIL_7 = 0.15;
+        const allIntSafe = ratios.every(r => Math.abs(r - Math.round(r)) < SEUIL_ENTIER);
+        const has7Safe = ratios.some(r => Math.abs(r - 7) < SEUIL_7);
+        const hasFracSafe = ratios.some(r => Math.abs(r - 4/3) < 0.12 || Math.abs(r - 8/3) < 0.12 || Math.abs(r - 11/3) < 0.15);
+        if (allIntSafe && !has7Safe) {
+            structure = 'CS';
+            details.push('✅ Tous les rapports sont proches d’entiers (1, 2, 3, 4, 5, 6…).');
+            details.push('❌ Le rapport 7 <strong>est absent</strong> : on passe directement de 6 à 8.');
+            details.push('➡️ C’est la signature du <strong style="color:#3b82f6;">cubique simple (CS)</strong>.');
+            details.push('<em>\\(N_1 = 1\\) (premier pic). Les \\(N\\) suivants sont 2, 3, 4, 5, 6, 8…</em>');
+        } else if (allIntSafe && has7Safe) {
+            structure = 'CC';
+            details.push('✅ Les rapports sont des entiers consécutifs : 1, 2, 3, 4, 5, 6, <strong>7</strong>, 8…');
+            details.push('➡️ La présence du rapport 7 écarte le CS. C’est caractéristique du <strong style="color:#ef4444;">cubique centré (CC)</strong>.');
+            details.push('<em>\\(N_1 = 2\\) (généralement), donc les divisions de la suite par 2 redonnent des entiers réguliers.</em>');
+        } else if (!allIntSafe && hasFracSafe) {
+            structure = 'CFC';
+            details.push('❌ Les rapports ne sont pas tous entiers : on observe des fractions du type 1,33 ou 2,67.');
+            details.push('➡️ Ces fractions proviennent des rapports \\(\\dfrac{N_i}{N_1}\\) = \\(\\dfrac{4}{3}\\), \\(\\dfrac{8}{3}\\), \\(\\dfrac{11}{3}\\)… propres au <strong style="color:#10b981;">cubique à faces centrées (CFC)</strong>.');
+            details.push('<em>\\(N_1 = 3\\) (premier pic), d’où les fractions caractéristiques.</em>');
+        } else {
+            structure = '?';
+            details.push('⚠️ Les rapports ne correspondent pas exactement à un cas parfait de réseau monoatomique.');
+        }
+        let html = `<div class="pedagogic-box">`;
+        html += `<h3>🧠 Comment lire les résultats ?</h3>`;
+        html += `<p>Le choix de \\(10^{\\circ}\\)  est arbitraire mais réaliste pour un diffractomètre sur poudre classique :`;
+        html += `<ul style="margin-left:16px;">`;
+        html += `<li>Il évite la zone du faisceau direct (proche de \\(0^{\\circ}\\)) où l’intensité parasite est maximale.</li><li>Il permet d’observer les premiers pics de diffraction correspondant aux grands plans réticulaires (faibles angles). </li><li>La plage couverte s’étend jusqu’à 2θ=100∘, ce qui est suffisant pour identifier les structures cubiques simples, centrées ou faces centrées avec une radiation Cu Kα (λ=1,5406 Å).</li></ul></p><br>`;
+        html += `<p>On compare les <strong>rapports des \\(\\sin^2\\theta\\)</strong> (colonne « Rapport » du tableau).<br>
+        Ces rapports valent théoriquement \\(\\dfrac{N_i}{N_1}\\), où \\(N = h^2+k^2+l^2\\).</p>`;
+        html += `<p style="margin:6px 0;"><strong>Valeurs mesurées :</strong> ${ratios.map(r => r.toFixed(4)).join(', ')}</p>`;
+        html += `<p style="font-size:0.8rem; color:#475569;">(Rappel des profils : CS = 1, 2, 3, 4, 5, 6, 8... | CC = 1, 2, 3, 4, 5, 6, 7... | CFC = 1, 1.33, 2.67, 3.67...)</p>`;
+        html += `<p><strong>Rappels des lois d'extinction :</strong></p>`;
+        html += `<ul style="margin-left:16px;">`;
+        html += `<li><span style="color:#3b82f6;">■ CS :</span> entiers successifs <strong>sauf 7</strong> (\\(N_1=1\\) \\(\\rightarrow\\) rapports 1, 2, 3, 4, 5, 6, 8…)</li>`;
+        html += `<li><span style="color:#ef4444;">■ CC :</span> entiers successifs <strong>tous présents</strong> (\\(N_1=2\\) \\(\\rightarrow\\) rapports 1, 2, 3, 4, 5, 6, 7…)</li>`;
+        html += `<li><span style="color:#10b981;">■ CFC :</span> <strong>fractions de tiers caractéristiques</strong> (\\(N_1=3\\) \\(\\rightarrow\\) rapports \\(\\dfrac{4}{3}\\)\\(\\approx 1{,}33\\) ; \\(\\dfrac{8}{3}\\)\\(\\approx 2{,}67\\)…)</li>`;
+        html += `</ul>`;
+        html += `<p style="margin-top:8px;"><strong>Résultat de l’analyse automatique :</strong></p>`;
+        html += `<div style="background:#fff; border:1px solid #d1d5db; border-radius:8px; padding:10px; margin-top:6px;">`;
+        for (const d of details) {
+            html += `<p style="margin:4px 0;">${d}</p>`;
+        }
+        if (structure && structure !== '?') {
+            html += `<p style="font-weight:700; margin-top:8px;">Conclusion : le diffractogramme est caractéristique d'une structure de type <strong>${structure}</strong>.</p>`;
+        } else {
+            html += `<p style="font-weight:700; margin-top:8px;">Conclusion : Identification complexe, vérifier les seuils d'angles.</p>`;
+        }
+        html += `</div></div>`;
+        return html;
+    }
+
+    function updateDiagnostic() {
+        diagnosticBox.innerHTML = '';
+        if (!detectedPeaks || detectedPeaks.length < 2) {
+            diagnosticBox.innerHTML = '<p style="color:#94a3b8;font-style:italic;text-align:center;">Pas assez de pics pour une analyse mathématique fiable.</p>';
+            typesetMath();
+            return;
+        }
+        const ratios = detectedPeaks.map(p => p.ratio).filter(r => !isNaN(r) && r > 0);
+        if (ratios.length < 2) return;
+        const has7 = ratios.some(r => Math.abs(r - 7) < 0.15);
+        const allInt = ratios.every(r => Math.abs(r - Math.round(r)) < 0.12);
+        const hasFrac = ratios.some(r => Math.abs(r - 4/3) < 0.12 || Math.abs(r - 8/3) < 0.12 || Math.abs(r - 11/3) < 0.15);
+        diagnosticBox.innerHTML = buildPedagogicDiagnostic(ratios, allInt, has7, hasFrac);
+        typesetMath();
+    }
+
+    function updateAnalysisTable() {
+        if (detectedPeaks.length === 0) {
+            tableContainer.innerHTML = '<p style="color:#94a3b8;font-style:italic;text-align:center;padding:20px;">Aucun pic détecté.</p>';
+            diagnosticBox.innerHTML = '';
+            typesetMath();
+            return;
+        }
+        let html = '<table class="table-peaks"><thead><tr><th>N°</th><th>2θ (°)</th><th>sin²θ</th><th>Rapport</th><th>N</th><th>hkl</th></tr></thead><tbody>';
+        for (let i = 0; i < detectedPeaks.length; i++) {
+            const p = detectedPeaks[i];
+            html += `<tr><td><strong>${i+1}</strong></td><td>${p.twoTheta.toFixed(2)}</td></td><td>${p.sin2theta.toFixed(4)}</td>
+                       <td><strong>${p.ratio.toFixed(4)}</strong></td><td>${p.N ?? '?'}</td><td>${p.hkl || '?'}</td></tr>`;
+        }
+        html += '</tbody></table>';
+        tableContainer.innerHTML = html;
+        updateDiagnostic(); // ceci appelle typesetMath()
+    }
+
+    function updateElementDisplay() {
+        if (selectMode.value === 'element') {
+            const sym = selectElement.value;
+            const data = elementData[sym];
+            if (data) {
+                document.getElementById('elNom').textContent = data.nom;
+                document.getElementById('elZ').textContent = data.Z;
+                document.getElementById('elConfig').textContent = data.config;
+                document.getElementById('elFamille').textContent = data.famille;
+                document.getElementById('elTemp').textContent = `${data.fusion}°C / ${data.ebullition}°C`;
+                document.getElementById('elStructLabel').textContent = `${data.structure.toUpperCase()} (a = ${data.a.toFixed(2)} Å)`;
+                elementCard.style.display = 'flex';
+                currentA = data.a;
+                currentStructure = data.structure;
+            }
+        } else {
+            elementCard.style.display = 'none';
+            currentA = 4.00;
+            currentStructure = selectStructure.value;
+        }
+        lblLambdaA.innerHTML = `\\(\\lambda\\)(Cu Kα) = 1,5406 Å · \\(a\\) = ${currentA.toFixed(2)} Å`;
+        typesetMath();
+    }
+
+    // ---------- Modes de comparaison et réinitialisation ----------
+    function drawComparisonGraphs() {
+        const originalA = currentA;
+        currentA = 4.00; 
+        const structures = ['cs', 'cc', 'cfc'];
+        const canvases = [
+            { canvas: canvasCS, ctx: ctxCS },
+            { canvas: canvasCC, ctx: ctxCC },
+            { canvas: canvasCFC, ctx: ctxCFC }
+        ];
+        for (let i = 0; i < structures.length; i++) {
+            const data = generateFullDiffractogram(structures[i], 700);
+            drawDiffractogramGeneric(canvases[i].canvas, canvases[i].ctx, data, data.length-1, [], true, false);
+        }
+        currentA = originalA;
+    }
+
+    function enterComparisonMode() {
+        compareMode = true;
+        mainCanvasRow.style.display = 'none';
+        comparisonRow.style.display = 'flex';
+        btnLaunch.disabled = true;
+        selectStructure.disabled = true;
+        selectElement.disabled = true;
+        selectMode.disabled = true;
+        btnCompare.textContent = '📊 Retour au mode standard';
+        btnCompare.classList.add('active');
+        tableContainer.innerHTML = '<p style="color:#94a3b8;font-style:italic;text-align:center;padding:20px;">Mode comparaison actif.</p>';
+        diagnosticBox.innerHTML = '';
+        drawComparisonGraphs();
+    }
+
+    function exitComparisonMode() {
+        compareMode = false;
+        mainCanvasRow.style.display = 'flex';
+        comparisonRow.style.display = 'none';
+        btnLaunch.disabled = false;
+        selectStructure.disabled = false;
+        selectElement.disabled = false;
+        selectMode.disabled = false;
+        btnCompare.textContent = '📊 Comparer CS / CC / CFC';
+        btnCompare.classList.remove('active');
+        if (detectedPeaks.length > 0) {
+            drawMainDiffractogram(dataPoints, dataPoints.length-1, detectedPeaks, true);
+            updateAnalysisTable();
+        } else {
+            drawMainDiffractogram([], -1, null);
+            tableContainer.innerHTML = '<p style="color:#94a3b8;font-style:italic;text-align:center;padding:20px;">Lancez une acquisition pour voir les résultats...</p>';
+            diagnosticBox.innerHTML = '';
+        }
+        drawSchema(THETA_MIN*2, false, false);
+    }
+
+    function resetAll() {
+        if (animationId) cancelAnimationFrame(animationId);
+        animationId = null; isScanning = false; scanProgress = 0;
+        scanCurrent2Theta = THETA_MIN * 2; dataPoints = []; detectedPeaks = []; scanStartTime = 0;
+        updateStatus('idle'); guessRow.style.display = 'none';
+        feedbackGuess.className = 'feedback-box'; feedbackGuess.textContent = '';
+        if (!compareMode) {
+            tableContainer.innerHTML = '<p style="color:#94a3b8;font-style:italic;text-align:center;padding:20px;">Lancez une acquisition pour voir les résultats...</p>';
+            diagnosticBox.innerHTML = '';
+            drawSchema(THETA_MIN*2, false, false);
+            drawMainDiffractogram([], -1, null);
+        }
+        btnLaunch.disabled = compareMode;
+        selectStructure.disabled = compareMode;
+        selectElement.disabled = compareMode;
+        selectMode.disabled = compareMode;
+        updateElementDisplay();
+        typesetMath(); // s'assurer que les formules statiques sont à jour
+    }
+
+    function updateStatus(status) {
+        statusBadge.classList.remove('status-idle','status-scanning','status-done');
+        if (status === 'idle') { statusBadge.classList.add('status-idle'); statusBadge.textContent = '⏸ En attente'; }
+        else if (status === 'scanning') { statusBadge.classList.add('status-scanning'); statusBadge.textContent = '🔍 Acquisition en cours...'; }
+        else if (status === 'done') { statusBadge.classList.add('status-done'); statusBadge.textContent = '✅ Acquisition terminée'; }
+    }
+
+    function startScan() {
+        if (isScanning || compareMode) return;
+        resetAll();
+        isScanning = true; scanStartTime = performance.now();
+        updateStatus('scanning'); 
+        btnLaunch.disabled = true; selectStructure.disabled = true; selectElement.disabled = true; selectMode.disabled = true;
+        guessRow.style.display = 'none'; feedbackGuess.className = 'feedback-box'; feedbackGuess.textContent = '';
+        
+        if (selectMode.value === 'structure') {
+            if (isUnknownMode) {
+                const arr = ['cs','cc','cfc'];
+                unknownTrueStructure = arr[Math.floor(Math.random()*3)];
+                currentStructure = unknownTrueStructure;
+                currentA = 4.00;
+            } else {
+                unknownTrueStructure = null;
+                currentStructure = selectStructure.value;
+                currentA = 4.00;
+            }
+        } else {
+            unknownTrueStructure = null;
+            const sym = selectElement.value;
+            currentStructure = elementData[sym].structure;
+            currentA = elementData[sym].a;
+        }
+
+        lblLambdaA.innerHTML = `\\(\\lambda\\)(Cu Kα) = 1,5406 Å · \\(a\\) = ${currentA.toFixed(2)} Å`;
+        typesetMath();
+
+        dataPoints = generateFullDiffractogram(currentStructure, 900);
+        scanCurrent2Theta = THETA_MIN * 2; scanProgress = 0; detectedPeaks = [];
+
+        function animate(timestamp) {
+            if (!isScanning) return;
+            const elapsed = (timestamp - scanStartTime)/1000;
+            scanProgress = Math.min(1, elapsed * SCAN_SPEED / ((THETA_MAX - THETA_MIN)*2));
+            scanCurrent2Theta = THETA_MIN*2 + scanProgress * (THETA_MAX - THETA_MIN)*2;
+            const idx = Math.floor(scanProgress * (dataPoints.length-1));
+            const clamped = Math.min(idx, dataPoints.length-1);
+            let nearPeak = false;
+            const theo = getTheoreticalPeaks(currentStructure);
+            const curTth = dataPoints[clamped]?.twoTheta || scanCurrent2Theta;
+            for (const tp of theo) if (Math.abs(curTth - tp.twoTheta) < 1.8) { nearPeak = true; break; }
+            drawSchema(scanCurrent2Theta, true, nearPeak);
+            drawMainDiffractogram(dataPoints, clamped, null, false, true);
+
+            if (scanProgress >= 1) {
+                isScanning = false; scanProgress = 1;
+                updateStatus('done'); 
+                btnLaunch.disabled = false; selectStructure.disabled = false; selectElement.disabled = false; selectMode.disabled = false;
+                const raw = detectPeaks(dataPoints);
+                detectedPeaks = analyzePeaks(raw, currentStructure);
+                drawSchema(THETA_MAX*2, false, false);
+                drawMainDiffractogram(dataPoints, dataPoints.length-1, detectedPeaks, true, false);
+                updateAnalysisTable();
+                if (selectMode.value === 'structure' && isUnknownMode) guessRow.style.display = 'flex';
+                animationId = null;
+                return;
+            }
+            animationId = requestAnimationFrame(animate);
+        }
+        animationId = requestAnimationFrame(animate);
+    }
+
+    function checkGuess(guess) {
+        if (!isUnknownMode || !unknownTrueStructure) return;
+        const correct = guess === unknownTrueStructure;
+        feedbackGuess.className = 'feedback-box';
+        if (correct) { feedbackGuess.classList.add('feedback-correct'); feedbackGuess.textContent = `✅ Bravo ! Structure ${unknownTrueStructure.toUpperCase()}.`; }
+        else { feedbackGuess.classList.add('feedback-wrong'); feedbackGuess.textContent = `❌ Incorrect. C'était ${unknownTrueStructure.toUpperCase()}.`; }
+        document.querySelectorAll('.guess-btn').forEach(b => b.disabled = true);
+        setTimeout(() => document.querySelectorAll('.guess-btn').forEach(b => b.disabled = false), 2000);
+    }
+
+    // ---------- Gestion des événements ----------
+    selectMode.addEventListener('change', () => {
+        if (selectMode.value === 'element') {
+            selectStructure.style.display = 'none';
+            selectElement.style.display = 'inline-block';
+            lblSelect.textContent = '⚛️ Élément :';
+        } else {
+            selectStructure.style.display = 'inline-block';
+            selectElement.style.display = 'none';
+            lblSelect.textContent = '🧪 Choix :';
+        }
+        isUnknownMode = (selectMode.value === 'structure' && selectStructure.value === 'unknown');
+        resetAll();
+    });
+
+    btnLaunch.addEventListener('click', startScan);
+    btnReset.addEventListener('click', () => {
+        if (compareMode) exitComparisonMode();
+        resetAll();
+    });
+    
+    selectStructure.addEventListener('change', () => {
+        if (isScanning || compareMode) return;
+        isUnknownMode = (selectStructure.value === 'unknown');
+        resetAll();
+    });
+
+    selectElement.addEventListener('change', () => {
+        if (isScanning || compareMode) return;
+        resetAll();
+    });
+
+    guessBtns.forEach(btn => btn.addEventListener('click', () => { if (btn.dataset.guess) checkGuess(btn.dataset.guess); }));
+    btnCompare.addEventListener('click', () => {
+        if (isScanning) return;
+        if (compareMode) exitComparisonMode();
+        else enterComparisonMode();
+    });
+
+    // ---------- Gestion de la modale copyright ----------
+    const modal = document.getElementById('copyrightModal');
+    const copyrightBtn = document.getElementById('copyrightModalBtn');
+    const closeSpan = document.querySelector('.close-modal');
+    if (copyrightBtn) {
+        copyrightBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+    }
+    if (closeSpan) {
+        closeSpan.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // ---------- Initialisation avec attente de MathJax ----------
+    function initializeApp() {
+        resetAll();
+        // Forcer un rendu LaTeX après que MathJax est prêt
+        if (window.MathJax && MathJax.startup && typeof MathJax.startup.promise === 'function') {
+            MathJax.startup.promise.then(() => {
+                typesetMath();
+            }).catch(err => console.warn("MathJax startup error:", err));
+        } else {
+            // Fallback : attendre que MathJax soit chargé
+            const checkInterval = setInterval(() => {
+                if (window.MathJax && MathJax.typesetPromise) {
+                    clearInterval(checkInterval);
+                    typesetMath();
+                }
+            }, 100);
+        }
+    }
+
+    initializeApp();
+})();
+</script>
+</body>
+</html>

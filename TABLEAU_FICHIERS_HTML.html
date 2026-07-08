@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord hiérarchique – SEPT2026-JUIN2027</title>
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <style>
+        /* ----- Reset & Variables (thème clair) ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        :root {
+            --bg-body: #f0f4f8;
+            --bg-menu: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border-light: #e2e8f0;
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.10);
+            --accent: #3182ce;
+            --accent-light: #ebf4ff;
+            --menu-width: 270px;
+        }
+
+        body {
+            background: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ----- Canvas en arrière‑plan (très discret) ----- */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ----- Menu arborescent (vertical) ----- */
+        .menu {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: var(--menu-width);
+            background: var(--bg-menu);
+            border-right: 1px solid var(--border-light);
+            padding: 1.5rem 0.8rem 1.5rem 0.8rem;
+            z-index: 10;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-header {
+            font-weight: 400;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .menu-header small {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        /* Arbre */
+        .tree {
+            list-style: none;
+            padding-left: 0;
+            font-size: 0.92rem;
+        }
+        .tree ul {
+            list-style: none;
+            padding-left: 1.2rem;
+            border-left: 1px dashed var(--border-light);
+            margin-left: 0.3rem;
+        }
+        .tree li {
+            margin: 0.15rem 0;
+        }
+        .tree summary {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 6px;
+            padding: 0.2rem 0.3rem;
+            transition: background 0.15s;
+            outline: none;
+            list-style: none; /* cache le triangle natif pour utiliser le nôtre */
+        }
+        .tree summary::-webkit-details-marker {
+            display: none;
+        }
+        .tree summary .arrow {
+            display: inline-block;
+            width: 1.2rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .tree details[open] > summary .arrow {
+            transform: rotate(90deg);
+        }
+        .tree .menu-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+            flex: 1;
+            font-weight: 450;
+            border-left: 3px solid transparent;
+        }
+        .tree .menu-link:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        .tree .menu-link.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            border-left-color: var(--accent);
+            font-weight: 500;
+        }
+        .tree .menu-link .icon {
+            font-size: 1rem;
+            width: 1.4rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .tree .menu-link .badge {
+            margin-left: auto;
+            background: var(--border-light);
+            color: var(--text-muted);
+            font-size: 0.65rem;
+            padding: 0 0.6rem;
+            border-radius: 10px;
+            font-weight: 400;
+        }
+
+        /* ----- Contenu principal ----- */
+        .content {
+            flex: 1;
+            padding: 2rem 2.5rem;
+            z-index: 5;
+            position: relative;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .content-header h1 {
+            font-weight: 300;
+            font-size: 2rem;
+            color: var(--text-primary);
+        }
+        .content-header h1 small {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-left: 1rem;
+            font-weight: 300;
+        }
+        .content-header .math-example {
+            margin-top: 0.4rem;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            background: var(--bg-menu);
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+        }
+
+        /* Grille des vignettes */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-light);
+            padding: 1.2rem 1.2rem 1.5rem;
+            transition: transform 0.2s, box-shadow 0.3s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: #bee0ff;
+        }
+        .card .title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+        .card .path {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card .summary {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex: 1;
+            margin-bottom: 0.8rem;
+        }
+        .card .btn {
+            align-self: flex-start;
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            padding: 0.4rem 1.2rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .card .btn:hover {
+            background: #2b6cb0;
+            transform: scale(1.02);
+        }
+
+        .empty-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            padding: 4rem 0;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Responsive */
+        @media (max-width: 820px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow-y: visible;
+            }
+            .menu {
+                position: relative;
+                height: auto;
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+                padding: 0.8rem;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            .content {
+                height: auto;
+                padding: 1.2rem;
+                overflow-y: visible;
+            }
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            .tree ul {
+                padding-left: 0.8rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .content-header h1 {
+                font-size: 1.4rem;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas d'arrière‑plan -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Menu arborescent -->
+    <nav class="menu" id="menu">
+        <div class="menu-header">
+            <span>📂 Arborescence</span>
+            <small>SEPT2026–JUIN2027</small>
+        </div>
+        <ul class="tree" id="treeContainer">
+            <!-- construit par JS -->
+        </ul>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="content" id="content">
+        <div class="content-header">
+            <h1>
+                📄 Fichiers HTML
+                <small>sélectionnez un élément dans l’arborescence</small>
+            </h1>
+            <div class="math-example">
+                \(\displaystyle \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}\) &nbsp;·&nbsp; MathJax intégré
+            </div>
+        </div>
+        <div class="grid" id="grid"></div>
+    </main>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ---- BASE URL pour tous les liens ----
+            const BASE_URL = 'https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027';
+
+            // ---- DONNÉES (liste exhaustive fournie) ----
+            const filesData = [
+                { path: "/index.html" },
+                { path: "/AUTOMATISMES/index.html" },
+                { path: "/AUTOMATISMES/DROITES/DROITES_COURS.html" },
+                { path: "/AUTOMATISMES/DROITES/DROITES_EXERCICES.html" },
+                { path: "/AUTOMATISMES/DROITES/DROITES_PBL.html" },
+                { path: "/AUTOMATISMES/DROITES/DROITES_PROBLEMES_SYNTHESE.html" },
+                { path: "/ENSEIGNEMENTS_SCIENTIFIQUES/index.html" },
+                { path: "/ENSEIGNEMENTS_SCIENTIFIQUES/CRISTAUX/index.html" },
+                { path: "/ENSEIGNEMENTS_SCIENTIFIQUES/CRISTAUX/CRISTAUX_CALCULS.html" },
+                { path: "/ENSEIGNEMENTS_SCIENTIFIQUES/CRISTAUX/CRISTAUX_ENTRAINEMENTS.html" },
+                { path: "/ENSEIGNEMENTS_SCIENTIFIQUES/CRISTAUX/CRISTAUX_INTEGRAL.html" },
+                { path: "/ENSEIGNEMENTS_SCIENTIFIQUES/CRISTAUX/CRISTAUX_SIMULATEUR.html" },
+                { path: "/JEUX_MATHS/index.html" },
+                { path: "/JEUX_MATHS/COURSES_VEHICULES.html" },
+                { path: "/PROGRESSIONS_CLASSES/PROGRESSIONS_CLASSES_2026_2027.html" },
+                { path: "/P_STI2D/index.html" },
+                { path: "/P_STI2D/RECHERCHE_CC_1STI2D.html" },
+                { path: "/P_STI2D/RECHERCHE_PCM_1STI2D.html" },
+                { path: "/STS_BIO_AC/index.html" },
+                { path: "/STS_BIO_AC/ANNALES/ANNALES_STS_GROUPEMENT_D_QUESTIONS_EXTRAITES.html" },
+                { path: "/STS_BIO_AC/ANNALES/ANNALES_STS_GROUPEMENT_D_V4.html" },
+                { path: "/STS_BIO_AC/ERREURS/CALCUL_ERREUR.html" },
+                { path: "/STS_BIO_AC/ERREURS/carte-concepts.html" },
+                { path: "/STS_BIO_AC/ERREURS/dof.html" },
+                { path: "/STS_BIO_AC/ERREURS/exercices.html" },
+                { path: "/STS_BIO_AC/ERREURS/glossaire.html" },
+                { path: "/STS_BIO_AC/ERREURS/incertitudes.html" },
+                { path: "/STS_BIO_AC/ERREURS/introduction.html" },
+                { path: "/STS_BIO_AC/ERREURS/justesse-fidelite.html" },
+                { path: "/STS_BIO_AC/ERREURS/mesures-experimentales.html" },
+                { path: "/STS_BIO_AC/ERREURS/propagation.html" },
+                { path: "/STS_BIO_AC/ERREURS/schema-erreurs.html" },
+                { path: "/STS_BIO_AC/ERREURS/types-erreurs.html" },
+                { path: "/STS_BIO_AC/PROGRAMME_STS_BIO_AC_1_ET_2.html" },
+                { path: "/STS_BIO_AC/STATISTIQUES_INFERENTIELLES/index.html" },
+                { path: "/STS_BIO_AC/STATISTIQUES_INFERENTIELLES/STATISTIQUES_INFERENTIELLES_COURS.html" },
+                { path: "/STS_BIO_AC/STATISTIQUES_INFERENTIELLES/STATISTIQUES_INFERENTIELLES_EXERCICES.html" },
+                { path: "/PREMIERES_TECHNOLOGIQUES/TRONC_COMMUN/PROGRAMME_CC_1_STI2D_STL.html" },
+                { path: "/TG_MATHS_COMP/index.html" },
+                { path: "/TG_MATHS_COMP/RECHERCHE_MC_TG.html" },
+                { path: "/TG_MATHS_EXPERTES/index.html" },
+                { path: "/TG_MATHS_EXPERTES/RECHERCHE_TG_MATH_EXPERTES.html" }
+            ];
+
+            // ---- Enrichissement (titre, résumé) ----
+            function getTitleFromPath(path) {
+                const parts = path.split('/').filter(p => p.length > 0);
+                let filename = parts[parts.length - 1];
+                if (filename.endsWith('.html')) filename = filename.slice(0, -5);
+                let title = filename.replace(/_/g, ' ');
+                title = title.replace(/\b\w/g, c => c.toUpperCase());
+                if (title.toLowerCase() === 'index') {
+                    const parent = parts[parts.length - 2];
+                    if (parent) {
+                        title = parent.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        title += ' (index)';
+                    } else {
+                        title = 'Accueil';
+                    }
+                }
+                return title;
+            }
+
+            function getSummary(path) {
+                const parts = path.split('/').filter(p => p.length > 0);
+                const last = parts[parts.length - 1];
+                if (last.toLowerCase().includes('cours')) return 'Cours et théorie';
+                if (last.toLowerCase().includes('exercices')) return 'Exercices pratiques';
+                if (last.toLowerCase().includes('pbl')) return 'Problème / PBL';
+                if (last.toLowerCase().includes('synthèse') || last.toLowerCase().includes('problemes')) return 'Synthèse et problèmes';
+                if (last.toLowerCase().includes('annales')) return 'Annales et sujets';
+                if (last.toLowerCase().includes('erreur') || last.toLowerCase().includes('incertitude')) return 'Gestion des erreurs et incertitudes';
+                if (last.toLowerCase().includes('statistiques')) return 'Statistiques inférentielles';
+                if (last.toLowerCase().includes('recherche')) return 'Recherche et documentation';
+                if (last.toLowerCase().includes('programme')) return 'Programme officiel';
+                if (last.toLowerCase().includes('simulateur')) return 'Simulateur interactif';
+                if (last.toLowerCase().includes('carte')) return 'Carte conceptuelle';
+                if (last.toLowerCase().includes('glossaire')) return 'Glossaire';
+                if (last.toLowerCase().includes('introduction')) return 'Introduction';
+                if (last.toLowerCase().includes('dof')) return 'Degrés de liberté';
+                if (last.toLowerCase().includes('schema')) return 'Schéma récapitulatif';
+                if (last.toLowerCase().includes('types')) return 'Typologie';
+                if (last.toLowerCase().includes('justesse')) return 'Justesse et fidélité';
+                if (last.toLowerCase().includes('mesures')) return 'Mesures expérimentales';
+                if (last.toLowerCase().includes('propagation')) return 'Propagation des incertitudes';
+                if (last.toLowerCase().includes('courses')) return 'Jeu de courses';
+                if (last.toLowerCase().includes('cristaux')) return 'Cristallographie';
+                if (last.toLowerCase().includes('droites')) return 'Étude des droites';
+                if (last.toLowerCase().includes('progressions')) return 'Progressions annuelles';
+                return 'Page de contenu';
+            }
+
+            const enriched = filesData.map(item => ({
+                ...item,
+                title: getTitleFromPath(item.path),
+                summary: getSummary(item.path)
+            }));
+
+            // ---- Construction de l'arbre ----
+            function buildTree(data) {
+                const root = { name: 'Tous', path: '', children: {}, fileData: null, isRoot: true };
+
+                data.forEach(item => {
+                    const parts = item.path.split('/').filter(p => p.length > 0);
+                    let current = root;
+                    let currentPath = '';
+                    parts.forEach((part, index) => {
+                        currentPath += '/' + part;
+                        if (!current.children[part]) {
+                            current.children[part] = {
+                                name: part,
+                                path: currentPath,
+                                children: {},
+                                fileData: null
+                            };
+                        }
+                        current = current.children[part];
+                        if (index === parts.length - 1) {
+                            current.fileData = item;
+                        }
+                    });
+                });
+                return root;
+            }
+
+            const treeRoot = buildTree(enriched);
+
+            // ---- Rendu du menu arborescent (récursif) ----
+            function renderTree(node, container) {
+                const ul = document.createElement('ul');
+                ul.className = 'tree';
+
+                // Trier les clés : dossiers d'abord, puis fichiers
+                const keys = Object.keys(node.children);
+                keys.sort((a, b) => {
+                    const aIsFolder = Object.keys(node.children[a].children).length > 0;
+                    const bIsFolder = Object.keys(node.children[b].children).length > 0;
+                    if (aIsFolder && !bIsFolder) return -1;
+                    if (!aIsFolder && bIsFolder) return 1;
+                    return a.localeCompare(b);
+                });
+
+                keys.forEach(key => {
+                    const child = node.children[key];
+                    const hasChildren = Object.keys(child.children).length > 0;
+                    const isFile = child.fileData !== null && !hasChildren;
+
+                    const li = document.createElement('li');
+
+                    // Élément cliquable (dossier ou fichier)
+                    const link = document.createElement('span');
+                    link.className = 'menu-link';
+                    link.dataset.path = child.path;
+                    link.dataset.isFile = isFile ? 'true' : 'false';
+
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'icon';
+                    iconSpan.textContent = hasChildren ? '📁' : (isFile ? '📄' : '📂');
+                    link.appendChild(iconSpan);
+
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = child.name;
+                    link.appendChild(textSpan);
+
+                    // Badge : nombre de fichiers sous ce dossier (si dossier)
+                    if (hasChildren || isFile) {
+                        const count = countFilesUnder(child);
+                        if (count > 0) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge';
+                            badge.textContent = count;
+                            link.appendChild(badge);
+                        }
+                    }
+
+                    link.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const path = this.dataset.path;
+                        const isFile = this.dataset.isFile === 'true';
+                        filterByPath(path, isFile);
+                        // Met à jour l'état actif
+                        document.querySelectorAll('.menu-link').forEach(el => el.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+
+                    if (hasChildren) {
+                        // Dossier : on l'emballe dans <details><summary>
+                        const details = document.createElement('details');
+                        // Par défaut ouvrir pour "Tous" ? Non, on laisse fermé pour la clarté.
+                        // Sauf si c'est la racine (Tous) qu'on affiche en haut séparément.
+                        const summary = document.createElement('summary');
+                        const arrow = document.createElement('span');
+                        arrow.className = 'arrow';
+                        arrow.textContent = '▶';
+                        summary.appendChild(arrow);
+                        summary.appendChild(link);
+                        details.appendChild(summary);
+
+                        // Rendu des enfants
+                        const childContainer = document.createElement('div');
+                        renderTree(child, childContainer);
+                        details.appendChild(childContainer.firstChild); // on déplace l'ul
+
+                        li.appendChild(details);
+                    } else {
+                        // Fichier (ou dossier vide sans enfants)
+                        li.appendChild(link);
+                    }
+
+                    ul.appendChild(li);
+                });
+
+                container.appendChild(ul);
+            }
+
+            // Compte les fichiers sous un nœud (récursif)
+            function countFilesUnder(node) {
+                let count = 0;
+                if (node.fileData) count++;
+                for (const key in node.children) {
+                    count += countFilesUnder(node.children[key]);
+                }
+                return count;
+            }
+
+            // ---- Rendu initial du menu ----
+            const treeContainer = document.getElementById('treeContainer');
+            // Ajouter manuellement l'élément "Tous" en tête
+            const rootLi = document.createElement('li');
+            const rootLink = document.createElement('span');
+            rootLink.className = 'menu-link active';
+            rootLink.dataset.path = '';
+            rootLink.dataset.isFile = 'false';
+            const rootIcon = document.createElement('span');
+            rootIcon.className = 'icon';
+            rootIcon.textContent = '🏠';
+            rootLink.appendChild(rootIcon);
+            const rootText = document.createElement('span');
+            rootText.textContent = 'Tous les fichiers';
+            rootLink.appendChild(rootText);
+            const totalBadge = document.createElement('span');
+            totalBadge.className = 'badge';
+            totalBadge.textContent = enriched.length;
+            rootLink.appendChild(totalBadge);
+            rootLink.addEventListener('click', function(e) {
+                e.stopPropagation();
+                filterByPath('', false);
+                document.querySelectorAll('.menu-link').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+            });
+            rootLi.appendChild(rootLink);
+            treeContainer.appendChild(rootLi);
+
+            // Rendu du reste de l'arbre
+            renderTree(treeRoot, treeContainer);
+
+            // ---- Filtrage des cartes ----
+            const grid = document.getElementById('grid');
+
+            function filterByPath(path, isFile) {
+                let filtered;
+                if (path === '') {
+                    filtered = enriched;
+                } else if (isFile) {
+                    filtered = enriched.filter(item => item.path === path);
+                } else {
+                    // Dossier : on prend tous les fichiers dont le chemin commence par path + '/'
+                    // ou bien exactement path (cas où un fichier est directement à la racine du dossier, ex: index.html)
+                    filtered = enriched.filter(item =>
+                        item.path === path || item.path.startsWith(path + '/')
+                    );
+                }
+
+                renderCards(filtered);
+                // Rafraîchir MathJax
+                if (window.MathJax && MathJax.typesetPromise) {
+                    MathJax.typesetPromise().catch(() => {});
+                }
+            }
+
+            function renderCards(items) {
+                grid.innerHTML = '';
+                if (items.length === 0) {
+                    grid.innerHTML = `<div class="empty-message">Aucun fichier dans cette section.</div>`;
+                    return;
+                }
+                items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const title = document.createElement('div');
+                    title.className = 'title';
+                    title.textContent = item.title;
+                    card.appendChild(title);
+
+                    const path = document.createElement('div');
+                    path.className = 'path';
+                    path.textContent = item.path;
+                    card.appendChild(path);
+
+                    const summary = document.createElement('div');
+                    summary.className = 'summary';
+                    summary.textContent = item.summary;
+                    card.appendChild(summary);
+
+                    const btn = document.createElement('a');
+                    btn.className = 'btn';
+                    btn.textContent = '🔗 Voir';
+                    // Lien absolu avec BASE_URL
+                    btn.href = BASE_URL + item.path;
+                    btn.target = '_blank';
+                    btn.rel = 'noopener noreferrer';
+                    card.appendChild(btn);
+
+                    grid.appendChild(card);
+                });
+            }
+
+            // ---- Initialisation : afficher "Tous" ----
+            renderCards(enriched);
+
+            // ---- Canvas d'arrière‑plan (particules claires) ----
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.speedY = (Math.random() - 0.5) * 0.4;
+                    this.opacity = Math.random() * 0.3 + 0.1;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0 || this.x > width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > height) this.speedY *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(43, 108, 176, ${this.opacity})`;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles(count) {
+                particles = [];
+                for (let i = 0; i < count; i++) {
+                    particles.push(new Particle());
+                }
+            }
+            initParticles(100);
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 140) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(43, 108, 176, ${0.06 * (1 - dist / 140)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                drawLines();
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            // ---- Exposer globalement pour débogage ----
+            window.filterByPath = filterByPath;
+
+        })();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse et Correction Cinématique – Version stable</title>
+    <!-- MathJax config pour éviter les conflits -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            options: {
+                skipHtmlTypes: 'script',
+                processHtmlClass: 'mathjax'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        /* --- Styles réutilisés et améliorés --- */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #1e40af;
+            font-size: 2.2rem;
+            margin: 0;
+        }
+        h2 {
+            color: #1e40af;
+            border-left: 6px solid #3b82f6;
+            padding-left: 15px;
+            margin: 40px 0 20px;
+        }
+        h3 {
+            color: #334155;
+            margin-top: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            border: 3px dashed #3b82f6;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            background: #eff6ff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .upload-section:hover {
+            background: #dbeafe;
+            border-color: #1e40af;
+        }
+        .upload-btn {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .upload-btn:hover {
+            background: #2563eb;
+        }
+        #file-input {
+            display: none;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+        .status-waiting {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .status-loaded {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+        }
+        th {
+            background: #f1f5f9;
+            font-weight: 700;
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #334155;
+            border-radius: 8px;
+            max-width: 100%;
+            background: white;
+        }
+        .didactic-box {
+            background: #f0fdf4;
+            border-left: 5px solid #22c55e;
+            padding: 18px 22px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .theory-box {
+            background: #eff6ff;
+            border-left: 5px solid #3b82f6;
+            padding: 18px 22px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .math-block {
+            overflow-x: auto;
+            padding: 8px 0;
+            font-size: 1.1rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: white;
+        }
+        .badge-v1 { background: #dc2626; }
+        .badge-v2 { background: #16a34a; }
+        .badge-v3 { background: #2563eb; }
+        .hidden {
+            display: none !important;
+        }
+        .sync-control {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .sync-control label {
+            font-weight: 600;
+        }
+        .sync-control input {
+            width: 100px;
+            padding: 8px 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        footer {
+            margin-top: 40px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+            text-align: center;
+            color: #64748b;
+        }
+        .copyright-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .copyright-btn:hover {
+            color: #0f172a;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 750px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .close-btn {
+            float: right;
+            font-size: 32px;
+            font-weight: 700;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>📐 Analyse & Correction Cinématique Dynamique</h1>
+        <p>Génération sur mesure des équations horaires et de la synchronisation d'arrivée</p>
+            <p><strong>Dans ce document, on utilise : Polynôme degré 1 (affine), Polynôme degré 2 (quadratique), Polynôme degré 3 (cubique), Fonction définie par morceaux (continue ou non), Fonction puissance / Racine, Fonction trigonométrique (sin/cos), Fonction rationnelle (homographique).</strong></p>
+    </header>
+
+    <!-- 1. Chargement du fichier JSON -->
+    <div class="card">
+        <h2>1. Chargement des données</h2>
+        <div id="statusIndicator" class="status-badge status-waiting">⏳ En attente d’un fichier JSON</div>
+        <div class="upload-section" onclick="document.getElementById('file-input').click()">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <p style="font-weight: 700; font-size: 1.2rem; margin: 15px 0 5px;">Cliquez pour sélectionner le fichier JSON</p>
+            <p style="color: #64748b; margin: 0;">(Exporté par COURSES_RECTILIGNES.html)</p>
+            <button class="upload-btn" type="button">Parcourir</button>
+            <input type="file" id="file-input" accept=".json">
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="upload-btn" style="background: #475569;" onclick="loadDefaultData()">Charger l’exemple pédagogique</button>
+        </div>
+    </div>
+
+    <!-- 2. Analyse (affichée après chargement) -->
+    <div id="analysisContainer" class="hidden">
+
+        <!-- Résumé des paramètres -->
+        <div class="card">
+            <h2>2. Paramètres extraits du fichier</h2>
+            <div id="configSummary"></div>
+        </div>
+
+        <!-- Graphique des trajectoires -->
+        <div class="card">
+            <h2>3. Trajectoires \(d(t)\)</h2>
+            <div class="canvas-container">
+                <canvas id="trajectoryCanvas" width="900" height="420"></canvas>
+            </div>
+        </div>
+
+        <!-- Extrait des données télémétriques -->
+        <div class="card">
+            <h2>4. Extrait des mesures (télémétrie)</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr><th>Temps (s)</th><th>V1 (m)</th><th>V1 accél. (m/s²)</th><th>V2 (m)</th><th>V2 accél. (m/s²)</th><th>V3 (m)</th><th>V3 accél. (m/s²)</th></tr>
+                    </thead>
+                    <tbody id="telemetryBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3a. Équations horaires détaillées -->
+        <div class="card">
+            <h2>5a. Correction – Établissement des équations horaires \(d_i(t)\)</h2>
+            <div class="theory-box">
+                <p><strong>Rappel :</strong> La position instantanée \(d(t)\) détermine la vitesse \(v(t)=d'(t)\) et l’accélération \(a(t)=d''(t)\). Les conditions initiales (avance \(d_0\), retard \(t_0\)) sont intégrées directement.</p>
+            </div>
+            <div id="dynamicEquations"></div>
+        </div>
+
+        <!-- 3b. Synchronisation à T* -->
+        <div class="card">
+            <h2>5b. Problème de synthèse – Arrivée simultanée à \(T^*\) (choisi automatiquement)</h2>
+            <div class="theory-box">
+                <p>Pour garantir des positions initiales <strong>toujours positives ou nulles</strong>, on choisit \(T^*\) comme le temps d'arrivée du véhicule le plus rapide (celui qui franchit la ligne d'arrivée en premier). Ainsi, pour ce véhicule, la nouvelle position initiale \(X_0 = 0\) ; pour les autres, \(X_0 \ge 0\).</p>
+                <p>Vous pouvez modifier \(T^*\) ci‑dessous pour explorer d'autres scénarios, mais la solution garantissant des positions non négatives est donnée par défaut.</p>
+            </div>
+            <div class="sync-control">
+                <label for="syncTInput">Instant de synchronisation \(T^*\) (s) :</label>
+                <input type="number" id="syncTInput" step="0.1" min="0.1">
+                <button class="upload-btn" style="background:#2563eb; padding: 8px 20px;" onclick="updateSync()">Appliquer</button>
+                <button class="upload-btn" style="background:#475569; padding: 8px 20px;" onclick="resetSyncToOptimal()">Réinitialiser à l'optimal</button>
+            </div>
+            <div id="syncTableContainer">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Véhicule</th><th>Modèle</th><th>Formule \(X_0\)</th><th>Calcul pour \(T^*\)</th><th>Avance / recul requis</th></tr>
+                        </thead>
+                        <tbody id="syncTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="syncConclusion" class="didactic-box"></div>
+        </div>
+    </div>
+
+    <footer>
+        <button class="copyright-btn" onclick="document.getElementById('copyrightModal').style.display='block'">Droits d'auteur</button>
+    </footer>
+</div>
+
+<!-- Modale droits d'auteur -->
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="document.getElementById('copyrightModal').style.display='none'">&times;</span>
+        <h2>⚖️ Droits d’auteur</h2>
+        <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) – Juillet 2026</p>
+        <p><strong>Licence non commerciale :</strong> utilisation, modification et distribution autorisées à des fins personnelles et éducatives uniquement. Toute utilisation commerciale est interdite sans accord écrit.</p>
+    </div>
+</div>
+
+<script>
+    // ===================================================================
+    // 1. DÉFINITION DES 15 MODÈLES CINÉMATIQUES (sans conflit LaTeX)
+    // ===================================================================
+    const MODELS = {
+        1: {
+            name: 'Linéaire (MRU)',
+            type: 'Mouvement Rectiligne Uniforme',
+            desc: 'Vitesse constante de 50 m/s, accélération nulle.',
+            pos: (t, d0) => 50 * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 50 t';
+                return `d(t) = 50 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 50 T^*',
+            syncCalc: (T) => 800 - 50 * T
+        },
+        2: {
+            name: 'Linéaire lente (MRU)',
+            type: 'Mouvement Rectiligne Uniforme',
+            desc: 'Vitesse constante de 42 m/s, accélération nulle.',
+            pos: (t, d0) => 42 * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 42 t';
+                return `d(t) = 42 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 42 T^*',
+            syncCalc: (T) => 800 - 42 * T
+        },
+        3: {
+            name: 'Linéaire rapide (MRU)',
+            type: 'Mouvement Rectiligne Uniforme',
+            desc: 'Vitesse constante de 55 m/s, accélération nulle.',
+            pos: (t, d0) => 55 * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 55 t';
+                return `d(t) = 55 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 55 T^*',
+            syncCalc: (T) => 800 - 55 * T
+        },
+        4: {
+            name: 'Accélération pure (MRUA)',
+            type: 'Mouvement Rectiligne Uniformément Accéléré',
+            desc: 'Part sans vitesse initiale, accélération constante \(a = 4\\,\\text{m/s}^2\).',
+            pos: (t, d0) => 2 * t * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 2 t^2';
+                return `d(t) = 2 t^2 + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 2 (T^*)^2',
+            syncCalc: (T) => 800 - 2 * T * T
+        },
+        5: {
+            name: 'Accélération décalée',
+            type: 'Mouvement quadratique avec vitesse initiale',
+            desc: 'Équivalent à \(d(t) = t^2 + 20t + d_0\), accélération \(2\\,\\text{m/s}^2\), vitesse initiale \(20\\,\\text{m/s}\).',
+            pos: (t, d0) => Math.pow(t + 10, 2) - 100 + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = t^2 + 20 t';
+                return `d(t) = t^2 + 20 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - \\bigl((T^*+10)^2 - 100\\bigr)',
+            syncCalc: (T) => 800 - (Math.pow(T + 10, 2) - 100)
+        },
+        6: {
+            name: 'Oscillante',
+            type: 'Mouvement linéaire + perturbation harmonique',
+            desc: 'Vitesse moyenne 48 m/s, oscillation sinusoïdale d’amplitude 30 m.',
+            pos: (t, d0) => 48 * t + 30 * Math.sin(t) + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 48 t + 30 \\sin(t)';
+                return `d(t) = 48 t + 30 \\sin(t) + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - \\bigl(48 T^* + 30 \\sin(T^*)\\bigr)',
+            syncCalc: (T) => 800 - (48 * T + 30 * Math.sin(T))
+        },
+        7: {
+            name: 'Arrêt au stand lissé',
+            type: 'Mouvement hybride par morceaux (C¹)',
+            desc: 'Cinq phases : MRU, freinage, immobilité, réaccélération, retour MRU.',
+            pos: (t, d0) => {
+                if (t <= 5) return 50 * t + d0;
+                if (t <= 10) return -5 * t * t + 100 * t - 125 + d0;
+                if (t <= 15) return 375 + d0;
+                if (t <= 20) return 5 * t * t - 150 * t + 1500 + d0;
+                return 50 * t - 500 + d0;
+            },
+            getLatex: (d0) => {
+                const d = d0 === 0 ? '' : ` + ${d0}`;
+                return `d(t) = \\begin{cases} 
+                    50 t${d} & \\text{si } 0 \\le t \\le 5 \\\\ 
+                    -5 t^2 + 100 t - 125${d} & \\text{si } 5 < t \\le 10 \\\\ 
+                    375${d} & \\text{si } 10 < t \\le 15 \\\\ 
+                    5 t^2 - 150 t + 1500${d} & \\text{si } 15 < t \\le 20 \\\\ 
+                    50 t - 500${d} & \\text{si } t > 20 
+                \\end{cases}`;
+            },
+            syncFormulaLatex: '\\text{selon la phase de } T^*',
+            syncCalc: (T) => {
+                let base = 0;
+                if (T <= 5) base = 50 * T;
+                else if (T <= 10) base = -5 * T * T + 100 * T - 125;
+                else if (T <= 15) base = 375;
+                else if (T <= 20) base = 5 * T * T - 150 * T + 1500;
+                else base = 50 * T - 500;
+                return 800 - base;
+            }
+        },
+        8: {
+            name: 'Racine carrée',
+            type: 'Mouvement à décélération progressive',
+            desc: 'Départ rapide puis ralentissement continu.',
+            pos: (t, d0) => 150 * Math.sqrt(t) + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 150 \\sqrt{t}';
+                return `d(t) = 150 \\sqrt{t} + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 150 \\sqrt{T^*}',
+            syncCalc: (T) => 800 - 150 * Math.sqrt(T)
+        },
+        9: {
+            name: 'Cubique douce',
+            type: 'Mouvement polynomial degré 3',
+            desc: 'Accélération linéaire croissante \(a(t)=0,6 t\).',
+            pos: (t, d0) => 20 * t + 0.1 * Math.pow(t, 3) + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 0{,}1 t^3 + 20 t';
+                return `d(t) = 0{,}1 t^3 + 20 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - (0{,}1 (T^*)^3 + 20 T^*)',
+            syncCalc: (T) => 800 - (0.1 * Math.pow(T, 3) + 20 * T)
+        },
+        10: {
+            name: 'Régulière (MRU)',
+            type: 'Mouvement Rectiligne Uniforme',
+            desc: 'Vitesse constante de 48 m/s.',
+            pos: (t, d0) => 48 * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 48 t';
+                return `d(t) = 48 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 48 T^*',
+            syncCalc: (T) => 800 - 48 * T
+        },
+        11: {
+            name: 'Régulière + (MRU)',
+            type: 'Mouvement Rectiligne Uniforme',
+            desc: 'Vitesse constante de 52 m/s.',
+            pos: (t, d0) => 52 * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 52 t';
+                return `d(t) = 52 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 52 T^*',
+            syncCalc: (T) => 800 - 52 * T
+        },
+        12: {
+            name: 'Départ lent',
+            type: 'Mouvement de puissance non entière',
+            desc: 'Exposant 1,8 : démarrage très progressif.',
+            pos: (t, d0) => 4 * Math.pow(t, 1.8) + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 4 t^{1{,}8}';
+                return `d(t) = 4 t^{1{,}8} + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 4 (T^*)^{1{,}8}',
+            syncCalc: (T) => 800 - 4 * Math.pow(T, 1.8)
+        },
+        13: {
+            name: 'Asymptotique',
+            type: 'Mouvement homographique',
+            desc: 'Tend vers 1200 m, décélération permanente.',
+            pos: (t, d0) => 1200 - 1200 / (0.05 * t + 1) + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 1200 - \\dfrac{1200}{0{,}05 t + 1}';
+                return `d(t) = 1200 - \\dfrac{1200}{0{,}05 t + 1} + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - \\left(1200 - \\dfrac{1200}{0{,}05 T^* + 1}\\right)',
+            syncCalc: (T) => 800 - (1200 - 1200 / (0.05 * T + 1))
+        },
+        14: {
+            name: 'Saccadée',
+            type: 'Mouvement à pulsation rapide',
+            desc: 'Vitesse moyenne 45 m/s avec oscillations en cosinus.',
+            pos: (t, d0) => 45 * t + 15 * Math.cos(2 * t) - 15 + d0,
+            getLatex: (d0) => {
+                const cst = d0 - 15;
+                if (cst === 0) return 'd(t) = 45 t + 15 \\cos(2t) - 15';
+                return `d(t) = 45 t + 15 \\cos(2t) - 15 + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - \\bigl(45 T^* + 15 \\cos(2T^*) - 15\\bigr)',
+            syncCalc: (T) => 800 - (45 * T + 15 * Math.cos(2 * T) - 15)
+        },
+        15: {
+            name: 'Constante (MRU)',
+            type: 'Mouvement Rectiligne Uniforme',
+            desc: 'Vitesse constante de 51 m/s.',
+            pos: (t, d0) => 51 * t + d0,
+            getLatex: (d0) => {
+                if (d0 === 0) return 'd(t) = 51 t';
+                return `d(t) = 51 t + ${d0}`;
+            },
+            syncFormulaLatex: 'X_0 = 800 - 51 T^*',
+            syncCalc: (T) => 800 - 51 * T
+        }
+    };
+
+    // ===================================================================
+    // 2. ÉTAT DE L'APPLICATION
+    // ===================================================================
+    let currentJSON = null;
+    let configVehicles = [];
+    let telemetryData = [];
+    let optimalT = 16; // valeur par défaut, sera recalculée
+    let currentT = 16;
+
+    // Éléments DOM
+    const statusIndicator = document.getElementById('statusIndicator');
+    const analysisContainer = document.getElementById('analysisContainer');
+    const configSummary = document.getElementById('configSummary');
+    const telemetryBody = document.getElementById('telemetryBody');
+    const dynamicEquations = document.getElementById('dynamicEquations');
+    const syncTableBody = document.getElementById('syncTableBody');
+    const syncConclusion = document.getElementById('syncConclusion');
+    const canvas = document.getElementById('trajectoryCanvas');
+    const ctx = canvas.getContext('2d');
+    const syncTInput = document.getElementById('syncTInput');
+
+    // ===================================================================
+    // 3. GESTION DU CHARGEMENT DE FICHIER
+    // ===================================================================
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                processData(data, file.name);
+            } catch (err) {
+                alert('Erreur : fichier JSON invalide.');
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    function loadDefaultData() {
+        const defaultJSON = {
+            "date_simulation": "2026-07-16T06:27:48.163Z",
+            "facteur_ralenti_utilise": 0.25,
+            "configuration_eleve": [
+                { "couloir": 1, "modele_id": 1, "nom": "Modèle 1 (Linéaire)", "retard_depart_s": 0, "avance_initiale_m": 0 },
+                { "couloir": 2, "modele_id": 4, "nom": "Modèle 4 (Accélération pure)", "retard_depart_s": 0, "avance_initiale_m": 30 },
+                { "couloir": 3, "modele_id": 7, "nom": "Modèle 7 (Arrêt au stand lissé)", "retard_depart_s": 0, "avance_initiale_m": 60 }
+            ],
+            "donnees_telemetriques": [
+                {"temps_secondes":0,"v1_distance_metres":0,"v1_acceleration_ms2":0,"v2_distance_metres":30,"v2_acceleration_ms2":4,"v3_distance_metres":60,"v3_acceleration_ms2":0},
+                {"temps_secondes":1,"v1_distance_metres":50,"v1_acceleration_ms2":0,"v2_distance_metres":32,"v2_acceleration_ms2":4,"v3_distance_metres":110,"v3_acceleration_ms2":0},
+                {"temps_secondes":2,"v1_distance_metres":100,"v1_acceleration_ms2":0,"v2_distance_metres":38,"v2_acceleration_ms2":4,"v3_distance_metres":160,"v3_acceleration_ms2":0},
+                {"temps_secondes":3,"v1_distance_metres":150,"v1_acceleration_ms2":0,"v2_distance_metres":48,"v2_acceleration_ms2":4,"v3_distance_metres":210,"v3_acceleration_ms2":0},
+                {"temps_secondes":4,"v1_distance_metres":200,"v1_acceleration_ms2":0,"v2_distance_metres":62,"v2_acceleration_ms2":4,"v3_distance_metres":260,"v3_acceleration_ms2":0},
+                {"temps_secondes":5,"v1_distance_metres":250,"v1_acceleration_ms2":0,"v2_distance_metres":80,"v2_acceleration_ms2":4,"v3_distance_metres":310,"v3_acceleration_ms2":-5},
+                {"temps_secondes":6,"v1_distance_metres":300,"v1_acceleration_ms2":0,"v2_distance_metres":102,"v2_acceleration_ms2":4,"v3_distance_metres":355,"v3_acceleration_ms2":-10},
+                {"temps_secondes":7,"v1_distance_metres":350,"v1_acceleration_ms2":0,"v2_distance_metres":128,"v2_acceleration_ms2":4,"v3_distance_metres":390,"v3_acceleration_ms2":-10},
+                {"temps_secondes":8,"v1_distance_metres":400,"v1_acceleration_ms2":0,"v2_distance_metres":158,"v2_acceleration_ms2":4,"v3_distance_metres":415,"v3_acceleration_ms2":-10},
+                {"temps_secondes":9,"v1_distance_metres":450,"v1_acceleration_ms2":0,"v2_distance_metres":192,"v2_acceleration_ms2":4,"v3_distance_metres":430,"v3_acceleration_ms2":-10},
+                {"temps_secondes":10,"v1_distance_metres":500,"v1_acceleration_ms2":0,"v2_distance_metres":230,"v2_acceleration_ms2":4,"v3_distance_metres":435,"v3_acceleration_ms2":-5},
+                {"temps_secondes":11,"v1_distance_metres":550,"v1_acceleration_ms2":0,"v2_distance_metres":272,"v2_acceleration_ms2":4,"v3_distance_metres":435,"v3_acceleration_ms2":0},
+                {"temps_secondes":12,"v1_distance_metres":600,"v1_acceleration_ms2":0,"v2_distance_metres":318,"v2_acceleration_ms2":4,"v3_distance_metres":435,"v3_acceleration_ms2":0},
+                {"temps_secondes":13,"v1_distance_metres":650,"v1_acceleration_ms2":0,"v2_distance_metres":368,"v2_acceleration_ms2":4,"v3_distance_metres":435,"v3_acceleration_ms2":0},
+                {"temps_secondes":14,"v1_distance_metres":700,"v1_acceleration_ms2":0,"v2_distance_metres":422,"v2_acceleration_ms2":4,"v3_distance_metres":435,"v3_acceleration_ms2":0},
+                {"temps_secondes":15,"v1_distance_metres":750,"v1_acceleration_ms2":0,"v2_distance_metres":480,"v2_acceleration_ms2":4,"v3_distance_metres":435,"v3_acceleration_ms2":5},
+                {"temps_secondes":16,"v1_distance_metres":800,"v1_acceleration_ms2":0,"v2_distance_metres":542,"v2_acceleration_ms2":4,"v3_distance_metres":440,"v3_acceleration_ms2":10},
+                {"temps_secondes":17,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":608,"v2_acceleration_ms2":4,"v3_distance_metres":455,"v3_acceleration_ms2":10},
+                {"temps_secondes":18,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":678,"v2_acceleration_ms2":4,"v3_distance_metres":480,"v3_acceleration_ms2":10},
+                {"temps_secondes":19,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":752,"v2_acceleration_ms2":4,"v3_distance_metres":515,"v3_acceleration_ms2":10},
+                {"temps_secondes":20,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":"✖","v2_acceleration_ms2":"✖","v3_distance_metres":560,"v3_acceleration_ms2":5},
+                {"temps_secondes":21,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":"✖","v2_acceleration_ms2":"✖","v3_distance_metres":610,"v3_acceleration_ms2":0},
+                {"temps_secondes":22,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":"✖","v2_acceleration_ms2":"✖","v3_distance_metres":660,"v3_acceleration_ms2":0},
+                {"temps_secondes":23,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":"✖","v2_acceleration_ms2":"✖","v3_distance_metres":710,"v3_acceleration_ms2":0},
+                {"temps_secondes":24,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":"✖","v2_acceleration_ms2":"✖","v3_distance_metres":760,"v3_acceleration_ms2":0},
+                {"temps_secondes":25,"v1_distance_metres":"✖","v1_acceleration_ms2":"✖","v2_distance_metres":"✖","v2_acceleration_ms2":"✖","v3_distance_metres":"✖","v3_acceleration_ms2":"✖"}
+            ]
+        };
+        processData(defaultJSON, 'exemple_pedagogique.json');
+    }
+
+    // ===================================================================
+    // 4. TRAITEMENT PRINCIPAL DES DONNÉES
+    // ===================================================================
+    function processData(data, filename) {
+        currentJSON = data;
+        configVehicles = data.configuration_eleve || [];
+        telemetryData = data.donnees_telemetriques || [];
+
+        statusIndicator.className = 'status-badge status-loaded';
+        statusIndicator.innerHTML = `✅ Fichier <strong>${filename}</strong> chargé (${telemetryData.length} points)`;
+
+        analysisContainer.classList.remove('hidden');
+
+        renderConfigSummary();
+        renderTelemetryTable();
+        drawTrajectoryGraph();
+        renderEquations();
+
+        // Calcul du T optimal (temps d'arrivée du plus rapide)
+        computeOptimalT();
+        // Afficher la synchronisation avec ce T
+        renderSyncTable(currentT);
+
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise([analysisContainer]).catch(err => console.warn('MathJax error', err));
+        }
+
+        analysisContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ===================================================================
+    // 5. FONCTIONS DE RENDU
+    // ===================================================================
+
+    // 5.1 Résumé de la configuration
+    function renderConfigSummary() {
+        let html = `<p><strong>Date :</strong> ${currentJSON.date_simulation ? new Date(currentJSON.date_simulation).toLocaleString() : 'inconnue'} &nbsp;|&nbsp; <strong>Ralenti :</strong> ${currentJSON.facteur_ralenti_utilise || 1}x</p>`;
+        html += `<div class="table-responsive"><table><thead><tr><th>Couloir</th><th>Modèle</th><th>Retard (s)</th><th>Avance initiale (m)</th></tr></thead><tbody>`;
+        configVehicles.forEach((v, i) => {
+            const badge = `badge-v${i+1}`;
+            html += `<tr><td><span class="badge ${badge}">Couloir ${v.couloir}</span></td><td><strong>${v.nom}</strong></td><td>${v.retard_depart_s}</td><td>${v.avance_initiale_m}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        configSummary.innerHTML = html;
+    }
+
+    // 5.2 Tableau télémétrique (extrait)
+    function renderTelemetryTable() {
+        const rows = telemetryData.slice(0, 18);
+        let html = '';
+        rows.forEach(r => {
+            html += `<tr><td><strong>${r.temps_secondes}</strong></td>
+                <td>${r.v1_distance_metres}</td><td>${r.v1_acceleration_ms2}</td>
+                <td>${r.v2_distance_metres}</td><td>${r.v2_acceleration_ms2}</td>
+                <td>${r.v3_distance_metres}</td><td>${r.v3_acceleration_ms2}</td></tr>`;
+        });
+        if (telemetryData.length > 18) {
+            html += `<tr><td colspan="7" style="font-style:italic;color:#64748b;">... ${telemetryData.length - 18} lignes supplémentaires ...</td></tr>`;
+        }
+        telemetryBody.innerHTML = html;
+    }
+
+    // 5.3 Graphique des trajectoires
+    function drawTrajectoryGraph() {
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+        const gW = W - margin.left - margin.right;
+        const gH = H - margin.top - margin.bottom;
+        const maxT = 25, maxD = 800;
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(margin.left, margin.top, gW, gH);
+
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#475569';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let d = 0; d <= maxD; d += 100) {
+            const y = margin.top + gH - (d / maxD) * gH;
+            ctx.beginPath();
+            ctx.moveTo(margin.left, y);
+            ctx.lineTo(margin.left + gW, y);
+            ctx.stroke();
+            ctx.fillText(`${d} m`, margin.left - 10, y);
+        }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let t = 0; t <= maxT; t += 2) {
+            const x = margin.left + (t / maxT) * gW;
+            ctx.beginPath();
+            ctx.moveTo(x, margin.top);
+            ctx.lineTo(x, margin.top + gH);
+            ctx.stroke();
+            ctx.fillText(`${t} s`, x, margin.top + gH + 8);
+        }
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(margin.left, margin.top);
+        ctx.lineTo(margin.left, margin.top + gH);
+        ctx.lineTo(margin.left + gW, margin.top + gH);
+        ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Temps t (s)', margin.left + gW/2, H - 10);
+        ctx.save();
+        ctx.translate(15, margin.top + gH/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('Distance d(t) (m)', 0, 0);
+        ctx.restore();
+
+        const colors = ['#dc2626', '#16a34a', '#2563eb'];
+        const keys = ['v1_distance_metres', 'v2_distance_metres', 'v3_distance_metres'];
+        keys.forEach((key, idx) => {
+            ctx.strokeStyle = colors[idx];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            let started = false;
+            telemetryData.forEach(row => {
+                const val = row[key];
+                if (val !== '✖' && val !== undefined) {
+                    const x = margin.left + (row.temps_secondes / maxT) * gW;
+                    const y = margin.top + gH - (val / maxD) * gH;
+                    if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+        });
+
+        const labels = configVehicles.map((v, i) => `Couloir ${v.couloir} : ${v.nom}`);
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 13px sans-serif';
+        const legX = margin.left + 20, legY = margin.top + 20;
+        colors.forEach((c, i) => {
+            ctx.fillStyle = c;
+            ctx.fillRect(legX, legY + i*24 - 6, 16, 16);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillText(labels[i] || `V${i+1}`, legX + 24, legY + i*24 + 4);
+        });
+    }
+
+    // 5.4 Équations horaires dynamiques
+    function renderEquations() {
+        let html = '';
+        configVehicles.forEach((v, idx) => {
+            const model = MODELS[v.modele_id];
+            if (!model) return;
+            const badge = `badge-v${idx+1}`;
+            const color = ['#dc2626','#16a34a','#2563eb'][idx] || '#888';
+            const eq = model.getLatex(v.avance_initiale_m);
+            html += `
+            <div class="didactic-box" style="border-left-color:${color};">
+                <h3 style="margin-top:0;color:${color};"><span class="badge ${badge}">Couloir ${v.couloir}</span> ${model.name} — ${model.type}</h3>
+                <p><strong>Conditions initiales :</strong> avance \(d_0 = ${v.avance_initiale_m}\) m, retard \(t_0 = ${v.retard_depart_s}\) s.</p>
+                <p><strong>Analyse :</strong> ${model.desc}</p>
+                <div class="math-block">$$ \\mathbf{${eq}} $$</div>
+                <p style="font-size:0.9rem;color:#475569;">(Pour \(t < ${v.retard_depart_s}\), le véhicule est immobile à la position \(d_0\).)</p>
+            </div>`;
+        });
+        dynamicEquations.innerHTML = html;
+    }
+
+    // 5.5 Calcul du temps d'arrivée pour un modèle donné
+    function computeArrivalTime(model, d0, maxT = 100) {
+        // Recherche du premier temps où la position atteint 800
+        let t = 0;
+        let step = 0.1;
+        let pos = model.pos(t, d0);
+        while (pos < 800 && t < maxT) {
+            t += step;
+            pos = model.pos(t, d0);
+            if (pos >= 800) break;
+            // Si on dépasse maxT, on augmente
+            if (t >= maxT) {
+                maxT *= 2;
+            }
+        }
+        if (pos < 800) return Infinity; // n'atteint pas
+        // Affiner par dichotomie
+        let lo = t - step, hi = t;
+        for (let i = 0; i < 50; i++) {
+            let mid = (lo + hi) / 2;
+            let p = model.pos(mid, d0);
+            if (p < 800) lo = mid;
+            else hi = mid;
+        }
+        return (lo + hi) / 2;
+    }
+
+    // 5.6 Calcul du T optimal (temps du plus rapide)
+    function computeOptimalT() {
+        let times = [];
+        configVehicles.forEach((v) => {
+            const model = MODELS[v.modele_id];
+            if (!model) return;
+            // On prend en compte l'avance initiale (d0) et le retard (on décale le temps)
+            // Pour le calcul du temps d'arrivée, on utilise la fonction pos avec l'avance.
+            const d0 = v.avance_initiale_m;
+            const t_arrivee = computeArrivalTime(model, d0);
+            if (isFinite(t_arrivee)) {
+                times.push(t_arrivee);
+            }
+        });
+        if (times.length === 0) {
+            optimalT = 16;
+        } else {
+            optimalT = Math.min(...times);
+            // Arrondir à 2 décimales
+            optimalT = Math.round(optimalT * 100) / 100;
+        }
+        currentT = optimalT;
+        syncTInput.value = optimalT;
+    }
+
+    // 5.7 Tableau de synchronisation pour un T donné
+    function renderSyncTable(T) {
+        const T_STAR = T;
+        let html = '';
+        let allFeasible = true;
+
+        configVehicles.forEach((v, idx) => {
+            const model = MODELS[v.modele_id];
+            if (!model) return;
+            const badge = `badge-v${idx+1}`;
+            // Calcul de X0 = 800 - d_i(T) en tenant compte de l'avance initiale d0
+            const d0 = v.avance_initiale_m;
+            // Pour la synchronisation, on considère que la position à l'instant T est donnée par pos(T, d0)
+            // Mais pos inclut déjà l'avance. En effet, la position réelle est d0 + f(T) (avec retard éventuel).
+            // Ici on suppose retard = 0 pour simplifier, mais on peut intégrer le retard.
+            // On utilise la fonction pos qui inclut déjà d0.
+            const distAtT = model.pos(T_STAR, d0);
+            let X0 = 800 - distAtT;
+            X0 = Math.round(X0 * 100) / 100;
+            let status = '';
+            if (X0 < 0) {
+                status = `<strong style="color:#dc2626;">${X0} m</strong> (négatif, impossible)`;
+                allFeasible = false;
+            } else if (X0 === 0) {
+                status = '0 m (ligne standard)';
+            } else {
+                status = `<strong>+ ${X0} m</strong> (avance sur grille)`;
+            }
+            // Formule générique
+            const formula = model.syncFormulaLatex || '—';
+            html += `<tr>
+                <td><span class="badge ${badge}">Couloir ${v.couloir}</span></td>
+                <td>${model.name}</td>
+                <td>\\( ${formula} \\)</td>
+                <td>\\( 800 - d_i(${T_STAR.toFixed(2)}) = ${X0} \\) m</td>
+                <td>${status}</td>
+            </tr>`;
+        });
+
+        syncTableBody.innerHTML = html;
+
+        let conclusionHtml = '';
+        if (allFeasible) {
+            conclusionHtml = `<div class="step-title">✅ Solution réalisable</div>
+            <p>Tous les véhicules peuvent franchir la ligne d’arrivée à \\(T^* = ${T_STAR.toFixed(2)}\\) s en ajustant leur position initiale comme indiqué ci-dessus. Toutes les positions initiales sont positives ou nulles.</p>`;
+        } else {
+            conclusionHtml = `<div class="step-title">⚠️ Ajustements nécessaires</div>
+            <p>Certains véhicules nécessitent une position initiale négative (recul impossible sur la grille). Pour synchroniser l’arrivée, envisagez :</p>
+            <ul>
+                <li>Choisir un instant \\(T^*\\) plus petit (par exemple le temps du plus rapide) pour garantir des positions non négatives.</li>
+                <li>Changer le modèle cinématique de certains véhicules.</li>
+                <li>Ajouter un retard au départ pour les plus rapides.</li>
+            </ul>`;
+        }
+        syncConclusion.innerHTML = conclusionHtml;
+    }
+
+    // 5.8 Mise à jour de la synchronisation avec un nouveau T
+    function updateSync() {
+        const val = parseFloat(syncTInput.value);
+        if (isNaN(val) || val <= 0) {
+            alert('Veuillez entrer un temps strictement positif.');
+            return;
+        }
+        currentT = val;
+        renderSyncTable(currentT);
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise([document.getElementById('syncTableContainer')]).catch(err => console.warn('MathJax error', err));
+        }
+    }
+
+    function resetSyncToOptimal() {
+        syncTInput.value = optimalT;
+        currentT = optimalT;
+        renderSyncTable(optimalT);
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise([document.getElementById('syncTableContainer')]).catch(err => console.warn('MathJax error', err));
+        }
+    }
+
+    // ===================================================================
+    // 6. GESTION DE LA MODALE
+    // ===================================================================
+    window.onclick = function(e) {
+        const modal = document.getElementById('copyrightModal');
+        if (e.target === modal) modal.style.display = 'none';
+    };
+</script>
+</body>
+</html>

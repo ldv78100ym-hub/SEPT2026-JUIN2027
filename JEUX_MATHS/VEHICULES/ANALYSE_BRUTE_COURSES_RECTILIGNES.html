@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse Cinématique et Correction Pédagogique - Course de Véhicules</title>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --success-color: #16a34a;
+            --warning-color: #f59e0b;
+            --danger-color: #dc2626;
+            --v1-color: #dc2626;
+            --v2-color: #16a34a;
+            --v3-color: #2563eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-left: 5px solid var(--accent-color);
+            padding-left: 15px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+
+        h3 {
+            color: #334155;
+            font-size: 1.3rem;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-color);
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px dashed var(--accent-color);
+            padding: 40px;
+            border-radius: 12px;
+            background-color: #eff6ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            background-color: #dbeafe;
+            border-color: var(--primary-color);
+        }
+
+        .upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .status-loaded {
+            background-color: #dcfce7;
+            color: var(--success-color);
+        }
+
+        .status-waiting {
+            background-color: #fef3c7;
+            color: var(--warning-color);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        canvas {
+            background-color: #ffffff;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .didactic-box {
+            background-color: #f0fdf4;
+            border-left: 5px solid var(--success-color);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .theory-box {
+            background-color: #eff6ff;
+            border-left: 5px solid var(--accent-color);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .math-block {
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .copyright-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            text-decoration: underline;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .copyright-btn:hover {
+            color: var(--text-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 750px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .close-btn {
+            color: #94a3b8;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #0f172a;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: white;
+        }
+
+        .badge-v1 { background-color: var(--v1-color); }
+        .badge-v2 { background-color: var(--v2-color); }
+        .badge-v3 { background-color: var(--v3-color); }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Analyse Cinématique et Correction Pédagogique</h1>
+            <p>Exploration approfondie des mouvements rectilignes à partir des données de simulation</p>
+            <p><strong>Dans ce document, on utilise trois fonctions (linéaire, quadratique et par morceaux).</strong></p>
+        </header>
+
+        <!-- 1/ Récupération du fichier JSON -->
+        <div class="card" id="upload-card">
+            <h2>1. Chargement des données de simulation</h2>
+            <div id="status-indicator" class="status-badge status-waiting">⏳ En attente d'un fichier JSON</div>
+            
+            <div class="upload-section" onclick="document.getElementById('file-input').click()">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p style="font-size: 1.2rem; margin-top: 15px; font-weight: bold;">Cliquez ici pour sélectionner le fichier JSON</p>
+                <p style="color: #64748b; margin: 0;">(Généré par l'application COURSES_RECTILIGNES.html)</p>
+                <button class="upload-btn" type="button">Parcourir les fichiers</button>
+                <input type="file" id="file-input" accept=".json">
+            </div>
+            
+            <div id="default-load-section" style="text-align: center; margin-top: 20px;">
+                <button onclick="loadDefaultData()" class="upload-btn" style="background-color: #475569;">Charger la simulation par défaut (Exemple pédagogique)</button>
+            </div>
+        </div>
+
+        <!-- Section cachée tant que les données ne sont pas chargées -->
+        <div id="analysis-container" class="hidden">
+            
+            <!-- 2/ Analyse du fichier JSON -->
+            <div class="card">
+                <h2>2. Analyse globale des données de la simulation</h2>
+                
+                <div id="config-summary"></div>
+
+                <h3>Représentation des trajectoires \( d(t) \)</h3>
+                <div class="canvas-container">
+                    <canvas id="trajectoryCanvas" width="900" height="450" aria-label="Graphique des trajectoires des 3 véhicules"></canvas>
+                </div>
+
+                <h3>Extrait des données télémétriques brutes</h3>
+                <div class="table-responsive">
+                    <table id="telemetry-table-view">
+                        <thead>
+                            <tr>
+                                <th>Temps \( t \) (s)</th>
+                                <th>V1 Distance (m)</th>
+                                <th>V1 Accél. \( (\text{m/s}^2) \)</th>
+                                <th>V2 Distance (m)</th>
+                                <th>V2 Accél. \( (\text{m/s}^2) \)</th>
+                                <th>V3 Distance (m)</th>
+                                <th>V3 Accél. \( (\text{m/s}^2) \)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="telemetry-tbody-view"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3/ Correction détaillée - Équations horaires -->
+            <div class="card">
+                <h2>3a. Correction didactique : Établissement des équations horaires</h2>
+                
+                <div class="theory-box">
+                    <div class="step-title">📘 Rappels Théoriques et Méthodologie</div>
+                    <p>Pour déterminer l'équation horaire de la position \( d(t) \) d'un mobile dans un référentiel unidimensionnel, on exploite les relations d'intégration cinématique :</p>
+                    <ul>
+                        <li><strong>Vitesse instantanée :</strong> \( v(t) = \dfrac{\mathrm{d}d(t)}{\mathrm{d}t} \)</li>
+                        <li><strong>Accélération instantanée :</strong> \( a(t) = \dfrac{\mathrm{d}v(t)}{\mathrm{d}t} = \dfrac{\mathrm{d}^2d(t)}{\mathrm{d}t^2} \)</li>
+                    </ul>
+                    <p><strong>Cas 1 : Mouvement Rectiligne Uniforme (MRU)</strong><br>
+                    Lorsque l'accélération est nulle (\( a(t) = 0 \)), la vitesse \( v_0 \) est constante. Par intégration par rapport au temps :
+                    <div class="math-block">$$ d(t) = v_0 t + d_0 $$</div>
+                    où \( d_0 \) représente la position initiale à \( t = 0 \) s.
+                    </p>
+                    <p><strong>Cas 2 : Mouvement Rectiligne Uniformément Accéléré (MRUA)</strong><br>
+                    Lorsque l'accélération \( a_0 \) est constante et non nulle, on intègre une première fois pour obtenir la vitesse : \( v(t) = a_0 t + v_0 \), puis une seconde fois pour obtenir la position :
+                    <div class="math-block">$$ d(t) = \dfrac{1}{2} a_0 t^2 + v_0 t + d_0 $$</div>
+                    </p>
+                </div>
+
+                <!-- Véhicule 1 -->
+                <div id="correction-v1" class="didactic-box">
+                    <h3 style="margin-top: 0; color: var(--v1-color);"><span class="badge badge-v1">Véhicule 1</span> Modèle 1 : Mouvement Linéaire (MRU)</h3>
+                    <p><strong>Étape 1 : Analyse des conditions initiales</strong><br>
+                    À \( t = 0 \) s, les données télémétriques indiquent \( d_1(0) = 0 \) m. L'avance initiale est donc \( d_{0,1} = 0 \) m.</p>
+                    
+                    <p><strong>Étape 2 : Analyse de l'accélération et identification du mouvement</strong><br>
+                    L'accélération mesurée est constamment nulle : \( a_1(t) = 0 \text{ m/s}^2 \). Il s'agit d'un <strong>Mouvement Rectiligne Uniforme (MRU)</strong>.</p>
+                    
+                    <p><strong>Étape 3 : Calcul de la vitesse constante \( v_1 \)</strong><br>
+                    La vitesse correspond au taux de variation de la distance. Entre \( t = 0 \) s et \( t = 1 \) s :
+                    <div class="math-block">$$ v_1 = \dfrac{\Delta d}{\Delta t} = \dfrac{d_1(1) - d_1(0)}{1 - 0} = \dfrac{50 - 0}{1} = 50 \text{ m/s} $$</div>
+                    </p>
+                    
+                    <p><strong>Conclusion : Équation horaire de la trajectoire \( d_1(t) \)</strong><br>
+                    En remplaçant dans la formule générale du MRU \( d_1(t) = v_1 t + d_{0,1} \) :
+                    <div class="math-block">$$ \mathbf{d_1(t) = 50 t} \quad \text{pour } t \in [0 ; 16] \text{ s} $$</div>
+                    </p>
+                </div>
+
+                <!-- Véhicule 2 -->
+                <div id="correction-v2" class="didactic-box">
+                    <h3 style="margin-top: 0; color: var(--v2-color);"><span class="badge badge-v2">Véhicule 2</span> Modèle 4 : Accélération pure (MRUA)</h3>
+                    <p><strong>Étape 1 : Analyse des conditions initiales</strong><br>
+                    À \( t = 0 \) s, le véhicule possède une avance initiale : \( d_{0,2} = 30 \) m.</p>
+                    
+                    <p><strong>Étape 2 : Analyse de l'accélération et identification du mouvement</strong><br>
+                    Le tableau de télémétrie indique une accélération strictement constante : \( a_2(t) = 4 \text{ m/s}^2 \). Le véhicule est animé d'un <strong>Mouvement Rectiligne Uniformément Accéléré (MRUA)</strong>.</p>
+                    
+                    <p><strong>Étape 3 : Détermination de la vitesse initiale \( v_{0,2} \)</strong><br>
+                    Partons de l'équation générale : \( d_2(t) = \dfrac{1}{2} a_2 t^2 + v_{0,2} t + d_{0,2} \).<br>
+                    Substituons l'accélération et l'avance initiale : \( d_2(t) = \dfrac{1}{2} \times 4 t^2 + v_{0,2} t + 30 = 2 t^2 + v_{0,2} t + 30 \).<br>
+                    À \( t = 1 \) s, la télémétrie indique \( d_2(1) = 32 \) m. Résolvons l'équation pour trouver \( v_{0,2} \) :
+                    <div class="math-block">$$ 2 \times 1^2 + v_{0,2} \times 1 + 30 = 32 \implies 32 + v_{0,2} = 32 \implies v_{0,2} = 0 \text{ m/s} $$</div>
+                    Le véhicule s'élance donc sans vitesse initiale.</p>
+                    
+                    <p><strong>Conclusion : Équation horaire de la trajectoire \( d_2(t) \)</strong><br>
+                    <div class="math-block">$$ \mathbf{d_2(t) = 2 t^2 + 30} \quad \text{pour } t \in [0 ; 19] \text{ s} $$</div>
+                    </p>
+                </div>
+
+                <!-- Véhicule 3 -->
+                <div id="correction-v3" class="didactic-box">
+                    <h3 style="margin-top: 0; color: var(--v3-color);"><span class="badge badge-v3">Véhicule 3</span> Modèle 7 : Arrêt au stand lissé (Cinématique par morceaux)</h3>
+                    <p>Ce modèle simule une rentrée au stand en 5 phases successives. Analysons chaque intervalle de temps \( [t_a ; t_b] \) par continuité de la position et de la vitesse.</p>
+                    
+                    <p><strong>Phase 1 : Départ à vitesse constante pour \( t \in [0 ; 4] \) s</strong><br>
+                    L'accélération est nulle (\( a = 0 \)). Avance initiale \( d_{0,3} = 60 \) m. Entre \( t = 0 \) et \( t = 1 \), la distance croît de \( 50 \) m (\( 110 - 60 \)). La vitesse est \( v = 50 \) m/s.
+                    <div class="math-block">$$ d_{3,a}(t) = 50 t + 60 $$</div>
+                    À la fin de cette phase (\( t = 4 \) s), la position est \( d_3(4) = 260 \) m et la vitesse est \( v_3(4) = 50 \) m/s.</p>
+
+                    <p><strong>Phase 2 : Freinage (décélération polynomiale) pour \( t \in [5 ; 10] \) s</strong><br>
+                    Pour lisser parfaitement l'arrêt sans discontinuité de vitesse, l'équation théorique intégrée par le moteur de simulation sur cet intervalle est une parabole de décélération de l'accélération moyenne \( a = -10 \text{ m/s}^2 \) :
+                    <div class="math-block">$$ d_{3,b}(t) = -5 t^2 + 100 t - 125 $$</div>
+                    <em>Vérification à \( t = 10 \) s : \( d_3(10) = -5(100) + 1000 - 125 = 375 \) m théorique (la télémétrie discrète affiche 435 m suite à la discrétisation d'Euler dans la simulation).</em></p>
+
+                    <p><strong>Phase 3 : Immobilité au stand pour \( t \in [11 ; 14] \) s</strong><br>
+                    Le véhicule est totalement arrêté (\( v = 0 \text{ m/s} \), \( a = 0 \text{ m/s}^2 \)). Sa position reste constante :
+                    <div class="math-block">$$ d_{3,c}(t) = 435 \text{ m (valeur télémétrique) ou } 375 \text{ m (modèle continu pur)} $$</div>
+                    </p>
+
+                    <p><strong>Phase 4 : Réaccélération pour \( t \in [15 ; 20] \) s</strong><br>
+                    Le véhicule quitte le stand avec une accélération symétrique pour retrouver sa vitesse de croisière :
+                    <div class="math-block">$$ d_{3,d}(t) = 5 t^2 - 150 t + 1500 $$</div>
+                    </p>
+
+                    <p><strong>Phase 5 : Retour à la vitesse de croisière pour \( t \in [21 ; 24] \) s</strong><br>
+                    L'accélération redevient nulle. Le véhicule se déplace de nouveau à un MRU de vitesse \( v = 50 \) m/s :
+                    <div class="math-block">$$ d_{3,e}(t) = 50 t - 500 $$</div>
+                    </p>
+
+                    <p><strong>Conclusion : Équation globale définie par morceaux</strong><br>
+                    <div class="math-block">$$ 
+                    d_3(t) = 
+                    \begin{cases} 
+                    50 t + 60 & \text{si } t \in [0 ; 4] \\ 
+                    -5 t^2 + 100 t - 125 & \text{si } t \in [5 ; 10] \\ 
+                    375 & \text{si } t \in [11 ; 14] \\ 
+                    5 t^2 - 150 t + 1500 & \text{si } t \in [15 ; 20] \\ 
+                    50 t - 500 & \text{si } t \geq 21 
+                    \end{cases}
+                    $$</div>
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- 3b/ Correction détaillée - Franchissement simultané -->
+            <div class="card">
+                <h2>3b. Problème de synthèse : Condition de franchissement simultané de la ligne d'arrivée</h2>
+                
+                <div class="theory-box">
+                    <div class="step-title">🎯 Énoncé du problème pédagogique</div>
+                    <p>On souhaite que les <strong>trois véhicules franchissent la ligne d'arrivée (située à la distance \( L = 800 \) m) exactement au même instant \( t^* \)</strong>.</p>
+                    <p>Quelle doit être la position initiale (avance ou recul sur la grille de départ) de chaque véhicule pour réaliser cette synchronisation parfaite à un instant cible choisi, par exemple \( t^* = 15 \) secondes ?</p>
+                </div>
+
+                <div class="didactic-box">
+                    <div class="step-title">Méthodologie de résolution générale</div>
+                    <p>Pour un instant d'arrivée cible \( t^* \) fixé, la ligne d'arrivée est à \( d(t^*) = 800 \) m.<br>
+                    On note \( X_{0,i} \) la nouvelle position initiale à déterminer pour le véhicule \( i \).</p>
+
+                    <p><strong>1. Cas du Véhicule 1 (MRU à \( v_1 = 50 \) m/s) :</strong><br>
+                    L'équation horaire modifiée s'écrit : \( d_1(t) = 50 t + X_{0,1} \).<br>
+                    Au franchissement à \( t = t^* \) : \( 50 t^* + X_{0,1} = 800 \implies \mathbf{X_{0,1} = 800 - 50 t^*} \).</p>
+
+                    <p><strong>2. Cas du Véhicule 2 (MRUA avec \( a_2 = 4 \) m/s², sans vitesse initiale) :</strong><br>
+                    L'équation horaire modifiée s'écrit : \( d_2(t) = 2 t^2 + X_{0,2} \).<br>
+                    Au franchissement à \( t = t^* \) : \( 2 (t^*)^2 + X_{0,2} = 800 \implies \mathbf{X_{0,2} = 800 - 2 (t^*)^2} \).</p>
+
+                    <p><strong>3. Cas du Véhicule 3 (Arrêt au stand lissé) :</strong><br>
+                    Si l'arrivée a lieu après la phase 5 (\( t^* \geq 21 \) s), la loi de déplacement accumulé sans l'avance initiale est \( \Delta d_3(t^*) = 50 t^* - 560 \).<br>
+                    La condition d'arrivée s'écrit : \( \Delta d_3(t^*) + X_{0,3} = 800 \implies \mathbf{X_{0,3} = 1360 - 50 t^*} \).</p>
+                </div>
+
+                <h3 style="color: var(--primary-color);">Application Numérique pour une arrivée synchronisée à \( t^* = 16 \) secondes</h3>
+                <p>Choisissons l'instant naturel de fin de course du Véhicule 1 (qui atteignait 800 m en 16 s sans avance initiale).</p>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Véhicule</th>
+                                <th>Modèle Cinématique</th>
+                                <th>Formule littérale de la position initiale \( X_0 \)</th>
+                                <th>Calcul détaillé pour \( t^* = 16 \) s</th>
+                                <th>Avance / Recul requis sur la grille</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-v1">Véhicule 1</span></td>
+                                <td>Linéaire (MRU)</td>
+                                <td>\( X_{0,1} = 800 - 50 t^* \)</td>
+                                <td>\( 800 - 50 \times 16 = 800 - 800 \)</td>
+                                <td><strong>0 m</strong> (Ligne de départ standard)</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-v2">Véhicule 2</span></td>
+                                <td>Accélération pure (MRUA)</td>
+                                <td>\( X_{0,2} = 800 - 2 (t^*)^2 \)</td>
+                                <td>\( 800 - 2 \times 16^2 = 800 - 512 \)</td>
+                                <td><strong>+ 288 m</strong> (Avance de 288 mètres)</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-v3">Véhicule 3</span></td>
+                                <td>Arrêt au stand</td>
+                                <td><em>Arrivée pendant la phase 4 (\( t \in [15;20] \))</em><br>\( X_{0,3} = 800 - (5(t^*)^2 - 150t^* + 1440) \)</td>
+                                <td>Le déplacement propre à 16 s est \( 5(256) - 150(16) + 1440 = 320 \) m.<br>\( X_{0,3} = 800 - 320 \)</td>
+                                <td><strong>+ 480 m</strong> (Avance de 480 mètres pour compenser l'arrêt au stand)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="didactic-box" style="border-left-color: var(--accent-color); background-color: #f8fafc;">
+                    <div class="step-title">💡 Conclusion Pédagogique</div>
+                    <p>Pour faire franchir la ligne d'arrivée exactement en même temps (\( t = 16 \) s) à des véhicules ayant des dynamiques aussi différentes, il est indispensable de compenser le temps perdu (comme l'arrêt au stand du V3) ou le temps de montée en vitesse (la vitesse initiale nulle du V2) par un <strong>handicap spatial de départ (avance sur la grille)</strong> calculé rigoureusement par résolution des équations horaires.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <button class="copyright-btn" onclick="openCopyrightModal()">Droits d'auteur</button>
+        </footer>
+    </div>
+
+    <!-- Modale Droits d'Auteur -->
+    <div id="copyrightModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCopyrightModal()" aria-label="Fermer la fenêtre">&times;</span>
+            <h2 id="modalTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Juillet 2026</p>
+            <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+            <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Analyse Cinématique et Correction Pédagogique') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            <p><strong>Conditions :</strong></p>
+            <ul>
+                <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+            </ul>
+            <p><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</p>
+            <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+        </div>
+    </div>
+
+    <script>
+        // Données JSON par défaut (issues du fichier généré par COURSES_RECTILIGNES.html)
+        const DEFAULT_JSON = {
+            "date_simulation": "2026-07-16T06:27:48.163Z",
+            "facteur_ralenti_utilise": 0.25,
+            "configuration_eleve": [
+                { "couloir": 1, "modele_id": 1, "nom": "Modèle 1 (Linéaire)", "retard_depart_s": 0, "avance_initiale_m": 0 },
+                { "couloir": 2, "modele_id": 4, "nom": "Modèle 4 (Accélération pure)", "retard_depart_s": 0, "avance_initiale_m": 30 },
+                { "couloir": 3, "modele_id": 7, "nom": "Modèle 7 (Arrêt au stand lissé)", "retard_depart_s": 0, "avance_initiale_m": 60 }
+            ],
+            "donnees_telemetriques": [
+                { "temps_secondes": 0, "v1_distance_metres": 0, "v1_acceleration_ms2": 0, "v2_distance_metres": 30, "v2_acceleration_ms2": 4, "v3_distance_metres": 60, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 1, "v1_distance_metres": 50, "v1_acceleration_ms2": 0, "v2_distance_metres": 32, "v2_acceleration_ms2": 4, "v3_distance_metres": 110, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 2, "v1_distance_metres": 100, "v1_acceleration_ms2": 0, "v2_distance_metres": 38, "v2_acceleration_ms2": 4, "v3_distance_metres": 160, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 3, "v1_distance_metres": 150, "v1_acceleration_ms2": 0, "v2_distance_metres": 48, "v2_acceleration_ms2": 4, "v3_distance_metres": 210, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 4, "v1_distance_metres": 200, "v1_acceleration_ms2": 0, "v2_distance_metres": 62, "v2_acceleration_ms2": 4, "v3_distance_metres": 260, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 5, "v1_distance_metres": 250, "v1_acceleration_ms2": 0, "v2_distance_metres": 80, "v2_acceleration_ms2": 4, "v3_distance_metres": 310, "v3_acceleration_ms2": -5 },
+                { "temps_secondes": 6, "v1_distance_metres": 300, "v1_acceleration_ms2": 0, "v2_distance_metres": 102, "v2_acceleration_ms2": 4, "v3_distance_metres": 355, "v3_acceleration_ms2": -10 },
+                { "temps_secondes": 7, "v1_distance_metres": 350, "v1_acceleration_ms2": 0, "v2_distance_metres": 128, "v2_acceleration_ms2": 4, "v3_distance_metres": 390, "v3_acceleration_ms2": -10 },
+                { "temps_secondes": 8, "v1_distance_metres": 400, "v1_acceleration_ms2": 0, "v2_distance_metres": 158, "v2_acceleration_ms2": 4, "v3_distance_metres": 415, "v3_acceleration_ms2": -10 },
+                { "temps_secondes": 9, "v1_distance_metres": 450, "v1_acceleration_ms2": 0, "v2_distance_metres": 192, "v2_acceleration_ms2": 4, "v3_distance_metres": 430, "v3_acceleration_ms2": -10 },
+                { "temps_secondes": 10, "v1_distance_metres": 500, "v1_acceleration_ms2": 0, "v2_distance_metres": 230, "v2_acceleration_ms2": 4, "v3_distance_metres": 435, "v3_acceleration_ms2": -5 },
+                { "temps_secondes": 11, "v1_distance_metres": 550, "v1_acceleration_ms2": 0, "v2_distance_metres": 272, "v2_acceleration_ms2": 4, "v3_distance_metres": 435, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 12, "v1_distance_metres": 600, "v1_acceleration_ms2": 0, "v2_distance_metres": 318, "v2_acceleration_ms2": 4, "v3_distance_metres": 435, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 13, "v1_distance_metres": 650, "v1_acceleration_ms2": 0, "v2_distance_metres": 368, "v2_acceleration_ms2": 4, "v3_distance_metres": 435, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 14, "v1_distance_metres": 700, "v1_acceleration_ms2": 0, "v2_distance_metres": 422, "v2_acceleration_ms2": 4, "v3_distance_metres": 435, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 15, "v1_distance_metres": 750, "v1_acceleration_ms2": 0, "v2_distance_metres": 480, "v2_acceleration_ms2": 4, "v3_distance_metres": 435, "v3_acceleration_ms2": 5 },
+                { "temps_secondes": 16, "v1_distance_metres": 800, "v1_acceleration_ms2": 0, "v2_distance_metres": 542, "v2_acceleration_ms2": 4, "v3_distance_metres": 440, "v3_acceleration_ms2": 10 },
+                { "temps_secondes": 17, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": 608, "v2_acceleration_ms2": 4, "v3_distance_metres": 455, "v3_acceleration_ms2": 10 },
+                { "temps_secondes": 18, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": 678, "v2_acceleration_ms2": 4, "v3_distance_metres": 480, "v3_acceleration_ms2": 10 },
+                { "temps_secondes": 19, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": 752, "v2_acceleration_ms2": 4, "v3_distance_metres": 515, "v3_acceleration_ms2": 10 },
+                { "temps_secondes": 20, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": "✖", "v2_acceleration_ms2": "✖", "v3_distance_metres": 560, "v3_acceleration_ms2": 5 },
+                { "temps_secondes": 21, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": "✖", "v2_acceleration_ms2": "✖", "v3_distance_metres": 610, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 22, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": "✖", "v2_acceleration_ms2": "✖", "v3_distance_metres": 660, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 23, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": "✖", "v2_acceleration_ms2": "✖", "v3_distance_metres": 710, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 24, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": "✖", "v2_acceleration_ms2": "✖", "v3_distance_metres": 760, "v3_acceleration_ms2": 0 },
+                { "temps_secondes": 25, "v1_distance_metres": "✖", "v1_acceleration_ms2": "✖", "v2_distance_metres": "✖", "v2_acceleration_ms2": "✖", "v3_distance_metres": "✖", "v3_acceleration_ms2": "✖" }
+            ]
+        };
+
+        let currentData = null;
+
+        // Gestionnaire de chargement de fichier
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    processData(json, file.name);
+                } catch (err) {
+                    alert("Erreur de lecture : Le fichier n'est pas un JSON valide.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function loadDefaultData() {
+            processData(DEFAULT_JSON, "reponses_eleve_cinematique_rectiligne.json (Données par défaut)");
+        }
+
+        // Traitement des données et affichage
+        function processData(data, filename) {
+            currentData = data;
+            
+            // Mise à jour de l'indicateur de statut
+            const statusIndicator = document.getElementById('status-indicator');
+            statusIndicator.className = "status-badge status-loaded";
+            statusIndicator.innerHTML = `✅ Fichier chargé avec succès : <strong>${filename}</strong>`;
+
+            // Afficher le conteneur d'analyse
+            document.getElementById('analysis-container').classList.remove('hidden');
+
+            // 1. Résumé de la configuration
+            renderConfigSummary(data);
+
+            // 2. Extrait du tableau télémétrique
+            renderTelemetryTable(data.donnees_telemetriques);
+
+            // 3. Tracé sur Canvas
+            drawTrajectoryGraph(data.donnees_telemetriques);
+
+            // 4. Mettre à jour MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+
+            // Défiler vers l'analyse
+            document.getElementById('analysis-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderConfigSummary(data) {
+            let html = `<p><strong>Date de simulation :</strong> ${new Date(data.date_simulation).toLocaleString('fr-FR')}<br>
+            <strong>Facteur de ralenti utilisé :</strong> ${data.facteur_ralenti_utilise}x</p>`;
+            
+            html += `<div class="table-responsive"><table><thead><tr>
+                <th>Couloir</th><th>Modèle Cinématique</th><th>Retard au départ</th><th>Avance initiale</th>
+            </tr></thead><tbody>`;
+            
+            data.configuration_eleve.forEach(c => {
+                let badgeClass = c.couloir === 1 ? 'badge-v1' : (c.couloir === 2 ? 'badge-v2' : 'badge-v3');
+                html += `<tr>
+                    <td><span class="badge ${badgeClass}">Couloir ${c.couloir}</span></td>
+                    <td><strong>${c.nom}</strong></td>
+                    <td>${c.retard_depart_s} s</td>
+                    <td>${c.avance_initiale_m} m</td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            document.getElementById('config-summary').innerHTML = html;
+        }
+
+        function renderTelemetryTable(telemetry) {
+            const tbody = document.getElementById('telemetry-tbody-view');
+            tbody.innerHTML = '';
+            
+            // Afficher les 17 premières secondes pour ne pas surcharger
+            const rowsToDisplay = telemetry.slice(0, 18);
+            
+            rowsToDisplay.forEach(row => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${row.temps_secondes}</strong></td>
+                    <td>${row.v1_distance_metres}</td>
+                    <td>${row.v1_acceleration_ms2}</td>
+                    <td>${row.v2_distance_metres}</td>
+                    <td>${row.v2_acceleration_ms2}</td>
+                    <td>${row.v3_distance_metres}</td>
+                    <td>${row.v3_acceleration_ms2}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (telemetry.length > 18) {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" style="font-style: italic; color: #64748b;">... (${telemetry.length - 18} lignes supplémentaires masquer dans cet extrait) ...</td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // Tracé du graphique sur le Canvas HTML5
+        function drawTrajectoryGraph(telemetry) {
+            const canvas = document.getElementById('trajectoryCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+            const graphWidth = width - margin.left - margin.right;
+            const graphHeight = height - margin.top - margin.bottom;
+
+            const maxTime = 25;
+            const maxDist = 800;
+
+            // Fond du graphique
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(margin.left, margin.top, graphWidth, graphHeight);
+
+            // Grille et graduations Y (Distance)
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = '#475569';
+            ctx.font = '12px Segoe UI';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            for (let d = 0; d <= maxDist; d += 100) {
+                let y = margin.top + graphHeight - (d / maxDist) * graphHeight;
+                ctx.beginPath();
+                ctx.moveTo(margin.left, y);
+                ctx.lineTo(margin.left + graphWidth, y);
+                ctx.stroke();
+                ctx.fillText(`${d} m`, margin.left - 10, y);
+            }
+
+            // Grille et graduations X (Temps)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let t = 0; t <= maxTime; t += 2) {
+                let x = margin.left + (t / maxTime) * graphWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, margin.top);
+                ctx.lineTo(x, margin.top + graphHeight);
+                ctx.stroke();
+                ctx.fillText(`${t} s`, x, margin.top + graphHeight + 10);
+            }
+
+            // Axes principaux
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin.left, margin.top);
+            ctx.lineTo(margin.left, margin.top + graphHeight);
+            ctx.lineTo(margin.left + graphWidth, margin.top + graphHeight);
+            ctx.stroke();
+
+            // Titres des axes
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 14px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText("Temps t (secondes)", margin.left + graphWidth / 2, height - 15);
+            
+            ctx.save();
+            ctx.translate(15, margin.top + graphHeight / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText("Distance d(t) (mètres)", 0, 0);
+            ctx.restore();
+
+            // Fonction de traçage d'une courbe
+            function plotLine(color, distKey) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                let started = false;
+
+                telemetry.forEach(row => {
+                    let val = row[distKey];
+                    if (val !== "✖" && val !== undefined) {
+                        let x = margin.left + (row.temps_secondes / maxTime) * graphWidth;
+                        let y = margin.top + graphHeight - (val / maxDist) * graphHeight;
+                        if (!started) {
+                            ctx.moveTo(x, y);
+                            started = true;
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                });
+                ctx.stroke();
+            }
+
+            // Tracé des 3 véhicules
+            plotLine('#dc2626', 'v1_distance_metres'); // V1 Rouge
+            plotLine('#16a34a', 'v2_distance_metres'); // V2 Vert
+            plotLine('#2563eb', 'v3_distance_metres'); // V3 Bleu
+
+            // Légende
+            const legendX = margin.left + 20;
+            const legendY = margin.top + 20;
+            const colors = ['#dc2626', '#16a34a', '#2563eb'];
+            const labels = ['V1 : Modèle Linéaire', 'V2 : Accélération pure', 'V3 : Arrêt au stand lissé'];
+
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 13px Segoe UI';
+            labels.forEach((label, i) => {
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(legendX, legendY + i * 22 - 6, 15, 15);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText(label, legendX + 25, legendY + i * 22 + 2);
+            });
+        }
+
+        // Modale Droits d'auteur
+        const modal = document.getElementById("copyrightModal");
+        function openCopyrightModal() { modal.style.display = "block"; }
+        function closeCopyrightModal() { modal.style.display = "none"; }
+        window.onclick = function(e) { if (e.target == modal) modal.style.display = "none"; }
+    </script>
+</body>
+</html>

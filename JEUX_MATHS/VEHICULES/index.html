@@ -1,1 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jeux Mathématiques — Véhicules</title>
+    <style>
+        :root {
+            --bg: #f0f5f0;
+            --card-bg: #ffffff;
+            --text: #1e2a1e;
+            --text-light: #4a5a4a;
 
+            /* Couleurs Véhicules */
+            --vehicule1: #1e7a5e;
+            --vehicule1-light: #ddf0e8;
+            --vehicule1-glow: rgba(30, 122, 94, 0.30);
+
+            --vehicule2: #2a6b8f;
+            --vehicule2-light: #d4e6f2;
+            --vehicule2-glow: rgba(42, 107, 143, 0.30);
+
+            --retour: #8a6e4b;
+            --retour-light: #f0e6d8;
+            --retour-glow: rgba(138, 110, 75, 0.25);
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 15% 25%, rgba(30, 122, 94, 0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 70%, rgba(42, 107, 143, 0.06) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 10%, rgba(138, 110, 75, 0.05) 0%, transparent 45%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 750px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header .badge {
+            display: inline-block;
+            background: #fff;
+            border: 1px solid #d0dcd0;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.4rem 1.2rem;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #162016;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-weight: 400;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        /* --- CARDS GRID --- */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.75rem;
+            align-items: stretch;
+        }
+
+        /* --- CARD --- */
+        .card {
+            position: relative;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 2rem 1.75rem 1.75rem;
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+            border: 2px solid transparent;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity var(--transition);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .card.card-rectiligne::before {
+            background: radial-gradient(circle at 30% 25%, var(--vehicule1-glow) 0%, transparent 60%);
+        }
+        .card.card-vehicules::before {
+            background: radial-gradient(circle at 70% 30%, var(--vehicule2-glow) 0%, transparent 60%);
+        }
+        .card.card-retour::before {
+            background: radial-gradient(circle at 50% 35%, var(--retour-glow) 0%, transparent 60%);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: #d0dcd0;
+        }
+        .card.card-rectiligne:hover {
+            border-color: #b0d5c4;
+        }
+        .card.card-vehicules:hover {
+            border-color: #b0cfe0;
+        }
+        .card.card-retour:hover {
+            border-color: #dcccbb;
+        }
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:focus-visible {
+            outline: 3px solid #8ab8a0;
+            outline-offset: 3px;
+            border-color: #8ab8a0;
+        }
+
+        /* --- ICON --- */
+        .card-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .icon-rectiligne {
+            background: var(--vehicule1-light);
+            color: var(--vehicule1);
+        }
+        .icon-vehicules {
+            background: var(--vehicule2-light);
+            color: var(--vehicule2);
+        }
+        .icon-retour {
+            background: var(--retour-light);
+            color: var(--retour);
+        }
+
+        /* --- CONTENT --- */
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            z-index: 1;
+        }
+
+        .card-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            opacity: 0.7;
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1.3;
+            color: #1a2a1a;
+            letter-spacing: -0.01em;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.55;
+            flex: 1;
+        }
+        .card-desc strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* --- ARROW --- */
+        .card-arrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            transition: color var(--transition), gap var(--transition);
+            z-index: 1;
+            margin-top: 0.25rem;
+        }
+
+        .card-arrow svg {
+            width: 16px;
+            height: 16px;
+            transition: transform var(--transition);
+        }
+
+        .card:hover .card-arrow {
+            gap: 0.7rem;
+        }
+        .card.card-rectiligne:hover .card-arrow {
+            color: var(--vehicule1);
+        }
+        .card.card-vehicules:hover .card-arrow {
+            color: var(--vehicule2);
+        }
+        .card.card-retour:hover .card-arrow {
+            color: var(--retour);
+        }
+        .card:hover .card-arrow svg {
+            transform: translateX(3px);
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            font-size: 0.85rem;
+            color: #8f9f8f;
+            letter-spacing: 0.02em;
+        }
+
+        .footer span {
+            opacity: 0.7;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 700px) {
+            .header h1 {
+                font-size: 1.85rem;
+            }
+            .header .subtitle {
+                font-size: 0.95rem;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            .card {
+                padding: 1.5rem 1.35rem 1.35rem;
+                gap: 0.75rem;
+            }
+            .card-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
+                border-radius: 10px;
+            }
+            .card-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            body {
+                padding: 1.25rem 0.8rem;
+            }
+            .header {
+                margin-bottom: 2rem;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .card {
+                padding: 1.25rem 1rem 1.15rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <header class="header">
+            <span class="badge">🚗 Jeux Mathématiques — 2026-2027</span>
+            <h1>Simulateurs de Courses</h1>
+            <p class="subtitle">
+                Étudiez la cinématique à travers deux simulateurs interactifs&nbsp;:
+                l’un dédié aux <strong>courses rectilignes</strong> avec analyse fine,
+                l’autre aux <strong>courses de véhicules</strong> en version plus accessible.
+            </p>
+        </header>
+
+        <!-- Grille de cartes -->
+        <div class="cards-grid">
+
+            <!-- Carte 1 : Courses Rectilignes -->
+            <a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/JEUX_MATHS/VEHICULES/COURSES_RECTILIGNES.html"
+               class="card card-rectiligne"
+               target="_blank"
+               rel="noopener noreferrer"
+               aria-label="Accéder au simulateur de courses rectilignes">
+                <div class="card-icon icon-rectiligne">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="12" x2="20" y2="12" />
+                        <polyline points="8 8 4 12 8 16" />
+                        <polyline points="16 8 20 12 16 16" />
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-tag">Analyse cinématique</span>
+                    <h2 class="card-title">Courses rectilignes</h2>
+                    <p class="card-desc">
+                        Simulateur avec <strong>chronomètre</strong>, <strong>ralentisseur d’animation</strong>
+                        (de 1× à 0,05×) et <strong>télémétrie en temps réel</strong> (distances, accélérations).
+                        Export des données en JSON. Permet d’observer les phases d’accélération et les dépassements.
+                        <br /><br />
+                        <span style="background: #ddf0e8; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: #1e7a5e;">
+                            ⚙️ Niveau de difficulté : élevé
+                        </span>
+                        &nbsp;— outils d’analyse approfondis.
+                    </p>
+                </div>
+                <span class="card-arrow">
+                    Ouvrir
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Carte 2 : Courses Véhicules -->
+            <a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/JEUX_MATHS/VEHICULES/COURSES_VEHICULES.html"
+               class="card card-vehicules"
+               target="_blank"
+               rel="noopener noreferrer"
+               aria-label="Accéder au simulateur de courses de véhicules">
+                <div class="card-icon icon-vehicules">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 17h14M5 17a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2M5 17v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2M17 17v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2" />
+                        <circle cx="7" cy="15" r="1.5" fill="currentColor" />
+                        <circle cx="17" cy="15" r="1.5" fill="currentColor" />
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-tag">Cinématique générale</span>
+                    <h2 class="card-title">Courses de véhicules</h2>
+                    <p class="card-desc">
+                        Simulateur proposant les mêmes fonctionnalités de base
+                        (<strong>chronomètre</strong>, <strong>télémétrie</strong> et export JSON)
+                        mais <strong>sans ralentisseur d’animation</strong>.
+                        Idéal pour une première approche des notions de vitesse, distance et accélération.
+                        <br /><br />
+                        <span style="background: #d4e6f2; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: #2a6b8f;">
+                            🟢 Niveau de difficulté : accessible
+                        </span>
+                        &nbsp;— prise en main immédiate.
+                    </p>
+                </div>
+                <span class="card-arrow">
+                    Ouvrir
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Carte 3 : Retour au dossier parent -->
+            <a href="https://ldv78100ym-hub.github.io/SEPT2026-JUIN2027/JEUX_MATHS/VEHICULES/index.html"
+               class="card card-retour"
+               target="_blank"
+               rel="noopener noreferrer"
+               aria-label="Accéder à l'index du dossier Véhicules">
+                <div class="card-icon icon-retour">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="2.18" />
+                        <line x1="8" y1="2" x2="8" y2="22" />
+                        <line x1="16" y1="2" x2="16" y2="22" />
+                        <line x1="2" y1="8" x2="22" y2="8" />
+                        <line x1="2" y1="16" x2="22" y2="16" />
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-tag">Navigation</span>
+                    <h2 class="card-title">Dossier Véhicules</h2>
+                    <p class="card-desc">
+                        Retour vers l’<strong>index du dossier</strong> pour accéder à l’ensemble des
+                        ressources et aux éventuelles mises à jour.
+                    </p>
+                </div>
+                <span class="card-arrow">
+                    Ouvrir
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </span>
+            </a>
+
+        </div>
+
+        <!-- Pied de page -->
+        <footer class="footer">
+            <span>Portail des simulateurs de courses — Année 2026–2027</span>
+        </footer>
+    </div>
+</body>
+</html>

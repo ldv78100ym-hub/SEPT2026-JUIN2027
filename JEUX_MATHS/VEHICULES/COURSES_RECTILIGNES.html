@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de Course Mathématique - Pistes Rectilignes Parallèles</title>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --track-color: #334155;
+            --accent-color: #2563eb;
+            --border-color: #cbd5e1;
+        }
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.5;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin: 15px 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 95%;
+            max-width: 1400px;
+        }
+        .chrono-container {
+            background-color: #0f172a;
+            color: #38bdf8;
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            padding: 12px 30px;
+            border-radius: 10px;
+            border: 3px solid #334155;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 250px;
+        }
+        .chrono-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+            font-family: Verdana, Geneva, sans-serif;
+            font-weight: bold;
+        }
+        .chrono-display {
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+        .canvas-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            border: 3px solid var(--text-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            padding: 15px 0;
+            overflow-x: auto;
+        }
+        canvas {
+            width: 100%;
+            max-width: 950px;
+            height: auto;
+            display: block;
+        }
+        .main-actions {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .main-actions button {
+            padding: 16px;
+            font-size: 1.15rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .panel {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid var(--accent-color);
+            width: 100%;
+            max-width: 1300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #e2e8f0;
+        }
+        .control-group:last-of-type {
+            border-bottom: none;
+        }
+        .slowmo-box {
+            background-color: #eff6ff;
+            border: 2px solid #3b82f6;
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        .role-desc {
+            font-size: 0.85rem;
+            color: #475569;
+            margin: 4px 0 12px 0;
+            font-style: italic;
+            line-height: 1.4;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: #fff;
+            color: var(--text-color);
+        }
+        select:focus, input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .input-col {
+            flex: 1;
+            min-width: 140px;
+        }
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button.stop {
+            background-color: #dc2626;
+        }
+        button.stop:hover {
+            background-color: #b91c1c;
+        }
+        button.secondary {
+            background-color: #475569;
+        }
+        button.secondary:hover {
+            background-color: #334155;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-left: 5px solid #16a34a;
+            border-radius: 6px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+        .telemetry-section {
+            width: 100%;
+            max-width: 1300px;
+            margin-top: 20px;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+        .telemetry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 15px;
+        }
+        .telemetry-header h3 {
+            margin: 0;
+            color: #0f172a;
+        }
+        .precision-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .precision-container select {
+            width: auto;
+            padding: 8px 12px;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            scroll-behavior: smooth;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        tr.new-row {
+            animation: highlightRow 1s ease-out;
+        }
+        @keyframes highlightRow {
+            0% { background-color: #dbeafe; }
+            100% { background-color: transparent; }
+        }
+        footer {
+            margin-top: 20px;
+            padding-bottom: 30px;
+        }
+        .copyright-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            text-decoration: underline;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        .copyright-btn:hover {
+            color: var(--text-color);
+        }
+        .lane-info {
+            font-size: 0.9rem;
+            color: #334155;
+            margin-top: 15px;
+            font-weight: bold;
+            background-color: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 750px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .close-btn {
+            color: #94a3b8;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close-btn:hover {
+            color: #0f172a;
+        }
+        .modal h2 {
+            margin-top: 0;
+            color: #0f172a;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 12px;
+        }
+        .controls-and-results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+        }
+        .panel-container {
+            flex: 1;
+            min-width: 350px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analyse Cinématique Numérique : Course des Véhicules sur Pistes Rectilignes</h1>
+        
+        <div class="chrono-container" aria-label="Chronomètre de la simulation">
+            <div class="chrono-label">⏱️ Temps Écoulé (Chronomètre)</div>
+            <div id="chrono-display" class="chrono-display">00:00.00 s</div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="raceCanvas" width="950" height="280" aria-label="Zone de simulation graphique de la course"></canvas>
+        </div>
+        
+        <!-- Boutons de contrôle positionnés directement sous l'animation -->
+        <div class="main-actions">
+            <button onclick="startRace()" aria-label="Démarrer la simulation">Démarrer</button>
+            <button class="stop" onclick="resetRace()" aria-label="Réinitialiser la simulation">Réinitialiser</button>
+        </div>
+        
+        <div class="controls-and-results">
+            <div class="panel-container">
+                <div class="panel">
+                    <h3>Configuration cinématique & Paramètres d'observation</h3>
+                    
+                    <div class="slowmo-box">
+                        <label for="slowmo-select" style="margin-top:0; color: #1e40af;">⏳ Ralentisseur d'animation (Observation pédagogique) :</label>
+                        <select id="slowmo-select" aria-label="Choisir le facteur de ralenti de l'animation">
+                            <option value="1">Vitesse réelle normale (1x)</option>
+                            <option value="0.5">Ralenti 2x (Vitesse : 0.5x)</option>
+                            <option value="0.25">Ralenti 4x (Vitesse : 0.25x)</option>
+                            <option value="0.1">Ralenti 10x (Vitesse : 0.1x - Analyse fine)</option>
+                            <option value="0.05">Ralenti extrême 20x (Vitesse : 0.05x)</option>
+                        </select>
+                        <p class="role-desc" style="margin-bottom:0; color: #3b82f6;">Permet d'observer précisément les phases d'accélération et les dépassements sans modifier la physique de la simulation.</p>
+                    </div>
+
+                    <div id="car-selectors"></div>
+                    
+                    <div id="results" aria-live="polite">
+                        Temps écoulé : 0.00 s<br>
+                        En attente du départ...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="telemetry-section">
+            <div class="telemetry-header">
+                <h3>📊 Acquisition des données en temps réel (Télémétrie)</h3>
+                <div class="precision-container">
+                    <label for="precision-select" style="margin:0; font-weight:normal;">Précision des mesures :</label>
+                    <select id="precision-select" aria-label="Choisir le nombre de décimales">
+                        <option value="1">1 décimale</option>
+                        <option value="2" selected>2 décimales</option>
+                        <option value="3">3 décimales</option>
+                        <option value="4">4 décimales</option>
+                    </select>
+                    <button class="secondary" style="padding: 8px 14px; font-size:0.9rem;" onclick="manualExportJSON()">Exporter (.JSON)</button>
+                </div>
+            </div>
+            <div class="table-responsive" id="table-container">
+                <table id="telemetry-table">
+                    <thead>
+                        <tr>
+                            <th>Temps \( (s) \)</th>
+                            <th>V1 : Distance \( (m) \)</th>
+                            <th>V1 : Accel. \( (m/s^2) \)</th>
+                            <th>V2 : Distance \( (m) \)</th>
+                            <th>V2 : Accel. \( (m/s^2) \)</th>
+                            <th>V3 : Distance \( (m) \)</th>
+                            <th>V3 : Accel. \( (m/s^2) \)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="telemetry-body">
+                        <tr><td colspan="7" style="color:#64748b; font-style:italic;">Les données apparaîtront ici au lancement de la course, synchronisées avec le visuel.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <button class="copyright-btn" onclick="openCopyrightModal()">Droits d'auteur</button>
+        </footer>
+    </div>
+
+    <div id="copyrightModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCopyrightModal()" aria-label="Fermer la fenêtre">&times;</span>
+            <h2 id="modalTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Juillet 2026</p>
+            <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+            <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Simulateur de Course Mathématique') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            <p><strong>Conditions :</strong></p>
+            <ul>
+                <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+            </ul>
+            <p><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</p>
+            <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration des pistes rectilignes parallèles
+        const TRACK = {
+            startX: 60,
+            startY: 40,
+            length: 800,  // Longueur de chaque piste (m)
+            laneWidth: 32,  // Largeur de chaque couloir
+            laneSpacing: 20,  // Espacement entre les pistes
+            numLanes: 3
+        };
+        
+        // Décalages verticaux pour chaque couloir
+        const LANES_OFFSETS = [0, TRACK.laneWidth + TRACK.laneSpacing, 2 * (TRACK.laneWidth + TRACK.laneSpacing)];
+        
+        // Couleurs des couloirs (Rouge, Vert, Bleu)
+        const LANE_COLORS = ['#dc2626', '#16a34a', '#2563eb'];
+        
+        // Formes des véhicules (Disque, Triangle, Carré)
+        const SLOT_SHAPES = ['circle', 'triangle', 'square'];
+        
+        // Modèles cinématiques s(t)
+        const CARS = [
+            { id: 1, name: 'Modèle 1 (Linéaire)', pos: t => 50 * t },
+            { id: 2, name: 'Modèle 2 (Linéaire lente)', pos: t => 42 * t },
+            { id: 3, name: 'Modèle 3 (Linéaire rapide)', pos: t => 55 * t },
+            { id: 4, name: 'Modèle 4 (Accélération pure)', pos: t => 2 * t * t },
+            { id: 5, name: 'Modèle 5 (Acc. décalée)', pos: t => Math.pow(t + 10, 2) - 100 },
+            { id: 6, name: 'Modèle 6 (Oscillante)', pos: t => 48 * t + 30 * Math.sin(t) },
+            { id: 7, name: 'Modèle 7 (Arrêt au stand lissé)', pos: t => {
+                if (t <= 5) return 50 * t;
+                if (t <= 10) return -5 * t*t + 100 * t - 125;
+                if (t <= 15) return 375;
+                if (t <= 20) return 5 * t*t - 150 * t + 1500;
+                return 50 * t - 500;
+            }},
+            { id: 8, name: 'Modèle 8 (Racine)', pos: t => 150 * Math.sqrt(t) },
+            { id: 9, name: 'Modèle 9 (Cubique douce)', pos: t => 20 * t + 0.1 * Math.pow(t, 3) },
+            { id: 10, name: 'Modèle 10 (Régulière)', pos: t => 48 * t },
+            { id: 11, name: 'Modèle 11 (Régulière +)', pos: t => 52 * t },
+            { id: 12, name: 'Modèle 12 (Départ lent)', pos: t => Math.pow(t, 1.8) * 4 },
+            { id: 13, name: 'Modèle 13 (Asymptotique)', pos: t => 1200 - 1200 / (0.05 * t + 1) },
+            { id: 14, name: 'Modèle 14 (Saccadée)', pos: t => 45 * t + 15 * Math.cos(2*t) - 15 },
+            { id: 15, name: 'Modèle 15 (Constante)', pos: t => 51 * t }
+        ];
+
+        let animationId;
+        let lastFrameTimestamp = null;
+        let simulatedTime = 0;
+        let isRacing = false;
+        let selectedCarsData = [];
+        let rankings = [];
+        let lastLogTime = -1;
+        let studentDataLog = [];
+        let studentConfigLog = [];
+
+        const canvas = document.getElementById('raceCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Mise à jour de l'affichage du chronomètre
+        function updateChronometerDisplay(timeInSeconds) {
+            let mins = Math.floor(timeInSeconds / 60);
+            let secs = Math.floor(timeInSeconds % 60);
+            let centis = Math.floor((timeInSeconds * 100) % 100);
+            
+            let formattedTime = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${centis.toString().padStart(2, '0')} s`;
+            document.getElementById('chrono-display').textContent = formattedTime;
+        }
+
+        // Longueur totale de chaque piste
+        function getLanePerimeter(laneOffset) {
+            return TRACK.length;
+        }
+
+        // Coordonnées géométriques sur le canvas
+        function getTrackCoordinates(distance, laneIndex) {
+            const y = TRACK.startY + LANES_OFFSETS[laneIndex];
+            const x = TRACK.startX + Math.min(distance, TRACK.length);
+            return { x: x, y: y };
+        }
+
+        // Dérivation numérique (position et accélération)
+        function getNumericalKinematics(car, globalTime) {
+            let t = globalTime - car.delay;
+            let distance = car.startPos;
+            let accel = 0;
+            let dt = 0.005;
+
+            if (t >= 0) {
+                distance += car.pos(t);
+                if (distance < car.perimeter) {
+                    if (t < dt) {
+                        let p0 = car.pos(t);
+                        let p1 = car.pos(t + dt);
+                        let p2 = car.pos(t + 2 * dt);
+                        accel = (p2 - 2 * p1 + p0) / (dt * dt);
+                    } else {
+                        let p_plus = car.pos(t + dt);
+                        let p_main = car.pos(t);
+                        let p_minus = car.pos(t - dt);
+                        accel = (p_plus - 2 * p_main + p_minus) / (dt * dt);
+                    }
+                    if (Math.abs(accel) < 0.01) accel = 0;
+                }
+            }
+            
+            return {
+                distance: Math.min(distance, car.perimeter),
+                acceleration: distance >= car.perimeter ? 0 : accel
+            };
+        }
+
+        // Dessiner un véhicule selon sa forme
+        function drawVehicle(x, y, color, shape) {
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+
+            if (shape === 'circle') {
+                ctx.arc(x, y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else if (shape === 'triangle') {
+                let s = 12;
+                ctx.moveTo(x, y - s);
+                ctx.lineTo(x + s, y + s);
+                ctx.lineTo(x - s, y + s);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (shape === 'square') {
+                let s = 18;
+                ctx.fillRect(x - s/2, y - s/2, s, s);
+                ctx.strokeRect(x - s/2, y - s/2, s, s);
+            }
+        }
+
+        // Dessiner la graduation pédagogique sous la piste
+        function drawGraduation() {
+            const bottomLaneY = TRACK.startY + LANES_OFFSETS[TRACK.numLanes - 1] + (TRACK.laneWidth / 2);
+            const rulerY = bottomLaneY + 22;
+
+            ctx.strokeStyle = '#334155';
+            ctx.fillStyle = '#1e293b';
+            ctx.lineWidth = 2;
+            ctx.font = 'bold 11px Verdana, Geneva, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Ligne principale de l'axe
+            ctx.beginPath();
+            ctx.moveTo(TRACK.startX, rulerY);
+            ctx.lineTo(TRACK.startX + TRACK.length, rulerY);
+            ctx.stroke();
+
+            // Graduations mineures (20 m) et majeures (100 m)
+            for (let dist = 0; dist <= TRACK.length; dist += 20) {
+                let x = TRACK.startX + dist;
+                let isMajor = (dist % 100 === 0);
+                let tickHeight = isMajor ? 12 : 6;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, rulerY);
+                ctx.lineTo(x, rulerY + tickHeight);
+                ctx.stroke();
+
+                if (isMajor) {
+                    ctx.fillText(`${dist} m`, x, rulerY + tickHeight + 4);
+                }
+            }
+            
+            // Légende de l'axe
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'italic 11px Verdana, Geneva, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText("Distance (mètres)", TRACK.startX + TRACK.length, rulerY + 22);
+        }
+
+        // Dessiner l'ensemble du graphique : pistes, graduations, véhicules
+        function drawTrack() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Pistes rectilignes
+            for (let i = 0; i < TRACK.numLanes; i++) {
+                const y = TRACK.startY + LANES_OFFSETS[i];
+                
+                // Fond de piste
+                ctx.fillStyle = '#f1f5f9';
+                ctx.fillRect(TRACK.startX, y - TRACK.laneWidth/2, TRACK.length, TRACK.laneWidth);
+                
+                // Bordure de piste
+                ctx.strokeStyle = LANE_COLORS[i];
+                ctx.lineWidth = 3;
+                ctx.strokeRect(TRACK.startX, y - TRACK.laneWidth/2, TRACK.length, TRACK.laneWidth);
+                
+                // Ligne de départ
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(TRACK.startX, y - TRACK.laneWidth/2);
+                ctx.lineTo(TRACK.startX, y + TRACK.laneWidth/2);
+                ctx.stroke();
+                
+                // Ligne d'arrivée (Damiers / Fin de piste)
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(TRACK.startX + TRACK.length, y - TRACK.laneWidth/2);
+                ctx.lineTo(TRACK.startX + TRACK.length, y + TRACK.laneWidth/2);
+                ctx.stroke();
+            }
+
+            // Dessiner l'axe gradué sous la dernière piste
+            drawGraduation();
+
+            if (selectedCarsData.length === 0) updateSelectedCarsDataFromUI();
+
+            // Dessiner les véhicules
+            selectedCarsData.forEach((car, index) => {
+                let drawDist = Math.max(0, Math.min(car.currentDist, car.perimeter));
+                let pt = getTrackCoordinates(drawDist, index);
+                drawVehicle(pt.x, pt.y, car.color, car.shape);
+            });
+        }
+
+        // Enregistrer une ligne dans le tableau de télémétrie
+        function logTelemetryRow(targetTime) {
+            let precision = parseInt(document.getElementById('precision-select').value);
+            let tbody = document.getElementById('telemetry-body');
+            
+            let rowHtml = `<tr class="new-row"><td><strong>${targetTime.toFixed(precision)}</strong></td>`;
+            let dataEntry = { temps_secondes: parseFloat(targetTime.toFixed(precision)) };
+
+            selectedCarsData.forEach((car, idx) => {
+                if (car.finishTime !== null && targetTime > car.finishTime) {
+                    let crossHtml = `<span style="color: ${car.color}; font-weight: bold; font-size: 1.1rem;">✖</span>`;
+                    rowHtml += `<td>${crossHtml}</td><td>${crossHtml}</td>`;
+                    dataEntry[`v${idx+1}_distance_metres`] = "✖";
+                    dataEntry[`v${idx+1}_acceleration_ms2`] = "✖";
+                } else {
+                    let kin = getNumericalKinematics(car, targetTime);
+                    rowHtml += `<td>${kin.distance.toFixed(precision)}</td><td>${kin.acceleration.toFixed(precision)}</td>`;
+                    dataEntry[`v${idx+1}_distance_metres`] = parseFloat(kin.distance.toFixed(precision));
+                    dataEntry[`v${idx+1}_acceleration_ms2`] = parseFloat(kin.acceleration.toFixed(precision));
+                }
+            });
+            rowHtml += `</tr>`;
+            
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
+            studentDataLog.push(dataEntry);
+            
+            let container = document.getElementById('table-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Génération automatique du fichier JSON
+        function generateStudentJSON() {
+            let payload = {
+                date_simulation: new Date().toISOString(),
+                facteur_ralenti_utilise: parseFloat(document.getElementById('slowmo-select').value),
+                configuration_eleve: studentConfigLog,
+                donnees_telemetriques: studentDataLog
+            };
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 4));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "reponses_eleve_cinematique_rectiligne.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Export manuel JSON
+        function manualExportJSON() {
+            if (studentDataLog.length === 0) {
+                alert("Veuillez lancer une simulation pour générer des données.");
+                return;
+            }
+            generateStudentJSON();
+        }
+
+        // Initialisation de l'interface et des contrôles
+        function initUI() {
+            const container = document.getElementById('car-selectors');
+            container.innerHTML = '';
+            
+            const shapeNamesFr = { 'circle': 'Disque 🔴', 'triangle': 'Triangle 🟢', 'square': 'Carré 🔵' };
+
+            for (let i = 0; i < 3; i++) {
+                let defCarId = i === 0 ? 1 : (i === 1 ? 4 : 7);
+                let laneColor = LANE_COLORS[i];
+                let shapeLabel = shapeNamesFr[SLOT_SHAPES[i]];
+                
+                let html = `
+                    <div class="control-group">
+                        <h4 style="margin: 0 0 10px 0; font-size: 1.1rem; color: ${laneColor};" id="header-car-${i}">
+                            Couloir ${i+1} [ Forme : ${shapeLabel} ]
+                        </h4>
+                        
+                        <label for="sel-car-${i}">1. Modèle Cinématique :</label>
+                        <select id="sel-car-${i}" oninput="uiChanged()">
+                            ${CARS.map(c => `<option value="${c.id}" ${c.id === defCarId ? 'selected':''}>${c.name}</option>`).join('')}
+                        </select>
+                        <p class="role-desc">Détermine la loi horaire mathématique \( s(t) \) régissant la position du véhicule.</p>
+
+                        <div class="input-row">
+                            <div class="input-col">
+                                <label for="delay-${i}">2. Retard au Départ (s) :</label>
+                                <input type="number" id="delay-${i}" value="0" step="0.5" min="0" oninput="uiChanged()">
+                                <p class="role-desc">Intervalle temporel durant lequel le véhicule reste immobile avant l'allumage moteur.</p>
+                            </div>
+                            <div class="input-col">
+                                <label for="pos-${i}">3. Avance Initiale (m) :</label>
+                                <input type="number" id="pos-${i}" value="${i === 0 ? '0' : (i===1 ? '30' : '60')}" min="0" step="5" oninput="uiChanged()">
+                                <p class="role-desc">Condition initiale spatiale \( s(0) \) : décalage géométrique en amont sur la grille.</p>
+                            </div>
+                        </div>
+                        
+                        <div id="lane-info-${i}" class="lane-info"></div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            }
+            uiChanged();
+        }
+
+        // Mise à jour de la configuration interne
+        function updateSelectedCarsDataFromUI() {
+            selectedCarsData = [];
+            studentConfigLog = [];
+            for (let i = 0; i < 3; i++) {
+                const selectElement = document.getElementById(`sel-car-${i}`);
+                if (!selectElement) continue;
+                
+                let carId = parseInt(selectElement.value);
+                let delay = parseFloat(document.getElementById(`delay-${i}`).value) || 0;
+                let startPos = Math.max(0, parseFloat(document.getElementById(`pos-${i}`).value) || 0); 
+                let car = CARS.find(c => c.id === carId);
+                
+                let offset = LANES_OFFSETS[i];
+                let perimeter = getLanePerimeter(offset);
+                
+                document.getElementById(`lane-info-${i}`).innerText = `Couloir ${i+1} : Distance totale = ${perimeter.toFixed(1)} m`;
+
+                selectedCarsData.push({
+                    ...car, 
+                    delay: delay, 
+                    startPos: startPos, 
+                    lane: i,
+                    perimeter: perimeter,
+                    color: LANE_COLORS[i],
+                    shape: SLOT_SHAPES[i], 
+                    finished: false, 
+                    finishTime: null, 
+                    currentDist: startPos
+                });
+
+                studentConfigLog.push({
+                    couloir: i+1, modele_id: car.id, nom: car.name, retard_depart_s: delay, avance_initiale_m: startPos
+                });
+            }
+        }
+
+        // Action sur modification des paramètres UI
+        function uiChanged() {
+            if (!isRacing) {
+                updateSelectedCarsDataFromUI();
+                drawTrack();
+                if (window.MathJax) MathJax.typesetPromise();
+            }
+        }
+
+        // Lancement de la course
+        function startRace() {
+            if (isRacing) return;
+            
+            updateSelectedCarsDataFromUI();
+            rankings = [];
+            studentDataLog = [];
+            lastLogTime = -1;
+            document.getElementById('telemetry-body').innerHTML = ''; 
+            
+            isRacing = true;
+            simulatedTime = 0;
+            lastFrameTimestamp = performance.now();
+            updateChronometerDisplay(0);
+            
+            document.getElementById('results').innerHTML = "Analyse en cours...";
+            
+            logTelemetryRow(0);
+            lastLogTime = 0;
+            
+            animate(lastFrameTimestamp);
+        }
+
+        // Réinitialisation de la course
+        function resetRace() {
+            isRacing = false;
+            cancelAnimationFrame(animationId);
+            simulatedTime = 0;
+            updateChronometerDisplay(0);
+            uiChanged();
+            document.getElementById('results').innerHTML = "Temps écoulé : 0.00 s<br>En attente du départ...";
+            document.getElementById('telemetry-body').innerHTML = '<tr><td colspan="7" style="color:#64748b; font-style:italic;">Les données apparaîtront ici au lancement de la course, synchronisées avec le visuel.</td></tr>';
+        }
+
+        // Boucle d'animation avec support du ralenti pédagogique
+        function animate(timestamp) {
+            if (!isRacing) return;
+
+            let dtReal = (timestamp - lastFrameTimestamp) / 1000;
+            lastFrameTimestamp = timestamp;
+
+            // Appliquer strictement le facteur de ralenti (valeurs <= 1 uniquement)
+            let speedFactor = parseFloat(document.getElementById('slowmo-select').value) || 1;
+            simulatedTime += dtReal * speedFactor;
+
+            let currentTime = simulatedTime;
+            let allFinished = true;
+
+            // Mise à jour de l'affichage du chronomètre
+            updateChronometerDisplay(currentTime);
+
+            selectedCarsData.forEach((car) => {
+                let kin = getNumericalKinematics(car, currentTime);
+                car.currentDist = kin.distance;
+
+                if (car.currentDist >= car.perimeter && !car.finished) {
+                    car.finished = true;
+                    car.finishTime = currentTime;
+                    rankings.push(car);
+                }
+
+                if (!car.finished) allFinished = false;
+            });
+
+            drawTrack();
+
+            // Synchronisation de la télémétrie seconde par seconde (temps physique de la simulation)
+            let targetLogTime = lastLogTime + 1;
+            if (currentTime >= targetLogTime) {
+                logTelemetryRow(targetLogTime);
+                lastLogTime = targetLogTime;
+            }
+
+            let resHtml = `Temps écoulé : ${currentTime.toFixed(2)} s<br><br>`;
+            rankings.forEach((c, i) => {
+                let icon = c.shape === 'circle' ? '🔴' : (c.shape === 'triangle' ? '🟢' : '🔵');
+                resHtml += `${i+1}. Couloir ${c.lane + 1} (${icon}) - ${c.finishTime.toFixed(2)} s<br>`;
+            });
+            document.getElementById('results').innerHTML = resHtml;
+
+            if (!allFinished) {
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isRacing = false;
+                let finalTime = Math.ceil(currentTime);
+                if (finalTime > lastLogTime) { logTelemetryRow(finalTime); }
+                
+                document.getElementById('results').innerHTML += "<br><strong>Course terminée ! Le fichier JSON a été généré.</strong>";
+                generateStudentJSON();
+            }
+        }
+
+        // Gestion de la modale des droits d'auteur
+        const modal = document.getElementById("copyrightModal");
+        function openCopyrightModal() { modal.style.display = "block"; }
+        function closeCopyrightModal() { modal.style.display = "none"; }
+        window.onclick = function(e) { if (e.target == modal) modal.style.display = "none"; }
+
+        window.onload = initUI;
+    </script>
+</body>
+</html>

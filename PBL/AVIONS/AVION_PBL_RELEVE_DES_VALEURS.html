@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>PBL Avion – Feuille de relevés (nombre d'essais variable) – Analyse exhaustive</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-room: #cfd8dc;
+            --text-color: #1a1a1a;
+            --highlight-main: #1565c0;
+            --highlight-alert: #b71c1c;
+            --highlight-success: #2e7d32;
+            --highlight-warning: #e67e22;
+            --board-bg: #fdfbf7;
+            --board-border: #3e2723;
+            --board-w: clamp(300px, 85vw, 1400px);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            background-color: var(--bg-room);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: var(--board-w);
+            margin: 2rem auto;
+            background: var(--board-bg);
+            border: 3px solid var(--board-border);
+            border-radius: 20px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.4);
+            padding: clamp(18px, 4vh, 35px);
+            position: relative;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vh, 2.6rem);
+            color: var(--highlight-main);
+            text-align: center;
+            border-bottom: 3px double var(--highlight-main);
+            padding-bottom: 0.8vh;
+            margin: 0 0 1.5vh 0;
+        }
+
+        h2 {
+            font-size: clamp(1.4rem, 3.6vh, 2rem);
+            color: var(--highlight-alert);
+            border-left: 6px solid var(--highlight-alert);
+            padding-left: 15px;
+            margin: 0 0 1.8vh 0;
+        }
+
+        .info-equipe {
+            background: #e3f2fd;
+            padding: 12px 18px;
+            border-radius: 18px;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .info-equipe label {
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .info-equipe input, .info-equipe select {
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid #aaa;
+            font-size: 1rem;
+        }
+        .info-equipe input[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(0.85rem, 2vh, 1rem);
+            background-color: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: var(--highlight-main);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        td input {
+            width: 100px;
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        td input.invalid-input {
+            background-color: #ffe0e0;
+            border-color: var(--highlight-alert);
+        }
+        td input.outlier-input {
+            background-color: #ffd8a9;
+            border-color: var(--highlight-warning);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 2rem 0 1rem;
+        }
+
+        .btn {
+            background-color: var(--highlight-main);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            background-color: #0d47a1;
+            transform: scale(1.02);
+        }
+        .btn-success {
+            background-color: var(--highlight-success);
+        }
+        .btn-success:hover {
+            background-color: #1b5e20;
+        }
+        .btn-alert {
+            background-color: var(--highlight-alert);
+        }
+        .btn-alert:hover {
+            background-color: #8b0000;
+        }
+        .btn-warning {
+            background-color: var(--highlight-warning);
+        }
+        .btn-warning:hover {
+            background-color: #b45f1b;
+        }
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 0.9rem;
+        }
+
+        .message-area {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 12px;
+            background-color: #f9f2e0;
+            border-left: 6px solid #e67e22;
+            font-weight: normal;
+            text-align: center;
+        }
+        .error-summary {
+            color: #b71c1c;
+            font-weight: bold;
+        }
+        .warning-summary {
+            color: #e67e22;
+            font-weight: bold;
+        }
+
+        .analysis-container {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f0f4f8;
+            border-radius: 18px;
+            border-left: 6px solid var(--highlight-main);
+            display: none; /* masqué par défaut */
+        }
+        .analysis-container.visible {
+            display: block;
+        }
+        .analysis-container h3 {
+            margin-top: 0;
+            color: var(--highlight-main);
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 0.5rem;
+        }
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .analysis-grid .stat-block {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .analysis-grid .stat-block h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--highlight-alert);
+        }
+        .analysis-grid .stat-block table {
+            width: 100%;
+            font-size: 0.9rem;
+            border-collapse: collapse;
+        }
+        .analysis-grid .stat-block td, .analysis-grid .stat-block th {
+            border: none;
+            padding: 4px 6px;
+            text-align: left;
+        }
+        .analysis-grid .stat-block td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        .analysis-summary {
+            grid-column: 1 / -1;
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 12px;
+            font-style: italic;
+            border-left: 4px solid var(--highlight-main);
+        }
+
+        @media (max-width: 700px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                margin: 1rem;
+                padding: 15px;
+            }
+            td input {
+                width: 70px;
+            }
+            .info-equipe {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #5d5d5d;
+            margin-top: 2rem;
+            border-top: 1px solid #ccc;
+            padding-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .footer-note .copyright-footer-btn {
+            background: #37474f;
+            color: white;
+            border: none;
+            padding: 6px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .footer-note .copyright-footer-btn:hover {
+            background: #1c262c;
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--highlight-success);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .save-indicator.show {
+            opacity: 1;
+        }
+
+        .modal {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: visibility 0.2s, opacity 0.2s;
+        }
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: #fff9ef;
+            max-width: 650px;
+            width: 90%;
+            padding: 25px;
+            border-radius: 28px;
+            border-top: 8px solid var(--highlight-alert);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--highlight-alert);
+            transition: transform 0.1s;
+        }
+        .close-modal:hover {
+            transform: scale(1.1);
+        }
+        .btn-test {
+            background-color: var(--highlight-success);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: 0.2s;
+        }
+        .btn-test:hover {
+            background-color: #1b5e20;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+
+<div id="saveIndicator" class="save-indicator">💾 Sauvegardé</div>
+
+<div class="container">
+    <h1>📋 Étape 2 – Feuille de relevés terrain</h1>
+    <h2>Lancers – Coordonnées cartésiennes (X, Y) – Analyse exhaustive</h2>
+
+    <div class="info-equipe">
+        <div><label>🏷️ Équipe :</label> <input type="text" id="teamName" placeholder="Nom de l'équipe" style="width: 180px;"></div>
+        <div><label>📅 Date des mesures :</label> <input type="date" id="dateField"></div>
+        <div><label>🔧 Avion retenu :</label> <input type="text" id="planeDesc" placeholder="ex: Dart + 2 trombones" style="width: 220px;"></div>
+        <div><label>🔢 N° relevé :</label> <input type="text" id="recordNumber" placeholder="ex: 001" style="width: 100px;"></div>
+        <div><label>📅 Création :</label> <input type="date" id="creationDate" readonly></div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <label>📊 Nombre d'essais :</label>
+            <input type="number" id="numTrials" value="20" min="1" max="100" style="width: 80px;">
+            <button class="btn btn-small" id="applyNumTrials">Appliquer</button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>N° essai</th>
+                    <th>X (m) <br> (distance longitudinale)</th>
+                    <th>Y (m) <br> (écart latéral, + à droite)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="message-area" id="messageArea">
+        ✅ Prêt – Saisissez vos mesures. Sauvegarde automatique dans le navigateur.
+    </div>
+
+    <div class="btn-group">
+        <button class="btn btn-warning" id="checkBtn">🔍 Vérifier cohérence & anomalies</button>
+        <button class="btn" id="analyzeBtn" style="background-color:#6c3483;">📊 Analyse exhaustive</button>
+        <button class="btn" id="exportCsvBtn">📥 Exporter en CSV</button>
+        <button class="btn" id="exportJsonBtn">💾 Exporter JSON</button>
+        <button class="btn btn-success" id="fillExampleBtn">🔍 Remplir exemples réalistes</button>
+        <button class="btn btn-alert" id="clearAllBtn">🗑️ Tout effacer</button>
+    </div>
+
+    <!-- Conteneur pour l'analyse -->
+    <div id="analysisContainer" class="analysis-container">
+        <h3>📊 Analyse exhaustive des résultats</h3>
+        <div id="analysisContent"></div>
+    </div>
+
+    <div class="footer-note">
+        <div>
+            📐 <strong>Validations :</strong><br>
+            • <span style="color:#b71c1c;">Rouge</span> = valeur hors plage (\(X \notin [0,15]\) m ou \(Y \notin [-10,10]\) m).<br>
+            • <span style="color:#e67e22;">Orange</span> = valeur aberrante statistique (méthode IQR) – détectée quand au moins 10 mesures valides sont saisies.<br>
+            🔒 Sauvegarde automatique dans le navigateur (localStorage). Export JSON disponible.
+        </div>
+        <button class="copyright-footer-btn" onclick="toggleModal(true)">📜 Droits & Licence</button>
+    </div>
+</div>
+
+<!-- Modale de licence -->
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="toggleModal(false)">&times;</span>
+        <h2 style="margin-top:0;">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+        <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) – Juin 2026</p>
+        <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+        <p>Ce code HTML/CSS/JS et le contenu de <strong>« Cartographie Pédagogique PBL – Avion en Papier Optimal »</strong> sont la propriété intellectuelle exclusive de Yann Merdy.</p>
+        <p><strong>Conditions :</strong></p>
+        <ul>
+            <li><strong>Utilisation Privée et Éducative (autorisée) :</strong> utilisation, copie, modification et distribution à des fins personnelles, éducatives et non lucratives.</li>
+            <li><strong>Utilisation Commerciale (interdite) :</strong> toute exploitation commerciale sans accord écrit explicite de l'auteur est interdite.</li>
+        </ul>
+        <p><strong>Attribution :</strong> toute reproduction doit conserver la mention de l'auteur (Yann Merdy) et cette notice.</p>
+        <p style="font-size:0.9rem;">Contact : yann.merdy@gmail.com</p>
+        <button class="btn-test" onclick="toggleModal(false)">Fermer</button>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // 1. VARIABLES GLOBALES
+    // ============================================================
+    let currentNumTrials = 20;
+    let data = [];
+    let outlierStatus = [];
+
+    const tableBody = document.getElementById('tableBody');
+    const messageDiv = document.getElementById('messageArea');
+    const saveIndicator = document.getElementById('saveIndicator');
+    const analysisContainer = document.getElementById('analysisContainer');
+    const analysisContent = document.getElementById('analysisContent');
+    let saveTimeout = null;
+
+    const teamNameInput = document.getElementById('teamName');
+    const dateFieldInput = document.getElementById('dateField');
+    const planeDescInput = document.getElementById('planeDesc');
+    const recordNumberInput = document.getElementById('recordNumber');
+    const creationDateInput = document.getElementById('creationDate');
+    const numTrialsInput = document.getElementById('numTrials');
+
+    // ============================================================
+    // 2. INDICATEUR DE SAUVEGARDE
+    // ============================================================
+    function showSaveIndicator() {
+        saveIndicator.classList.add('show');
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            saveIndicator.classList.remove('show');
+        }, 1000);
+    }
+
+    // ============================================================
+    // 3. SAUVEGARDE / CHARGEMENT LOCALSTORAGE
+    // ============================================================
+    function getCurrentState() {
+        return {
+            teamName: teamNameInput.value,
+            dateField: dateFieldInput.value,
+            planeDesc: planeDescInput.value,
+            recordNumber: recordNumberInput.value,
+            creationDate: creationDateInput.value,
+            numTrials: currentNumTrials,
+            data: data
+        };
+    }
+
+    function applyState(obj) {
+        if (!obj) return;
+        if (obj.teamName !== undefined) teamNameInput.value = obj.teamName;
+        if (obj.dateField !== undefined) dateFieldInput.value = obj.dateField;
+        if (obj.planeDesc !== undefined) planeDescInput.value = obj.planeDesc;
+        if (obj.recordNumber !== undefined) recordNumberInput.value = obj.recordNumber;
+        if (obj.creationDate !== undefined) creationDateInput.value = obj.creationDate;
+        if (obj.numTrials !== undefined) {
+            currentNumTrials = obj.numTrials;
+            numTrialsInput.value = currentNumTrials;
+        }
+        if (obj.data && Array.isArray(obj.data)) {
+            data = obj.data.slice();
+            if (data.length !== currentNumTrials) {
+                const newData = Array(currentNumTrials).fill().map(() => ({ x: '', y: '' }));
+                for (let i = 0; i < Math.min(data.length, currentNumTrials); i++) {
+                    newData[i] = data[i];
+                }
+                data = newData;
+            }
+        } else {
+            data = Array(currentNumTrials).fill().map(() => ({ x: '', y: '' }));
+        }
+        outlierStatus = Array(currentNumTrials).fill().map(() => ({ xOutlier: false, yOutlier: false }));
+    }
+
+    function saveToLocalStorage() {
+        try {
+            const state = getCurrentState();
+            localStorage.setItem('pbl_avion_data', JSON.stringify(state));
+            showSaveIndicator();
+        } catch (e) {
+            console.warn('Erreur de sauvegarde localStorage', e);
+        }
+    }
+
+    function loadFromLocalStorage() {
+        const stored = localStorage.getItem('pbl_avion_data');
+        if (!stored) return false;
+        try {
+            const obj = JSON.parse(stored);
+            applyState(obj);
+            return true;
+        } catch (e) {
+            console.warn('Erreur de chargement localStorage', e);
+            return false;
+        }
+    }
+
+    // ============================================================
+    // 4. VALIDATION
+    // ============================================================
+    function isValidX(val) {
+        if (val === '' || val === null) return false;
+        let num = parseFloat(val);
+        return !isNaN(num) && num >= 0 && num <= 15;
+    }
+
+    function isValidY(val) {
+        if (val === '' || val === null) return false;
+        let num = parseFloat(val);
+        return !isNaN(num) && num >= -10 && num <= 10;
+    }
+
+    // ============================================================
+    // 5. DÉTECTION D'OUTLIERS (IQR)
+    // ============================================================
+    function detectOutliers(values) {
+        const validNumbers = values.filter(v => v !== null && !isNaN(v));
+        if (validNumbers.length < 10) return Array(values.length).fill(false);
+        
+        validNumbers.sort((a,b) => a - b);
+        const q1Index = Math.floor(validNumbers.length * 0.25);
+        const q3Index = Math.floor(validNumbers.length * 0.75);
+        const q1 = validNumbers[q1Index];
+        const q3 = validNumbers[q3Index];
+        const iqr = q3 - q1;
+        const lowerBound = q1 - 1.5 * iqr;
+        const upperBound = q3 + 1.5 * iqr;
+        
+        return values.map(v => v !== null && (v < lowerBound || v > upperBound));
+    }
+
+    function updateOutlierFlags() {
+        let xValues = data.map(row => {
+            let v = parseFloat(row.x);
+            return isValidX(row.x) ? v : null;
+        });
+        let yValues = data.map(row => {
+            let v = parseFloat(row.y);
+            return isValidY(row.y) ? v : null;
+        });
+        
+        const xOutliers = detectOutliers(xValues);
+        const yOutliers = detectOutliers(yValues);
+        
+        for (let i = 0; i < currentNumTrials; i++) {
+            outlierStatus[i] = {
+                xOutlier: xOutliers[i] || false,
+                yOutlier: yOutliers[i] || false
+            };
+        }
+    }
+
+    function updateRowStyles(rowIndex) {
+        const row = tableBody.children[rowIndex];
+        if (!row) return;
+        const xInput = row.cells[1].querySelector('input');
+        const yInput = row.cells[2].querySelector('input');
+        
+        const xValid = isValidX(data[rowIndex].x);
+        const yValid = isValidY(data[rowIndex].y);
+        
+        if (!xValid) {
+            setFieldStyle(xInput, 'invalid');
+        } else if (outlierStatus[rowIndex].xOutlier) {
+            setFieldStyle(xInput, 'outlier');
+        } else {
+            setFieldStyle(xInput, 'valid');
+        }
+        
+        if (!yValid) {
+            setFieldStyle(yInput, 'invalid');
+        } else if (outlierStatus[rowIndex].yOutlier) {
+            setFieldStyle(yInput, 'outlier');
+        } else {
+            setFieldStyle(yInput, 'valid');
+        }
+    }
+    
+    function setFieldStyle(input, status) {
+        input.classList.remove('invalid-input', 'outlier-input');
+        if (status === 'invalid') {
+            input.classList.add('invalid-input');
+        } else if (status === 'outlier') {
+            input.classList.add('outlier-input');
+        } else {
+            input.style.backgroundColor = '';
+        }
+    }
+
+    // ============================================================
+    // 6. VÉRIFICATION GLOBALE
+    // ============================================================
+    function checkAllCoherency() {
+        updateOutlierFlags();
+        
+        let individualErrors = [];
+        let outlierWarnings = [];
+        let validCount = 0;
+        
+        for (let i = 0; i < currentNumTrials; i++) {
+            const xVal = data[i].x;
+            const yVal = data[i].y;
+            const xValid = isValidX(xVal);
+            const yValid = isValidY(yVal);
+            if (xValid && yValid) validCount++;
+            
+            if (!xValid || !yValid) {
+                let msg = `Essai ${i+1} : `;
+                if (!xValid) msg += `X invalide (${xVal === '' ? 'vide' : xVal}) `;
+                if (!yValid) msg += `Y invalide (${yVal === '' ? 'vide' : yVal})`;
+                individualErrors.push(msg);
+            }
+            if (xValid && outlierStatus[i].xOutlier) {
+                outlierWarnings.push(`Essai ${i+1} : X = ${xVal} m (anomalie statistique)`);
+            }
+            if (yValid && outlierStatus[i].yOutlier) {
+                outlierWarnings.push(`Essai ${i+1} : Y = ${yVal} m (anomalie statistique)`);
+            }
+            updateRowStyles(i);
+        }
+        
+        let html = '';
+        if (individualErrors.length === 0 && outlierWarnings.length === 0) {
+            html = '✅ <strong>Aucune incohérence ni anomalie détectée.</strong> Toutes les valeurs sont valides et cohérentes entre elles.';
+            messageDiv.style.backgroundColor = '#e6f7e6';
+            messageDiv.style.borderLeftColor = 'var(--highlight-success)';
+        } else {
+            if (individualErrors.length > 0) {
+                html += `<span class="error-summary">⚠️ ${individualErrors.length} erreur(s) de plage :</span><br>${individualErrors.join('<br>')}<br><br>`;
+            }
+            if (outlierWarnings.length > 0) {
+                html += `<span class="warning-summary">📊 ${outlierWarnings.length} anomalie(s) statistique(s) (IQR) :</span><br>${outlierWarnings.join('<br>')}`;
+            }
+            messageDiv.style.backgroundColor = '#fff0e0';
+            messageDiv.style.borderLeftColor = 'var(--highlight-warning)';
+        }
+        if (validCount < 10 && individualErrors.length === 0) {
+            html += `<br><br>ℹ️ <strong>Pas assez de données valides (${validCount}/10)</strong> pour la détection d’anomalies statistiques. Continuez la saisie.`;
+        }
+        messageDiv.innerHTML = html;
+    }
+
+    // ============================================================
+    // 7. ANALYSE EXHAUSTIVE
+    // ============================================================
+    function performAnalysis() {
+        // Récupérer les valeurs valides
+        const xVals = [];
+        const yVals = [];
+        for (let i = 0; i < currentNumTrials; i++) {
+            const x = parseFloat(data[i].x);
+            const y = parseFloat(data[i].y);
+            if (isValidX(data[i].x)) xVals.push(x);
+            if (isValidY(data[i].y)) yVals.push(y);
+        }
+
+        // Fonctions statistiques
+        function mean(arr) { return arr.reduce((a,b) => a + b, 0) / arr.length; }
+        function median(arr) {
+            const sorted = [...arr].sort((a,b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid-1] + sorted[mid]) / 2 : sorted[mid];
+        }
+        function quartiles(arr) {
+            const sorted = [...arr].sort((a,b) => a - b);
+            const q1 = median(sorted.slice(0, Math.floor(sorted.length / 2)));
+            const q3 = median(sorted.slice(Math.ceil(sorted.length / 2)));
+            return { q1, q3 };
+        }
+        function variance(arr) {
+            const m = mean(arr);
+            return arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length;
+        }
+        function stddev(arr) { return Math.sqrt(variance(arr)); }
+        function coeffVar(arr) { return stddev(arr) / mean(arr); }
+        function meanAbs(arr) { return arr.reduce((a,b) => a + Math.abs(b), 0) / arr.length; }
+        function confInterval(arr) {
+            const m = mean(arr);
+            const s = stddev(arr);
+            const n = arr.length;
+            const se = s / Math.sqrt(n);
+            const z = 1.96; // 95% CI
+            return { lower: m - z * se, upper: m + z * se };
+        }
+        function countInRange(arr, low, high) {
+            return arr.filter(v => v >= low && v <= high).length;
+        }
+
+        // Générer le HTML
+        let html = '<div class="analysis-grid">';
+
+        // Bloc X
+        if (xVals.length > 0) {
+            const nX = xVals.length;
+            const meanX = mean(xVals);
+            const stdX = stddev(xVals);
+            const varX = variance(xVals);
+            const medX = median(xVals);
+            const { q1: q1X, q3: q3X } = quartiles(xVals);
+            const iqrX = q3X - q1X;
+            const minX = Math.min(...xVals);
+            const maxX = Math.max(...xVals);
+            const rangeX = maxX - minX;
+            const cvX = coeffVar(xVals);
+            const ciX = confInterval(xVals);
+            const inTargetX = countInRange(xVals, 5, 10);
+            const pctTargetX = (inTargetX / nX * 100).toFixed(1);
+
+            html += `
+            <div class="stat-block">
+                <h4>📏 Distance X (m) — ${nX} valeurs valides</h4>
+                <table>
+                    <tr><td>Moyenne</td><td>${meanX.toFixed(3)}</td></tr>
+                    <tr><td>Écart-type</td><td>${stdX.toFixed(3)}</td></tr>
+                    <tr><td>Variance</td><td>${varX.toFixed(4)}</td></tr>
+                    <tr><td>Médiane</td><td>${medX.toFixed(3)}</td></tr>
+                    <tr><td>Q1 (1er quartile)</td><td>${q1X.toFixed(3)}</td></tr>
+                    <tr><td>Q3 (3e quartile)</td><td>${q3X.toFixed(3)}</td></tr>
+                    <tr><td>IQR (Q3-Q1)</td><td>${iqrX.toFixed(3)}</td></tr>
+                    <tr><td>Minimum</td><td>${minX.toFixed(3)}</td></tr>
+                    <tr><td>Maximum</td><td>${maxX.toFixed(3)}</td></tr>
+                    <tr><td>Étendue</td><td>${rangeX.toFixed(3)}</td></tr>
+                    <tr><td>Coeff. variation</td><td>${(cvX * 100).toFixed(1)} %</td></tr>
+                    <tr><td>IC 95% de la moyenne</td><td>[${ciX.lower.toFixed(3)} ; ${ciX.upper.toFixed(3)}]</td></tr>
+                    <tr><td>% dans [5;10] m</td><td>${pctTargetX} % (${inTargetX}/${nX})</td></tr>
+                </table>
+            </div>`;
+        } else {
+            html += `<div class="stat-block"><h4>📏 Distance X</h4><p>Aucune valeur valide.</p></div>`;
+        }
+
+        // Bloc Y
+        if (yVals.length > 0) {
+            const nY = yVals.length;
+            const meanY = mean(yVals);
+            const stdY = stddev(yVals);
+            const varY = variance(yVals);
+            const medY = median(yVals);
+            const { q1: q1Y, q3: q3Y } = quartiles(yVals);
+            const iqrY = q3Y - q1Y;
+            const minY = Math.min(...yVals);
+            const maxY = Math.max(...yVals);
+            const rangeY = maxY - minY;
+            const cvY = coeffVar(yVals);
+            const ciY = confInterval(yVals);
+            const meanAbsY = meanAbs(yVals);
+            const inTargetY = countInRange(yVals, -2, 2);
+            const pctTargetY = (inTargetY / nY * 100).toFixed(1);
+
+            html += `
+            <div class="stat-block">
+                <h4>📐 Écart latéral Y (m) — ${nY} valeurs valides</h4>
+                <table>
+                    <tr><td>Moyenne</td><td>${meanY.toFixed(3)}</td></tr>
+                    <tr><td>Écart-type</td><td>${stdY.toFixed(3)}</td></tr>
+                    <tr><td>Variance</td><td>${varY.toFixed(4)}</td></tr>
+                    <tr><td>Médiane</td><td>${medY.toFixed(3)}</td></tr>
+                    <tr><td>Q1 (1er quartile)</td><td>${q1Y.toFixed(3)}</td></tr>
+                    <tr><td>Q3 (3e quartile)</td><td>${q3Y.toFixed(3)}</td></tr>
+                    <tr><td>IQR (Q3-Q1)</td><td>${iqrY.toFixed(3)}</td></tr>
+                    <tr><td>Minimum</td><td>${minY.toFixed(3)}</td></tr>
+                    <tr><td>Maximum</td><td>${maxY.toFixed(3)}</td></tr>
+                    <tr><td>Étendue</td><td>${rangeY.toFixed(3)}</td></tr>
+                    <tr><td>Coeff. variation</td><td>${(cvY * 100).toFixed(1)} %</td></tr>
+                    <tr><td>IC 95% de la moyenne</td><td>[${ciY.lower.toFixed(3)} ; ${ciY.upper.toFixed(3)}]</td></tr>
+                    <tr><td>Écart absolu moyen</td><td>${meanAbsY.toFixed(3)}</td></tr>
+                    <tr><td>% dans [-2; +2] m</td><td>${pctTargetY} % (${inTargetY}/${nY})</td></tr>
+                </table>
+            </div>`;
+        } else {
+            html += `<div class="stat-block"><h4>📐 Écart latéral Y</h4><p>Aucune valeur valide.</p></div>`;
+        }
+
+        // Résumé interprétatif
+        if (xVals.length > 0 && yVals.length > 0) {
+            const meanXv = mean(xVals);
+            const stdXv = stddev(xVals);
+            const meanAbsYv = meanAbs(yVals);
+            const pctXtarget = countInRange(xVals, 5, 10) / xVals.length * 100;
+            const pctYtarget = countInRange(yVals, -2, 2) / yVals.length * 100;
+
+            let summary = `📝 <strong>Interprétation :</strong> La distance moyenne est de ${meanXv.toFixed(2)} m (σ = ${stdXv.toFixed(2)} m). `;
+            if (meanXv < 4) summary += "Les lancers sont plutôt courts. ";
+            else if (meanXv > 8) summary += "Les lancers sont plutôt longs. ";
+            else summary += "Les lancers atteignent une distance intermédiaire. ";
+
+            summary += `L'écart latéral moyen en valeur absolue est de ${meanAbsYv.toFixed(2)} m. `;
+            if (meanAbsYv < 0.5) summary += "La précision latérale est excellente. ";
+            else if (meanAbsYv < 1.0) summary += "La précision latérale est bonne. ";
+            else if (meanAbsYv < 2.0) summary += "La précision latérale est moyenne. ";
+            else summary += "La précision latérale est à améliorer. ";
+
+            summary += `Environ ${pctXtarget.toFixed(0)}% des essais sont dans la zone cible [5-10] m pour X, et ${pctYtarget.toFixed(0)}% dans la zone [-2,+2] m pour Y.`;
+            html += `<div class="analysis-summary">${summary}</div>`;
+        } else {
+            html += `<div class="analysis-summary">⚠️ Pas assez de données valides pour une interprétation fiable.</div>`;
+        }
+
+        html += '</div>'; // fin .analysis-grid
+        analysisContent.innerHTML = html;
+        analysisContainer.classList.add('visible');
+    }
+
+    // ============================================================
+    // 8. RENDU DU TABLEAU
+    // ============================================================
+    function renderTable() {
+        tableBody.innerHTML = '';
+        for (let i = 0; i < currentNumTrials; i++) {
+            const row = tableBody.insertRow();
+            const cellNum = row.insertCell(0);
+            cellNum.textContent = i + 1;
+            cellNum.style.fontWeight = 'bold';
+            
+            const cellX = row.insertCell(1);
+            const inputX = document.createElement('input');
+            inputX.type = 'text';
+            inputX.value = data[i]?.x || '';
+            inputX.placeholder = 'ex: 5.20';
+            inputX.addEventListener('input', (function(idx) {
+                return function(e) {
+                    data[idx].x = e.target.value;
+                    updateRowStyles(idx);
+                    saveToLocalStorage();
+                };
+            })(i));
+            cellX.appendChild(inputX);
+            
+            const cellY = row.insertCell(2);
+            const inputY = document.createElement('input');
+            inputY.type = 'text';
+            inputY.value = data[i]?.y || '';
+            inputY.placeholder = 'ex: +0.35 ou -0.42';
+            inputY.addEventListener('input', (function(idx) {
+                return function(e) {
+                    data[idx].y = e.target.value;
+                    updateRowStyles(idx);
+                    saveToLocalStorage();
+                };
+            })(i));
+            cellY.appendChild(inputY);
+        }
+        for (let i = 0; i < currentNumTrials; i++) updateRowStyles(i);
+    }
+
+    // ============================================================
+    // 9. EXPORT CSV
+    // ============================================================
+    function exportToCSV() {
+        const team = teamNameInput.value.trim() || 'Equipe';
+        const date = dateFieldInput.value || new Date().toISOString().slice(0,10);
+        const plane = planeDescInput.value.trim() || 'Non précisé';
+        const record = recordNumberInput.value.trim() || 'non défini';
+        const creation = creationDateInput.value || 'inconnue';
+        
+        let csvRows = [];
+        csvRows.push(`# Relevés - Équipe: ${team}, Date mesures: ${date}, Avion: ${plane}, N° relevé: ${record}, Création: ${creation}`);
+        csvRows.push('Essai;X_(m);Y_(m)');
+        
+        for (let i = 0; i < currentNumTrials; i++) {
+            let xVal = data[i].x !== '' ? parseFloat(data[i].x).toFixed(2) : '';
+            let yVal = data[i].y !== '' ? parseFloat(data[i].y).toFixed(2) : '';
+            if (isNaN(parseFloat(data[i].x))) xVal = data[i].x;
+            if (isNaN(parseFloat(data[i].y))) yVal = data[i].y;
+            csvRows.push(`${i+1};${xVal};${yVal}`);
+        }
+        
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', `releves_${team.replace(/\s/g,'_')}_${date}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    // 10. EXPORT JSON
+    // ============================================================
+    function exportJSON() {
+        const state = getCurrentState();
+        const json = JSON.stringify(state, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        const team = teamNameInput.value.trim() || 'Equipe';
+        const date = dateFieldInput.value || new Date().toISOString().slice(0,10);
+        link.setAttribute('download', `releves_${team.replace(/\s/g,'_')}_${date}.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    // 11. EXEMPLES ET EFFACEMENT
+    // ============================================================
+    function fillWithExamples() {
+        for (let i = 0; i < currentNumTrials; i++) {
+            let x = (3.5 + Math.random() * 7.0).toFixed(2);
+            let y = (Math.random() * 6 - 3).toFixed(2);
+            data[i].x = x;
+            data[i].y = y;
+        }
+        renderTable();
+        saveToLocalStorage();
+        checkAllCoherency();
+        // Cacher l'analyse car les données ont changé
+        analysisContainer.classList.remove('visible');
+    }
+    
+    function clearAll() {
+        for (let i = 0; i < currentNumTrials; i++) {
+            data[i].x = '';
+            data[i].y = '';
+        }
+        renderTable();
+        saveToLocalStorage();
+        messageDiv.innerHTML = '✅ Données effacées.';
+        messageDiv.style.backgroundColor = '#f9f2e0';
+        messageDiv.style.borderLeftColor = '#e67e22';
+        analysisContainer.classList.remove('visible');
+    }
+
+    // ============================================================
+    // 12. GESTION DU NOMBRE D'ESSAIS
+    // ============================================================
+    function applyNumTrials() {
+        let newNum = parseInt(numTrialsInput.value, 10);
+        if (isNaN(newNum) || newNum < 1) newNum = 1;
+        if (newNum > 100) newNum = 100;
+        numTrialsInput.value = newNum;
+
+        if (newNum === currentNumTrials) return;
+
+        const newData = Array(newNum).fill().map(() => ({ x: '', y: '' }));
+        for (let i = 0; i < Math.min(data.length, newNum); i++) {
+            newData[i] = data[i];
+        }
+        data = newData;
+        currentNumTrials = newNum;
+        outlierStatus = Array(currentNumTrials).fill().map(() => ({ xOutlier: false, yOutlier: false }));
+
+        renderTable();
+        saveToLocalStorage();
+        messageDiv.innerHTML = `✅ Nombre d'essais mis à jour : ${currentNumTrials}. Les données existantes ont été conservées.`;
+        messageDiv.style.backgroundColor = '#e6f7e6';
+        messageDiv.style.borderLeftColor = 'var(--highlight-success)';
+        for (let i = 0; i < currentNumTrials; i++) updateRowStyles(i);
+        analysisContainer.classList.remove('visible');
+    }
+
+    // ============================================================
+    // 13. MODALE
+    // ============================================================
+    function toggleModal(show) {
+        const modal = document.getElementById('copyrightModal');
+        if (show) modal.classList.add('active');
+        else modal.classList.remove('active');
+    }
+
+    // ============================================================
+    // 14. ATTACHER LES ÉCOUTEURS
+    // ============================================================
+    function attachAutoSaveListeners() {
+        const metaInputs = [teamNameInput, dateFieldInput, planeDescInput, recordNumberInput, numTrialsInput];
+        metaInputs.forEach(inp => {
+            inp.addEventListener('input', saveToLocalStorage);
+            inp.addEventListener('change', saveToLocalStorage);
+        });
+        document.getElementById('applyNumTrials').addEventListener('click', applyNumTrials);
+    }
+
+    // ============================================================
+    // 15. INITIALISATION
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        // Charger depuis localStorage
+        const loaded = loadFromLocalStorage();
+        // Initialiser la date de création (si non présente)
+        if (!creationDateInput.value) {
+            const today = new Date().toISOString().slice(0,10);
+            creationDateInput.value = today;
+            saveToLocalStorage();
+        }
+        // Si aucun chargement, initialiser data
+        if (!loaded) {
+            data = Array(currentNumTrials).fill().map(() => ({ x: '', y: '' }));
+            outlierStatus = Array(currentNumTrials).fill().map(() => ({ xOutlier: false, yOutlier: false }));
+        } else {
+            outlierStatus = Array(currentNumTrials).fill().map(() => ({ xOutlier: false, yOutlier: false }));
+        }
+        // Rendre le tableau
+        renderTable();
+        // Date du jour par défaut si non définie
+        if (!dateFieldInput.value) {
+            const today = new Date().toISOString().slice(0,10);
+            dateFieldInput.value = today;
+        }
+        // Attacher les écouteurs
+        attachAutoSaveListeners();
+        // Sauvegarde initiale
+        saveToLocalStorage();
+        // Message
+        messageDiv.innerHTML = `✅ Prêt – ${currentNumTrials} essais configurés. Sauvegarde automatique dans le navigateur.`;
+        messageDiv.style.backgroundColor = '#e6f7e6';
+        messageDiv.style.borderLeftColor = 'var(--highlight-success)';
+        // Boutons
+        document.getElementById('checkBtn').addEventListener('click', checkAllCoherency);
+        document.getElementById('analyzeBtn').addEventListener('click', performAnalysis);
+        document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+        document.getElementById('exportJsonBtn').addEventListener('click', exportJSON);
+        document.getElementById('fillExampleBtn').addEventListener('click', fillWithExamples);
+        document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+    });
+</script>
+</body>
+</html>

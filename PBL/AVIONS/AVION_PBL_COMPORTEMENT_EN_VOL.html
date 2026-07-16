@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>PBL Avion en Papier – Étape 1 : Analyse fine du comportement</title>
+    
+    <style>
+        :root {
+            --bg-room: #cfd8dc;
+            --text-color: #1a1a1a;
+            --highlight-main: #1565c0;
+            --highlight-alert: #b71c1c;
+            --highlight-success: #2e7d32;
+            --highlight-warning: #e67e22;
+            --board-bg: #fdfbf7;
+            --board-border: #3e2723;
+            --board-w: clamp(300px, 85vw, 1300px);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            background-color: var(--bg-room);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: var(--board-w);
+            margin: 2rem auto;
+            background: var(--board-bg);
+            border: 3px solid var(--board-border);
+            border-radius: 20px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.4);
+            padding: clamp(18px, 4vh, 35px);
+            position: relative;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vh, 2.6rem);
+            color: var(--highlight-main);
+            text-align: center;
+            border-bottom: 3px double var(--highlight-main);
+            padding-bottom: 0.8vh;
+            margin: 0 0 1.5vh 0;
+        }
+
+        h2 {
+            font-size: clamp(1.4rem, 3.6vh, 2rem);
+            color: var(--highlight-alert);
+            border-left: 6px solid var(--highlight-alert);
+            padding-left: 15px;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .info-equipe {
+            background: #e3f2fd;
+            padding: 12px 18px;
+            border-radius: 18px;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+        .info-equipe label {
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .info-equipe input {
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid #aaa;
+            font-size: 1rem;
+        }
+
+        .settings {
+            background: #f0f4f8;
+            padding: 12px 18px;
+            border-radius: 18px;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .settings label {
+            font-weight: bold;
+        }
+        .settings input {
+            width: 80px;
+            padding: 6px;
+            border-radius: 30px;
+            border: 1px solid #aaa;
+            text-align: center;
+        }
+        .btn {
+            background-color: var(--highlight-main);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            background-color: #0d47a1;
+            transform: scale(1.02);
+        }
+        .btn-success {
+            background-color: var(--highlight-success);
+        }
+        .btn-success:hover {
+            background-color: #1b5e20;
+        }
+        .btn-warning {
+            background-color: var(--highlight-warning);
+        }
+        .btn-warning:hover {
+            background-color: #b45f1b;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: var(--highlight-main);
+            color: white;
+            font-weight: bold;
+        }
+        select {
+            padding: 6px;
+            border-radius: 20px;
+            border: 1px solid #aaa;
+            font-size: 0.9rem;
+        }
+        .stat-box {
+            background: #f1f8e9;
+            border: 2px solid var(--highlight-success);
+            border-radius: 18px;
+            padding: 15px;
+            margin: 1.5rem 0;
+        }
+        .stat-title {
+            color: var(--highlight-success);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .pronostic {
+            background: #fff3e0;
+            border-left: 8px solid var(--highlight-warning);
+            padding: 15px;
+            border-radius: 18px;
+            margin-top: 1.5rem;
+        }
+        .flex-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #5d5d5d;
+            margin-top: 2rem;
+            border-top: 1px solid #ccc;
+            padding-top: 1rem;
+        }
+        .accept-good {
+            background-color: #d4edda;
+            border-left: 6px solid var(--highlight-success);
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .detail-list {
+            margin: 8px 0 0 20px;
+            padding-left: 0;
+        }
+        .detail-list li {
+            margin-bottom: 6px;
+        }
+
+        /* Styles pour le bouton copyright et la modale */
+        .copyright-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #37474f;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 2000;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: auto;
+        }
+        .copyright-btn:hover {
+            background: #1c262c;
+        }
+
+        .modal {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: visibility 0.2s, opacity 0.2s;
+        }
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: #fff9ef;
+            max-width: 650px;
+            width: 90%;
+            padding: 25px;
+            border-radius: 28px;
+            border-top: 8px solid var(--highlight-alert);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--highlight-alert);
+            transition: transform 0.1s;
+        }
+        .close-modal:hover {
+            transform: scale(1.1);
+        }
+        .btn-test {
+            background-color: var(--highlight-success);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: 0.2s;
+        }
+        .btn-test:hover {
+            background-color: #1b5e20;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Bouton droits d'auteur -->
+<button class="copyright-btn" onclick="toggleModal(true)">📜 Droits & Licence</button>
+
+<div class="container">
+    <h1>✈️ Étape 1 – Analyse du comportement de vol</h1>
+    <h2>Observations & pronostic avec conseils précis</h2>
+
+    <div class="info-equipe">
+        <div><label>🏷️ Équipe :</label> <input type="text" id="teamName" placeholder="Nom de l'équipe"></div>
+        <div><label>📅 Date :</label> <input type="date" id="dateField"></div>
+        <div><label>🔧 Modèle / lestage :</label> <input type="text" id="planeDesc" placeholder="ex: Dart + 2 trombones"></div>
+    </div>
+
+    <div class="settings">
+        <div><label>Nombre d'essais :</label> <input type="number" id="nbEssais" min="3" max="30" value="10"></div>
+        <button class="btn" id="initTableBtn">🔄 Initialiser le tableau</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="obsTable">
+            <thead>
+                <tr><th>Essai</th><th>Direction (gauche / droite / tout droit)</th><th>Tangage (pique / neutre / cabre)</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="flex-buttons">
+        <button class="btn btn-success" id="analyzeBtn">📊 Analyser et établir le pronostic</button>
+        <button class="btn btn-warning" id="resetBtn">🗑️ Réinitialiser toutes les données</button>
+    </div>
+
+    <div id="statContainer"></div>
+
+    <footer>
+        💡 <strong>Seuil d'acceptabilité :</strong> direction « tout droit » ≥ 60% <strong>et</strong> tangage « neutre » ≥ 60%.
+    </footer>
+</div>
+
+<!-- Modale de licence -->
+<div id="copyrightModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="toggleModal(false)">&times;</span>
+        <h2 style="margin-top:0;">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+        <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) – Juin 2026</p>
+        <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+        <p>Ce code HTML/CSS/JS et le contenu de <strong>« Cartographie Pédagogique PBL – Avion en Papier Optimal »</strong> sont la propriété intellectuelle exclusive de Yann Merdy.</p>
+        <p><strong>Conditions :</strong></p>
+        <ul>
+            <li><strong>Utilisation Privée et Éducative (autorisée) :</strong> utilisation, copie, modification et distribution à des fins personnelles, éducatives et non lucratives.</li>
+            <li><strong>Utilisation Commerciale (interdite) :</strong> toute exploitation commerciale sans accord écrit explicite de l'auteur est interdite.</li>
+        </ul>
+        <p><strong>Attribution :</strong> toute reproduction doit conserver la mention de l'auteur (Yann Merdy) et cette notice.</p>
+        <p style="font-size:0.9rem;">Contact : yann.merdy@gmail.com</p>
+        <button class="btn-test" onclick="toggleModal(false)">Fermer</button>
+    </div>
+</div>
+
+<script>
+    const nbEssaisInput = document.getElementById('nbEssais');
+    const initBtn = document.getElementById('initTableBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const tableBody = document.getElementById('tableBody');
+    const statContainer = document.getElementById('statContainer');
+
+    let currentNbEssais = 10;
+    let observations = [];
+
+    function initTable(nb) {
+        currentNbEssais = nb;
+        observations = [];
+        for (let i = 0; i < currentNbEssais; i++) {
+            observations.push({ direction: 'tout droit', tangage: 'neutre' });
+        }
+        renderTable();
+        statContainer.innerHTML = '';
+    }
+
+    function renderTable() {
+        tableBody.innerHTML = '';
+        for (let i = 0; i < currentNbEssais; i++) {
+            const row = tableBody.insertRow();
+            const cellNum = row.insertCell(0);
+            cellNum.textContent = i + 1;
+            cellNum.style.fontWeight = 'bold';
+            
+            const cellDir = row.insertCell(1);
+            const selectDir = document.createElement('select');
+            const dirOptions = ['gauche', 'tout droit', 'droite'];
+            dirOptions.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt === 'tout droit' ? '→ tout droit' : (opt === 'gauche' ? '← gauche' : '→ droite');
+                if (observations[i].direction === opt) option.selected = true;
+                selectDir.appendChild(option);
+            });
+            selectDir.addEventListener('change', (function(idx) {
+                return function(e) { observations[idx].direction = e.target.value; };
+            })(i));
+            cellDir.appendChild(selectDir);
+            
+            const cellTang = row.insertCell(2);
+            const selectTang = document.createElement('select');
+            const tangOptions = ['pique', 'neutre', 'cabre'];
+            tangOptions.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt === 'pique' ? '⬇️ pique du nez' : (opt === 'cabre' ? '⬆️ cabre' : '➖ neutre');
+                if (observations[i].tangage === opt) option.selected = true;
+                selectTang.appendChild(option);
+            });
+            selectTang.addEventListener('change', (function(idx) {
+                return function(e) { observations[idx].tangage = e.target.value; };
+            })(i));
+            cellTang.appendChild(selectTang);
+        }
+    }
+
+    function analyzeAndPronostic() {
+        let dirCount = { gauche: 0, 'tout droit': 0, droite: 0 };
+        let tangCount = { pique: 0, neutre: 0, cabre: 0 };
+        for (let obs of observations) {
+            dirCount[obs.direction]++;
+            tangCount[obs.tangage]++;
+        }
+        const total = currentNbEssais;
+        const dirPct = {
+            gauche: (dirCount.gauche / total * 100).toFixed(1),
+            'tout droit': (dirCount['tout droit'] / total * 100).toFixed(1),
+            droite: (dirCount.droite / total * 100).toFixed(1)
+        };
+        const tangPct = {
+            pique: (tangCount.pique / total * 100).toFixed(1),
+            neutre: (tangCount.neutre / total * 100).toFixed(1),
+            cabre: (tangCount.cabre / total * 100).toFixed(1)
+        };
+
+        const seuilAccept = 60;
+        const directionOK = dirPct['tout droit'] >= seuilAccept;
+        const tangageOK = tangPct.neutre >= seuilAccept;
+        const volNormal = directionOK && tangageOK;
+
+        let conseilDirection = "";
+        let conseilTangage = "";
+
+        // === CONSEIL DIRECTION ===
+        if (dirPct.gauche > 50) {
+            conseilDirection = `<strong>L'avion part très souvent à gauche.</strong><br>
+            ➜ Solutions concrètes :<br>
+            <ul class="detail-list">
+                <li>🔧 <strong>Symétrie des ailes :</strong> Mesurez l'angle des ailes gauches et droites. Si l'aile gauche est plus haute, rabattez-la légèrement vers le bas. Utilisez une règle pour vérifier.</li>
+                <li>⚖️ <strong>Lestage asymétrique :</strong> Ajoutez un petit trombone <strong>à droite</strong> du fuselage (pas au centre) pour équilibrer.</li>
+                <li>📐 <strong>Pli correcteur :</strong> Courbez très légèrement le bord de fuite de l'aile droite vers le haut (2-3 mm) pour créer plus de portance à droite.</li>
+                <li>🔄 <strong>Itération :</strong> Testez après chaque modification (3 lancers) et notez l'effet.</li>
+            </ul>`;
+        } 
+        else if (dirPct.droite > 50) {
+            conseilDirection = `<strong>L'avion part très souvent à droite.</strong><br>
+            ➜ Solutions concrètes :<br>
+            <ul class="detail-list">
+                <li>🔧 <strong>Symétrie des ailes :</strong> Vérifiez que l'aile droite n'est pas plus haute. Rabattez-la légèrement.</li>
+                <li>⚖️ <strong>Lestage asymétrique :</strong> Ajoutez un petit trombone <strong>à gauche</strong> du fuselage.</li>
+                <li>📐 <strong>Pli correcteur :</strong> Courbez très légèrement le bord de fuite de l'aile gauche vers le haut.</li>
+                <li>🔄 <strong>Test itératif :</strong> 3 lancers après chaque réglage.</li>
+            </ul>`;
+        } 
+        else if (dirPct['tout droit'] < seuilAccept) {
+            conseilDirection = `<strong>La direction est instable (seulement ${dirPct['tout droit']}% de vols tout droit).</strong><br>
+            ➜ Améliorations très précises :<br>
+            <strong>1. RIGIDITÉ DU FUSELAGE :</strong><br>
+            <ul class="detail-list">
+                <li>• <strong>Plier plus serré :</strong> Utilisez une règle métallique pour marquer fortement les plis. Un fuselage mou déforme la trajectoire.</li>
+                <li>• <strong>Renfort scotch :</strong> Appliquez une fine bande de scotch (2 cm) le long du dos du fuselage (partie centrale). Cela rigidifie sans ajouter trop de poids.</li>
+                <li>• <strong>Double épaisseur :</strong> Pour un fuselage plus rigide, pliez une bande de papier supplémentaire à l'intérieur (type "renfort de quille").</li>
+                <li>• <strong>Éliminer les jeux :</strong> Vérifiez que les ailes ne bougent pas par rapport au fuselage. Fixez-les avec un point de scotch si nécessaire.</li>
+            </ul>
+            <strong>2. PRÉCISION DU LANCER :</strong><br>
+            <ul class="detail-list">
+                <li>• <strong>Posture fixe :</strong> Placez-vous toujours au même endroit, pieds parallèles à la ligne de lancer.</li>
+                <li>• <strong>Hauteur constante :</strong> Lancez la main à hauteur des yeux (ou épaule) – mesurez avec un mètre.</li>
+                <li>• <strong>Gestuelle :</strong> Le mouvement vient uniquement du poignet. Pas d'épaule ni de coude. Entraînez-vous à 10 lancers à vide.</li>
+                <li>• <strong>Point de visée :</strong> Choisissez un repère au sol (craie) à 5 mètres et visez-le. Relâchez l'avion quand la main est alignée avec ce point.</li>
+                <li>• <strong>Lâcher franc :</strong> Ne pas accompagner l'avion du doigt. Ouvrez brusquement la pince.</li>
+                <li>• <strong>Enregistrement vidéo :</strong> Filmez-vous au ralenti pour comparer les gestes entre essais.</li>
+            </ul>
+            <strong>3. AUTRES PISTES :</strong><br>
+            <ul class="detail-list">
+                <li>• <strong>Alimentation en vent :</strong> Lancez face au vent (ou par vent nul). Pas de vent de côté.</li>
+                <li>• <strong>État de l'avion :</strong> Remplacez l'avion tous les 20 lancers (le papier se fatigue).</li>
+            </ul>`;
+        } 
+        else {
+            conseilDirection = `✅ Direction correcte (${dirPct['tout droit']}% de vols tout droit, ≥ ${seuilAccept}%). Continuez ainsi !`;
+        }
+
+        // === CONSEIL TANGAGE ===
+        if (tangPct.pique > 50) {
+            conseilTangage = "L'avion pique du nez très fréquemment. ➜ Centre de gravité trop en avant. Retirez 1 à 2 trombones. Si cela ne suffit pas, courbez très légèrement l'arrière des ailes vers le haut (contre-courbure).";
+        } 
+        else if (tangPct.cabre > 50) {
+            conseilTangage = "L'avion cabre souvent (décrochage). ➜ Centre de gravité trop en arrière. Ajoutez 1 ou 2 trombones à l'avant. Vérifiez que l'angle d'incidence n'est pas excessif (ailes trop relevées à l'avant).";
+        } 
+        else if (tangPct.neutre < seuilAccept) {
+            conseilTangage = `Tangage instable (seulement ${tangPct.neutre}% neutre). ➜ Stabilisez la hauteur de lancer (main à hauteur fixe) et la force (entraînement). Ajustez le lestage par incréments de 0,5 trombone (coupez un trombone en deux). Notez les résultats.`;
+        } 
+        else {
+            conseilTangage = `✅ Tangage correct (${tangPct.neutre}% neutre). Bon réglage !`;
+        }
+
+        let bilanGlobal = "";
+        if (volNormal) {
+            bilanGlobal = `<div class="accept-good">🎉 <strong>Félicitations !</strong> Votre avion répond aux critères (direction tout droit ≥ ${seuilAccept}% ET tangage neutre ≥ ${seuilAccept}%). Vous pouvez passer à l'étape 2.</div><br>`;
+        } else {
+            bilanGlobal = `<div style="background:#ffe0e0; padding:10px; border-radius:12px; border-left:6px solid var(--highlight-alert);">⚠️ <strong>Votre avion ne remplit pas encore les critères.</strong> Appliquez les recommandations ci-dessous et retestez.</div><br>`;
+        }
+
+        const pronosticMsg = `<div class="stat-box">
+                            <div class="stat-title">📊 Résultats (${total} essais)</div>
+                            <p><strong>Direction :</strong> Gauche ${dirPct.gauche}% | Tout droit ${dirPct['tout droit']}% | Droite ${dirPct.droite}%</p>
+                            <p><strong>Tangage :</strong> Pique ${tangPct.pique}% | Neutre ${tangPct.neutre}% | Cabre ${tangPct.cabre}%</p>
+                            <p><strong>Seuil :</strong> ${seuilAccept}% tout droit ET ${seuilAccept}% neutre.</p>
+                        </div>
+                        ${bilanGlobal}
+                        <div class="pronostic">
+                            <strong>🔧 PRONOSTIC DÉTAILLÉ :</strong><br><br>
+                            <strong>➡️ DIRECTION :</strong><br> ${conseilDirection}<br><br>
+                            <strong>⬆️ TANGAGE :</strong><br> ${conseilTangage}<br><br>
+                            <em>💡 Conseil global : Modifiez un seul paramètre à la fois, puis refaites 10 essais pour mesurer l'amélioration. Tenez un journal de bord.</em>
+                        </div>`;
+
+        statContainer.innerHTML = pronosticMsg;
+    }
+
+    function resetAll() {
+        initTable(currentNbEssais);
+        statContainer.innerHTML = '';
+    }
+
+    function onChangeNbEssais() {
+        let newNb = parseInt(nbEssaisInput.value);
+        if (isNaN(newNb)) newNb = 10;
+        if (newNb < 1) newNb = 1;
+        if (newNb > 30) newNb = 30;
+        currentNbEssais = newNb;
+        nbEssaisInput.value = newNb;
+        initTable(currentNbEssais);
+    }
+
+    function toggleModal(show) {
+        const modal = document.getElementById('copyrightModal');
+        if (show) modal.classList.add('active');
+        else modal.classList.remove('active');
+    }
+
+    initBtn.addEventListener('click', onChangeNbEssais);
+    analyzeBtn.addEventListener('click', analyzeAndPronostic);
+    resetBtn.addEventListener('click', resetAll);
+
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('dateField').value = today;
+    initTable(10);
+</script>
+</body>
+</html>

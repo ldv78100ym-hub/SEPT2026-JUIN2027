@@ -131,6 +131,40 @@
         .btn-warning:hover {
             background-color: #b45f1b;
         }
+        .btn-danger {
+            background-color: #b71c1c;
+        }
+        .btn-danger:hover {
+            background-color: #880e0e;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--highlight-main);
+            color: var(--highlight-main);
+        }
+        .btn-outline:hover {
+            background: var(--highlight-main);
+            color: white;
+        }
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            border-radius: 30px;
+        }
+        .btn-analyze-series {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .btn-analyze-series:hover {
+            background-color: #4a42cc;
+        }
+        .btn-evolution {
+            background-color: #00897b;
+            color: white;
+        }
+        .btn-evolution:hover {
+            background-color: #00695c;
+        }
 
         .table-wrapper {
             overflow-x: auto;
@@ -188,6 +222,125 @@
             justify-content: center;
             margin: 1.5rem 0;
         }
+        .serie-controls {
+            background: #e8eaf6;
+            padding: 12px 18px;
+            border-radius: 18px;
+            margin: 1.5rem 0 1rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .serie-controls .serie-num {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--highlight-main);
+        }
+        .series-list-container {
+            background: #f5f5f5;
+            border-radius: 18px;
+            padding: 12px 18px;
+            margin-top: 2rem;
+        }
+        .series-list-container h3 {
+            margin: 0 0 10px 0;
+            color: var(--highlight-main);
+        }
+        .series-list-container ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .series-list-container li {
+            background: white;
+            padding: 8px 14px;
+            margin-bottom: 6px;
+            border-radius: 30px;
+            border-left: 4px solid var(--highlight-main);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            align-items: center;
+        }
+        .series-list-container li .badge {
+            background: var(--highlight-success);
+            color: white;
+            border-radius: 30px;
+            padding: 2px 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .series-list-container li .badge-fail {
+            background: var(--highlight-alert);
+        }
+        .series-list-container .empty-msg {
+            color: #777;
+            font-style: italic;
+        }
+        .series-list-container .series-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+        .analysis-badge {
+            background: #e0e0e0;
+            border-radius: 30px;
+            padding: 2px 12px;
+            font-size: 0.7rem;
+            color: #333;
+        }
+        .evolution-container {
+            background: #e0f2f1;
+            border-radius: 18px;
+            padding: 15px;
+            margin-top: 1.5rem;
+            border: 2px solid #00897b;
+        }
+        .evolution-container .evo-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00695c;
+            margin-bottom: 10px;
+        }
+        .evo-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .evo-table th {
+            background: #00897b;
+            color: white;
+            padding: 8px;
+        }
+        .evo-table td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .evo-table .trend-up {
+            color: var(--highlight-success);
+            font-weight: bold;
+        }
+        .evo-table .trend-down {
+            color: var(--highlight-alert);
+            font-weight: bold;
+        }
+        .evo-table .trend-stable {
+            color: #f57c00;
+            font-weight: bold;
+        }
+        .evo-summary {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 12px;
+            border-left: 6px solid #00897b;
+        }
         footer {
             text-align: center;
             font-size: 0.75rem;
@@ -210,7 +363,6 @@
             margin-bottom: 6px;
         }
 
-        /* Styles pour le bouton copyright et la modale */
         .copyright-btn {
             position: fixed;
             bottom: 20px;
@@ -287,11 +439,29 @@
             background-color: #1b5e20;
             transform: scale(1.02);
         }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
 
-<!-- Bouton droits d'auteur -->
 <button class="copyright-btn" onclick="toggleModal(true)">📜 Droits & Licence</button>
 
 <div class="container">
@@ -309,10 +479,24 @@
         <button class="btn" id="initTableBtn">🔄 Initialiser le tableau</button>
     </div>
 
+    <!-- Contrôles des séries -->
+    <div class="serie-controls">
+        <div>
+            <span class="serie-num">📌 Série en cours : n° <span id="serieNumDisplay">1</span></span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button class="btn btn-success" id="saveSerieBtn">💾 Enregistrer la série</button>
+            <button class="btn" id="downloadJsonBtn">⬇️ Télécharger JSON</button>
+            <button class="btn btn-outline" id="importJsonBtn">📤 Importer JSON</button>
+            <button class="btn btn-danger" id="clearSeriesBtn">🗑️ Effacer toutes les séries</button>
+        </div>
+        <input type="file" id="fileInput" accept=".json" style="display:none;">
+    </div>
+
     <div class="table-wrapper">
         <table id="obsTable">
             <thead>
-                <tr><th>Essai</th><th>Direction (gauche / droite / tout droit)</th><th>Tangage (pique / neutre / cabre)</th></tr>
+                <tr><th>Essai</th><th>Direction (gauche / tout droit / droite)</th><th>Tangage (pique / neutre / cabre)</th></tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -320,10 +504,18 @@
 
     <div class="flex-buttons">
         <button class="btn btn-success" id="analyzeBtn">📊 Analyser et établir le pronostic</button>
+        <button class="btn btn-evolution" id="evolutionBtn">📈 Analyser l'évolution</button>
         <button class="btn btn-warning" id="resetBtn">🗑️ Réinitialiser toutes les données</button>
     </div>
 
     <div id="statContainer"></div>
+    <div id="evolutionContainer" class="evolution-container" style="display:none;"></div>
+
+    <!-- Liste des séries enregistrées -->
+    <div class="series-list-container">
+        <h3>📋 Séries enregistrées (<span id="seriesCount">0</span>)</h3>
+        <div id="seriesList"><p class="empty-msg">Aucune série enregistrée.</p></div>
+    </div>
 
     <footer>
         💡 <strong>Seuil d'acceptabilité :</strong> direction « tout droit » ≥ 60% <strong>et</strong> tangage « neutre » ≥ 60%.
@@ -349,17 +541,44 @@
     </div>
 </div>
 
+<!-- Toast de notification -->
+<div id="toast" class="toast"></div>
+
 <script>
     const nbEssaisInput = document.getElementById('nbEssais');
     const initBtn = document.getElementById('initTableBtn');
     const analyzeBtn = document.getElementById('analyzeBtn');
+    const evolutionBtn = document.getElementById('evolutionBtn');
     const resetBtn = document.getElementById('resetBtn');
     const tableBody = document.getElementById('tableBody');
     const statContainer = document.getElementById('statContainer');
+    const evolutionContainer = document.getElementById('evolutionContainer');
+    const saveSerieBtn = document.getElementById('saveSerieBtn');
+    const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+    const importJsonBtn = document.getElementById('importJsonBtn');
+    const fileInput = document.getElementById('fileInput');
+    const clearSeriesBtn = document.getElementById('clearSeriesBtn');
+    const seriesList = document.getElementById('seriesList');
+    const seriesCount = document.getElementById('seriesCount');
+    const serieNumDisplay = document.getElementById('serieNumDisplay');
 
     let currentNbEssais = 10;
     let observations = [];
 
+    // Stockage des séries
+    let series = [];
+    let currentSerieNumber = 1;
+
+    // Fonction toast
+    function showToast(msg, duration = 2500) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    // --- Initialisation du tableau ---
     function initTable(nb) {
         currentNbEssais = nb;
         observations = [];
@@ -368,6 +587,9 @@
         }
         renderTable();
         statContainer.innerHTML = '';
+        evolutionContainer.style.display = 'none';
+        evolutionContainer.innerHTML = '';
+        document.querySelectorAll('.analysis-badge').forEach(el => el.remove());
     }
 
     function renderTable() {
@@ -410,23 +632,24 @@
         }
     }
 
-    function analyzeAndPronostic() {
+    // --- Fonction centrale de calcul des statistiques et conseils (pour n'importe quelles données) ---
+    function computeInterpretationForData(obsArray, nbEssais) {
         let dirCount = { gauche: 0, 'tout droit': 0, droite: 0 };
         let tangCount = { pique: 0, neutre: 0, cabre: 0 };
-        for (let obs of observations) {
+        for (let obs of obsArray) {
             dirCount[obs.direction]++;
             tangCount[obs.tangage]++;
         }
-        const total = currentNbEssais;
+        const total = nbEssais;
         const dirPct = {
-            gauche: (dirCount.gauche / total * 100).toFixed(1),
-            'tout droit': (dirCount['tout droit'] / total * 100).toFixed(1),
-            droite: (dirCount.droite / total * 100).toFixed(1)
+            gauche: (dirCount.gauche / total * 100),
+            'tout droit': (dirCount['tout droit'] / total * 100),
+            droite: (dirCount.droite / total * 100)
         };
         const tangPct = {
-            pique: (tangCount.pique / total * 100).toFixed(1),
-            neutre: (tangCount.neutre / total * 100).toFixed(1),
-            cabre: (tangCount.cabre / total * 100).toFixed(1)
+            pique: (tangCount.pique / total * 100),
+            neutre: (tangCount.neutre / total * 100),
+            cabre: (tangCount.cabre / total * 100)
         };
 
         const seuilAccept = 60;
@@ -434,10 +657,8 @@
         const tangageOK = tangPct.neutre >= seuilAccept;
         const volNormal = directionOK && tangageOK;
 
+        // --- Conseils direction ---
         let conseilDirection = "";
-        let conseilTangage = "";
-
-        // === CONSEIL DIRECTION ===
         if (dirPct.gauche > 50) {
             conseilDirection = `<strong>L'avion part très souvent à gauche.</strong><br>
             ➜ Solutions concrètes :<br>
@@ -459,7 +680,7 @@
             </ul>`;
         } 
         else if (dirPct['tout droit'] < seuilAccept) {
-            conseilDirection = `<strong>La direction est instable (seulement ${dirPct['tout droit']}% de vols tout droit).</strong><br>
+            conseilDirection = `<strong>La direction est instable (seulement ${dirPct['tout droit'].toFixed(1)}% de vols tout droit).</strong><br>
             ➜ Améliorations très précises :<br>
             <strong>1. RIGIDITÉ DU FUSELAGE :</strong><br>
             <ul class="detail-list">
@@ -484,10 +705,11 @@
             </ul>`;
         } 
         else {
-            conseilDirection = `✅ Direction correcte (${dirPct['tout droit']}% de vols tout droit, ≥ ${seuilAccept}%). Continuez ainsi !`;
+            conseilDirection = `✅ Direction correcte (${dirPct['tout droit'].toFixed(1)}% de vols tout droit, ≥ ${seuilAccept}%). Continuez ainsi !`;
         }
 
-        // === CONSEIL TANGAGE ===
+        // --- Conseils tangage ---
+        let conseilTangage = "";
         if (tangPct.pique > 50) {
             conseilTangage = "L'avion pique du nez très fréquemment. ➜ Centre de gravité trop en avant. Retirez 1 à 2 trombones. Si cela ne suffit pas, courbez très légèrement l'arrière des ailes vers le haut (contre-courbure).";
         } 
@@ -495,23 +717,23 @@
             conseilTangage = "L'avion cabre souvent (décrochage). ➜ Centre de gravité trop en arrière. Ajoutez 1 ou 2 trombones à l'avant. Vérifiez que l'angle d'incidence n'est pas excessif (ailes trop relevées à l'avant).";
         } 
         else if (tangPct.neutre < seuilAccept) {
-            conseilTangage = `Tangage instable (seulement ${tangPct.neutre}% neutre). ➜ Stabilisez la hauteur de lancer (main à hauteur fixe) et la force (entraînement). Ajustez le lestage par incréments de 0,5 trombone (coupez un trombone en deux). Notez les résultats.`;
+            conseilTangage = `Tangage instable (seulement ${tangPct.neutre.toFixed(1)}% neutre). ➜ Stabilisez la hauteur de lancer (main à hauteur fixe) et la force (entraînement). Ajustez le lestage par incréments de 0,5 trombone (coupez un trombone en deux). Notez les résultats.`;
         } 
         else {
-            conseilTangage = `✅ Tangage correct (${tangPct.neutre}% neutre). Bon réglage !`;
+            conseilTangage = `✅ Tangage correct (${tangPct.neutre.toFixed(1)}% neutre). Bon réglage !`;
         }
 
         let bilanGlobal = "";
         if (volNormal) {
-            bilanGlobal = `<div class="accept-good">🎉 <strong>Félicitations !</strong> Votre avion répond aux critères (direction tout droit ≥ ${seuilAccept}% ET tangage neutre ≥ ${seuilAccept}%). Vous pouvez passer à l'étape 2.</div><br>`;
+            bilanGlobal = `<div class="accept-good">🎉 <strong>Félicitations !</strong> Votre avion répond aux critères (direction tout droit ≥ ${seuilAccept}% ET tangage neutre ≥ ${seuilAccept}%). Vous pouvez passer à l'étape 2.</div>`;
         } else {
-            bilanGlobal = `<div style="background:#ffe0e0; padding:10px; border-radius:12px; border-left:6px solid var(--highlight-alert);">⚠️ <strong>Votre avion ne remplit pas encore les critères.</strong> Appliquez les recommandations ci-dessous et retestez.</div><br>`;
+            bilanGlobal = `<div style="background:#ffe0e0; padding:10px; border-radius:12px; border-left:6px solid var(--highlight-alert);">⚠️ <strong>Votre avion ne remplit pas encore les critères.</strong> Appliquez les recommandations ci-dessous et retestez.</div>`;
         }
 
-        const pronosticMsg = `<div class="stat-box">
+        const pronosticHTML = `<div class="stat-box">
                             <div class="stat-title">📊 Résultats (${total} essais)</div>
-                            <p><strong>Direction :</strong> Gauche ${dirPct.gauche}% | Tout droit ${dirPct['tout droit']}% | Droite ${dirPct.droite}%</p>
-                            <p><strong>Tangage :</strong> Pique ${tangPct.pique}% | Neutre ${tangPct.neutre}% | Cabre ${tangPct.cabre}%</p>
+                            <p><strong>Direction :</strong> Gauche ${dirPct.gauche.toFixed(1)}% | Tout droit ${dirPct['tout droit'].toFixed(1)}% | Droite ${dirPct.droite.toFixed(1)}%</p>
+                            <p><strong>Tangage :</strong> Pique ${tangPct.pique.toFixed(1)}% | Neutre ${tangPct.neutre.toFixed(1)}% | Cabre ${tangPct.cabre.toFixed(1)}%</p>
                             <p><strong>Seuil :</strong> ${seuilAccept}% tout droit ET ${seuilAccept}% neutre.</p>
                         </div>
                         ${bilanGlobal}
@@ -522,14 +744,354 @@
                             <em>💡 Conseil global : Modifiez un seul paramètre à la fois, puis refaites 10 essais pour mesurer l'amélioration. Tenez un journal de bord.</em>
                         </div>`;
 
-        statContainer.innerHTML = pronosticMsg;
+        return {
+            dirCount,
+            tangCount,
+            dirPct,
+            tangPct,
+            directionOK,
+            tangageOK,
+            volNormal,
+            conseilDirection,
+            conseilTangage,
+            bilanGlobal,
+            pronosticHTML,
+            seuilAccept
+        };
     }
 
+    // --- Analyse des données actuelles (tableau) ---
+    function analyzeAndPronostic() {
+        const interp = computeInterpretationForData(observations, currentNbEssais);
+        statContainer.innerHTML = `<div style="background:#e3f2fd; padding:8px 16px; border-radius:30px; margin-bottom:15px; display:inline-block; font-weight:bold;">📌 Analyse des données du tableau (série en cours)</div>` + interp.pronosticHTML;
+        window._lastInterpretation = interp;
+        evolutionContainer.style.display = 'none';
+        document.querySelectorAll('.analysis-badge').forEach(el => el.remove());
+    }
+
+    // --- Analyse d'une série enregistrée ---
+    function analyzeSeries(numero) {
+        const serie = series.find(s => s.numero === numero);
+        if (!serie) {
+            showToast('❌ Série introuvable.', 2000);
+            return;
+        }
+        const interp = computeInterpretationForData(serie.observations, serie.nbEssais);
+        statContainer.innerHTML = `<div style="background:#e3f2fd; padding:8px 16px; border-radius:30px; margin-bottom:15px; display:inline-block; font-weight:bold;">📌 Analyse de la série #${serie.numero} (${serie.date})</div>` + interp.pronosticHTML;
+        window._lastInterpretation = interp;
+        evolutionContainer.style.display = 'none';
+
+        document.querySelectorAll('.analysis-badge').forEach(el => el.remove());
+        const items = document.querySelectorAll('#seriesList li');
+        items.forEach(li => {
+            const num = li.dataset.serieNum;
+            if (parseInt(num) === numero) {
+                const badge = document.createElement('span');
+                badge.className = 'analysis-badge';
+                badge.textContent = '📊 En analyse';
+                li.appendChild(badge);
+            }
+        });
+        showToast(`📊 Analyse de la série #${serie.numero} affichée.`, 2000);
+    }
+
+    // --- Analyse de l'évolution entre les séries ---
+    function analyzeEvolution() {
+        if (series.length < 2) {
+            showToast('⚠️ Il faut au moins 2 séries enregistrées pour analyser l\'évolution.', 3000);
+            return;
+        }
+
+        // Trier les séries par numéro
+        const sorted = [...series].sort((a, b) => a.numero - b.numero);
+        
+        let html = `<div class="evo-title">📈 Analyse de l'évolution (${sorted.length} séries)</div>`;
+        html += `<table class="evo-table">
+            <thead>
+                <tr><th>Série</th><th>Date</th><th>% Tout droit</th><th>Tendance Dir.</th><th>% Neutre</th><th>Tendance Tang.</th><th>Statut</th></tr>
+            </thead>
+            <tbody>`;
+
+        let prevDir = null, prevTang = null;
+        let dirProgression = 0, tangProgression = 0;
+        let firstDir = sorted[0].interpretation.dirPct['tout droit'];
+        let lastDir = sorted[sorted.length-1].interpretation.dirPct['tout droit'];
+        let firstTang = sorted[0].interpretation.tangPct.neutre;
+        let lastTang = sorted[sorted.length-1].interpretation.tangPct.neutre;
+
+        for (let i = 0; i < sorted.length; i++) {
+            const s = sorted[i];
+            const dir = s.interpretation.dirPct['tout droit'];
+            const tang = s.interpretation.tangPct.neutre;
+            const valid = s.interpretation.volNormal;
+
+            // Tendance direction
+            let dirTrend = '';
+            if (i === 0) dirTrend = '—';
+            else if (dir > prevDir) { dirTrend = '⬆️'; dirProgression += (dir - prevDir); }
+            else if (dir < prevDir) { dirTrend = '⬇️'; dirProgression -= (prevDir - dir); }
+            else dirTrend = '➖';
+
+            // Tendance tangage
+            let tangTrend = '';
+            if (i === 0) tangTrend = '—';
+            else if (tang > prevTang) { tangTrend = '⬆️'; tangProgression += (tang - prevTang); }
+            else if (tang < prevTang) { tangTrend = '⬇️'; tangProgression -= (prevTang - tang); }
+            else tangTrend = '➖';
+
+            const badge = valid ? '<span class="badge">✅ OK</span>' : '<span class="badge badge-fail">❌ À améliorer</span>';
+
+            html += `<tr>
+                <td><strong>#${s.numero}</strong></td>
+                <td>${s.date}</td>
+                <td>${dir.toFixed(1)}%</td>
+                <td class="${dirTrend === '⬆️' ? 'trend-up' : dirTrend === '⬇️' ? 'trend-down' : 'trend-stable'}">${dirTrend}</td>
+                <td>${tang.toFixed(1)}%</td>
+                <td class="${tangTrend === '⬆️' ? 'trend-up' : tangTrend === '⬇️' ? 'trend-down' : 'trend-stable'}">${tangTrend}</td>
+                <td>${badge}</td>
+            </tr>`;
+
+            prevDir = dir;
+            prevTang = tang;
+        }
+
+        html += `</tbody></table>`;
+
+        // Résumé et conseils
+        let summary = `<div class="evo-summary">`;
+        const dirDiff = lastDir - firstDir;
+        const tangDiff = lastTang - firstTang;
+        summary += `<p><strong>Évolution globale :</strong></p>`;
+        summary += `<ul>`;
+        if (dirDiff > 0) {
+            summary += `<li style="color:var(--highlight-success);">✅ Direction : amélioration de ${dirDiff.toFixed(1)} points de pourcentage (de ${firstDir.toFixed(1)}% à ${lastDir.toFixed(1)}%).</li>`;
+        } else if (dirDiff < 0) {
+            summary += `<li style="color:var(--highlight-alert);">⚠️ Direction : détérioration de ${Math.abs(dirDiff).toFixed(1)} points de pourcentage (de ${firstDir.toFixed(1)}% à ${lastDir.toFixed(1)}%).</li>`;
+        } else {
+            summary += `<li style="color:#f57c00;">➖ Direction : stable (${firstDir.toFixed(1)}%).</li>`;
+        }
+
+        if (tangDiff > 0) {
+            summary += `<li style="color:var(--highlight-success);">✅ Tangage : amélioration de ${tangDiff.toFixed(1)} points de pourcentage (de ${firstTang.toFixed(1)}% à ${lastTang.toFixed(1)}%).</li>`;
+        } else if (tangDiff < 0) {
+            summary += `<li style="color:var(--highlight-alert);">⚠️ Tangage : détérioration de ${Math.abs(tangDiff).toFixed(1)} points de pourcentage (de ${firstTang.toFixed(1)}% à ${lastTang.toFixed(1)}%).</li>`;
+        } else {
+            summary += `<li style="color:#f57c00;">➖ Tangage : stable (${firstTang.toFixed(1)}%).</li>`;
+        }
+        summary += `</ul>`;
+
+        // Conseils d'optimisation
+        summary += `<p><strong>🔧 Recommandations pour optimiser :</strong></p><ul>`;
+        if (dirDiff < 0) {
+            summary += `<li>La stabilité directionnelle se dégrade. Vérifiez la symétrie des ailes et le lestage. Réduisez les modifications brutales.</li>`;
+        } else if (dirDiff > 0 && lastDir < 60) {
+            summary += `<li>La direction s'améliore mais reste sous le seuil (${lastDir.toFixed(1)}%). Poursuivez les ajustements fins de symétrie et de rigidité.</li>`;
+        } else if (lastDir >= 60) {
+            summary += `<li>✅ Direction satisfaisante. Maintenez vos réglages.</li>`;
+        }
+
+        if (tangDiff < 0) {
+            summary += `<li>Le tangage se dégrade. Vérifiez le centrage (CG) et l'incidence des ailes. Un léger contrepoids peut aider.</li>`;
+        } else if (tangDiff > 0 && lastTang < 60) {
+            summary += `<li>Le tangage s'améliore mais reste sous le seuil (${lastTang.toFixed(1)}%). Affinez le lestage avant/arrière.</li>`;
+        } else if (lastTang >= 60) {
+            summary += `<li>✅ Tangage satisfaisant. Continuez à stabiliser vos lancers.</li>`;
+        }
+
+        if (lastDir >= 60 && lastTang >= 60) {
+            summary += `<li>🎉 Tous les critères sont remplis ! Vous pouvez passer à l'étape 2.</li>`;
+        } else {
+            summary += `<li>💡 Conseil global : modifiez un seul paramètre à la fois, et testez systématiquement avec 10 lancers pour mesurer l'impact.</li>`;
+        }
+        summary += `</ul></div>`;
+
+        html += summary;
+        evolutionContainer.innerHTML = html;
+        evolutionContainer.style.display = 'block';
+        statContainer.innerHTML = '';
+        document.querySelectorAll('.analysis-badge').forEach(el => el.remove());
+
+        showToast('📈 Analyse de l\'évolution affichée.', 2500);
+    }
+
+    // --- Enregistrer la série courante ---
+    function saveSerie() {
+        const date = document.getElementById('dateField').value || new Date().toISOString().slice(0,10);
+        const equipe = document.getElementById('teamName').value.trim() || 'Équipe non nommée';
+        const modele = document.getElementById('planeDesc').value.trim() || 'Modèle non spécifié';
+
+        const interp = computeInterpretationForData(observations, currentNbEssais);
+        window._lastInterpretation = interp;
+
+        const obsCopy = JSON.parse(JSON.stringify(observations));
+
+        const serie = {
+            numero: currentSerieNumber,
+            date: date,
+            equipe: equipe,
+            modele: modele,
+            nbEssais: currentNbEssais,
+            observations: obsCopy,
+            interpretation: {
+                dirPct: {
+                    gauche: interp.dirPct.gauche,
+                    'tout droit': interp.dirPct['tout droit'],
+                    droite: interp.dirPct.droite
+                },
+                tangPct: {
+                    pique: interp.tangPct.pique,
+                    neutre: interp.tangPct.neutre,
+                    cabre: interp.tangPct.cabre
+                },
+                directionOK: interp.directionOK,
+                tangageOK: interp.tangageOK,
+                volNormal: interp.volNormal,
+                conseilDirection: interp.conseilDirection,
+                conseilTangage: interp.conseilTangage,
+                bilanGlobal: interp.bilanGlobal,
+                seuilAccept: interp.seuilAccept,
+                pronosticHTML: interp.pronosticHTML
+            },
+            timestamp: new Date().toISOString()
+        };
+
+        series.push(serie);
+        currentSerieNumber++;
+        serieNumDisplay.textContent = currentSerieNumber;
+        renderSeriesList();
+        showToast(`✅ Série n°${serie.numero} enregistrée avec succès !`);
+    }
+
+    // --- Télécharger JSON (le nom commence IMPÉRATIVEMENT par le nom de l'équipe) ---
+    function downloadJSON() {
+        if (series.length === 0) {
+            showToast('⚠️ Aucune série enregistrée à exporter.', 3000);
+            return;
+        }
+
+        // Récupérer le nom de l'équipe
+        let teamName = document.getElementById('teamName').value.trim();
+        if (!teamName) {
+            teamName = 'equipe_non_nommee';
+        }
+
+        // Nettoyer le nom pour qu'il soit valide dans un nom de fichier
+        // Remplacer les espaces par des underscores, supprimer les caractères spéciaux dangereux
+        const sanitizedTeam = teamName
+            .normalize('NFD') // Décompose les accents (é -> e + ́)
+            .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+            .replace(/\s+/g, '_') // Espaces -> underscores
+            .replace(/[^a-zA-Z0-9_-]/g, ''); // Supprime tout caractère non alphanumérique, sauf _ et -
+
+        const data = JSON.stringify(series, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0,10);
+        // Le nom du fichier commence par le nom de l'équipe
+        a.download = `${sanitizedTeam}_series_avion_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`⬇️ Fichier JSON téléchargé (${series.length} série(s)).`);
+    }
+
+    // --- Importer JSON ---
+    function importJSON(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data)) {
+                    showToast('❌ Le fichier doit contenir un tableau de séries.', 3000);
+                    return;
+                }
+                if (data.length === 0) {
+                    showToast('⚠️ Le fichier est vide.', 3000);
+                    return;
+                }
+                const first = data[0];
+                if (!first.numero || !first.observations || !first.interpretation) {
+                    showToast('❌ Structure JSON invalide : champ "numero", "observations" ou "interpretation" manquant.', 3000);
+                    return;
+                }
+                series = data;
+                const maxNum = series.reduce((max, s) => Math.max(max, s.numero || 0), 0);
+                currentSerieNumber = maxNum + 1;
+                serieNumDisplay.textContent = currentSerieNumber;
+                renderSeriesList();
+                showToast(`✅ ${series.length} série(s) importée(s) avec succès !`);
+            } catch (err) {
+                showToast('❌ Erreur lors de la lecture du fichier JSON : ' + err.message, 3000);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- Effacer toutes les séries ---
+    function clearAllSeries() {
+        if (series.length === 0) {
+            showToast('Aucune série à effacer.', 2000);
+            return;
+        }
+        if (confirm('Voulez-vous vraiment effacer toutes les séries enregistrées ?')) {
+            series = [];
+            currentSerieNumber = 1;
+            serieNumDisplay.textContent = currentSerieNumber;
+            renderSeriesList();
+            statContainer.innerHTML = '';
+            evolutionContainer.style.display = 'none';
+            evolutionContainer.innerHTML = '';
+            document.querySelectorAll('.analysis-badge').forEach(el => el.remove());
+            showToast('🗑️ Toutes les séries ont été effacées.');
+        }
+    }
+
+    // --- Affichage de la liste des séries ---
+    function renderSeriesList() {
+        seriesCount.textContent = series.length;
+        if (series.length === 0) {
+            seriesList.innerHTML = '<p class="empty-msg">Aucune série enregistrée.</p>';
+            return;
+        }
+        let html = '<ul>';
+        const sorted = [...series].reverse();
+        sorted.forEach(s => {
+            const dirPct = s.interpretation.dirPct['tout droit'].toFixed(1);
+            const tangPct = s.interpretation.tangPct.neutre.toFixed(1);
+            const valid = s.interpretation.volNormal;
+            const badge = valid ? '<span class="badge">✅ OK</span>' : '<span class="badge badge-fail">❌ À améliorer</span>';
+            html += `<li data-serie-num="${s.numero}">
+                <strong>#${s.numero}</strong>
+                <span>📅 ${s.date}</span>
+                <span>🏷️ ${s.equipe}</span>
+                <span>🔧 ${s.modele}</span>
+                <span>📊 ${s.nbEssais} essais</span>
+                <span>→ ${dirPct}% tout droit</span>
+                <span>⬆ ${tangPct}% neutre</span>
+                ${badge}
+                <span class="series-actions">
+                    <button class="btn btn-analyze-series btn-sm" onclick="analyzeSeries(${s.numero})">📊 Analyser</button>
+                </span>
+            </li>`;
+        });
+        html += '</ul>';
+        seriesList.innerHTML = html;
+    }
+
+    // --- Réinitialisation complète (tableau + stats) ---
     function resetAll() {
         initTable(currentNbEssais);
         statContainer.innerHTML = '';
+        evolutionContainer.style.display = 'none';
+        evolutionContainer.innerHTML = '';
+        document.querySelectorAll('.analysis-badge').forEach(el => el.remove());
+        showToast('🔄 Tableau réinitialisé.');
     }
 
+    // --- Changement du nombre d'essais ---
     function onChangeNbEssais() {
         let newNb = parseInt(nbEssaisInput.value);
         if (isNaN(newNb)) newNb = 10;
@@ -540,19 +1102,39 @@
         initTable(currentNbEssais);
     }
 
+    // --- Modale de licence ---
     function toggleModal(show) {
         const modal = document.getElementById('copyrightModal');
         if (show) modal.classList.add('active');
         else modal.classList.remove('active');
     }
 
+    // --- Événements ---
     initBtn.addEventListener('click', onChangeNbEssais);
     analyzeBtn.addEventListener('click', analyzeAndPronostic);
+    evolutionBtn.addEventListener('click', analyzeEvolution);
     resetBtn.addEventListener('click', resetAll);
+    saveSerieBtn.addEventListener('click', saveSerie);
+    downloadJsonBtn.addEventListener('click', downloadJSON);
+    clearSeriesBtn.addEventListener('click', clearAllSeries);
 
+    importJsonBtn.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files.length > 0) {
+            importJSON(this.files[0]);
+            this.value = '';
+        }
+    });
+
+    // Initialisation
     const today = new Date().toISOString().slice(0,10);
     document.getElementById('dateField').value = today;
     initTable(10);
+    renderSeriesList();
+    serieNumDisplay.textContent = currentSerieNumber;
 </script>
 </body>
 </html>

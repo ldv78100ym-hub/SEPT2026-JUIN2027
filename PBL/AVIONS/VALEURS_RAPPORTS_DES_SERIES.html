@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>PBL Avion – Rapports des relevés de valeurs (X, Y)</title>
+
+    <!-- MathJax (sans polyfill, strictement interdit) -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async>
+    </script>
+
+    <style>
+        :root {
+            --bg-main: #eceff1;
+            --bg-card: #ffffff;
+            --primary: #1565c0;
+            --primary-light: #e3f2fd;
+            --success: #2e7d32;
+            --warning: #e67e22;
+            --danger: #b71c1c;
+            --border-radius: 16px;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+            --text: #1a1a1a;
+            --text-light: #555;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-main);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        h1 small {
+            font-size: 0.9rem;
+            font-weight: normal;
+            color: var(--text-light);
+            margin-left: auto;
+        }
+
+        .upload-section {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 24px 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 24px;
+        }
+        .upload-section label {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        .upload-section input[type="file"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 2px dashed #aaa;
+            border-radius: 12px;
+            background: #fafafa;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .upload-section input[type="file"]:hover {
+            border-color: var(--primary);
+        }
+        .upload-section .file-status {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        .upload-section .file-status strong {
+            color: var(--primary);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 22px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            white-space: nowrap;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+            background: #0d47a1;
+        }
+        .btn-success {
+            background: var(--success);
+        }
+        .btn-success:hover {
+            background: #1b5e20;
+        }
+        .btn-warning {
+            background: var(--warning);
+        }
+        .btn-warning:hover {
+            background: #b45f1b;
+        }
+        .btn-danger {
+            background: var(--danger);
+        }
+        .btn-danger:hover {
+            background: #880e0e;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-sm {
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            border-radius: 30px;
+        }
+
+        .series-list {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            margin-top: 20px;
+        }
+
+        .serie-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px 28px;
+            border-left: 6px solid var(--primary);
+            transition: 0.15s;
+        }
+        .serie-card:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+        }
+
+        .serie-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 12px 24px;
+            margin-bottom: 14px;
+        }
+        .serie-header .num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .serie-header .meta {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 18px;
+        }
+        .serie-header .meta span {
+            background: #f0f4f8;
+            padding: 2px 14px;
+            border-radius: 30px;
+        }
+        .serie-header .badge-ok {
+            background: var(--success);
+            color: white;
+            padding: 2px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .serie-header .badge-fail {
+            background: var(--danger);
+            color: white;
+            padding: 2px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Données */
+        .data-summary {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin: 10px 0 16px 0;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 40px;
+            font-size: 0.95rem;
+        }
+        .data-summary .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .data-summary .stat-group .label {
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .data-summary .stat-group .value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .data-summary .stat-group .value .highlight {
+            color: var(--primary);
+        }
+
+        .data-table-wrap {
+            overflow-x: auto;
+            margin: 12px 0 16px 0;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+        .data-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            background: white;
+        }
+        .data-table-wrap th,
+        .data-table-wrap td {
+            padding: 6px 10px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .data-table-wrap th {
+            background: var(--primary-light);
+            color: var(--text);
+            font-weight: 600;
+        }
+        .data-table-wrap tr:hover {
+            background: #f5f8fa;
+        }
+
+        /* Rapport */
+        .report-section {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 2px dashed #e0e0e0;
+        }
+        .report-section .report-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .report-section .report-title .badge-report {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 0 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 700px) {
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .report-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .report-field label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        .report-field textarea {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1.5px solid #d0d7de;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 80px;
+            transition: 0.15s;
+            background: #fcfcfc;
+            width: 100%;
+        }
+        .report-field textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+            background: white;
+        }
+        .report-field .char-count {
+            font-size: 0.75rem;
+            color: #aaa;
+            text-align: right;
+            padding-right: 6px;
+        }
+
+        .report-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+            align-items: center;
+        }
+        .report-actions .saved-indicator {
+            font-size: 0.85rem;
+            color: var(--success);
+            font-weight: 500;
+            display: none;
+        }
+        .report-actions .saved-indicator.show {
+            display: inline;
+        }
+
+        /* Export */
+        .export-section {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 20px 28px;
+            box-shadow: var(--shadow);
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 24px;
+        }
+        .export-section .info {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+        .export-section .info strong {
+            color: var(--text);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+        .empty-state h2 {
+            font-weight: 400;
+            color: #666;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            z-index: 9999;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.35s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Print */
+        @media print {
+            .upload-section,
+            .export-section,
+            .report-actions .btn {
+                display: none !important;
+            }
+            .serie-card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            .report-field textarea {
+                border: 1px solid #ccc;
+                background: white;
+                min-height: 60px;
+            }
+            .toast {
+                display: none !important;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .serie-card {
+                padding: 16px;
+            }
+            .serie-header .num {
+                font-size: 1.2rem;
+            }
+            .upload-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .report-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn {
+                text-align: center;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>
+            📋 Rapports des relevés (X, Y)
+            <small>PBL Avion – Feuille de relevés</small>
+        </h1>
+
+        <!-- Upload -->
+        <div class="upload-section">
+            <label for="jsonUpload">📂 Importer un ou plusieurs JSON :</label>
+            <input type="file" id="jsonUpload" accept=".json" multiple>
+            <span class="file-status" id="fileStatus">Aucun fichier chargé</span>
+            <button class="btn btn-outline btn-sm" id="clearDataBtn">🗑️ Effacer toutes les séries</button>
+        </div>
+
+        <!-- Container des séries -->
+        <div id="seriesContainer">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">📤</div>
+                <h2>Chargez un ou plusieurs fichiers JSON</h2>
+                <p style="color:#aaa; font-size:0.95rem;">Exportez depuis l'outil de relevé des valeurs.</p>
+            </div>
+            <div class="series-list" id="seriesList" style="display:none;"></div>
+        </div>
+
+        <!-- Export -->
+        <div class="export-section" id="exportSection" style="display:none;">
+            <span class="info">📋 <strong id="reportCount">0</strong> rapport(s) rédigé(s) sur <strong id="totalSeries">0</strong> série(s)</span>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-left:auto;">
+                <button class="btn btn-success" id="exportReportsBtn">📥 Exporter les rapports (JSON)</button>
+                <button class="btn btn-warning" id="exportHtmlBtn">🖨️ Exporter en HTML</button>
+                <button class="btn btn-outline" id="printBtn">🖨️ Imprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================================
+        // ÉTAT
+        // ============================================================
+        let seriesData = []; // tableau d'objets séries (chacun issu d'un JSON)
+        let reports = {}; // { "serieId": { modified: "...", reasons: "...", effects: "..." } }
+        let nextSerieId = 0;
+
+        // ============================================================
+        // DOM refs
+        // ============================================================
+        const jsonUpload = document.getElementById('jsonUpload');
+        const fileStatus = document.getElementById('fileStatus');
+        const seriesList = document.getElementById('seriesList');
+        const emptyState = document.getElementById('emptyState');
+        const exportSection = document.getElementById('exportSection');
+        const reportCount = document.getElementById('reportCount');
+        const totalSeries = document.getElementById('totalSeries');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const exportReportsBtn = document.getElementById('exportReportsBtn');
+        const exportHtmlBtn = document.getElementById('exportHtmlBtn');
+        const printBtn = document.getElementById('printBtn');
+        const toastEl = document.getElementById('toast');
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        let toastTimer = null;
+
+        function showToast(msg, duration = 2500) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toastEl.classList.remove('show'), duration);
+        }
+
+        // ============================================================
+        // STOCKAGE LOCAL
+        // ============================================================
+        function loadReportsFromStorage() {
+            try {
+                const stored = localStorage.getItem('pbl_releve_reports_v1');
+                if (stored) {
+                    reports = JSON.parse(stored);
+                    if (typeof reports !== 'object' || Array.isArray(reports)) reports = {};
+                }
+            } catch (_) { reports = {}; }
+        }
+
+        function saveReportsToStorage() {
+            try {
+                localStorage.setItem('pbl_releve_reports_v1', JSON.stringify(reports));
+            } catch (_) {}
+        }
+
+        // ============================================================
+        // CHARGEMENT JSON (un ou plusieurs fichiers)
+        // ============================================================
+        function loadJSONFiles(files) {
+            let promises = [];
+            for (const file of files) {
+                promises.push(new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            // Valider la structure (doit contenir teamName, dateField, data, etc.)
+                            if (!data.data || !Array.isArray(data.data)) {
+                                reject(new Error(`Fichier ${file.name} : champ "data" manquant ou invalide.`));
+                                return;
+                            }
+                            // Ajouter un id unique
+                            data._serieId = nextSerieId++;
+                            data._fileName = file.name;
+                            // S'assurer que les champs obligatoires existent
+                            if (!data.teamName) data.teamName = 'Équipe inconnue';
+                            if (!data.dateField) data.dateField = new Date().toISOString().slice(0, 10);
+                            if (!data.planeDesc) data.planeDesc = 'Non précisé';
+                            if (!data.recordNumber) data.recordNumber = '—';
+                            if (!data.creationDate) data.creationDate = new Date().toISOString().slice(0, 10);
+                            if (!data.numTrials) data.numTrials = data.data.length;
+                            resolve(data);
+                        } catch (err) {
+                            reject(new Error(`Fichier ${file.name} : ${err.message}`));
+                        }
+                    };
+                    reader.onerror = () => reject(new Error(`Erreur de lecture de ${file.name}`));
+                    reader.readAsText(file);
+                }));
+            }
+
+            Promise.all(promises)
+                .then(results => {
+                    // Ajouter toutes les séries
+                    let added = 0;
+                    for (const serie of results) {
+                        seriesData.push(serie);
+                        added++;
+                    }
+                    renderAll();
+                    showToast(`✅ ${added} série(s) importée(s) avec succès.`, 3000);
+                })
+                .catch(err => {
+                    showToast('❌ ' + err.message, 4000);
+                });
+        }
+
+        // ============================================================
+        // RENDU
+        // ============================================================
+        function renderAll() {
+            if (seriesData.length === 0) {
+                seriesList.style.display = 'none';
+                emptyState.style.display = 'block';
+                exportSection.style.display = 'none';
+                fileStatus.textContent = 'Aucun fichier chargé';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            seriesList.style.display = 'block';
+            exportSection.style.display = 'flex';
+            fileStatus.textContent = `✅ ${seriesData.length} série(s) chargée(s)`;
+
+            // Trier par date (ou par id)
+            const sorted = [...seriesData].sort((a, b) => a._serieId - b._serieId);
+
+            let html = '';
+            let reportCountVal = 0;
+
+            for (const serie of sorted) {
+                const id = serie._serieId;
+                const report = reports[id] || { modified: '', reasons: '', effects: '' };
+                const hasReport = report.modified || report.reasons || report.effects;
+                if (hasReport) reportCountVal++;
+
+                // Calculer quelques stats pour l'affichage
+                const xVals = serie.data.map(d => parseFloat(d.x)).filter(v => !isNaN(v));
+                const yVals = serie.data.map(d => parseFloat(d.y)).filter(v => !isNaN(v));
+                const meanX = xVals.length ? (xVals.reduce((a, b) => a + b, 0) / xVals.length) : 0;
+                const meanAbsY = yVals.length ? (yVals.reduce((a, b) => a + Math.abs(b), 0) / yVals.length) : 0;
+                const validCount = Math.min(xVals.length, yVals.length);
+
+                // Tableau des données (afficher les 10 premières lignes)
+                const dataPreview = serie.data.slice(0, 10);
+
+                html += `
+                <div class="serie-card" data-serie="${id}">
+                    <div class="serie-header">
+                        <span class="num">#${id}</span>
+                        <span class="meta">
+                            <span>📅 ${serie.dateField || '—'}</span>
+                            <span>🏷️ ${serie.teamName || '—'}</span>
+                            <span>🔧 ${serie.planeDesc || '—'}</span>
+                            <span>📊 ${serie.numTrials || 0} essais</span>
+                            <span>📂 ${serie._fileName || ''}</span>
+                        </span>
+                        <span class="${validCount === serie.numTrials ? 'badge-ok' : 'badge-fail'}">
+                            ${validCount === serie.numTrials ? '✅ Complet' : '⚠️ Données manquantes'}
+                        </span>
+                    </div>
+
+                    <div class="data-summary">
+                        <div class="stat-group">
+                            <span class="label">Distance X (m)</span>
+                            <span class="value">${xVals.length > 0 ? meanX.toFixed(2) : '—'} m <span style="font-weight:normal;font-size:0.8rem;color:#888;">(${xVals.length} valides)</span></span>
+                        </div>
+                        <div class="stat-group">
+                            <span class="label">Écart latéral Y (m)</span>
+                            <span class="value">${yVals.length > 0 ? meanAbsY.toFixed(2) : '—'} m <span style="font-weight:normal;font-size:0.8rem;color:#888;">(écart absolu moyen, ${yVals.length} valides)</span></span>
+                        </div>
+                        <div class="stat-group">
+                            <span class="label">Validité</span>
+                            <span class="value">${validCount} / ${serie.numTrials} essais valides</span>
+                        </div>
+                    </div>
+
+                    <div class="data-table-wrap">
+                        <table>
+                            <thead><tr><th>Essai</th><th>X (m)</th><th>Y (m)</th></tr></thead>
+                            <tbody>
+                                ${dataPreview.map((d, i) => `
+                                    <tr>
+                                        <td>${i+1}</td>
+                                        <td>${d.x !== undefined && d.x !== '' ? d.x : '—'}</td>
+                                        <td>${d.y !== undefined && d.y !== '' ? d.y : '—'}</td>
+                                    </tr>
+                                `).join('')}
+                                ${serie.data.length > 10 ? `<tr><td colspan="3" style="color:#888;font-style:italic;">... et ${serie.data.length - 10} autres essais</td></tr>` : ''}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="report-section">
+                        <div class="report-title">
+                            📝 Rapport de la série #${id}
+                            <span class="badge-report">${hasReport ? '✅ Rédigé' : 'À compléter'}</span>
+                        </div>
+
+                        <div class="report-grid">
+                            <div class="report-field">
+                                <label for="modified_${id}">🔧 1. Qu'avez-vous modifié ?</label>
+                                <textarea id="modified_${id}" rows="3" 
+                                    placeholder="Décrivez les modifications apportées au protocole, à l'avion, au lanceur, etc.">${escapeHtml(report.modified || '')}</textarea>
+                                <span class="char-count" id="modified_count_${id}">0 caractères</span>
+                            </div>
+                            <div class="report-field">
+                                <label for="reasons_${id}">❓ 2. Pourquoi ces modifications ?</label>
+                                <textarea id="reasons_${id}" rows="3" 
+                                    placeholder="Expliquez votre stratégie, vos hypothèses, ce que vous cherchiez à améliorer.">${escapeHtml(report.reasons || '')}</textarea>
+                                <span class="char-count" id="reasons_count_${id}">0 caractères</span>
+                            </div>
+                            <div class="report-field" style="grid-column: 1 / -1;">
+                                <label for="effects_${id}">📈 3. Quels ont été les effets observés ?</label>
+                                <textarea id="effects_${id}" rows="3" 
+                                    placeholder="Décrivez les changements constatés dans les valeurs de X et Y (distance, précision latérale, dispersion, etc.).">${escapeHtml(report.effects || '')}</textarea>
+                                <span class="char-count" id="effects_count_${id}">0 caractères</span>
+                            </div>
+                        </div>
+
+                        <div class="report-actions">
+                            <button class="btn btn-success btn-sm" onclick="saveReport(${id})">💾 Sauvegarder le rapport</button>
+                            <span class="saved-indicator" id="saved_${id}">✅ Sauvegardé</span>
+                            <span style="margin-left:auto; font-size:0.8rem; color:#aaa;" id="lastSave_${id}"></span>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+
+            seriesList.innerHTML = html;
+            totalSeries.textContent = seriesData.length;
+            reportCount.textContent = reportCountVal;
+
+            // Compteurs de caractères
+            for (const serie of sorted) {
+                const id = serie._serieId;
+                attachCharCounter(`modified_${id}`, `modified_count_${id}`);
+                attachCharCounter(`reasons_${id}`, `reasons_count_${id}`);
+                attachCharCounter(`effects_${id}`, `effects_count_${id}`);
+                // Restaurer l'indicateur
+                const saved = document.getElementById(`saved_${id}`);
+                const report = reports[id];
+                if (report && (report.modified || report.reasons || report.effects)) {
+                    saved.classList.add('show');
+                }
+                const lastSave = document.getElementById(`lastSave_${id}`);
+                if (report && report._savedAt) {
+                    const d = new Date(report._savedAt);
+                    lastSave.textContent = `Dernière sauvegarde : ${d.toLocaleString()}`;
+                } else {
+                    lastSave.textContent = '';
+                }
+            }
+
+            // MathJax
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise().catch(() => {});
+            }
+        }
+
+        // ============================================================
+        // UTILITAIRES
+        // ============================================================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function attachCharCounter(textareaId, countId) {
+            const ta = document.getElementById(textareaId);
+            const counter = document.getElementById(countId);
+            if (!ta || !counter) return;
+            const update = () => {
+                counter.textContent = ta.value.length + ' caractères';
+            };
+            ta.addEventListener('input', update);
+            update();
+        }
+
+        // ============================================================
+        // SAUVEGARDE D'UN RAPPORT
+        // ============================================================
+        function saveReport(id) {
+            const modified = document.getElementById(`modified_${id}`).value.trim();
+            const reasons = document.getElementById(`reasons_${id}`).value.trim();
+            const effects = document.getElementById(`effects_${id}`).value.trim();
+
+            if (!modified && !reasons && !effects) {
+                showToast('⚠️ Remplissez au moins un champ avant de sauvegarder.', 2500);
+                return;
+            }
+
+            reports[id] = {
+                modified: modified,
+                reasons: reasons,
+                effects: effects,
+                _savedAt: new Date().toISOString()
+            };
+
+            saveReportsToStorage();
+
+            const saved = document.getElementById(`saved_${id}`);
+            saved.classList.add('show');
+            setTimeout(() => saved.classList.remove('show'), 3000);
+
+            const lastSave = document.getElementById(`lastSave_${id}`);
+            const d = new Date();
+            lastSave.textContent = `Dernière sauvegarde : ${d.toLocaleString()}`;
+
+            updateReportCount();
+            showToast(`✅ Rapport de la série #${id} sauvegardé.`, 2000);
+        }
+
+        function updateReportCount() {
+            let count = 0;
+            for (const serie of seriesData) {
+                const r = reports[serie._serieId];
+                if (r && (r.modified || r.reasons || r.effects)) count++;
+            }
+            reportCount.textContent = count;
+            // Mettre à jour les badges
+            for (const serie of seriesData) {
+                const id = serie._serieId;
+                const badge = document.querySelector(`.serie-card[data-serie="${id}"] .badge-report`);
+                if (badge) {
+                    const r = reports[id];
+                    const has = r && (r.modified || r.reasons || r.effects);
+                    badge.textContent = has ? '✅ Rédigé' : 'À compléter';
+                    badge.style.background = has ? '#d4edda' : '#f8f9fa';
+                    badge.style.color = has ? '#155724' : '#6c757d';
+                }
+            }
+        }
+
+        // ============================================================
+        // EXPORT DES RAPPORTS (JSON)
+        // ============================================================
+        function exportReportsJSON() {
+            if (seriesData.length === 0) {
+                showToast('⚠️ Aucune série chargée.', 2000);
+                return;
+            }
+
+            const exportData = {
+                exportedAt: new Date().toISOString(),
+                series: seriesData.map(s => {
+                    const id = s._serieId;
+                    const report = reports[id] || { modified: '', reasons: '', effects: '' };
+                    return {
+                        id: id,
+                        fileName: s._fileName,
+                        teamName: s.teamName,
+                        dateField: s.dateField,
+                        planeDesc: s.planeDesc,
+                        recordNumber: s.recordNumber,
+                        creationDate: s.creationDate,
+                        numTrials: s.numTrials,
+                        // on ne garde pas toutes les données pour alléger, mais on peut garder un résumé
+                        dataSummary: {
+                            validCount: s.data.filter(d => d.x !== '' && d.y !== '').length,
+                            total: s.data.length
+                        },
+                        report: {
+                            modified: report.modified || '',
+                            reasons: report.reasons || '',
+                            effects: report.effects || '',
+                            savedAt: report._savedAt || null
+                        }
+                    };
+                })
+            };
+
+            const json = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const teamName = seriesData[0]?.teamName?.trim() || 'equipe';
+            const sanitized = teamName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(
+                /[^a-zA-Z0-9_-]/g, '');
+            a.download = `${sanitized}_rapports_releves_${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`📥 ${exportData.series.length} rapport(s) exporté(s) en JSON.`, 2500);
+        }
+
+        // ============================================================
+        // EXPORT EN HTML
+        // ============================================================
+        function exportHTML() {
+            if (seriesData.length === 0) {
+                showToast('⚠️ Aucune série chargée.', 2000);
+                return;
+            }
+
+            const sorted = [...seriesData].sort((a, b) => a._serieId - b._serieId);
+
+            let htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>Rapports des relevés (X, Y)</title>
+            <style>
+                body { font-family: 'Segoe UI', Roboto, sans-serif; max-width: 1100px; margin: 30px auto; padding: 20px; background: #fff; color: #1a1a1a; }
+                h1 { color: #1565c0; border-bottom: 3px double #1565c0; padding-bottom: 8px; }
+                .serie { border: 1px solid #ddd; border-radius: 16px; padding: 20px 24px; margin-bottom: 30px; break-inside: avoid; }
+                .header { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 12px; }
+                .num { font-size: 1.4rem; font-weight: 700; color: #1565c0; }
+                .meta { color: #555; font-size: 0.9rem; }
+                .meta span { background: #f0f4f8; padding: 2px 14px; border-radius: 30px; margin-right: 6px; }
+                .badge { display: inline-block; padding: 2px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 600; }
+                .badge.ok { background: #2e7d32; color: white; }
+                .badge.fail { background: #b71c1c; color: white; }
+                .stats { background: #f8f9fa; padding: 10px 16px; border-radius: 12px; margin: 10px 0; font-size: 0.95rem; }
+                .data-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9rem; }
+                .data-table th, .data-table td { padding: 6px 10px; border: 1px solid #ddd; text-align: center; }
+                .data-table th { background: #e3f2fd; }
+                .report-block { margin-top: 16px; border-top: 2px dashed #e0e0e0; padding-top: 16px; }
+                .report-block .q { font-weight: 600; color: #333; margin-top: 10px; }
+                .report-block .a { background: #fafafa; padding: 6px 14px; border-radius: 8px; border-left: 4px solid #1565c0; margin: 4px 0 10px 0; white-space: pre-wrap; }
+                .footer { margin-top: 40px; text-align: center; color: #999; font-size: 0.8rem; border-top: 1px solid #eee; padding-top: 16px; }
+                @media print { .no-print { display: none; } .serie { break-inside: avoid; } }
+            </style>
+            </head>
+            <body>
+            <h1>📋 Rapports des relevés (X, Y)</h1>
+            <p style="color:#555;">Exporté le ${new Date().toLocaleString()}</p>
+            `;
+
+            for (const serie of sorted) {
+                const id = serie._serieId;
+                const report = reports[id] || { modified: '', reasons: '', effects: '' };
+                const xVals = serie.data.map(d => parseFloat(d.x)).filter(v => !isNaN(v));
+                const yVals = serie.data.map(d => parseFloat(d.y)).filter(v => !isNaN(v));
+                const meanX = xVals.length ? (xVals.reduce((a, b) => a + b, 0) / xVals.length) : 0;
+                const meanAbsY = yVals.length ? (yVals.reduce((a, b) => a + Math.abs(b), 0) / yVals.length) : 0;
+                const validCount = Math.min(xVals.length, yVals.length);
+                const allValid = validCount === serie.numTrials;
+
+                htmlContent += `
+                <div class="serie">
+                    <div class="header">
+                        <span class="num">#${id}</span>
+                        <span class="meta">
+                            <span>📅 ${serie.dateField || '—'}</span>
+                            <span>🏷️ ${serie.teamName || '—'}</span>
+                            <span>🔧 ${serie.planeDesc || '—'}</span>
+                            <span>📊 ${serie.numTrials || 0} essais</span>
+                        </span>
+                        <span class="badge ${allValid ? 'ok' : 'fail'}">${allValid ? '✅ Complet' : '⚠️ Données manquantes'}</span>
+                    </div>
+
+                    <div class="stats">
+                        <strong>X :</strong> moyenne ${meanX.toFixed(2)} m (${xVals.length} valides) &nbsp;|&nbsp;
+                        <strong>Y :</strong> écart absolu moyen ${meanAbsY.toFixed(2)} m (${yVals.length} valides)
+                    </div>
+
+                    <table class="data-table">
+                        <thead><tr><th>Essai</th><th>X (m)</th><th>Y (m)</th></tr></thead>
+                        <tbody>
+                            ${serie.data.slice(0, 15).map((d, i) => `
+                                <tr><td>${i+1}</td><td>${d.x !== undefined && d.x !== '' ? d.x : '—'}</td><td>${d.y !== undefined && d.y !== '' ? d.y : '—'}</td></tr>
+                            `).join('')}
+                            ${serie.data.length > 15 ? `<tr><td colspan="3" style="color:#888;font-style:italic;">... et ${serie.data.length - 15} autres essais</td></tr>` : ''}
+                        </tbody>
+                    </table>
+
+                    <div class="report-block">
+                        <div class="q">🔧 1. Qu'avez-vous modifié ?</div>
+                        <div class="a">${escapeHtml(report.modified || '(non renseigné)')}</div>
+
+                        <div class="q">❓ 2. Pourquoi ces modifications ?</div>
+                        <div class="a">${escapeHtml(report.reasons || '(non renseigné)')}</div>
+
+                        <div class="q">📈 3. Quels ont été les effets observés ?</div>
+                        <div class="a">${escapeHtml(report.effects || '(non renseigné)')}</div>
+                        ${report._savedAt ? `<div style="text-align:right;font-size:0.75rem;color:#999;margin-top:6px;">Sauvegardé le ${new Date(report._savedAt).toLocaleString()}</div>` : ''}
+                    </div>
+                </div>
+                `;
+            }
+
+            htmlContent += `
+            <div class="footer">Rapports générés par l'outil PBL Avion — Relevés</div>
+            </body>
+            </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const teamName = seriesData[0]?.teamName?.trim() || 'equipe';
+            const sanitized = teamName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(
+                /[^a-zA-Z0-9_-]/g, '');
+            a.download = `${sanitized}_rapports_releves_${new Date().toISOString().slice(0,10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('📄 Rapport HTML exporté.', 2000);
+        }
+
+        // ============================================================
+        // IMPRESSION
+        // ============================================================
+        function printReports() {
+            window.print();
+        }
+
+        // ============================================================
+        // EFFACER TOUTES LES SÉRIES
+        // ============================================================
+        function clearAllData() {
+            if (seriesData.length === 0 && Object.keys(reports).length === 0) {
+                showToast('Aucune donnée à effacer.', 2000);
+                return;
+            }
+            if (!confirm('Voulez-vous vraiment effacer toutes les séries et tous les rapports ?')) return;
+            seriesData = [];
+            reports = {};
+            nextSerieId = 0;
+            saveReportsToStorage();
+            jsonUpload.value = '';
+            renderAll();
+            showToast('🗑️ Toutes les données ont été effacées.', 2000);
+        }
+
+        // ============================================================
+        // ÉVÉNEMENTS
+        // ============================================================
+        jsonUpload.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                loadJSONFiles(this.files);
+                this.value = ''; // pour permettre de recharger les mêmes fichiers
+            }
+        });
+
+        clearDataBtn.addEventListener('click', clearAllData);
+        exportReportsBtn.addEventListener('click', exportReportsJSON);
+        exportHtmlBtn.addEventListener('click', exportHTML);
+        printBtn.addEventListener('click', printReports);
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        loadReportsFromStorage();
+        renderAll();
+
+        console.log('📝 PBL Relevé Rapporteur chargé.');
+    </script>
+</body>
+</html>

@@ -218,6 +218,33 @@
             font-weight: 600;
         }
 
+        /* Photos */
+        .photos-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0 16px 0;
+        }
+        .photos-gallery .photo-thumb {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .photos-gallery .photo-thumb:hover {
+            transform: scale(1.04);
+            border-color: var(--primary);
+        }
+        .photos-gallery .no-photo {
+            color: #aaa;
+            font-style: italic;
+            font-size: 0.9rem;
+            padding: 4px 0;
+        }
+
         /* Données */
         .data-summary {
             background: #f8f9fa;
@@ -420,6 +447,57 @@
             opacity: 1;
         }
 
+        /* Modal photo */
+        .modal-photo {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: visibility 0.2s, opacity 0.2s;
+        }
+        .modal-photo.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-photo-content {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        .modal-photo-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+        }
+        .modal-photo-close {
+            position: absolute;
+            top: 8px;
+            right: 14px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #555;
+            transition: 0.1s;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+        .modal-photo-close:hover {
+            color: var(--danger);
+            transform: scale(1.1);
+        }
+
         /* Print */
         @media print {
             .upload-section,
@@ -438,6 +516,9 @@
                 min-height: 60px;
             }
             .toast {
+                display: none !important;
+            }
+            .modal-photo {
                 display: none !important;
             }
         }
@@ -461,6 +542,10 @@
             .btn {
                 text-align: center;
                 padding: 10px 16px;
+            }
+            .photos-gallery .photo-thumb {
+                width: 65px;
+                height: 65px;
             }
         }
     </style>
@@ -502,6 +587,14 @@
         </div>
     </div>
 
+    <!-- Modal photo -->
+    <div class="modal-photo" id="photoModal">
+        <div class="modal-photo-content">
+            <button class="modal-photo-close" id="photoModalClose">&times;</button>
+            <img id="photoModalImg" src="" alt="Photo agrandie">
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
@@ -509,8 +602,8 @@
         // ============================================================
         // ÉTAT
         // ============================================================
-        let seriesData = []; // tableau d'objets séries (chacun issu d'un JSON)
-        let reports = {}; // { "serieId": { modified: "...", reasons: "...", effects: "..." } }
+        let seriesData = [];
+        let reports = {};
         let nextSerieId = 0;
 
         // ============================================================
@@ -528,6 +621,9 @@
         const exportHtmlBtn = document.getElementById('exportHtmlBtn');
         const printBtn = document.getElementById('printBtn');
         const toastEl = document.getElementById('toast');
+        const photoModal = document.getElementById('photoModal');
+        const photoModalImg = document.getElementById('photoModalImg');
+        const photoModalClose = document.getElementById('photoModalClose');
 
         // ============================================================
         // TOAST
@@ -570,23 +666,40 @@
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         try {
-                            const data = JSON.parse(e.target.result);
-                            // Valider la structure (doit contenir teamName, dateField, data, etc.)
-                            if (!data.data || !Array.isArray(data.data)) {
-                                reject(new Error(`Fichier ${file.name} : champ "data" manquant ou invalide.`));
+                            const parsed = JSON.parse(e.target.result);
+
+                            let seriesArray = [];
+                            if (Array.isArray(parsed)) {
+                                seriesArray = parsed;
+                            } else if (parsed.data && Array.isArray(parsed.data)) {
+                                seriesArray = [parsed];
+                            } else {
+                                reject(new Error(`Fichier ${file.name} : format non reconnu.`));
                                 return;
                             }
-                            // Ajouter un id unique
-                            data._serieId = nextSerieId++;
-                            data._fileName = file.name;
-                            // S'assurer que les champs obligatoires existent
-                            if (!data.teamName) data.teamName = 'Équipe inconnue';
-                            if (!data.dateField) data.dateField = new Date().toISOString().slice(0, 10);
-                            if (!data.planeDesc) data.planeDesc = 'Non précisé';
-                            if (!data.recordNumber) data.recordNumber = '—';
-                            if (!data.creationDate) data.creationDate = new Date().toISOString().slice(0, 10);
-                            if (!data.numTrials) data.numTrials = data.data.length;
-                            resolve(data);
+
+                            const processed = seriesArray.map((serie, index) => {
+                                if (!serie.teamName) serie.teamName = 'Équipe inconnue';
+                                if (!serie.dateField) serie.dateField = new Date().toISOString().slice(0, 10);
+                                if (!serie.planeDesc) serie.planeDesc = 'Non précisé';
+                                if (!serie.recordNumber) serie.recordNumber = '—';
+                                if (!serie.creationDate) serie.creationDate = new Date().toISOString().slice(0,
+                                10);
+                                if (!serie.numTrials) serie.numTrials = serie.data ? serie.data.length : 0;
+                                // S'assurer que le champ photos existe
+                                if (!serie.photos || !Array.isArray(serie.photos)) {
+                                    serie.photos = [];
+                                }
+                                if (serie.id === undefined) {
+                                    serie.id = nextSerieId++;
+                                } else {
+                                    serie.id = parseInt(serie.id) || nextSerieId++;
+                                }
+                                serie._fileName = file.name;
+                                return serie;
+                            });
+
+                            resolve(processed);
                         } catch (err) {
                             reject(new Error(`Fichier ${file.name} : ${err.message}`));
                         }
@@ -598,11 +711,21 @@
 
             Promise.all(promises)
                 .then(results => {
-                    // Ajouter toutes les séries
+                    let allSeries = [];
+                    for (const result of results) {
+                        allSeries = allSeries.concat(result);
+                    }
                     let added = 0;
-                    for (const serie of results) {
-                        seriesData.push(serie);
-                        added++;
+                    for (const serie of allSeries) {
+                        const existing = seriesData.find(s => s.id === serie.id);
+                        if (!existing) {
+                            seriesData.push(serie);
+                            added++;
+                        } else {
+                            const idx = seriesData.findIndex(s => s.id === serie.id);
+                            seriesData[idx] = serie;
+                            added++;
+                        }
                     }
                     renderAll();
                     showToast(`✅ ${added} série(s) importée(s) avec succès.`, 3000);
@@ -629,27 +752,26 @@
             exportSection.style.display = 'flex';
             fileStatus.textContent = `✅ ${seriesData.length} série(s) chargée(s)`;
 
-            // Trier par date (ou par id)
-            const sorted = [...seriesData].sort((a, b) => a._serieId - b._serieId);
+            const sorted = [...seriesData].sort((a, b) => (a.id || 0) - (b.id || 0));
 
             let html = '';
             let reportCountVal = 0;
 
             for (const serie of sorted) {
-                const id = serie._serieId;
+                const id = serie.id;
                 const report = reports[id] || { modified: '', reasons: '', effects: '' };
                 const hasReport = report.modified || report.reasons || report.effects;
                 if (hasReport) reportCountVal++;
 
-                // Calculer quelques stats pour l'affichage
-                const xVals = serie.data.map(d => parseFloat(d.x)).filter(v => !isNaN(v));
-                const yVals = serie.data.map(d => parseFloat(d.y)).filter(v => !isNaN(v));
+                const xVals = serie.data ? serie.data.map(d => parseFloat(d.x)).filter(v => !isNaN(v)) : [];
+                const yVals = serie.data ? serie.data.map(d => parseFloat(d.y)).filter(v => !isNaN(v)) : [];
                 const meanX = xVals.length ? (xVals.reduce((a, b) => a + b, 0) / xVals.length) : 0;
                 const meanAbsY = yVals.length ? (yVals.reduce((a, b) => a + Math.abs(b), 0) / yVals.length) : 0;
                 const validCount = Math.min(xVals.length, yVals.length);
+                const totalTrials = serie.numTrials || (serie.data ? serie.data.length : 0);
 
-                // Tableau des données (afficher les 10 premières lignes)
-                const dataPreview = serie.data.slice(0, 10);
+                const dataPreview = serie.data ? serie.data.slice(0, 10) : [];
+                const photos = serie.photos || [];
 
                 html += `
                 <div class="serie-card" data-serie="${id}">
@@ -659,12 +781,18 @@
                             <span>📅 ${serie.dateField || '—'}</span>
                             <span>🏷️ ${serie.teamName || '—'}</span>
                             <span>🔧 ${serie.planeDesc || '—'}</span>
-                            <span>📊 ${serie.numTrials || 0} essais</span>
+                            <span>📊 ${totalTrials || 0} essais</span>
                             <span>📂 ${serie._fileName || ''}</span>
                         </span>
-                        <span class="${validCount === serie.numTrials ? 'badge-ok' : 'badge-fail'}">
-                            ${validCount === serie.numTrials ? '✅ Complet' : '⚠️ Données manquantes'}
+                        <span class="${validCount === totalTrials ? 'badge-ok' : 'badge-fail'}">
+                            ${validCount === totalTrials ? '✅ Complet' : '⚠️ Données manquantes'}
                         </span>
+                    </div>
+
+                    <div class="photos-gallery">
+                        ${photos.length > 0 ? photos.map(p => `
+                            <img class="photo-thumb" src="${p}" alt="Photo" onclick="openPhotoModal('${p}')">
+                        `).join('') : '<span class="no-photo">📷 Aucune photo enregistrée pour cette série.</span>'}
                     </div>
 
                     <div class="data-summary">
@@ -678,7 +806,7 @@
                         </div>
                         <div class="stat-group">
                             <span class="label">Validité</span>
-                            <span class="value">${validCount} / ${serie.numTrials} essais valides</span>
+                            <span class="value">${validCount} / ${totalTrials} essais valides</span>
                         </div>
                     </div>
 
@@ -693,7 +821,7 @@
                                         <td>${d.y !== undefined && d.y !== '' ? d.y : '—'}</td>
                                     </tr>
                                 `).join('')}
-                                ${serie.data.length > 10 ? `<tr><td colspan="3" style="color:#888;font-style:italic;">... et ${serie.data.length - 10} autres essais</td></tr>` : ''}
+                                ${serie.data && serie.data.length > 10 ? `<tr><td colspan="3" style="color:#888;font-style:italic;">... et ${serie.data.length - 10} autres essais</td></tr>` : ''}
                             </tbody>
                         </table>
                     </div>
@@ -739,13 +867,11 @@
             totalSeries.textContent = seriesData.length;
             reportCount.textContent = reportCountVal;
 
-            // Compteurs de caractères
             for (const serie of sorted) {
-                const id = serie._serieId;
+                const id = serie.id;
                 attachCharCounter(`modified_${id}`, `modified_count_${id}`);
                 attachCharCounter(`reasons_${id}`, `reasons_count_${id}`);
                 attachCharCounter(`effects_${id}`, `effects_count_${id}`);
-                // Restaurer l'indicateur
                 const saved = document.getElementById(`saved_${id}`);
                 const report = reports[id];
                 if (report && (report.modified || report.reasons || report.effects)) {
@@ -760,7 +886,6 @@
                 }
             }
 
-            // MathJax
             if (window.MathJax && MathJax.typesetPromise) {
                 MathJax.typesetPromise().catch(() => {});
             }
@@ -823,13 +948,12 @@
         function updateReportCount() {
             let count = 0;
             for (const serie of seriesData) {
-                const r = reports[serie._serieId];
+                const r = reports[serie.id];
                 if (r && (r.modified || r.reasons || r.effects)) count++;
             }
             reportCount.textContent = count;
-            // Mettre à jour les badges
             for (const serie of seriesData) {
-                const id = serie._serieId;
+                const id = serie.id;
                 const badge = document.querySelector(`.serie-card[data-serie="${id}"] .badge-report`);
                 if (badge) {
                     const r = reports[id];
@@ -853,7 +977,7 @@
             const exportData = {
                 exportedAt: new Date().toISOString(),
                 series: seriesData.map(s => {
-                    const id = s._serieId;
+                    const id = s.id;
                     const report = reports[id] || { modified: '', reasons: '', effects: '' };
                     return {
                         id: id,
@@ -864,10 +988,10 @@
                         recordNumber: s.recordNumber,
                         creationDate: s.creationDate,
                         numTrials: s.numTrials,
-                        // on ne garde pas toutes les données pour alléger, mais on peut garder un résumé
+                        hasPhotos: s.photos && s.photos.length > 0,
                         dataSummary: {
-                            validCount: s.data.filter(d => d.x !== '' && d.y !== '').length,
-                            total: s.data.length
+                            validCount: s.data ? s.data.filter(d => d.x !== '' && d.y !== '').length : 0,
+                            total: s.data ? s.data.length : 0
                         },
                         report: {
                             modified: report.modified || '',
@@ -905,7 +1029,7 @@
                 return;
             }
 
-            const sorted = [...seriesData].sort((a, b) => a._serieId - b._serieId);
+            const sorted = [...seriesData].sort((a, b) => (a.id || 0) - (b.id || 0));
 
             let htmlContent = `
             <!DOCTYPE html>
@@ -922,6 +1046,8 @@
                 .badge { display: inline-block; padding: 2px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 600; }
                 .badge.ok { background: #2e7d32; color: white; }
                 .badge.fail { background: #b71c1c; color: white; }
+                .photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+                .photos img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; }
                 .stats { background: #f8f9fa; padding: 10px 16px; border-radius: 12px; margin: 10px 0; font-size: 0.95rem; }
                 .data-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9rem; }
                 .data-table th, .data-table td { padding: 6px 10px; border: 1px solid #ddd; text-align: center; }
@@ -939,14 +1065,16 @@
             `;
 
             for (const serie of sorted) {
-                const id = serie._serieId;
+                const id = serie.id;
                 const report = reports[id] || { modified: '', reasons: '', effects: '' };
-                const xVals = serie.data.map(d => parseFloat(d.x)).filter(v => !isNaN(v));
-                const yVals = serie.data.map(d => parseFloat(d.y)).filter(v => !isNaN(v));
+                const xVals = serie.data ? serie.data.map(d => parseFloat(d.x)).filter(v => !isNaN(v)) : [];
+                const yVals = serie.data ? serie.data.map(d => parseFloat(d.y)).filter(v => !isNaN(v)) : [];
                 const meanX = xVals.length ? (xVals.reduce((a, b) => a + b, 0) / xVals.length) : 0;
                 const meanAbsY = yVals.length ? (yVals.reduce((a, b) => a + Math.abs(b), 0) / yVals.length) : 0;
                 const validCount = Math.min(xVals.length, yVals.length);
-                const allValid = validCount === serie.numTrials;
+                const totalTrials = serie.numTrials || (serie.data ? serie.data.length : 0);
+                const allValid = validCount === totalTrials;
+                const photos = serie.photos || [];
 
                 htmlContent += `
                 <div class="serie">
@@ -956,9 +1084,13 @@
                             <span>📅 ${serie.dateField || '—'}</span>
                             <span>🏷️ ${serie.teamName || '—'}</span>
                             <span>🔧 ${serie.planeDesc || '—'}</span>
-                            <span>📊 ${serie.numTrials || 0} essais</span>
+                            <span>📊 ${totalTrials || 0} essais</span>
                         </span>
                         <span class="badge ${allValid ? 'ok' : 'fail'}">${allValid ? '✅ Complet' : '⚠️ Données manquantes'}</span>
+                    </div>
+
+                    <div class="photos">
+                        ${photos.length > 0 ? photos.map(p => `<img src="${p}" alt="Photo">`).join('') : '<span style="color:#999;">Aucune photo</span>'}
                     </div>
 
                     <div class="stats">
@@ -969,10 +1101,10 @@
                     <table class="data-table">
                         <thead><tr><th>Essai</th><th>X (m)</th><th>Y (m)</th></tr></thead>
                         <tbody>
-                            ${serie.data.slice(0, 15).map((d, i) => `
+                            ${serie.data ? serie.data.slice(0, 15).map((d, i) => `
                                 <tr><td>${i+1}</td><td>${d.x !== undefined && d.x !== '' ? d.x : '—'}</td><td>${d.y !== undefined && d.y !== '' ? d.y : '—'}</td></tr>
-                            `).join('')}
-                            ${serie.data.length > 15 ? `<tr><td colspan="3" style="color:#888;font-style:italic;">... et ${serie.data.length - 15} autres essais</td></tr>` : ''}
+                            `).join('') : ''}
+                            ${serie.data && serie.data.length > 15 ? `<tr><td colspan="3" style="color:#888;font-style:italic;">... et ${serie.data.length - 15} autres essais</td></tr>` : ''}
                         </tbody>
                     </table>
 
@@ -1020,6 +1152,28 @@
         }
 
         // ============================================================
+        // MODALE PHOTO
+        // ============================================================
+        function openPhotoModal(src) {
+            photoModalImg.src = src;
+            photoModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoModal() {
+            photoModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        photoModalClose.addEventListener('click', closePhotoModal);
+        photoModal.addEventListener('click', function(e) {
+            if (e.target === this) closePhotoModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePhotoModal();
+        });
+
+        // ============================================================
         // EFFACER TOUTES LES SÉRIES
         // ============================================================
         function clearAllData() {
@@ -1043,7 +1197,7 @@
         jsonUpload.addEventListener('change', function(e) {
             if (this.files && this.files.length > 0) {
                 loadJSONFiles(this.files);
-                this.value = ''; // pour permettre de recharger les mêmes fichiers
+                this.value = '';
             }
         });
 
@@ -1058,7 +1212,7 @@
         loadReportsFromStorage();
         renderAll();
 
-        console.log('📝 PBL Relevé Rapporteur chargé.');
+        console.log('📝 PBL Relevé Rapporteur chargé (compatible photos).');
     </script>
 </body>
 </html>

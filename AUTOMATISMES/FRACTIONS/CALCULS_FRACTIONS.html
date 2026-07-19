@@ -2888,7 +2888,7 @@
             7, 7
         ];
 
-        // ---------- FONCTION DE NORMALISATION DES SIGNES (AJOUT UNIQUE) ----------
+        // ---------- FONCTION DE NORMALISATION DES SIGNES (AMÉLIORÉE) ----------
         function normalizeLatex(str) {
             // Règle 5 : \dfrac{-12}{34} -> -\dfrac{12}{34}
             str = str.replace(/\\dfrac\{-(\d+)\}\{(\d+)\}/g, '-\\dfrac{$1}{$2}');
@@ -2898,16 +2898,23 @@
             str = str.replace(/\+ \s*-/g, '- ');
 
             // Règle 2 & 3 : déplacement des signes dans les produits
-            str = str.replace(/\((\d+)\)\s*\\times\s*-(\d+)/g, '-$1\\times$2');
-            str = str.replace(/\(-(\d+)\)\s*\\times\s*-(\d+)/g, '-$1\\times$2');
-            str = str.replace(/\(-(\d+)\)\s*\\times\s*(\d+)/g, '-$1\\times$2');
-            str = str.replace(/\((\d+)\)\s*\\times\s*(\d+)/g, '$1\\times$2');
+            // \times -2 \times 3  ->  \times (-2) \times 3
+            str = str.replace(/\\times\s*-(\d+)/g, '\\times (-$1)');
+            // \times -\dfrac{2}{3}  ->  \times \left(-\dfrac{2}{3}\right)
+            str = str.replace(/\\times\s*-\\dfrac\{(\d+)\}\{(\d+)\}/g, '\\times \\left(-\\dfrac{$1}{$2}\\right)');
 
-            // Second passage pour les doubles signes résiduels
+            // Nettoyage des parenthèses inutiles autour des nombres positifs
+            str = str.replace(/\((\d+)\)\s*\\times\s*(\d+)/g, '$1\\times$2');
+            // Mais on garde les négatifs avec leurs parenthèses
+            str = str.replace(/\(-(\d+)\)\s*\\times\s*(\d+)/g, '(-$1)\\times$2');
+            str = str.replace(/\(-(\d+)\)\s*\\times\s*(-\d+)/g, '(-$1)\\times(-$2)');
+
+            // Second passage : doubles signes résiduels
             str = str.replace(/-\s*-/g, '+ ');
             // Troisième passage : fractions restantes
             str = str.replace(/\\dfrac\{-(\d+)\}\{(\d+)\}/g, '-\\dfrac{$1}{$2}');
 
+            // Nettoyer les espaces
             return str.replace(/\s+/g, ' ');
         }
 

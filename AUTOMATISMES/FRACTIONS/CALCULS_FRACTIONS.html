@@ -139,6 +139,12 @@
         .btn-secondary:hover {
             background: #37474f;
         }
+        .btn-series {
+            background: #7b1fa2;
+        }
+        .btn-series:hover {
+            background: #4a148c;
+        }
         .actions {
             display: flex;
             flex-wrap: wrap;
@@ -239,6 +245,16 @@
             font-weight: 700;
             margin-left: 8px;
         }
+        .diff-badge {
+            display: inline-block;
+            background: #8d6e63;
+            color: white;
+            border-radius: 30px;
+            padding: 1px 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-left: 6px;
+        }
         footer {
             margin-top: 30px;
             text-align: center;
@@ -286,6 +302,13 @@
             border-radius: 12px;
             border: 1px solid #bbb;
             margin-top: 10px;
+        }
+        .series-info {
+            background: #ede7f6;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-weight: 500;
+            color: #4a148c;
         }
 
         /* ---- MODALE ---- */
@@ -445,14 +468,14 @@
                 <span>🔢 Essai n° <strong id="displayAttempt">--</strong></span>
             </div>
             <div class="actions">
-                <button class="btn btn-success" onclick="startQuiz()">🚀 Commencer le QCM</button>
+                <button class="btn btn-success" onclick="startQuiz('full')">🚀 QCM complet (62)</button>
+                <button class="btn btn-series" onclick="startSeries()">🎯 Série de 20</button>
                 <button class="btn btn-secondary" onclick="loadJSON()">📂 Charger une sauvegarde</button>
                 <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileUpload(event)" />
             </div>
             <p style="font-size:0.9rem; color:#546e7a; margin-top:10px;">
                 💡 Le numéro d'essai s'incrémente automatiquement à chaque nouveau départ.
-                <span style="display:block; margin-top:4px;">🔄 À chaque recommencement, les réponses sont mélangées
-                    et les questions Vrai/Faux sont aléatoirement reformulées.</span>
+                <span style="display:block; margin-top:4px;">🔄 Les séries de 20 s'adaptent à vos résultats : les questions bien maîtrisées apparaissent moins souvent.</span>
             </p>
         </div>
 
@@ -462,6 +485,7 @@
                 <span>👤 <strong id="displayName">--</strong> – <span id="displayClass">--</span></span>
                 <span>📅 <span id="displayDate2">--</span> – Essai n° <span id="displayAttempt2">--</span></span>
                 <span>📊 <span id="progressText">0 / 0</span></span>
+                <span class="series-info" id="seriesInfo"></span>
             </div>
             <div id="questionsContainer"></div>
             <div class="actions">
@@ -525,7 +549,6 @@
     <script>
         // ================================================================
         // 1. GÉNÉRATEUR DE QUESTIONS – 62 PATTERNS UNIQUES
-        //    Chaque question utilise une structure différente.
         // ================================================================
 
         // ---------- Utilitaires ----------
@@ -572,7 +595,6 @@
             return arr;
         }
 
-        // Génère un distracteur en modifiant légèrement la fraction correcte
         function generateDistractor(correctNum, correctDen, used) {
             const candidates = [];
             for (let d of [-2, -1, 1, 2]) {
@@ -628,10 +650,7 @@
             return dists;
         }
 
-        // ---------- Fonctions de construction de question ----------
-        // Chaque fonction retourne { question, options, correct, weight, explanation }
-        // Les options sont un tableau de chaînes LaTeX avec délimiteurs $...$
-
+        // ---------- 62 générateurs (inchangés) ----------
         const GENERATORS = [];
 
         // 0 : a/b + c/d
@@ -1038,7 +1057,7 @@
             };
         };
 
-        // 12 : a/b + c/d + e/f (3 termes)
+        // 12 : a/b + c/d + e/f
         GENERATORS[12] = function() {
             let a, b, c, d, e, f;
             do {
@@ -1604,7 +1623,7 @@
             };
         };
 
-        // 28 : Simplifier a/b (avec facteur commun)
+        // 28 : Simplifier a/b (facteur commun)
         GENERATORS[28] = function() {
             let factor = randInt(2, 6);
             let a = randNonZeroInt(-10, 10);
@@ -1615,7 +1634,7 @@
             const correctNum = s.num,
                 correctDen = s.den;
             if (correctDen === 1 && Math.abs(correctNum) <= 1) {
-                return GENERATORS[28](); // on relance
+                return GENERATORS[28]();
             }
             const dists = generateDistractors(correctNum, correctDen, 3);
             const options = [s, ...dists];
@@ -1634,7 +1653,7 @@
             };
         };
 
-        // 29 : Simplifier (a*b)/(c*d) avec facteur commun
+        // 29 : Simplifier (a*b)/(c*d)
         GENERATORS[29] = function() {
             let a, b, c, d;
             do {
@@ -2072,7 +2091,7 @@
             };
         };
 
-        // 41 : Simplifier (a^2)/(b^2) avec facteur (littéral)
+        // 41 : Simplifier (a^2)/(b^2) avec facteur
         GENERATORS[41] = function() {
             let factor = randInt(2, 5);
             let a = randNonZeroInt(-8, 8);
@@ -2531,7 +2550,7 @@
             };
         };
 
-        // 53 : Simplifier (a^2 b)/(a b^2) (littéral)
+        // 53 : Simplifier (a^2 b)/(a b^2)
         GENERATORS[53] = function() {
             let a, b;
             do {
@@ -2563,7 +2582,7 @@
             };
         };
 
-        // 54 : Simplifier (a/b + c/d) avec facteur commun (ex: (2a)/(2b) )
+        // 54 : (a/b + c/d) avec facteur commun
         GENERATORS[54] = function() {
             let factor = randInt(2, 5);
             let a = randNonZeroInt(-8, 8);
@@ -2675,7 +2694,7 @@
             };
         };
 
-        // 57 : a/b + c/d * e/f (priorité multiplication)
+        // 57 : a/b + c/d * e/f
         GENERATORS[57] = function() {
             let a, b, c, d, e, f;
             do {
@@ -2710,7 +2729,7 @@
             };
         };
 
-        // 58 : a/b - c/d / e/f (priorité division)
+        // 58 : a/b - c/d / e/f
         GENERATORS[58] = function() {
             let a, b, c, d, e, f;
             do {
@@ -2858,10 +2877,25 @@
             };
         };
 
-        // ----- Générateur principal : 62 questions -----
-        function generateAllQuestions() {
+        // ---------- Matrice de difficulté (1 = très facile, 8 = très difficile) ----------
+        const DIFFICULTY = [
+            1, 1, 2, 2, 3, 3, 3, 3, 3, 3,
+            3, 3, 3, 3, 3, 3, 5, 5, 5, 5,
+            5, 5, 4, 4, 4, 4, 4, 4, 2, 3,
+            6, 6, 6, 6, 4, 5, 5, 5, 6, 7,
+            7, 3, 8, 8, 8, 8, 6, 6, 6, 6,
+            6, 6, 6, 4, 4, 7, 7, 3, 3, 7,
+            7, 7
+        ];
+
+        // ----- Générateur principal adaptatif -----
+        function generateQuestions(indices) {
+            if (!indices) {
+                // Toutes les 62
+                indices = Array.from({ length: 62 }, (_, i) => i);
+            }
             const questions = [];
-            for (let i = 0; i < 62; i++) {
+            for (let i of indices) {
                 const q = GENERATORS[i]();
                 questions.push({
                     id: i + 1,
@@ -2870,7 +2904,9 @@
                     options: q.options,
                     correct: q.correct,
                     weight: q.weight || 1,
-                    explanation: q.explanation
+                    difficulty: DIFFICULTY[i],
+                    explanation: q.explanation,
+                    generatorIdx: i
                 });
             }
             return questions;
@@ -2892,7 +2928,11 @@
             total: 0,
             history: [],
             isRestoring: false,
-            selectionHistory: []
+            selectionHistory: [],
+            generatorStats: Array.from({ length: 62 }, () => ({ attempts: 0, correct: 0, streak: 0 })),
+            seriesCount: 0, // nombre de séries de 20 déjà effectuées
+            isSeriesMode: false,
+            selectedIndices: [] // indices des questions sélectionnées pour la série
         };
 
         // ================================================================
@@ -2910,7 +2950,7 @@
         }
 
         function shuffleAllQuestions() {
-            state.questions = generateAllQuestions();
+            state.questions = generateQuestions();
             state.questions = state.questions.map(q => shuffleQuestion(q));
             state.total = state.questions.length;
             state.totalWeight = state.questions.reduce((acc, q) => acc + q.weight, 0);
@@ -2919,49 +2959,91 @@
             state.submitted = false;
             state.scoreBrut = 0;
             state.scoreNormalized = 0;
+            state.isSeriesMode = false;
+            state.selectedIndices = [];
+        }
+
+        // ---------- Sélection adaptative pour les séries de 20 ----------
+        function getEasiestIndices(count) {
+            // Retourne les `count` indices les plus faciles (difficulté croissante)
+            const sorted = Array.from({ length: 62 }, (_, i) => i);
+            sorted.sort((a, b) => DIFFICULTY[a] - DIFFICULTY[b] || a - b);
+            return sorted.slice(0, count);
+        }
+
+        function getWeightedIndices(count) {
+            // Calcule un poids pour chaque question, basé sur :
+            // - difficulté (plus elle est faible, plus on la favorise)
+            // - taux de réussite (plus il est élevé, moins on la favorise)
+            // - série de réussites consécutives (plus elle est longue, moins on la favorise)
+            const weights = [];
+            for (let i = 0; i < 62; i++) {
+                const diff = DIFFICULTY[i];
+                const stats = state.generatorStats[i];
+                const attempts = stats.attempts || 0;
+                const correct = stats.correct || 0;
+                const streak = stats.streak || 0;
+
+                // Score de difficulté : plus c'est facile, plus le score est élevé
+                const diffScore = 10 - diff; // diff 1 -> 9, diff 8 -> 2
+
+                // Facteur de performance : plus on a de réussites, plus on réduit le poids
+                let perfFactor = 1;
+                if (attempts > 0) {
+                    const rate = correct / attempts;
+                    perfFactor = 1 + rate * 0.5; // rate 1 -> 1.5, rate 0 -> 1
+                }
+
+                // Facteur de régularité : plus la série est longue, plus on réduit le poids
+                const streakFactor = 1 + streak * 0.2; // streak 5 -> 2, streak 0 -> 1
+
+                // Poids final : on favorise les questions faciles, pénalise les bien réussies
+                let weight = diffScore / (perfFactor * streakFactor);
+                // Ajout d'une petite constante pour éviter le zéro
+                weight += 0.1;
+                // On s'assure que le poids est positif
+                if (weight < 0) weight = 0.1;
+                weights.push(weight);
+            }
+
+            // Tirage pondéré sans remise
+            const selected = [];
+            const available = Array.from({ length: 62 }, (_, i) => i);
+            for (let n = 0; n < count; n++) {
+                let totalWeight = 0;
+                for (let i of available) {
+                    totalWeight += weights[i];
+                }
+                if (totalWeight === 0) break;
+                let r = Math.random() * totalWeight;
+                for (let i = 0; i < available.length; i++) {
+                    const idx = available[i];
+                    r -= weights[idx];
+                    if (r <= 0) {
+                        selected.push(idx);
+                        available.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            // Si on n'a pas assez de questions (cas improbable), on complète avec les plus faciles
+            while (selected.length < count) {
+                const missing = count - selected.length;
+                const easiest = getEasiestIndices(missing + 10);
+                for (let idx of easiest) {
+                    if (!selected.includes(idx)) {
+                        selected.push(idx);
+                        if (selected.length >= count) break;
+                    }
+                }
+            }
+            return selected;
         }
 
         // ================================================================
-        // 4. INITIALISATION
+        // 4. DÉMARRAGE
         // ================================================================
-        function init() {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
-            state.date = dateStr;
-            document.getElementById('displayDate').textContent = dateStr;
-            document.getElementById('displayDate2').textContent = dateStr;
-
-            let attempt = parseInt(localStorage.getItem('qcm_attempt_fractions') || '1');
-            state.attempt = attempt;
-            document.getElementById('displayAttempt').textContent = attempt;
-            document.getElementById('displayAttempt2').textContent = attempt;
-
-            const saved = localStorage.getItem('qcm_identity_fractions');
-            if (saved) {
-                try {
-                    const id = JSON.parse(saved);
-                    document.getElementById('lastname').value = id.nom || '';
-                    document.getElementById('firstname').value = id.prenom || '';
-                    document.getElementById('classname').value = id.classe || '';
-                } catch (e) {}
-            }
-
-            const hist = localStorage.getItem('qcm_history_fractions');
-            if (hist) {
-                try {
-                    state.history = JSON.parse(hist);
-                } catch (e) { state.history = []; }
-            } else {
-                state.history = [];
-            }
-
-            shuffleAllQuestions();
-        }
-
-        // ================================================================
-        // 5. DÉMARRAGE
-        // ================================================================
-        function startQuiz() {
+        function startQuiz(mode) {
             const nom = document.getElementById('lastname').value.trim();
             const prenom = document.getElementById('firstname').value.trim();
             const classe = document.getElementById('classname').value.trim();
@@ -2983,7 +3065,71 @@
             document.getElementById('identitySection').classList.add('hidden');
             document.getElementById('quizSection').classList.remove('hidden');
 
-            shuffleAllQuestions();
+            if (mode === 'full') {
+                shuffleAllQuestions();
+                state.isSeriesMode = false;
+                state.selectedIndices = [];
+                document.getElementById('seriesInfo').textContent = '';
+            } else {
+                // mode 'series' est géré par startSeries()
+            }
+            renderQuestions();
+            updateProgress();
+            document.getElementById('historySection').classList.add('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+        }
+
+        function startSeries() {
+            // Vérifier l'identité
+            const nom = document.getElementById('lastname').value.trim();
+            const prenom = document.getElementById('firstname').value.trim();
+            const classe = document.getElementById('classname').value.trim();
+            if (!nom || !prenom || !classe) {
+                alert('Veuillez remplir tous les champs (nom, prénom, classe).');
+                return;
+            }
+            state.identity = { nom, prenom, classe };
+            localStorage.setItem('qcm_identity_fractions', JSON.stringify(state.identity));
+
+            const attempt = parseInt(localStorage.getItem('qcm_attempt_fractions') || '1');
+            state.attempt = attempt;
+            localStorage.setItem('qcm_attempt_fractions', (attempt + 1).toString());
+
+            document.getElementById('displayName').textContent = prenom + ' ' + nom;
+            document.getElementById('displayClass').textContent = classe;
+            document.getElementById('displayAttempt2').textContent = attempt;
+
+            document.getElementById('identitySection').classList.add('hidden');
+            document.getElementById('quizSection').classList.remove('hidden');
+
+            // Sélection des 20 questions
+            let indices;
+            if (state.seriesCount === 0) {
+                // Première série : les 20 plus faciles
+                indices = getEasiestIndices(20);
+            } else {
+                // Séries suivantes : tirage pondéré
+                indices = getWeightedIndices(20);
+            }
+            // Trier par difficulté croissante
+            indices.sort((a, b) => DIFFICULTY[a] - DIFFICULTY[b] || a - b);
+            state.selectedIndices = indices;
+            state.isSeriesMode = true;
+
+            // Générer les questions
+            state.questions = generateQuestions(indices);
+            state.questions = state.questions.map(q => shuffleQuestion(q));
+            state.total = state.questions.length;
+            state.totalWeight = state.questions.reduce((acc, q) => acc + q.weight, 0);
+            state.answers = {};
+            state.selectionHistory = state.questions.map(() => []);
+            state.submitted = false;
+            state.scoreBrut = 0;
+            state.scoreNormalized = 0;
+
+            document.getElementById('seriesInfo').textContent =
+                `🎯 Série n°${state.seriesCount + 1} (20 questions) - Adaptative`;
+
             renderQuestions();
             updateProgress();
             document.getElementById('historySection').classList.add('hidden');
@@ -2991,7 +3137,7 @@
         }
 
         // ================================================================
-        // 6. RENDU
+        // 5. RENDU
         // ================================================================
         function renderQuestions() {
             const container = document.getElementById('questionsContainer');
@@ -3008,8 +3154,9 @@
                 const text = document.createElement('div');
                 text.className = 'question-text';
                 const weightLabel = q.weight === 1 ? '⭐' : (q.weight === 2 ? '⭐⭐' : '⭐⭐⭐');
+                const diffLabel = `🎯 Niv.${q.difficulty || '?'}`;
                 text.innerHTML =
-                    `<span class="badge">Q${idx+1}</span> ${q.question} <span class="weight-badge">${weightLabel} (x${q.weight})</span>`;
+                    `<span class="badge">Q${idx+1}</span> ${q.question} <span class="weight-badge">${weightLabel} (x${q.weight})</span> <span class="diff-badge">${diffLabel}</span>`;
                 block.appendChild(text);
 
                 const optionsDiv = document.createElement('div');
@@ -3074,7 +3221,7 @@
         }
 
         // ================================================================
-        // 7. DÉFILEMENT
+        // 6. DÉFILEMENT
         // ================================================================
         function scrollToNextQuestion(currentIdx) {
             if (state.isRestoring) return;
@@ -3093,7 +3240,7 @@
         }
 
         // ================================================================
-        // 8. PROGRESS
+        // 7. PROGRESS
         // ================================================================
         function updateProgress() {
             const answered = Object.keys(state.answers).length;
@@ -3102,7 +3249,7 @@
         }
 
         // ================================================================
-        // 9. SOUMISSION
+        // 8. SOUMISSION
         // ================================================================
         function submitQuiz() {
             if (state.submitted) {
@@ -3126,6 +3273,7 @@
             let totalErreurs = 0;
             let details = [];
 
+            // Mise à jour des statistiques des générateurs
             state.questions.forEach((q, idx) => {
                 const userAns = state.answers[idx];
                 let finalCorrect = false;
@@ -3164,6 +3312,18 @@
                 }
                 totalErreurs += erreurs;
                 details.push({ idx, finalCorrect, erreurs, premierCorrect });
+
+                // Mettre à jour generatorStats
+                if (q.generatorIdx !== undefined) {
+                    const stats = state.generatorStats[q.generatorIdx];
+                    stats.attempts = (stats.attempts || 0) + 1;
+                    if (finalCorrect) {
+                        stats.correct = (stats.correct || 0) + 1;
+                        stats.streak = (stats.streak || 0) + 1;
+                    } else {
+                        stats.streak = 0;
+                    }
+                }
             });
 
             let scoreNormalized = (earnedWeight / totalWeight) * 100;
@@ -3171,6 +3331,11 @@
 
             state.scoreBrut = scoreBrut;
             state.scoreNormalized = scoreNormalized;
+
+            // Incrémenter le compteur de séries si on est en mode série
+            if (state.isSeriesMode) {
+                state.seriesCount++;
+            }
 
             const entry = {
                 essai: state.attempt,
@@ -3180,7 +3345,10 @@
                 total: total,
                 premierEssaiReussi: premierEssaiReussi,
                 totalErreurs: totalErreurs,
-                totalWeight: totalWeight
+                totalWeight: totalWeight,
+                isSeries: state.isSeriesMode,
+                seriesNumber: state.isSeriesMode ? state.seriesCount : 0,
+                generatorStats: state.generatorStats.map(s => ({ ...s }))
             };
             state.history.push(entry);
             localStorage.setItem('qcm_history_fractions', JSON.stringify(state.history));
@@ -3198,6 +3366,7 @@
                         <div><strong>1ers essais réussis :</strong> ${premierEssaiReussi}</div>
                         <div><strong>Total erreurs :</strong> ${totalErreurs}</div>
                     </div>
+                    ${state.isSeriesMode ? `<div style="margin-top:6px; color:#4a148c;">🎯 Série n°${state.seriesCount} (adaptative)</div>` : ''}
                     ${answered < total ? `<br>⚠️ ${total - answered} question(s) sans réponse (comptées fausses).` : ''}
                     <div style="margin-top:10px; font-size:0.9rem; color:#555;">
                         💡 Chaque question a un poids (⭐=1, ⭐⭐=2, ⭐⭐⭐=3). Le score normalisé = (poids gagné / poids total) × 100.
@@ -3234,7 +3403,7 @@
         }
 
         // ================================================================
-        // 10. BILAN
+        // 9. BILAN
         // ================================================================
         function renderHistory() {
             const container = document.getElementById('historyContent');
@@ -3246,17 +3415,19 @@
 
             let html =
                 `<table class="history-table">
-                        <thead><tr><th>Essai</th><th>Date</th><th>Score /100</th><th>Brut</th><th>1ers essais</th></tr></thead><tbody>`;
+                        <thead><tr><th>Essai</th><th>Date</th><th>Score /100</th><th>Brut</th><th>1ers essais</th><th>Série</th></tr></thead><tbody>`;
             let last = history[history.length - 1];
             history.forEach(h => {
                 html += `<tr><td>${h.essai}</td><td>${h.date}</td>
                             <td><strong>${h.scoreNormalized.toFixed(1)}</strong></td>
                             <td>${h.scoreBrut} / ${h.total}</td>
-                            <td>${h.premierEssaiReussi || 0}</td></tr>`;
+                            <td>${h.premierEssaiReussi || 0}</td>
+                            <td>${h.isSeries ? '🎯' + (h.seriesNumber || '') : '📚'}</td></tr>`;
             });
             html += `</tbody></table>`;
             html += `<div style="margin-top:10px; font-weight:bold;">
                         Dernier score normalisé : <span style="font-size:1.2em; color:#1565c0;">${last.scoreNormalized.toFixed(1)} / 100</span>
+                        ${last.isSeries ? ' (Série adaptative)' : ''}
                     </div>`;
             container.innerHTML = html;
             drawHistoryChart(history);
@@ -3305,7 +3476,7 @@
                 const x = padding.left + i * gap + (gap - barWidth) / 2;
                 const barH = (pct / maxPct) * chartH;
                 const y = padding.top + chartH - barH;
-                ctx.fillStyle = (i === n - 1) ? '#1565c0' : '#90caf9';
+                ctx.fillStyle = history[i].isSeries ? '#7b1fa2' : (i === n - 1 ? '#1565c0' : '#90caf9');
                 ctx.fillRect(x, y, barWidth, barH);
                 ctx.fillStyle = '#000';
                 ctx.font = '8px sans-serif';
@@ -3330,7 +3501,7 @@
         }
 
         // ================================================================
-        // 11. TÉLÉCHARGEMENT / CHARGEMENT / RECOMMENCER
+        // 10. TÉLÉCHARGEMENT / CHARGEMENT / RECOMMENCER
         // ================================================================
         function downloadJSON() {
             const data = {
@@ -3345,6 +3516,10 @@
                 questions: state.questions,
                 history: state.history,
                 selectionHistory: state.selectionHistory,
+                generatorStats: state.generatorStats,
+                seriesCount: state.seriesCount,
+                isSeriesMode: state.isSeriesMode,
+                selectedIndices: state.selectedIndices,
                 timestamp: new Date().toISOString()
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3385,6 +3560,10 @@
                     if (data.history) state.history = data.history;
                     if (data.selectionHistory) state.selectionHistory = data.selectionHistory;
                     else state.selectionHistory = state.questions.map(() => []);
+                    if (data.generatorStats) state.generatorStats = data.generatorStats;
+                    if (data.seriesCount !== undefined) state.seriesCount = data.seriesCount;
+                    if (data.isSeriesMode !== undefined) state.isSeriesMode = data.isSeriesMode;
+                    if (data.selectedIndices) state.selectedIndices = data.selectedIndices;
 
                     if (data.questions && data.questions.length > 0) {
                         state.questions = data.questions;
@@ -3505,7 +3684,7 @@
         }
 
         // ================================================================
-        // 12. MODALE
+        // 11. MODALE
         // ================================================================
         function showModal() {
             document.getElementById('modalOverlay').classList.add('active');
@@ -3518,8 +3697,47 @@
         }
 
         // ================================================================
-        // 13. INIT
+        // 12. INIT
         // ================================================================
+        function init() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+            state.date = dateStr;
+            document.getElementById('displayDate').textContent = dateStr;
+            document.getElementById('displayDate2').textContent = dateStr;
+
+            let attempt = parseInt(localStorage.getItem('qcm_attempt_fractions') || '1');
+            state.attempt = attempt;
+            document.getElementById('displayAttempt').textContent = attempt;
+            document.getElementById('displayAttempt2').textContent = attempt;
+
+            const saved = localStorage.getItem('qcm_identity_fractions');
+            if (saved) {
+                try {
+                    const id = JSON.parse(saved);
+                    document.getElementById('lastname').value = id.nom || '';
+                    document.getElementById('firstname').value = id.prenom || '';
+                    document.getElementById('classname').value = id.classe || '';
+                } catch (e) {}
+            }
+
+            const hist = localStorage.getItem('qcm_history_fractions');
+            if (hist) {
+                try {
+                    state.history = JSON.parse(hist);
+                } catch (e) { state.history = []; }
+            } else {
+                state.history = [];
+            }
+
+            // Initialiser generatorStats si absent
+            if (!state.generatorStats || state.generatorStats.length !== 62) {
+                state.generatorStats = Array.from({ length: 62 }, () => ({ attempts: 0, correct: 0, streak: 0 }));
+            }
+            if (state.seriesCount === undefined) state.seriesCount = 0;
+
+            shuffleAllQuestions();
+        }
         init();
     </script>
 </body>

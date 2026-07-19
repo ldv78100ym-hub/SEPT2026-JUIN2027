@@ -524,12 +524,8 @@
 
     <script>
         // ================================================================
-        // 1. GÉNÉRATEUR DE QUESTIONS DYNAMIQUES
-        //    Toutes les valeurs numériques sont aléatoires :
-        //    - numérateurs entre -20 et 20 (sauf 0 pour éviter les fractions nulles)
-        //    - dénominateurs entre 1 et 20
-        //    - les résultats sont simplifiés
-        //    - 3 distracteurs plausibles sont générés
+        // 1. GÉNÉRATEUR DE QUESTIONS – 62 PATTERNS UNIQUES
+        //    Chaque question utilise une structure différente.
         // ================================================================
 
         // ---------- Utilitaires ----------
@@ -579,7 +575,6 @@
         // Génère un distracteur en modifiant légèrement la fraction correcte
         function generateDistractor(correctNum, correctDen, used) {
             const candidates = [];
-            // Variantes sur le numérateur
             for (let d of [-2, -1, 1, 2]) {
                 let n = correctNum + d;
                 if (n === 0) continue;
@@ -587,7 +582,6 @@
                 let key = s.num + '/' + s.den;
                 if (!used.has(key)) candidates.push({ num: s.num, den: s.den });
             }
-            // Variantes sur le dénominateur
             for (let d of [-2, -1, 1, 2]) {
                 let den = correctDen + d;
                 if (den <= 0) continue;
@@ -595,7 +589,6 @@
                 let key = s.num + '/' + s.den;
                 if (!used.has(key)) candidates.push({ num: s.num, den: s.den });
             }
-            // Inversion
             if (correctNum !== 0) {
                 let s = simplify(correctDen, correctNum);
                 let key = s.num + '/' + s.den;
@@ -609,7 +602,6 @@
                     return c;
                 }
             }
-            // Fallback
             let attempts = 0;
             while (attempts < 50) {
                 let n = randNonZeroInt(-10, 10);
@@ -636,12 +628,14 @@
             return dists;
         }
 
-        // ---------- Générateurs de questions ----------
-        // Chaque générateur retourne { question, options, correct, explanation, weight }
+        // ---------- Fonctions de construction de question ----------
+        // Chaque fonction retourne { question, options, correct, weight, explanation }
         // Les options sont un tableau de chaînes LaTeX avec délimiteurs $...$
 
-        // Addition : a/b + c/d
-        function genAdd() {
+        const GENERATORS = [];
+
+        // 0 : a/b + c/d
+        GENERATORS[0] = function() {
             let a, b, c, d;
             do {
                 a = randNonZeroInt(-15, 15);
@@ -658,7 +652,6 @@
             const options = [s, ...dists];
             const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
             shuffleArray(optionObjects);
-            // ENCADRER chaque option par des $ pour MathJax
             const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
             const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
             const explanation =
@@ -670,10 +663,10 @@
                 weight: 1,
                 explanation: explanation
             };
-        }
+        };
 
-        // Soustraction : a/b - c/d
-        function genSub() {
+        // 1 : a/b - c/d
+        GENERATORS[1] = function() {
             let a, b, c, d;
             do {
                 a = randNonZeroInt(-15, 15);
@@ -701,10 +694,10 @@
                 weight: 1,
                 explanation: explanation
             };
-        }
+        };
 
-        // Multiplication : (a/b) * (c/d)
-        function genMul() {
+        // 2 : a/b * c/d
+        GENERATORS[2] = function() {
             let a, b, c, d;
             do {
                 a = randNonZeroInt(-15, 15);
@@ -732,10 +725,10 @@
                 weight: 1,
                 explanation: explanation
             };
-        }
+        };
 
-        // Division : (a/b) / (c/d)
-        function genDiv() {
+        // 3 : a/b / c/d
+        GENERATORS[3] = function() {
             let a, b, c, d;
             do {
                 a = randNonZeroInt(-15, 15);
@@ -763,18 +756,23 @@
                 weight: 1,
                 explanation: explanation
             };
-        }
+        };
 
-        // Puissance : (a/b)^n avec n=2 ou 3
-        function genPow() {
-            let a, b, n;
-            n = randInt(2, 3);
+        // 4 : (a/b + c/d) * e/f
+        GENERATORS[4] = function() {
+            let a, b, c, d, e, f;
             do {
                 a = randNonZeroInt(-10, 10);
                 b = randInt(1, 10);
-            } while (a === 0);
-            const num = Math.pow(a, n);
-            const den = Math.pow(b, n);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const sumNum = a * d + c * b;
+            const sumDen = b * d;
+            const num = sumNum * e;
+            const den = sumDen * f;
             const s = simplify(num, den);
             const correctNum = s.num,
                 correctDen = s.den;
@@ -785,29 +783,839 @@
             const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
             const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
             const explanation =
-                `$\\left(\\dfrac{${a}}{${b}}\\right)^${n} = \\dfrac{${a}^{${n}}}{${b}^{${n}}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}} = \\left(\\dfrac{(${a})\\times${d} + (${c})\\times${b}}{${b}\\times${d}}\\right) \\times \\dfrac{${e}}{${f}} = \\dfrac{${sumNum}\\times(${e})}{${sumDen}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
             return {
-                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^${n}$ :`,
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}}$ :`,
                 options: finalOptions,
                 correct: correctIdx,
-                weight: 1,
+                weight: 2,
                 explanation: explanation
             };
-        }
+        };
 
-        // Simplification
-        function genSimplify() {
-            let num, den;
+        // 5 : (a/b - c/d) * e/f
+        GENERATORS[5] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const diffNum = a * d - c * b;
+            const diffDen = b * d;
+            const num = diffNum * e;
+            const den = diffDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}} = \\left(\\dfrac{(${a})\\times${d} - (${c})\\times${b}}{${b}\\times${d}}\\right) \\times \\dfrac{${e}}{${f}} = \\dfrac{${diffNum}\\times(${e})}{${diffDen}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 6 : (a/b + c/d) / e/f
+        GENERATORS[6] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const sumNum = a * d + c * b;
+            const sumDen = b * d;
+            const num = sumNum * f;
+            const den = sumDen * e;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}} = \\left(\\dfrac{(${a})\\times${d} + (${c})\\times${b}}{${b}\\times${d}}\\right) \\times \\dfrac{${f}}{${e}} = \\dfrac{${sumNum}\\times${f}}{${sumDen}\\times(${e})} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 7 : (a/b - c/d) / e/f
+        GENERATORS[7] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const diffNum = a * d - c * b;
+            const diffDen = b * d;
+            const num = diffNum * f;
+            const den = diffDen * e;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}} = \\left(\\dfrac{(${a})\\times${d} - (${c})\\times${b}}{${b}\\times${d}}\\right) \\times \\dfrac{${f}}{${e}} = \\dfrac{${diffNum}\\times${f}}{${diffDen}\\times(${e})} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 8 : a/b + (c/d * e/f)
+        GENERATORS[8] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const prodNum = c * e;
+            const prodDen = d * f;
+            const num = a * prodDen + prodNum * b;
+            const den = b * prodDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} + \\left(\\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}}\\right) = \\dfrac{${a}}{${b}} + \\dfrac{${c*e}}{${d*f}} = \\dfrac{${a}\\times${prodDen} + (${c*e})\\times${b}}{${b}\\times${prodDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} + \\left(\\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 9 : a/b - (c/d / e/f)
+        GENERATORS[9] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const quotNum = c * f;
+            const quotDen = d * e;
+            const num = a * quotDen - quotNum * b;
+            const den = b * quotDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} - \\left(\\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}}\\right) = \\dfrac{${a}}{${b}} - \\dfrac{${c*f}}{${d*e}} = \\dfrac{${a}\\times${quotDen} - (${c*f})\\times${b}}{${b}\\times${quotDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} - \\left(\\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 10 : (a/b * c/d) + e/f
+        GENERATORS[10] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const prodNum = a * c;
+            const prodDen = b * d;
+            const num = prodNum * f + e * prodDen;
+            const den = prodDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\dfrac{${e}}{${f}} = \\dfrac{${a*c}}{${b*d}} + \\dfrac{${e}}{${f}} = \\dfrac{${prodNum}\\times${f} + (${e})\\times${prodDen}}{${prodDen}\\times${f}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 11 : (a/b / c/d) - e/f
+        GENERATORS[11] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const quotNum = a * d;
+            const quotDen = b * c;
+            const num = quotNum * f - e * quotDen;
+            const den = quotDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\dfrac{${e}}{${f}} = \\dfrac{${a*d}}{${b*c}} - \\dfrac{${e}}{${f}} = \\dfrac{${quotNum}\\times${f} - (${e})\\times${quotDen}}{${quotDen}\\times${f}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 12 : a/b + c/d + e/f (3 termes)
+        GENERATORS[12] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const den = b * d * f;
+            const num = a * d * f + c * b * f + e * b * d;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} + \\dfrac{${e}}{${f}} = \\dfrac{${a}\\times${d}\\times${f} + ${c}\\times${b}\\times${f} + ${e}\\times${b}\\times${d}}{${b}\\times${d}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} + \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 13 : a/b - c/d - e/f
+        GENERATORS[13] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const den = b * d * f;
+            const num = a * d * f - c * b * f - e * b * d;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}} - \\dfrac{${e}}{${f}} = \\dfrac{${a}\\times${d}\\times${f} - ${c}\\times${b}\\times${f} - ${e}\\times${b}\\times${d}}{${b}\\times${d}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}} - \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 14 : a/b * c/d * e/f
+        GENERATORS[14] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const num = a * c * e;
+            const den = b * d * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}} = \\dfrac{${a}\\times${c}\\times${e}}{${b}\\times${d}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 15 : a/b / c/d / e/f
+        GENERATORS[15] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const num = a * d * f;
+            const den = b * c * e;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}} = \\dfrac{${a}}{${b}} \\times \\dfrac{${d}}{${c}} \\times \\dfrac{${f}}{${e}} = \\dfrac{${a}\\times${d}\\times${f}}{${b}\\times${c}\\times${e}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 16 : (a/b + c/d) * (e/f + g/h)
+        GENERATORS[16] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+                g = randNonZeroInt(-8, 8);
+                h = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const s1Num = a * d + c * b,
+                s1Den = b * d;
+            const s2Num = e * h + g * f,
+                s2Den = f * h;
+            const num = s1Num * s2Num;
+            const den = s1Den * s2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\left(\\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}\\right) = \\dfrac{${s1Num}}{${s1Den}} \\times \\dfrac{${s2Num}}{${s2Den}} = \\dfrac{${s1Num}\\times${s2Num}}{${s1Den}\\times${s2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\left(\\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 17 : (a/b - c/d) * (e/f - g/h)
+        GENERATORS[17] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+                g = randNonZeroInt(-8, 8);
+                h = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const s1Num = a * d - c * b,
+                s1Den = b * d;
+            const s2Num = e * h - g * f,
+                s2Den = f * h;
+            const num = s1Num * s2Num;
+            const den = s1Den * s2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\times \\left(\\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}\\right) = \\dfrac{${s1Num}}{${s1Den}} \\times \\dfrac{${s2Num}}{${s2Den}} = \\dfrac{${s1Num}\\times${s2Num}}{${s1Den}\\times${s2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\times \\left(\\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 18 : (a/b + c/d) / (e/f + g/h)
+        GENERATORS[18] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+                g = randNonZeroInt(-8, 8);
+                h = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const s1Num = a * d + c * b,
+                s1Den = b * d;
+            const s2Num = e * h + g * f,
+                s2Den = f * h;
+            const num = s1Num * s2Den;
+            const den = s1Den * s2Num;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\div \\left(\\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}\\right) = \\dfrac{${s1Num}}{${s1Den}} \\times \\dfrac{${s2Den}}{${s2Num}} = \\dfrac{${s1Num}\\times${s2Den}}{${s1Den}\\times${s2Num}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\div \\left(\\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 19 : (a/b - c/d) / (e/f - g/h)
+        GENERATORS[19] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+                g = randNonZeroInt(-8, 8);
+                h = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const s1Num = a * d - c * b,
+                s1Den = b * d;
+            const s2Num = e * h - g * f,
+                s2Den = f * h;
+            const num = s1Num * s2Den;
+            const den = s1Den * s2Num;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\left(\\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}\\right) = \\dfrac{${s1Num}}{${s1Den}} \\times \\dfrac{${s2Den}}{${s2Num}} = \\dfrac{${s1Num}\\times${s2Den}}{${s1Den}\\times${s2Num}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\left(\\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 20 : (a/b * c/d) + (e/f * g/h)
+        GENERATORS[20] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+                g = randNonZeroInt(-8, 8);
+                h = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const p1Num = a * c,
+                p1Den = b * d;
+            const p2Num = e * g,
+                p2Den = f * h;
+            const num = p1Num * p2Den + p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\left(\\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}\\right) = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} + ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\left(\\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 21 : (a/b / c/d) - (e/f / g/h)
+        GENERATORS[21] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+                g = randNonZeroInt(-8, 8);
+                h = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const q1Num = a * d,
+                q1Den = b * c;
+            const q2Num = e * h,
+                q2Den = f * g;
+            const num = q1Num * q2Den - q2Num * q1Den;
+            const den = q1Den * q2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\left(\\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}}\\right) = \\dfrac{${q1Num}}{${q1Den}} - \\dfrac{${q2Num}}{${q2Den}} = \\dfrac{${q1Num}\\times${q2Den} - ${q2Num}\\times${q1Den}}{${q1Den}\\times${q2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\left(\\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 22 : (a/b + c/d)^2
+        GENERATORS[22] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+            } while (a === 0 || c === 0);
+            const sumNum = a * d + c * b;
+            const sumDen = b * d;
+            const num = sumNum * sumNum;
+            const den = sumDen * sumDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right)^2 = \\left(\\dfrac{${sumNum}}{${sumDen}}\\right)^2 = \\dfrac{${sumNum}^2}{${sumDen}^2} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 23 : (a/b - c/d)^2
+        GENERATORS[23] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+            } while (a === 0 || c === 0);
+            const diffNum = a * d - c * b;
+            const diffDen = b * d;
+            const num = diffNum * diffNum;
+            const den = diffDen * diffDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right)^2 = \\left(\\dfrac{${diffNum}}{${diffDen}}\\right)^2 = \\dfrac{${diffNum}^2}{${diffDen}^2} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 24 : (a/b)^2 + (c/d)^2
+        GENERATORS[24] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c,
+                p2Den = d * d;
+            const num = p1Num * p2Den + p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 + \\left(\\dfrac{${c}}{${d}}\\right)^2 = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} + ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 + \\left(\\dfrac{${c}}{${d}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 25 : (a/b)^2 - (c/d)^2
+        GENERATORS[25] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c,
+                p2Den = d * d;
+            const num = p1Num * p2Den - p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 - \\left(\\dfrac{${c}}{${d}}\\right)^2 = \\dfrac{${p1Num}}{${p1Den}} - \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} - ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 - \\left(\\dfrac{${c}}{${d}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 26 : (a/b)^2 * (c/d)
+        GENERATORS[26] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+            } while (a === 0 || c === 0);
+            const pNum = a * a,
+                pDen = b * b;
+            const num = pNum * c;
+            const den = pDen * d;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\dfrac{${c}}{${d}} = \\dfrac{${a}^2}{${b}^2} \\times \\dfrac{${c}}{${d}} = \\dfrac{${pNum}\\times${c}}{${pDen}\\times${d}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\dfrac{${c}}{${d}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 27 : (a/b) / (c/d)^2
+        GENERATORS[27] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+            } while (a === 0 || c === 0);
+            const qNum = a * d * d;
+            const qDen = b * c * c;
+            const s = simplify(qNum, qDen);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 = \\dfrac{${a}}{${b}} \\div \\dfrac{${c}^2}{${d}^2} = \\dfrac{${a}}{${b}} \\times \\dfrac{${d}^2}{${c}^2} = \\dfrac{${a}\\times${d}^2}{${b}\\times${c}^2} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 28 : Simplifier a/b (avec facteur commun)
+        GENERATORS[28] = function() {
             let factor = randInt(2, 6);
             let a = randNonZeroInt(-10, 10);
             let b = randInt(1, 10);
-            num = a * factor;
-            den = b * factor;
+            let num = a * factor;
+            let den = b * factor;
             const s = simplify(num, den);
             const correctNum = s.num,
                 correctDen = s.den;
             if (correctDen === 1 && Math.abs(correctNum) <= 1) {
-                return genSimplify();
+                return GENERATORS[28](); // on relance
             }
             const dists = generateDistractors(correctNum, correctDen, 3);
             const options = [s, ...dists];
@@ -824,158 +1632,1237 @@
                 weight: 1,
                 explanation: explanation
             };
-        }
+        };
 
-        // Opérations combinées
-        function genCombined() {
-            const structures = [
-                // (a/b + c/d) * e/f
-                () => {
-                    let a, b, c, d, e, f;
-                    do {
-                        a = randNonZeroInt(-10, 10);
-                        b = randInt(1, 10);
-                        c = randNonZeroInt(-10, 10);
-                        d = randInt(1, 10);
-                        e = randNonZeroInt(-10, 10);
-                        f = randInt(1, 10);
-                    } while (a === 0 || c === 0 || e === 0);
-                    const sumNum = a * d + c * b;
-                    const sumDen = b * d;
-                    const num = sumNum * e;
-                    const den = sumDen * f;
-                    const s = simplify(num, den);
-                    const correctNum = s.num,
-                        correctDen = s.den;
-                    const dists = generateDistractors(correctNum, correctDen, 3);
-                    const options = [s, ...dists];
-                    const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
-                    shuffleArray(optionObjects);
-                    const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
-                    const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
-                    const explanation =
-                        `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}} = \\left(\\dfrac{(${a})\\times${d} + (${c})\\times${b}}{${b}\\times${d}}\\right) \\times \\dfrac{${e}}{${f}} = \\dfrac{${sumNum}\\times(${e})}{${sumDen}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
-                    return {
-                        question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}}$ :`,
-                        options: finalOptions,
-                        correct: correctIdx,
-                        weight: 2,
-                        explanation: explanation
-                    };
-                },
-                // (a/b - c/d) / e/f
-                () => {
-                    let a, b, c, d, e, f;
-                    do {
-                        a = randNonZeroInt(-10, 10);
-                        b = randInt(1, 10);
-                        c = randNonZeroInt(-10, 10);
-                        d = randInt(1, 10);
-                        e = randNonZeroInt(-10, 10);
-                        f = randInt(1, 10);
-                    } while (a === 0 || c === 0 || e === 0);
-                    const diffNum = a * d - c * b;
-                    const diffDen = b * d;
-                    const num = diffNum * f;
-                    const den = diffDen * e;
-                    const s = simplify(num, den);
-                    const correctNum = s.num,
-                        correctDen = s.den;
-                    const dists = generateDistractors(correctNum, correctDen, 3);
-                    const options = [s, ...dists];
-                    const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
-                    shuffleArray(optionObjects);
-                    const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
-                    const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
-                    const explanation =
-                        `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}} = \\left(\\dfrac{(${a})\\times${d} - (${c})\\times${b}}{${b}\\times${d}}\\right) \\times \\dfrac{${f}}{${e}} = \\dfrac{${diffNum}\\times${f}}{${diffDen}\\times(${e})} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
-                    return {
-                        question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}}$ :`,
-                        options: finalOptions,
-                        correct: correctIdx,
-                        weight: 2,
-                        explanation: explanation
-                    };
-                },
-                // (a/b) * (c/d) + e/f
-                () => {
-                    let a, b, c, d, e, f;
-                    do {
-                        a = randNonZeroInt(-10, 10);
-                        b = randInt(1, 10);
-                        c = randNonZeroInt(-10, 10);
-                        d = randInt(1, 10);
-                        e = randNonZeroInt(-10, 10);
-                        f = randInt(1, 10);
-                    } while (a === 0 || c === 0 || e === 0);
-                    const prodNum = a * c;
-                    const prodDen = b * d;
-                    const num = prodNum * f + e * prodDen;
-                    const den = prodDen * f;
-                    const s = simplify(num, den);
-                    const correctNum = s.num,
-                        correctDen = s.den;
-                    const dists = generateDistractors(correctNum, correctDen, 3);
-                    const options = [s, ...dists];
-                    const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
-                    shuffleArray(optionObjects);
-                    const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
-                    const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
-                    const explanation =
-                        `$\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}} + \\dfrac{${e}}{${f}} = \\dfrac{(${a})\\times(${c})}{${b}\\times${d}} + \\dfrac{${e}}{${f}} = \\dfrac{${prodNum}\\times${f} + (${e})\\times${prodDen}}{${prodDen}\\times${f}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
-                    return {
-                        question: `Calculer $\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}} + \\dfrac{${e}}{${f}}$ :`,
-                        options: finalOptions,
-                        correct: correctIdx,
-                        weight: 2,
-                        explanation: explanation
-                    };
-                }
-            ];
-            const idx = randInt(0, structures.length - 1);
-            return structures[idx]();
-        }
+        // 29 : Simplifier (a*b)/(c*d) avec facteur commun
+        GENERATORS[29] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randNonZeroInt(-8, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randNonZeroInt(-8, 8);
+            } while (a === 0 || b === 0 || c === 0 || d === 0);
+            let factor = randInt(2, 5);
+            let num = a * b * factor;
+            let den = c * d * factor;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            if (correctDen === 1 && Math.abs(correctNum) <= 1) {
+                return GENERATORS[29]();
+            }
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${num}}{${den}} = \\dfrac{${num}\\div${factor}}{${den}\\div${factor}} = \\dfrac{${correctNum}}{${correctDen}}$`;
+            return {
+                question: `Simplifier $\\dfrac{${num}}{${den}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 1,
+                explanation: explanation
+            };
+        };
+
+        // 30 : (a/b + c/d) * e/f + g/h
+        GENERATORS[30] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+                g = randNonZeroInt(-6, 6);
+                h = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const sumNum = a * d + c * b,
+                sumDen = b * d;
+            const prodNum = sumNum * e,
+                prodDen = sumDen * f;
+            const num = prodNum * h + g * prodDen;
+            const den = prodDen * h;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}} = \\dfrac{${sumNum}}{${sumDen}} \\times \\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}} = \\dfrac{${prodNum}}{${prodDen}} + \\dfrac{${g}}{${h}} = \\dfrac{${prodNum}\\times${h} + ${g}\\times${prodDen}}{${prodDen}\\times${h}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 31 : (a/b - c/d) / e/f - g/h
+        GENERATORS[31] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+                g = randNonZeroInt(-6, 6);
+                h = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const diffNum = a * d - c * b,
+                diffDen = b * d;
+            const quotNum = diffNum * f,
+                quotDen = diffDen * e;
+            const num = quotNum * h - g * quotDen;
+            const den = quotDen * h;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}} = \\dfrac{${diffNum}}{${diffDen}} \\div \\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}} = \\dfrac{${quotNum}}{${quotDen}} - \\dfrac{${g}}{${h}} = \\dfrac{${quotNum}\\times${h} - ${g}\\times${quotDen}}{${quotDen}\\times${h}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 32 : (a/b * c/d) + (e/f) / (g/h)
+        GENERATORS[32] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+                g = randNonZeroInt(-6, 6);
+                h = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const prodNum = a * c,
+                prodDen = b * d;
+            const quotNum = e * h,
+                quotDen = f * g;
+            const num = prodNum * quotDen + quotNum * prodDen;
+            const den = prodDen * quotDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}} = \\dfrac{${prodNum}}{${prodDen}} + \\dfrac{${e*h}}{${f*g}} = \\dfrac{${prodNum}\\times${quotDen} + ${quotNum}\\times${prodDen}}{${prodDen}\\times${quotDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 33 : (a/b / c/d) - (e/f) * (g/h)
+        GENERATORS[33] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+                g = randNonZeroInt(-6, 6);
+                h = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const quotNum = a * d,
+                quotDen = b * c;
+            const prodNum = e * g,
+                prodDen = f * h;
+            const num = quotNum * prodDen - prodNum * quotDen;
+            const den = quotDen * prodDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\left(\\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}\\right) = \\dfrac{${quotNum}}{${quotDen}} - \\dfrac{${prodNum}}{${prodDen}} = \\dfrac{${quotNum}\\times${prodDen} - ${prodNum}\\times${quotDen}}{${quotDen}\\times${prodDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\left(\\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}\\right)$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 34 : (a/b)^3
+        GENERATORS[34] = function() {
+            let a, b;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+            } while (a === 0);
+            const num = a * a * a;
+            const den = b * b * b;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^3 = \\dfrac{${a}^3}{${b}^3} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 1,
+                explanation: explanation
+            };
+        };
+
+        // 35 : (a/b)^2 + (c/d)^3
+        GENERATORS[35] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c * c,
+                p2Den = d * d * d;
+            const num = p1Num * p2Den + p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 + \\left(\\dfrac{${c}}{${d}}\\right)^3 = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} + ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 + \\left(\\dfrac{${c}}{${d}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 36 : (a/b)^2 - (c/d)^3
+        GENERATORS[36] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c * c,
+                p2Den = d * d * d;
+            const num = p1Num * p2Den - p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 - \\left(\\dfrac{${c}}{${d}}\\right)^3 = \\dfrac{${p1Num}}{${p1Den}} - \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} - ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 - \\left(\\dfrac{${c}}{${d}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 37 : (a/b)^2 * (c/d)^3
+        GENERATORS[37] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c * c,
+                p2Den = d * d * d;
+            const num = p1Num * p2Num;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\left(\\dfrac{${c}}{${d}}\\right)^3 = \\dfrac{${p1Num}}{${p1Den}} \\times \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Num}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\left(\\dfrac{${c}}{${d}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 38 : (a/b) / (c/d)^2 + e/f
+        GENERATORS[38] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randInt(1, 8);
+                c = randNonZeroInt(-8, 8);
+                d = randInt(1, 8);
+                e = randNonZeroInt(-8, 8);
+                f = randInt(1, 8);
+            } while (a === 0 || c === 0 || e === 0);
+            const quotNum = a * d * d;
+            const quotDen = b * c * c;
+            const num = quotNum * f + e * quotDen;
+            const den = quotDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 + \\dfrac{${e}}{${f}} = \\dfrac{${a*d*d}}{${b*c*c}} + \\dfrac{${e}}{${f}} = \\dfrac{${quotNum}}{${quotDen}} + \\dfrac{${e}}{${f}} = \\dfrac{${quotNum}\\times${f} + ${e}\\times${quotDen}}{${quotDen}\\times${f}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 + \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 39 : (a/b) + (c/d) / (e/f) * (g/h)
+        GENERATORS[39] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+                g = randNonZeroInt(-6, 6);
+                h = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const quotNum = c * f,
+                quotDen = d * e;
+            const prodNum = quotNum * g,
+                prodDen = quotDen * h;
+            const num = a * prodDen + prodNum * b;
+            const den = b * prodDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}} = \\dfrac{${a}}{${b}} + \\dfrac{${c*f}}{${d*e}} \\times \\dfrac{${g}}{${h}} = \\dfrac{${a}}{${b}} + \\dfrac{${prodNum}}{${prodDen}} = \\dfrac{${a}\\times${prodDen} + ${prodNum}\\times${b}}{${b}\\times${prodDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 40 : (a/b) - (c/d) * (e/f) / (g/h)
+        GENERATORS[40] = function() {
+            let a, b, c, d, e, f, g, h;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+                g = randNonZeroInt(-6, 6);
+                h = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0 || g === 0);
+            const prodNum = c * e,
+                prodDen = d * f;
+            const quotNum = prodNum * h,
+                quotDen = prodDen * g;
+            const num = a * quotDen - quotNum * b;
+            const den = b * quotDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}} = \\dfrac{${a}}{${b}} - \\dfrac{${c*e}}{${d*f}} \\div \\dfrac{${g}}{${h}} = \\dfrac{${a}}{${b}} - \\dfrac{${quotNum}}{${quotDen}} = \\dfrac{${a}\\times${quotDen} - ${quotNum}\\times${b}}{${b}\\times${quotDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 41 : Simplifier (a^2)/(b^2) avec facteur (littéral)
+        GENERATORS[41] = function() {
+            let factor = randInt(2, 5);
+            let a = randNonZeroInt(-8, 8);
+            let b = randInt(1, 8);
+            let num = a * a * factor;
+            let den = b * b * factor;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            if (correctDen === 1 && Math.abs(correctNum) <= 1) {
+                return GENERATORS[41]();
+            }
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${num}}{${den}} = \\dfrac{${num}\\div${factor}}{${den}\\div${factor}} = \\dfrac{${correctNum}}{${correctDen}}$`;
+            return {
+                question: `Simplifier $\\dfrac{${num}}{${den}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 1,
+                explanation: explanation
+            };
+        };
+
+        // 42 : (a/b + c/d) * (e/f - g/h) + i/j
+        GENERATORS[42] = function() {
+            let a, b, c, d, e, f, g, h, i, j;
+            do {
+                a = randNonZeroInt(-5, 5);
+                b = randInt(1, 5);
+                c = randNonZeroInt(-5, 5);
+                d = randInt(1, 5);
+                e = randNonZeroInt(-5, 5);
+                f = randInt(1, 5);
+                g = randNonZeroInt(-5, 5);
+                h = randInt(1, 5);
+                i = randNonZeroInt(-5, 5);
+                j = randInt(1, 5);
+            } while (a === 0 || c === 0 || e === 0 || g === 0 || i === 0);
+            const s1Num = a * d + c * b,
+                s1Den = b * d;
+            const s2Num = e * h - g * f,
+                s2Den = f * h;
+            const prodNum = s1Num * s2Num,
+                prodDen = s1Den * s2Den;
+            const num = prodNum * j + i * prodDen;
+            const den = prodDen * j;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\left(\\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}\\right) + \\dfrac{${i}}{${j}} = \\dfrac{${s1Num}}{${s1Den}} \\times \\dfrac{${s2Num}}{${s2Den}} + \\dfrac{${i}}{${j}} = \\dfrac{${prodNum}}{${prodDen}} + \\dfrac{${i}}{${j}} = \\dfrac{${prodNum}\\times${j} + ${i}\\times${prodDen}}{${prodDen}\\times${j}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\times \\left(\\dfrac{${e}}{${f}} - \\dfrac{${g}}{${h}}\\right) + \\dfrac{${i}}{${j}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 43 : (a/b - c/d) / (e/f + g/h) - i/j
+        GENERATORS[43] = function() {
+            let a, b, c, d, e, f, g, h, i, j;
+            do {
+                a = randNonZeroInt(-5, 5);
+                b = randInt(1, 5);
+                c = randNonZeroInt(-5, 5);
+                d = randInt(1, 5);
+                e = randNonZeroInt(-5, 5);
+                f = randInt(1, 5);
+                g = randNonZeroInt(-5, 5);
+                h = randInt(1, 5);
+                i = randNonZeroInt(-5, 5);
+                j = randInt(1, 5);
+            } while (a === 0 || c === 0 || e === 0 || g === 0 || i === 0);
+            const s1Num = a * d - c * b,
+                s1Den = b * d;
+            const s2Num = e * h + g * f,
+                s2Den = f * h;
+            const quotNum = s1Num * s2Den,
+                quotDen = s1Den * s2Num;
+            const num = quotNum * j - i * quotDen;
+            const den = quotDen * j;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\left(\\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}\\right) - \\dfrac{${i}}{${j}} = \\dfrac{${s1Num}}{${s1Den}} \\div \\dfrac{${s2Num}}{${s2Den}} - \\dfrac{${i}}{${j}} = \\dfrac{${quotNum}}{${quotDen}} - \\dfrac{${i}}{${j}} = \\dfrac{${quotNum}\\times${j} - ${i}\\times${quotDen}}{${quotDen}\\times${j}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right) \\div \\left(\\dfrac{${e}}{${f}} + \\dfrac{${g}}{${h}}\\right) - \\dfrac{${i}}{${j}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 44 : (a/b * c/d) + (e/f / g/h) * i/j
+        GENERATORS[44] = function() {
+            let a, b, c, d, e, f, g, h, i, j;
+            do {
+                a = randNonZeroInt(-5, 5);
+                b = randInt(1, 5);
+                c = randNonZeroInt(-5, 5);
+                d = randInt(1, 5);
+                e = randNonZeroInt(-5, 5);
+                f = randInt(1, 5);
+                g = randNonZeroInt(-5, 5);
+                h = randInt(1, 5);
+                i = randNonZeroInt(-5, 5);
+                j = randInt(1, 5);
+            } while (a === 0 || c === 0 || e === 0 || g === 0 || i === 0);
+            const prodNum = a * c,
+                prodDen = b * d;
+            const quotNum = e * h,
+                quotDen = f * g;
+            const prod2Num = quotNum * i,
+                prod2Den = quotDen * j;
+            const num = prodNum * prod2Den + prod2Num * prodDen;
+            const den = prodDen * prod2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\left(\\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}}\\right) \\times \\dfrac{${i}}{${j}} = \\dfrac{${prodNum}}{${prodDen}} + \\dfrac{${quotNum}}{${quotDen}} \\times \\dfrac{${i}}{${j}} = \\dfrac{${prodNum}}{${prodDen}} + \\dfrac{${prod2Num}}{${prod2Den}} = \\dfrac{${prodNum}\\times${prod2Den} + ${prod2Num}\\times${prodDen}}{${prodDen}\\times${prod2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}\\right) + \\left(\\dfrac{${e}}{${f}} \\div \\dfrac{${g}}{${h}}\\right) \\times \\dfrac{${i}}{${j}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 45 : (a/b / c/d) - (e/f * g/h) / i/j
+        GENERATORS[45] = function() {
+            let a, b, c, d, e, f, g, h, i, j;
+            do {
+                a = randNonZeroInt(-5, 5);
+                b = randInt(1, 5);
+                c = randNonZeroInt(-5, 5);
+                d = randInt(1, 5);
+                e = randNonZeroInt(-5, 5);
+                f = randInt(1, 5);
+                g = randNonZeroInt(-5, 5);
+                h = randInt(1, 5);
+                i = randNonZeroInt(-5, 5);
+                j = randInt(1, 5);
+            } while (a === 0 || c === 0 || e === 0 || g === 0 || i === 0);
+            const quotNum = a * d,
+                quotDen = b * c;
+            const prodNum = e * g,
+                prodDen = f * h;
+            const quot2Num = prodNum * j,
+                quot2Den = prodDen * i;
+            const num = quotNum * quot2Den - quot2Num * quotDen;
+            const den = quotDen * quot2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\left(\\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}\\right) \\div \\dfrac{${i}}{${j}} = \\dfrac{${quotNum}}{${quotDen}} - \\dfrac{${prodNum}}{${prodDen}} \\div \\dfrac{${i}}{${j}} = \\dfrac{${quotNum}}{${quotDen}} - \\dfrac{${quot2Num}}{${quot2Den}} = \\dfrac{${quotNum}\\times${quot2Den} - ${quot2Num}\\times${quotDen}}{${quotDen}\\times${quot2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}\\right) - \\left(\\dfrac{${e}}{${f}} \\times \\dfrac{${g}}{${h}}\\right) \\div \\dfrac{${i}}{${j}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 46 : (a/b)^2 + (c/d)^2 - (e/f)^2
+        GENERATORS[46] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c,
+                p2Den = d * d;
+            const p3Num = e * e,
+                p3Den = f * f;
+            const den = p1Den * p2Den * p3Den;
+            const num = p1Num * p2Den * p3Den + p2Num * p1Den * p3Den - p3Num * p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 + \\left(\\dfrac{${c}}{${d}}\\right)^2 - \\left(\\dfrac{${e}}{${f}}\\right)^2 = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} - \\dfrac{${p3Num}}{${p3Den}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 + \\left(\\dfrac{${c}}{${d}}\\right)^2 - \\left(\\dfrac{${e}}{${f}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 47 : (a/b)^2 - (c/d)^2 + (e/f)^2
+        GENERATORS[47] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c,
+                p2Den = d * d;
+            const p3Num = e * e,
+                p3Den = f * f;
+            const den = p1Den * p2Den * p3Den;
+            const num = p1Num * p2Den * p3Den - p2Num * p1Den * p3Den + p3Num * p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 - \\left(\\dfrac{${c}}{${d}}\\right)^2 + \\left(\\dfrac{${e}}{${f}}\\right)^2 = \\dfrac{${p1Num}}{${p1Den}} - \\dfrac{${p2Num}}{${p2Den}} + \\dfrac{${p3Num}}{${p3Den}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 - \\left(\\dfrac{${c}}{${d}}\\right)^2 + \\left(\\dfrac{${e}}{${f}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 48 : (a/b)^2 * (c/d)^2 / (e/f)^2
+        GENERATORS[48] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const p1Num = a * a,
+                p1Den = b * b;
+            const p2Num = c * c,
+                p2Den = d * d;
+            const p3Num = e * e,
+                p3Den = f * f;
+            const num = p1Num * p2Num * p3Den;
+            const den = p1Den * p2Den * p3Num;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\left(\\dfrac{${c}}{${d}}\\right)^2 \\div \\left(\\dfrac{${e}}{${f}}\\right)^2 = \\dfrac{${p1Num}}{${p1Den}} \\times \\dfrac{${p2Num}}{${p2Den}} \\times \\dfrac{${p3Den}}{${p3Num}} = \\dfrac{${p1Num}\\times${p2Num}\\times${p3Den}}{${p1Den}\\times${p2Den}\\times${p3Num}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\left(\\dfrac{${c}}{${d}}\\right)^2 \\div \\left(\\dfrac{${e}}{${f}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 49 : (a/b)^3 - (c/d)^3
+        GENERATORS[49] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a * a,
+                p1Den = b * b * b;
+            const p2Num = c * c * c,
+                p2Den = d * d * d;
+            const num = p1Num * p2Den - p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^3 - \\left(\\dfrac{${c}}{${d}}\\right)^3 = \\dfrac{${p1Num}}{${p1Den}} - \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} - ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^3 - \\left(\\dfrac{${c}}{${d}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 50 : (a/b)^3 + (c/d)^3
+        GENERATORS[50] = function() {
+            let a, b, c, d;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+            } while (a === 0 || c === 0);
+            const p1Num = a * a * a,
+                p1Den = b * b * b;
+            const p2Num = c * c * c,
+                p2Den = d * d * d;
+            const num = p1Num * p2Den + p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^3 + \\left(\\dfrac{${c}}{${d}}\\right)^3 = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} + ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^3 + \\left(\\dfrac{${c}}{${d}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 51 : (a/b)^2 * (c/d) + e/f
+        GENERATORS[51] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const pNum = a * a * c,
+                pDen = b * b * d;
+            const num = pNum * f + e * pDen;
+            const den = pDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\dfrac{${c}}{${d}} + \\dfrac{${e}}{${f}} = \\dfrac{${a*a} \\times ${c}}{${b*b} \\times ${d}} + \\dfrac{${e}}{${f}} = \\dfrac{${pNum}}{${pDen}} + \\dfrac{${e}}{${f}} = \\dfrac{${pNum}\\times${f} + ${e}\\times${pDen}}{${pDen}\\times${f}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\dfrac{${c}}{${d}} + \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 52 : (a/b) / (c/d)^2 - e/f
+        GENERATORS[52] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const qNum = a * d * d,
+                qDen = b * c * c;
+            const num = qNum * f - e * qDen;
+            const den = qDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 - \\dfrac{${e}}{${f}} = \\dfrac{${a*d*d}}{${b*c*c}} - \\dfrac{${e}}{${f}} = \\dfrac{${qNum}}{${qDen}} - \\dfrac{${e}}{${f}} = \\dfrac{${qNum}\\times${f} - ${e}\\times${qDen}}{${qDen}\\times${f}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 - \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 53 : Simplifier (a^2 b)/(a b^2) (littéral)
+        GENERATORS[53] = function() {
+            let a, b;
+            do {
+                a = randNonZeroInt(-8, 8);
+                b = randNonZeroInt(-8, 8);
+            } while (a === 0 || b === 0);
+            let num = a * a * b;
+            let den = a * b * b;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            if (correctDen === 1 && Math.abs(correctNum) <= 1) {
+                return GENERATORS[53]();
+            }
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${num}}{${den}} = \\dfrac{${a*a*b}}{${a*b*b}} = \\dfrac{${a}}{${b}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Simplifier $\\dfrac{${num}}{${den}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 1,
+                explanation: explanation
+            };
+        };
+
+        // 54 : Simplifier (a/b + c/d) avec facteur commun (ex: (2a)/(2b) )
+        GENERATORS[54] = function() {
+            let factor = randInt(2, 5);
+            let a = randNonZeroInt(-8, 8);
+            let b = randInt(1, 8);
+            let c = randNonZeroInt(-8, 8);
+            let d = randInt(1, 8);
+            let num1 = a * factor,
+                den1 = b * factor;
+            let num2 = c * factor,
+                den2 = d * factor;
+            const num = num1 * den2 + num2 * den1;
+            const den = den1 * den2;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            if (correctDen === 1 && Math.abs(correctNum) <= 1) {
+                return GENERATORS[54]();
+            }
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${num1}}{${den1}} + \\dfrac{${num2}}{${den2}} = \\dfrac{${num1}\\times${den2} + ${num2}\\times${den1}}{${den1}\\times${den2}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${num1}}{${den1}} + \\dfrac{${num2}}{${den2}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 55 : (a/b + c/d)^2 - (e/f)^2
+        GENERATORS[55] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const sumNum = a * d + c * b,
+                sumDen = b * d;
+            const sq1Num = sumNum * sumNum,
+                sq1Den = sumDen * sumDen;
+            const sq2Num = e * e,
+                sq2Den = f * f;
+            const num = sq1Num * sq2Den - sq2Num * sq1Den;
+            const den = sq1Den * sq2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right)^2 - \\left(\\dfrac{${e}}{${f}}\\right)^2 = \\dfrac{${sumNum}^2}{${sumDen}^2} - \\dfrac{${e}^2}{${f}^2} = \\dfrac{${sq1Num}}{${sq1Den}} - \\dfrac{${sq2Num}}{${sq2Den}} = \\dfrac{${sq1Num}\\times${sq2Den} - ${sq2Num}\\times${sq1Den}}{${sq1Den}\\times${sq2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right)^2 - \\left(\\dfrac{${e}}{${f}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 56 : (a/b - c/d)^2 * e/f
+        GENERATORS[56] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const diffNum = a * d - c * b,
+                diffDen = b * d;
+            const sqNum = diffNum * diffNum,
+                sqDen = diffDen * diffDen;
+            const num = sqNum * e;
+            const den = sqDen * f;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right)^2 \\times \\dfrac{${e}}{${f}} = \\dfrac{${diffNum}^2}{${diffDen}^2} \\times \\dfrac{${e}}{${f}} = \\dfrac{${sqNum}\\times${e}}{${sqDen}\\times${f}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}}\\right)^2 \\times \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 57 : a/b + c/d * e/f (priorité multiplication)
+        GENERATORS[57] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const prodNum = c * e,
+                prodDen = d * f;
+            const num = a * prodDen + prodNum * b;
+            const den = b * prodDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}} = \\dfrac{${a}}{${b}} + \\dfrac{${c*e}}{${d*f}} = \\dfrac{${a}\\times${prodDen} + ${prodNum}\\times${b}}{${b}\\times${prodDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 58 : a/b - c/d / e/f (priorité division)
+        GENERATORS[58] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-10, 10);
+                b = randInt(1, 10);
+                c = randNonZeroInt(-10, 10);
+                d = randInt(1, 10);
+                e = randNonZeroInt(-10, 10);
+                f = randInt(1, 10);
+            } while (a === 0 || c === 0 || e === 0);
+            const quotNum = c * f,
+                quotDen = d * e;
+            const num = a * quotDen - quotNum * b;
+            const den = b * quotDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}} = \\dfrac{${a}}{${b}} - \\dfrac{${c*f}}{${d*e}} = \\dfrac{${a}\\times${quotDen} - ${quotNum}\\times${b}}{${b}\\times${quotDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} - \\dfrac{${c}}{${d}} \\div \\dfrac{${e}}{${f}}$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 2,
+                explanation: explanation
+            };
+        };
+
+        // 59 : (a/b)^3 + (c/d)^3 - (e/f)^3
+        GENERATORS[59] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-5, 5);
+                b = randInt(1, 5);
+                c = randNonZeroInt(-5, 5);
+                d = randInt(1, 5);
+                e = randNonZeroInt(-5, 5);
+                f = randInt(1, 5);
+            } while (a === 0 || c === 0 || e === 0);
+            const p1Num = a * a * a,
+                p1Den = b * b * b;
+            const p2Num = c * c * c,
+                p2Den = d * d * d;
+            const p3Num = e * e * e,
+                p3Den = f * f * f;
+            const den = p1Den * p2Den * p3Den;
+            const num = p1Num * p2Den * p3Den + p2Num * p1Den * p3Den - p3Num * p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^3 + \\left(\\dfrac{${c}}{${d}}\\right)^3 - \\left(\\dfrac{${e}}{${f}}\\right)^3 = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} - \\dfrac{${p3Num}}{${p3Den}} = \\dfrac{${num}}{${den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^3 + \\left(\\dfrac{${c}}{${d}}\\right)^3 - \\left(\\dfrac{${e}}{${f}}\\right)^3$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 60 : (a/b)^2 * (c/d) + (e/f)^2
+        GENERATORS[60] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const p1Num = a * a * c,
+                p1Den = b * b * d;
+            const p2Num = e * e,
+                p2Den = f * f;
+            const num = p1Num * p2Den + p2Num * p1Den;
+            const den = p1Den * p2Den;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\dfrac{${c}}{${d}} + \\left(\\dfrac{${e}}{${f}}\\right)^2 = \\dfrac{${p1Num}}{${p1Den}} + \\dfrac{${p2Num}}{${p2Den}} = \\dfrac{${p1Num}\\times${p2Den} + ${p2Num}\\times${p1Den}}{${p1Den}\\times${p2Den}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\left(\\dfrac{${a}}{${b}}\\right)^2 \\times \\dfrac{${c}}{${d}} + \\left(\\dfrac{${e}}{${f}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
+
+        // 61 : (a/b) / (c/d)^2 + (e/f)^2
+        GENERATORS[61] = function() {
+            let a, b, c, d, e, f;
+            do {
+                a = randNonZeroInt(-6, 6);
+                b = randInt(1, 6);
+                c = randNonZeroInt(-6, 6);
+                d = randInt(1, 6);
+                e = randNonZeroInt(-6, 6);
+                f = randInt(1, 6);
+            } while (a === 0 || c === 0 || e === 0);
+            const qNum = a * d * d,
+                qDen = b * c * c;
+            const pNum = e * e,
+                pDen = f * f;
+            const num = qNum * pDen + pNum * qDen;
+            const den = qDen * pDen;
+            const s = simplify(num, den);
+            const correctNum = s.num,
+                correctDen = s.den;
+            const dists = generateDistractors(correctNum, correctDen, 3);
+            const options = [s, ...dists];
+            const optionObjects = options.map((o, idx) => ({ ...o, origIdx: idx }));
+            shuffleArray(optionObjects);
+            const finalOptions = optionObjects.map(o => `$${fracLatex(o.num, o.den)}$`);
+            const correctIdx = optionObjects.findIndex(o => o.num === correctNum && o.den === correctDen);
+            const explanation =
+                `$\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 + \\left(\\dfrac{${e}}{${f}}\\right)^2 = \\dfrac{${a*d*d}}{${b*c*c}} + \\dfrac{${e^2}}{${f^2}} = \\dfrac{${qNum}}{${qDen}} + \\dfrac{${pNum}}{${pDen}} = \\dfrac{${qNum}\\times${pDen} + ${pNum}\\times${qDen}}{${qDen}\\times${pDen}} = ${fracLatex(correctNum, correctDen)}$`;
+            return {
+                question: `Calculer $\\dfrac{${a}}{${b}} \\div \\left(\\dfrac{${c}}{${d}}\\right)^2 + \\left(\\dfrac{${e}}{${f}}\\right)^2$ :`,
+                options: finalOptions,
+                correct: correctIdx,
+                weight: 3,
+                explanation: explanation
+            };
+        };
 
         // ----- Générateur principal : 62 questions -----
         function generateAllQuestions() {
             const questions = [];
-            const types = [];
-            for (let i = 0; i < 15; i++) types.push('add');
-            for (let i = 0; i < 15; i++) types.push('sub');
-            for (let i = 0; i < 10; i++) types.push('mul');
-            for (let i = 0; i < 10; i++) types.push('div');
-            for (let i = 0; i < 5; i++) types.push('pow');
-            for (let i = 0; i < 5; i++) types.push('simplify');
-            for (let i = 0; i < 7; i++) types.push('combined');
-            shuffleArray(types);
             for (let i = 0; i < 62; i++) {
-                const type = types[i % types.length];
-                let q;
-                switch (type) {
-                    case 'add':
-                        q = genAdd();
-                        break;
-                    case 'sub':
-                        q = genSub();
-                        break;
-                    case 'mul':
-                        q = genMul();
-                        break;
-                    case 'div':
-                        q = genDiv();
-                        break;
-                    case 'pow':
-                        q = genPow();
-                        break;
-                    case 'simplify':
-                        q = genSimplify();
-                        break;
-                    case 'combined':
-                        q = genCombined();
-                        break;
-                    default:
-                        q = genAdd();
-                }
+                const q = GENERATORS[i]();
                 questions.push({
                     id: i + 1,
                     type: 'radio',

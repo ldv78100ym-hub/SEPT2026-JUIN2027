@@ -2888,15 +2888,38 @@
             7, 7
         ];
 
-        // ----- Générateur principal adaptatif -----
+        // ---------- FONCTION DE NORMALISATION DES SIGNES (AJOUT UNIQUE) ----------
+        function normalizeLatex(str) {
+            // Règle 5 : \dfrac{-12}{34} -> -\dfrac{12}{34}
+            str = str.replace(/\\dfrac\{-(\d+)\}\{(\d+)\}/g, '-\\dfrac{$1}{$2}');
+
+            // Règle 1 & 4 : suppression des doubles signes
+            str = str.replace(/-\s*-/g, '+ ');
+            str = str.replace(/\+ \s*-/g, '- ');
+
+            // Règle 2 & 3 : déplacement des signes dans les produits
+            str = str.replace(/\((\d+)\)\s*\\times\s*-(\d+)/g, '-$1\\times$2');
+            str = str.replace(/\(-(\d+)\)\s*\\times\s*-(\d+)/g, '-$1\\times$2');
+            str = str.replace(/\(-(\d+)\)\s*\\times\s*(\d+)/g, '-$1\\times$2');
+            str = str.replace(/\((\d+)\)\s*\\times\s*(\d+)/g, '$1\\times$2');
+
+            // Second passage pour les doubles signes résiduels
+            str = str.replace(/-\s*-/g, '+ ');
+            // Troisième passage : fractions restantes
+            str = str.replace(/\\dfrac\{-(\d+)\}\{(\d+)\}/g, '-\\dfrac{$1}{$2}');
+
+            return str.replace(/\s+/g, ' ');
+        }
+
+        // ----- Générateur principal adaptatif (MODIFIÉ : on nettoie les explications) -----
         function generateQuestions(indices) {
             if (!indices) {
-                // Toutes les 62
                 indices = Array.from({ length: 62 }, (_, i) => i);
             }
             const questions = [];
             for (let i of indices) {
                 const q = GENERATORS[i]();
+                const cleanedExplanation = normalizeLatex(q.explanation);
                 questions.push({
                     id: i + 1,
                     type: 'radio',
@@ -2905,7 +2928,7 @@
                     correct: q.correct,
                     weight: q.weight || 1,
                     difficulty: DIFFICULTY[i],
-                    explanation: q.explanation,
+                    explanation: cleanedExplanation,
                     generatorIdx: i
                 });
             }
@@ -2930,9 +2953,9 @@
             isRestoring: false,
             selectionHistory: [],
             generatorStats: Array.from({ length: 62 }, () => ({ attempts: 0, correct: 0, streak: 0 })),
-            seriesCount: 0, // nombre de séries de 20 déjà effectuées
+            seriesCount: 0,
             isSeriesMode: false,
-            selectedIndices: [] // indices des questions sélectionnées pour la série
+            selectedIndices: []
         };
 
         // ================================================================
@@ -2963,19 +2986,14 @@
             state.selectedIndices = [];
         }
 
-        // ---------- Sélection adaptative pour les séries de 20 ----------
+        // ---------- Sélection adaptative ----------
         function getEasiestIndices(count) {
-            // Retourne les `count` indices les plus faciles (difficulté croissante)
             const sorted = Array.from({ length: 62 }, (_, i) => i);
             sorted.sort((a, b) => DIFFICULTY[a] - DIFFICULTY[b] || a - b);
             return sorted.slice(0, count);
         }
 
         function getWeightedIndices(count) {
-            // Calcule un poids pour chaque question, basé sur :
-            // - difficulté (plus elle est faible, plus on la favorise)
-            // - taux de réussite (plus il est élevé, moins on la favorise)
-            // - série de réussites consécutives (plus elle est longue, moins on la favorise)
             const weights = [];
             for (let i = 0; i < 62; i++) {
                 const diff = DIFFICULTY[i];
@@ -2983,37 +3001,23 @@
                 const attempts = stats.attempts || 0;
                 const correct = stats.correct || 0;
                 const streak = stats.streak || 0;
-
-                // Score de difficulté : plus c'est facile, plus le score est élevé
-                const diffScore = 10 - diff; // diff 1 -> 9, diff 8 -> 2
-
-                // Facteur de performance : plus on a de réussites, plus on réduit le poids
+                const diffScore = 10 - diff;
                 let perfFactor = 1;
                 if (attempts > 0) {
                     const rate = correct / attempts;
-                    perfFactor = 1 + rate * 0.5; // rate 1 -> 1.5, rate 0 -> 1
+                    perfFactor = 1 + rate * 0.5;
                 }
-
-                // Facteur de régularité : plus la série est longue, plus on réduit le poids
-                const streakFactor = 1 + streak * 0.2; // streak 5 -> 2, streak 0 -> 1
-
-                // Poids final : on favorise les questions faciles, pénalise les bien réussies
+                const streakFactor = 1 + streak * 0.2;
                 let weight = diffScore / (perfFactor * streakFactor);
-                // Ajout d'une petite constante pour éviter le zéro
                 weight += 0.1;
-                // On s'assure que le poids est positif
                 if (weight < 0) weight = 0.1;
                 weights.push(weight);
             }
-
-            // Tirage pondéré sans remise
             const selected = [];
             const available = Array.from({ length: 62 }, (_, i) => i);
             for (let n = 0; n < count; n++) {
                 let totalWeight = 0;
-                for (let i of available) {
-                    totalWeight += weights[i];
-                }
+                for (let i of available) totalWeight += weights[i];
                 if (totalWeight === 0) break;
                 let r = Math.random() * totalWeight;
                 for (let i = 0; i < available.length; i++) {
@@ -3026,10 +3030,8 @@
                     }
                 }
             }
-            // Si on n'a pas assez de questions (cas improbable), on complète avec les plus faciles
             while (selected.length < count) {
-                const missing = count - selected.length;
-                const easiest = getEasiestIndices(missing + 10);
+                const easiest = getEasiestIndices(count + 10);
                 for (let idx of easiest) {
                     if (!selected.includes(idx)) {
                         selected.push(idx);
@@ -3070,8 +3072,6 @@
                 state.isSeriesMode = false;
                 state.selectedIndices = [];
                 document.getElementById('seriesInfo').textContent = '';
-            } else {
-                // mode 'series' est géré par startSeries()
             }
             renderQuestions();
             updateProgress();
@@ -3080,7 +3080,6 @@
         }
 
         function startSeries() {
-            // Vérifier l'identité
             const nom = document.getElementById('lastname').value.trim();
             const prenom = document.getElementById('firstname').value.trim();
             const classe = document.getElementById('classname').value.trim();
@@ -3102,21 +3101,16 @@
             document.getElementById('identitySection').classList.add('hidden');
             document.getElementById('quizSection').classList.remove('hidden');
 
-            // Sélection des 20 questions
             let indices;
             if (state.seriesCount === 0) {
-                // Première série : les 20 plus faciles
                 indices = getEasiestIndices(20);
             } else {
-                // Séries suivantes : tirage pondéré
                 indices = getWeightedIndices(20);
             }
-            // Trier par difficulté croissante
             indices.sort((a, b) => DIFFICULTY[a] - DIFFICULTY[b] || a - b);
             state.selectedIndices = indices;
             state.isSeriesMode = true;
 
-            // Générer les questions
             state.questions = generateQuestions(indices);
             state.questions = state.questions.map(q => shuffleQuestion(q));
             state.total = state.questions.length;
@@ -3273,7 +3267,6 @@
             let totalErreurs = 0;
             let details = [];
 
-            // Mise à jour des statistiques des générateurs
             state.questions.forEach((q, idx) => {
                 const userAns = state.answers[idx];
                 let finalCorrect = false;
@@ -3313,7 +3306,6 @@
                 totalErreurs += erreurs;
                 details.push({ idx, finalCorrect, erreurs, premierCorrect });
 
-                // Mettre à jour generatorStats
                 if (q.generatorIdx !== undefined) {
                     const stats = state.generatorStats[q.generatorIdx];
                     stats.attempts = (stats.attempts || 0) + 1;
@@ -3332,7 +3324,6 @@
             state.scoreBrut = scoreBrut;
             state.scoreNormalized = scoreNormalized;
 
-            // Incrémenter le compteur de séries si on est en mode série
             if (state.isSeriesMode) {
                 state.seriesCount++;
             }
@@ -3358,25 +3349,25 @@
             const summary = document.createElement('div');
             summary.className = 'result-summary' + (scoreBrut === total ? '' : ' wrong-summary');
             summary.innerHTML = `
-                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px;">
-                        <div><strong>Score normalisé :</strong> <span style="font-size:1.4em;">${scoreNormalized.toFixed(1)} / 100</span></div>
-                        <div><strong>Score brut :</strong> ${scoreBrut} / ${total} (${Math.round(scoreBrut/total*100)}%)</div>
-                        <div><strong>Poids total :</strong> ${totalWeight}</div>
-                        <div><strong>Poids gagné :</strong> ${earnedWeight.toFixed(1)}</div>
-                        <div><strong>1ers essais réussis :</strong> ${premierEssaiReussi}</div>
-                        <div><strong>Total erreurs :</strong> ${totalErreurs}</div>
-                    </div>
-                    ${state.isSeriesMode ? `<div style="margin-top:6px; color:#4a148c;">🎯 Série n°${state.seriesCount} (adaptative)</div>` : ''}
-                    ${answered < total ? `<br>⚠️ ${total - answered} question(s) sans réponse (comptées fausses).` : ''}
-                    <div style="margin-top:10px; font-size:0.9rem; color:#555;">
-                        💡 Chaque question a un poids (⭐=1, ⭐⭐=2, ⭐⭐⭐=3). Le score normalisé = (poids gagné / poids total) × 100.
-                        Une pénalité de 0.2 × poids est appliquée par erreur (hésitation) sur les bonnes réponses.
-                    </div>
-                    <div style="margin-top:8px; font-size:0.85rem; color:#7b1fa2;">
-                        🔄 Les questions sont mélangées à chaque essai.<br>
-                        📐 Seules les valeurs exactes entières ou fractionnaires sont utilisées.
-                    </div>
-                `;
+                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px;">
+                    <div><strong>Score normalisé :</strong> <span style="font-size:1.4em;">${scoreNormalized.toFixed(1)} / 100</span></div>
+                    <div><strong>Score brut :</strong> ${scoreBrut} / ${total} (${Math.round(scoreBrut/total*100)}%)</div>
+                    <div><strong>Poids total :</strong> ${totalWeight}</div>
+                    <div><strong>Poids gagné :</strong> ${earnedWeight.toFixed(1)}</div>
+                    <div><strong>1ers essais réussis :</strong> ${premierEssaiReussi}</div>
+                    <div><strong>Total erreurs :</strong> ${totalErreurs}</div>
+                </div>
+                ${state.isSeriesMode ? `<div style="margin-top:6px; color:#4a148c;">🎯 Série n°${state.seriesCount} (adaptative)</div>` : ''}
+                ${answered < total ? `<br>⚠️ ${total - answered} question(s) sans réponse (comptées fausses).` : ''}
+                <div style="margin-top:10px; font-size:0.9rem; color:#555;">
+                    💡 Chaque question a un poids (⭐=1, ⭐⭐=2, ⭐⭐⭐=3). Le score normalisé = (poids gagné / poids total) × 100.
+                    Une pénalité de 0.2 × poids est appliquée par erreur (hésitation) sur les bonnes réponses.
+                </div>
+                <div style="margin-top:8px; font-size:0.85rem; color:#7b1fa2;">
+                    🔄 Les questions sont mélangées à chaque essai.<br>
+                    📐 Seules les valeurs exactes entières ou fractionnaires sont utilisées.
+                </div>
+            `;
             resultArea.innerHTML = '';
             resultArea.appendChild(summary);
 
@@ -3415,7 +3406,7 @@
 
             let html =
                 `<table class="history-table">
-                        <thead><tr><th>Essai</th><th>Date</th><th>Score /100</th><th>Brut</th><th>1ers essais</th><th>Série</th></tr></thead><tbody>`;
+                    <thead><tr><th>Essai</th><th>Date</th><th>Score /100</th><th>Brut</th><th>1ers essais</th><th>Série</th></tr></thead><tbody>`;
             let last = history[history.length - 1];
             history.forEach(h => {
                 html += `<tr><td>${h.essai}</td><td>${h.date}</td>
@@ -3480,10 +3471,10 @@
                 ctx.fillRect(x, y, barWidth, barH);
                 ctx.fillStyle = '#000';
                 ctx.font = '8px sans-serif';
-                ctx.fillText(history[i].essai, x + barWidth / 2 - 6, padding.top + chartH + 15);
+                ctx.fillText(history[i].essai, x + barWidth/2 - 6, padding.top + chartH + 15);
                 ctx.fillStyle = '#1565c0';
                 ctx.font = 'bold 10px sans-serif';
-                ctx.fillText(pct.toFixed(0) + '%', x + barWidth / 2 - 10, y - 5);
+                ctx.fillText(pct.toFixed(0) + '%', x + barWidth/2 - 10, y - 5);
             }
             if (n > 1) {
                 ctx.strokeStyle = '#c62828';
@@ -3491,7 +3482,7 @@
                 ctx.beginPath();
                 for (let i = 0; i < n; i++) {
                     const pct = history[i].scoreNormalized;
-                    const x = padding.left + i * gap + gap / 2;
+                    const x = padding.left + i * gap + gap/2;
                     const y = padding.top + chartH - (pct / maxPct) * chartH;
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
@@ -3575,12 +3566,10 @@
 
                     document.getElementById('identitySection').classList.add('hidden');
                     document.getElementById('quizSection').classList.remove('hidden');
-                    document.getElementById('displayName').textContent = (state.identity.prenom || '') + ' ' + (state
-                        .identity.nom || '');
+                    document.getElementById('displayName').textContent = (state.identity.prenom || '') + ' ' + (state.identity.nom || '');
                     document.getElementById('displayClass').textContent = state.identity.classe || '';
                     document.getElementById('displayAttempt2').textContent = state.attempt || '1';
-                    document.getElementById('displayDate2').textContent = state.date || new Date().toLocaleDateString(
-                        'fr-FR');
+                    document.getElementById('displayDate2').textContent = state.date || new Date().toLocaleDateString('fr-FR');
 
                     renderQuestions();
                     Object.keys(state.answers).forEach(idx => {
@@ -3615,10 +3604,8 @@
                             } else if (q.type === 'checkbox') {
                                 const correctIndices = q.correct;
                                 const userIndices = userAns;
-                                const manquantes = correctIndices.filter(i => !userIndices.includes(i))
-                                    .length;
-                                const excess = userIndices.filter(i => !correctIndices.includes(i))
-                                    .length;
+                                const manquantes = correctIndices.filter(i => !userIndices.includes(i)).length;
+                                const excess = userIndices.filter(i => !correctIndices.includes(i)).length;
                                 finalCorrect = (manquantes + excess === 0);
                             }
                             if (finalCorrect) scoreBrut++;
@@ -3636,12 +3623,11 @@
                         const resultArea = document.getElementById('resultArea');
                         resultArea.classList.remove('hidden');
                         const summary = document.createElement('div');
-                        summary.className = 'result-summary' + (scoreBrut === state.questions.length ? '' :
-                            ' wrong-summary');
+                        summary.className = 'result-summary' + (scoreBrut === state.questions.length ? '' : ' wrong-summary');
                         summary.innerHTML = `
-                                <strong>Score : ${scoreBrut} / ${state.questions.length}</strong> (${Math.round(scoreBrut/state.questions.length*100)}%)
-                                ${scoreBrut === state.questions.length ? ' 🎉 Parfait !' : ' 📘 Revoyez les explications.'}
-                            `;
+                            <strong>Score : ${scoreBrut} / ${state.questions.length}</strong> (${Math.round(scoreBrut/state.questions.length*100)}%)
+                            ${scoreBrut === state.questions.length ? ' 🎉 Parfait !' : ' 📘 Revoyez les explications.'}
+                        `;
                         resultArea.innerHTML = '';
                         resultArea.appendChild(summary);
                         renderHistory();
@@ -3659,9 +3645,7 @@
         }
 
         function resetQuiz() {
-            if (!confirm(
-                    'Voulez-vous vraiment recommencer le QCM ? Toutes les réponses seront effacées et les questions mélangées à nouveau.'
-                    )) return;
+            if (!confirm('Voulez-vous vraiment recommencer le QCM ? Toutes les réponses seront effacées et les questions mélangées à nouveau.')) return;
             state.submitted = false;
             state.answers = {};
             state.scoreBrut = 0;
@@ -3730,7 +3714,6 @@
                 state.history = [];
             }
 
-            // Initialiser generatorStats si absent
             if (!state.generatorStats || state.generatorStats.length !== 62) {
                 state.generatorStats = Array.from({ length: 62 }, () => ({ attempts: 0, correct: 0, streak: 0 }));
             }

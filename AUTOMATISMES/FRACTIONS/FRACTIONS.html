@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🧮 Fractions – Fusion & Révisions</title>
+
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', ']']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer>
+    </script>
+
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #f1f4f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .card {
+            max-width: 960px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px 28px 28px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf2;
+        }
+
+        /* ---------- EN-TÊTE ---------- */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .header .badge {
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 12px;
+            border-radius: 30px;
+        }
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            background: #f8fafc;
+            padding: 3px 14px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stats .num {
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .stats .ok {
+            color: #15803d;
+        }
+        .stats .ko {
+            color: #b91c1c;
+        }
+
+        /* ---------- SÉLECTEUR DE TYPE D'EXERCICE ---------- */
+        .mode-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+            background: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+            align-items: center;
+        }
+        .mode-selector label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-right: 4px;
+        }
+        .mode-btn {
+            background: transparent;
+            border: 1px solid #d1d9e0;
+            border-radius: 30px;
+            padding: 4px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+        .mode-btn:hover {
+            background: #e9edf2;
+        }
+        .mode-btn.active {
+            background: #1e293b;
+            color: #fff;
+            border-color: #1e293b;
+        }
+        .mode-btn.revision {
+            background: #b45309;
+            color: #fff;
+            border-color: #b45309;
+        }
+        .mode-btn.revision:hover {
+            background: #92400e;
+        }
+
+        /* ---------- QUESTION ---------- */
+        .question-block {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 16px;
+            margin: 4px 0 18px;
+            border: 1px solid #e2e8f0;
+        }
+        .question-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .expression-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            font-size: 20px;
+            padding: 2px 0;
+        }
+        .expression-display .math {
+            font-size: 20px;
+            max-width: 70%;
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+        .expression-display .equal-sign {
+            font-size: 18px;
+            font-weight: 300;
+            color: #64748b;
+        }
+        .expression-display .target {
+            font-size: 16px;
+            font-weight: 500;
+            background: #fff;
+            padding: 2px 14px;
+            border-radius: 40px;
+            border: 1px dashed #94a3b8;
+        }
+
+        /* ---------- RÉPONSES ---------- */
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 7px;
+            margin: 14px 0 18px;
+        }
+        .answer-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: 1.5px solid #d1d9e0;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        .answer-option:hover:not(.disabled) {
+            border-color: #94a3b8;
+            background: #fafcff;
+            transform: translateY(-1px);
+        }
+        .answer-option.selected {
+            border-color: #2563eb;
+            background: #f0f5ff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+        }
+        .answer-option.correct-reveal {
+            border-color: #15803d;
+            background: #f0fdf4;
+        }
+        .answer-option.wrong-reveal {
+            border-color: #b91c1c;
+            background: #fef2f2;
+        }
+        .answer-option.disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+        .answer-option .radio {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            transition: 0.1s;
+        }
+        .answer-option.selected .radio {
+            border-color: #2563eb;
+            background: #2563eb;
+        }
+        .answer-option.selected .radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .answer-option .label {
+            font-weight: 500;
+            font-size: 14px;
+            flex: 1;
+        }
+        .answer-option .math {
+            font-size: 15px;
+        }
+        .answer-option .other-label {
+            font-style: italic;
+        }
+        .answer-option .check-mark {
+            margin-left: auto;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .answer-option.correct-reveal .check-mark {
+            color: #15803d;
+        }
+        .answer-option.wrong-reveal .check-mark {
+            color: #b91c1c;
+        }
+
+        /* ---------- BOUTONS ---------- */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 2px 0 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 7px 16px;
+            border-radius: 60px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            background: #f1f4f9;
+            color: #1e293b;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-primary {
+            background: #1e293b;
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0f172a;
+        }
+        .btn-success {
+            background: #15803d;
+            color: #fff;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #166534;
+        }
+        .btn-outline {
+            background: transparent;
+            border-color: #cbd5e1;
+        }
+        .btn-outline:hover:not(:disabled) {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .btn-warning {
+            background: #b45309;
+            color: #fff;
+        }
+        .btn-warning:hover:not(:disabled) {
+            background: #92400e;
+        }
+
+        /* ---------- FEEDBACK ---------- */
+        .feedback {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback.visible {
+            display: block;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .feedback .result {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .feedback .result .icon {
+            font-size: 18px;
+        }
+        .feedback .result.correct {
+            color: #15803d;
+        }
+        .feedback .result.incorrect {
+            color: #b91c1c;
+        }
+        .feedback .explanation {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .feedback .explanation .math {
+            font-size: 14px;
+        }
+        .feedback .explanation .step {
+            margin: 6px 0 2px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .feedback .explanation .detail {
+            margin: 4px 0;
+            padding: 6px 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* ---------- STATUS JSON ---------- */
+        .json-status {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 4px 12px;
+            background: #f8fafc;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .json-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .json-status .dot.ok {
+            background: #15803d;
+        }
+        .json-status .dot.ko {
+            background: #b91c1c;
+        }
+        .json-status .dot.neutral {
+            background: #94a3b8;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 580px) {
+            .card {
+                padding: 14px 10px 18px;
+            }
+            .stats {
+                font-size: 11px;
+                padding: 3px 8px;
+                gap: 5px;
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 5px;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            .expression-display {
+                font-size: 17px;
+            }
+            .expression-display .math {
+                font-size: 17px;
+                max-width: 92%;
+            }
+            .mode-selector {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="app">
+        <!-- En‑tête -->
+        <div class="header">
+            <h1>🧮 Fractions – Fusion &amp; Révisions</h1>
+            <span class="badge" id="modeBadge">Réduction</span>
+            <div class="stats" id="statsDisplay">
+                <span>✅ <span class="num ok" id="successCount">0</span></span>
+                <span>❌ <span class="num ko" id="errorCount">0</span></span>
+                <span>📊 <span class="num" id="totalCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- Sélecteur de mode -->
+        <div class="mode-selector">
+            <label>Mode :</label>
+            <button class="mode-btn active" data-mode="reduction">Réduction</button>
+            <button class="mode-btn" data-mode="signes">Signes</button>
+            <button class="mode-btn" data-mode="calculs">Calculs</button>
+            <button class="mode-btn revision" data-mode="revision">📚 Révisions</button>
+        </div>
+
+        <!-- Question -->
+        <div class="question-block">
+            <div class="question-label">
+                <span class="icon">🎯</span>
+                <span id="questionLabel">Rendez irréductible la fraction suivante :</span>
+            </div>
+            <div class="expression-display">
+                <span class="math" id="expressionLatex">\(\dfrac{48}{72}\)</span>
+                <span class="equal-sign">⟶</span>
+                <span class="target">?</span>
+            </div>
+        </div>
+
+        <!-- Réponses -->
+        <div class="answers-grid" id="answersContainer"></div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary" id="submitBtn">📤 Soumettre</button>
+            <button class="btn btn-outline" id="resetBtn">🔄 Suivant</button>
+            <button class="btn btn-success" id="saveBtn">💾 Exporter JSON</button>
+            <button class="btn btn-warning" id="loadBtn">📂 Importer JSON</button>
+        </div>
+
+        <!-- Feedback -->
+        <div class="feedback" id="feedback">
+            <div class="result" id="resultDisplay">
+                <span class="icon" id="resultIcon">✅</span>
+                <span id="resultText">Correct !</span>
+            </div>
+            <div class="explanation" id="explanationText"></div>
+        </div>
+
+        <!-- Status JSON -->
+        <div class="json-status" id="jsonStatus">
+            <span class="dot neutral" id="statusDot"></span>
+            <span id="statusText">Aucune donnée en mémoire</span>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  UTILITAIRES
+        // ================================================================
+        function pgcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b) {
+                [a, b] = [b, a % b];
+            }
+            return a;
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function randomNonZeroInt(min, max) {
+            let n;
+            do { n = randomInt(min, max); } while (n === 0);
+            return n;
+        }
+
+        function randomIrreducibleFraction() {
+            let num, den, g;
+            do {
+                num = randomNonZeroInt(-100, 100);
+                den = randomInt(2, 100);
+                g = pgcd(num, den);
+            } while (g !== 1);
+            return { num, den };
+        }
+
+        // ================================================================
+        //  GÉNÉRATEURS D'EXERCICES
+        // ================================================================
+
+        // ---- 1. RÉDUCTION ----
+        function generateReduction() {
+            let num = randomNonZeroInt(2, 200);
+            let den = randomInt(2, 200);
+            let g = pgcd(num, den);
+            while (g === 1) {
+                num = randomNonZeroInt(2, 200);
+                den = randomInt(2, 200);
+                g = pgcd(num, den);
+            }
+            const reducedNum = num / g;
+            const reducedDen = den / g;
+
+            // Construire les réponses
+            const correct = { num: reducedNum, den: reducedDen };
+            const distractors = [];
+            const used = new Set();
+            used.add(`${reducedNum}/${reducedDen}`);
+
+            // générer 4 distracteurs
+            let attempts = 0;
+            while (distractors.length < 4 && attempts < 200) {
+                attempts++;
+                let dNum = randomNonZeroInt(1, 20);
+                let dDen = randomInt(2, 20);
+                const dg = pgcd(dNum, dDen);
+                dNum /= dg;
+                dDen /= dg;
+                const key = `${dNum}/${dDen}`;
+                if (!used.has(key) && !(dNum === reducedNum && dDen === reducedDen)) {
+                    used.add(key);
+                    distractors.push({ num: dNum, den: dDen });
+                }
+            }
+            // si pas assez, on force
+            while (distractors.length < 4) {
+                let dNum = randomNonZeroInt(1, 10);
+                let dDen = randomInt(2, 10);
+                const dg = pgcd(dNum, dDen);
+                dNum /= dg;
+                dDen /= dg;
+                const key = `${dNum}/${dDen}`;
+                if (!used.has(key)) {
+                    used.add(key);
+                    distractors.push({ num: dNum, den: dDen });
+                }
+            }
+
+            // Mélanger la bonne réponse parmi les 5 (4 distracteurs + 1 correct)
+            const all = [...distractors];
+            const pos = randomInt(0, 4);
+            all.splice(pos, 0, correct);
+
+            const answers = all.map((a, idx) => ({
+                num: a.num,
+                den: a.den,
+                isOther: false,
+                correct: (idx === pos)
+            }));
+
+            // Ajouter l'option "Autre" (rarement correcte)
+            const otherIsCorrect = (randomInt(1, 10) === 1);
+            if (otherIsCorrect) {
+                // On remplace une réponse fausse par "Autre" correct
+                const fakeIdx = answers.findIndex(a => !a.correct);
+                if (fakeIdx !== -1) {
+                    answers[fakeIdx] = { num: null, den: null, isOther: true, correct: true };
+                }
+                // On s'assure que la bonne réponse affichée reste correcte
+                // mais on va simplement forcer "Autre" comme seule correcte
+                // Pour simplifier, on refait
+                // On va plutôt tout refaire proprement
+                return generateReduction(); // on régénère
+            } else {
+                // Ajouter "Autre" faux en fin de liste
+                answers.push({ num: null, den: null, isOther: true, correct: false });
+            }
+
+            return {
+                type: 'reduction',
+                rawLatex: `\\dfrac{${num}}{${den}}`,
+                answers: answers,
+                correctNum: reducedNum,
+                correctDen: reducedDen,
+                otherIsCorrect: false
+            };
+        }
+
+        // ---- 2. SIGNES (simplification d'écriture) ----
+        // On reprend le principe du fichier FRACTION_SIMPLIFICATION_SIGNES.html
+        // mais on simplifie : on génère une expression avec des signes
+        function generateSignes() {
+            // Créer une expression du type : a - (-b) ou a + (-b) etc.
+            const a = randomNonZeroInt(-20, 20);
+            const b = randomNonZeroInt(-20, 20);
+            const op = randomInt(0, 1) === 0 ? '+' : '-';
+            // Expression brute
+            let raw;
+            let correctTex;
+            let distractors = [];
+            let correctAnswer;
+
+            if (op === '+') {
+                // a + (-b) → a - b
+                raw = `${a} + (-${Math.abs(b)})`;
+                correctTex = `${a} - ${Math.abs(b)}`;
+                correctAnswer = { tex: correctTex };
+                // distracteurs
+                const d1 = `${a} + ${Math.abs(b)}`; // erreur de signe
+                const d2 = `${a} - (-${Math.abs(b)})`; // double négatif
+                const d3 = `${a} + (-${Math.abs(b)})`; // non simplifié
+                distractors = [{ tex: d1 }, { tex: d2 }, { tex: d3 }];
+            } else {
+                // a - (-b) → a + b
+                raw = `${a} - (-${Math.abs(b)})`;
+                correctTex = `${a} + ${Math.abs(b)}`;
+                correctAnswer = { tex: correctTex };
+                const d1 = `${a} - ${Math.abs(b)}`;
+                const d2 = `${a} + (-${Math.abs(b)})`;
+                const d3 = `${a} - (-${Math.abs(b)})`;
+                distractors = [{ tex: d1 }, { tex: d2 }, { tex: d3 }];
+            }
+
+            // Mélanger
+            const all = [...distractors];
+            const pos = randomInt(0, 3);
+            all.splice(pos, 0, correctAnswer);
+
+            const answers = all.map((a, idx) => ({
+                tex: a.tex,
+                isOther: false,
+                correct: (idx === pos)
+            }));
+
+            // Ajouter "Autre" faux
+            answers.push({ tex: null, isOther: true, correct: false });
+
+            return {
+                type: 'signes',
+                rawLatex: raw,
+                answers: answers,
+                correctTex: correctTex,
+                otherIsCorrect: false
+            };
+        }
+
+        // ---- 3. CALCULS (entier + fraction, etc.) ----
+        // On reprend le principe du fichier FRACTIONS_CALCULS.html
+        function generateCalculs() {
+            // Niveau 1 : un entier + une fraction
+            const a = randomNonZeroInt(-20, 20);
+            const frac = randomIrreducibleFraction();
+            const op = ['+', '-', '*', '/'][randomInt(0, 3)];
+
+            let raw, correctNum, correctDen;
+            // On calcule le résultat
+            let num1 = a,
+                den1 = 1;
+            let num2 = frac.num,
+                den2 = frac.den;
+            let resNum, resDen;
+            switch (op) {
+                case '+':
+                    resNum = num1 * den2 + num2 * den1;
+                    resDen = den1 * den2;
+                    break;
+                case '-':
+                    resNum = num1 * den2 - num2 * den1;
+                    resDen = den1 * den2;
+                    break;
+                case '*':
+                    resNum = num1 * num2;
+                    resDen = den1 * den2;
+                    break;
+                case '/':
+                    resNum = num1 * den2;
+                    resDen = den1 * num2;
+                    break;
+            }
+            const g = pgcd(resNum, resDen);
+            resNum /= g;
+            resDen /= g;
+            if (resDen < 0) { resNum = -resNum;
+                resDen = -resDen; }
+
+            raw = `${a} ${op} \\dfrac{${frac.num}}{${frac.den}}`;
+            correctNum = resNum;
+            correctDen = resDen;
+
+            // Générer des distracteurs
+            const distractors = [];
+            const used = new Set();
+            used.add(`${correctNum}/${correctDen}`);
+            let attempts = 0;
+            while (distractors.length < 4 && attempts < 200) {
+                attempts++;
+                let dNum = randomNonZeroInt(-50, 50);
+                let dDen = randomInt(2, 50);
+                const dg = pgcd(dNum, dDen);
+                dNum /= dg;
+                dDen /= dg;
+                if (dDen < 0) { dNum = -dNum;
+                    dDen = -dDen; }
+                const key = `${dNum}/${dDen}`;
+                if (!used.has(key) && !(dNum === correctNum && dDen === correctDen)) {
+                    used.add(key);
+                    distractors.push({ num: dNum, den: dDen });
+                }
+            }
+            while (distractors.length < 4) {
+                let dNum = randomNonZeroInt(-20, 20);
+                let dDen = randomInt(2, 20);
+                const dg = pgcd(dNum, dDen);
+                dNum /= dg;
+                dDen /= dg;
+                if (dDen < 0) { dNum = -dNum;
+                    dDen = -dDen; }
+                const key = `${dNum}/${dDen}`;
+                if (!used.has(key)) {
+                    used.add(key);
+                    distractors.push({ num: dNum, den: dDen });
+                }
+            }
+
+            const all = [...distractors];
+            const pos = randomInt(0, 4);
+            all.splice(pos, 0, { num: correctNum, den: correctDen });
+
+            const answers = all.map((a, idx) => ({
+                num: a.num,
+                den: a.den,
+                isOther: false,
+                correct: (idx === pos)
+            }));
+
+            // Ajouter "Autre" faux
+            answers.push({ num: null, den: null, isOther: true, correct: false });
+
+            return {
+                type: 'calculs',
+                rawLatex: raw,
+                answers: answers,
+                correctNum: correctNum,
+                correctDen: correctDen,
+                otherIsCorrect: false
+            };
+        }
+
+        // ================================================================
+        //  FONCTION GÉNÉRALE
+        // ================================================================
+        function generateQuestion(mode) {
+            switch (mode) {
+                case 'reduction':
+                    return generateReduction();
+                case 'signes':
+                    return generateSignes();
+                case 'calculs':
+                    return generateCalculs();
+                default:
+                    return generateReduction();
+            }
+        }
+
+        // ================================================================
+        //  ÉTAT GLOBAL
+        // ================================================================
+        const state = {
+            mode: 'reduction', // 'reduction' | 'signes' | 'calculs' | 'revision'
+            currentQuestion: null,
+            answers: [],
+            selectedIndex: -1,
+            submitted: false,
+            stats: { successes: 0, errors: 0, total: 0 },
+            history: [], // [{mode, type, correct, selected, raw}]
+            // Pour les révisions, on stocke les scores par type
+            scores: {
+                reduction: { ok: 0, ko: 0 },
+                signes: { ok: 0, ko: 0 },
+                calculs: { ok: 0, ko: 0 }
+            }
+        };
+
+        // ================================================================
+        //  RENDU
+        // ================================================================
+        function renderQuestion() {
+            const el = document.getElementById('expressionLatex');
+            const q = state.currentQuestion;
+            if (q.type === 'signes') {
+                el.textContent = `\\(${q.rawLatex}\\)`;
+            } else if (q.type === 'reduction') {
+                el.textContent = `\\(${q.rawLatex}\\)`;
+            } else if (q.type === 'calculs') {
+                el.textContent = `\\(${q.rawLatex}\\)`;
+            }
+            renderMath();
+        }
+
+        function renderAnswers() {
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            state.answers.forEach((ans, idx) => {
+                const div = document.createElement('div');
+                div.className = 'answer-option';
+                div.dataset.index = idx;
+
+                const radio = document.createElement('span');
+                radio.className = 'radio';
+
+                const label = document.createElement('span');
+                label.className = 'label';
+                if (ans.isOther) {
+                    label.innerHTML = `<span class="other-label">Autre</span>`;
+                } else if (ans.tex !== undefined) {
+                    // mode signes
+                    label.innerHTML = `<span class="math">\\(${ans.tex}\\)</span>`;
+                } else {
+                    // mode réduction ou calculs
+                    let display;
+                    if (ans.den === 1) {
+                        display = `${ans.num}`;
+                    } else {
+                        display = `\\dfrac{${ans.num}}{${ans.den}}`;
+                    }
+                    label.innerHTML = `<span class="math">\\(${display}\\)</span>`;
+                }
+
+                const check = document.createElement('span');
+                check.className = 'check-mark';
+
+                div.appendChild(radio);
+                div.appendChild(label);
+                div.appendChild(check);
+
+                if (state.selectedIndex === idx) div.classList.add('selected');
+
+                div.addEventListener('click', () => onAnswerClick(idx));
+                container.appendChild(div);
+            });
+            renderMath();
+        }
+
+        function renderMath() {
+            if (!window.MathJax || !MathJax.typesetPromise) {
+                setTimeout(renderMath, 200);
+                return;
+            }
+            MathJax.typesetPromise().catch(() => {});
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('successCount').textContent = state.stats.successes;
+            document.getElementById('errorCount').textContent = state.stats.errors;
+            document.getElementById('totalCount').textContent = state.stats.total;
+        }
+
+        function clearFeedback() {
+            document.getElementById('feedback').classList.remove('visible');
+        }
+
+        function showFeedback(isCorrect, explanationHtml) {
+            const fb = document.getElementById('feedback');
+            const resultDiv = document.getElementById('resultDisplay');
+            const icon = document.getElementById('resultIcon');
+            const text = document.getElementById('resultText');
+            const expl = document.getElementById('explanationText');
+
+            fb.classList.add('visible');
+            if (isCorrect) {
+                resultDiv.className = 'result correct';
+                icon.textContent = '✅';
+                text.textContent = 'Correct !';
+            } else {
+                resultDiv.className = 'result incorrect';
+                icon.textContent = '❌';
+                text.textContent = 'Incorrect. Voici la correction :';
+            }
+            expl.innerHTML = explanationHtml;
+            renderMath();
+        }
+
+        function buildExplanation(q, isCorrect) {
+            let html = '';
+            html += `<div class="step">📐 Expression :</div>`;
+            html += `<div class="detail">\\(${q.rawLatex}\\)</div>`;
+            html += `<div class="step">✅ Réponse correcte :</div>`;
+            if (q.type === 'signes') {
+                html += `<div class="detail">\\(${q.correctTex}\\)</div>`;
+            } else if (q.type === 'reduction') {
+                let display;
+                if (q.correctDen === 1) display = `${q.correctNum}`;
+                else display = `\\dfrac{${q.correctNum}}{${q.correctDen}}`;
+                html += `<div class="detail">\\(${display}\\)</div>`;
+            } else if (q.type === 'calculs') {
+                let display;
+                if (q.correctDen === 1) display = `${q.correctNum}`;
+                else display = `\\dfrac{${q.correctNum}}{${q.correctDen}}`;
+                html += `<div class="detail">\\(${display}\\)</div>`;
+            }
+            if (!isCorrect) {
+                html += `<div class="step" style="color:#b91c1c;">❌ Votre choix :</div>`;
+                const sel = state.answers[state.selectedIndex];
+                if (sel.isOther) {
+                    html += `<div class="detail"><strong>Autre</strong></div>`;
+                } else if (sel.tex !== undefined) {
+                    html += `<div class="detail">\\(${sel.tex}\\)</div>`;
+                } else {
+                    let display;
+                    if (sel.den === 1) display = `${sel.num}`;
+                    else display = `\\dfrac{${sel.num}}{${sel.den}}`;
+                    html += `<div class="detail">\\(${display}\\)</div>`;
+                }
+            }
+            return html;
+        }
+
+        // ================================================================
+        //  INTERACTIONS
+        // ================================================================
+        function onAnswerClick(index) {
+            if (state.submitted) return;
+            state.selectedIndex = index;
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function onSubmit() {
+            if (state.submitted) return;
+            if (state.selectedIndex === -1) {
+                alert('Veuillez sélectionner une réponse.');
+                return;
+            }
+
+            const selected = state.answers[state.selectedIndex];
+            const isCorrect = selected.correct;
+
+            // Mettre à jour les stats globales
+            state.stats.total++;
+            if (isCorrect) state.stats.successes++;
+            else state.stats.errors++;
+            updateStatsDisplay();
+
+            // Mettre à jour les scores par type
+            const mode = state.mode;
+            if (mode !== 'revision') {
+                if (isCorrect) state.scores[mode].ok++;
+                else state.scores[mode].ko++;
+            }
+
+            // Historique
+            state.history.push({
+                mode: mode,
+                type: state.currentQuestion.type,
+                correct: isCorrect,
+                selected: selected.isOther ? 'Autre' : (selected.tex || `${selected.num}/${selected.den}`),
+                raw: state.currentQuestion.rawLatex
+            });
+
+            state.submitted = true;
+
+            // Révéler les réponses
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.add('disabled');
+                const ans = state.answers[i];
+                if (ans.correct) {
+                    el.classList.add('correct-reveal');
+                    el.querySelector('.check-mark').textContent = '✓';
+                } else if (i === state.selectedIndex && !ans.correct) {
+                    el.classList.add('wrong-reveal');
+                    el.querySelector('.check-mark').textContent = '✗';
+                }
+                if (i === state.selectedIndex) el.classList.add('selected');
+            });
+
+            document.getElementById('submitBtn').disabled = true;
+
+            const explanation = buildExplanation(state.currentQuestion, isCorrect);
+            showFeedback(isCorrect, explanation);
+
+            saveToLocalStorage();
+        }
+
+        function onReset() {
+            generateNewQuestion();
+            document.getElementById('submitBtn').disabled = true;
+            document.querySelectorAll('.answer-option').forEach(el => {
+                el.classList.remove('disabled', 'correct-reveal', 'wrong-reveal', 'selected');
+                el.querySelector('.check-mark').textContent = '';
+            });
+            clearFeedback();
+        }
+
+        // ================================================================
+        //  MODE RÉVISIONS
+        // ================================================================
+        function getWeakestMode() {
+            const modes = ['reduction', 'signes', 'calculs'];
+            let worst = 'reduction';
+            let worstRate = 1;
+            for (const m of modes) {
+                const ok = state.scores[m].ok;
+                const ko = state.scores[m].ko;
+                const total = ok + ko;
+                if (total === 0) return m; // jamais fait
+                const rate = ko / total;
+                if (rate > worstRate) {
+                    worstRate = rate;
+                    worst = m;
+                }
+            }
+            return worst;
+        }
+
+        function generateRevisionQuestion() {
+            const weakest = getWeakestMode();
+            // Générer une question du mode le plus faible
+            const q = generateQuestion(weakest);
+            // Ajouter une indication
+            q.revisionMode = weakest;
+            return q;
+        }
+
+        // ================================================================
+        //  GÉNÉRATION D'UNE NOUVELLE QUESTION
+        // ================================================================
+        function generateNewQuestion() {
+            let q;
+            if (state.mode === 'revision') {
+                q = generateRevisionQuestion();
+                // On ajuste le label
+                document.getElementById('questionLabel').textContent =
+                    `📚 Révision (${q.revisionMode}) – ${getLabelForMode(q.revisionMode)}`;
+            } else {
+                q = generateQuestion(state.mode);
+                document.getElementById('questionLabel').textContent = getLabelForMode(state.mode);
+            }
+            state.currentQuestion = q;
+            state.answers = q.answers.map((a, i) => ({ ...a, index: i }));
+            state.selectedIndex = -1;
+            state.submitted = false;
+
+            renderQuestion();
+            renderAnswers();
+            clearFeedback();
+            updateStatsDisplay();
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function getLabelForMode(mode) {
+            switch (mode) {
+                case 'reduction':
+                    return 'Rendez irréductible la fraction suivante :';
+                case 'signes':
+                    return 'Simplifiez l\'écriture de l\'expression suivante :';
+                case 'calculs':
+                    return 'Calculez le résultat exact de l\'expression suivante :';
+                default:
+                    return '';
+            }
+        }
+
+        // ================================================================
+        //  CHANGEMENT DE MODE
+        // ================================================================
+        function changeMode(mode) {
+            state.mode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            document.getElementById('modeBadge').textContent =
+                mode === 'revision' ? 'Révisions' :
+                mode === 'reduction' ? 'Réduction' :
+                mode === 'signes' ? 'Signes' : 'Calculs';
+            onReset();
+        }
+
+        // ================================================================
+        //  JSON (LOCAL STORAGE)
+        // ================================================================
+        function saveToLocalStorage() {
+            try {
+                const data = {
+                    stats: state.stats,
+                    history: state.history,
+                    scores: state.scores,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('fractions_fusion_data', JSON.stringify(data));
+                updateJsonStatus('saved', 'Données sauvegardées.');
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur de sauvegarde.');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('fractions_fusion_data');
+                if (!raw) { updateJsonStatus('empty', 'Aucune donnée trouvée.'); return; }
+                const data = JSON.parse(raw);
+                if (data.stats) state.stats = data.stats;
+                if (data.history) state.history = data.history;
+                if (data.scores) state.scores = data.scores;
+                updateStatsDisplay();
+                updateJsonStatus('loaded', `Données chargées (${state.history.length} essais).`);
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur de chargement.');
+            }
+        }
+
+        function exportJSON() {
+            const data = {
+                stats: state.stats,
+                history: state.history,
+                scores: state.scores,
+                exportedAt: new Date().toISOString()
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fractions_fusion_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            updateJsonStatus('saved', 'Fichier exporté.');
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.stats && data.history && data.scores) {
+                            state.stats = data.stats;
+                            state.history = data.history;
+                            state.scores = data.scores;
+                            updateStatsDisplay();
+                            updateJsonStatus('loaded', `Données importées (${state.history.length} essais).`);
+                            saveToLocalStorage();
+                        } else {
+                            updateJsonStatus('error', 'Format JSON invalide.');
+                        }
+                    } catch (err) {
+                        updateJsonStatus('error', 'Erreur de lecture.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function updateJsonStatus(status, message) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            dot.className = 'dot';
+            if (status === 'saved' || status === 'loaded') dot.classList.add('ok');
+            else if (status === 'error') dot.classList.add('ko');
+            else dot.classList.add('neutral');
+            text.textContent = message;
+        }
+
+        // ================================================================
+        //  INITIALISATION
+        // ================================================================
+        function init() {
+            // Charger depuis localStorage
+            try {
+                const raw = localStorage.getItem('fractions_fusion_data');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.stats) state.stats = data.stats;
+                    if (data.history) state.history = data.history;
+                    if (data.scores) state.scores = data.scores;
+                    updateStatsDisplay();
+                    updateJsonStatus('loaded', `Données chargées (${state.history.length} essais).`);
+                } else {
+                    updateJsonStatus('empty', 'Aucune donnée en mémoire.');
+                }
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur de chargement.');
+            }
+
+            // Mode par défaut
+            state.mode = 'reduction';
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeMode(btn.dataset.mode);
+                });
+            });
+            document.getElementById('modeBadge').textContent = 'Réduction';
+
+            // Générer la première question
+            generateNewQuestion();
+
+            // Événements
+            document.getElementById('submitBtn').addEventListener('click', onSubmit);
+            document.getElementById('resetBtn').addEventListener('click', onReset);
+            document.getElementById('saveBtn').addEventListener('click', exportJSON);
+            document.getElementById('loadBtn').addEventListener('click', importJSON);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM – Réduction de fractions</title>
+
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ],
+                displayMath: [
+                    ['$$', '$$'],
+                    ['\\[', '\\]']
+                ]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer>
+    </script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f1f4f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .card {
+            max-width: 920px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 32px 36px 36px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf2;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+        .header .badge {
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 14px;
+            border-radius: 30px;
+        }
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            background: #f8fafc;
+            padding: 4px 16px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stats .num {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .stats .ok {
+            color: #15803d;
+        }
+        .stats .ko {
+            color: #b91c1c;
+        }
+
+        .question-block {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px 20px 20px;
+            margin: 4px 0 24px;
+            border: 1px solid #e2e8f0;
+        }
+        .question-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .question-label .icon {
+            font-size: 18px;
+        }
+        .fraction-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0 2px;
+            font-size: 26px;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+        }
+        .fraction-display .math {
+            font-size: 30px;
+        }
+        .fraction-display .equal-sign {
+            font-size: 24px;
+            font-weight: 300;
+            color: #64748b;
+        }
+        .fraction-display .target {
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: 500;
+            background: #ffffff;
+            padding: 2px 20px;
+            border-radius: 40px;
+            border: 1px dashed #94a3b8;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0 24px;
+        }
+        @media (max-width: 580px) {
+            .answers-grid {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 20px 16px 24px;
+            }
+            .stats {
+                font-size: 12px;
+                padding: 4px 12px;
+                gap: 8px;
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .fraction-display {
+                font-size: 20px;
+            }
+            .fraction-display .math {
+                font-size: 24px;
+            }
+        }
+
+        .answer-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1.5px solid #d1d9e0;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+        .answer-option:hover:not(.disabled) {
+            border-color: #94a3b8;
+            background: #fafcff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .answer-option.selected {
+            border-color: #2563eb;
+            background: #f0f5ff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+        }
+        .answer-option.correct-reveal {
+            border-color: #15803d;
+            background: #f0fdf4;
+        }
+        .answer-option.wrong-reveal {
+            border-color: #b91c1c;
+            background: #fef2f2;
+        }
+        .answer-option.disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+        .answer-option .radio {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+            background: #fff;
+        }
+        .answer-option.selected .radio {
+            border-color: #2563eb;
+            background: #2563eb;
+        }
+        .answer-option.selected .radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .answer-option .label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 15px;
+        }
+        .answer-option .math {
+            font-size: 17px;
+            margin-left: 2px;
+        }
+        .answer-option .other-label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 15px;
+            font-style: italic;
+        }
+        .answer-option .check-mark {
+            margin-left: auto;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .answer-option.correct-reveal .check-mark {
+            color: #15803d;
+        }
+        .answer-option.wrong-reveal .check-mark {
+            color: #b91c1c;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 4px 0 16px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 22px;
+            border-radius: 60px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            background: #f1f4f9;
+            color: #1e293b;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .btn-primary {
+            background: #1e293b;
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0f172a;
+        }
+        .btn-success {
+            background: #15803d;
+            color: #fff;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #166534;
+        }
+        .btn-outline {
+            background: transparent;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-outline:hover:not(:disabled) {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .btn-warning {
+            background: #b45309;
+            color: #fff;
+        }
+        .btn-warning:hover:not(:disabled) {
+            background: #92400e;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 18px 22px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback.visible {
+            display: block;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback .result {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .feedback .result .icon {
+            font-size: 24px;
+        }
+        .feedback .result.correct {
+            color: #15803d;
+        }
+        .feedback .result.incorrect {
+            color: #b91c1c;
+        }
+
+        .feedback .explanation {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+        .feedback .explanation .math {
+            font-size: 16px;
+        }
+        .feedback .explanation .highlight {
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            display: inline-block;
+            margin: 2px 0;
+        }
+        .feedback .explanation .step {
+            margin: 10px 0 4px 0;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .feedback .explanation .factor-tree {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            margin: 8px 0 10px;
+            padding: 10px 14px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .feedback .explanation .factor-tree .common {
+            background: #dcfce7;
+            padding: 2px 10px;
+            border-radius: 10px;
+            border: 1px solid #bbf7d0;
+            font-weight: 600;
+        }
+
+        .canvas-wrapper {
+            margin: 14px 0 4px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+        }
+        .canvas-wrapper canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .json-status {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 6px 16px;
+            background: #f8fafc;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .json-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .json-status .dot.ok {
+            background: #15803d;
+        }
+        .json-status .dot.ko {
+            background: #b91c1c;
+        }
+        .json-status .dot.neutral {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="app">
+        <!-- EN-TÊTE -->
+        <div class="header">
+            <h1>🧮 Réduction de fractions</h1>
+            <span class="badge">QCM</span>
+            <div class="stats" id="statsDisplay">
+                <span>✅ <span class="num ok" id="successCount">0</span></span>
+                <span>❌ <span class="num ko" id="errorCount">0</span></span>
+                <span>📊 <span class="num" id="totalCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- QUESTION -->
+        <div class="question-block">
+            <div class="question-label">
+                <span class="icon">🎯</span>
+                Rendez irréductible la fraction suivante&nbsp;:
+            </div>
+            <div class="fraction-display" id="fractionDisplay">
+                <span class="math" id="fractionLatex">\(\dfrac{12}{18}\)</span>
+                <span class="equal-sign">⟶</span>
+                <span class="target">?</span>
+            </div>
+        </div>
+
+        <!-- RÉPONSES -->
+        <div class="answers-grid" id="answersContainer"></div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+            <button class="btn btn-primary" id="submitBtn">📤 Soumettre</button>
+            <button class="btn btn-outline" id="resetBtn">🔄 Recommencer</button>
+            <button class="btn btn-success" id="saveBtn">💾 Enregistrer JSON</button>
+            <button class="btn btn-warning" id="loadBtn">📂 Charger JSON</button>
+        </div>
+
+        <!-- FEEDBACK -->
+        <div class="feedback" id="feedback">
+            <div class="result" id="resultDisplay">
+                <span class="icon" id="resultIcon">✅</span>
+                <span id="resultText">Correct !</span>
+            </div>
+            <div class="explanation" id="explanationText"></div>
+            <div class="canvas-wrapper" id="canvasWrapper" style="display:none;">
+                <canvas id="factorCanvas" width="600" height="150"></canvas>
+            </div>
+        </div>
+
+        <!-- STATUT JSON -->
+        <div class="json-status" id="jsonStatus">
+            <span class="dot neutral" id="statusDot"></span>
+            <span id="statusText">Aucune donnée en mémoire</span>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  ÉTAT GLOBAL
+        // ================================================================
+        const state = {
+            a: 0,
+            b: 0,
+            aPrime: 0,
+            bPrime: 0,
+            k: 0,
+            correctNum: 0,
+            correctDen: 0,
+            answers: [],
+            correctIndex: -1,
+            selectedIndex: -1,
+            submitted: false,
+            stats: { successes: 0, errors: 0, total: 0 },
+            history: [],
+        };
+
+        // ================================================================
+        //  UTILITAIRES
+        // ================================================================
+        function gcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b) { [a, b] = [b, a % b]; }
+            return a;
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function latexFrac(num, den) {
+            if (den < 0) { num = -num;
+                den = -den; }
+            return `\\dfrac{${num}}{${den}}`;
+        }
+
+        function primeFactors(n) {
+            n = Math.abs(n);
+            const factors = [];
+            let num = n;
+            for (let p = 2; p * p <= num; p++) {
+                if (num % p === 0) {
+                    let exp = 0;
+                    while (num % p === 0) { num /= p;
+                        exp++; }
+                    factors.push({ prime: p, exponent: exp });
+                }
+            }
+            if (num > 1) factors.push({ prime: num, exponent: 1 });
+            return factors;
+        }
+
+        // ================================================================
+        //  GÉNÉRATION DE LA QUESTION
+        // ================================================================
+        function generateCoprimePair() {
+            for (let tries = 0; tries < 5000; tries++) {
+                const ap = randomInt(-100, 100);
+                if (ap === 0) continue;
+                const bp = randomInt(2, 100);
+                if (gcd(Math.abs(ap), bp) === 1) return { aPrime: ap, bPrime: bp };
+            }
+            return { aPrime: 3, bPrime: 7 };
+        }
+
+        function generateDistractors(correctNum, correctDen) {
+            const distractors = [];
+            const used = new Set();
+            used.add(`${correctNum}/${correctDen}`);
+            let attempts = 0;
+            while (distractors.length < 4 && attempts < 8000) {
+                attempts++;
+                let num, den;
+                const strategy = randomInt(0, 3);
+                if (strategy === 0) {
+                    num = correctNum + randomInt(-5, 5);
+                    if (num === 0) num = randomInt(-10, 10);
+                    if (num === correctNum) num += (num > 0 ? 1 : -1);
+                    den = correctDen;
+                } else if (strategy === 1) {
+                    num = correctNum;
+                    den = correctDen + randomInt(-3, 3);
+                    if (den < 2) den = correctDen + 2;
+                    if (den === correctDen) den += 2;
+                } else if (strategy === 2) {
+                    num = randomInt(-80, 80);
+                    if (num === 0) num = randomInt(-10, 10);
+                    den = randomInt(2, 80);
+                } else {
+                    num = correctNum + randomInt(-4, 4);
+                    if (num === 0) num = randomInt(-10, 10);
+                    den = correctDen + randomInt(-2, 2);
+                    if (den < 2) den = correctDen + 2;
+                    if (num === correctNum && den === correctDen) {
+                        num += (num > 0 ? 1 : -1);
+                    }
+                }
+                if (den <= 0) den = randomInt(2, 30);
+                const g = gcd(Math.abs(num), den);
+                const snum = num / g;
+                const sden = den / g;
+                const key = `${snum}/${sden}`;
+                if (!used.has(key) && snum !== 0 && sden >= 2 && Math.abs(snum) <= 150 && sden <= 150) {
+                    used.add(key);
+                    distractors.push({ num: snum, den: sden });
+                }
+            }
+            while (distractors.length < 4) {
+                const offset = distractors.length + 1;
+                let num = correctNum + offset * 3;
+                if (num === 0) num = offset * 2 + 1;
+                let den = correctDen + offset * 2;
+                if (den < 2) den = 2 + offset;
+                const g = gcd(Math.abs(num), den);
+                const snum = num / g;
+                const sden = den / g;
+                const key = `${snum}/${sden}`;
+                if (!used.has(key) && snum !== 0 && sden >= 2) {
+                    used.add(key);
+                    distractors.push({ num: snum, den: sden });
+                } else {
+                    const fallbackNum = (offset % 2 === 0) ? 2 + offset : -(2 + offset);
+                    const fallbackDen = 3 + offset * 2;
+                    const g2 = gcd(Math.abs(fallbackNum), fallbackDen);
+                    const fn = fallbackNum / g2;
+                    const fd = fallbackDen / g2;
+                    const k2 = `${fn}/${fd}`;
+                    if (!used.has(k2) && fn !== 0 && fd >= 2) {
+                        used.add(k2);
+                        distractors.push({ num: fn, den: fd });
+                    }
+                }
+            }
+            return distractors;
+        }
+
+        function generateQuestion() {
+            const { aPrime, bPrime } = generateCoprimePair();
+            const k = randomInt(2, 100);
+            const a = k * aPrime;
+            const b = k * bPrime;
+            const correctNum = aPrime;
+            const correctDen = bPrime;
+
+            const answers = [];
+            const correctPos = randomInt(0, 4);
+            const distractors = generateDistractors(correctNum, correctDen);
+
+            for (let i = 0; i < 5; i++) {
+                if (i === correctPos) {
+                    answers.push({ label: String.fromCharCode(65 + i), num: correctNum, den: correctDen, isOther: false,
+                        isCorrect: true });
+                } else if (i === 4) {
+                    answers.push({ label: 'E', num: null, den: null, isOther: true, isCorrect: false });
+                } else {
+                    const d = distractors.pop() || { num: correctNum + (i + 1), den: correctDen + (i + 1) };
+                    answers.push({ label: String.fromCharCode(65 + i), num: d.num, den: d.den, isOther: false,
+                        isCorrect: false });
+                }
+            }
+            if (correctPos === 4) {
+                answers[4].isCorrect = true;
+                for (let i = 0; i < 4; i++) answers[i].isCorrect = false;
+            } else {
+                answers[4].isCorrect = false;
+                answers[4].isOther = true;
+                for (let i = 0; i < 5; i++) {
+                    if (i === correctPos) { answers[i].isCorrect = true;
+                        answers[i].isOther = false; } else if (i !== 4) { answers[i].isCorrect = false;
+                        answers[i].isOther = false; }
+                }
+            }
+
+            state.a = a;
+            state.b = b;
+            state.aPrime = aPrime;
+            state.bPrime = bPrime;
+            state.k = k;
+            state.correctNum = correctNum;
+            state.correctDen = correctDen;
+            state.answers = answers;
+            state.correctIndex = correctPos;
+            state.selectedIndex = -1;
+            state.submitted = false;
+
+            renderQuestion();
+            renderAnswers();
+            clearFeedback();
+            updateStatsDisplay();
+        }
+
+        // ================================================================
+        //  RENDU MATHJAX
+        // ================================================================
+        let mathJaxRendering = false;
+
+        function renderMath() {
+            if (!window.MathJax || !MathJax.typesetPromise) {
+                setTimeout(() => renderMath(), 200);
+                return;
+            }
+            if (mathJaxRendering) {
+                setTimeout(() => renderMath(), 100);
+                return;
+            }
+            mathJaxRendering = true;
+            MathJax.typesetPromise()
+                .catch(() => {})
+                .finally(() => {
+                    mathJaxRendering = false;
+                });
+        }
+
+        function renderQuestion() {
+            const el = document.getElementById('fractionLatex');
+            el.textContent = `\\(${latexFrac(state.a, state.b)}\\)`;
+            renderMath();
+        }
+
+        function renderAnswers() {
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            state.answers.forEach((ans, idx) => {
+                const div = document.createElement('div');
+                div.className = 'answer-option';
+                div.dataset.index = idx;
+
+                const radio = document.createElement('span');
+                radio.className = 'radio';
+
+                const label = document.createElement('span');
+                label.className = 'label';
+                if (ans.isOther) {
+                    label.innerHTML = `<span class="other-label">Autre</span>`;
+                } else {
+                    label.innerHTML = `<span class="math">\\(${latexFrac(ans.num, ans.den)}\\)</span>`;
+                }
+
+                const check = document.createElement('span');
+                check.className = 'check-mark';
+
+                div.appendChild(radio);
+                div.appendChild(label);
+                div.appendChild(check);
+
+                if (state.selectedIndex === idx) div.classList.add('selected');
+
+                div.addEventListener('click', () => onAnswerClick(idx));
+                container.appendChild(div);
+            });
+            renderMath();
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('successCount').textContent = state.stats.successes;
+            document.getElementById('errorCount').textContent = state.stats.errors;
+            document.getElementById('totalCount').textContent = state.stats.total;
+        }
+
+        function clearFeedback() {
+            const fb = document.getElementById('feedback');
+            fb.classList.remove('visible');
+            document.getElementById('canvasWrapper').style.display = 'none';
+        }
+
+        function showFeedback(isCorrect, explanationHtml) {
+            const fb = document.getElementById('feedback');
+            const resultDiv = document.getElementById('resultDisplay');
+            const icon = document.getElementById('resultIcon');
+            const text = document.getElementById('resultText');
+            const expl = document.getElementById('explanationText');
+
+            fb.classList.add('visible');
+            if (isCorrect) {
+                resultDiv.className = 'result correct';
+                icon.textContent = '✅';
+                text.textContent = 'Correct !';
+            } else {
+                resultDiv.className = 'result incorrect';
+                icon.textContent = '❌';
+                text.textContent = 'Incorrect. Voici la correction détaillée :';
+            }
+            expl.innerHTML = explanationHtml;
+            renderMath();
+        }
+
+        // ================================================================
+        //  CANVAS (version sobre, sans "Faisant une équation")
+        // ================================================================
+        function showCanvas(a, b, factorsA, factorsB, commonFactors) {
+            const wrapper = document.getElementById('canvasWrapper');
+            wrapper.style.display = 'flex';
+            const canvas = document.getElementById('factorCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width,
+                H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, W, H);
+
+            const pad = 30;
+            const colW = (W - pad * 2) / 2;
+            const yBase = 70;
+
+            ctx.font = '600 14px Inter, system-ui, sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.fillText(`a = ${a}`, pad + colW / 2, 28);
+            ctx.fillText(`b = ${b}`, pad + colW + colW / 2, 28);
+
+            ctx.font = '13px Inter, system-ui, sans-serif';
+
+            const drawFactors = (factors, x, y, highlightSet) => {
+                let xPos = x - colW / 2 + 20;
+                factors.forEach((f) => {
+                    const isCommon = highlightSet.has(f.prime);
+                    const label = f.exponent === 1 ? `${f.prime}` : `${f.prime}^${f.exponent}`;
+                    ctx.font = isCommon ? '600 14px Inter, sans-serif' : '400 13px Inter, sans-serif';
+                    const tw = ctx.measureText(label).width;
+                    const bx = xPos;
+                    const by = y - 14;
+                    const bw = tw + 20;
+                    const bh = 28;
+                    if (isCommon) {
+                        ctx.fillStyle = '#dcfce7';
+                        ctx.shadowColor = 'rgba(21,128,61,0.10)';
+                        ctx.shadowBlur = 6;
+                        ctx.beginPath();
+                        ctx.roundRect(bx, by, bw, bh, 6);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#166534';
+                        ctx.fillText(label, bx + 10, by + 19);
+                    } else {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.shadowColor = 'rgba(0,0,0,0.02)';
+                        ctx.shadowBlur = 4;
+                        ctx.beginPath();
+                        ctx.roundRect(bx, by, bw, bh, 5);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.strokeStyle = '#d1d9e0';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.roundRect(bx, by, bw, bh, 5);
+                        ctx.stroke();
+                        ctx.fillStyle = '#1e293b';
+                        ctx.fillText(label, bx + 10, by + 19);
+                    }
+                    xPos += bw + 6;
+                    if (xPos > x + colW / 2 - 10) {
+                        xPos = x - colW / 2 + 20;
+                        y += 36;
+                    }
+                });
+            };
+
+            const highlightA = new Set(commonFactors.map(f => f.prime));
+            const highlightB = new Set(commonFactors.map(f => f.prime));
+
+            drawFactors(factorsA, pad + colW / 2, yBase, highlightA);
+            drawFactors(factorsB, pad + colW + colW / 2, yBase, highlightB);
+
+            const legY = H - 20;
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#475569';
+            ctx.fillText('Facteurs communs surlignés', W / 2, legY);
+
+            ctx.beginPath();
+            ctx.moveTo(pad + colW + 8, yBase + 8);
+            ctx.lineTo(pad + colW + colW - 8, yBase + 8);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            const commonStr = commonFactors.map(f => f.exponent === 1 ? `${f.prime}` : `${f.prime}^${f.exponent}`).join(
+            ' × ');
+            if (commonFactors.length > 0) {
+                ctx.font = '500 13px Inter, sans-serif';
+                ctx.fillStyle = '#166534';
+                ctx.textAlign = 'center';
+                ctx.fillText(`↕  Facteurs communs : ${commonStr}  ↕`, W / 2, yBase + 56);
+            }
+
+            const g = commonFactors.reduce((prod, f) => prod * Math.pow(f.prime, f.exponent), 1);
+            const simpNum = state.a / g;
+            const simpDen = state.b / g;
+            ctx.font = '500 15px Inter, sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            // Suppression de "Faisant une équation" – affichage sobre
+            ctx.fillText(`Forme irréductible : ${simpNum}/${simpDen}`, W / 2, H - 6);
+        }
+
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                return this;
+            };
+        }
+
+        // ================================================================
+        //  EXPLICATION DÉTAILLÉE (tout en LaTeX)
+        // ================================================================
+        function buildExplanation(a, b, correctNum, correctDen, selectedNum, selectedDen, isCorrect) {
+            const factorsA = primeFactors(a);
+            const factorsB = primeFactors(b);
+            const common = [];
+            const mapA = {};
+            factorsA.forEach(f => mapA[f.prime] = f.exponent);
+            factorsB.forEach(f => {
+                if (mapA[f.prime]) {
+                    const exp = Math.min(mapA[f.prime], f.exponent);
+                    common.push({ prime: f.prime, exponent: exp });
+                }
+            });
+
+            function formatFactors(factors) {
+                return factors.map(f => f.exponent === 1 ? `${f.prime}` : `${f.prime}^{${f.exponent}}`).join(' \\times ');
+            }
+
+            const latexA = formatFactors(factorsA);
+            const latexB = formatFactors(factorsB);
+            const latexCommon = common.length > 0 ? formatFactors(common) : '';
+
+            let html = '';
+            html += `<div class="step">🔍 Décomposition en facteurs premiers :</div>`;
+            html += `<div class="factor-tree">`;
+            html += `<span>\\(${a} = ${latexA}\\)</span>`;
+            html += `<span class="sep">|</span>`;
+            html += `<span>\\(${b} = ${latexB}\\)</span>`;
+            html += `</div>`;
+
+            if (common.length > 0) {
+                html += `<div class="step">🔗 Facteurs communs : <span class="common">\\(${latexCommon}\\)</span></div>`;
+            } else {
+                html += `<div class="step">ℹ️ Aucun facteur commun : la fraction est déjà irréductible.</div>`;
+            }
+
+            const pgcd = common.reduce((prod, f) => prod * Math.pow(f.prime, f.exponent), 1);
+            html += `<div class="step">📐 PGCD(\\(${a}, ${b}\\)) = \\(${pgcd}\\)</div>`;
+
+            const simpNum = a / pgcd;
+            const simpDen = b / pgcd;
+            html += `<div class="step">✂️ Division par le PGCD :</div>`;
+            html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0;">`;
+            html += `<span>\\(\\dfrac{${a}}{${b}}\\)</span>`;
+            html += `<span style="font-size:20px;color:#64748b;">=</span>`;
+            html += `<span>\\(\\dfrac{${a} \\div ${pgcd}}{${b} \\div ${pgcd}}\\)</span>`;
+            html += `<span style="font-size:20px;color:#64748b;">=</span>`;
+            html += `<span style="font-weight:700;color:#15803d;">\\(${latexFrac(simpNum, simpDen)}\\)</span>`;
+            html += `</div>`;
+            html += `<div class="step" style="margin-top:8px;">✅ Forme irréductible : <strong>\\(${latexFrac(simpNum, simpDen)}\\)</strong></div>`;
+
+            if (!isCorrect && selectedNum !== null && selectedDen !== null) {
+                const selG = gcd(Math.abs(selectedNum), Math.abs(selectedDen));
+                const selNum = selectedNum / selG;
+                const selDen = selectedDen / selG;
+                html +=
+                    `<div style="margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:12px;border:1px solid #fecaca;">`;
+                html += `<span style="font-weight:600;color:#b91c1c;">❌ Votre réponse :</span> `;
+                html += `<span>\\(${latexFrac(selectedNum, selectedDen)}\\)</span>`;
+                if (selectedNum !== simpNum || selectedDen !== simpDen) {
+                    html +=
+                        ` <span style="color:#475569;">(qui vaut \\(${latexFrac(selNum, selDen)}\\) après simplification)</span>`;
+                    html +=
+                        `<br><span style="color:#475569;font-size:14px;">La bonne réponse est \\(${latexFrac(simpNum, simpDen)}\\).</span>`;
+                }
+                html += `</div>`;
+            }
+
+            
+            return html;
+        }
+
+        // ================================================================
+        //  INTERACTIONS
+        // ================================================================
+        function onAnswerClick(index) {
+            if (state.submitted) return;
+            state.selectedIndex = index;
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function onSubmit() {
+            if (state.submitted) return;
+            if (state.selectedIndex === -1) {
+                alert('Veuillez sélectionner une réponse.');
+                return;
+            }
+
+            const selected = state.answers[state.selectedIndex];
+            const isCorrect = selected.isCorrect;
+
+            state.stats.total++;
+            if (isCorrect) state.stats.successes++;
+            else state.stats.errors++;
+            updateStatsDisplay();
+
+            const expr = `${state.a}/${state.b}`;
+            const correctExpr = `${state.correctNum}/${state.correctDen}`;
+            if (isCorrect) {
+                state.history.push({ type: 'success', expression: expr, correct: correctExpr });
+            } else {
+                const explanation = buildExplanation(
+                    state.a, state.b,
+                    state.correctNum, state.correctDen,
+                    selected.isOther ? null : selected.num,
+                    selected.isOther ? null : selected.den,
+                    false
+                );
+                state.history.push({ type: 'failure', expression: expr, correct: correctExpr, explanation: explanation });
+            }
+
+            state.submitted = true;
+
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.add('disabled');
+                const ans = state.answers[i];
+                if (ans.isCorrect) {
+                    el.classList.add('correct-reveal');
+                    el.querySelector('.check-mark').textContent = '✓';
+                } else if (i === state.selectedIndex && !ans.isCorrect) {
+                    el.classList.add('wrong-reveal');
+                    el.querySelector('.check-mark').textContent = '✗';
+                }
+                if (i === state.selectedIndex) el.classList.add('selected');
+            });
+
+            document.getElementById('submitBtn').disabled = true;
+
+            if (isCorrect) {
+                const exp = buildExplanation(state.a, state.b, state.correctNum, state.correctDen, null, null, true);
+                showFeedback(true, exp);
+            } else {
+                const exp = buildExplanation(
+                    state.a, state.b,
+                    state.correctNum, state.correctDen,
+                    selected.isOther ? null : selected.num,
+                    selected.isOther ? null : selected.den,
+                    false
+                );
+                showFeedback(false, exp);
+            }
+
+            saveToLocalStorage();
+        }
+
+        function onReset() {
+            generateQuestion();
+            document.getElementById('submitBtn').disabled = true;
+            document.querySelectorAll('.answer-option').forEach(el => {
+                el.classList.remove('disabled', 'correct-reveal', 'wrong-reveal', 'selected');
+                el.querySelector('.check-mark').textContent = '';
+            });
+        }
+
+        // ================================================================
+        //  JSON (LOCAL STORAGE + IMPORT/EXPORT)
+        // ================================================================
+        function saveToLocalStorage() {
+            try {
+                const data = { stats: state.stats, history: state.history, lastUpdated: new Date().toISOString() };
+                localStorage.setItem('fractionQCM_data', JSON.stringify(data));
+                updateJsonStatus('saved', 'Données sauvegardées dans le navigateur.');
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur lors de la sauvegarde.');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('fractionQCM_data');
+                if (!raw) { updateJsonStatus('empty', 'Aucune donnée trouvée.'); return; }
+                const data = JSON.parse(raw);
+                if (data.stats) state.stats = data.stats;
+                if (data.history) state.history = data.history;
+                updateStatsDisplay();
+                updateJsonStatus('loaded', `Données chargées : ${state.history.length} essais (${state.stats.successes} succès, ${state.stats.errors} échecs).`);
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur lors du chargement des données.');
+            }
+        }
+
+        function exportJSON() {
+            const data = { stats: state.stats, history: state.history, exportedAt: new Date().toISOString() };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fraction_qcm_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            updateJsonStatus('saved', 'Fichier JSON exporté avec succès.');
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.stats && data.history) {
+                            state.stats = data.stats;
+                            state.history = data.history;
+                            updateStatsDisplay();
+                            updateJsonStatus('loaded', `Données importées : ${state.history.length} essais.`);
+                            saveToLocalStorage();
+                        } else {
+                            updateJsonStatus('error', 'Format JSON invalide.');
+                        }
+                    } catch (err) {
+                        updateJsonStatus('error', 'Erreur lors de la lecture du fichier.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function updateJsonStatus(status, message) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            dot.className = 'dot';
+            if (status === 'saved' || status === 'loaded') dot.classList.add('ok');
+            else if (status === 'error') dot.classList.add('ko');
+            else dot.classList.add('neutral');
+            text.textContent = message;
+        }
+
+        // ================================================================
+        //  INITIALISATION
+        // ================================================================
+        function init() {
+            try {
+                const raw = localStorage.getItem('fractionQCM_data');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.stats) state.stats = data.stats;
+                    if (data.history) state.history = data.history;
+                    updateStatsDisplay();
+                    updateJsonStatus('loaded', `Données chargées : ${state.history.length} essais.`);
+                } else {
+                    updateJsonStatus('empty', 'Aucune donnée en mémoire.');
+                }
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur de chargement.');
+            }
+
+            generateQuestion();
+            document.getElementById('submitBtn').disabled = true;
+
+            document.getElementById('submitBtn').addEventListener('click', onSubmit);
+            document.getElementById('resetBtn').addEventListener('click', onReset);
+            document.getElementById('saveBtn').addEventListener('click', exportJSON);
+            document.getElementById('loadBtn').addEventListener('click', importJSON);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM – Résultat d’un calcul (déverrouillage progressif)</title>
+
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ],
+                displayMath: [
+                    ['$$', '$$'],
+                    ['\\[', '\]']
+                ]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer>
+    </script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f1f4f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .card {
+            max-width: 960px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px 30px 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf2;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+        .header .badge {
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 12px;
+            border-radius: 30px;
+        }
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            background: #f8fafc;
+            padding: 3px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .stats .num {
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .stats .ok {
+            color: #15803d;
+        }
+        .stats .ko {
+            color: #b91c1c;
+        }
+
+        /* ===== Sélecteur de niveau avec verrouillage ===== */
+        .level-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .level-selector label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-right: 6px;
+        }
+        .level-btn {
+            background: transparent;
+            border: 1px solid #d1d9e0;
+            border-radius: 30px;
+            padding: 4px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+        }
+        .level-btn:hover:not(:disabled) {
+            background: #e9edf2;
+        }
+        .level-btn.active {
+            background: #1e293b;
+            color: #fff;
+            border-color: #1e293b;
+        }
+        .level-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+        .level-btn .lock-icon {
+            margin-left: 4px;
+            font-size: 12px;
+        }
+        .level-btn .tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 400;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .level-btn:hover .tooltip {
+            display: block;
+        }
+        .level-btn .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        .question-block {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 16px 16px 14px;
+            margin: 4px 0 18px;
+            border: 1px solid #e2e8f0;
+        }
+        .question-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .question-label .icon {
+            font-size: 16px;
+        }
+        .expression-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2px 0 0px;
+            font-size: 20px;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+        }
+        .expression-display .math {
+            font-size: 20px;
+            word-break: break-all;
+            max-width: 70%;
+            display: inline-block;
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+        .expression-display .equal-sign {
+            font-size: 18px;
+            font-weight: 300;
+            color: #64748b;
+        }
+        .expression-display .target {
+            font-size: 16px;
+            color: #0f172a;
+            font-weight: 500;
+            background: #ffffff;
+            padding: 2px 14px;
+            border-radius: 40px;
+            border: 1px dashed #94a3b8;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 7px;
+            margin: 14px 0 18px;
+        }
+
+        @media (max-width: 580px) {
+            .card {
+                padding: 14px 10px 18px;
+            }
+            .stats {
+                font-size: 11px;
+                padding: 3px 8px;
+                gap: 5px;
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 5px;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            .expression-display {
+                font-size: 17px;
+            }
+            .expression-display .math {
+                font-size: 17px;
+                max-width: 92%;
+            }
+            .level-selector {
+                justify-content: center;
+            }
+            .level-btn .tooltip {
+                white-space: normal;
+                width: 180px;
+                text-align: center;
+            }
+        }
+
+        .answer-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: 1.5px solid #d1d9e0;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+        .answer-option:hover:not(.disabled) {
+            border-color: #94a3b8;
+            background: #fafcff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .answer-option.selected {
+            border-color: #2563eb;
+            background: #f0f5ff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+        }
+        .answer-option.correct-reveal {
+            border-color: #15803d;
+            background: #f0fdf4;
+        }
+        .answer-option.wrong-reveal {
+            border-color: #b91c1c;
+            background: #fef2f2;
+        }
+        .answer-option.disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+        .answer-option .radio {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+            background: #fff;
+        }
+        .answer-option.selected .radio {
+            border-color: #2563eb;
+            background: #2563eb;
+        }
+        .answer-option.selected .radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .answer-option .label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 14px;
+            flex: 1;
+        }
+        .answer-option .math {
+            font-size: 15px;
+            margin-left: 2px;
+        }
+        .answer-option .other-label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 14px;
+            font-style: italic;
+        }
+        .answer-option .check-mark {
+            margin-left: auto;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .answer-option.correct-reveal .check-mark {
+            color: #15803d;
+        }
+        .answer-option.wrong-reveal .check-mark {
+            color: #b91c1c;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 2px 0 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 7px 16px;
+            border-radius: 60px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            background: #f1f4f9;
+            color: #1e293b;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .btn-primary {
+            background: #1e293b;
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0f172a;
+        }
+        .btn-success {
+            background: #15803d;
+            color: #fff;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #166534;
+        }
+        .btn-outline {
+            background: transparent;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-outline:hover:not(:disabled) {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .btn-warning {
+            background: #b45309;
+            color: #fff;
+        }
+        .btn-warning:hover:not(:disabled) {
+            background: #92400e;
+        }
+
+        .feedback {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback.visible {
+            display: block;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback .result {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .feedback .result .icon {
+            font-size: 18px;
+        }
+        .feedback .result.correct {
+            color: #15803d;
+        }
+        .feedback .result.incorrect {
+            color: #b91c1c;
+        }
+
+        .feedback .explanation {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+        .feedback .explanation .math {
+            font-size: 14px;
+        }
+        .feedback .explanation .step {
+            margin: 6px 0 2px 0;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .feedback .explanation .detail {
+            margin: 4px 0;
+            padding: 6px 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .json-status {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 4px 12px;
+            background: #f8fafc;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .json-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .json-status .dot.ok {
+            background: #15803d;
+        }
+        .json-status .dot.ko {
+            background: #b91c1c;
+        }
+        .json-status .dot.neutral {
+            background: #94a3b8;
+        }
+
+        .unlock-message {
+            margin: 6px 0 0 0;
+            font-size: 12px;
+            color: #15803d;
+            font-weight: 500;
+            display: none;
+        }
+        .unlock-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="app">
+        <div class="header">
+            <h1>🧮 Résultat d’un calcul</h1>
+            <span class="badge" id="levelBadge">Niveau 1</span>
+            <div class="stats" id="statsDisplay">
+                <span>✅ <span class="num ok" id="successCount">0</span></span>
+                <span>❌ <span class="num ko" id="errorCount">0</span></span>
+                <span>📊 <span class="num" id="totalCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- Sélecteur de niveau avec déverrouillage -->
+        <div class="level-selector">
+            <label>Niveau :</label>
+            <button class="level-btn active" data-level="1" disabled>1</button>
+            <button class="level-btn" data-level="2" disabled>2 🔒</button>
+            <button class="level-btn" data-level="3" disabled>3 🔒</button>
+            <button class="level-btn" data-level="4" disabled>4 🔒</button>
+            <span style="font-size:12px; color:#64748b; margin-left:6px;">
+                (1: entier+frac • 2: 2 entiers+frac • 3: 2 frac+entier • 4: 3 frac avec parenthèses)
+            </span>
+        </div>
+        <div id="unlockMessage" class="unlock-message">🎉 Niveau suivant débloqué !</div>
+
+        <div class="question-block">
+            <div class="question-label">
+                <span class="icon">🎯</span>
+                Calculez et choisissez le résultat exact de l’expression suivante&nbsp;:
+            </div>
+            <div class="expression-display">
+                <span class="math" id="expressionLatex">\(3 - \dfrac{-2}{5}\)</span>
+                <span class="equal-sign">⟶</span>
+                <span class="target">?</span>
+            </div>
+        </div>
+
+        <div class="answers-grid" id="answersContainer"></div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="submitBtn">📤 Soumettre</button>
+            <button class="btn btn-outline" id="resetBtn">🔄 Recommencer</button>
+            <button class="btn btn-success" id="saveBtn">💾 Enregistrer JSON</button>
+            <button class="btn btn-warning" id="loadBtn">📂 Charger JSON</button>
+        </div>
+
+        <div class="feedback" id="feedback">
+            <div class="result" id="resultDisplay">
+                <span class="icon" id="resultIcon">✅</span>
+                <span id="resultText">Correct !</span>
+            </div>
+            <div class="explanation" id="explanationText"></div>
+        </div>
+
+        <div class="json-status" id="jsonStatus">
+            <span class="dot neutral" id="statusDot"></span>
+            <span id="statusText">Aucune donnée en mémoire</span>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  UTILITAIRES : PGCD, fraction irréductible, entiers aléatoires
+        // ================================================================
+        function pgcd(a, b) {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b) {
+                [a, b] = [b, a % b];
+            }
+            return a;
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function randomNonZeroInt(min, max) {
+            let n;
+            do { n = randomInt(min, max); } while (n === 0);
+            return n;
+        }
+
+        function randomIrreducibleFraction() {
+            let num, den, g;
+            do {
+                num = randomNonZeroInt(-100, 100);
+                den = randomInt(2, 100);
+                g = pgcd(num, den);
+            } while (g !== 1);
+            return { num: num, den: den };
+        }
+
+        // ================================================================
+        //  NŒUD D'EXPRESSION
+        // ================================================================
+        function Node(type, value, left, right, op) {
+            this.type = type; // 'integer', 'fraction', 'op'
+            this.value = value || null; // {num, den}
+            this.left = left || null;
+            this.right = right || null;
+            this.op = op || null;
+        }
+
+        // ================================================================
+        //  GÉNÉRATION D'ARBRES SELON LE NIVEAU
+        // ================================================================
+
+        function randomLeaf(type) {
+            if (type === 'integer') {
+                return new Node('integer', { num: randomNonZeroInt(-100, 100), den: 1 });
+            } else {
+                const f = randomIrreducibleFraction();
+                return new Node('fraction', { num: f.num, den: f.den });
+            }
+        }
+
+        function buildTreeWithLeafTypes(opsCount, leafTypes) {
+            if (opsCount === 0) {
+                if (leafTypes.length !== 1) throw new Error("Il faut exactement une feuille");
+                return randomLeaf(leafTypes[0]);
+            }
+            const ops = ['+', '-', '*', '/'];
+            const op = ops[randomInt(0, 3)];
+            let leftOps = randomInt(0, opsCount - 1);
+            let rightOps = opsCount - 1 - leftOps;
+            const leftLeavesCount = leftOps + 1;
+            const rightLeavesCount = rightOps + 1;
+
+            const shuffled = [...leafTypes];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = randomInt(0, i);
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const leftTypes = shuffled.slice(0, leftLeavesCount);
+            const rightTypes = shuffled.slice(leftLeavesCount);
+
+            const left = buildTreeWithLeafTypes(leftOps, leftTypes);
+            const right = buildTreeWithLeafTypes(rightOps, rightTypes);
+
+            return new Node('op', null, left, right, op);
+        }
+
+        function generateLevel1() {
+            const leftIsInt = Math.random() < 0.5;
+            const types = leftIsInt ? ['integer', 'fraction'] : ['fraction', 'integer'];
+            return buildTreeWithLeafTypes(1, types);
+        }
+
+        function generateLevel2() {
+            const types = ['integer', 'integer', 'fraction'];
+            for (let i = types.length - 1; i > 0; i--) {
+                const j = randomInt(0, i);
+                [types[i], types[j]] = [types[j], types[i]];
+            }
+            return buildTreeWithLeafTypes(2, types);
+        }
+
+        function generateLevel3() {
+            const types = ['fraction', 'fraction', 'integer'];
+            for (let i = types.length - 1; i > 0; i--) {
+                const j = randomInt(0, i);
+                [types[i], types[j]] = [types[j], types[i]];
+            }
+            return buildTreeWithLeafTypes(2, types);
+        }
+
+        function generateLevel4() {
+            const leftGrouped = Math.random() < 0.5;
+            const fracs = [randomIrreducibleFraction(), randomIrreducibleFraction(), randomIrreducibleFraction()];
+            const f1 = new Node('fraction', { num: fracs[0].num, den: fracs[0].den });
+            const f2 = new Node('fraction', { num: fracs[1].num, den: fracs[1].den });
+            const f3 = new Node('fraction', { num: fracs[2].num, den: fracs[2].den });
+
+            const ops = ['+', '-', '*', '/'];
+            const opInt = ops[randomInt(0, 3)];
+            const opRoot = ops[randomInt(0, 3)];
+
+            let root;
+            if (leftGrouped) {
+                const group = new Node('op', null, f1, f2, opInt);
+                root = new Node('op', null, group, f3, opRoot);
+            } else {
+                const group = new Node('op', null, f2, f3, opInt);
+                root = new Node('op', null, f1, group, opRoot);
+            }
+            return root;
+        }
+
+        function generateExpressionForLevel(level) {
+            let root;
+            let attempts = 0;
+            do {
+                attempts++;
+                switch (level) {
+                    case 1:
+                        root = generateLevel1();
+                        break;
+                    case 2:
+                        root = generateLevel2();
+                        break;
+                    case 3:
+                        root = generateLevel3();
+                        break;
+                    case 4:
+                        root = generateLevel4();
+                        break;
+                    default:
+                        root = generateLevel1();
+                }
+                const result = evaluate(root);
+                if (result.num === 0) continue;
+                if (Math.abs(result.num) > 1000 || Math.abs(result.den) > 1000) continue;
+                const latex = toLatexRaw(root);
+                if (hasConsecutiveOperators(latex)) continue;
+                if (level === 4) {
+                    const display = toLatexRaw(root);
+                    if (!display.includes('\\left(') && !display.includes('(')) {
+                        continue;
+                    }
+                }
+                break;
+            } while (attempts < 200);
+            return root;
+        }
+
+        // ================================================================
+        //  ÉVALUATION
+        // ================================================================
+        function evaluate(node) {
+            if (node.type === 'integer' || node.type === 'fraction') {
+                return { num: node.value.num, den: node.value.den || 1 };
+            }
+            const leftVal = evaluate(node.left);
+            const rightVal = evaluate(node.right);
+            let num, den;
+            switch (node.op) {
+                case '+':
+                    num = leftVal.num * rightVal.den + rightVal.num * leftVal.den;
+                    den = leftVal.den * rightVal.den;
+                    break;
+                case '-':
+                    num = leftVal.num * rightVal.den - rightVal.num * leftVal.den;
+                    den = leftVal.den * rightVal.den;
+                    break;
+                case '*':
+                    num = leftVal.num * rightVal.num;
+                    den = leftVal.den * rightVal.den;
+                    break;
+                case '/':
+                    num = leftVal.num * rightVal.den;
+                    den = leftVal.den * rightVal.num;
+                    break;
+            }
+            const g = pgcd(num, den);
+            num /= g;
+            den /= g;
+            if (den < 0) { num = -num;
+                den = -den; }
+            return { num, den };
+        }
+
+        // ================================================================
+        //  CONVERSION LaTeX
+        // ================================================================
+        function toLatexRaw(node) {
+            if (node.type === 'integer') {
+                return `${node.value.num}`;
+            }
+            if (node.type === 'fraction') {
+                return `\\dfrac{${node.value.num}}{${node.value.den}}`;
+            }
+            const left = toLatexRaw(node.left);
+            const right = toLatexRaw(node.right);
+            let op = node.op;
+            if (op === '*') op = '\\times';
+            if (op === '/') op = '\\div';
+            let leftStr = left;
+            let rightStr = right;
+            const leftPrio = getPriority(node.op);
+            const rightPrio = getPriority(node.op);
+            if (node.left.type === 'op' && getPriority(node.left.op) < leftPrio) {
+                leftStr = '\\left(' + leftStr + '\\right)';
+            }
+            if (node.right.type === 'op' && getPriority(node.right.op) < rightPrio) {
+                rightStr = '\\left(' + rightStr + '\\right)';
+            }
+            if (node.op === '-' && node.right.type === 'op') {
+                rightStr = '\\left(' + rightStr + '\\right)';
+            }
+            return leftStr + ' ' + op + ' ' + rightStr;
+        }
+
+        function getPriority(op) {
+            if (op === '+' || op === '-') return 1;
+            if (op === '*' || op === '/') return 2;
+            return 0;
+        }
+
+        function hasConsecutiveOperators(tex) {
+            let clean = tex.replace(/\\left\([^)]*\)/g, ' ').replace(/\([^)]*\)/g, ' ');
+            clean = clean.replace(/\\dfrac\{[^}]*\}\{[^}]*\}/g, ' ');
+            const patterns = [/\\times\s*\-/, /\\div\s*\-/, /\+\s*\-/, /\-\s*\-/, /\*\s*\-/, /\/\s*\-/];
+            for (let p of patterns) {
+                if (p.test(clean)) return true;
+            }
+            return false;
+        }
+
+        // ================================================================
+        //  DISTRACTEURS
+        // ================================================================
+        function generateDistractors(correctNum, correctDen, count) {
+            const distractors = [];
+            const used = new Set();
+            used.add(`${correctNum}/${correctDen}`);
+
+            let attempts = 0;
+            while (distractors.length < count && attempts < 300) {
+                attempts++;
+                let num = correctNum;
+                let den = correctDen;
+                const mod = randomInt(1, 7);
+                switch (mod) {
+                    case 1:
+                        num = -num;
+                        break;
+                    case 2:
+                        num += (Math.random() < 0.5 ? 1 : -1) * randomInt(1, 5);
+                        break;
+                    case 3:
+                        den += (Math.random() < 0.5 ? 1 : -1) * randomInt(1, 5);
+                        if (den === 0) den = 1;
+                        break;
+                    case 4:
+                        num = randomNonZeroInt(-100, 100);
+                        break;
+                    case 5:
+                        den = randomInt(2, 100);
+                        break;
+                    case 6:
+                        [num, den] = [den, num];
+                        break;
+                    case 7:
+                        num = randomNonZeroInt(-100, 100);
+                        den = randomInt(2, 100);
+                        break;
+                }
+                const g = pgcd(num, den);
+                num /= g;
+                den /= g;
+                if (den < 0) { num = -num;
+                    den = -den; }
+                const key = `${num}/${den}`;
+                if (!used.has(key) && !(num === correctNum && den === correctDen)) {
+                    used.add(key);
+                    distractors.push({ num, den });
+                }
+            }
+            while (distractors.length < count) {
+                let num = randomNonZeroInt(-100, 100);
+                let den = randomInt(2, 100);
+                const g = pgcd(num, den);
+                num /= g;
+                den /= g;
+                if (den < 0) { num = -num;
+                    den = -den; }
+                const key = `${num}/${den}`;
+                if (!used.has(key)) {
+                    used.add(key);
+                    distractors.push({ num, den });
+                }
+            }
+            return distractors;
+        }
+
+        // ================================================================
+        //  GÉNÉRATION DE LA QUESTION COMPLÈTE
+        // ================================================================
+        function generateQuestion(level) {
+            let attempts = 0;
+            while (attempts < 100) {
+                attempts++;
+                const root = generateExpressionForLevel(level);
+                const rawLatex = toLatexRaw(root);
+                const result = evaluate(root);
+                if (result.num === 0) continue;
+                if (Math.abs(result.num) > 1000 || Math.abs(result.den) > 1000) continue;
+
+                const correctNum = result.num;
+                const correctDen = result.den;
+
+                const otherIsCorrect = (randomInt(1, 10) === 1);
+                let answers = [];
+
+                if (otherIsCorrect) {
+                    const distractors = generateDistractors(correctNum, correctDen, 4);
+                    for (let d of distractors) {
+                        answers.push({ num: d.num, den: d.den, isOther: false, correct: false });
+                    }
+                    answers.push({ num: null, den: null, isOther: true, correct: true });
+                } else {
+                    const distractors = generateDistractors(correctNum, correctDen, 3);
+                    const correctPos = randomInt(0, 3);
+                    let exprIndex = 0;
+                    for (let i = 0; i < 4; i++) {
+                        if (i === correctPos) {
+                            answers.push({ num: correctNum, den: correctDen, isOther: false, correct: true });
+                        } else {
+                            const d = distractors[exprIndex++];
+                            answers.push({ num: d.num, den: d.den, isOther: false, correct: false });
+                        }
+                    }
+                    answers.push({ num: null, den: null, isOther: true, correct: false });
+                }
+
+                return {
+                    rawLatex: rawLatex,
+                    answers: answers,
+                    correctNum: correctNum,
+                    correctDen: correctDen,
+                    otherIsCorrect: otherIsCorrect
+                };
+            }
+            return generateQuestion(level);
+        }
+
+        // ================================================================
+        //  ÉTAT GLOBAL
+        // ================================================================
+        const state = {
+            currentLevel: 1,
+            currentQuestion: null,
+            answers: [],
+            correctIndex: -1,
+            selectedIndex: -1,
+            submitted: false,
+            stats: { successes: 0, errors: 0, total: 0 },
+            history: [],
+            // Niveaux : 1 à 4, chaque niveau stocke un tableau des 10 derniers résultats (booléens)
+            levelHistory: {
+                1: [],
+                2: [],
+                3: [],
+                4: []
+            },
+            unlockedLevels: [true, false, false, false] // index 0 = niveau 1
+        };
+
+        // ================================================================
+        //  GESTION DES NIVEAUX ET DÉVERROUILLAGE
+        // ================================================================
+        function getSuccessRate(level) {
+            const hist = state.levelHistory[level] || [];
+            if (hist.length === 0) return 0;
+            const recent = hist.slice(-10); // les 10 dernières
+            const success = recent.filter(x => x === true).length;
+            return success / recent.length;
+        }
+
+        function updateUnlockedLevels() {
+            // Niveau 1 toujours débloqué
+            state.unlockedLevels[0] = true;
+            for (let i = 1; i < 4; i++) {
+                // Niveau i débloqué si niveau i-1 a un taux >= 0.8 sur les 10 dernières
+                const prevRate = getSuccessRate(i);
+                state.unlockedLevels[i] = (prevRate >= 0.8);
+            }
+            // Si le niveau 4 est débloqué, on affiche un message
+            if (state.unlockedLevels[3]) {
+                document.getElementById('unlockMessage').classList.add('show');
+                document.getElementById('unlockMessage').textContent = '🎉 Tous les niveaux sont débloqués ! Félicitations !';
+            } else {
+                // Vérifier si un niveau vient d'être débloqué
+                for (let i = 1; i < 4; i++) {
+                    if (state.unlockedLevels[i] && !state._prevUnlocked?.[i]) {
+                        document.getElementById('unlockMessage').classList.add('show');
+                        document.getElementById('unlockMessage').textContent = `🎉 Niveau ${i+1} débloqué !`;
+                        break;
+                    }
+                }
+            }
+            // Sauvegarder l'état précédent pour détecter les nouveaux débloquages
+            state._prevUnlocked = [...state.unlockedLevels];
+            // Mettre à jour les boutons
+            updateLevelButtons();
+        }
+
+        function updateLevelButtons() {
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                const lvl = parseInt(btn.dataset.level);
+                const unlocked = state.unlockedLevels[lvl - 1];
+                btn.disabled = !unlocked;
+                // Mettre à jour l'icône
+                const iconSpan = btn.querySelector('.lock-icon');
+                if (iconSpan) {
+                    iconSpan.textContent = unlocked ? '' : '🔒';
+                }
+                // Mettre à jour l'infobulle
+                let tooltip = btn.querySelector('.tooltip');
+                if (!unlocked) {
+                    if (!tooltip) {
+                        tooltip = document.createElement('span');
+                        tooltip.className = 'tooltip';
+                        btn.appendChild(tooltip);
+                    }
+                    const prevLevel = lvl - 1;
+                    const rate = getSuccessRate(prevLevel);
+                    const percent = Math.round(rate * 100);
+                    tooltip.textContent = `Niveau ${prevLevel} : ${percent}% (80% requis)`;
+                } else {
+                    if (tooltip) tooltip.remove();
+                }
+                // Activer le bouton si c'est le niveau courant
+                btn.classList.toggle('active', lvl === state.currentLevel && unlocked);
+            });
+        }
+
+        // ================================================================
+        //  RENDU
+        // ================================================================
+        function renderQuestion() {
+            const el = document.getElementById('expressionLatex');
+            el.textContent = `\\(${state.currentQuestion.rawLatex}\\)`;
+            renderMath();
+        }
+
+        function renderAnswers() {
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            state.answers.forEach((ans, idx) => {
+                const div = document.createElement('div');
+                div.className = 'answer-option';
+                div.dataset.index = idx;
+
+                const radio = document.createElement('span');
+                radio.className = 'radio';
+
+                const label = document.createElement('span');
+                label.className = 'label';
+                if (ans.isOther) {
+                    label.innerHTML = `<span class="other-label">Autre</span>`;
+                } else {
+                    let display;
+                    if (ans.den === 1) {
+                        display = `${ans.num}`;
+                    } else {
+                        display = `\\dfrac{${ans.num}}{${ans.den}}`;
+                    }
+                    label.innerHTML = `<span class="math">\\(${display}\\)</span>`;
+                }
+
+                const check = document.createElement('span');
+                check.className = 'check-mark';
+
+                div.appendChild(radio);
+                div.appendChild(label);
+                div.appendChild(check);
+
+                if (state.selectedIndex === idx) div.classList.add('selected');
+
+                div.addEventListener('click', () => onAnswerClick(idx));
+                container.appendChild(div);
+            });
+            renderMath();
+        }
+
+        function renderMath() {
+            if (!window.MathJax || !MathJax.typesetPromise) {
+                setTimeout(renderMath, 200);
+                return;
+            }
+            MathJax.typesetPromise().catch(() => {});
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('successCount').textContent = state.stats.successes;
+            document.getElementById('errorCount').textContent = state.stats.errors;
+            document.getElementById('totalCount').textContent = state.stats.total;
+        }
+
+        function clearFeedback() {
+            document.getElementById('feedback').classList.remove('visible');
+        }
+
+        function showFeedback(isCorrect, explanationHtml) {
+            const fb = document.getElementById('feedback');
+            const resultDiv = document.getElementById('resultDisplay');
+            const icon = document.getElementById('resultIcon');
+            const text = document.getElementById('resultText');
+            const expl = document.getElementById('explanationText');
+
+            fb.classList.add('visible');
+            if (isCorrect) {
+                resultDiv.className = 'result correct';
+                icon.textContent = '✅';
+                text.textContent = 'Correct !';
+            } else {
+                resultDiv.className = 'result incorrect';
+                icon.textContent = '❌';
+                text.textContent = 'Incorrect. Voici le résultat correct :';
+            }
+            expl.innerHTML = explanationHtml;
+            renderMath();
+        }
+
+        function buildExplanation(correctNum, correctDen, selectedNum, selectedDen, isCorrect, otherIsCorrect) {
+            let html = '';
+            html += `<div class="step">📐 Expression initiale :</div>`;
+            html += `<div class="detail">\\(${state.currentQuestion.rawLatex}\\)</div>`;
+            html += `<div class="step">✅ Résultat correct :</div>`;
+            if (otherIsCorrect) {
+                html += `<div class="detail"><strong>Autre</strong> (aucune des propositions n'était correcte)</div>`;
+            } else {
+                let display;
+                if (correctDen === 1) display = `${correctNum}`;
+                else display = `\\dfrac{${correctNum}}{${correctDen}}`;
+                html += `<div class="detail">\\(${display}\\)</div>`;
+            }
+
+            if (!isCorrect) {
+                html += `<div class="step" style="color:#b91c1c;">❌ Votre choix :</div>`;
+                if (selectedNum === null) {
+                    html += `<div class="detail"><strong>Autre</strong></div>`;
+                } else {
+                    let display;
+                    if (selectedDen === 1) display = `${selectedNum}`;
+                    else display = `\\dfrac{${selectedNum}}{${selectedDen}}`;
+                    html += `<div class="detail">\\(${display}\\)</div>`;
+                }
+            }
+            return html;
+        }
+
+        // ================================================================
+        //  INTERACTIONS
+        // ================================================================
+        function onAnswerClick(index) {
+            if (state.submitted) return;
+            state.selectedIndex = index;
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function onSubmit() {
+            if (state.submitted) return;
+            if (state.selectedIndex === -1) {
+                alert('Veuillez sélectionner une réponse.');
+                return;
+            }
+
+            const selected = state.answers[state.selectedIndex];
+            const isCorrect = selected.correct;
+
+            // Mettre à jour les stats globales
+            state.stats.total++;
+            if (isCorrect) state.stats.successes++;
+            else state.stats.errors++;
+            updateStatsDisplay();
+
+            // Mettre à jour l'historique du niveau courant
+            const lvl = state.currentLevel;
+            if (!state.levelHistory[lvl]) state.levelHistory[lvl] = [];
+            state.levelHistory[lvl].push(isCorrect);
+            // Garder seulement les 10 dernières
+            if (state.levelHistory[lvl].length > 10) {
+                state.levelHistory[lvl].shift();
+            }
+
+            // Vérifier si le niveau suivant doit être débloqué
+            updateUnlockedLevels();
+
+            // Sauvegarder
+            saveToLocalStorage();
+
+            // Soumission
+            const raw = state.currentQuestion.rawLatex;
+            const cNum = state.currentQuestion.correctNum;
+            const cDen = state.currentQuestion.correctDen;
+            state.history.push({
+                type: isCorrect ? 'success' : 'failure',
+                expression: raw,
+                correct: `${cNum}/${cDen}`,
+                selected: selected.isOther ? 'Autre' : `${selected.num}/${selected.den}`
+            });
+
+            state.submitted = true;
+
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.add('disabled');
+                const ans = state.answers[i];
+                if (ans.correct) {
+                    el.classList.add('correct-reveal');
+                    el.querySelector('.check-mark').textContent = '✓';
+                } else if (i === state.selectedIndex && !ans.correct) {
+                    el.classList.add('wrong-reveal');
+                    el.querySelector('.check-mark').textContent = '✗';
+                }
+                if (i === state.selectedIndex) el.classList.add('selected');
+            });
+
+            document.getElementById('submitBtn').disabled = true;
+
+            const explanation = buildExplanation(
+                cNum, cDen,
+                selected.isOther ? null : selected.num,
+                selected.isOther ? null : selected.den,
+                isCorrect,
+                state.currentQuestion.otherIsCorrect
+            );
+            showFeedback(isCorrect, explanation);
+        }
+
+        function onReset() {
+            generateNewQuestion();
+            document.getElementById('submitBtn').disabled = true;
+            document.querySelectorAll('.answer-option').forEach(el => {
+                el.classList.remove('disabled', 'correct-reveal', 'wrong-reveal', 'selected');
+                el.querySelector('.check-mark').textContent = '';
+            });
+            clearFeedback();
+            // Cacher le message de déblocage après reset
+            document.getElementById('unlockMessage').classList.remove('show');
+        }
+
+        function changeLevel(level) {
+            if (!state.unlockedLevels[level - 1]) {
+                alert(`Le niveau ${level} est verrouillé. Vous devez obtenir au moins 80% de bonnes réponses sur les 10 dernières questions du niveau ${level-1}.`);
+                return;
+            }
+            state.currentLevel = level;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.level) === level);
+            });
+            document.getElementById('levelBadge').textContent = `Niveau ${level}`;
+            onReset();
+        }
+
+        // ================================================================
+        //  GÉNÉRATION D'UNE NOUVELLE QUESTION
+        // ================================================================
+        function generateNewQuestion() {
+            const q = generateQuestion(state.currentLevel);
+            state.currentQuestion = q;
+            state.answers = q.answers.map((a, i) => ({ ...a, index: i }));
+            state.correctIndex = state.answers.findIndex(a => a.correct);
+            state.selectedIndex = -1;
+            state.submitted = false;
+
+            renderQuestion();
+            renderAnswers();
+            clearFeedback();
+            updateStatsDisplay();
+            // Mettre à jour les boutons (déjà fait par updateUnlockedLevels)
+        }
+
+        // ================================================================
+        //  JSON (LOCAL STORAGE)
+        // ================================================================
+        function saveToLocalStorage() {
+            try {
+                const data = {
+                    stats: state.stats,
+                    history: state.history,
+                    levelHistory: state.levelHistory,
+                    unlockedLevels: state.unlockedLevels,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('expressionQCM_progressive', JSON.stringify(data));
+                updateJsonStatus('saved', 'Données sauvegardées dans le navigateur.');
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur lors de la sauvegarde.');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('expressionQCM_progressive');
+                if (!raw) { updateJsonStatus('empty', 'Aucune donnée trouvée.'); return; }
+                const data = JSON.parse(raw);
+                if (data.stats) state.stats = data.stats;
+                if (data.history) state.history = data.history;
+                if (data.levelHistory) state.levelHistory = data.levelHistory;
+                if (data.unlockedLevels) state.unlockedLevels = data.unlockedLevels;
+                updateStatsDisplay();
+                updateUnlockedLevels();
+                updateJsonStatus('loaded', `Données chargées : ${state.history.length} essais (${state.stats.successes} succès, ${state.stats.errors} échecs).`);
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur lors du chargement des données.');
+            }
+        }
+
+        function exportJSON() {
+            const data = {
+                stats: state.stats,
+                history: state.history,
+                levelHistory: state.levelHistory,
+                unlockedLevels: state.unlockedLevels,
+                exportedAt: new Date().toISOString()
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `qcm_progressive_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            updateJsonStatus('saved', 'Fichier JSON exporté avec succès.');
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.stats && data.history && data.levelHistory && data.unlockedLevels) {
+                            state.stats = data.stats;
+                            state.history = data.history;
+                            state.levelHistory = data.levelHistory;
+                            state.unlockedLevels = data.unlockedLevels;
+                            updateStatsDisplay();
+                            updateUnlockedLevels();
+                            updateJsonStatus('loaded', `Données importées : ${state.history.length} essais.`);
+                            saveToLocalStorage();
+                        } else {
+                            updateJsonStatus('error', 'Format JSON invalide (certains champs manquent).');
+                        }
+                    } catch (err) {
+                        updateJsonStatus('error', 'Erreur lors de la lecture du fichier.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function updateJsonStatus(status, message) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            dot.className = 'dot';
+            if (status === 'saved' || status === 'loaded') dot.classList.add('ok');
+            else if (status === 'error') dot.classList.add('ko');
+            else dot.classList.add('neutral');
+            text.textContent = message;
+        }
+
+        // ================================================================
+        //  INITIALISATION
+        // ================================================================
+        function init() {
+            // Charger depuis localStorage
+            try {
+                const raw = localStorage.getItem('expressionQCM_progressive');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.stats) state.stats = data.stats;
+                    if (data.history) state.history = data.history;
+                    if (data.levelHistory) state.levelHistory = data.levelHistory;
+                    if (data.unlockedLevels) state.unlockedLevels = data.unlockedLevels;
+                    updateStatsDisplay();
+                    updateJsonStatus('loaded', `Données chargées : ${state.history.length} essais.`);
+                } else {
+                    updateJsonStatus('empty', 'Aucune donnée en mémoire.');
+                }
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur de chargement.');
+            }
+
+            // Initialiser les niveaux débloqués
+            state._prevUnlocked = [...state.unlockedLevels];
+            // S'assurer que le niveau 1 est débloqué
+            state.unlockedLevels[0] = true;
+            // Recalculer les déblocages
+            updateUnlockedLevels();
+
+            // Niveau par défaut : 1
+            state.currentLevel = 1;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                const lvl = parseInt(btn.dataset.level);
+                btn.addEventListener('click', () => {
+                    changeLevel(lvl);
+                });
+            });
+            document.getElementById('levelBadge').textContent = `Niveau ${state.currentLevel}`;
+
+            generateNewQuestion();
+            document.getElementById('submitBtn').disabled = true;
+
+            document.getElementById('submitBtn').addEventListener('click', onSubmit);
+            document.getElementById('resetBtn').addEventListener('click', onReset);
+            document.getElementById('saveBtn').addEventListener('click', exportJSON);
+            document.getElementById('loadBtn').addEventListener('click', importJSON);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

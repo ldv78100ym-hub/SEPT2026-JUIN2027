@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM – Écriture correcte d’une expression</title>
+
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [
+                    ['$', '$'],
+                    ['\\(', '\\)']
+                ],
+                displayMath: [
+                    ['$$', '$$'],
+                    ['\\[', '\]']
+                ]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer>
+    </script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f1f4f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .card {
+            max-width: 960px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px 30px 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf2;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+        .header .badge {
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 12px;
+            border-radius: 30px;
+        }
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            background: #f8fafc;
+            padding: 3px 12px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .stats .num {
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .stats .ok {
+            color: #15803d;
+        }
+        .stats .ko {
+            color: #b91c1c;
+        }
+
+        .question-block {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 16px 16px 14px;
+            margin: 4px 0 18px;
+            border: 1px solid #e2e8f0;
+        }
+        .question-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .question-label .icon {
+            font-size: 16px;
+        }
+        .expression-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2px 0 0px;
+            font-size: 20px;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+        }
+        .expression-display .math {
+            font-size: 20px;
+            word-break: break-all;
+            max-width: 70%;
+            display: inline-block;
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+        .expression-display .equal-sign {
+            font-size: 18px;
+            font-weight: 300;
+            color: #64748b;
+        }
+        .expression-display .target {
+            font-size: 16px;
+            color: #0f172a;
+            font-weight: 500;
+            background: #ffffff;
+            padding: 2px 14px;
+            border-radius: 40px;
+            border: 1px dashed #94a3b8;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 7px;
+            margin: 14px 0 18px;
+        }
+
+        @media (max-width: 580px) {
+            .card {
+                padding: 14px 10px 18px;
+            }
+            .stats {
+                font-size: 11px;
+                padding: 3px 8px;
+                gap: 5px;
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-around;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 5px;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            .expression-display {
+                font-size: 17px;
+            }
+            .expression-display .math {
+                font-size: 17px;
+                max-width: 92%;
+            }
+        }
+
+        .answer-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: 1.5px solid #d1d9e0;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+        .answer-option:hover:not(.disabled) {
+            border-color: #94a3b8;
+            background: #fafcff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .answer-option.selected {
+            border-color: #2563eb;
+            background: #f0f5ff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+        }
+        .answer-option.correct-reveal {
+            border-color: #15803d;
+            background: #f0fdf4;
+        }
+        .answer-option.wrong-reveal {
+            border-color: #b91c1c;
+            background: #fef2f2;
+        }
+        .answer-option.disabled {
+            cursor: default;
+            opacity: 0.85;
+        }
+        .answer-option .radio {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+            background: #fff;
+        }
+        .answer-option.selected .radio {
+            border-color: #2563eb;
+            background: #2563eb;
+        }
+        .answer-option.selected .radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .answer-option .label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 14px;
+            flex: 1;
+        }
+        .answer-option .math {
+            font-size: 15px;
+            margin-left: 2px;
+        }
+        .answer-option .other-label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 14px;
+            font-style: italic;
+        }
+        .answer-option .check-mark {
+            margin-left: auto;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .answer-option.correct-reveal .check-mark {
+            color: #15803d;
+        }
+        .answer-option.wrong-reveal .check-mark {
+            color: #b91c1c;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 2px 0 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 7px 16px;
+            border-radius: 60px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            background: #f1f4f9;
+            color: #1e293b;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .btn-primary {
+            background: #1e293b;
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0f172a;
+        }
+        .btn-success {
+            background: #15803d;
+            color: #fff;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #166534;
+        }
+        .btn-outline {
+            background: transparent;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-outline:hover:not(:disabled) {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .btn-warning {
+            background: #b45309;
+            color: #fff;
+        }
+        .btn-warning:hover:not(:disabled) {
+            background: #92400e;
+        }
+
+        .feedback {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback.visible {
+            display: block;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback .result {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .feedback .result .icon {
+            font-size: 18px;
+        }
+        .feedback .result.correct {
+            color: #15803d;
+        }
+        .feedback .result.incorrect {
+            color: #b91c1c;
+        }
+
+        .feedback .explanation {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+        .feedback .explanation .math {
+            font-size: 14px;
+        }
+        .feedback .explanation .step {
+            margin: 6px 0 2px 0;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .feedback .explanation .detail {
+            margin: 4px 0;
+            padding: 6px 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .json-status {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 4px 12px;
+            background: #f8fafc;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .json-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .json-status .dot.ok {
+            background: #15803d;
+        }
+        .json-status .dot.ko {
+            background: #b91c1c;
+        }
+        .json-status .dot.neutral {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="app">
+        <div class="header">
+            <h1>🧮 Écriture correcte</h1>
+            <span class="badge">QCM</span>
+            <div class="stats" id="statsDisplay">
+                <span>✅ <span class="num ok" id="successCount">0</span></span>
+                <span>❌ <span class="num ko" id="errorCount">0</span></span>
+                <span>📊 <span class="num" id="totalCount">0</span></span>
+            </div>
+        </div>
+
+        <div class="question-block">
+            <div class="question-label">
+                <span class="icon">🎯</span>
+                Parmi les propositions ci-dessous, laquelle est l'écriture correcte de l'expression suivante&nbsp;?
+            </div>
+            <div class="expression-display">
+                <span class="math" id="expressionLatex">\(3 - \dfrac{-2}{5} \times -5\)</span>
+                <span class="equal-sign">⟶</span>
+                <span class="target">?</span>
+            </div>
+        </div>
+
+        <div class="answers-grid" id="answersContainer"></div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="submitBtn">📤 Soumettre</button>
+            <button class="btn btn-outline" id="resetBtn">🔄 Recommencer</button>
+            <button class="btn btn-success" id="saveBtn">💾 Enregistrer JSON</button>
+            <button class="btn btn-warning" id="loadBtn">📂 Charger JSON</button>
+        </div>
+
+        <div class="feedback" id="feedback">
+            <div class="result" id="resultDisplay">
+                <span class="icon" id="resultIcon">✅</span>
+                <span id="resultText">Correct !</span>
+            </div>
+            <div class="explanation" id="explanationText"></div>
+        </div>
+
+        <div class="json-status" id="jsonStatus">
+            <span class="dot neutral" id="statusDot"></span>
+            <span id="statusText">Aucune donnée en mémoire</span>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  RÈGLE IMPÉRATIVE : JAMAIS deux opérateurs consécutifs sans parenthèses
+        //  dans la bonne réponse. Vérification stricte et régénération.
+        // ================================================================
+
+        // ================================================================
+        //  UTILITAIRES
+        // ================================================================
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function randomNonZeroInt(min, max) {
+            let n;
+            do { n = randomInt(min, max); } while (n === 0);
+            return n;
+        }
+
+        function randomFraction() {
+            let a = randomNonZeroInt(-100, 100);
+            let b = randomInt(1, 100);
+            return { num: a, den: b };
+        }
+
+        // ================================================================
+        //  ARBRE D'EXPRESSION AVEC EXACTEMENT 3 OPÉRATEURS
+        // ================================================================
+        function Node(type, value, left, right, op) {
+            this.type = type; // 'integer', 'fraction', 'op'
+            this.value = value || null; // {num, den}
+            this.left = left || null;
+            this.right = right || null;
+            this.op = op || null;
+        }
+
+        function generateNodeWithOps(targetOps) {
+            if (targetOps === 0) {
+                if (Math.random() < 0.5) {
+                    const n = randomNonZeroInt(-100, 100);
+                    return new Node('integer', { num: n, den: 1 });
+                } else {
+                    const f = randomFraction();
+                    return new Node('fraction', { num: f.num, den: f.den });
+                }
+            }
+            const ops = ['+', '-', '*', '/'];
+            const op = ops[randomInt(0, 3)];
+            let leftOps = randomInt(0, targetOps - 1);
+            let rightOps = targetOps - 1 - leftOps;
+            let left = generateNodeWithOps(leftOps);
+            let right = generateNodeWithOps(rightOps);
+            if (op === '/') {
+                if (right.type === 'integer' && right.value.num === 0) {
+                    right = new Node('integer', { num: randomNonZeroInt(-100, 100), den: 1 });
+                }
+            }
+            return new Node('op', null, left, right, op);
+        }
+
+        function countOps(node) {
+            if (node.type === 'op') {
+                return 1 + countOps(node.left) + countOps(node.right);
+            }
+            return 0;
+        }
+
+        function generateExpression() {
+            let node = generateNodeWithOps(3);
+            while (countOps(node) !== 3) {
+                node = generateNodeWithOps(3);
+            }
+            return node;
+        }
+
+        // ================================================================
+        //  PRIORITÉ DES OPÉRATEURS
+        // ================================================================
+        function getPriority(op) {
+            if (op === '+' || op === '-') return 1;
+            if (op === '*' || op === '/') return 2;
+            return 0;
+        }
+
+        // ================================================================
+        //  CONVERSION LaTeX AVEC RÈGLES DE SIGNES
+        // ================================================================
+
+        function toLatex(node, parentOp, side, options) {
+            options = options || {
+                doubleNeg: true,
+                negFractionTimes: true,
+                negNumberTimes: true,
+                negAddition: true,
+                negDivision: true
+            };
+
+            // --- Feuille ---
+            if (node.type === 'integer' || node.type === 'fraction') {
+                const num = node.value.num;
+                const den = node.value.den || 1;
+                const absNum = Math.abs(num);
+                const isFrac = (den !== 1);
+
+                if (num >= 0) {
+                    if (isFrac) return { tex: `\\dfrac{${num}}{${den}}`, changeOp: false, neg: false };
+                    else return { tex: `${num}`, changeOp: false, neg: false };
+                }
+
+                // num < 0
+                // Règle : si l'opérateur parent est '+' ou '-' et qu'on est à droite,
+                // on simplifie les signes consécutifs : +(-a) → -a, -(-a) → +a
+                if ((parentOp === '+' || parentOp === '-') && side === 'right' && options.doubleNeg) {
+                    if (isFrac) return { tex: `\\dfrac{${absNum}}{${den}}`, changeOp: true, neg: false };
+                    else return { tex: `${absNum}`, changeOp: true, neg: false };
+                }
+
+                // Règle pour \times négatif
+                if (parentOp === '*' && side === 'right') {
+                    if (isFrac && options.negFractionTimes) {
+                        return { tex: `\\left(-\\dfrac{${absNum}}{${den}}\\right)`, changeOp: false, neg: false };
+                    } else if (!isFrac && options.negNumberTimes) {
+                        return { tex: `(${num})`, changeOp: false, neg: false };
+                    } else {
+                        if (isFrac) return { tex: `-\\dfrac{${absNum}}{${den}}`, changeOp: false, neg: true };
+                        else return { tex: `${num}`, changeOp: false, neg: true };
+                    }
+                }
+
+                // Règle pour division par négatif
+                if (parentOp === '/' && side === 'right' && options.negDivision) {
+                    if (isFrac) {
+                        return { tex: `\\left(-\\dfrac{${absNum}}{${den}}\\right)`, changeOp: false, neg: false };
+                    } else {
+                        return { tex: `(${num})`, changeOp: false, neg: false };
+                    }
+                }
+
+                // Règle par défaut : fraction négative seule -> -\dfrac{abs}{den}
+                if (isFrac) {
+                    return { tex: `-\\dfrac{${absNum}}{${den}}`, changeOp: false, neg: true };
+                } else {
+                    return { tex: `${num}`, changeOp: false, neg: true };
+                }
+            }
+
+            // --- Opérateur ---
+            const op = node.op;
+            const leftRes = toLatex(node.left, op, 'left', options);
+            const rightRes = toLatex(node.right, op, 'right', options);
+
+            let leftTex = leftRes.tex;
+            let rightTex = rightRes.tex;
+            let displayOp = op;
+
+            // Si le terme de droite est négatif et qu'on a un changement d'opérateur demandé,
+            // on ajuste l'opérateur (cela gère +(-a) et -(-a))
+            if (rightRes.changeOp && options.negAddition) {
+                if (op === '+') displayOp = '-';
+                else if (op === '-') displayOp = '+';
+                // rightTex contient déjà la valeur absolue (sans signe)
+            }
+
+            let combined = leftTex + ' ' + displayOp + ' ' + rightTex;
+
+            // Parenthèses selon priorités
+            const parentPriority = parentOp ? getPriority(parentOp) : 0;
+            const currentPriority = getPriority(op);
+            let needParen = false;
+            if (parentPriority > currentPriority) {
+                needParen = true;
+            } else if (parentPriority === currentPriority) {
+                if ((parentOp === '-' || parentOp === '/') && side === 'right') {
+                    needParen = true;
+                }
+                if (parentOp === '*' && (op === '+' || op === '-')) {
+                    needParen = true;
+                }
+                if (parentOp === '/' && (op === '+' || op === '-') && side === 'left') {
+                    needParen = true;
+                }
+            }
+            if (needParen) {
+                combined = '\\left(' + combined + '\\right)';
+            }
+
+            combined = combined.replace(/\*/g, '\\times');
+
+            return { tex: combined, changeOp: false, neg: false };
+        }
+
+        // ================================================================
+        //  AFFICHAGE BRUT DE L'EXPRESSION INITIALE
+        // ================================================================
+        function toLatexRaw(node) {
+            if (node.type === 'integer') {
+                return `${node.value.num}`;
+            }
+            if (node.type === 'fraction') {
+                return `\\dfrac{${node.value.num}}{${node.value.den}}`;
+            }
+            const left = toLatexRaw(node.left);
+            const right = toLatexRaw(node.right);
+            let op = node.op;
+            if (op === '*') op = '\\times';
+            if (op === '/') op = '\\div';
+            const leftNode = node.left;
+            const rightNode = node.right;
+            const leftPrio = getPriority(node.op);
+            const rightPrio = getPriority(node.op);
+            let leftStr = left;
+            let rightStr = right;
+            if (leftNode.type === 'op' && getPriority(leftNode.op) < leftPrio) {
+                leftStr = '\\left(' + leftStr + '\\right)';
+            }
+            if (rightNode.type === 'op' && getPriority(rightNode.op) < rightPrio) {
+                rightStr = '\\left(' + rightStr + '\\right)';
+            }
+            if (node.op === '-' && rightNode.type === 'op') {
+                rightStr = '\\left(' + rightStr + '\\right)';
+            }
+            return leftStr + ' ' + op + ' ' + rightStr;
+        }
+
+        // ================================================================
+        //  VÉRIFICATION STRICTE : PAS DE DEUX OPÉRATEURS CONSÉCUTIFS
+        // ================================================================
+        function hasConsecutiveOperators(tex) {
+            // On retire tout ce qui est entre parenthèses (y compris \left(...\right))
+            let clean = tex.replace(/\\left\([^)]*\)/g, ' ').replace(/\([^)]*\)/g, ' ');
+            // On retire les \dfrac{...}{...} pour ne pas confondre avec des opérateurs
+            clean = clean.replace(/\\dfrac\{[^}]*\}\{[^}]*\}/g, ' ');
+            // On vérifie les motifs interdits : \times -, \div -, + -, - -
+            const patterns = [/\\times\s*\-/, /\\div\s*\-/, /\+\s*\-/, /\-\s*\-/, /\*\s*\-/, /\/\s*\-/];
+            for (let p of patterns) {
+                if (p.test(clean)) return true;
+            }
+            return false;
+        }
+
+        // ================================================================
+        //  GÉNÉRATION DES DISTRACTEURS ET DE LA QUESTION
+        // ================================================================
+
+        function generateDistractors(root, correctTex, count) {
+            const distractors = [];
+            const used = new Set();
+            used.add(correctTex);
+
+            const ruleConfigs = [
+                { name: 'doubleNeg', message: "Vous avez conservé un double négatif (ex: '- (-a)') ou un '+ (-a)' alors qu'il faut le simplifier (respectivement en '+a' ou '-a')." },
+                { name: 'negFractionTimes', message: "Vous n'avez pas mis de parenthèses autour de la fraction négative multipliée (ex: \\times\\left(-\\dfrac{...}{...}\\right))." },
+                { name: 'negNumberTimes', message: "Vous n'avez pas mis de parenthèses autour du nombre négatif dans une multiplication (ex: \\times (-a))." },
+                { name: 'negAddition', message: "Vous n'avez pas simplifié l'addition ou la soustraction avec un nombre négatif (ex: 'a - (-b)' doit devenir 'a + b')." },
+                { name: 'negDivision', message: "Vous n'avez pas mis de parenthèses autour du nombre négatif dans une division (ex: / (-a))." }
+            ];
+
+            for (let i = ruleConfigs.length - 1; i > 0; i--) {
+                const j = randomInt(0, i);
+                [ruleConfigs[i], ruleConfigs[j]] = [ruleConfigs[j], ruleConfigs[i]];
+            }
+
+            for (let config of ruleConfigs) {
+                if (distractors.length >= count) break;
+                const opts = {
+                    doubleNeg: true,
+                    negFractionTimes: true,
+                    negNumberTimes: true,
+                    negAddition: true,
+                    negDivision: true
+                };
+                opts[config.name] = false;
+
+                let tex = toLatex(root, null, null, opts).tex;
+                let attempts = 0;
+                while (used.has(tex) && attempts < 10) {
+                    const keys = ['doubleNeg', 'negFractionTimes', 'negNumberTimes', 'negAddition', 'negDivision'];
+                    const k = keys[randomInt(0, 4)];
+                    opts[k] = !opts[k];
+                    tex = toLatex(root, null, null, opts).tex;
+                    attempts++;
+                }
+                if (!used.has(tex) && tex !== correctTex) {
+                    used.add(tex);
+                    distractors.push({ tex: tex });
+                }
+            }
+
+            while (distractors.length < count) {
+                const clone = JSON.parse(JSON.stringify(root));
+                let leaves = [];
+                function collect(node) {
+                    if (node.type === 'integer' || node.type === 'fraction') {
+                        leaves.push(node);
+                    } else {
+                        collect(node.left);
+                        collect(node.right);
+                    }
+                }
+                collect(clone);
+                if (leaves.length === 0) break;
+                const leaf = leaves[randomInt(0, leaves.length - 1)];
+                leaf.value.num = -leaf.value.num;
+                if (leaf.value.num === 0) leaf.value.num = randomNonZeroInt(-100, 100);
+                const newTex = toLatex(clone, null, null, { doubleNeg: true, negFractionTimes: true, negNumberTimes: true,
+                        negAddition: true, negDivision: true }).tex;
+                if (!used.has(newTex) && newTex !== correctTex) {
+                    used.add(newTex);
+                    distractors.push({ tex: newTex });
+                } else {
+                    if (leaves.length > 1) {
+                        const leaf2 = leaves[(leaves.indexOf(leaf) + 1) % leaves.length];
+                        leaf2.value.num = -leaf2.value.num;
+                        if (leaf2.value.num === 0) leaf2.value.num = randomNonZeroInt(-100, 100);
+                        const newTex2 = toLatex(clone, null, null, { doubleNeg: true, negFractionTimes: true,
+                                negNumberTimes: true, negAddition: true, negDivision: true }).tex;
+                        if (!used.has(newTex2) && newTex2 !== correctTex) {
+                            used.add(newTex2);
+                            distractors.push({ tex: newTex2 });
+                        }
+                    }
+                }
+            }
+
+            while (distractors.length < count) {
+                const fake = generateExpression();
+                const tex = toLatex(fake, null, null, { doubleNeg: true, negFractionTimes: true, negNumberTimes: true,
+                        negAddition: true, negDivision: true }).tex;
+                if (!used.has(tex) && tex !== correctTex) {
+                    used.add(tex);
+                    distractors.push({ tex: tex });
+                }
+            }
+
+            return distractors;
+        }
+
+        function generateQuestion() {
+            let attempts = 0;
+            while (attempts < 100) {
+                attempts++;
+                const root = generateExpression();
+                const rawLatex = toLatexRaw(root);
+                const correctRes = toLatex(root, null, null, { doubleNeg: true, negFractionTimes: true, negNumberTimes: true,
+                    negAddition: true, negDivision: true });
+                const correctTex = correctRes.tex;
+
+                // Vérification impérative : pas de deux opérateurs consécutifs sans parenthèses
+                if (hasConsecutiveOperators(correctTex)) {
+                    continue; // on régénère
+                }
+
+                const otherIsCorrect = (randomInt(1, 5) === 1);
+
+                let answers = [];
+
+                if (otherIsCorrect) {
+                    const distractors = generateDistractors(root, correctTex, 4);
+                    for (let d of distractors) {
+                        answers.push({ tex: d.tex, isOther: false, correct: false });
+                    }
+                    answers.push({ tex: null, isOther: true, correct: true });
+                } else {
+                    const distractors = generateDistractors(root, correctTex, 3);
+                    const correctPos = randomInt(0, 3);
+                    let exprIndex = 0;
+                    for (let i = 0; i < 4; i++) {
+                        if (i === correctPos) {
+                            answers.push({ tex: correctTex, isOther: false, correct: true });
+                        } else {
+                            answers.push({ tex: distractors[exprIndex++].tex, isOther: false, correct: false });
+                        }
+                    }
+                    answers.push({ tex: null, isOther: true, correct: false });
+                }
+
+                return {
+                    rawLatex: rawLatex,
+                    answers: answers,
+                    correctTex: correctTex,
+                    otherIsCorrect: otherIsCorrect
+                };
+            }
+            // fallback (ne devrait pas arriver)
+            return generateQuestion();
+        }
+
+        // ================================================================
+        //  ÉTAT GLOBAL
+        // ================================================================
+        const state = {
+            currentQuestion: null,
+            answers: [],
+            correctIndex: -1,
+            selectedIndex: -1,
+            submitted: false,
+            stats: { successes: 0, errors: 0, total: 0 },
+            history: [],
+        };
+
+        // ================================================================
+        //  RENDU
+        // ================================================================
+        function renderQuestion() {
+            const el = document.getElementById('expressionLatex');
+            el.textContent = `\\(${state.currentQuestion.rawLatex}\\)`;
+            renderMath();
+        }
+
+        function renderAnswers() {
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            state.answers.forEach((ans, idx) => {
+                const div = document.createElement('div');
+                div.className = 'answer-option';
+                div.dataset.index = idx;
+
+                const radio = document.createElement('span');
+                radio.className = 'radio';
+
+                const label = document.createElement('span');
+                label.className = 'label';
+                if (ans.isOther) {
+                    label.innerHTML = `<span class="other-label">Autre</span>`;
+                } else {
+                    label.innerHTML = `<span class="math">\\(${ans.tex}\\)</span>`;
+                }
+
+                const check = document.createElement('span');
+                check.className = 'check-mark';
+
+                div.appendChild(radio);
+                div.appendChild(label);
+                div.appendChild(check);
+
+                if (state.selectedIndex === idx) div.classList.add('selected');
+
+                div.addEventListener('click', () => onAnswerClick(idx));
+                container.appendChild(div);
+            });
+            renderMath();
+        }
+
+        function renderMath() {
+            if (!window.MathJax || !MathJax.typesetPromise) {
+                setTimeout(renderMath, 200);
+                return;
+            }
+            MathJax.typesetPromise().catch(() => {});
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('successCount').textContent = state.stats.successes;
+            document.getElementById('errorCount').textContent = state.stats.errors;
+            document.getElementById('totalCount').textContent = state.stats.total;
+        }
+
+        function clearFeedback() {
+            document.getElementById('feedback').classList.remove('visible');
+        }
+
+        function showFeedback(isCorrect, explanationHtml) {
+            const fb = document.getElementById('feedback');
+            const resultDiv = document.getElementById('resultDisplay');
+            const icon = document.getElementById('resultIcon');
+            const text = document.getElementById('resultText');
+            const expl = document.getElementById('explanationText');
+
+            fb.classList.add('visible');
+            if (isCorrect) {
+                resultDiv.className = 'result correct';
+                icon.textContent = '✅';
+                text.textContent = 'Correct !';
+            } else {
+                resultDiv.className = 'result incorrect';
+                icon.textContent = '❌';
+                text.textContent = 'Incorrect. Voici la correction :';
+            }
+            expl.innerHTML = explanationHtml;
+            renderMath();
+        }
+
+        // ================================================================
+        //  EXPLICATION
+        // ================================================================
+        function buildExplanation(correctTex, selectedTex, isCorrect, otherIsCorrect) {
+            let html = '';
+            html += `<div class="step">📐 Expression initiale :</div>`;
+            html += `<div class="detail">\\(${state.currentQuestion.rawLatex}\\)</div>`;
+            html += `<div class="step">✅ Écriture correcte :</div>`;
+            if (otherIsCorrect) {
+                html += `<div class="detail"><strong>Autre</strong> (aucune des expressions proposées n'est correcte)</div>`;
+            } else {
+                html += `<div class="detail">\\(${correctTex}\\)</div>`;
+            }
+
+            if (!isCorrect) {
+                html += `<div class="step" style="color:#b91c1c;">❌ Votre choix :</div>`;
+                if (selectedTex === null) {
+                    html += `<div class="detail"><strong>Autre</strong></div>`;
+                } else {
+                    html += `<div class="detail">\\(${selectedTex}\\)</div>`;
+                }
+            }
+
+            
+            return html;
+        }
+
+        // ================================================================
+        //  INTERACTIONS
+        // ================================================================
+        function onAnswerClick(index) {
+            if (state.submitted) return;
+            state.selectedIndex = index;
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function onSubmit() {
+            if (state.submitted) return;
+            if (state.selectedIndex === -1) {
+                alert('Veuillez sélectionner une réponse.');
+                return;
+            }
+
+            const selected = state.answers[state.selectedIndex];
+            const isCorrect = selected.correct;
+
+            state.stats.total++;
+            if (isCorrect) state.stats.successes++;
+            else state.stats.errors++;
+            updateStatsDisplay();
+
+            const raw = state.currentQuestion.rawLatex;
+            const correct = state.currentQuestion.correctTex;
+            state.history.push({
+                type: isCorrect ? 'success' : 'failure',
+                expression: raw,
+                correct: correct,
+                selected: selected.isOther ? 'Autre' : selected.tex
+            });
+
+            state.submitted = true;
+
+            document.querySelectorAll('.answer-option').forEach((el, i) => {
+                el.classList.add('disabled');
+                const ans = state.answers[i];
+                if (ans.correct) {
+                    el.classList.add('correct-reveal');
+                    el.querySelector('.check-mark').textContent = '✓';
+                } else if (i === state.selectedIndex && !ans.correct) {
+                    el.classList.add('wrong-reveal');
+                    el.querySelector('.check-mark').textContent = '✗';
+                }
+                if (i === state.selectedIndex) el.classList.add('selected');
+            });
+
+            document.getElementById('submitBtn').disabled = true;
+
+            const explanation = buildExplanation(
+                state.currentQuestion.correctTex,
+                selected.isOther ? null : selected.tex,
+                isCorrect,
+                state.currentQuestion.otherIsCorrect
+            );
+            showFeedback(isCorrect, explanation);
+
+            saveToLocalStorage();
+        }
+
+        function onReset() {
+            generateNewQuestion();
+            document.getElementById('submitBtn').disabled = true;
+            document.querySelectorAll('.answer-option').forEach(el => {
+                el.classList.remove('disabled', 'correct-reveal', 'wrong-reveal', 'selected');
+                el.querySelector('.check-mark').textContent = '';
+            });
+            clearFeedback();
+        }
+
+        // ================================================================
+        //  GÉNÉRATION D'UNE NOUVELLE QUESTION
+        // ================================================================
+        function generateNewQuestion() {
+            const q = generateQuestion();
+            state.currentQuestion = q;
+            state.answers = q.answers.map((a, i) => ({ ...a, index: i }));
+            state.correctIndex = state.answers.findIndex(a => a.correct);
+            state.selectedIndex = -1;
+            state.submitted = false;
+
+            renderQuestion();
+            renderAnswers();
+            clearFeedback();
+            updateStatsDisplay();
+        }
+
+        // ================================================================
+        //  JSON (LOCAL STORAGE)
+        // ================================================================
+        function saveToLocalStorage() {
+            try {
+                const data = { stats: state.stats, history: state.history, lastUpdated: new Date().toISOString() };
+                localStorage.setItem('expressionQCM_data', JSON.stringify(data));
+                updateJsonStatus('saved', 'Données sauvegardées dans le navigateur.');
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur lors de la sauvegarde.');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('expressionQCM_data');
+                if (!raw) { updateJsonStatus('empty', 'Aucune donnée trouvée.'); return; }
+                const data = JSON.parse(raw);
+                if (data.stats) state.stats = data.stats;
+                if (data.history) state.history = data.history;
+                updateStatsDisplay();
+                updateJsonStatus('loaded', `Données chargées : ${state.history.length} essais (${state.stats.successes} succès, ${state.stats.errors} échecs).`);
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur lors du chargement des données.');
+            }
+        }
+
+        function exportJSON() {
+            const data = { stats: state.stats, history: state.history, exportedAt: new Date().toISOString() };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `expression_qcm_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            updateJsonStatus('saved', 'Fichier JSON exporté avec succès.');
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.stats && data.history) {
+                            state.stats = data.stats;
+                            state.history = data.history;
+                            updateStatsDisplay();
+                            updateJsonStatus('loaded', `Données importées : ${state.history.length} essais.`);
+                            saveToLocalStorage();
+                        } else {
+                            updateJsonStatus('error', 'Format JSON invalide.');
+                        }
+                    } catch (err) {
+                        updateJsonStatus('error', 'Erreur lors de la lecture du fichier.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function updateJsonStatus(status, message) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            dot.className = 'dot';
+            if (status === 'saved' || status === 'loaded') dot.classList.add('ok');
+            else if (status === 'error') dot.classList.add('ko');
+            else dot.classList.add('neutral');
+            text.textContent = message;
+        }
+
+        // ================================================================
+        //  INITIALISATION
+        // ================================================================
+        function init() {
+            try {
+                const raw = localStorage.getItem('expressionQCM_data');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.stats) state.stats = data.stats;
+                    if (data.history) state.history = data.history;
+                    updateStatsDisplay();
+                    updateJsonStatus('loaded', `Données chargées : ${state.history.length} essais.`);
+                } else {
+                    updateJsonStatus('empty', 'Aucune donnée en mémoire.');
+                }
+            } catch (e) {
+                updateJsonStatus('error', 'Erreur de chargement.');
+            }
+
+            generateNewQuestion();
+            document.getElementById('submitBtn').disabled = true;
+
+            document.getElementById('submitBtn').addEventListener('click', onSubmit);
+            document.getElementById('resetBtn').addEventListener('click', onReset);
+            document.getElementById('saveBtn').addEventListener('click', exportJSON);
+            document.getElementById('loadBtn').addEventListener('click', importJSON);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

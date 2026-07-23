@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priorités opératoires — Valeurs exactes</title>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'none'
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            startup: { typeset: false }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --accent: #2c3e50;
+            --operator: #fdebd0;
+            --paren: #d4e6f1;
+            --exponent: #fadbd8;
+            --number: #f4f4f4;
+            --highlight: #e67e22;
+            --radius: 12px;
+            --shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font); background: var(--bg); min-height: 100vh; padding: 25px; display: flex; justify-content: center; align-items: center; }
+        .container { max-width: 900px; width: 100%; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 30px 30px 25px; }
+        h1 { font-size: 2rem; font-weight: 700; color: #1a2332; margin-bottom: 5px; text-align: center; }
+        .subtitle { text-align: center; color: #5a6c7d; margin-bottom: 20px; }
+        .principe { background: #eef3f9; border-left: 5px solid var(--accent); padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 15px 0 20px; }
+        .principe ol { padding-left: 22px; font-weight: 600; }
+        .canvas-box { text-align: center; background: #fcfdfd; border: 1px solid #dde2e8; border-radius: var(--radius); padding: 15px; margin: 20px 0; }
+        canvas { display: block; margin: 0 auto; max-width: 100%; border-radius: 6px; background: #fff; }
+        .buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 15px 0 10px; }
+        .btn { padding: 10px 18px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; font-family: var(--font); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #1a252f; }
+        .btn-outline { background: #fff; border: 2px solid var(--accent); color: var(--accent); }
+        .btn-outline:hover { background: #e9eef3; }
+        .expression-display { text-align: center; font-size: 1.25rem; padding: 12px; background: #fafbfc; border-radius: 8px; border: 1px dashed #ccd; margin: 15px 0; overflow-x: auto; }
+        .step-message { margin-top: 8px; font-style: italic; color: #4a5568; text-align: center; min-height: 1.5em; }
+        footer { margin-top: 25px; font-size: 0.8rem; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📏 Priorités opératoires</h1>
+    <p class="subtitle">PEMDAS – résultats exacts (fractions irréductibles)</p>
+
+    <div class="principe">
+        <strong>Ordre de priorité :</strong>
+        <ol>
+            <li><strong>P</strong> – Parenthèses</li>
+            <li><strong>E</strong> – Exposants (^)</li>
+            <li><strong>MD</strong> – Multiplications (×) et Divisions (÷) de gauche à droite</li>
+            <li><strong>AS</strong> – Additions (+) et Soustractions (−) de gauche à droite</li>
+        </ol>
+    </div>
+
+    <p style="margin: 0 0 10px;">
+        Cliquez sur <strong>« Étape suivante »</strong> pour effectuer une seule opération prioritaire.
+        Les résultats sont toujours des fractions exactes, simplifiées.
+    </p>
+
+    <div class="canvas-box">
+        <canvas id="priorityCanvas" width="700" height="320"></canvas>
+        <p class="step-message" id="stepMessage">Cliquez sur « Nouvelle expression » pour commencer.</p>
+        <div class="buttons">
+            <button class="btn btn-primary" id="btnNext">⏭ Étape suivante</button>
+            <button class="btn btn-outline" id="btnReset">↺ Réinitialiser</button>
+            <button class="btn btn-outline" id="btnNewExpr">🎲 Nouvelle expression</button>
+        </div>
+    </div>
+
+    <div class="expression-display" id="mathExpression">\[ 4 + 3 \times (6 - 2)^2 \div 2 \]</div>
+
+    <footer>Les parenthèses, les exposants, puis les multiplications/divisions, enfin les additions/soustractions.</footer>
+</div>
+
+<script>
+(function() {
+    const canvas = document.getElementById('priorityCanvas');
+    const ctx = canvas.getContext('2d');
+    const stepMsg = document.getElementById('stepMessage');
+    const mathDiv = document.getElementById('mathExpression');
+
+    // ---------- Représentation des fractions ----------
+    class Fraction {
+        constructor(num, den = 1) {
+            if (den < 0) { num = -num; den = -den; }
+            if (num === 0) den = 1;
+            const g = Fraction.gcd(Math.abs(num), den);
+            this.num = num / g;
+            this.den = den / g;
+        }
+        static gcd(a, b) { return b ? Fraction.gcd(b, a % b) : a; }
+        toString() { return this.den === 1 ? `${this.num}` : `${this.num}/${this.den}`; }
+        toLatex() { return this.den === 1 ? `${this.num}` : `\\dfrac{${this.num}}{${this.den}}`; }
+        isInteger() { return this.den === 1; }
+    }
+
+    function fractionFromString(s) {
+        if (s.includes('/')) {
+            const [num, den] = s.split('/').map(Number);
+            return new Fraction(num, den);
+        }
+        return new Fraction(parseInt(s));
+    }
+
+    // ---------- Tokens avec valeur fractionnaire ----------
+    function createNumberToken(value) {
+        const frac = value instanceof Fraction ? value : fractionFromString(value.toString());
+        return { type: 'number', value: frac.toString(), fraction: frac };
+    }
+
+    // Expression initiale (valeurs exactes)
+    let expression = [
+        createNumberToken('4'),
+        { type: 'operator', value: '+' },
+        createNumberToken('3'),
+        { type: 'operator', value: '×' },
+        { type: 'paren_open', value: '(' },
+        createNumberToken('6'),
+        { type: 'operator', value: '-' },
+        createNumberToken('2'),
+        { type: 'paren_close', value: ')' },
+        { type: 'exponent', value: '2' },
+        { type: 'operator', value: '÷' },
+        createNumberToken('2')
+    ];
+
+    let steps = [];
+    let currentStep = -1;
+
+    function cloneTokens(arr) { return arr.map(t => ({...t, fraction: t.fraction ? new Fraction(t.fraction.num, t.fraction.den) : undefined})); }
+    function tokenStr(arr) { return arr.map(t => (t.type === 'exponent' ? '^' + t.value : (t.type === 'number' ? t.value : t.value))).join(' '); }
+
+    function isSingleNumber(tokens, start, end) { return start === end && tokens[start].type === 'number'; }
+
+    function findInnerParen(tokens) {
+        let openIdx = -1;
+        for (let i = 0; i < tokens.length; i++) {
+            if (tokens[i].type === 'paren_open') openIdx = i;
+            else if (tokens[i].type === 'paren_close' && openIdx !== -1) return { start: openIdx, end: i };
+        }
+        return null;
+    }
+
+    function nextOpInInterval(tokens, start, end) {
+        for (let i = end; i >= start + 1; i--) {
+            if (tokens[i].type === 'exponent') return { type: 'exponent', opIdx: i, leftIdx: i - 1 };
+        }
+        for (let i = start; i <= end; i++) {
+            if (tokens[i].type === 'operator' && (tokens[i].value === '×' || tokens[i].value === '÷')) {
+                if (i - 1 >= start && i + 1 <= end && tokens[i-1].type === 'number' && tokens[i+1].type === 'number')
+                    return { type: 'MD', opIdx: i, leftIdx: i - 1, rightIdx: i + 1 };
+            }
+        }
+        for (let i = start; i <= end; i++) {
+            if (tokens[i].type === 'operator' && (tokens[i].value === '+' || tokens[i].value === '-')) {
+                if (i - 1 >= start && i + 1 <= end && tokens[i-1].type === 'number' && tokens[i+1].type === 'number')
+                    return { type: 'AS', opIdx: i, leftIdx: i - 1, rightIdx: i + 1 };
+            }
+        }
+        return null;
+    }
+
+    function applyOp(fracA, op, fracB) {
+        const a = fracA;
+        const b = fracB;
+        let num, den;
+        switch (op) {
+            case '+': num = a.num * b.den + b.num * a.den; den = a.den * b.den; break;
+            case '-': num = a.num * b.den - b.num * a.den; den = a.den * b.den; break;
+            case '×': num = a.num * b.num; den = a.den * b.den; break;
+            case '÷': num = a.num * b.den; den = a.den * b.num; break;
+            case '^': {
+                // exposant entier uniquement (positif)
+                const exp = parseInt(b.toString());
+                num = Math.pow(a.num, exp);
+                den = Math.pow(a.den, exp);
+                break;
+            }
+            default: return new Fraction(0);
+        }
+        return new Fraction(num, den);
+    }
+
+    function buildSteps(initialTokens) {
+        const history = [];
+        let tokens = cloneTokens(initialTokens);
+        history.push({ tokens: cloneTokens(tokens), operation: null, message: 'Expression initiale' });
+
+        const MAX = 1000;
+        let iter = 0;
+        while (tokens.length > 1 && iter < MAX) {
+            iter++;
+            const paren = findInnerParen(tokens);
+
+            if (paren && !isSingleNumber(tokens, paren.start + 1, paren.end - 1)) {
+                const innerStart = paren.start + 1;
+                const innerEnd = paren.end - 1;
+                const op = nextOpInInterval(tokens, innerStart, innerEnd);
+                if (op) {
+                    if (op.type === 'exponent') {
+                        const leftToken = tokens[op.leftIdx];
+                        const expVal = parseInt(tokens[op.opIdx].value);
+                        const resultFrac = new Fraction(Math.pow(leftToken.fraction.num, expVal), Math.pow(leftToken.fraction.den, expVal));
+                        const resultToken = createNumberToken(resultFrac);
+                        const resultIndex = op.leftIdx;
+                        tokens.splice(op.leftIdx, 2, resultToken);
+                        history.push({
+                            tokens: cloneTokens(tokens),
+                            operation: {
+                                type: 'exponent',
+                                left: leftToken,
+                                op: { type: 'operator', value: '^' },
+                                right: { type: 'number', value: expVal.toString(), fraction: new Fraction(expVal) },
+                                result: resultToken,
+                                resultIndex
+                            },
+                            message: `Dans les parenthèses : ${leftToken.value} ^ ${expVal} = ${resultFrac.toString()}`
+                        });
+                    } else {
+                        const leftToken = tokens[op.leftIdx];
+                        const opToken = tokens[op.opIdx];
+                        const rightToken = tokens[op.rightIdx];
+                        const resultFrac = applyOp(leftToken.fraction, opToken.value, rightToken.fraction);
+                        const resultToken = createNumberToken(resultFrac);
+                        const resultIndex = op.leftIdx;
+                        tokens.splice(op.leftIdx, 3, resultToken);
+                        history.push({
+                            tokens: cloneTokens(tokens),
+                            operation: {
+                                type: 'binary',
+                                left: leftToken,
+                                op: opToken,
+                                right: rightToken,
+                                result: resultToken,
+                                resultIndex
+                            },
+                            message: `Dans les parenthèses : ${leftToken.value} ${opToken.value} ${rightToken.value} = ${resultFrac.toString()}`
+                        });
+                    }
+                    continue;
+                }
+            }
+
+            if (paren && isSingleNumber(tokens, paren.start + 1, paren.end - 1)) {
+                const innerToken = tokens[paren.start + 1];
+                const parenOpen = tokens[paren.start];
+                const parenClose = tokens[paren.end];
+                const resultToken = createNumberToken(innerToken.fraction);
+                const resultIndex = paren.start;
+                tokens.splice(paren.start, 3, resultToken);
+                history.push({
+                    tokens: cloneTokens(tokens),
+                    operation: {
+                        type: 'paren_removal',
+                        left: parenOpen,
+                        middle: innerToken,
+                        right: parenClose,
+                        result: resultToken,
+                        resultIndex
+                    },
+                    message: `Suppression des parenthèses : (${innerToken.value}) → ${innerToken.value}`
+                });
+                continue;
+            }
+
+            const op = nextOpInInterval(tokens, 0, tokens.length - 1);
+            if (!op) break;
+            if (op.type === 'exponent') {
+                const leftToken = tokens[op.leftIdx];
+                const expVal = parseInt(tokens[op.opIdx].value);
+                const resultFrac = new Fraction(Math.pow(leftToken.fraction.num, expVal), Math.pow(leftToken.fraction.den, expVal));
+                const resultToken = createNumberToken(resultFrac);
+                const resultIndex = op.leftIdx;
+                tokens.splice(op.leftIdx, 2, resultToken);
+                history.push({
+                    tokens: cloneTokens(tokens),
+                    operation: {
+                        type: 'exponent',
+                        left: leftToken,
+                        op: { type: 'operator', value: '^' },
+                        right: { type: 'number', value: expVal.toString(), fraction: new Fraction(expVal) },
+                        result: resultToken,
+                        resultIndex
+                    },
+                    message: `${leftToken.value} ^ ${expVal} = ${resultFrac.toString()}`
+                });
+            } else {
+                const leftToken = tokens[op.leftIdx];
+                const opToken = tokens[op.opIdx];
+                const rightToken = tokens[op.rightIdx];
+                const resultFrac = applyOp(leftToken.fraction, opToken.value, rightToken.fraction);
+                const resultToken = createNumberToken(resultFrac);
+                const resultIndex = op.leftIdx;
+                tokens.splice(op.leftIdx, 3, resultToken);
+                history.push({
+                    tokens: cloneTokens(tokens),
+                    operation: {
+                        type: 'binary',
+                        left: leftToken,
+                        op: opToken,
+                        right: rightToken,
+                        result: resultToken,
+                        resultIndex
+                    },
+                    message: `${leftToken.value} ${opToken.value} ${rightToken.value} = ${resultFrac.toString()}`
+                });
+            }
+        }
+        return history;
+    }
+
+    function randomExpression() {
+        const nums = ['2','3','4','5','6','7','8','9'];
+        const r = () => nums[Math.floor(Math.random() * nums.length)];
+        const opAS = () => ['+','-'][Math.floor(Math.random()*2)];
+        const opMD = () => ['×','÷'][Math.floor(Math.random()*2)];
+
+        let tokens = [];
+        tokens.push(createNumberToken(r()));
+        tokens.push({type:'operator', value: opAS()});
+        tokens.push(createNumberToken(r()));
+        tokens.push({type:'operator', value: opMD()});
+
+        const withParen = Math.random() < 0.6;
+        if (withParen) {
+            tokens.push({type:'paren_open', value:'('});
+            tokens.push(createNumberToken(r()));
+            tokens.push({type:'operator', value: opAS()});
+            tokens.push(createNumberToken(r()));
+            tokens.push({type:'paren_close', value:')'});
+            if (Math.random() < 0.5) tokens.push({type:'exponent', value: '2'});
+        } else {
+            tokens.push(createNumberToken(r()));
+            if (Math.random() < 0.5) tokens.push({type:'exponent', value: '2'});
+        }
+
+        // Dernier opérateur : on évite les divisions qui ne donneraient pas un résultat "simple" ?
+        // Pour l'instant, on laisse ÷, le résultat sera fractionnaire exact.
+        tokens.push({type:'operator', value: opMD()});
+        tokens.push(createNumberToken(r()));
+        return tokens;
+    }
+
+    function updateMathDisplay(tokens) {
+        let latex = tokens.map(t => {
+            if (t.type === 'number') return t.fraction.toLatex();
+            if (t.type === 'exponent') return '^' + t.value;
+            return t.value;
+        }).join(' ')
+        .replace(/×/g, ' \\times ')
+        .replace(/÷/g, ' \\div ');
+        mathDiv.innerHTML = `\\[ ${latex} \\]`;
+        if (window.MathJax?.typesetPromise) MathJax.typesetPromise([mathDiv]).catch(()=>{});
+    }
+
+    function drawCanvas(stepIdx) {
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        const tokens = (stepIdx === -1) ? expression : steps[stepIdx].tokens;
+        const currentOperation = (stepIdx >= 0) ? steps[stepIdx].operation : null;
+
+        const boxW = 50, boxH = 44, gap = 6;
+        const total = tokens.length;
+        const totalWidth = total * boxW + (total - 1) * gap;
+        const startX = (w - totalWidth) / 2;
+        const yTop = 35;
+
+        const bgColors = {
+            number: '#f4f4f4',
+            operator: '#fdebd0',
+            paren_open: '#d4e6f1',
+            paren_close: '#d4e6f1',
+            exponent: '#fadbd8'
+        };
+
+        tokens.forEach((tok, i) => {
+            const x = startX + i * (boxW + gap);
+            const y = yTop;
+            ctx.fillStyle = bgColors[tok.type] || '#eee';
+            ctx.strokeStyle = '#a0a8b5';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(x, y, boxW, boxH, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#1a1a1a';
+            ctx.font = 'bold 16px ' + getComputedStyle(document.body).fontFamily;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let text = tok.value;
+            if (tok.type === 'exponent') text = '^' + tok.value;
+            ctx.fillText(text, x + boxW/2, y + boxH/2);
+        });
+
+        if (currentOperation) {
+            const op = currentOperation;
+            let opTokens = [];
+            if (op.type === 'binary') {
+                opTokens = [op.left, op.op, op.right];
+            } else if (op.type === 'exponent') {
+                opTokens = [op.left, op.op, op.right];
+            } else if (op.type === 'paren_removal') {
+                opTokens = [op.left, op.middle, op.right];
+            }
+
+            const opBoxW = 44, opBoxH = 34, opGap = 4;
+            const opCount = opTokens.length;
+            const opTotalW = opCount * opBoxW + (opCount - 1) * opGap;
+            const equalsWidth = 20;
+            const resBoxW = Math.max(44, ctx.measureText(op.result.value).width + 16);
+            const totalCalcWidth = opTotalW + 10 + equalsWidth + 10 + resBoxW;
+            const calcStartX = (w - totalCalcWidth) / 2;
+            const yBase = yTop + boxH + 30;
+
+            opTokens.forEach((tok, i) => {
+                const x = calcStartX + i * (opBoxW + opGap);
+                const y = yBase;
+                ctx.fillStyle = bgColors[tok.type] || '#eee';
+                ctx.strokeStyle = '#e67e22';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(x, y, opBoxW, opBoxH, 4);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#1a1a1a';
+                ctx.font = 'bold 14px ' + getComputedStyle(document.body).fontFamily;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                let text = tok.value;
+                if (tok.type === 'exponent') text = '^' + tok.value;
+                ctx.fillText(text, x + opBoxW/2, y + opBoxH/2);
+            });
+
+            const eqX = calcStartX + opTotalW + 10;
+            ctx.fillStyle = '#e67e22';
+            ctx.font = 'bold 18px ' + getComputedStyle(document.body).fontFamily;
+            ctx.textBaseline = 'middle';
+            ctx.fillText('=', eqX + equalsWidth/2, yBase + opBoxH/2);
+
+            const resX = eqX + equalsWidth + 10;
+            ctx.fillStyle = '#f4f4f4';
+            ctx.strokeStyle = '#e67e22';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(resX, yBase, resBoxW, opBoxH, 4);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#1a1a1a';
+            ctx.font = 'bold 14px ' + getComputedStyle(document.body).fontFamily;
+            ctx.fillText(op.result.value, resX + resBoxW/2, yBase + opBoxH/2);
+
+            const resultIndex = op.resultIndex;
+            if (resultIndex < tokens.length && tokens[resultIndex].value === op.result.value) {
+                const targetX = startX + resultIndex * (boxW + gap) + boxW/2;
+                const targetY = yTop + boxH;
+                const startArrowX = resX + resBoxW/2;
+                const startArrowY = yBase;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#e67e22';
+                ctx.lineWidth = 1.8;
+                ctx.setLineDash([5, 3]);
+                ctx.moveTo(startArrowX, startArrowY);
+                const midY = (startArrowY + targetY) / 2;
+                ctx.lineTo(startArrowX, midY);
+                ctx.lineTo(targetX, midY);
+                ctx.lineTo(targetX, targetY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.moveTo(targetX, targetY);
+                ctx.lineTo(targetX - 5, targetY - 8);
+                ctx.lineTo(targetX + 5, targetY - 8);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        const msg = stepIdx >= 0 ? steps[stepIdx].message : ' ';
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = 'italic 14px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = 'center';
+        ctx.fillText(msg, w / 2, yTop + boxH + 95);
+    }
+
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.moveTo(x + r, y);
+        this.lineTo(x + w - r, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + r);
+        this.lineTo(x + w, y + h - r);
+        this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        this.lineTo(x + r, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - r);
+        this.lineTo(x, y + r);
+        this.quadraticCurveTo(x, y, x + r, y);
+        this.closePath();
+        return this;
+    };
+
+    function loadNewExpression(tokens) {
+        expression = cloneTokens(tokens);
+        steps = buildSteps(expression);
+        currentStep = -1;
+        updateMathDisplay(expression);
+        drawCanvas(-1);
+        stepMsg.textContent = 'Nouvelle expression. Prêt pour la première étape.';
+    }
+
+    function nextStep() {
+        if (currentStep < steps.length - 1) {
+            currentStep++;
+            drawCanvas(currentStep);
+            stepMsg.textContent = steps[currentStep].message;
+            updateMathDisplay(steps[currentStep].tokens);
+        } else {
+            stepMsg.textContent = 'Résolution terminée !';
+        }
+    }
+
+    function resetToStart() {
+        currentStep = -1;
+        drawCanvas(-1);
+        updateMathDisplay(expression);
+        stepMsg.textContent = 'Réinitialisé à l’expression de départ.';
+    }
+
+    function randomize() {
+        loadNewExpression(randomExpression());
+    }
+
+    function resizeCanvas() {
+        const parent = canvas.parentElement;
+        const w = Math.min(parent.clientWidth - 20, 700);
+        canvas.style.width = w + 'px';
+        canvas.style.height = '320px';
+        drawCanvas(currentStep);
+    }
+
+    async function init() {
+        await new Promise(resolve => {
+            if (window.MathJax?.typesetPromise) resolve();
+            else {
+                const check = () => window.MathJax?.typesetPromise ? resolve() : setTimeout(check, 80);
+                check();
+            }
+        });
+
+        steps = buildSteps(expression);
+        updateMathDisplay(expression);
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        document.getElementById('btnNext').addEventListener('click', nextStep);
+        document.getElementById('btnReset').addEventListener('click', resetToStart);
+        document.getElementById('btnNewExpr').addEventListener('click', randomize);
+    }
+
+    init().catch(console.error);
+})();
+</script>
+</body>
+</html>

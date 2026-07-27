@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz & QCM – Suites (H1) – Fonctions de référence</title>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        body {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 1.5rem 0 1rem;
+            flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+        }
+        .sidebar h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            padding: 0 1.2rem 0.6rem;
+            border-bottom: 2px solid #eef2f6;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.2px;
+        }
+        .menu-item {
+            display: block;
+            padding: 0.7rem 1.2rem;
+            font-weight: 500;
+            color: #475569;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.15s;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .menu-item:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .menu-item.active {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left-color: #3b82f6;
+            font-weight: 600;
+        }
+        .menu-item .badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.05rem 0.6rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-right: 0.4rem;
+        }
+
+        .main-content {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1rem 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            background: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.04);
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+            gap: 1rem;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .student-area {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .student-area label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .student-area input {
+            padding: 0.3rem 0.6rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 140px;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.85rem;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn-success {
+            background: #22c55e;
+        }
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .section {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .section.active {
+            display: block;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .section-header h2 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .question {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+        }
+        .question:last-child {
+            border-bottom: none;
+        }
+        .q-text {
+            font-size: 1.05rem;
+            margin-bottom: 0.4rem;
+        }
+        .q-answer {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .q-answer input[type="text"] {
+            padding: 0.25rem 0.6rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            width: 120px;
+            font-size: 0.95rem;
+        }
+        .q-answer .options {
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+        .q-answer .options label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.95rem;
+        }
+        .feedback {
+            margin-top: 0.2rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .feedback.correct {
+            color: #16a34a;
+        }
+        .feedback.incorrect {
+            color: #dc2626;
+        }
+
+        .rappel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+        .rappel-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            border-left: 5px solid #3b82f6;
+        }
+        .rappel-card h4 {
+            font-size: 1.05rem;
+            margin-bottom: 0.3rem;
+            color: #1e293b;
+        }
+        .rappel-card .formule {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #0f172a;
+            margin: 0.3rem 0;
+        }
+        .rappel-card .desc {
+            font-size: 0.95rem;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            max-width: 480px;
+            width: 90%;
+            padding: 2rem 2rem 1.8rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: modalPop 0.2s ease-out;
+        }
+        @keyframes modalPop {
+            from {
+                transform: scale(0.95) translateY(10px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+        .modal-box p {
+            font-size: 1.1rem;
+            color: #1e293b;
+            margin: 1rem 0 1.5rem;
+            line-height: 1.6;
+        }
+        .modal-box .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .summary-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #94a3b8;
+        }
+        .summary-item.correct {
+            border-left-color: #22c55e;
+        }
+        .summary-item.incorrect {
+            border-left-color: #ef4444;
+        }
+        .summary-item .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .summary-item .q-header .status {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .summary-item .q-header .status.correct {
+            color: #16a34a;
+        }
+        .summary-item .q-header .status.incorrect {
+            color: #dc2626;
+        }
+        .summary-item .q-header .status.unanswered {
+            color: #f59e0b;
+        }
+        .summary-item .q-text-sm {
+            font-size: 0.95rem;
+            margin: 0.2rem 0;
+        }
+        .summary-item .details {
+            font-size: 0.9rem;
+            color: #1e293b;
+            margin: 0.3rem 0;
+        }
+        .summary-item .details strong {
+            color: #0f172a;
+        }
+        .summary-item .diagnostic {
+            background: #f1f5f9;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            margin-top: 0.4rem;
+            font-size: 0.9rem;
+            color: #0f172a;
+        }
+        .summary-item .diagnostic .advice {
+            color: #1e40af;
+            font-weight: 500;
+            display: block;
+            margin-top: 0.2rem;
+        }
+        .no-submit {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 0.3rem 0.5rem;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .sidebar h2 {
+                display: none;
+            }
+            .menu-item {
+                padding: 0.3rem 0.8rem;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                white-space: nowrap;
+                font-size: 0.85rem;
+            }
+            .menu-item.active {
+                border-left-color: transparent;
+                border-bottom-color: #3b82f6;
+                background: transparent;
+            }
+            .main-content {
+                height: calc(100vh - 50px);
+                padding: 0.5rem;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+            .student-area {
+                flex-wrap: wrap;
+            }
+            .section {
+                padding: 1rem;
+            }
+            .rappel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h2>📋 Navigation</h2>
+        <a class="menu-item active" data-target="quiz" onclick="showSection('quiz')">
+            <span class="badge">📝</span> Quiz
+        </a>
+        <a class="menu-item" data-target="qcm" onclick="showSection('qcm')">
+            <span class="badge">🧩</span> QCM
+        </a>
+        <a class="menu-item" data-target="summary" onclick="showSection('summary')">
+            <span class="badge">📊</span> Résumé
+        </a>
+        <a class="menu-item" data-target="rappel" onclick="showSection('rappel')">
+            <span class="badge">📚</span> Rappels
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>📐 Suites – H1 : Modes de génération</h1>
+            <div class="student-area">
+                <label for="studentName">👤 Élève :</label>
+                <input type="text" id="studentName" placeholder="Votre nom" value="Élève 1" />
+                <button class="btn btn-success" id="submitBtn">✅ Soumettre &amp; vérifier</button>
+                <button class="btn btn-secondary" id="downloadBtn">⬇️ Télécharger JSON</button>
+            </div>
+        </div>
+
+        <div class="section active" id="quizSection">
+            <div class="section-header">
+                <h2>📝 Quiz – réponses libres</h2>
+                <button class="btn btn-secondary btn-sm" id="resetQuizBtn">🔄 Réinitialiser le Quiz</button>
+            </div>
+            <div id="quizContainer"></div>
+        </div>
+
+        <div class="section" id="qcmSection">
+            <div class="section-header">
+                <h2>🧩 QCM – choix multiple</h2>
+                <button class="btn btn-secondary btn-sm" id="resetQcmBtn">🔄 Réinitialiser le QCM</button>
+            </div>
+            <div id="qcmContainer"></div>
+        </div>
+
+        <div class="section" id="summarySection">
+            <h2>📊 Analyse détaillée des résultats</h2>
+            <div id="summaryContent">
+                <p class="no-submit">Soumettez vos réponses pour obtenir une analyse personnalisée.</p>
+            </div>
+        </div>
+
+        <div class="section" id="rappelSection">
+            <h2>📚 Rappels : Fonctions de référence</h2>
+            <p style="margin-bottom:1.2rem; color:#475569;">
+                Voici les principales familles de fonctions utilisées pour définir une suite de manière explicite ($u_n = f(n)$).
+                Reconnaître la forme générale permet d'identifier le type d'évolution et de prévoir l'allure du nuage de points.
+            </p>
+            <div class="rappel-grid">
+                <div class="rappel-card">
+                    <h4>📈 Affine</h4>
+                    <div class="formule">$u_n = a n + b$</div>
+                    <div class="desc"><strong>Graphique :</strong> droite. <strong>Pente :</strong> $a$. Si $a > 0$ : croissante ; $a < 0$ : décroissante.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>📊 Quadratique</h4>
+                    <div class="formule">$u_n = a n^2 + b$</div>
+                    <div class="desc"><strong>Graphique :</strong> parabole. Si $a > 0$ : minimum ; $a < 0$ : maximum.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>📉 Cubique</h4>
+                    <div class="formule">$u_n = a n^3 + b$</div>
+                    <div class="desc"><strong>Graphique :</strong> courbe en "S". $a > 0$ : croissante ; $a < 0$ : décroissante.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>√ Racine carrée</h4>
+                    <div class="formule">$u_n = \sqrt{a n + b}$</div>
+                    <div class="desc"><strong>Domaine :</strong> $a n + b \geq 0$. Croissante si $a > 0$.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>⅟ Inverse</h4>
+                    <div class="formule">$u_n = \dfrac{a}{n + b}$</div>
+                    <div class="desc"><strong>Graphique :</strong> hyperbole. Décroissante si $a > 0$.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>| | Valeur absolue</h4>
+                    <div class="formule">$u_n = |a n + b|$</div>
+                    <div class="desc"><strong>Graphique :</strong> forme en "V". Décroissante puis croissante.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>📈 Exponentielle</h4>
+                    <div class="formule">$u_n = k \times a^n$</div>
+                    <div class="desc">Si $a > 1$ : croissance rapide ; si $0 < a < 1$ : décroissance.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>🔄 Trigonométrique</h4>
+                    <div class="formule">$\sin(n)$ ou $\cos(n)$</div>
+                    <div class="desc">Périodiques, oscillent entre $-1$ et $1$. Ex : $\sin\left(\dfrac{n\pi}{2}\right)$ donne $0, 1, 0, -1, \dots$</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box">
+            <h3 id="modalTitle">Titre</h3>
+            <p id="modalMessage">Message</p>
+            <div class="actions" id="modalActions"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Formatage (signes) ---
+        function fmtLinear(a, b) {
+            if (a === 0 && b === 0) return '0';
+            let part = '';
+            if (a === 0) part = '';
+            else if (a === 1) part = 'n';
+            else if (a === -1) part = '-n';
+            else part = a + 'n';
+            if (b === 0) return part || '0';
+            else if (b > 0) return part ? part + ' + ' + b : String(b);
+            else return part ? part + ' - ' + Math.abs(b) : '-' + Math.abs(b);
+        }
+        function fmtRecurrence(r) { if (r === 0) return 'u_n'; if (r > 0) return 'u_n + ' + r; return 'u_n - ' + Math.abs(r); }
+        function fmtValue(v) { return v < 0 ? '-' + Math.abs(v) : String(v); }
+        function fmtQuadratic(a, b) {
+            if (a === 0) return fmtLinear(0, b);
+            let part = (a === 1 ? 'n^2' : (a === -1 ? '-n^2' : a + 'n^2'));
+            if (b === 0) return part;
+            else if (b > 0) return part + ' + ' + b;
+            else return part + ' - ' + Math.abs(b);
+        }
+        function fmtCubic(a, b) {
+            if (a === 0) return fmtLinear(0, b);
+            let part = (a === 1 ? 'n^3' : (a === -1 ? '-n^3' : a + 'n^3'));
+            if (b === 0) return part;
+            else if (b > 0) return part + ' + ' + b;
+            else return part + ' - ' + Math.abs(b);
+        }
+        function fmtSqrt(coeff, c) {
+            if (c === 0) return '\\sqrt{' + coeff + 'n}';
+            if (c > 0) return '\\sqrt{' + coeff + 'n + ' + c + '}';
+            return '\\sqrt{' + coeff + 'n - ' + Math.abs(c) + '}';
+        }
+        function fmtFrac(num, denomConst) {
+            if (denomConst === 0) return '\\dfrac{' + num + '}{n}';
+            if (denomConst > 0) return '\\dfrac{' + num + '}{n + ' + denomConst + '}';
+            return '\\dfrac{' + num + '}{n - ' + Math.abs(denomConst) + '}';
+        }
+        function fmtAbs(a, b) { let inner = fmtLinear(a, b); return '|' + inner + '|'; }
+        function fmtExpo(base, coeff) { if (coeff === 1) return base + '^n'; return coeff + ' \\times ' + base + '^n'; }
+
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function pickRandom(arr, n) {
+            const shuffled = shuffle(arr);
+            return shuffled.slice(0, n);
+        }
+
+        // --- Gestion du menu ---
+        function showSection(target) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(target + 'Section').classList.add('active');
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.menu-item[data-target="${target}"]`).classList.add('active');
+            if (target === 'rappel') {
+                setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }, 100);
+            }
+        }
+
+        // --- Modale ---
+        function showModal(title, message, confirmText = 'OK', cancelText = null) {
+            return new Promise((resolve) => {
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalMessage').innerHTML = message;
+                const actions = document.getElementById('modalActions');
+                actions.innerHTML = '';
+                if (cancelText) {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.textContent = cancelText;
+                    cancelBtn.onclick = () => { closeModal();
+                        resolve(false); };
+                    actions.appendChild(cancelBtn);
+                }
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'btn btn-success';
+                confirmBtn.textContent = confirmText;
+                confirmBtn.onclick = () => { closeModal();
+                    resolve(true); };
+                actions.appendChild(confirmBtn);
+                document.getElementById('customModal').classList.add('active');
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.remove('active');
+        }
+
+        // --- Signatures ---
+        let usedSignaturesQuiz = new Set();
+        let usedSignaturesQcm = new Set();
+
+        // --- Générateurs Quiz (avec category) ---
+        const quizGenerators = [{
+            gen: function() {
+                const a = randInt(-5, 5);
+                const b = randInt(-10, 10);
+                const k = randInt(0, 10);
+                const answer = a * k + b;
+                return { text: `Soit $u_n = ${fmtLinear(a, b)}$. Calculer $u_{${k}}$.`, answer, category: 'affine',
+                    signature: `q_aff_${a}_${b}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const a = randInt(1, 4) * (Math.random() > 0.5 ? 1 : -1);
+                const b = randInt(-5, 5);
+                const k = randInt(0, 5);
+                const answer = a * k * k + b;
+                return { text: `Soit $u_n = ${fmtQuadratic(a, b)}$. Calculer $u_{${k}}$.`, answer, category: 'quadratic',
+                    signature: `q_quad_${a}_${b}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const a = randInt(1, 3) * (Math.random() > 0.5 ? 1 : -1);
+                const b = randInt(-5, 5);
+                const k = randInt(0, 4);
+                const answer = a * k * k * k + b;
+                return { text: `Soit $u_n = ${fmtCubic(a, b)}$. Calculer $u_{${k}}$.`, answer, category: 'cubic',
+                    signature: `q_cub_${a}_${b}_${k}` };
+            }
+        }, {
+            gen: function() {
+                let attempts = 0;
+                while (attempts < 50) {
+                    attempts++;
+                    const target = randInt(2, 5);
+                    const a = randInt(1, 3);
+                    const k = randInt(0, 4);
+                    const c = target * target - a * k;
+                    if (c >= 0 && c <= 10) {
+                        return { text: `Soit $u_n = ${fmtSqrt(a, c)}$. Calculer $u_{${k}}$.`, answer: target,
+                            category: 'sqrt', signature: `q_sqrt_${a}_${c}_${k}` };
+                    }
+                }
+                return { text: 'Soit $u_n = \\sqrt{4n+1}$. Calculer $u_2$.', answer: 3, category: 'sqrt',
+                    signature: 'q_sqrt_fallback' };
+            }
+        }, {
+            gen: function() {
+                const factor = randInt(1, 4);
+                const k = randInt(0, 3);
+                const c = randInt(1, 3);
+                const num = factor * (k + c);
+                return { text: `Soit $u_n = ${fmtFrac(num, c)}$. Calculer $u_{${k}}$.`, answer: factor,
+                    category: 'inverse', signature: `q_inv_${num}_${c}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const a = randInt(1, 4) * (Math.random() > 0.5 ? 1 : -1);
+                const b = randInt(-6, 6);
+                const k = randInt(0, 5);
+                const answer = Math.abs(a * k + b);
+                return { text: `Soit $u_n = ${fmtAbs(a, b)}$. Calculer $u_{${k}}$.`, answer, category: 'abs',
+                    signature: `q_abs_${a}_${b}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const base = randInt(2, 4);
+                const coeff = randInt(1, 3);
+                const k = randInt(0, 4);
+                const answer = coeff * Math.pow(base, k);
+                return { text: `Soit $u_n = ${fmtExpo(base, coeff)}$. Calculer $u_{${k}}$.`, answer,
+                    category: 'exponential', signature: `q_exp_${base}_${coeff}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const k = randInt(0, 3);
+                const val = Math.sin(k * Math.PI / 2);
+                let answer = 0;
+                if (val > 0.5) answer = 1;
+                else if (val < -0.5) answer = -1;
+                else answer = 0;
+                const text = `Soit $u_n = \\sin\\left(\\dfrac{n\\pi}{2}\\right)$. Calculer $u_{${k}}$.`;
+                return { text, answer, category: 'trig', signature: `q_trig_sin_${k}` };
+            }
+        }, {
+            gen: function() {
+                const k = randInt(0, 3);
+                const val = Math.cos(k * Math.PI);
+                let answer = 0;
+                if (val > 0.5) answer = 1;
+                else if (val < -0.5) answer = -1;
+                else answer = 0;
+                const text = `Soit $u_n = \\cos(n\\pi)$. Calculer $u_{${k}}$.`;
+                return { text, answer, category: 'trig', signature: `q_trig_cos_${k}` };
+            }
+        }];
+
+        // --- Générateurs QCM (avec category) ---
+        const qcmGenerators = [{
+            gen: function() {
+                const a = randInt(1, 4);
+                const b = randInt(-3, 3);
+                const correct = `$u_n = ${fmtLinear(a, b)}$`;
+                const wrongs = [
+                    `$u_n = ${fmtQuadratic(randInt(1,3), randInt(-2,2))}$`,
+                    `$u_n = \\sqrt{${randInt(1,3)}n + ${randInt(1,3)}}$`,
+                    `$u_n = ${fmtFrac(randInt(2,5), randInt(1,2))}$`
+                ];
+                const options = shuffle([correct, ...pickRandom(wrongs, 3)]);
+                const correctIndex = options.indexOf(correct);
+                return { text: 'Parmi ces expressions, laquelle est une fonction affine ?', options, correctIndex,
+                    category: 'recognition_affine', signature: `qcm_aff_${Date.now()}_${Math.random()}` };
+            }
+        }, {
+            gen: function() {
+                const correct = '$\\sin(n)$';
+                const wrongs = ['$n^2$', '$2^n$', '$|n|$'];
+                const options = shuffle([correct, ...pickRandom(wrongs, 3)]);
+                const correctIndex = options.indexOf(correct);
+                return { text: 'Laquelle est une fonction trigonométrique ?', options, correctIndex,
+                    category: 'recognition_trig', signature: `qcm_trig_${Date.now()}_${Math.random()}` };
+            }
+        }, {
+            gen: function() {
+                const correct = '$3^n$';
+                const wrongs = ['$\\sqrt{n}$', '$\\dfrac{1}{n}$', '$n^3$'];
+                const options = shuffle([correct, ...pickRandom(wrongs, 3)]);
+                const correctIndex = options.indexOf(correct);
+                return { text: 'Laquelle est une fonction exponentielle ?', options, correctIndex,
+                    category: 'recognition_exp', signature: `qcm_exp_${Date.now()}_${Math.random()}` };
+            }
+        }, {
+            gen: function() {
+                const target = randInt(2, 4);
+                const a = randInt(1, 2);
+                const k = randInt(0, 3);
+                const c = target * target - a * k;
+                if (c < 0 || c > 8) {
+                    const expr = '\\sqrt{2n+1}';
+                    const correct = '$u_4 = 3$';
+                    const wrongs = ['$u_4 = 4$', '$u_4 = 2$', '$u_4 = 9$'];
+                    return { text: `Soit $u_n = ${expr}$. Que vaut $u_4$ ?`, options: shuffle([correct, ...wrongs]),
+                        correctIndex: 0, category: 'qcm_sqrt', signature: 'qcm_sqrt_fallback' };
+                }
+                const expr = fmtSqrt(a, c);
+                const correct = `$u_{${k}} = ${target}$`;
+                const wrongs = [
+                    `$u_{${k}} = ${target + randInt(1,2)}$`,
+                    `$u_{${k}} = ${Math.max(1, target - randInt(1,2))}$`,
+                    `$u_{${k}} = ${target * target}$`
+                ];
+                const options = shuffle([correct, ...pickRandom(wrongs, 3)]);
+                const correctIndex = options.indexOf(correct);
+                return { text: `Soit $u_n = ${expr}$. Que vaut $u_{${k}}$ ?`, options, correctIndex,
+                    category: 'qcm_sqrt', signature: `qcm_sqrt_${a}_${c}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const factor = randInt(1, 3);
+                const k = randInt(0, 2);
+                const c = randInt(1, 2);
+                const num = factor * (k + c);
+                const expr = fmtFrac(num, c);
+                const correct = `$u_{${k}} = ${factor}$`;
+                const wrongs = [
+                    `$u_{${k}} = ${factor + randInt(1,2)}$`,
+                    `$u_{${k}} = ${num}$`,
+                    `$u_{${k}} = ${k+c}$`
+                ];
+                const options = shuffle([correct, ...pickRandom(wrongs, 3)]);
+                const correctIndex = options.indexOf(correct);
+                return { text: `Soit $u_n = ${expr}$. Que vaut $u_{${k}}$ ?`, options, correctIndex,
+                    category: 'qcm_inv', signature: `qcm_inv_${num}_${c}_${k}` };
+            }
+        }, {
+            gen: function() {
+                const correct = '$u_0 = 2$, $u_{n+1} = u_n + 3$';
+                const wrongs = [
+                    `$u_n = 2n+3$`,
+                    `$u_n = 3n+2$`,
+                    `$u_0 = 3$, $u_{n+1} = 2u_n$`
+                ];
+                const options = shuffle([correct, ...pickRandom(wrongs, 3)]);
+                const correctIndex = options.indexOf(correct);
+                return { text: 'Laquelle est une définition par récurrence ?', options, correctIndex,
+                    category: 'recognition_recurrence', signature: `qcm_rec_${Date.now()}_${Math.random()}` };
+            }
+        }];
+
+        // --- Génération unique ---
+        function generateUniqueQuestions(generators, count, usedSet) {
+            const results = [];
+            let attempts = 0;
+            while (results.length < count && attempts < 200) {
+                attempts++;
+                const item = generators[Math.floor(Math.random() * generators.length)];
+                const q = item.gen();
+                if (!usedSet.has(q.signature)) {
+                    usedSet.add(q.signature);
+                    results.push(q);
+                }
+            }
+            while (results.length < count) {
+                const item = generators[Math.floor(Math.random() * generators.length)];
+                results.push(item.gen());
+            }
+            return results;
+        }
+
+        // --- État ---
+        let quizQuestions = [];
+        let qcmQuestions = [];
+        let quizAnswers = {};
+        let qcmAnswers = {};
+        let submitted = false;
+
+        // --- Rendu ---
+        async function renderQuiz() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+            quizQuestions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
+                        <div class="q-text">${q.text}</div>
+                        <div class="q-answer">
+                            <input type="text" id="quiz_${idx}" placeholder="Votre réponse" />
+                            <span class="feedback" id="quiz_feedback_${idx}"></span>
+                        </div>
+                    `;
+                container.appendChild(div);
+                if (submitted && quizAnswers[idx] !== undefined) {
+                    document.getElementById(`quiz_${idx}`).value = quizAnswers[idx];
+                }
+            });
+            await MathJax.typesetPromise();
+        }
+
+        async function renderQCM() {
+            const container = document.getElementById('qcmContainer');
+            container.innerHTML = '';
+            qcmQuestions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                let optionsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    const checked = (submitted && qcmAnswers[idx] === optIdx) ? 'checked' : '';
+                    optionsHtml += `
+                            <label>
+                                <input type="radio" name="qcm_${idx}" value="${optIdx}" ${checked} />
+                                ${opt}
+                            </label>
+                        `;
+                });
+                div.innerHTML = `
+                        <div class="q-text">${q.text}</div>
+                        <div class="q-answer">
+                            <div class="options">${optionsHtml}</div>
+                            <span class="feedback" id="qcm_feedback_${idx}"></span>
+                        </div>
+                    `;
+                container.appendChild(div);
+            });
+            await MathJax.typesetPromise();
+        }
+
+        // --- Réinitialisations ---
+        async function resetQuiz() {
+            usedSignaturesQuiz.clear();
+            quizQuestions = generateUniqueQuestions(quizGenerators, 6, usedSignaturesQuiz);
+            quizAnswers = {};
+            submitted = false;
+            await renderQuiz();
+            renderSummary();
+        }
+
+        async function resetQcm() {
+            usedSignaturesQcm.clear();
+            qcmQuestions = generateUniqueQuestions(qcmGenerators, 5, usedSignaturesQcm);
+            qcmAnswers = {};
+            submitted = false;
+            await renderQCM();
+            renderSummary();
+        }
+
+        // --- Résumé détaillé avec diagnostics ultra-précis ---
+        function renderSummary() {
+            const container = document.getElementById('summaryContent');
+            if (!submitted) {
+                container.innerHTML = '<p class="no-submit">Soumettez vos réponses pour obtenir une analyse personnalisée.</p>';
+                return;
+            }
+
+            let quizCorrect = 0,
+                quizTotal = quizQuestions.length;
+            let qcmCorrect = 0,
+                qcmTotal = qcmQuestions.length;
+
+            // Base de diagnostics ultra-détaillés (Lacune précise + Correction concrète)
+            const baseDiagnostics = {
+                affine: {
+                    msg: 'Erreur de calcul dans une fonction affine ($u_n = a n + b$).',
+                    advice: '💡 <b>Lacune :</b> Substitution ou règle des signes.<br>• <b>Règle :</b> Remplacez $n$ par la valeur donnée, puis calculez.<br>• <b>Exemple :</b> $u_n = 2n - 3$, $u_4 = 2 \\times 4 - 3 = 8 - 3 = 5$.<br>• <b>Entraînement :</b> Refaites 5 calculs avec des coefficients négatifs (ex: $-3n + 2$).'
+                },
+                quadratic: {
+                    msg: 'Erreur de calcul dans une fonction quadratique ($u_n = a n^2 + b$).',
+                    advice: '💡 <b>Lacune :</b> Priorité des opérations (puissance avant multiplication).<br>• <b>Règle :</b> Calculez $n^2$, multipliez par $a$, puis ajoutez $b$.<br>• <b>Exemple :</b> $u_n = -2n^2 + 5$, $u_3 = -2 \\times 9 + 5 = -18 + 5 = -13$.<br>• <b>Entraînement :</b> Révisez les carrés parfaits (1,4,9,16,25).'
+                },
+                cubic: {
+                    msg: 'Erreur de calcul dans une fonction cubique ($u_n = a n^3 + b$).',
+                    advice: '💡 <b>Lacune :</b> Calcul des puissances cubiques.<br>• <b>Règle :</b> $n^3 = n \\times n \\times n$.<br>• <b>Exemple :</b> $u_n = 3n^3 - 2$, $u_2 = 3 \\times 8 - 2 = 24 - 2 = 22$.<br>• <b>Entraînement :</b> Révisez les cubes (2³=8, 3³=27, 4³=64).'
+                },
+                sqrt: {
+                    msg: 'Erreur dans le calcul d\'une racine carrée.',
+                    advice: '💡 <b>Lacune :</b> Extraction de racine ou carrés parfaits.<br>• <b>Règle :</b> $\sqrt{x}$ est le nombre positif dont le carré vaut $x$. Calculez d\'abord l\'intérieur.<br>• <b>Exemple :</b> $\sqrt{3n+4}$ pour $n=4$ donne $\sqrt{16} = 4$.<br>• <b>Entraînement :</b> Apprenez par cœur les carrés parfaits jusqu\'à 144.'
+                },
+                inverse: {
+                    msg: 'Erreur dans le calcul d\'une fraction inverse.',
+                    advice: '💡 <b>Lacune :</b> Division ou simplification.<br>• <b>Règle :</b> Calculez le dénominateur $(n+c)$, puis divisez le numérateur.<br>• <b>Exemple :</b> $\\dfrac{6}{2+1} = \\dfrac{6}{3} = 2$.<br>• <b>Entraînement :</b> Révisez les tables de division et la simplification de fractions.'
+                },
+                abs: {
+                    msg: 'Erreur avec la valeur absolue.',
+                    advice: '💡 <b>Lacune :</b> Définition de la valeur absolue.<br>• <b>Règle :</b> $|x| = x$ si $x \\ge 0$, et $-x$ si $x < 0$. Calculez l\'intérieur, puis rendez-le positif.<br>• <b>Exemple :</b> $| -3 \\times 2 + 1 | = | -6 + 1 | = | -5 | = 5$.<br>• <b>Entraînement :</b> Résolvez 5 équations avec valeurs absolues.'
+                },
+                exponential: {
+                    msg: 'Erreur dans le calcul d\'une exponentielle ($a^n$).',
+                    advice: '💡 <b>Lacune :</b> Définition de la puissance.<br>• <b>Règle :</b> $a^n$ = $a$ multiplié par lui-même $n$ fois.<br>• <b>Exemple :</b> $2^4 = 2 \\times 2 \\times 2 \\times 2 = 16$.<br>• <b>Entraînement :</b> Révisez les puissances de 2, 3 et 4 jusqu\'à l\'exposant 5.'
+                },
+                trig: {
+                    msg: 'Erreur dans le calcul trigonométrique.',
+                    advice: '💡 <b>Lacune :</b> Valeurs remarquables non mémorisées.<br>• <b>Valeurs clés :</b> $\\sin(0)=0, \\sin(\\pi/2)=1, \\sin(\\pi)=0, \\sin(3\\pi/2)=-1$ ; $\\cos(0)=1, \\cos(\\pi)=-1$.<br>• <b>Méthode :</b> Pour $\\sin(n\\pi/2)$, remplacez $n$ par 0,1,2,3 et appliquez les valeurs.<br>• <b>Entraînement :</b> Écrivez le tableau des valeurs sur un brouillon.'
+                },
+                recognition_affine: {
+                    msg: 'Confusion avec la reconnaissance des fonctions affines.',
+                    advice: '💡 <b>Lacune :</b> Forme caractéristique non identifiée.<br>• <b>Règle :</b> Une fonction affine est de la forme $a n + b$ (c\'est une droite).<br>• <b>Pièges :</b> $n^2$ (parabole), $1/n$ (hyperbole), $\\sqrt{n}$ (racine) ne sont PAS affines.<br>• <b>Entraînement :</b> Classez 10 expressions en "affine" ou "non affine".'
+                },
+                recognition_trig: {
+                    msg: 'Confusion avec les fonctions trigonométriques.',
+                    advice: '💡 <b>Lacune :</b> Distinction des fonctions périodiques.<br>• <b>Règle :</b> Les fonctions trigonométriques sont $\\sin(n)$ ou $\\cos(n)$.<br>• <b>Entraînement :</b> Reconnaître $\\sin$, $\\cos$, $\\tan$ dans une liste de fonctions.'
+                },
+                recognition_exp: {
+                    msg: 'Confusion avec les fonctions exponentielles.',
+                    advice: '💡 <b>Lacune :</b> Confusion entre puissance et exponentielle.<br>• <b>Règle :</b> Une exponentielle a la variable en exposant : $a^n$ (ex: $2^n$, $3^n$).<br>• <b>Piège :</b> $n^2$ est une puissance (variable en base), pas une exponentielle.<br>• <b>Entraînement :</b> Différenciez $2^n$ de $n^2$ dans des exercices.'
+                },
+                qcm_sqrt: {
+                    msg: 'Erreur de calcul de racine carrée dans le QCM.',
+                    advice: '💡 <b>Lacune :</b> Extraction de racine ou carrés parfaits.<br>• <b>Règle :</b> Même règle que pour la racine carrée classique.<br>• <b>Exemple :</b> $\\sqrt{2n+1}$ pour $n=4$ donne $\\sqrt{9}=3$.<br>• <b>Entraînement :</b> Révisez les carrés parfaits de 1 à 10.'
+                },
+                qcm_inv: {
+                    msg: 'Erreur de calcul de fraction inverse dans le QCM.',
+                    advice: '💡 <b>Lacune :</b> Calcul de fractions.<br>• <b>Règle :</b> Calculez le dénominateur, puis divisez.<br>• <b>Exemple :</b> $\\dfrac{4}{n+1}$ pour $n=1$ donne $\\dfrac{4}{2}=2$.<br>• <b>Entraînement :</b> Révisez la division et la simplification.'
+                },
+                recognition_recurrence: {
+                    msg: 'Confusion entre définition explicite et par récurrence.',
+                    advice: '💡 <b>Lacune :</b> Distinction des deux modes de génération.<br>• <b>Règle :</b> Explicite donne $u_n$ directement (ex: $u_n = 2n$). Récurrence donne $u_{n+1}$ en fonction de $u_n$ (ex: $u_{n+1} = u_n + 2$) et nécessite une condition initiale ($u_0$).<br>• <b>Entraînement :</b> Transformez une expression explicite en récurrence, et inversement.'
+                }
+            };
+
+            function getDiagnostic(category, isCorrect, userAns, correctAns, isQCM = false) {
+                if (isCorrect) {
+                    return { msg: '✅ Acquis', advice: '💡 Continuez à vous entraîner pour consolider cette maîtrise.' };
+                }
+                let diag = baseDiagnostics[category] || {
+                    msg: 'Erreur non identifiée.',
+                    advice: '💡 Revoir le cours sur les suites numériques et les fonctions de référence.'
+                };
+                let detail = (isQCM) ? `Votre choix : ${userAns} | Bonne réponse : ${correctAns}` :
+                    `Votre réponse : ${userAns} | Bonne réponse : ${correctAns}`;
+                // On ajoute le détail à la fin du message
+                return { msg: diag.msg + ' ' + detail, advice: diag.advice };
+            }
+
+            let html = '';
+            // Scores
+            for (let i = 0; i < quizQuestions.length; i++) {
+                if (document.getElementById(`quiz_feedback_${i}`)?.classList.contains('correct')) quizCorrect++;
+            }
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                if (document.getElementById(`qcm_feedback_${i}`)?.classList.contains('correct')) qcmCorrect++;
+            }
+
+            html += `<div style="display:flex; gap:2rem; flex-wrap:wrap; margin-bottom:1.5rem; background:#f1f5f9; padding:0.8rem 1.2rem; border-radius:10px;">
+                        <div><strong>📝 Quiz</strong> : ${quizCorrect}/${quizTotal} correct</div>
+                        <div><strong>🧩 QCM</strong> : ${qcmCorrect}/${qcmTotal} correct</div>
+                    </div>`;
+
+            // --- Quiz ---
+            html += `<h3 style="margin-top:1.2rem; margin-bottom:0.5rem;">📝 Détail du Quiz</h3>`;
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const q = quizQuestions[i];
+                const userAns = quizAnswers[i] || '';
+                const hasAnswered = userAns.trim() !== '';
+
+                if (!hasAnswered) {
+                    html += `
+                            <div class="summary-item incorrect">
+                                <div class="q-header">
+                                    <span><strong>Question ${i+1}</strong> : ${q.text}</span>
+                                    <span class="status unanswered">⚠️ Non répondue</span>
+                                </div>
+                                <div class="details">Vous n'avez pas saisi de réponse.</div>
+                                <div class="diagnostic">
+                                    <span style="font-weight:600;">🔍 Diagnostic :</span> Question sans réponse.
+                                    <span class="advice">💡 Pensez à répondre à toutes les questions pour un bilan complet.</span>
+                                </div>
+                            </div>
+                        `;
+                    continue;
+                }
+
+                const isCorrect = document.getElementById(`quiz_feedback_${i}`)?.classList.contains('correct') || false;
+                const diag = getDiagnostic(q.category || 'affine', isCorrect, userAns, q.answer, false);
+                const statusClass = isCorrect ? 'correct' : 'incorrect';
+                const statusLabel = isCorrect ? '✅ Correct' : '❌ Incorrect';
+                html += `
+                        <div class="summary-item ${statusClass}">
+                            <div class="q-header">
+                                <span><strong>Question ${i+1}</strong> : ${q.text}</span>
+                                <span class="status ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="details">
+                                <strong>Votre réponse :</strong> ${userAns} &nbsp;|&nbsp; <strong>Bonne réponse :</strong> ${q.answer}
+                            </div>
+                            <div class="diagnostic">
+                                <span style="font-weight:600;">🔍 Diagnostic :</span> ${diag.msg}
+                                <span class="advice">${diag.advice}</span>
+                            </div>
+                        </div>
+                    `;
+            }
+
+            // --- QCM ---
+            html += `<h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">🧩 Détail du QCM</h3>`;
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                const q = qcmQuestions[i];
+                const userIdx = qcmAnswers[i];
+                const hasAnswered = (userIdx !== undefined && userIdx !== -1);
+
+                if (!hasAnswered) {
+                    html += `
+                            <div class="summary-item incorrect">
+                                <div class="q-header">
+                                    <span><strong>Question ${i+1}</strong> : ${q.text}</span>
+                                    <span class="status unanswered">⚠️ Non répondue</span>
+                                </div>
+                                <div class="details">Vous n'avez pas sélectionné de réponse.</div>
+                                <div class="diagnostic">
+                                    <span style="font-weight:600;">🔍 Diagnostic :</span> Question sans réponse.
+                                    <span class="advice">💡 Pensez à répondre à toutes les questions pour un bilan complet.</span>
+                                </div>
+                            </div>
+                        `;
+                    continue;
+                }
+
+                const userChoice = q.options[userIdx];
+                const isCorrect = document.getElementById(`qcm_feedback_${i}`)?.classList.contains('correct') || false;
+                const diag = getDiagnostic(q.category || 'recognition_affine', isCorrect, userChoice, q.options[q
+                        .correctIndex], true);
+                const statusClass = isCorrect ? 'correct' : 'incorrect';
+                const statusLabel = isCorrect ? '✅ Correct' : '❌ Incorrect';
+                html += `
+                        <div class="summary-item ${statusClass}">
+                            <div class="q-header">
+                                <span><strong>Question ${i+1}</strong> : ${q.text}</span>
+                                <span class="status ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="details">
+                                <strong>Votre choix :</strong> ${userChoice} &nbsp;|&nbsp; <strong>Bonne réponse :</strong> ${q.options[q.correctIndex]}
+                            </div>
+                            <div class="diagnostic">
+                                <span style="font-weight:600;">🔍 Diagnostic :</span> ${diag.msg}
+                                <span class="advice">${diag.advice}</span>
+                            </div>
+                        </div>
+                    `;
+            }
+
+            // Synthèse finale
+            let totalCorrect = quizCorrect + qcmCorrect;
+            let totalTotal = quizTotal + qcmTotal;
+            let synth = '';
+            if (totalCorrect === totalTotal) synth = '🎉 Félicitations ! Toutes les réponses sont justes. Continuez ainsi.';
+            else if (totalCorrect >= totalTotal * 0.7) synth = '👍 Bonne maîtrise globale. Consultez les lacunes détaillées ci-dessus pour progresser.';
+            else synth = '📖 Des lacunes importantes sont identifiées. Appliquez précisément les conseils de correction donnés pour chaque erreur.';
+
+            let unansweredMsg = '';
+            const totalUnanswered = quizQuestions.filter((_, i) => (quizAnswers[i] || '').trim() === '').length +
+                qcmQuestions.filter((_, i) => qcmAnswers[i] === undefined || qcmAnswers[i] === -1).length;
+            if (totalUnanswered > 0) {
+                unansweredMsg =
+                    `⚠️ ${totalUnanswered} question(s) sans réponse. L'analyse détaillée ne porte que sur les questions traitées.`;
+            }
+
+            html += `<div style="margin-top:1.5rem; padding:1rem; background:#eef2ff; border-radius:10px; text-align:center; font-weight:500; color:#1e293b;">
+                        ${synth}
+                        ${unansweredMsg ? '<br><span style="font-weight:400; color:#f59e0b;">' + unansweredMsg + '</span>' : ''}
+                    </div>`;
+
+            container.innerHTML = html;
+            setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }, 100);
+        }
+
+        // --- JSON Auto ---
+        function autoDownloadJSON() {
+            const name = document.getElementById('studentName').value.trim() || 'Anonyme';
+            const now = new Date();
+            const timestamp = now.toISOString();
+            const data = {
+                student: name,
+                timestamp: timestamp,
+                quiz: quizQuestions.map((q, idx) => ({
+                    question: q.text,
+                    userAnswer: quizAnswers[idx] || '',
+                    correctAnswer: q.answer,
+                    category: q.category || 'unknown',
+                    isCorrect: document.getElementById(`quiz_feedback_${idx}`)?.classList.contains('correct') || false
+                })),
+                qcm: qcmQuestions.map((q, idx) => ({
+                    question: q.text,
+                    options: q.options,
+                    userChoice: qcmAnswers[idx] !== undefined ? q.options[qcmAnswers[idx]] : null,
+                    correctChoice: q.options[q.correctIndex],
+                    category: q.category || 'unknown',
+                    isCorrect: document.getElementById(`qcm_feedback_${idx}`)?.classList.contains('correct') || false
+                }))
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `suite_H1_${name}_${now.toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Soumettre ---
+        async function submitAll() {
+            quizAnswers = {};
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const input = document.getElementById(`quiz_${i}`);
+                quizAnswers[i] = input ? input.value.trim() : '';
+            }
+            qcmAnswers = {};
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                const radios = document.querySelectorAll(`input[name="qcm_${i}"]`);
+                let selected = -1;
+                radios.forEach((r, idx) => { if (r.checked) selected = idx; });
+                qcmAnswers[i] = selected;
+            }
+
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const q = quizQuestions[i];
+                const userAns = quizAnswers[i];
+                const feedback = document.getElementById(`quiz_feedback_${i}`);
+                if (feedback) {
+                    let isCorrect = false;
+                    if (typeof q.answer === 'number') {
+                        const num = parseFloat(userAns);
+                        if (!isNaN(num)) isCorrect = Math.abs(num - q.answer) < 1e-6;
+                    } else {
+                        isCorrect = userAns.toLowerCase().trim() === q.answer.toLowerCase().trim();
+                    }
+                    feedback.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect (réponse : ' + q.answer + ')';
+                    feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+                }
+            }
+
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                const q = qcmQuestions[i];
+                const userIdx = qcmAnswers[i];
+                const feedback = document.getElementById(`qcm_feedback_${i}`);
+                if (feedback) {
+                    const isCorrect = (userIdx === q.correctIndex);
+                    feedback.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect (bonne réponse : ' + q.options[q
+                        .correctIndex] + ')';
+                    feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+                }
+            }
+            submitted = true;
+            renderSummary();
+            autoDownloadJSON();
+        }
+
+        // --- Téléchargement manuel ---
+        async function downloadJSON() {
+            if (!submitted) {
+                await showModal('Information', 'Veuillez d’abord soumettre vos réponses pour générer un JSON.', 'OK');
+                return;
+            }
+            autoDownloadJSON();
+        }
+
+        // --- Réinitialisations avec modale ---
+        async function handleResetQuiz() {
+            const confirm = await showModal('Confirmation', 'Voulez-vous vraiment réinitialiser le Quiz ?<br>Vos réponses actuelles seront perdues.',
+                'Oui', 'Non');
+            if (confirm) await resetQuiz();
+        }
+
+        async function handleResetQcm() {
+            const confirm = await showModal('Confirmation', 'Voulez-vous vraiment réinitialiser le QCM ?<br>Vos réponses actuelles seront perdues.',
+                'Oui', 'Non');
+            if (confirm) await resetQcm();
+        }
+
+        // --- Initialisation ---
+        window.onload = async function() {
+            await resetQuiz();
+            await resetQcm();
+            setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }, 500);
+            document.getElementById('submitBtn').addEventListener('click', submitAll);
+            document.getElementById('resetQuizBtn').addEventListener('click', handleResetQuiz);
+            document.getElementById('resetQcmBtn').addEventListener('click', handleResetQcm);
+            document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
+        };
+    </script>
+</body>
+</html>

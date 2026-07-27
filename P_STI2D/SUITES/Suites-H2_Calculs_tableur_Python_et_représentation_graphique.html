@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>H2 – Suites : Outils numériques & graphiques</title>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        /* --- Reset & global --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            font-size: 15px;
+        }
+        body {
+            display: flex;
+        }
+
+        /* --- Sidebar professionnelle --- */
+        .sidebar {
+            width: 230px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 1.8rem 0 1rem;
+            flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+            position: sticky;
+            top: 0;
+        }
+        .sidebar h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            padding: 0 1.5rem 0.8rem;
+            border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .sidebar h2 span {
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 30px;
+            margin-left: auto;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.7rem 1.5rem;
+            font-weight: 500;
+            color: #475569;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.15s;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .menu-item .badge {
+            background: #e2e8f0;
+            color: #1e293b;
+            padding: 0.05rem 0.6rem;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .menu-item .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            margin-left: auto;
+            flex-shrink: 0;
+            transition: 0.2s;
+        }
+        .menu-item .status-dot.answered {
+            background: #22c55e;
+        }
+        .menu-item .status-dot.partial {
+            background: #eab308;
+        }
+        .menu-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        .menu-item.active {
+            background: #eff6ff;
+            color: #1e40af;
+            border-left-color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* --- Main content --- */
+        .main-content {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.2rem 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+        }
+
+        /* Header with progress */
+        .header {
+            background: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 1.2rem;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .header h1 small {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 0.1rem 0.8rem;
+            border-radius: 30px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .stats-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .stats-progress .bar-bg {
+            width: 120px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .stats-progress .bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #2563eb;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .student-area {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .student-area label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+        .student-area input {
+            padding: 0.25rem 0.6rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            width: 130px;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+        .student-area input:focus {
+            border-color: #2563eb;
+            background: white;
+            outline: none;
+        }
+
+        .btn {
+            background: #e2e8f0;
+            color: #1e293b;
+            border: none;
+            padding: 0.35rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn:hover {
+            background: #cbd5e1;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            margin-bottom: 1.2rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .section.active {
+            display: block;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.6rem;
+        }
+        .section-header h2 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Instructions */
+        .instruction-box {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 1.2rem;
+            border-left: 4px solid #2563eb;
+            font-size: 0.9rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .instruction-box strong {
+            color: #0f172a;
+        }
+
+        /* Questions */
+        .question {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.2rem 0;
+        }
+        .question:last-child {
+            border-bottom: none;
+        }
+        .q-text {
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #0f172a;
+        }
+        .q-answer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            align-items: flex-start;
+        }
+        .q-answer input[type="text"] {
+            padding: 0.3rem 0.8rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            width: 200px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+        .q-answer input[type="text"]:focus {
+            border-color: #2563eb;
+            background: white;
+            outline: none;
+        }
+        .q-answer .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.2rem;
+        }
+        .q-answer .options label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            transition: 0.1s;
+        }
+        .q-answer .options label:hover {
+            background: #f1f5f9;
+        }
+        .feedback {
+            margin-top: 0.3rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 6px;
+        }
+        .feedback.correct {
+            color: #16a34a;
+            background: #dcfce7;
+        }
+        .feedback.incorrect {
+            color: #dc2626;
+            background: #fee2e2;
+        }
+        .feedback.unanswered {
+            color: #eab308;
+            background: #fef9c3;
+        }
+
+        .graph-canvas {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            margin: 0.4rem 0;
+            cursor: pointer;
+            touch-action: none;
+            max-width: 100%;
+            height: auto;
+        }
+        .graph-canvas.interactive {
+            cursor: crosshair;
+        }
+        .graph-hint {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* Rappels */
+        .rappel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.2rem;
+        }
+        .rappel-card {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 1rem 1.2rem;
+            border-left: 5px solid #2563eb;
+            transition: 0.15s;
+        }
+        .rappel-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .rappel-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .rappel-card .formule {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1e293b;
+            margin: 0.3rem 0;
+            background: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .rappel-card .desc {
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .rappel-card .tip {
+            background: #fef9c3;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #854d0e;
+            margin-top: 0.4rem;
+        }
+
+        /* Summary */
+        .summary-item {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 5px solid #94a3b8;
+        }
+        .summary-item.correct {
+            border-left-color: #22c55e;
+        }
+        .summary-item.incorrect {
+            border-left-color: #ef4444;
+        }
+        .summary-item .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .summary-item .q-header .status {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .summary-item .q-header .status.correct {
+            color: #16a34a;
+        }
+        .summary-item .q-header .status.incorrect {
+            color: #dc2626;
+        }
+        .summary-item .q-header .status.unanswered {
+            color: #eab308;
+        }
+        .summary-item .details {
+            font-size: 0.9rem;
+            color: #1e293b;
+            margin: 0.3rem 0;
+        }
+        .summary-item .diagnostic {
+            background: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            margin-top: 0.4rem;
+            font-size: 0.9rem;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+        .summary-item .diagnostic .advice {
+            color: #2563eb;
+            font-weight: 500;
+            display: block;
+            margin-top: 0.2rem;
+        }
+        .mastery-level {
+            background: #f1f5f9;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            max-width: 480px;
+            width: 90%;
+            padding: 2rem 2rem 1.8rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: modalPop 0.2s ease-out;
+        }
+        @keyframes modalPop {
+            from {
+                transform: scale(0.95) translateY(10px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-box h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .modal-box p {
+            font-size: 1rem;
+            color: #1e293b;
+            margin: 0.8rem 0 1.2rem;
+            line-height: 1.6;
+        }
+        .modal-box .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 0.3rem 0.5rem;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .sidebar h2 {
+                display: none;
+            }
+            .menu-item {
+                padding: 0.3rem 0.8rem;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                white-space: nowrap;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+            }
+            .menu-item .status-dot {
+                display: none;
+            }
+            .menu-item.active {
+                border-left-color: transparent;
+                border-bottom-color: #2563eb;
+                background: transparent;
+            }
+            .main-content {
+                height: calc(100vh - 50px);
+                padding: 0.6rem;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+                padding: 0.8rem 1rem;
+            }
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .header-right {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .stats-progress .bar-bg {
+                width: 80px;
+            }
+            .section {
+                padding: 1rem;
+            }
+            .rappel-grid {
+                grid-template-columns: 1fr;
+            }
+            .q-answer input[type="text"] {
+                width: 100%;
+            }
+            .instruction-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Scrollbar styles */
+        .main-content::-webkit-scrollbar,
+        .sidebar::-webkit-scrollbar,
+        .section::-webkit-scrollbar {
+            width: 5px;
+        }
+        .main-content::-webkit-scrollbar-track,
+        .sidebar::-webkit-scrollbar-track,
+        .section::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .main-content::-webkit-scrollbar-thumb,
+        .sidebar::-webkit-scrollbar-thumb,
+        .section::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <h2>📋 Navigation <span>H2</span></h2>
+        <a class="menu-item active" data-target="quiz" onclick="showSection('quiz')">
+            <span class="badge">📝</span> Quiz
+            <span class="status-dot" id="dot-quiz"></span>
+        </a>
+        <a class="menu-item" data-target="qcm" onclick="showSection('qcm')">
+            <span class="badge">🧩</span> QCM
+            <span class="status-dot" id="dot-qcm"></span>
+        </a>
+        <a class="menu-item" data-target="summary" onclick="showSection('summary')">
+            <span class="badge">📊</span> Résumé
+            <span class="status-dot" id="dot-summary"></span>
+        </a>
+        <a class="menu-item" data-target="rappel" onclick="showSection('rappel')">
+            <span class="badge">📚</span> Rappels
+            <span class="status-dot" id="dot-rappel"></span>
+        </a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="header">
+            <h1>📐 Suites – H2 : <br>Calculs, tableur/Python et représentation graphique</h1>
+            <div class="header-right">
+                <div class="stats-progress">
+                    <span id="statsText">0 / 11 répondues</span>
+                    <div class="bar-bg"><div class="bar-fill" id="progressFill"></div></div>
+                </div>
+                <div class="student-area">
+                    <label for="studentName">👤</label>
+                    <input type="text" id="studentName" placeholder="Votre nom" value="Élève 1" />
+                </div>
+                <button class="btn btn-primary" id="submitBtn">✅ Vérifier tout</button>
+                <button class="btn btn-secondary" id="downloadBtn">⬇️ JSON</button>
+            </div>
+        </div>
+
+        <!-- QUIZ SECTION -->
+        <div class="section active" id="quizSection">
+            <div class="section-header">
+                <h2>📝 Quiz – réponses libres et choix</h2>
+                <button class="btn btn-secondary" id="resetQuizBtn">🔄 Réinitialiser le Quiz</button>
+            </div>
+            <div class="instruction-box">
+                <span>💡</span>
+                <div><strong>Instructions :</strong> Répondez aux questions ci-dessous. Certaines demandent une saisie texte, d'autres un choix parmi les propositions. Cliquez sur <strong>"Vérifier tout"</strong> pour corriger.</div>
+            </div>
+            <div id="quizContainer"></div>
+        </div>
+
+        <!-- QCM SECTION -->
+        <div class="section" id="qcmSection">
+            <div class="section-header">
+                <h2>🧩 QCM – choix multiple</h2>
+                <button class="btn btn-secondary" id="resetQcmBtn">🔄 Réinitialiser le QCM</button>
+            </div>
+            <div class="instruction-box">
+                <span>💡</span>
+                <div><strong>Instructions :</strong> Choisissez la bonne réponse parmi les propositions. L'option <strong>"Autre"</strong> peut parfois être la bonne, lisez bien chaque énoncé.</div>
+            </div>
+            <div id="qcmContainer"></div>
+        </div>
+
+        <!-- SUMMARY SECTION -->
+        <div class="section" id="summarySection">
+            <h2>📊 Analyse détaillée des résultats</h2>
+            <div id="summaryContent">
+                <p class="no-submit">Soumettez vos réponses pour obtenir une analyse personnalisée.</p>
+            </div>
+        </div>
+
+        <!-- RAPPELS SECTION -->
+        <div class="section" id="rappelSection">
+            <h2>📚 Rappels : Tableur, Python et nuage de points</h2>
+            <p style="margin-bottom:1rem; color:#475569;">
+                Pour générer les termes d’une suite et interpréter son nuage de points, on utilise des outils numériques.
+                La forme du nuage permet de conjecturer la nature de la suite.
+            </p>
+            <div class="rappel-grid">
+                <div class="rappel-card">
+                    <h4>📊 Tableur</h4>
+                    <div class="formule">=2*A2+3</div>
+                    <div class="desc">Formule en B2 si A2 contient $n$. Recopier vers le bas pour générer la liste.</div>
+                    <div class="tip">💡 Astuce : Utilisez la poignée de recopie pour étendre la formule.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>🐍 Python – Liste en compréhension</h4>
+                    <div class="formule">[2*n+3 for n in range(5)]</div>
+                    <div class="desc">Génère les 5 premiers termes : $n=0,1,2,3,4$.</div>
+                    <div class="tip">💡 Astuce : `range(5)` va de 0 à 4.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>🐍 Python – Boucle</h4>
+                    <div class="formule">L.append(2*n+3)</div>
+                    <div class="desc">Ajoute successivement les termes dans une liste.</div>
+                    <div class="tip">💡 Astuce : Pensez à initialiser `L = []` avant la boucle.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>📈 Nuage de points</h4>
+                    <div class="formule">$(n, u_n)$</div>
+                    <div class="desc">En abscisse le rang $n$, en ordonnée la valeur $u_n$.</div>
+                    <div class="tip">💡 Astuce : Les points alignés indiquent une suite arithmétique.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>📈 Suite arithmétique</h4>
+                    <div class="formule">Points alignés</div>
+                    <div class="desc">Si les points sont alignés, la suite est arithmétique ($u_n = a n + b$).</div>
+                    <div class="tip">💡 Astuce : La différence $u_{n+1} - u_n$ est constante.</div>
+                </div>
+                <div class="rappel-card">
+                    <h4>📈 Suite géométrique</h4>
+                    <div class="formule">Croissance exponentielle</div>
+                    <div class="desc">Si la croissance est exponentielle (points sur une courbe $a^n$), la suite est géométrique.</div>
+                    <div class="tip">💡 Astuce : Le rapport $u_{n+1} / u_n$ est constant.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box">
+            <h3 id="modalTitle">Titre</h3>
+            <p id="modalMessage">Message</p>
+            <div class="actions" id="modalActions"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  UTILITAIRES & FORMATAGE
+        // ============================================================
+        function fmtLinear(a, b) {
+            if (a === 0 && b === 0) return '0';
+            let part = '';
+            if (a === 0) part = '';
+            else if (a === 1) part = 'n';
+            else if (a === -1) part = '-n';
+            else part = a + 'n';
+            if (b === 0) return part || '0';
+            else if (b > 0) return part ? part + ' + ' + b : String(b);
+            else return part ? part + ' - ' + Math.abs(b) : '-' + Math.abs(b);
+        }
+        function fmtValue(v) { return v < 0 ? '-' + Math.abs(v) : String(v); }
+
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]]; }
+            return a;
+        }
+
+        // ============================================================
+        //  CANVAS DRAWING
+        // ============================================================
+        function drawGrid(ctx, w, h, xMin, xMax, yMin, yMax) {
+            ctx.clearRect(0, 0, w, h);
+            const pad = 30;
+            const graphW = w - 2 * pad;
+            const graphH = h - 2 * pad;
+            const scaleX = graphW / (xMax - xMin);
+            const scaleY = graphH / (yMax - yMin);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            const originX = pad - xMin * scaleX;
+            const originY = h - pad + yMin * scaleY;
+            ctx.moveTo(pad, originY);
+            ctx.lineTo(w - pad, originY);
+            ctx.moveTo(originX, pad);
+            ctx.lineTo(originX, h - pad);
+            ctx.stroke();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 0.5;
+            for (let x = Math.ceil(xMin); x <= xMax; x++) {
+                const cx = pad + (x - xMin) * scaleX;
+                ctx.beginPath();
+                ctx.moveTo(cx, pad);
+                ctx.lineTo(cx, h - pad);
+                ctx.stroke();
+                ctx.fillStyle = '#475569';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(x, cx, h - pad + 14);
+            }
+            for (let y = Math.ceil(yMin); y <= yMax; y++) {
+                const cy = h - pad - (y - yMin) * scaleY;
+                ctx.beginPath();
+                ctx.moveTo(pad, cy);
+                ctx.lineTo(w - pad, cy);
+                ctx.stroke();
+                ctx.fillStyle = '#475569';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(y, pad - 6, cy + 4);
+            }
+            return { pad, scaleX, scaleY };
+        }
+
+        let userDrawnPoints = {};
+        let graphData = {};
+
+        function drawQuizGraph(idx, points) {
+            const canvas = document.getElementById(`quiz_graph_${idx}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width,
+                h = canvas.height;
+            const xVals = points.map(p => p[0]);
+            const yVals = points.map(p => p[1]);
+            const xMin = Math.min(...xVals) - 0.5;
+            const xMax = Math.max(...xVals) + 0.5;
+            const yMin = Math.min(0, ...yVals) - 1;
+            const yMax = Math.max(...yVals) + 1;
+            drawGrid(ctx, w, h, xMin, xMax, yMin, yMax);
+            ctx.fillStyle = '#dc2626';
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1;
+            const pad = 30;
+            const graphW = w - 2 * pad;
+            const graphH = h - 2 * pad;
+            const scaleX = graphW / (xMax - xMin);
+            const scaleY = graphH / (yMax - yMin);
+            points.forEach(([x, y]) => {
+                const cx = pad + (x - xMin) * scaleX;
+                const cy = h - pad - (y - yMin) * scaleY;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            });
+            graphData[idx] = { points, xMin, xMax, yMin, yMax };
+        }
+
+        function drawQcmGraph(idx, points) {
+            const canvas = document.getElementById(`qcm_graph_${idx}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width,
+                h = canvas.height;
+            const xVals = points.map(p => p[0]);
+            const yVals = points.map(p => p[1]);
+            const xMin = Math.min(...xVals) - 0.5;
+            const xMax = Math.max(...xVals) + 0.5;
+            const yMin = Math.min(0, ...yVals) - 1;
+            const yMax = Math.max(...yVals) + 1;
+            drawGrid(ctx, w, h, xMin, xMax, yMin, yMax);
+            ctx.fillStyle = '#dc2626';
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1;
+            const pad = 30;
+            const graphW = w - 2 * pad;
+            const graphH = h - 2 * pad;
+            const scaleX = graphW / (xMax - xMin);
+            const scaleY = graphH / (yMax - yMin);
+            points.forEach(([x, y]) => {
+                const cx = pad + (x - xMin) * scaleX;
+                const cy = h - pad - (y - yMin) * scaleY;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            });
+        }
+
+        function initDrawCanvas(idx) {
+            const canvas = document.getElementById(`quiz_draw_${idx}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width,
+                h = canvas.height;
+            const correct = quizQuestions[idx].answer;
+            const xVals = correct.map(p => p[0]);
+            const yVals = correct.map(p => p[1]);
+            const xMin = Math.min(...xVals) - 0.5;
+            const xMax = Math.max(...xVals) + 0.5;
+            const yMin = Math.min(0, ...yVals) - 1;
+            const yMax = Math.max(...yVals) + 1;
+            const { pad, scaleX, scaleY } = drawGrid(ctx, w, h, xMin, xMax, yMin, yMax);
+            canvas._pad = pad;
+            canvas._scaleX = scaleX;
+            canvas._scaleY = scaleY;
+            canvas._xMin = xMin;
+            canvas._xMax = xMax;
+            canvas._yMin = yMin;
+            canvas._yMax = yMax;
+            canvas._h = h;
+            canvas._ctx = ctx;
+            redrawDrawnPoints(idx);
+            canvas.onclick = function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX_canvas = canvas.width / rect.width;
+                const scaleY_canvas = canvas.height / rect.height;
+                const mouseX = (e.clientX - rect.left) * scaleX_canvas;
+                const mouseY = (e.clientY - rect.top) * scaleY_canvas;
+                const x = (mouseX - pad) / scaleX + xMin;
+                const y = -(mouseY - (h - pad)) / scaleY + yMin;
+                const roundX = Math.round(x);
+                const roundY = Math.round(y);
+                if (roundX < 0 || roundX > 2) return;
+                const existingIdx = userDrawnPoints[idx].findIndex(p => p[0] === roundX);
+                if (existingIdx !== -1) userDrawnPoints[idx].splice(existingIdx, 1);
+                else userDrawnPoints[idx].push([roundX, roundY]);
+                redrawDrawnPoints(idx);
+                updateStats();
+            };
+        }
+
+        function redrawDrawnPoints(idx) {
+            const canvas = document.getElementById(`quiz_draw_${idx}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width,
+                h = canvas.height;
+            const pad = canvas._pad || 30;
+            const scaleX = canvas._scaleX || (400 - 60) / 3;
+            const scaleY = canvas._scaleY || (250 - 60) / 13;
+            const xMin = canvas._xMin || -0.5;
+            const yMin = canvas._yMin || -1;
+            const xMax = canvas._xMax || 2.5;
+            const yMax = canvas._yMax || 12;
+            drawGrid(ctx, w, h, xMin, xMax, yMin, yMax);
+            userDrawnPoints[idx].forEach(([x, y]) => {
+                const cx = pad + (x - xMin) * scaleX;
+                const cy = h - pad - (y - yMin) * scaleY;
+                ctx.fillStyle = '#2563eb';
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            });
+        }
+
+        function redrawAllGraphs() {
+            quizQuestions.forEach((q, idx) => {
+                if (q.points) drawQuizGraph(idx, q.points);
+                if (q.isDraw) redrawDrawnPoints(idx);
+            });
+            qcmQuestions.forEach((q, idx) => {
+                if (q.points) drawQcmGraph(idx, q.points);
+            });
+        }
+
+        // ============================================================
+        //  MENU & MODAL
+        // ============================================================
+        function showSection(target) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(target + 'Section').classList.add('active');
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.menu-item[data-target="${target}"]`).classList.add('active');
+            if (target === 'rappel') {
+                setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }, 100);
+            }
+            if (target === 'quiz' || target === 'qcm') {
+                setTimeout(() => redrawAllGraphs(), 200);
+                setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }, 300);
+            }
+        }
+
+        function showModal(title, message, confirmText = 'OK', cancelText = null) {
+            return new Promise((resolve) => {
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalMessage').innerHTML = message;
+                const actions = document.getElementById('modalActions');
+                actions.innerHTML = '';
+                if (cancelText) {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-secondary';
+                    cancelBtn.textContent = cancelText;
+                    cancelBtn.onclick = () => { closeModal();
+                        resolve(false); };
+                    actions.appendChild(cancelBtn);
+                }
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'btn btn-primary';
+                confirmBtn.textContent = confirmText;
+                confirmBtn.onclick = () => { closeModal();
+                    resolve(true); };
+                actions.appendChild(confirmBtn);
+                document.getElementById('customModal').classList.add('active');
+            });
+        }
+
+        function closeModal() { document.getElementById('customModal').classList.remove('active'); }
+
+        // ============================================================
+        //  QUESTION GENERATORS (QUIZ & QCM)
+        // ============================================================
+        const quizCategoryMap = {
+            'calc_linear': [
+                function() {
+                    const a = randInt(-4, 4);
+                    const b = randInt(-8, 8);
+                    const k = randInt(0, 8);
+                    const answer = a * k + b;
+                    const expr = fmtLinear(a, b);
+                    return { text: `Soit $u_n = ${expr}$. Calculer $u_{${k}}$ pour générer la liste.`, answer,
+                        category: 'calc_linear', type: 'text',
+                        signature: `q_lin_${a}_${b}_${k}` };
+                }
+            ],
+            'calc_recurrence': [
+                function() {
+                    const u0 = randInt(-3, 6);
+                    const r = randInt(-4, 4);
+                    const k = randInt(1, 5);
+                    const answer = u0 + r * k;
+                    const recur = r === 0 ? 'u_n' : (r > 0 ? 'u_n + ' + r : 'u_n - ' + Math.abs(r));
+                    return { text: `Soit $u_0 = ${fmtValue(u0)}$ et $u_{n+1} = ${recur}$. Calculer $u_{${k}}$.`, answer,
+                        category: 'calc_recurrence', type: 'text',
+                        signature: `q_rec_${u0}_${r}_${k}` };
+                }
+            ],
+            'python_index': [
+                function() {
+                    const a = randInt(1, 4);
+                    const b = randInt(-2, 3);
+                    const k = randInt(0, 2);
+                    const answer = a * k + b;
+                    const expr = fmtLinear(a, b);
+                    const pyCode = `[${expr} for n in range(3)]`;
+                    const text =
+                        `En Python, la liste \`${pyCode}\` a été créée. Que vaut l'élément d'indice ${k} ? (attention aux indices commençant à 0)`;
+                    return { text, answer, category: 'python_index', type: 'text',
+                        signature: `q_pyidx_${a}_${b}_${k}` };
+                }
+            ],
+            'graph_interp': [
+                function() {
+                    const options = ['Arithmétique', 'Géométrique', 'Autre'];
+                    const shuffledOptions = shuffle([...options]);
+                    const correctIndex = Math.floor(Math.random() * 3);
+                    const correctAnswer = shuffledOptions[correctIndex];
+                    let points;
+                    if (correctAnswer === 'Arithmétique') {
+                        const a = randInt(1, 3);
+                        const b = randInt(1, 5);
+                        points = Array.from({ length: 3 }, (_, i) => [i, a * i + b]);
+                    } else if (correctAnswer === 'Géométrique') {
+                        const q = randInt(2, 4);
+                        const u0 = randInt(1, 3);
+                        points = Array.from({ length: 3 }, (_, i) => [i, u0 * Math.pow(q, i)]);
+                    } else {
+                        const c = randInt(1, 3);
+                        points = Array.from({ length: 3 }, (_, i) => [i, i * i + c]);
+                    }
+                    return {
+                        text: `Observez le nuage de points ci-dessous (3 points). Cette suite est-elle arithmétique, géométrique ou autre ?`,
+                        points: points,
+                        type: 'choice',
+                        options: shuffledOptions,
+                        correctIndex: correctIndex,
+                        category: 'graph_interp',
+                        signature: `q_graph_${Date.now()}_${Math.random()}`
+                    };
+                }
+            ],
+            'draw_seq': [
+                function() {
+                    const a = randInt(1, 3);
+                    const b = randInt(0, 3);
+                    const correctPoints = Array.from({ length: 3 }, (_, i) => [i, a * i + b]);
+                    const expr = fmtLinear(a, b);
+                    return {
+                        text: `Placez les 3 points de la suite $u_n = ${expr}$ pour $n = 0, 1, 2$ sur le graphique (cliquez sur la zone).`,
+                        answer: correctPoints,
+                        category: 'draw_seq',
+                        isDraw: true,
+                        type: 'draw',
+                        signature: `q_draw_${a}_${b}_${Date.now()}`
+                    };
+                }
+            ]
+        };
+
+        function generateQCMOptions(correct, wrongs) {
+            const otherLabel = 'Autre (aucune des réponses ci-dessus)';
+            const otherIsCorrect = Math.random() < 0.2;
+            let options = [];
+            let correctIndex = -1;
+            if (otherIsCorrect) {
+                let modifiedCorrect = correct;
+                if (typeof correct === 'string') {
+                    let match = correct.match(/\d/);
+                    if (match) {
+                        let digit = parseInt(match[0]);
+                        let newDigit = (digit + 1) % 10;
+                        modifiedCorrect = correct.replace(match[0], newDigit.toString());
+                        while (modifiedCorrect === correct || wrongs.includes(modifiedCorrect)) {
+                            newDigit = (newDigit + 1) % 10;
+                            modifiedCorrect = correct.replace(match[0], newDigit.toString());
+                        }
+                    }
+                }
+                const allWrongs = [...wrongs, modifiedCorrect];
+                options = shuffle(allWrongs);
+                const otherIdx = randInt(0, 4);
+                options.splice(otherIdx, 0, otherLabel);
+                correctIndex = otherIdx;
+            } else {
+                const allOptions = shuffle([correct, ...wrongs]);
+                const otherIdx = randInt(0, 4);
+                allOptions.splice(otherIdx, 0, otherLabel);
+                options = allOptions;
+                correctIndex = options.indexOf(correct);
+            }
+            return { options, correctIndex };
+        }
+
+        const qcmCategoryMap = {
+            'qcm_python_code': [
+                function() {
+                    const text =
+                        'Quelle est la bonne syntaxe Python pour générer les 5 premiers termes ($n=0,1,2,3,4$) de $u_n = 2n+1$ ?';
+                    const correct = '[2*n + 1 for n in range(5)]';
+                    const wrongs = ['[2*n + 1 for n in range(4)]', '[2*n + 1 for n in range(1,5)]',
+                        '[2*n + 1 for n in range(0,5)]'
+                    ];
+                    const { options, correctIndex } = generateQCMOptions(correct, wrongs);
+                    return { text, options, correctIndex, category: 'qcm_python_code',
+                        signature: `qcm_py_${Date.now()}_${Math.random()}` };
+                }
+            ],
+            'qcm_spreadsheet': [
+                function() {
+                    const text =
+                        'Dans un tableur, si la colonne A contient les rangs $n$ (A2 pour $n=0$, A3 pour $n=1$...), quelle formule doit-on écrire en B2 pour calculer $u_n = 2n+3$ ?';
+                    const correct = '=2*A2+3';
+                    const wrongs = ['=2*A1+3', '=2*A2+3 (en B1)', '=2*A3+3'];
+                    const { options, correctIndex } = generateQCMOptions(correct, wrongs);
+                    return { text, options, correctIndex, category: 'qcm_spreadsheet',
+                        signature: `qcm_spr_${Date.now()}_${Math.random()}` };
+                }
+            ],
+            'qcm_interp_arith': [
+                function() {
+                    const text = 'On observe un nuage de points $(n, u_n)$ parfaitement aligné. La suite est :';
+                    const correct = 'arithmétique';
+                    const wrongs = ['géométrique', 'ni l\'un ni l\'autre', 'constante'];
+                    const { options, correctIndex } = generateQCMOptions(correct, wrongs);
+                    return { text, options, correctIndex, category: 'qcm_interp_arith',
+                        signature: `qcm_arith_${Date.now()}_${Math.random()}` };
+                }
+            ],
+            'qcm_interp_geom': [
+                function() {
+                    const text =
+                        'On observe un nuage de points $(n, u_n)$ qui suit une courbe exponentielle (les rapports $u_{n+1}/u_n$ sont constants). La suite est :';
+                    const correct = 'géométrique';
+                    const wrongs = ['arithmétique', 'ni l\'un ni l\'autre', 'constante'];
+                    const { options, correctIndex } = generateQCMOptions(correct, wrongs);
+                    return { text, options, correctIndex, category: 'qcm_interp_geom',
+                        signature: `qcm_geom_${Date.now()}_${Math.random()}` };
+                }
+            ],
+            'qcm_python_lib': [
+                function() {
+                    const text = 'En Python, quelle instruction permet d\'importer la bibliothèque pour tracer un nuage de points ?';
+                    const correct = 'import matplotlib.pyplot as plt';
+                    const wrongs = ['import plotly as plt', 'import math as plt', 'import numpy as plt'];
+                    const { options, correctIndex } = generateQCMOptions(correct, wrongs);
+                    return { text, options, correctIndex, category: 'qcm_python_lib',
+                        signature: `qcm_lib_${Date.now()}_${Math.random()}` };
+                }
+            ],
+            'qcm_graph': [
+                function() {
+                    const isArith = Math.random() < 0.5;
+                    let points, correctFormula, wrongFormulas;
+                    if (isArith) {
+                        const a = randInt(1, 3);
+                        const b = randInt(1, 4);
+                        points = Array.from({ length: 3 }, (_, i) => [i, a * i + b]);
+                        correctFormula = `u_n = ${fmtLinear(a, b)}`;
+                        wrongFormulas = [
+                            `u_n = ${fmtLinear(a+1, b)}`,
+                            `u_n = ${fmtLinear(a, b+2)}`,
+                            `u_n = ${fmtLinear(a*2, b)}`
+                        ];
+                    } else {
+                        const q = randInt(2, 3);
+                        const u0 = randInt(1, 2);
+                        points = Array.from({ length: 3 }, (_, i) => [i, u0 * Math.pow(q, i)]);
+                        correctFormula = `u_n = ${u0} \\times ${q}^n`;
+                        wrongFormulas = [
+                            `u_n = ${fmtLinear(u0, q)}`,
+                            `u_n = ${u0+1} \\times ${q}^n`,
+                            `u_n = ${u0} \\times ${q+1}^n`
+                        ];
+                    }
+                    const text = 'Quelle formule correspond au nuage de points ci-dessous (3 points) ?';
+                    const { options, correctIndex } = generateQCMOptions(correctFormula, wrongFormulas);
+                    return { text, options, correctIndex, points, category: 'qcm_graph',
+                        signature: `qcm_graph_${Date.now()}_${Math.random()}` };
+                }
+            ]
+        };
+
+        function generateUniqueQuestions(categoryMap, count, usedSet) {
+            const categories = Object.keys(categoryMap);
+            const shuffledCategories = shuffle(categories);
+            const selectedCategories = shuffledCategories.slice(0, count);
+            const results = [];
+            for (let cat of selectedCategories) {
+                const generators = categoryMap[cat];
+                const gen = generators[Math.floor(Math.random() * generators.length)];
+                let q = null;
+                let attempts = 0;
+                while (attempts < 30) {
+                    const candidate = gen();
+                    if (!usedSet.has(candidate.signature)) {
+                        usedSet.add(candidate.signature);
+                        q = candidate;
+                        break;
+                    }
+                    attempts++;
+                }
+                if (!q) q = gen();
+                results.push(q);
+            }
+            return results;
+        }
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let quizQuestions = [];
+        let qcmQuestions = [];
+        let quizAnswers = {};
+        let qcmAnswers = {};
+        let submitted = false;
+        let usedSignaturesQuiz = new Set();
+        let usedSignaturesQcm = new Set();
+
+        // ============================================================
+        //  RENDER FUNCTIONS
+        // ============================================================
+        async function renderQuiz() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+            userDrawnPoints = {};
+            quizQuestions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.dataset.idx = idx;
+                let extraHtml = '';
+                if (q.points) extraHtml += `<canvas id="quiz_graph_${idx}" class="graph-canvas" width="400" height="250"></canvas>`;
+                if (q.isDraw) {
+                    extraHtml +=
+                        `<canvas id="quiz_draw_${idx}" class="graph-canvas interactive" width="400" height="250"></canvas>
+                                 <div class="graph-hint">Cliquez pour placer un point (3 attendus). Cliquez sur un point existant pour le supprimer.</div>`;
+                    userDrawnPoints[idx] = [];
+                }
+                let answerHtml = '';
+                if (q.type === 'choice') {
+                    let optionsHtml = '';
+                    q.options.forEach((opt, optIdx) => {
+                        const checked = (submitted && quizAnswers[idx] === optIdx) ? 'checked' : '';
+                        optionsHtml +=
+                            `<label><input type="radio" name="quiz_choice_${idx}" value="${optIdx}" ${checked} /> ${opt}</label>`;
+                    });
+                    answerHtml = `<div class="options">${optionsHtml}</div>`;
+                } else if (q.type === 'draw') {
+                    answerHtml = '';
+                } else {
+                    answerHtml = `<input type="text" id="quiz_${idx}" placeholder="Votre réponse" />`;
+                }
+                div.innerHTML = `
+                        <div class="q-text">${q.text}</div>
+                        <div class="q-answer">${extraHtml}${answerHtml}<span class="feedback" id="quiz_feedback_${idx}"></span></div>
+                    `;
+                container.appendChild(div);
+                if (submitted && q.type === 'text' && quizAnswers[idx] !== undefined) {
+                    document.getElementById(`quiz_${idx}`).value = quizAnswers[idx];
+                }
+                if (submitted && q.type === 'choice' && quizAnswers[idx] !== undefined) {
+                    const radios = document.querySelectorAll(`input[name="quiz_choice_${idx}"]`);
+                    radios.forEach(r => { if (parseInt(r.value) === quizAnswers[idx]) r.checked = true; });
+                }
+                if (q.points) setTimeout(() => drawQuizGraph(idx, q.points), 50);
+                if (q.isDraw) setTimeout(() => initDrawCanvas(idx), 50);
+            });
+            await new Promise(r => setTimeout(r, 200));
+            if (window.MathJax && MathJax.typesetPromise) await MathJax.typesetPromise();
+            updateStats();
+            updateMenuDots();
+        }
+
+        async function renderQCM() {
+            const container = document.getElementById('qcmContainer');
+            container.innerHTML = '';
+            qcmQuestions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                let extraHtml = '';
+                if (q.points) extraHtml += `<canvas id="qcm_graph_${idx}" class="graph-canvas" width="400" height="250"></canvas>`;
+                let optionsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    const checked = (submitted && qcmAnswers[idx] === optIdx) ? 'checked' : '';
+                    optionsHtml +=
+                        `<label><input type="radio" name="qcm_${idx}" value="${optIdx}" ${checked} /> ${opt}</label>`;
+                });
+                div.innerHTML = `
+                        <div class="q-text">${q.text}</div>
+                        <div class="q-answer">${extraHtml}<div class="options">${optionsHtml}</div><span class="feedback" id="qcm_feedback_${idx}"></span></div>
+                    `;
+                container.appendChild(div);
+                if (q.points) setTimeout(() => drawQcmGraph(idx, q.points), 50);
+            });
+            await new Promise(r => setTimeout(r, 200));
+            if (window.MathJax && MathJax.typesetPromise) await MathJax.typesetPromise();
+            updateStats();
+            updateMenuDots();
+        }
+
+        // ============================================================
+        //  STATS & MENU DOTS
+        // ============================================================
+        function updateStats() {
+            let total = quizQuestions.length + qcmQuestions.length;
+            let answered = 0;
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const q = quizQuestions[i];
+                if (q.isDraw) {
+                    if ((userDrawnPoints[i] || []).length > 0) answered++;
+                } else if (q.type === 'choice') {
+                    if (quizAnswers[i] !== undefined && quizAnswers[i] !== null && quizAnswers[i] !== -1) answered++;
+                } else {
+                    if ((quizAnswers[i] || '').trim() !== '') answered++;
+                }
+            }
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                if (qcmAnswers[i] !== undefined && qcmAnswers[i] !== null && qcmAnswers[i] !== -1) answered++;
+            }
+            document.getElementById('statsText').textContent = `${answered} / ${total} répondues`;
+            const pct = total === 0 ? 0 : (answered / total) * 100;
+            document.getElementById('progressFill').style.width = Math.min(pct, 100) + '%';
+            // Update dots
+            const quizTotal = quizQuestions.length;
+            const qcmTotal = qcmQuestions.length;
+            let quizAns = 0,
+                qcmAns = 0;
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const q = quizQuestions[i];
+                if (q.isDraw) { if ((userDrawnPoints[i] || []).length > 0) quizAns++; } else if (q.type === 'choice') { if (
+                        quizAnswers[i] !== undefined && quizAnswers[i] !== null && quizAnswers[i] !== -1) quizAns++; } else { if (
+                        (quizAnswers[i] || '').trim() !== '') quizAns++; }
+            }
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                if (qcmAnswers[i] !== undefined && qcmAnswers[i] !== null && qcmAnswers[i] !== -1) qcmAns++;
+            }
+            setDot('quiz', quizAns, quizTotal);
+            setDot('qcm', qcmAns, qcmTotal);
+            if (submitted) {
+                document.getElementById('dot-summary').className = 'status-dot answered';
+            } else {
+                document.getElementById('dot-summary').className = 'status-dot';
+            }
+            document.getElementById('dot-rappel').className = 'status-dot';
+        }
+
+        function setDot(type, answered, total) {
+            const dot = document.getElementById(`dot-${type}`);
+            if (total === 0) { dot.className = 'status-dot'; return; }
+            if (answered === total) dot.className = 'status-dot answered';
+            else if (answered > 0) dot.className = 'status-dot partial';
+            else dot.className = 'status-dot';
+        }
+
+        function updateMenuDots() { updateStats(); }
+
+        // ============================================================
+        //  RESET
+        // ============================================================
+        async function resetQuiz() {
+            usedSignaturesQuiz.clear();
+            quizQuestions = generateUniqueQuestions(quizCategoryMap, 6, usedSignaturesQuiz);
+            quizAnswers = {};
+            userDrawnPoints = {};
+            submitted = false;
+            await renderQuiz();
+            await renderSummary();
+        }
+
+        async function resetQcm() {
+            usedSignaturesQcm.clear();
+            qcmQuestions = generateUniqueQuestions(qcmCategoryMap, 5, usedSignaturesQcm);
+            qcmAnswers = {};
+            submitted = false;
+            await renderQCM();
+            await renderSummary();
+        }
+
+        // ============================================================
+        //  DIAGNOSTICS & SUMMARY
+        // ============================================================
+        const baseDiagnostics = {
+            calc_linear: {
+                msg: 'Erreur de calcul d’un terme d’une suite affine ($u_n = a n + b$).',
+                advice: '💡 Astuce : Remplacez $n$ par la valeur donnée, puis calculez. Ex: $u_4 = 3 \\times 4 - 2 = 10$. Entraînez-vous avec des coefficients négatifs.'
+            },
+            calc_recurrence: {
+                msg: 'Erreur de calcul d’un terme par récurrence.',
+                advice: '💡 Astuce : Calculez $u_1$, puis $u_2$, ... jusqu’à $u_k$. Ex: $u_0=2, u_{n+1}=u_n-3$ donne $u_1=-1, u_2=-4$.'
+            },
+            python_index: {
+                msg: 'Erreur d’accès à un élément d’une liste Python.',
+                advice: '💡 Astuce : Les indices commencent à 0. `L[0]` est le premier terme. Ex: `[2,4,6]` -> `L[1]` vaut 4.'
+            },
+            graph_interp: {
+                msg: 'Erreur d’identification de la nature de la suite (arithmétique, géométrique ou autre).',
+                advice: '💡 Astuce : Points alignés → arithmétique (différence constante). Croissance exponentielle → géométrique (rapport constant). Sinon → Autre.'
+            },
+            draw_seq: {
+                msg: 'Erreur dans le placement des points sur le graphique (coordonnées).',
+                advice: '💡 Astuce : En abscisse le rang $n$, en ordonnée $u_n$. Ex: $u_n=2n+1$ donne $(0,1), (1,3), (2,5)$.'
+            },
+            qcm_python_code: {
+                msg: 'Erreur sur la syntaxe de génération de liste en Python.',
+                advice: '💡 Astuce : `[expr for n in range(k)]` génère k termes de n=0 à k-1. Ex: `[2*n for n in range(3)]` donne `[0,2,4]`.'
+            },
+            qcm_spreadsheet: {
+                msg: 'Erreur sur la syntaxe d’une formule de tableur.',
+                advice: '💡 Astuce : On commence par `=` et on utilise `*` pour multiplier. Ex: `=2*A2+3` si A2 contient $n$.'
+            },
+            qcm_interp_arith: {
+                msg: 'Confusion : un nuage aligné correspond à une suite arithmétique.',
+                advice: '💡 Astuce : Points alignés → suite arithmétique (droite). Vérifiez la différence $u_{n+1}-u_n$.'
+            },
+            qcm_interp_geom: {
+                msg: 'Confusion : une courbe exponentielle correspond à une suite géométrique.',
+                advice: '💡 Astuce : Croissance exponentielle → rapports constants $u_{n+1}/u_n = q$.'
+            },
+            qcm_python_lib: {
+                msg: 'Erreur sur l’import des bibliothèques Python pour le tracé.',
+                advice: '💡 Astuce : `import matplotlib.pyplot as plt` est la bonne instruction pour tracer des graphiques.'
+            },
+            qcm_graph: {
+                msg: 'Erreur d’association entre un nuage de points et sa formule.',
+                advice: '💡 Astuce : Alignement → $a n + b$ ; exponentielle → $k \\times a^n$. Observez la forme du nuage.'
+            }
+        };
+
+        function getDiagnostic(category, isCorrect, userAns, correctAns, isQCM = false) {
+            if (isCorrect) return { msg: '✅ Acquis !', advice: '💡 Continuez à vous entraîner pour consolider.' };
+            let diag = baseDiagnostics[category] || { msg: 'Erreur non identifiée.', advice: '💡 Revoir le cours sur les suites.' };
+            let detail = (isQCM) ? `Votre choix : ${userAns} | Bonne réponse : ${correctAns}` :
+                `Votre réponse : ${userAns} | Bonne réponse : ${correctAns}`;
+            return { msg: diag.msg + ' ' + detail, advice: diag.advice };
+        }
+
+        async function renderSummary() {
+            const container = document.getElementById('summaryContent');
+            if (!submitted) {
+                container.innerHTML = '<p class="no-submit">Soumettez vos réponses pour obtenir une analyse personnalisée.</p>';
+                if (window.MathJax && MathJax.typesetPromise) await MathJax.typesetPromise();
+                return;
+            }
+            let quizCorrect = 0,
+                quizTotal = quizQuestions.length;
+            let qcmCorrect = 0,
+                qcmTotal = qcmQuestions.length;
+            for (let i = 0; i < quizQuestions.length; i++) {
+                if (document.getElementById(`quiz_feedback_${i}`)?.classList.contains('correct')) quizCorrect++;
+            }
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                if (document.getElementById(`qcm_feedback_${i}`)?.classList.contains('correct')) qcmCorrect++;
+            }
+            let html =
+                `<div style="display:flex; gap:2rem; flex-wrap:wrap; margin-bottom:1.2rem; background:#f1f5f9; padding:0.8rem 1.5rem; border-radius:12px;">
+                        <div><strong>📝 Quiz</strong> : ${quizCorrect}/${quizTotal} correct</div>
+                        <div><strong>🧩 QCM</strong> : ${qcmCorrect}/${qcmTotal} correct</div>
+                    </div>`;
+
+            // Mastery level
+            const total = quizTotal + qcmTotal;
+            const totalCorrect = quizCorrect + qcmCorrect;
+            let level = '🟢 Maîtrise solide';
+            let levelColor = '#22c55e';
+            if (total > 0 && totalCorrect / total < 0.5) { level = '🔴 Lacunes importantes';
+                levelColor = '#dc2626'; } else if (total > 0 && totalCorrect / total < 0.75) { level = '🟠 En cours d\'acquisition';
+                levelColor = '#eab308'; }
+            html += `<div class="mastery-level" style="border-left:5px solid ${levelColor};">
+                        Niveau de maîtrise : <strong>${level}</strong> (${totalCorrect}/${total})
+                    </div>`;
+
+            // Quiz detail
+            html += `<h3 style="margin-top:1.2rem; margin-bottom:0.5rem;">📝 Détail du Quiz</h3>`;
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const q = quizQuestions[i];
+                let userAns = '';
+                let hasAnswered = false;
+                if (q.isDraw) {
+                    const drawn = userDrawnPoints[i] || [];
+                    userAns = drawn.map(p => `(${p[0]},${p[1]})`).join(' ');
+                    hasAnswered = drawn.length > 0;
+                } else if (q.type === 'choice') {
+                    const idx = quizAnswers[i];
+                    hasAnswered = (idx !== undefined && idx !== null && idx !== -1);
+                    userAns = hasAnswered ? q.options[idx] : 'Non sélectionné';
+                } else {
+                    userAns = quizAnswers[i] || '';
+                    hasAnswered = userAns.trim() !== '';
+                }
+                if (!hasAnswered) {
+                    html += `
+                            <div class="summary-item incorrect">
+                                <div class="q-header"><span><strong>Q${i+1}</strong> : ${q.text}</span><span class="status unanswered">⚠️ Non répondue</span></div>
+                                <div class="details">Vous n'avez pas répondu.</div>
+                                <div class="diagnostic">🔍 <strong>Conseil :</strong> Pensez à répondre à toutes les questions.</div>
+                            </div>`;
+                    continue;
+                }
+                const isCorrect = document.getElementById(`quiz_feedback_${i}`)?.classList.contains('correct') || false;
+                let correctAns = q.isDraw ? 'points corrects' : (q.type === 'choice' ? q.options[q.correctIndex] : q.answer);
+                const diag = getDiagnostic(q.category || 'calc_linear', isCorrect, userAns, correctAns, false);
+                const statusClass = isCorrect ? 'correct' : 'incorrect';
+                const statusLabel = isCorrect ? '✅ Correct' : '❌ Incorrect';
+                html += `
+                        <div class="summary-item ${statusClass}">
+                            <div class="q-header"><span><strong>Q${i+1}</strong> : ${q.text}</span><span class="status ${statusClass}">${statusLabel}</span></div>
+                            <div class="details"><strong>Votre réponse :</strong> ${userAns} &nbsp;|&nbsp; <strong>Bonne réponse :</strong> ${correctAns}</div>
+                            <div class="diagnostic">🔍 ${diag.msg}<span class="advice">${diag.advice}</span></div>
+                        </div>`;
+            }
+
+            // QCM detail
+            html += `<h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">🧩 Détail du QCM</h3>`;
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                const q = qcmQuestions[i];
+                const userIdx = qcmAnswers[i];
+                const hasAnswered = (userIdx !== undefined && userIdx !== -1);
+                if (!hasAnswered) {
+                    html += `
+                            <div class="summary-item incorrect">
+                                <div class="q-header"><span><strong>Q${i+1}</strong> : ${q.text}</span><span class="status unanswered">⚠️ Non répondue</span></div>
+                                <div class="details">Vous n'avez pas sélectionné de réponse.</div>
+                                <div class="diagnostic">🔍 <strong>Conseil :</strong> Sélectionnez une option pour chaque question.</div>
+                            </div>`;
+                    continue;
+                }
+                const userChoice = q.options[userIdx];
+                const isCorrect = document.getElementById(`qcm_feedback_${i}`)?.classList.contains('correct') || false;
+                const diag = getDiagnostic(q.category || 'qcm_python_code', isCorrect, userChoice, q.options[q.correctIndex],
+                    true);
+                const statusClass = isCorrect ? 'correct' : 'incorrect';
+                const statusLabel = isCorrect ? '✅ Correct' : '❌ Incorrect';
+                html += `
+                        <div class="summary-item ${statusClass}">
+                            <div class="q-header"><span><strong>Q${i+1}</strong> : ${q.text}</span><span class="status ${statusClass}">${statusLabel}</span></div>
+                            <div class="details"><strong>Votre choix :</strong> ${userChoice} &nbsp;|&nbsp; <strong>Bonne réponse :</strong> ${q.options[q.correctIndex]}</div>
+                            <div class="diagnostic">🔍 ${diag.msg}<span class="advice">${diag.advice}</span></div>
+                        </div>`;
+            }
+
+            // Final encouragement
+            let synth = '';
+            if (totalCorrect === total) synth =
+                '🎉 Félicitations ! Vous maîtrisez parfaitement les outils numériques et les graphiques.';
+            else if (totalCorrect >= total * 0.7) synth =
+                '👍 Bonne maîtrise. Consultez les conseils ci-dessus pour les points à consolider.';
+            else synth = '📖 Des lacunes sont identifiées. Reprenez les rappels et les exercices ciblés.';
+            html +=
+                `<div style="margin-top:1.5rem; padding:1rem; background:#eef2ff; border-radius:12px; text-align:center; font-weight:500;">${synth}</div>`;
+
+            container.innerHTML = html;
+            await new Promise(r => setTimeout(r, 100));
+            if (window.MathJax && MathJax.typesetPromise) await MathJax.typesetPromise();
+        }
+
+        // ============================================================
+        //  SUBMIT & JSON
+        // ============================================================
+        async function submitAll() {
+            quizAnswers = {};
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const q = quizQuestions[i];
+                if (q.isDraw) {
+                    const drawn = userDrawnPoints[i] || [];
+                    const correct = q.answer;
+                    let isCorrect = drawn.length === correct.length;
+                    if (isCorrect) {
+                        const sortedDrawn = [...drawn].sort((a, b) => a[0] - b[0]);
+                        const sortedCorrect = [...correct].sort((a, b) => a[0] - b[0]);
+                        for (let j = 0; j < sortedDrawn.length; j++) {
+                            if (Math.abs(sortedDrawn[j][0] - sortedCorrect[j][0]) > 0.1 ||
+                                Math.abs(sortedDrawn[j][1] - sortedCorrect[j][1]) > 0.1) { isCorrect = false; break; }
+                        }
+                    }
+                    const feedback = document.getElementById(`quiz_feedback_${i}`);
+                    if (feedback) {
+                        feedback.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect (attendus : ' + correct.map(p =>
+                            `(${p[0]},${p[1]})`).join(' ') + ')';
+                        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+                    }
+                    continue;
+                } else if (q.type === 'choice') {
+                    const radios = document.querySelectorAll(`input[name="quiz_choice_${i}"]`);
+                    let selected = -1;
+                    radios.forEach((r, idx) => { if (r.checked) selected = parseInt(r.value); });
+                    quizAnswers[i] = selected;
+                    const feedback = document.getElementById(`quiz_feedback_${i}`);
+                    if (feedback) {
+                        const isCorrect = (selected === q.correctIndex);
+                        feedback.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect (bonne réponse : ' + q.options[q
+                            .correctIndex] + ')';
+                        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+                    }
+                } else {
+                    const input = document.getElementById(`quiz_${i}`);
+                    const userAns = input ? input.value.trim() : '';
+                    quizAnswers[i] = userAns;
+                    const feedback = document.getElementById(`quiz_feedback_${i}`);
+                    if (feedback) {
+                        let isCorrect = false;
+                        if (typeof q.answer === 'number') {
+                            const num = parseFloat(userAns);
+                            if (!isNaN(num)) isCorrect = Math.abs(num - q.answer) < 1e-6;
+                        } else {
+                            isCorrect = userAns.toLowerCase().trim() === q.answer.toLowerCase().trim();
+                        }
+                        feedback.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect (réponse : ' + q.answer + ')';
+                        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+                    }
+                }
+            }
+
+            qcmAnswers = {};
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                const radios = document.querySelectorAll(`input[name="qcm_${i}"]`);
+                let selected = -1;
+                radios.forEach((r, idx) => { if (r.checked) selected = idx; });
+                qcmAnswers[i] = selected;
+            }
+            for (let i = 0; i < qcmQuestions.length; i++) {
+                const q = qcmQuestions[i];
+                const userIdx = qcmAnswers[i];
+                const feedback = document.getElementById(`qcm_feedback_${i}`);
+                if (feedback) {
+                    const isCorrect = (userIdx === q.correctIndex);
+                    feedback.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect (bonne réponse : ' + q.options[q
+                        .correctIndex] + ')';
+                    feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+                }
+            }
+            submitted = true;
+            await renderSummary();
+            autoDownloadJSON();
+            updateStats();
+            updateMenuDots();
+        }
+
+        function autoDownloadJSON() {
+            const name = document.getElementById('studentName').value.trim() || 'Anonyme';
+            const now = new Date();
+            const timestamp = now.toISOString();
+            const data = {
+                student: name,
+                timestamp: timestamp,
+                quiz: quizQuestions.map((q, idx) => ({
+                    question: q.text,
+                    userAnswer: q.isDraw ? (userDrawnPoints[idx] || []) : (q.type === 'choice' ? (quizAnswers[idx] !==
+                        undefined ? q.options[quizAnswers[idx]] : '') : (quizAnswers[idx] || '')),
+                    correctAnswer: q.isDraw ? 'points corrects' : (q.type === 'choice' ? q.options[q.correctIndex] : q
+                        .answer),
+                    category: q.category || 'unknown',
+                    isCorrect: document.getElementById(`quiz_feedback_${idx}`)?.classList.contains('correct') || false
+                })),
+                qcm: qcmQuestions.map((q, idx) => ({
+                    question: q.text,
+                    options: q.options,
+                    userChoice: qcmAnswers[idx] !== undefined ? q.options[qcmAnswers[idx]] : null,
+                    correctChoice: q.options[q.correctIndex],
+                    category: q.category || 'unknown',
+                    isCorrect: document.getElementById(`qcm_feedback_${idx}`)?.classList.contains('correct') || false
+                }))
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `suite_H2_${name}_${now.toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================
+        //  EVENT LISTENERS & INIT
+        // ============================================================
+        window.onload = async function() {
+            await resetQuiz();
+            await resetQcm();
+            setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(); }, 600);
+            document.getElementById('submitBtn').addEventListener('click', submitAll);
+            document.getElementById('resetQuizBtn').addEventListener('click', async () => {
+                const confirm = await showModal('Confirmation', 'Voulez-vous vraiment réinitialiser le Quiz ?<br>Vos réponses actuelles seront perdues.',
+                    'Oui', 'Non');
+                if (confirm) await resetQuiz();
+            });
+            document.getElementById('resetQcmBtn').addEventListener('click', async () => {
+                const confirm = await showModal('Confirmation', 'Voulez-vous vraiment réinitialiser le QCM ?<br>Vos réponses actuelles seront perdues.',
+                    'Oui', 'Non');
+                if (confirm) await resetQcm();
+            });
+            document.getElementById('downloadBtn').addEventListener('click', async () => {
+                if (!submitted) {
+                    await showModal('Information', 'Veuillez d’abord soumettre vos réponses pour générer un JSON.', 'OK');
+                    return;
+                }
+                autoDownloadJSON();
+            });
+        };
+    </script>
+
+</body>
+</html>

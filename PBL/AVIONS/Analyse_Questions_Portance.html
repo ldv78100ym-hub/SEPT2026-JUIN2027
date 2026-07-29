@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse des réponses – Portance (version chiffrée)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f0f4f8;
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            padding: 30px 40px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 2rem;
+            color: #0a2a4a;
+            margin-top: 0;
+            border-bottom: 4px solid #1a4a7a;
+            padding-bottom: 10px;
+        }
+        .upload-area {
+            border: 2px dashed #b0c8e0;
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f8fafc;
+            margin: 20px 0;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .upload-area.dragover {
+            background: #e2ecf9;
+            border-color: #1a4a7a;
+        }
+        .upload-area p {
+            margin: 0;
+            color: #2a4a6a;
+            font-size: 1.1rem;
+        }
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        .btn {
+            background: #1a4a7a;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn:hover {
+            background: #0d3a5a;
+            transform: scale(0.98);
+        }
+        .btn-secondary {
+            background: #27ae60;
+        }
+        .btn-secondary:hover {
+            background: #1e8449;
+        }
+        .report {
+            margin-top: 30px;
+            display: none;
+        }
+        .report.show {
+            display: block;
+        }
+        .metadata {
+            background: #eef4fa;
+            border-radius: 16px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 40px;
+        }
+        .metadata span {
+            font-weight: 500;
+            color: #0a2a4a;
+        }
+        .section-title {
+            font-size: 1.6rem;
+            color: #0a2a4a;
+            margin: 30px 0 15px;
+            border-left: 6px solid #1a4a7a;
+            padding-left: 16px;
+        }
+        .question-block {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 18px 22px;
+            margin: 14px 0;
+            border-left: 4px solid #b0c8e0;
+        }
+        .question-block .q-label {
+            font-weight: 700;
+            color: #1a4a7a;
+            font-size: 1.05rem;
+        }
+        .question-block .q-reponse {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border: 1px solid #dde6f0;
+            white-space: pre-wrap;
+            font-family: inherit;
+            color: #1a2a3a;
+        }
+        .question-block .q-analyse {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            margin-top: 8px;
+        }
+        .analyse-item {
+            flex: 1 1 200px;
+            background: white;
+            border-radius: 12px;
+            padding: 10px 14px;
+            border: 1px solid #dde6f0;
+        }
+        .analyse-item .label {
+            font-weight: 600;
+            color: #0a2a4a;
+        }
+        .analyse-item .content {
+            margin-top: 4px;
+        }
+        .score-badge {
+            display: inline-block;
+            background: #1a4a7a;
+            color: white;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-left: 12px;
+        }
+        .score-badge.good { background: #27ae60; }
+        .score-badge.average { background: #f39c12; }
+        .score-badge.bad { background: #c0392b; }
+        .bilan-final {
+            background: #eef4fa;
+            border-radius: 20px;
+            padding: 24px 30px;
+            margin: 30px 0 10px;
+            border-left: 6px solid #1a4a7a;
+        }
+        .bilan-final h3 { margin-top: 0; color: #0a2a4a; }
+        .note-final {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a4a7a;
+        }
+        .note-final.warning { color: #f39c12; }
+        .evolution-note {
+            font-style: italic;
+            color: #3a5a7a;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #6a7a8a;
+            text-align: center;
+        }
+        .empty-response {
+            background: #fde8e8;
+            border-left-color: #c0392b;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 20px; }
+            .metadata { flex-direction: column; gap: 6px; }
+            .question-block .q-analyse { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 Analyse des réponses – Activité Portance</h1>
+    <p style="color: #2a4a6a;">Chargez le fichier JSON exporté (chiffré ou non) pour obtenir une analyse détaillée.</p>
+
+    <div class="upload-area" id="dropZone">
+        <p>📁 Glissez-déposez votre fichier JSON ici<br>ou cliquez pour le sélectionner</p>
+        <input type="file" id="fileInput" accept=".json">
+    </div>
+
+    <div style="display: flex; gap: 12px; margin: 10px 0 20px; flex-wrap: wrap;">
+        <button class="btn" id="analyzeBtn">🔍 Analyser</button>
+        <button class="btn btn-secondary" id="exampleEmptyBtn">📄 Exemple vide (W)</button>
+    </div>
+
+    <div class="report" id="reportContainer">
+        <div id="reportContent"></div>
+    </div>
+
+    <div class="footer">
+        Outil d'analyse pédagogique – Pondération selon la difficulté (86 pts max).
+        <br><span style="font-size:0.8rem;">Détection automatique des fichiers chiffrés.</span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        // ============================================================
+        //  CLÉ ET FONCTIONS DE DÉCHIFFREMENT (identiques à l'activité)
+        // ============================================================
+        const SECRET_KEY = 'Portance2026!';
+
+        function deobfuscate(encoded) {
+            try {
+                const decoded = atob(encoded);
+                let json = '';
+                for (let i = 0; i < decoded.length; i++) {
+                    const keyChar = SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
+                    const code = decoded.charCodeAt(i) ^ keyChar;
+                    json += String.fromCharCode(code);
+                }
+                return JSON.parse(json);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ============================================================
+        //  GRILLE D'ÉVALUATION AVEC PONDÉRATION (1 à 3 points)
+        // ============================================================
+        const GRILLE = {
+            // ---- PARTIE 1 : OBSERVATION (6 questions) ----
+            'ex1_1': { poids: 3, mots_cles: ['portance', 'asymétrique', 'aile', 'répartition', 'masse', 'pliage'], min_mots: 15, commentaire_ok: 'Lien asymétrie/portance bien identifié.', commentaire_ko: 'Pensez à décrire comment une dissymétrie affecte la portance.' },
+            'ex1_2': { poids: 3, mots_cles: ['cabré', 'piqué', 'L>P', 'L<P', 'Newton'], min_mots: 15, commentaire_ok: 'Bon lien entre tangage et comparaison L/P.', commentaire_ko: 'Pour interpréter le tangage, il faut comparer L et P.' },
+            'ex1_3': { poids: 3, mots_cles: ['angle d\'attaque', 'alpha', 'C_L', 'portance', 'distance'], min_mots: 15, commentaire_ok: 'Vous reliez bien l\'angle d\'attaque à la portance via C_L.', commentaire_ko: 'L\'angle d\'attaque influence directement C_L, donc la portance.' },
+            'ex1_4': { poids: 3, mots_cles: ['vitesse', 'alpha', 'masse', 'portance', 'distance'], min_mots: 15, commentaire_ok: 'Paramètres influents identifiés. La vitesse est le levier le plus efficace.', commentaire_ko: 'Pour augmenter la distance, on agit sur la vitesse, alpha ou la masse.' },
+            'ex1_5': { poids: 3, mots_cles: ['moyenne', 'écart-type', 'symétrie', 'dissymétrie', 'répartition'], min_mots: 15, commentaire_ok: 'Interprétation correcte de la moyenne et de l\'écart-type.', commentaire_ko: 'Une moyenne proche de 0 et un petit écart-type indiquent une bonne symétrie.' },
+            'ex1_6': { poids: 2, mots_cles: ['vitesse', 'alpha', 'masse', 'carré', 'formule'], min_mots: 12, commentaire_ok: 'Vous mettez en avant le rôle prépondérant de la vitesse (V²).', commentaire_ko: 'La formule L = ½ ρ V² S C_L montre que la vitesse a une influence quadratique.' },
+
+            // ---- PARTIE 3 : MASSE VOLUMIQUE (7 questions) ----
+            'ex3_1': { poids: 2, mots_cles: ['diminue', 'augmente', 'température', 'densité', 'inverse'], min_mots: 10, commentaire_ok: 'Vous décrivez bien l\'évolution de ρ avec la température.', commentaire_ko: 'Quand la température augmente, la masse volumique ρ diminue.' },
+            'ex3_2': { poids: 2, mots_cles: ['diminue', 'altitude', 'pression', 'moins dense'], min_mots: 10, commentaire_ok: 'Vous avez compris que ρ diminue avec l\'altitude.', commentaire_ko: 'En altitude, la pression diminue, donc ρ diminue.' },
+            'ex3_3': { poids: 1, est_numerique: true, reponse_attendue: 0.88, tolerance: 0.02, commentaire_ok: 'Valeur correcte (≈0,88).', commentaire_ko: 'Valeur erronée. Vérifiez les curseurs.' },
+            'ex3_4': { poids: 1, est_numerique: true, reponse_attendue: 1.225, tolerance: 0.01, commentaire_ok: 'Calcul correct (1,225).', commentaire_ko: 'Calcul incorrect.' },
+            'ex3_5': { poids: 2, mots_cles: ['chauffé', 'moins dense', 'poussée', 'Archimède', 'monte'], min_mots: 12, commentaire_ok: 'Vous expliquez bien le principe d\'Archimède.', commentaire_ko: 'L\'air chauffé est moins dense, la poussée d\'Archimède l\'emporte.' },
+            'ex3_6a': { poids: 1, est_numerique: true, reponse_attendue: 0.98, tolerance: 0.02, commentaire_ok: 'Valeur correcte (≈0,98).', commentaire_ko: 'Valeur erronée.' },
+            'ex3_6b': { poids: 1, est_numerique: true, reponse_attendue: 20, tolerance: 2, commentaire_ok: 'Écart correct (≈20%).', commentaire_ko: 'Écart incorrect.' },
+
+            // ---- PARTIE 4 : COEFFICIENTS AÉRODYNAMIQUES (8 questions) ----
+            'ex4_1': { poids: 1, mots_cles: ['45°', 'maximale', 'sinus'], min_mots: 5, commentaire_ok: 'Vous avez trouvé 45°.', commentaire_ko: 'La portance est maximale quand sin(2α) est maximal, soit α=45°.' },
+            'ex4_2': { poids: 3, mots_cles: ['augmente', 'C_D', 'croissante', 'quadratique'], min_mots: 15, commentaire_ok: 'Vous décrivez bien la relation croissante entre C_D et C_L.', commentaire_ko: 'C_D = C_D0 + k C_L².' },
+            'ex4_3': { poids: 3, mots_cles: ['décrochage', 'C_L', 'diminue', 'traînée', 'portance'], min_mots: 15, commentaire_ok: 'Vous avez identifié la chute de C_L et le décrochage.', commentaire_ko: 'Au-delà de 15°, C_L diminue, C_D augmente, décrochage.' },
+            'ex4_4a': { poids: 1, est_numerique: true, reponse_attendue: 0.610, tolerance: 0.01, commentaire_ok: 'Valeur correcte (0.610).', commentaire_ko: 'Valeur incorrecte.' },
+            'ex4_4b': { poids: 1, est_numerique: true, reponse_attendue: 0.0386, tolerance: 0.001, commentaire_ok: 'Valeur correcte (0.0386).', commentaire_ko: 'Valeur incorrecte.' },
+            'ex4_5': { poids: 2, mots_cles: ['finesse', 'efficacité', 'traînée', 'portance'], min_mots: 12, commentaire_ok: 'Vous avez bien défini la finesse.', commentaire_ko: 'La finesse C_L/C_D mesure l\'efficacité aérodynamique.' },
+            'ex4_6a': { poids: 1, est_numerique: true, reponse_attendue: 12, tolerance: 2, commentaire_ok: 'Valeur correcte (≈12°).', commentaire_ko: 'Valeur erronée.' },
+            'ex4_6b': { poids: 1, est_numerique: true, reponse_attendue: 15.8, tolerance: 1, commentaire_ok: 'Valeur correcte (≈15.8).', commentaire_ko: 'Valeur erronée.' },
+
+            // ---- PARTIE 5 : FORCES (10 questions) ----
+            'ex5_1': { poids: 3, mots_cles: ['quadruple', 'carré', 'vitesse', 'double'], min_mots: 12, commentaire_ok: 'Vous avez bien montré que doubler V quadruple L.', commentaire_ko: 'L ∝ V², donc doubler V multiplie L par 4.' },
+            'ex5_2': { poids: 3, mots_cles: ['augmenter', 'vitesse', 'alpha', 'compenser'], min_mots: 12, commentaire_ok: 'Vous proposez les bons leviers pour compenser.', commentaire_ko: 'Il faut augmenter L en jouant sur V ou α.' },
+            'ex5_3': { poids: 3, mots_cles: ['altitude', 'ρ', 'diminue', 'compenser', 'vitesse'], min_mots: 12, commentaire_ok: 'Vous avez compris que ρ diminue avec l\'altitude.', commentaire_ko: 'En altitude, ρ diminue, il faut augmenter V ou α.' },
+            'ex5_4a': { poids: 1, est_numerique: true, reponse_attendue: 0.556, tolerance: 0.02, commentaire_ok: 'Valeur plausible (≈0.556).', commentaire_ko: 'Vérifiez le calcul.' },
+            'ex5_4b': { poids: 1, est_numerique: true, reponse_attendue: 0.036, tolerance: 0.01, commentaire_ok: 'Valeur plausible (≈0.036).', commentaire_ko: 'Vérifiez le calcul.' },
+            'ex5_4c': { poids: 1, est_numerique: true, reponse_attendue: 0.0589, tolerance: 0.002, commentaire_ok: 'Poids correct (≈0.0589).', commentaire_ko: 'P = m × g.' },
+            'ex5_4d': { poids: 1, est_numerique: true, reponse_attendue: 0.497, tolerance: 0.02, commentaire_ok: 'Fy correct (≈0.497).', commentaire_ko: 'Fy = L - P.' },
+            'ex5_4e': { poids: 2, mots_cles: ['monte', 'ascend'], min_mots: 3, commentaire_ok: 'Vous avez bien déterminé que l\'avion monte.', commentaire_ko: 'L > P, l\'avion monte.' },
+            'ex5_5': { poids: 1, est_numerique: true, reponse_attendue: 3.1, tolerance: 0.3, commentaire_ok: 'Masse correcte (≈3.1 g).', commentaire_ko: 'Ajustez le curseur pour L/P≈1.' },
+            'ex5_6': { poids: 3, mots_cles: ['carré', 'énergie cinétique', 'dynamique'], min_mots: 15, commentaire_ok: 'Vous expliquez bien l\'origine du V².', commentaire_ko: 'La portance dépend de l\'énergie cinétique de l\'air.' },
+
+            // ---- PARTIE 6 : SUITES ET SIMULATION (8 questions) ----
+            'ex6_1a': { poids: 1, est_numerique: true, reponse_attendue: 3.0, tolerance: 0.5, commentaire_ok: 'Distance cohérente (≈3.0 m).', commentaire_ko: 'Lancez la simulation.' },
+            'ex6_1b': { poids: 1, est_numerique: true, reponse_attendue: 0.7, tolerance: 0.2, commentaire_ok: 'Durée cohérente (≈0.7 s).', commentaire_ko: 'Vérifiez la simulation.' },
+            'ex6_1c': { poids: 1, est_numerique: true, reponse_attendue: 4.5, tolerance: 0.5, commentaire_ok: 'Vitesse cohérente (≈4.5 m/s).', commentaire_ko: 'Vérifiez la simulation.' },
+            'ex6_2': { poids: 3, mots_cles: ['proportionnel', 'racine', 'double', 'augmente'], min_mots: 12, commentaire_ok: 'Vous avez bien analysé l\'effet de la hauteur.', commentaire_ko: 'Doubler la hauteur ne double pas la distance.' },
+            'ex6_3': { poids: 3, mots_cles: ['pas de temps', 'précision', 'divergence', 'stabilité'], min_mots: 12, commentaire_ok: 'Vous avez identifié l\'importance du pas de temps.', commentaire_ko: 'Un pas de temps trop grand fait diverger la simulation.' },
+            'ex6_4': { poids: 1, est_numerique: true, reponse_attendue: 6.5, tolerance: 0.5, commentaire_ok: 'Vitesse correcte (≈6.5).', commentaire_ko: 'Ajustez v0 pour obtenir 5 m.' },
+            'ex6_5': { poids: 3, mots_cles: ['Euler', 'itération', 'accélération', 'vitesse', 'position'], min_mots: 20, commentaire_ok: 'Vous avez détaillé les étapes du schéma d\'Euler.', commentaire_ko: 'Le schéma d\'Euler met à jour vitesse puis position.' },
+            'ex6_6': { poids: 3, mots_cles: ['parabolique', 'portance', 'modifie', 'trajectoire'], min_mots: 12, commentaire_ok: 'Vous avez saisi que la portance modifie la trajectoire.', commentaire_ko: 'Avec portance, la trajectoire s\'aplatit (vol plané).' },
+
+            // ---- PARTIE 7 : COMPARAISON (5 questions) ----
+            'ex7_1': { poids: 1, est_numerique: true, reponse_attendue: 0.2, tolerance: 0.5, commentaire_ok: 'Écart moyen cohérent (≈0.2).', commentaire_ko: 'Calculez la moyenne des écarts absolus.' },
+            'ex7_2': { poids: 3, mots_cles: ['sous-estime', 'surestime', 'biais', 'systématique'], min_mots: 12, commentaire_ok: 'Vous avez identifié un biais systématique.', commentaire_ko: 'Si tous les écarts sont positifs, le modèle sous-estime.' },
+            'ex7_3': { poids: 3, mots_cles: ['erreur de mesure', 'modèle', 'approximation', 'vent', 'frottement'], min_mots: 20, commentaire_ok: 'Vous avez listé des sources d\'erreur pertinentes.', commentaire_ko: 'N\'oubliez pas les erreurs de mesure, le vent, les approximations.' },
+            'ex7_4': { poids: 2, mots_cles: ['CL', 'CD', 'ajuster', 'mesurer'], min_mots: 15, commentaire_ok: 'Vous proposez des ajustements pertinents.', commentaire_ko: 'On peut ajuster CL_max, CD0, ou S.' },
+            'ex7_5': { poids: 2, mots_cles: ['mesure', 'film', 'moyenne', 'essais'], min_mots: 15, commentaire_ok: 'Vous proposez des améliorations expérimentales.', commentaire_ko: 'Filmer les lancers, faire plusieurs essais et moyenner.' },
+        };
+
+        const MAX_TOTAL = 86;
+
+        // ============================================================
+        //  ANALYSE D'UNE RÉPONSE (0 à poids_max)
+        // ============================================================
+        function analyseReponse(id, reponse, grille) {
+            const crit = grille[id];
+            if (!crit) return { points: 0, commentaire: 'Question non évaluée.', mots_cles_trouves: [], longueur: 0, maxQ: 0 };
+
+            const reponseStr = (reponse || '').toString().trim();
+            const mots = reponseStr.split(/\s+/).filter(w => w.length > 0);
+            const longueur = mots.length;
+            const maxQ = crit.poids;
+
+            if (reponseStr === '') {
+                return { points: 0, commentaire: '⚠️ Réponse manquante. 0 point.', mots_cles_trouves: [], longueur: 0, maxQ: maxQ };
+            }
+
+            if (crit.est_numerique) {
+                const val = parseFloat(reponseStr);
+                if (isNaN(val)) {
+                    return { points: 0, commentaire: '⚠️ Valeur numérique attendue. 0 point. ' + crit.commentaire_ko, mots_cles_trouves: [], longueur: longueur, maxQ: maxQ };
+                }
+                const ecart = Math.abs(val - crit.reponse_attendue);
+                if (ecart <= crit.tolerance) {
+                    return { points: maxQ, commentaire: '✅ ' + crit.commentaire_ok + ` (${maxQ}/${maxQ})`, mots_cles_trouves: [], longueur: longueur, maxQ: maxQ };
+                } else {
+                    return { points: 0, commentaire: '❌ ' + crit.commentaire_ko + ` (attendu ~ ${crit.reponse_attendue}). 0/${maxQ}.`, mots_cles_trouves: [], longueur: longueur, maxQ: maxQ };
+                }
+            }
+
+            if (longueur < 5) {
+                return { points: 0, commentaire: '📝 Réponse trop courte (moins de 5 mots). 0/' + maxQ + '. ' + crit.commentaire_ko, mots_cles_trouves: [], longueur: longueur, maxQ: maxQ };
+            }
+
+            const mots_cles_trouves = [];
+            for (const mc of crit.mots_cles) {
+                if (reponseStr.toLowerCase().includes(mc.toLowerCase())) {
+                    mots_cles_trouves.push(mc);
+                }
+            }
+            const ratio_cles = crit.mots_cles.length > 0 ? mots_cles_trouves.length / crit.mots_cles.length : 1;
+            const seuil = crit.min_mots || 10;
+
+            let ratio_qualite = 0.6 * Math.min(1, ratio_cles) + 0.4 * Math.min(1, longueur / seuil);
+            if (ratio_cles >= 0.8 && longueur >= seuil) {
+                ratio_qualite = Math.min(1, ratio_qualite * 1.1);
+            }
+            ratio_qualite = Math.min(1, ratio_qualite);
+            const points_obtenus = Math.round((ratio_qualite * maxQ) * 100) / 100;
+
+            let commentaire = '';
+            if (ratio_cles >= 0.8 && longueur >= seuil) {
+                commentaire = '✅ ' + crit.commentaire_ok + ` (${points_obtenus}/${maxQ})`;
+            } else if (ratio_cles < 0.4) {
+                commentaire = '⚠️ Mots-clés manquants : ' + crit.mots_cles.filter(mc => !reponseStr.toLowerCase().includes(mc.toLowerCase())).join(', ') + '. ' + crit.commentaire_ko + ` (${points_obtenus}/${maxQ})`;
+            } else if (longueur < seuil) {
+                commentaire = '📝 Réponse un peu courte (moins de ' + seuil + ' mots). ' + crit.commentaire_ko + ` (${points_obtenus}/${maxQ})`;
+            } else {
+                commentaire = '🔍 Réponse partielle. ' + crit.commentaire_ko + ` (${points_obtenus}/${maxQ})`;
+            }
+
+            return {
+                points: points_obtenus,
+                commentaire: commentaire,
+                mots_cles_trouves: mots_cles_trouves,
+                longueur: longueur,
+                maxQ: maxQ,
+                reponse_brute: reponse
+            };
+        }
+
+        // ============================================================
+        //  TRAITEMENT DU JSON (avec tentative de déchiffrement)
+        // ============================================================
+        function analyserJSON(data) {
+            // Si data est une chaîne, on essaie de la déchiffrer
+            if (typeof data === 'string') {
+                const decrypted = deobfuscate(data);
+                if (decrypted) data = decrypted;
+                else {
+                    try { data = JSON.parse(data); } catch(e) { data = null; }
+                }
+            }
+            if (!data || !data.reponses) {
+                alert('Le fichier ne contient pas de réponses valides.');
+                return null;
+            }
+
+            const resultats = {
+                meta: {
+                    eleve: data.student || 'Inconnu',
+                    timestamp: data.timestamp || 'Non fourni',
+                },
+                questions: {},
+                total_points: 0,
+                max_points: MAX_TOTAL,
+                empty_count: 0,
+                non_empty_count: 0,
+                total_questions: Object.keys(GRILLE).length,
+                details_par_partie: {
+                    part1: { points: 0, max: 0 },
+                    part3: { points: 0, max: 0 },
+                    part4: { points: 0, max: 0 },
+                    part5: { points: 0, max: 0 },
+                    part6: { points: 0, max: 0 },
+                    part7: { points: 0, max: 0 },
+                }
+            };
+
+            const reponses = data.reponses || {};
+
+            for (const [id, crit] of Object.entries(GRILLE)) {
+                const reponse = reponses[id] !== undefined ? reponses[id] : '';
+                const analyse = analyseReponse(id, reponse, GRILLE);
+                resultats.questions[id] = {
+                    reponse: reponse,
+                    analyse: analyse,
+                };
+                resultats.total_points += analyse.points;
+                if (reponse === '') {
+                    resultats.empty_count++;
+                } else {
+                    resultats.non_empty_count++;
+                }
+
+                let partie = 'part1';
+                if (id.startsWith('ex3_')) partie = 'part3';
+                else if (id.startsWith('ex4_')) partie = 'part4';
+                else if (id.startsWith('ex5_')) partie = 'part5';
+                else if (id.startsWith('ex6_')) partie = 'part6';
+                else if (id.startsWith('ex7_')) partie = 'part7';
+                else if (id.startsWith('ex1_')) partie = 'part1';
+
+                resultats.details_par_partie[partie].points += analyse.points;
+                resultats.details_par_partie[partie].max += analyse.maxQ;
+            }
+
+            if (resultats.empty_count === resultats.total_questions) {
+                resultats.note = 'W';
+            } else {
+                const raw = (resultats.total_points / resultats.max_points) * 20;
+                resultats.note = Math.round(raw * 10) / 10;
+            }
+
+            return resultats;
+        }
+
+        // ============================================================
+        //  GÉNÉRATION DU RAPPORT
+        // ============================================================
+        function genererRapport(resultats) {
+            const meta = resultats.meta;
+            const questions = resultats.questions;
+            const note = resultats.note;
+            const total = resultats.total_points.toFixed(2);
+            const max = resultats.max_points;
+            const all_empty = resultats.empty_count === resultats.total_questions;
+            const empty_count = resultats.empty_count;
+            const non_empty_count = resultats.non_empty_count;
+            const total_q = resultats.total_questions;
+
+            let html = '';
+
+            html += `<div class="metadata">
+                        <span>👤 Élève : <strong>${meta.eleve}</strong></span>
+                        <span>📅 Dernière modification : <strong>${meta.timestamp}</strong></span>
+                        <span>📊 Note globale : <strong class="note-final ${all_empty ? 'warning' : ''}">${all_empty ? 'W (Non noté)' : note + '/20'}</strong></span>
+                        <span>📝 Questions vides : <strong>${empty_count} / ${total_q}</strong></span>
+                        <span>📝 Questions traitées : <strong>${non_empty_count} / ${total_q}</strong></span>
+                        <span>📈 Score brut : <strong>${total} / ${max}</strong></span>
+                    </div>`;
+
+            html += `<div class="bilan-final"><h3>📋 Bilan général</h3>`;
+            if (all_empty) {
+                html += `<p style="color:#c0392b; font-weight:bold;">⚠️ Aucune réponse n'a été fournie. Note <strong>W</strong> (en attente de travail).</p>
+                         <p>Reprenez l'activité et remplissez <strong>toutes</strong> les questions.</p>`;
+            } else {
+                html += `<p>L'élève a obtenu <strong>${total} / ${max}</strong> points, soit <strong>${note}/20</strong>.</p>
+                         <p>${note >= 16 ? '🟢 Excellente maîtrise.' :
+                            note >= 12 ? '🟡 Bonne maîtrise, quelques points à améliorer.' :
+                            note >= 8 ? '🟠 Compréhension partielle.' :
+                            note >= 4 ? '🔴 De nombreuses lacunes.' :
+                            '⛔ Réponses très insuffisantes.'}</p>`;
+                if (empty_count > 0) {
+                    html += `<p style="color:#c0392b;">⚠️ <strong>${empty_count} question(s) vides</strong> (0 point chacune).</p>`;
+                }
+                const avg = non_empty_count > 0 ? resultats.total_points / non_empty_count : 0;
+                html += `<p>📊 <strong>Moyenne par réponse non vide :</strong> ${avg.toFixed(2)} / ${(resultats.max_points / total_q).toFixed(2)} points.</p>`;
+            }
+            html += `</div>`;
+
+            const parties = [
+                { id: 'part1', label: '1️⃣ Observation et analyse', questions: ['ex1_1','ex1_2','ex1_3','ex1_4','ex1_5','ex1_6'] },
+                { id: 'part3', label: '3️⃣ Masse volumique', questions: ['ex3_1','ex3_2','ex3_3','ex3_4','ex3_5','ex3_6a','ex3_6b'] },
+                { id: 'part4', label: '4️⃣ Coeff. aérodynamiques', questions: ['ex4_1','ex4_2','ex4_3','ex4_4a','ex4_4b','ex4_5','ex4_6a','ex4_6b'] },
+                { id: 'part5', label: '5️⃣ Forces', questions: ['ex5_1','ex5_2','ex5_3','ex5_4a','ex5_4b','ex5_4c','ex5_4d','ex5_4e','ex5_5','ex5_6'] },
+                { id: 'part6', label: '6️⃣ Suites et simulation', questions: ['ex6_1a','ex6_1b','ex6_1c','ex6_2','ex6_3','ex6_4','ex6_5','ex6_6'] },
+                { id: 'part7', label: '7️⃣ Comparaison', questions: ['ex7_1','ex7_2','ex7_3','ex7_4','ex7_5'] },
+            ];
+
+            for (const partie of parties) {
+                const pts = resultats.details_par_partie[partie.id]?.points || 0;
+                const maxPts = resultats.details_par_partie[partie.id]?.max || 1;
+                const pourc = maxPts > 0 ? Math.round((pts / maxPts) * 100) : 0;
+                const color = pourc >= 80 ? 'good' : (pourc >= 50 ? 'average' : 'bad');
+
+                html += `<div class="section-title">${partie.label} <span class="score-badge ${color}">${pts.toFixed(1)} / ${maxPts} (${pourc}%)</span></div>`;
+
+                for (const qid of partie.questions) {
+                    if (!questions[qid]) continue;
+                    const q = questions[qid];
+                    const reponse = q.reponse || '(vide)';
+                    const analyse = q.analyse;
+                    const maxQ = analyse.maxQ || 1;
+                    const pctQ = maxQ > 0 ? Math.round((analyse.points / maxQ) * 100) : 0;
+                    const clsQ = pctQ >= 80 ? 'good' : (pctQ >= 50 ? 'average' : 'bad');
+                    const estVide = (reponse === '' || reponse === null || reponse === undefined);
+                    const classeVide = estVide ? 'empty-response' : '';
+
+                    html += `<div class="question-block ${classeVide}">
+                                <div class="q-label">${qid} <span class="score-badge ${clsQ}">${analyse.points.toFixed(2)} / ${maxQ}</span></div>
+                                <div class="q-reponse"><strong>Réponse :</strong> ${estVide ? '<em>(vide)</em>' : reponse}</div>
+                                <div class="q-analyse">
+                                    <div class="analyse-item"><span class="label">🔍 Commentaire :</span>
+                                        <div class="content">${analyse.commentaire || 'Aucun commentaire.'}</div>
+                                    </div>
+                                    ${!estVide ? `
+                                    <div class="analyse-item"><span class="label">📝 Mots-clés trouvés :</span>
+                                        <div class="content">${analyse.mots_cles_trouves && analyse.mots_cles_trouves.length > 0 ? analyse.mots_cles_trouves.join(', ') : 'Aucun'}</div>
+                                    </div>
+                                    <div class="analyse-item"><span class="label">📏 Longueur :</span>
+                                        <div class="content">${analyse.longueur} mots</div>
+                                    </div>` : ''}
+                                </div>
+                            </div>`;
+                }
+            }
+
+            html += `<div class="bilan-final" style="margin-top:30px;">
+                        <h3>📈 Évolution et suivi</h3>
+                        <p>Version enregistrée le <strong>${meta.timestamp}</strong>.</p>
+                        <p class="evolution-note">💡 Comparez avec des exports précédents pour suivre la progression.</p>
+                        <p><strong>🔑 Conseils :</strong></p>
+                        <ul>
+                            <li><strong>Remplissez toutes les questions</strong> – les réponses vides rapportent 0 point.</li>
+                            <li>Utilisez le <strong>vocabulaire technique</strong> (portance, traînée, coefficient, angle d'attaque).</li>
+                            <li>Vérifiez les calculs numériques avec les simulateurs.</li>
+                            <li>Soignez la <strong>longueur</strong> des réponses (15-20 mots minimum).</li>
+                        </ul>
+                        <p><strong>📌 Pondération :</strong> questions simples (1 pt), intermédiaires (2 pts), complexes (3 pts). Total = 86 points.</p>
+                    </div>`;
+
+            return html;
+        }
+
+        // ============================================================
+        //  INTERFACE UTILISATEUR
+        // ============================================================
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const exampleEmptyBtn = document.getElementById('exampleEmptyBtn');
+        const reportContainer = document.getElementById('reportContainer');
+        const reportContent = document.getElementById('reportContent');
+
+        let currentFile = null;
+
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                currentFile = files[0];
+                fileInput.files = files;
+                processFile(currentFile);
+            }
+        });
+        dropZone.addEventListener('click', () => { fileInput.click(); });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                currentFile = fileInput.files[0];
+                processFile(currentFile);
+            }
+        });
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const content = e.target.result;
+                    let json = null;
+
+                    // 1. Essayer de déchiffrer (fichier obfusqué)
+                    const decrypted = deobfuscate(content);
+                    if (decrypted) {
+                        json = decrypted;
+                    } else {
+                        // 2. Essayer de parser en JSON clair
+                        try { json = JSON.parse(content); } catch(e) {}
+                    }
+
+                    if (!json || !json.reponses) {
+                        alert('Le fichier n\'est pas un JSON valide (chiffré ou clair) contenant des réponses.');
+                        return;
+                    }
+
+                    const resultats = analyserJSON(json);
+                    if (resultats) {
+                        reportContent.innerHTML = genererRapport(resultats);
+                        reportContainer.classList.add('show');
+                    }
+                } catch (err) {
+                    alert('Erreur lors de la lecture : ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        analyzeBtn.addEventListener('click', () => {
+            if (!currentFile) {
+                alert('Veuillez d\'abord charger un fichier JSON.');
+                return;
+            }
+            processFile(currentFile);
+        });
+
+        // Exemple vide
+        exampleEmptyBtn.addEventListener('click', () => {
+            const exemple = { student: "Élève (vide)", timestamp: new Date().toISOString(), reponses: {} };
+            const resultats = analyserJSON(exemple);
+            if (resultats) {
+                reportContent.innerHTML = genererRapport(resultats);
+                reportContainer.classList.add('show');
+            }
+            currentFile = null;
+            fileInput.value = '';
+        });
+
+        console.log('📘 Analyseur adapté – déchiffrement automatique des fichiers obfusqués.');
+    })();
+</script>
+</body>
+</html>

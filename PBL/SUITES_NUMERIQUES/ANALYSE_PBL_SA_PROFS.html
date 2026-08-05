@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tableau de bord enseignant – Analyse PBL</title>
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async>
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f1f5f9;
+            padding: 20px;
+            color: #0f172a;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.07);
+        }
+        h1 {
+            font-size: 2rem;
+            border-left: 6px solid #2563eb;
+            padding-left: 16px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #475569;
+            border-bottom: 2px dashed #e2e8f0;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+        }
+        .section {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 18px 22px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+        }
+        .section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .flex-row>* {
+            margin-right: 8px;
+        }
+        input[type="file"] {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #fafafa;
+        }
+        .btn {
+            background: #2563eb;
+            border: none;
+            color: white;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+            transform: scale(1.02);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2563eb;
+            color: #2563eb;
+        }
+        .btn-outline:hover {
+            background: #2563eb;
+            color: white;
+        }
+        .session-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .session-item {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .session-item .ts {
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .answer-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+        .answer-card h4 {
+            font-size: 1.05rem;
+            margin-bottom: 6px;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .answer-content {
+            background: #fafafa;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            border-left: 4px solid #94a3b8;
+        }
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .metric {
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+        .metric .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .fraud-high {
+            color: #b45309;
+        }
+        .fraud-medium {
+            color: #ca8a04;
+        }
+        .fraud-low {
+            color: #16a34a;
+        }
+        .feedback-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .feedback-table th {
+            background: #e2e8f0;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 2px solid #cbd5e1;
+        }
+        .feedback-table td {
+            padding: 8px 12px;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .feedback-table td:first-child {
+            border-right: 1px solid #e2e8f0;
+        }
+        .feedback-table ul {
+            margin-left: 16px;
+            list-style-type: disc;
+        }
+        .feedback-table .positive {
+            color: #166534;
+        }
+        .feedback-table .negative {
+            color: #991b1b;
+        }
+        .summary-box {
+            background: #f1f5f9;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .summary-box strong {
+            font-size: 1.1rem;
+        }
+        .footer {
+            font-size: 0.85rem;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 14px;
+            margin-top: 20px;
+            text-align: right;
+        }
+        .hidden {
+            display: none;
+        }
+        .tag {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .tag.good {
+            background: #bbf7d0;
+            color: #166534;
+        }
+        .tag.warn {
+            background: #fef08a;
+            color: #854d0e;
+        }
+        .tag.bad {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        .fraud-alert {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        .fraud-safe {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #166534;
+            font-weight: 600;
+        }
+        @media (max-width: 640px) {
+            .container {
+                padding: 14px;
+            }
+            .flex-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .flex-row>* {
+                margin-right: 0;
+            }
+            .feedback-table td {
+                display: block;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .feedback-table td:last-child {
+                border-bottom: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 Analyseur de cohérence – PBL Rouleaux</h1>
+        <div class="subtitle">Détection des incohérences et suspicion d'IA (fichier .json)</div>
+
+        <!-- Chargement du fichier -->
+        <div class="section">
+            <h2>📂 Charger une sauvegarde</h2>
+            <p>Sélectionnez le fichier <code>.json</code> généré par les élèves.</p>
+            <div class="flex-row">
+                <input type="file" id="fileInput" accept=".json" />
+                <button class="btn" id="loadBtn">📤 Charger et analyser</button>
+            </div>
+            <div id="statusMessage" style="margin-top:10px; font-weight:500;"></div>
+        </div>
+
+        <!-- Liste des sessions -->
+        <div id="sessionSection" class="section hidden">
+            <h2>📅 Sessions disponibles</h2>
+            <div id="sessionList" class="session-list"></div>
+            <p style="font-size:0.9rem; color:#475569;">Cliquez sur "Analyser" pour examiner les réponses d'une session.</p>
+        </div>
+
+        <!-- Rapport -->
+        <div id="reportSection" class="section hidden">
+            <h2>📋 Rapport détaillé – <span id="reportTimestamp"></span></h2>
+            <div id="reportContent"></div>
+        </div>
+
+        <div class="footer">
+            Outil d'analyse pédagogique – Utilisation réservée à l'enseignant.
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. Variables globales
+        // ============================================================
+        let currentHistory = null;
+
+        // ============================================================
+        // 2. Analyse des réponses – version avec tableaux positifs/négatifs
+        // ============================================================
+        const fieldLabels = {
+            'p1_tools': 'Phase 1.a – Outils utilisés',
+            'p1_reasoning': 'Phase 1.b – Raisonnement (tests)',
+            'p1_answer': 'Phase 1.c – Réponses finales',
+            'p2_tools': 'Phase 2.a – Outils utilisés',
+            'p2_reasoning': 'Phase 2.b – Raisonnement (démarche)',
+            'p2_answer': 'Phase 2.c – Réponses finales',
+            'toolExact': 'Phase 3.a – Outils utilisés',
+            'reasoningExact': 'Phase 3.a – Raisonnement',
+            'answerExact': 'Phase 3.a – Réponse numérique (m)',
+            'toolMean': 'Phase 3.b – Outils utilisés',
+            'reasoningMean': 'Phase 3.b – Raisonnement',
+            'answerMean': 'Phase 3.b – Réponse numérique (m)',
+            'reasoningText': 'Synthèse globale',
+            'p4_tools': 'Phase 4.a – Outils utilisés',
+            'p4_reasoning': 'Phase 4.b – Raisonnement',
+            'p4_answer': 'Phase 4.c – Réponse finale'
+        };
+
+        const logicConnectors = [
+            'donc', 'alors', 'par conséquent', 'ainsi', 'puisque', 'car',
+            'si', 'alors', 'et', 'ou', 'd\'où', 'par suite', 'en effet',
+            'c\'est-à-dire', 'autrement dit', 'de plus', 'en outre'
+        ];
+
+        const suspiciousPhrases = [
+            'en tant que modèle', 'je suis un modèle', 'je suis une ia',
+            'je suis un assistant', 'je n\'ai pas de', 'je ne peux pas',
+            'cet exercice', 'voici une solution', 'voici la solution',
+            'commençons par', 'dans cette solution', 'pour résoudre',
+            'il est important de', 'il convient de', 'nous allons',
+            'dans un premier temps', 'dans un second temps',
+            'théorème de fermat', 'constante de planck', 'monte-carlo'
+        ];
+
+        const fraudWarnings = [
+            'triche', 'sanction', 'discipline', 'avertissement', 'conséquence',
+            'honnêteté', 'fraude', 'plagiat', 'copie', 'intelligence artificielle',
+            'ia', 'modèle', 'assistant', 'gpt', 'chatgpt'
+        ];
+
+        const nonsenseWords = [
+            'blurp', 'zizou', 'gna gna', 'blabla', 'gibberish', 'xyzzy', 'foo bar',
+            'lorem ipsum', 'dolor sit amet', 'consectetur', 'adipiscing'
+        ];
+
+        const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/u;
+
+        function checkFormulaConsistency(text) {
+            if (!text) return 0;
+            const lower = text.toLowerCase();
+            const goodPatterns = [
+                /2\s*π\s*\(r\s*\+\s*\(k\s*-\s*1\)\s*e\)/i,
+                /π\s*\(2r\s*\+\s*\(n\s*-\s*1\)e\)/i,
+                /n\s*π\s*\(2r\s*\+\s*\(n\s*-\s*1\)e\)/i,
+                /n\s*\*\s*π\s*\*\s*\(2r/i
+            ];
+            const badPatterns = [
+                /r\s*\*\s*cos/i,
+                /r\s*\*\s*e\s*\^/i,
+                /u_k\s*=\s*r\s*\*\s*cos/i,
+                /L_n\s*=\s*n\s*\*\s*π\s*\*\s*\(r\s*\+\s*e\)\s*\^2/i,
+                /S_n\s*=\s*n!\s*\*/i,
+                /moyenne harmonique/i,
+                /Pythagore/i,
+                /gravitation universelle/i,
+                /Laplace/i,
+                /stirling/i,
+                /taylor/i,
+                /fourier/i,
+                /thalès/i
+            ];
+            let good = goodPatterns.some(p => p.test(lower));
+            let bad = badPatterns.some(p => p.test(lower));
+            if (good && !bad) return 0;
+            if (bad && !good) return 2;
+            if (bad && good) return 1;
+            return 0;
+        }
+
+        function analyzeAnswer(text) {
+            if (!text || text.trim() === '') {
+                return {
+                    length: 0,
+                    words: 0,
+                    lines: 0,
+                    hasLatex: false,
+                    hasLogic: false,
+                    hasSuspicious: false,
+                    hasFraudWarning: false,
+                    hasNonsense: false,
+                    hasEmoji: false,
+                    hasSpecialChar: false,
+                    invisibleChars: false,
+                    formulaConsistency: 0,
+                    fraudScore: 0,
+                    qualityScore: 0,
+                    positivePoints: ['Aucune réponse fournie.'],
+                    negativePoints: ['Réponse vide à analyser.']
+                };
+            }
+
+            const clean = text;
+            const length = clean.length;
+            const words = clean.split(/\s+/).filter(w => w.length > 0).length;
+            const lines = clean.split('\n').filter(l => l.trim().length > 0).length;
+
+            const latexRegex = /\\[a-zA-Z]+|_|\^|pi|sum|dfrac|frac|sqrt|bar|text|times|ldots|cdots|displaystyle/;
+            const hasLatex = latexRegex.test(clean);
+
+            const lower = clean.toLowerCase();
+            const hasLogic = logicConnectors.some(c => lower.includes(c));
+            const hasSuspicious = suspiciousPhrases.some(p => lower.includes(p));
+            const hasFraudWarning = fraudWarnings.some(w => lower.includes(w));
+            const hasNonsense = nonsenseWords.some(w => lower.includes(w));
+            const hasEmoji = emojiRegex.test(clean);
+            const specialCount = (clean.match(/[^a-zA-Z0-9\s.,;:!?'"()\[\]{}\-+=*\/\\|]/g) || []).length;
+            const hasSpecialChar = specialCount > 0;
+            const invisibleRegex = /[\u200B-\u200D\uFEFF]/;
+            const invisibleChars = invisibleRegex.test(clean);
+            const formulaConsistency = checkFormulaConsistency(clean);
+
+            // Calcul des scores
+            let fraudScore = 0;
+            if (hasSuspicious) fraudScore += 30;
+            if (hasFraudWarning) fraudScore += 35;
+            if (hasNonsense) fraudScore += 25;
+            if (hasEmoji) fraudScore += 20;
+            if (hasSpecialChar) fraudScore += 15;
+            if (invisibleChars) fraudScore += 20;
+            if (formulaConsistency === 2) fraudScore += 25;
+            else if (formulaConsistency === 1) fraudScore += 10;
+            if (words > 50 && !hasLogic) fraudScore += 15;
+            if (words > 100) fraudScore += 10;
+            if (hasLatex && words < 15) fraudScore += 10;
+            fraudScore = Math.min(100, fraudScore);
+
+            let qualityScore = 0;
+            if (length > 20) qualityScore += 20;
+            if (words > 10) qualityScore += 20;
+            if (hasLatex) qualityScore += 25;
+            if (hasLogic) qualityScore += 20;
+            if (lines > 1) qualityScore += 15;
+            if (lines >= 3) qualityScore += 10;
+            qualityScore = Math.min(100, qualityScore);
+
+            // Construction des points positifs et négatifs
+            let positive = [];
+            let negative = [];
+
+            if (length === 0) {
+                positive = ['Aucune réponse fournie.'];
+                negative = ['Réponse vide, impossible à évaluer.'];
+            } else {
+                // Positifs
+                if (hasLatex) positive.push('✅ Utilisation de LaTeX pour les formules.');
+                else positive.push('ℹ️ Pensez à utiliser LaTeX pour plus de rigueur.');
+                if (hasLogic) positive.push('✅ Utilisation de connecteurs logiques.');
+                else positive.push('ℹ️ Ajoutez des connecteurs logiques (donc, puisque, etc.).');
+                if (lines > 1) positive.push('✅ Réponse structurée en plusieurs paragraphes.');
+                else positive.push('ℹ️ Structurez en plusieurs paragraphes pour plus de clarté.');
+                if (words > 10) positive.push('✅ Réponse suffisamment développée.');
+                else positive.push('ℹ️ Développez davantage votre réponse.');
+
+                // Négatifs
+                if (hasEmoji) negative.push('❌ Émoticônes détectées (inapproprié).');
+                if (hasSpecialChar) negative.push('❌ Caractères spéciaux excessifs.');
+                if (hasNonsense) negative.push('❌ Mots sans signification (charabia).');
+                if (hasFraudWarning) negative.push('⚠️ Avertissement sur la triche – très suspect.');
+                if (hasSuspicious) negative.push('⚠️ Phrases typiques d\'IA détectées.');
+                if (invisibleChars) negative.push('⚠️ Caractères invisibles (copier-coller).');
+                if (formulaConsistency === 2) negative.push('❌ Formule mathématique incohérente (probablement générée par IA).');
+                else if (formulaConsistency === 1) negative.push('⚠️ Formule confuse.');
+                if (fraudScore > 60) negative.push('🚨 Forte suspicion de triche.');
+                else if (fraudScore > 30) negative.push('⚠️ Suspicion modérée.');
+            }
+
+            // Si la réponse est vide, on ajuste
+            if (length === 0) {
+                positive = ['Aucune réponse fournie.'];
+                negative = ['Réponse vide – encouragez l\'élève à formuler sa pensée.'];
+            }
+
+            return {
+                length,
+                words,
+                lines,
+                hasLatex,
+                hasLogic,
+                hasSuspicious,
+                hasFraudWarning,
+                hasNonsense,
+                hasEmoji,
+                hasSpecialChar,
+                invisibleChars,
+                formulaConsistency,
+                fraudScore,
+                qualityScore,
+                positivePoints: positive,
+                negativePoints: negative
+            };
+        }
+
+        // ============================================================
+        // 3. Cohérence entre valeurs numériques
+        // ============================================================
+        function checkNumericCoherence(ansExact, ansMean) {
+            let score = 0;
+            let feedback = '';
+            const valExact = parseFloat(ansExact);
+            const valMean = parseFloat(ansMean);
+
+            if (isNaN(valExact) && isNaN(valMean)) {
+                return { score: 0, feedback: 'Aucune valeur numérique fournie.' };
+            }
+
+            const plausibleMin = 0.1;
+            const plausibleMax = 100;
+
+            let exactPlausible = true,
+                meanPlausible = true;
+            if (!isNaN(valExact)) {
+                if (valExact < plausibleMin || valExact > plausibleMax) exactPlausible = false;
+            }
+            if (!isNaN(valMean)) {
+                if (valMean < plausibleMin || valMean > plausibleMax) meanPlausible = false;
+            }
+
+            let diff = 0;
+            if (!isNaN(valExact) && !isNaN(valMean)) {
+                diff = Math.abs(valExact - valMean) / Math.max(Math.abs(valExact), Math.abs(valMean), 1);
+            }
+
+            if (!isNaN(valExact) && !isNaN(valMean)) {
+                if (diff < 0.1) {
+                    score = 0;
+                    feedback = 'Les deux valeurs sont très proches (cohérence interne).';
+                } else if (diff < 0.5) {
+                    score = 1;
+                    feedback = 'Les deux valeurs sont modérément différentes.';
+                } else {
+                    score = 2;
+                    feedback = 'Les deux valeurs sont très différentes (incohérence).';
+                }
+                if (!exactPlausible || !meanPlausible) {
+                    feedback += ' De plus, une ou plusieurs valeurs sont en dehors de la plage plausible (0.1-100 m).';
+                    score = Math.max(score, 1);
+                }
+            } else {
+                if (!exactPlausible || !meanPlausible) {
+                    score = 1;
+                    feedback = 'La valeur fournie est en dehors de la plage plausible.';
+                } else {
+                    score = 0;
+                    feedback = 'La valeur fournie est plausible.';
+                }
+            }
+            if (isNaN(valExact) && !isNaN(valMean)) {
+                if (meanPlausible) feedback = 'Une seule valeur fournie, elle semble plausible.';
+                else feedback = 'La valeur fournie est en dehors de la plage plausible.';
+            }
+            if (!isNaN(valExact) && isNaN(valMean)) {
+                if (exactPlausible) feedback = 'Une seule valeur fournie, elle semble plausible.';
+                else feedback = 'La valeur fournie est en dehors de la plage plausible.';
+            }
+
+            return { score, feedback };
+        }
+
+        // ============================================================
+        // 4. Génération du rapport avec tableaux
+        // ============================================================
+        function generateReport(data) {
+            const answers = data.data;
+            const timestamp = data.timestamp;
+            let html = '';
+
+            // En-tête
+            html += `<div class="summary-box">
+                <strong>📅 Session du ${new Date(timestamp).toLocaleString('fr-FR')}</strong>
+                <br />
+                <span>Champs remplis : ${Object.keys(answers).filter(k => answers[k] && answers[k].trim() !== '').length} / ${Object.keys(fieldLabels).length}</span>
+                <br />
+                <span>Session ID : <code>${data.sessionId || 'non renseigné'}</code></span>
+            </div>`;
+
+            // Calcul des scores globaux
+            let totalFraud = 0,
+                countFraud = 0;
+            let totalQuality = 0,
+                countQuality = 0;
+            let totalFormulaInc = 0,
+                countFormula = 0;
+            let hasAnyEmoji = false,
+                hasAnyWarning = false,
+                hasAnyNonsense = false;
+
+            for (const [id, value] of Object.entries(answers)) {
+                if (!value || value.trim() === '') continue;
+                const analysis = analyzeAnswer(value);
+                totalFraud += analysis.fraudScore;
+                countFraud++;
+                totalQuality += analysis.qualityScore;
+                countQuality++;
+                if (analysis.formulaConsistency > 0) {
+                    totalFormulaInc += analysis.formulaConsistency;
+                    countFormula++;
+                }
+                if (analysis.hasEmoji) hasAnyEmoji = true;
+                if (analysis.hasFraudWarning) hasAnyWarning = true;
+                if (analysis.hasNonsense) hasAnyNonsense = true;
+            }
+            const avgFraud = countFraud > 0 ? Math.round(totalFraud / countFraud) : 0;
+            const avgQuality = countQuality > 0 ? Math.round(totalQuality / countQuality) : 0;
+            const avgFormulaInc = countFormula > 0 ? (totalFormulaInc / countFormula) : 0;
+
+            // Cohérence numérique
+            const ansExact = answers['answerExact'] || '';
+            const ansMean = answers['answerMean'] || '';
+            const numeric = checkNumericCoherence(ansExact, ansMean);
+
+            let suspicionScore = avgFraud;
+            if (numeric.score === 2) suspicionScore += 25;
+            else if (numeric.score === 1) suspicionScore += 10;
+            if (avgFormulaInc > 1.5) suspicionScore += 20;
+            else if (avgFormulaInc > 0.5) suspicionScore += 10;
+            if (hasAnyEmoji) suspicionScore += 15;
+            if (hasAnyWarning) suspicionScore += 20;
+            if (hasAnyNonsense) suspicionScore += 15;
+            suspicionScore = Math.min(100, suspicionScore);
+
+            let alertHtml = '';
+            if (suspicionScore > 65) {
+                alertHtml = `<div class="fraud-alert">🚨 ALERTE : Forte suspicion de triche (score = ${suspicionScore}%). Vérifiez les réponses.</div>`;
+            } else if (suspicionScore > 35) {
+                alertHtml = `<div class="fraud-alert" style="border-color:#ca8a04; background:#fef9c3; color:#854d0e;">⚠️ Suspicion modérée (score = ${suspicionScore}%).</div>`;
+            } else {
+                alertHtml = `<div class="fraud-safe">✅ Aucune suspicion forte (score = ${suspicionScore}%).</div>`;
+            }
+
+            // Synthèse
+            html += `<div class="summary-box" style="background:#eef2ff; border-color:#2563eb;">
+                <strong>📊 Synthèse</strong><br />
+                <span>Qualité moyenne : <strong>${avgQuality}%</strong></span><br />
+                <span>Suspicion IA : <strong>${avgFraud}%</strong></span><br />
+                <span>Cohérence des formules : ${avgFormulaInc > 1.5 ? '⚠️ Mauvais' : (avgFormulaInc > 0.5 ? '⚡ Moyen' : '✅ Bon')}</span><br />
+                <span>Cohérence numérique : ${numeric.feedback}</span><br />
+                <span style="font-size:0.9rem; color:#475569;">Score global : <strong>${suspicionScore}%</strong></span>
+                ${hasAnyEmoji ? '<br /><span style="color:#b45309;">⚠️ Émoticônes détectées dans certaines réponses.</span>' : ''}
+                ${hasAnyWarning ? '<br /><span style="color:#b45309;">⚠️ Avertissements sur la triche détectés.</span>' : ''}
+                ${hasAnyNonsense ? '<br /><span style="color:#b45309;">⚠️ Charabia détecté.</span>' : ''}
+            </div>`;
+
+            html += alertHtml;
+
+            // Détail par champ
+            for (const [id, label] of Object.entries(fieldLabels)) {
+                const value = answers[id] || '';
+                const analysis = analyzeAnswer(value);
+                const fraudClass = analysis.fraudScore > 60 ? 'fraud-high' : (analysis.fraudScore > 30 ? 'fraud-medium' :
+                    'fraud-low');
+
+                html += `<div class="answer-card">
+                    <h4>
+                        <span>${label}</span>
+                        <span>
+                            <span class="tag ${analysis.fraudScore > 60 ? 'bad' : (analysis.fraudScore > 30 ? 'warn' : 'good')}">
+                                IA ${analysis.fraudScore}%
+                            </span>
+                            <span class="tag ${analysis.qualityScore > 70 ? 'good' : (analysis.qualityScore > 40 ? 'warn' : 'bad')}">
+                                Qualité ${analysis.qualityScore}%
+                            </span>
+                            ${analysis.formulaConsistency > 0 ? `<span class="tag bad">Formule incohérente</span>` : ''}
+                            ${analysis.hasEmoji ? `<span class="tag bad">😊 Émoticône</span>` : ''}
+                            ${analysis.hasFraudWarning ? `<span class="tag bad">⚠️ Avertissement triche</span>` : ''}
+                            ${analysis.hasNonsense ? `<span class="tag bad">💬 Charabia</span>` : ''}
+                        </span>
+                    </h4>
+                    <div class="answer-content">${value || '<em>Réponse vide</em>'}</div>
+                    <div class="analysis-grid">
+                        <div class="metric"><span class="label">Caractères</span><span class="value">${analysis.length}</span></div>
+                        <div class="metric"><span class="label">Mots</span><span class="value">${analysis.words}</span></div>
+                        <div class="metric"><span class="label">Paragraphes</span><span class="value">${analysis.lines}</span></div>
+                        <div class="metric"><span class="label">LaTeX</span><span class="value">${analysis.hasLatex ? '✅' : '❌'}</span></div>
+                        <div class="metric"><span class="label">Connecteurs</span><span class="value">${analysis.hasLogic ? '✅' : '❌'}</span></div>
+                        <div class="metric"><span class="label">Phrases suspectes</span><span class="value">${analysis.hasSuspicious ? '⚠️' : '✅'}</span></div>
+                        <div class="metric"><span class="label">Car. invisibles</span><span class="value">${analysis.invisibleChars ? '⚠️' : '✅'}</span></div>
+                    </div>
+
+                    <!-- Tableau à deux colonnes : Points positifs / Points négatifs -->
+                    <table class="feedback-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50%;">✅ Points positifs</th>
+                                <th style="width:50%;">❌ Points négatifs / à améliorer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <ul>
+                                        ${analysis.positivePoints.map(p => `<li>${p}</li>`).join('')}
+                                    </ul>
+                                </td>
+                                <td>
+                                    <ul>
+                                        ${analysis.negativePoints.map(p => `<li>${p}</li>`).join('')}
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`;
+            }
+
+            html += `<div style="margin-top:20px; padding:12px 16px; background:#fef9c3; border-radius:8px; border-left:4px solid #ca8a04;">
+                <strong>📌 Conseils :</strong>
+                <ul style="margin-left:20px;">
+                    <li>Vérifiez les réponses avec un score de suspicion > 50% et une faible qualité.</li>
+                    <li>Comparez les réponses entre les membres du groupe.</li>
+                    <li>Les émoticônes, charabia, avertissements de triche sont des signaux forts.</li>
+                </ul>
+            </div>`;
+
+            return html;
+        }
+
+        // ============================================================
+        // 5. Interface utilisateur
+        // ============================================================
+        const fileInput = document.getElementById('fileInput');
+        const loadBtn = document.getElementById('loadBtn');
+        const statusMsg = document.getElementById('statusMessage');
+        const sessionSection = document.getElementById('sessionSection');
+        const sessionList = document.getElementById('sessionList');
+        const reportSection = document.getElementById('reportSection');
+        const reportContent = document.getElementById('reportContent');
+        const reportTimestamp = document.getElementById('reportTimestamp');
+
+        loadBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) {
+                statusMsg.textContent = '❌ Veuillez sélectionner un fichier.';
+                statusMsg.style.color = '#dc2626';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const obj = JSON.parse(content);
+                    if (!obj.history || !Array.isArray(obj.history) || obj.history.length === 0) {
+                        statusMsg.textContent = '❌ Le fichier ne contient pas d\'historique valide.';
+                        statusMsg.style.color = '#dc2626';
+                        return;
+                    }
+                    currentHistory = obj.history;
+
+                    sessionSection.classList.remove('hidden');
+                    sessionList.innerHTML = '';
+                    currentHistory.forEach((entry, index) => {
+                        const ts = entry.timestamp;
+                        const date = new Date(ts);
+                        const dateStr = date.toLocaleString('fr-FR');
+                        const count = Object.keys(entry.data).filter(k => entry.data[k] && entry.data[k].trim() !== '')
+                            .length;
+                        const div = document.createElement('div');
+                        div.className = 'session-item';
+                        div.innerHTML = `
+                            <span class="ts">${dateStr}</span>
+                            <span>${count} champs remplis</span>
+                            <button class="btn btn-outline" data-index="${index}">🔍 Analyser</button>
+                        `;
+                        sessionList.appendChild(div);
+                    });
+
+                    sessionList.querySelectorAll('[data-index]').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index);
+                            const entry = currentHistory[idx];
+                            if (entry) {
+                                reportTimestamp.textContent = new Date(entry.timestamp).toLocaleString(
+                                'fr-FR');
+                                reportContent.innerHTML = generateReport(entry);
+                                reportSection.classList.remove('hidden');
+                                reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        });
+                    });
+
+                    statusMsg.textContent = `✅ Fichier chargé ! ${currentHistory.length} session(s).`;
+                    statusMsg.style.color = '#16a34a';
+
+                    if (currentHistory.length === 1) {
+                        const entry = currentHistory[0];
+                        reportTimestamp.textContent = new Date(entry.timestamp).toLocaleString('fr-FR');
+                        reportContent.innerHTML = generateReport(entry);
+                        reportSection.classList.remove('hidden');
+                    }
+
+                } catch (err) {
+                    statusMsg.textContent = '❌ Erreur de parsing JSON : ' + err.message;
+                    statusMsg.style.color = '#dc2626';
+                }
+            };
+            reader.onerror = function() {
+                statusMsg.textContent = '❌ Erreur lors de la lecture du fichier.';
+                statusMsg.style.color = '#dc2626';
+            };
+            reader.readAsText(file);
+        });
+
+        statusMsg.textContent = 'Prêt. Sélectionnez un fichier .json.';
+        statusMsg.style.color = '#475569';
+    </script>
+
+</body>
+</html>

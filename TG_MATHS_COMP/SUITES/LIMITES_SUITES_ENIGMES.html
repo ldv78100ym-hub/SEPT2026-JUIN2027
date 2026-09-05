@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Énigmes – Suites et limites</title>
+    <!-- Chargement de MathJax 3 avec configuration TeX -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f0f4f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .app {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            padding: 2rem 2.5rem;
+            margin: 0 auto;
+        }
+        /* header */
+        .header {
+            border-bottom: 2px solid #eef3f8;
+            padding-bottom: 1.2rem;
+            margin-bottom: 1.8rem;
+        }
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: #0b1d2b;
+            letter-spacing: -0.3px;
+        }
+        .header .sub {
+            color: #4d6679;
+            font-size: 0.95rem;
+            margin-top: 0.2rem;
+        }
+        /* consignes */
+        .consignes {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 1.2rem 1.8rem;
+            margin-bottom: 2rem;
+            border-left: 5px solid #3b6b8f;
+            font-size: 0.95rem;
+            color: #1d2f40;
+        }
+        .consignes strong {
+            color: #0b2a44;
+        }
+        .consignes ul {
+            margin: 0.5rem 0 0 1.5rem;
+        }
+        .consignes .epsilon {
+            font-style: italic;
+            background: #e6edf5;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 0.3rem;
+        }
+        /* navigation */
+        .nav-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 0.6rem 0;
+        }
+        .nav-bar .select-wrap {
+            flex: 2;
+            min-width: 220px;
+        }
+        .nav-bar select {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 1px solid #ccd7e3;
+            border-radius: 40px;
+            background: #fafcfd;
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .nav-bar select:focus {
+            border-color: #3b6b8f;
+            box-shadow: 0 0 0 3px rgba(59,107,143,0.15);
+        }
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .nav-controls button {
+            background: white;
+            border: 1px solid #d0d9e3;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #1f3345;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .nav-controls button:hover:not(:disabled) {
+            background: #eaf1f9;
+            border-color: #8baacb;
+        }
+        .nav-controls button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .nav-controls .counter {
+            background: #eaf0f6;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1d3b58;
+            min-width: 80px;
+            text-align: center;
+        }
+        /* affichage énigme */
+        .enigma-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.8rem 2rem;
+            border: 1px solid #e6edf4;
+            transition: all 0.1s ease;
+        }
+        .enigma-card .top {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.2rem;
+            border-bottom: 2px solid #f0f5fb;
+            padding-bottom: 0.8rem;
+        }
+        .enigma-card .ref {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #102433;
+        }
+        .enigma-card .ref small {
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: #6b7f94;
+            margin-left: 0.8rem;
+        }
+        .enigma-card .stars {
+            color: #f5a623;
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+        }
+        .enigma-card .section-tag {
+            display: inline-block;
+            background: #eaf0f6;
+            color: #1c3a5a;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.15rem 1.2rem;
+            border-radius: 30px;
+            letter-spacing: 0.4px;
+            margin-top: 0.2rem;
+        }
+        .enigma-card .content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #1d2c3b;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .enigma-card .content .math {
+            font-family: 'Times New Roman', serif;
+        }
+        .footer {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .footer button {
+            background: white;
+            border: 1px solid #d0d9e3;
+            padding: 0.4rem 1.6rem;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #1f3345;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .footer button:hover:not(:disabled) {
+            background: #eaf1f9;
+            border-color: #8baacb;
+        }
+        .footer button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .footer .progress {
+            font-size: 0.9rem;
+            color: #5e758b;
+        }
+        @media (max-width: 700px) {
+            .app { padding: 1.2rem; }
+            .enigma-card { padding: 1.2rem; }
+            .nav-bar { flex-direction: column; align-items: stretch; }
+            .nav-controls { justify-content: center; }
+            .footer { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+
+    <!-- En-tête -->
+    <div class="header">
+        <h1>🧩 Série d'énigmes</h1>
+        <div class="sub">Suites et limites — 48 énigmes • 110 min • Groupe de 3</div>
+    </div>
+
+    <!-- Consignes (fixes) -->
+    <div class="consignes">
+        <strong>Consignes</strong>
+        <ul>
+            <li>Chaque groupe de 3 élèves doit résoudre les 48 énigmes suivantes.</li>
+            <li>Les énigmes sont classées par thème et par difficulté croissante (<span style="color:#f5a623;">★</span> à <span style="color:#f5a623;">★★★★</span>).</li>
+            <li>Chaque élève rend une copie individuelle contenant ses réponses et justifications.</li>
+            <li>Vous pouvez vous répartir les énigmes au sein du groupe, mais vous devez tous maîtriser l'ensemble des notions.</li>
+        </ul>
+        <div class="epsilon">
+            <em>Rappel de la définition ε :</em>
+            $\lim_{n\to\infty} x_n = \ell$ signifie que pour tout $\varepsilon > 0$, il existe un rang $N$ tel que pour tout $n \ge N$, on a $|x_n - \ell| < \varepsilon$, c'est-à-dire $\ell - \varepsilon < x_n < \ell + \varepsilon$.
+        </div>
+    </div>
+
+    <!-- Barre de navigation -->
+    <div class="nav-bar">
+        <div class="select-wrap">
+            <select id="enigmeSelect"></select>
+        </div>
+        <div class="nav-controls">
+            <button id="prevBtn" title="Précédent">◀</button>
+            <span class="counter" id="counterDisplay">1 / 48</span>
+            <button id="nextBtn" title="Suivant">▶</button>
+        </div>
+    </div>
+
+    <!-- Carte de l'énigme -->
+    <div class="enigma-card" id="card">
+        <div class="top">
+            <div>
+                <span class="ref" id="refLabel">1.1</span>
+                <span class="section-tag" id="sectionTag">Approche intuitive</span>
+            </div>
+            <span class="stars" id="starsDisplay">★</span>
+        </div>
+        <div class="content" id="contentDisplay"></div>
+    </div>
+
+    <!-- Pied de navigation -->
+    <div class="footer">
+        <button id="prevBtn2">◀ Précédent</button>
+        <span class="progress" id="progressText">Énigme 1 sur 48</span>
+        <button id="nextBtn2">Suivant ▶</button>
+    </div>
+
+</div>
+
+<script>
+    // ============================================================
+    //  DONNÉES DES 48 ÉNIGMES (extraites du document LaTeX)
+    // ============================================================
+    const enigmes = [
+        // SECTION SAVOIRS – Approche intuitive
+        {
+            id: '1.1',
+            section: 'SAVOIRS',
+            subsection: 'Approche intuitive',
+            difficulty: 1,
+            content: `Observez les premiers termes de $u_n = \\dfrac{1}{n}+2$.
+
+Calculez $u_{10}$, $u_{100}$, $u_{1000}$.
+
+Vers quel nombre semble tendre $u_n$ lorsque $n$ devient très grand ?`
+        },
+        {
+            id: '1.2',
+            section: 'SAVOIRS',
+            subsection: 'Approche intuitive',
+            difficulty: 2,
+            content: `La suite $u_n = (-1)^n + \\dfrac{1}{n}$ alterne-t-elle ?
+
+Vers quoi semble-t-elle tendre ?
+
+Proposer une justification ?`
+        },
+        {
+            id: '1.3',
+            section: 'SAVOIRS',
+            subsection: 'Approche intuitive',
+            difficulty: 3,
+            content: `Calculer $1 - \\dfrac{1}{n+1}$.
+
+Soit $u_n = \\dfrac{n}{n+1}$.
+
+Calculez $u_{10}$, $u_{100}$, $u_{1000}$.
+
+Quelle conjecture faites-vous sur la limite de $u_n$ ?
+
+Justifier.`
+        },
+        {
+            id: '1.4',
+            section: 'SAVOIRS',
+            subsection: 'Approche intuitive',
+            difficulty: 4,
+            content: `Soit $u_n = \\sqrt{n+1} - \\sqrt{n}$.
+
+Calculez $u_1, u_{10}, u_{100}, u_{1000}$.
+
+Conjecturez la limite de $u_n$.
+(Indice : $a^2-b^2=\\ldots$)`
+        },
+        // Opérations sur les limites
+        {
+            id: '2.1',
+            section: 'SAVOIRS',
+            subsection: 'Opérations sur les limites',
+            difficulty: 1,
+            content: `On donne $u_n = 2 + \\dfrac{3}{n}$ et $v_n = 5 - \\dfrac{1}{n}$.
+
+Calculez $\\lim\\limits_{n\\to\\infty} (u_n + v_n)$ et $\\lim\\limits_{n\\to\\infty} (u_n \\cdot v_n)$.`
+        },
+        {
+            id: '2.2',
+            section: 'SAVOIRS',
+            subsection: 'Opérations sur les limites',
+            difficulty: 2,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\left[\\dfrac{n^2+1}{2n^2-3}\\right]$.
+(Indice : factoriser le numérateur et le dénominateur par un terme de degré bien choisi.)`
+        },
+        {
+            id: '2.3',
+            section: 'SAVOIRS',
+            subsection: 'Opérations sur les limites',
+            difficulty: 3,
+            content: `Soit $u_n \\to 2$ et $v_n \\to 0$.
+
+Que peut-on dire de $\\lim\\limits_{n\\to\\infty} \\left(\\dfrac{u_n}{v_n}\\right)$ ?
+
+Donnez un exemple où cette limite vaut $+\\infty$, un autre où elle vaut $-\\infty$, et un dernier où elle n'existe pas.`
+        },
+        {
+            id: '2.4',
+            section: 'SAVOIRS',
+            subsection: 'Opérations sur les limites',
+            difficulty: 4,
+            content: `Soit $\\lim\\limits_{n\\to\\infty} u_n = 0$ et $\\lim\\limits_{n\\to\\infty} v_n = +\\infty$.
+
+La limite de $u_n^{v_n}$ est-elle toujours la même ?
+
+Donnez deux exemples de suites $(u_n)$ et $(v_n)$ avec des limites différentes de $u_n^{v_n}$.
+(Indice : tester avec la calculatrice ou sur géogébra)`
+        },
+        // Passage à la limite dans les inégalités
+        {
+            id: '3.1',
+            section: 'SAVOIRS',
+            subsection: 'Passage à la limite dans les inégalités',
+            difficulty: 1,
+            content: `Si $u_n \\le v_n$ pour tout $n$, $\\lim\\limits_{n\\to\\infty} u_n = 3$ et $\\lim\\limits_{n\\to\\infty} v_n = 5$, que vaut $\\lim\\limits_{n\\to\\infty} (v_n - u_n)$ ?`
+        },
+        {
+            id: '3.2',
+            section: 'SAVOIRS',
+            subsection: 'Passage à la limite dans les inégalités',
+            difficulty: 2,
+            content: `Si $u_n \\le v_n \\le w_n$ pour tout $n$, avec $\\lim\\limits_{n\\to\\infty} u_n = -\\infty$ et $\\lim\\limits_{n\\to\\infty} w_n = +\\infty$, peut-on conclure que $v_n$ admet une limite ?
+
+Donnez un contre-exemple.`
+        },
+        {
+            id: '3.3',
+            section: 'SAVOIRS',
+            subsection: 'Passage à la limite dans les inégalités',
+            difficulty: 3,
+            content: `Si $u_n \\le v_n$ pour tout $n$ et $\\lim\\limits_{n\\to\\infty} u_n = +\\infty$, que peut-on dire de la suite $v_n$ ?
+
+Justifiez.`
+        },
+        {
+            id: '3.4',
+            section: 'SAVOIRS',
+            subsection: 'Passage à la limite dans les inégalités',
+            difficulty: 4,
+            content: `Si $u_n \\le v_n$ pour tout $n$ et $\\lim\\limits_{n\\to\\infty} u_n = \\lim\\limits_{n\\to\\infty} v_n = 0$, la suite $\\dfrac{u_n}{v_n}$ admet-elle toujours une limite ?
+
+Donnez deux exemples montrant que le résultat peut être différent.`
+        },
+        // Théorème des gendarmes
+        {
+            id: '4.1',
+            section: 'SAVOIRS',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 1,
+            content: `Encadrez $u_n = \\dfrac{\\sin n}{n}$ par deux suites qui tendent vers $0$. Déduisez-en $\\lim\\limits_{n\\to\\infty} u_n$.`
+        },
+        {
+            id: '4.2',
+            section: 'SAVOIRS',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 2,
+            content: `Déterminez $\\lim\\limits_{n\\to\\infty} \\dfrac{(-1)^n}{n^2+1}$ en utilisant un encadrement.`
+        },
+        {
+            id: '4.3',
+            section: 'SAVOIRS',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 3,
+            content: `Trouvez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\cos(n^2)}{n+1}$.`
+        },
+        {
+            id: '4.4',
+            section: 'SAVOIRS',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 4,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\sin n + \\cos n}{\\sqrt{n}}$ en utilisant un encadrement approprié.`
+        },
+
+        // SECTION SAVOIR-FAIRE
+        {
+            id: '5.1',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Calcul de limite explicite',
+            difficulty: 1,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\left[\\dfrac{2n+3}{n+1}\\right]$.`
+        },
+        {
+            id: '5.2',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Calcul de limite explicite',
+            difficulty: 2,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{n^2-1}{2n^2+n+1}$.`
+        },
+        {
+            id: '5.3',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Calcul de limite explicite',
+            difficulty: 3,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\left(\\sqrt{n^2+n} - n\\right)$.`
+        },
+        {
+            id: '5.4',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Calcul de limite explicite',
+            difficulty: 4,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{n^3 + 3^n}{2^n + 4^n}$.`
+        },
+        // Gendarmes pour encadrer
+        {
+            id: '6.1',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Gendarmes pour encadrer',
+            difficulty: 1,
+            content: `Trouvez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\cos n}{n^2}$.`
+        },
+        {
+            id: '6.2',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Gendarmes pour encadrer',
+            difficulty: 2,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{(-1)^n}{\\sqrt{n}+1}$.`
+        },
+        {
+            id: '6.3',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Gendarmes pour encadrer',
+            difficulty: 3,
+            content: `Déterminez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\sin(\\sqrt{n})}{n+1}$.`
+        },
+        {
+            id: '6.4',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Gendarmes pour encadrer',
+            difficulty: 4,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\left( \\dfrac{\\sin(n^2)}{n} + \\dfrac{(-1)^n}{n^2} \\right)$.`
+        },
+        // Représentation graphique
+        {
+            id: '7.1',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Représentation graphique',
+            difficulty: 1,
+            content: `Soit $u_n = 1 + \\dfrac{(-1)^n}{n}$. Calculez $u_1, u_2, u_3, u_4, u_5$, placez ces points sur un axe et conjecturez la limite.`
+        },
+        {
+            id: '7.2',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Représentation graphique',
+            difficulty: 2,
+            content: `Soit $u_n = \\dfrac{n}{n+1}$. Calculez $u_1,\\dots,u_5$, tracez les points dans un repère $(n,u_n)$ et conjecturez la limite.`
+        },
+        {
+            id: '7.3',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Représentation graphique',
+            difficulty: 3,
+            content: `Soit $u_n = \\sin\\left(\\dfrac{\\pi n}{2}\\right) + \\dfrac{1}{n}$. Calculez $u_1,\\dots,u_6$, représentez-les et conjecturez l'existence d'une limite.`
+        },
+        {
+            id: '7.4',
+            section: 'SAVOIR-FAIRE',
+            subsection: 'Représentation graphique',
+            difficulty: 4,
+            content: `Soit $u_n = \\dfrac{\\ln n}{n}$. À l'aide d'une calculatrice, calculez $u_{10}, u_{100}, u_{1000}$ et conjecturez la limite. (On admettra que $\\ln n$ croît très lentement.)`
+        },
+
+        // SECTION MÉTHODES
+        {
+            id: '8.1',
+            section: 'MÉTHODES',
+            subsection: 'Factorisation par terme dominant',
+            difficulty: 1,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{3n^2+2n}{5n^2-1}$ en factorisant par le terme dominant.`
+        },
+        {
+            id: '8.2',
+            section: 'MÉTHODES',
+            subsection: 'Factorisation par terme dominant',
+            difficulty: 2,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{2n^3 - n}{n^2 + 3}$ (forme indéterminée $\\infty/\\infty$).
+
+Factorisez par le terme dominant du numérateur et du dénominateur.`
+        },
+        {
+            id: '8.3',
+            section: 'MÉTHODES',
+            subsection: 'Factorisation par terme dominant',
+            difficulty: 3,
+            content: `Déterminez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\sqrt{n^4+1}}{n^2+3}$.`
+        },
+        {
+            id: '8.4',
+            section: 'MÉTHODES',
+            subsection: 'Factorisation par terme dominant',
+            difficulty: 4,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{2^n + 3^n}{3^n + 4^n}$.
+
+(Pensez à factoriser par la puissance qui domine.)`
+        },
+        // Encadrement – gendarmes
+        {
+            id: '9.1',
+            section: 'MÉTHODES',
+            subsection: 'Encadrement – gendarmes',
+            difficulty: 1,
+            content: `Encadrez $u_n = \\dfrac{\\sin n}{n}$ et trouvez sa limite.`
+        },
+        {
+            id: '9.2',
+            section: 'MÉTHODES',
+            subsection: 'Encadrement – gendarmes',
+            difficulty: 2,
+            content: `Trouvez $\\lim\\limits_{n\\to\\infty} \\dfrac{(-1)^n}{n^2+1}$ à l'aide d'un encadrement.`
+        },
+        {
+            id: '9.3',
+            section: 'MÉTHODES',
+            subsection: 'Encadrement – gendarmes',
+            difficulty: 3,
+            content: `Calculez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\cos(\\ln n)}{n}$.`
+        },
+        {
+            id: '9.4',
+            section: 'MÉTHODES',
+            subsection: 'Encadrement – gendarmes',
+            difficulty: 4,
+            content: `Trouvez $\\lim\\limits_{n\\to\\infty} \\dfrac{\\sin n + \\cos n}{n^2+1}$.`
+        },
+
+        // SECTION FORMULES
+        {
+            id: '10.1',
+            section: 'FORMULES',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 1,
+            content: `Recopiez et complétez : « Si $u_n \\le v_n \\le w_n$ et $\\lim\\limits_{n\\to\\infty} u_n = \\lim\\limits_{n\\to\\infty} w_n = \\ell$, alors \\ldots »`
+        },
+        {
+            id: '10.2',
+            section: 'FORMULES',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 2,
+            content: `Soit $u_n = -\\dfrac{1}{n}$, $v_n = \\dfrac{\\sin n}{n}$ et $w_n = \\dfrac{1}{n}$. Vérifiez que $u_n \\le v_n \\le w_n$ pour tout $n\\ge 1$, puis trouvez $\\lim\\limits_{n\\to\\infty} v_n$.`
+        },
+        {
+            id: '10.3',
+            section: 'FORMULES',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 3,
+            content: `Peut-on appliquer le théorème des gendarmes à $u_n = -1$, $v_n = (-1)^n$ et $w_n = 1$ ? Si non, pourquoi ?
+
+Donnez un exemple où les hypothèses du théorème ne sont pas toutes vérifiées mais où $v_n$ possède tout de même une limite.`
+        },
+        {
+            id: '10.4',
+            section: 'FORMULES',
+            subsection: 'Théorème des gendarmes',
+            difficulty: 4,
+            content: `Énoncez le théorème des gendarmes pour une limite finie.
+
+En utilisant la définition $\\varepsilon$ de la limite, esquissez une démonstration.`
+        },
+
+        // SECTION LEÇONS
+        {
+            id: '11.1',
+            section: 'LEÇONS',
+            subsection: 'Définition intuitive',
+            difficulty: 1,
+            content: `Expliquez avec vos propres mots ce que signifie « la suite $u_n$ tend vers $2$ ».`
+        },
+        {
+            id: '11.2',
+            section: 'LEÇONS',
+            subsection: 'Définition intuitive',
+            difficulty: 2,
+            content: `Donnez un exemple de suite qui tend vers $0$ mais dont aucun terme n'est égal à $0$.`
+        },
+        {
+            id: '11.3',
+            section: 'LEÇONS',
+            subsection: 'Définition intuitive',
+            difficulty: 3,
+            content: `La suite $u_n = \\sin n$ possède-t-elle une limite intuitive ?
+
+Pourquoi ?`
+        },
+        {
+            id: '11.4',
+            section: 'LEÇONS',
+            subsection: 'Définition intuitive',
+            difficulty: 4,
+            content: `Décrivez une suite qui n'admet aucune limite (ni finie, ni infinie) et expliquez pourquoi son comportement est « erratique ».`
+        },
+        // Opérations algébriques
+        {
+            id: '12.1',
+            section: 'LEÇONS',
+            subsection: 'Opérations algébriques',
+            difficulty: 1,
+            content: `Énoncez la règle de la limite d'une somme de deux suites convergentes.`
+        },
+        {
+            id: '12.2',
+            section: 'LEÇONS',
+            subsection: 'Opérations algébriques',
+            difficulty: 2,
+            content: `Si $u_n \\to 2$ et $v_n \\to 3$, calculez $\\lim\\limits_{n\\to\\infty} (u_n v_n)$ et $\\lim\\limits_{n\\to\\infty} \\dfrac{u_n}{v_n}$.`
+        },
+        {
+            id: '12.3',
+            section: 'LEÇONS',
+            subsection: 'Opérations algébriques',
+            difficulty: 3,
+            content: `Si $u_n \\to +\\infty$ et $v_n \\to -\\infty$, que peut-on dire de la limite de $u_n + v_n$ ?
+
+Donnez un exemple où la somme tend vers $0$ et un autre où elle tend vers $+\\infty$.`
+        },
+        {
+            id: '12.4',
+            section: 'LEÇONS',
+            subsection: 'Opérations algébriques',
+            difficulty: 4,
+            content: `Soit $u_n$ une suite telle que $\\lim\\limits_{n\\to\\infty} u_n = 2$. On pose $v_n = \\dfrac{1}{u_n - 2}$.
+
+Que vaut $\\lim\\limits_{n\\to\\infty} v_n$ ?
+
+Est-ce toujours déterminé ?
+
+Donnez un exemple où $v_n$ diverge sans limite.`
+        }
+    ];
+
+    // ============================================================
+    //  LOGIQUE DE RENDU
+    // ============================================================
+    let currentIndex = 0;
+    const total = enigmes.length;
+
+    // Éléments DOM
+    const selectEl = document.getElementById('enigmeSelect');
+    const refLabel = document.getElementById('refLabel');
+    const sectionTag = document.getElementById('sectionTag');
+    const starsDisplay = document.getElementById('starsDisplay');
+    const contentDisplay = document.getElementById('contentDisplay');
+    const counterDisplay = document.getElementById('counterDisplay');
+    const progressText = document.getElementById('progressText');
+
+    // Fonction pour générer les étoiles
+    function starsHTML(diff) {
+        return '★'.repeat(diff) + '☆'.repeat(4 - diff);
+    }
+
+    // Affichage d'une énigme
+    function render(index) {
+        const e = enigmes[index];
+        if (!e) return;
+        refLabel.textContent = e.id;
+        sectionTag.textContent = e.subsection;
+        starsDisplay.textContent = starsHTML(e.difficulty);
+        // Le contenu est déjà en texte avec des $, on le place tel quel
+        contentDisplay.innerHTML = e.content.replace(/\n/g, '<br>');
+        counterDisplay.textContent = `${index+1} / ${total}`;
+        progressText.textContent = `Énigme ${index+1} sur ${total}`;
+        // Mettre à jour le select
+        selectEl.value = index;
+        // Désactiver les boutons
+        document.getElementById('prevBtn').disabled = (index === 0);
+        document.getElementById('prevBtn2').disabled = (index === 0);
+        document.getElementById('nextBtn').disabled = (index === total-1);
+        document.getElementById('nextBtn2').disabled = (index === total-1);
+        // Demander à MathJax de traiter le nouveau contenu
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise().catch(err => console.warn('MathJax error:', err));
+        }
+    }
+
+    // Navigation
+    function goTo(index) {
+        if (index < 0 || index >= total) return;
+        currentIndex = index;
+        render(currentIndex);
+        // Scroll vers la carte
+        document.getElementById('card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Événements
+    document.getElementById('prevBtn').addEventListener('click', () => goTo(currentIndex-1));
+    document.getElementById('prevBtn2').addEventListener('click', () => goTo(currentIndex-1));
+    document.getElementById('nextBtn').addEventListener('click', () => goTo(currentIndex+1));
+    document.getElementById('nextBtn2').addEventListener('click', () => goTo(currentIndex+1));
+
+    // Remplir le select
+    enigmes.forEach((e, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${e.id} – ${e.subsection} (${e.section})`;
+        selectEl.appendChild(opt);
+    });
+    selectEl.addEventListener('change', (ev) => {
+        const idx = parseInt(ev.target.value, 10);
+        if (!isNaN(idx) && idx !== currentIndex) {
+            goTo(idx);
+        }
+    });
+
+    // Raccourcis clavier
+    document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'ArrowLeft') {
+            ev.preventDefault();
+            goTo(currentIndex-1);
+        } else if (ev.key === 'ArrowRight') {
+            ev.preventDefault();
+            goTo(currentIndex+1);
+        }
+    });
+
+    // Initialisation
+    render(0);
+</script>
+</body>
+</html>

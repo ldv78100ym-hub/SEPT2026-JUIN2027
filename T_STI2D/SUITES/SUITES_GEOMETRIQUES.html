@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Suites géométriques &amp; sommes – Terminale STI2D</title>
 
-    <!-- MathJax3 -->
+    <!-- MathJax3 : on n'utilise que \(...\) et \[...\] -->
     <script>
         MathJax = {
             tex: { inlineMath: [
-                    ['$', '$'],
                     ['\\(', '\\)']
+                ], displayMath: [
+                    ['\\[', '\\]']
                 ] },
             svg: { fontCache: 'global' },
             options: { skipHtmlTypes: 'script' }
@@ -300,7 +301,7 @@
         }
 
         /* ----------------------------------------------
-           CANVAS
+           CANVAS + CONTROLES
         ---------------------------------------------- */
         .canvas-wrapper {
             background: #f8fafc;
@@ -309,6 +310,7 @@
             padding: 0.5rem;
             margin: 1.5rem 0;
             text-align: center;
+            position: relative;
         }
 
         .canvas-wrapper canvas {
@@ -316,12 +318,47 @@
             height: auto;
             border-radius: 10px;
             background: #ffffff;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .canvas-wrapper canvas:active {
+            cursor: grabbing;
         }
 
         .canvas-wrapper .legende {
             font-size: 0.9rem;
             color: #475569;
             margin-top: 0.4rem;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .graph-controls button {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(4px);
+        }
+
+        .graph-controls button:hover {
+            background: #ffffff;
+            border-color: #3b82f6;
+            color: #2563eb;
         }
 
         /* ----------------------------------------------
@@ -553,6 +590,97 @@
         }
 
         /* ----------------------------------------------
+           CONTROLES DYNAMIQUES
+        ---------------------------------------------- */
+        .controls {
+            background: #f8fafc;
+            border-radius: 18px;
+            padding: 1.5rem 2rem;
+            margin: 1.5rem 0;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.5rem 2rem;
+        }
+
+        .controls .group {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem 1rem;
+            flex-wrap: wrap;
+        }
+
+        .controls label {
+            font-weight: 600;
+            color: #0f172a;
+            min-width: 2.5rem;
+        }
+
+        .controls input[type="number"] {
+            width: 80px;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .controls input[type="number"]:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .btn-random {
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 0.5rem 1.8rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-random:hover {
+            background: #7c3aed;
+        }
+        .btn-random:active {
+            transform: scale(0.96);
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .controls input[type="number"] {
+                width: 70px;
+            }
+        }
+
+        /* ----------------------------------------------
+           TABLEAU DYNAMIQUE
+        ---------------------------------------------- */
+        .dyn-table {
+            margin: 1.5rem 0;
+        }
+
+        .dyn-table table {
+            font-size: 0.9rem;
+        }
+
+        .dyn-table td {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ----------------------------------------------
            RESPONSIVE
         ---------------------------------------------- */
         @media (max-width: 600px) {
@@ -586,7 +714,76 @@
         </div>
 
         <!-- ============================================
-        INTRODUCTION
+        PARAMÈTRES INTERACTIFS
+        ============================================ -->
+        <section>
+            <h2>🎛️ Paramètres de la suite</h2>
+            <div class="controls">
+                <div class="group">
+                    <label for="u0_input">\(u_0\)</label>
+                    <input type="number" id="u0_input" value="2" step="0.1" />
+                </div>
+                <div class="group">
+                    <label for="q_input">\(q\)</label>
+                    <input type="number" id="q_input" value="1.5" step="0.05" />
+                </div>
+                <div class="group">
+                    <label for="n_input">\(n\) (termes)</label>
+                    <input type="number" id="n_input" value="6" min="1" max="15" step="1" />
+                </div>
+                <div class="group">
+                    <button class="btn-random" id="btnRandom">🎲 Générer aléatoire</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+        EXPLORATION DYNAMIQUE
+        ============================================ -->
+        <section>
+            <h2>📈 Exploration interactive</h2>
+            <div class="info-box">
+                <strong>Suite géométrique :</strong>
+                \(u_n = u_0 \times q^n\) avec
+                \(u_0 = \) <span id="dyn_u0">2</span>,
+                \(q = \) <span id="dyn_q">1.5</span>.
+                <br />
+                <strong>Termes :</strong>
+                <span id="dyn_termes">2.0, 3.0, 4.5, 6.75, 10.125, 15.1875</span>
+                <br />
+                <strong>Somme des <span id="dyn_n">6</span> premiers termes :</strong>
+                \(S = \) <span id="dyn_somme">41.0625</span>
+                (formule : \(u_0 \times \dfrac{1 - q^n}{1 - q}\))
+            </div>
+
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="canvasSuite" width="800" height="380"></canvas>
+                <div class="graph-controls">
+                    <button id="resetViewBtn" title="Réinitialiser le zoom et le déplacement">🔄 Réinitialiser</button>
+                </div>
+                <div class="legende">
+                    Suite géométrique : points bleus = termes, courbe orange = ajustement exponentiel.
+                    <span style="display:block;font-size:0.8rem;color:#94a3b8;">Glisser pour déplacer · Molette pour zoomer</span>
+                </div>
+            </div>
+
+            <div class="dyn-table">
+                <h3>📋 Table des termes</h3>
+                <div class="table-wrap">
+                    <table id="dyn_table">
+                        <thead>
+                            <tr><th>\(n\)</th><th>\(u_n\)</th></tr>
+                        </thead>
+                        <tbody id="dyn_tbody">
+                            <!-- rempli par JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+        INTRODUCTION (avec valeurs dynamiques)
         ============================================ -->
         <section>
             <h2>🔰 Introduction</h2>
@@ -636,23 +833,22 @@
             </p>
 
             <div class="info-box exemple">
-                <strong>📘 Exemple :</strong> la suite $2, 6, 18, 54, \dots$ est géométrique de
-                raison $q = 3$ car :
-                \[
-                    6 = 3 \times 2,\quad 18 = 3 \times 6,\quad 54 = 3 \times 18,\quad \dots
-                \]
+                <strong>📘 Exemple interactif :</strong> avec \(u_0 = \) <span id="ex_u0">2</span>
+                et \(q = \) <span id="ex_q">1.5</span>, les premiers termes sont :
+                <span id="ex_termes_aff">2, 3, 4.5, 6.75, 10.125, 15.1875</span>
+                (car chaque terme est multiplié par \(q\)).
             </div>
 
             <div class="info-box attention">
-                ⚠️ <strong>Attention :</strong> si $q = 0$, la suite devient nulle à partir du
-                premier terme. Si $q = 1$, la suite est constante. Si $q &lt; 0$, les termes
+                ⚠️ <strong>Attention :</strong> si \(q = 0\), la suite devient nulle à partir du
+                premier terme. Si \(q = 1\), la suite est constante. Si \(q &lt; 0\), les termes
                 alternent de signe.
             </div>
 
             <h3>🔢 Formule explicite</h3>
             <p>
-                Si on connaît le premier terme $u_0$ et la raison $q$, on peut calculer
-                directement le terme de rang $n$ :
+                Si on connaît le premier terme \(u_0\) et la raison \(q\), on peut calculer
+                directement le terme de rang \(n\) :
             </p>
             <div style="text-align:center;font-size:1.5rem;margin:1rem 0;">
                 \[
@@ -665,11 +861,16 @@
             </p>
 
             <div class="info-box exemple">
-                <strong>📘 Exemple :</strong> pour la suite $u_0 = 5$, $q = 2$, on a :
+                <strong>📘 Exemple :</strong> pour la suite \(u_0 = \) <span id="ex2_u0">2</span>,
+                \(q = \) <span id="ex2_q">1.5</span>, on a :
                 \[
-                    u_3 = 5 \times 2^3 = 5 \times 8 = 40
+                    u_3 = \mathbf{<span id="ex2_u0_2" style="font-weight:normal;">2</span>}
+                    \times \mathbf{<span id="ex2_q_2" style="font-weight:normal;">1.5</span>}^3
+                    = \mathbf{<span id="ex2_u0_2" style="font-weight:normal;">2</span>}
+                    \times \mathbf{<span id="ex2_q3" style="font-weight:normal;">3.375</span>}
+                    = \mathbf{<span id="ex2_u3" style="font-weight:normal;">6.75</span>}
                 \]
-                On vérifie : $5 \to 10 \to 20 \to 40$.
+                On vérifie : <span id="ex2_terms">2 → 3 → 4.5 → 6.75</span>.
             </div>
         </section>
 
@@ -679,8 +880,8 @@
         <section>
             <h2>🧮 Somme des termes consécutifs</h2>
             <p>
-                On note $S_n$ la somme des premiers termes $u_0 + u_1 + \cdots + u_{n-1}$.
-                Pour une suite géométrique de raison $q \neq 1$ :
+                On note \(S_n\) la somme des premiers termes \(u_0 + u_1 + \cdots + u_{n-1}\).
+                Pour une suite géométrique de raison \(q \neq 1\) :
             </p>
             <div style="text-align:center;font-size:1.5rem;margin:1rem 0;">
                 \[
@@ -688,143 +889,30 @@
                 \]
             </div>
             <p>
-                Si $q = 1$, la suite est constante et $S_n = n \times u_0$.
+                Si \(q = 1\), la suite est constante et \(S_n = n \times u_0\).
             </p>
 
             <div class="info-box astuce">
-                💡 On utilise souvent la somme des termes de $u_0$ à $u_{n-1}$ (soit $n$ termes).
-                Pour la somme de $u_p$ à $u_m$ (termes consécutifs), on peut utiliser :
+                💡 On utilise souvent la somme des termes de \(u_0\) à \(u_{n-1}\) (soit \(n\) termes).
+                Pour la somme de \(u_p\) à \(u_m\) (termes consécutifs), on peut utiliser :
                 \[
                     u_p + u_{p+1} + \cdots + u_m = u_p \times \frac{1 - q^{m-p+1}}{1 - q}
                 \]
             </div>
 
             <div class="info-box exemple">
-                <strong>📘 Exemple :</strong> pour $u_0 = 3$, $q = 2$, la somme des 5 premiers termes
-                ($n=5$) vaut :
+                <strong>📘 Exemple interactif :</strong> pour \(u_0 = \) <span id="sum_u0">2</span>,
+                \(q = \) <span id="sum_q">1.5</span>, la somme des
+                <span id="sum_n">6</span> premiers termes (\(n = \) <span id="sum_n2">6</span>) vaut :
                 \[
-                    S_5 = 3 \times \dfrac{1 - 2^5}{1 - 2} = 3 \times \dfrac{1 - 32}{-1} = 3 \times 31 = 93
+                    S_{<span id="sum_n3">6</span>} =
+                    \mathbf{<span id="sum_u0_2">2</span>} \times
+                    \dfrac{1 - \mathbf{<span id="sum_q_n">1.5^6</span>}}{1 - \mathbf{<span id="sum_q_2">1.5</span>}}
+                    = \mathbf{<span id="sum_result">41.0625</span>}
                 \]
-                Vérification : $3 + 6 + 12 + 24 + 48 = 93$.
+                Vérification : <span id="sum_terms_aff">2 + 3 + 4.5 + 6.75 + 10.125 + 15.1875</span> =
+                <span id="sum_result2">41.0625</span>.
             </div>
-
-            <!-- ======== CANVAS : visualisation ======== -->
-            <h3>📊 Visualisation</h3>
-            <div class="canvas-wrapper">
-                <canvas id="canvasSuite" width="800" height="380"></canvas>
-                <div class="legende">
-                    Suite géométrique $u_n = 2 \times 1.5^n$ &nbsp;–&nbsp; les points bleus sont les
-                    termes, la courbe orange est l'ajustement exponentiel.
-                </div>
-            </div>
-
-            <script>
-                (function() {
-                    const canvas = document.getElementById('canvasSuite');
-                    if (!canvas) return;
-                    const ctx = canvas.getContext('2d');
-                    const W = canvas.width,
-                        H = canvas.height;
-                    const pad = { top: 40, bottom: 50, left: 60, right: 30 };
-                    const graphW = W - pad.left - pad.right;
-                    const graphH = H - pad.top - pad.bottom;
-
-                    // Paramètres de la suite : u0 = 2, q = 1.5
-                    const u0 = 2,
-                        q = 1.5;
-                    const nMax = 8;
-                    const termes = [];
-                    for (let n = 0; n <= nMax; n++) {
-                        termes.push(u0 * Math.pow(q, n));
-                    }
-                    const maxVal = Math.max(...termes) * 1.15;
-
-                    function draw() {
-                        ctx.clearRect(0, 0, W, H);
-
-                        // Grille
-                        ctx.strokeStyle = "#e2e8f0";
-                        ctx.lineWidth = 0.5;
-                        for (let i = 0; i <= 5; i++) {
-                            const y = pad.top + graphH - (i / 5) * graphH;
-                            ctx.beginPath();
-                            ctx.moveTo(pad.left, y);
-                            ctx.lineTo(W - pad.right, y);
-                            ctx.stroke();
-                            const val = (i / 5) * maxVal;
-                            ctx.fillStyle = "#475569";
-                            ctx.font = "12px sans-serif";
-                            ctx.textAlign = "right";
-                            ctx.fillText(val.toFixed(1), pad.left - 8, y + 4);
-                        }
-                        for (let i = 0; i <= nMax; i++) {
-                            const x = pad.left + (i / nMax) * graphW;
-                            ctx.beginPath();
-                            ctx.moveTo(x, pad.top);
-                            ctx.lineTo(x, H - pad.bottom);
-                            ctx.stroke();
-                            ctx.fillStyle = "#475569";
-                            ctx.font = "12px sans-serif";
-                            ctx.textAlign = "center";
-                            ctx.fillText(i, x, H - pad.bottom + 20);
-                        }
-                        // Axes
-                        ctx.strokeStyle = "#0f172a";
-                        ctx.lineWidth = 1.5;
-                        ctx.beginPath();
-                        ctx.moveTo(pad.left, pad.top);
-                        ctx.lineTo(pad.left, H - pad.bottom);
-                        ctx.lineTo(W - pad.right, H - pad.bottom);
-                        ctx.stroke();
-
-                        // Courbe exponentielle
-                        ctx.beginPath();
-                        ctx.strokeStyle = "#f59e0b";
-                        ctx.lineWidth = 2.5;
-                        for (let t = 0; t <= nMax * 20; t++) {
-                            const n = t / 20;
-                            const val = u0 * Math.pow(q, n);
-                            const x = pad.left + (n / nMax) * graphW;
-                            const y = pad.top + graphH - (val / maxVal) * graphH;
-                            if (t === 0) ctx.moveTo(x, y);
-                            else ctx.lineTo(x, y);
-                        }
-                        ctx.stroke();
-
-                        // Points
-                        for (let i = 0; i < termes.length; i++) {
-                            const x = pad.left + (i / nMax) * graphW;
-                            const y = pad.top + graphH - (termes[i] / maxVal) * graphH;
-                            ctx.beginPath();
-                            ctx.arc(x, y, 6, 0, 2 * Math.PI);
-                            ctx.fillStyle = "#3b82f6";
-                            ctx.fill();
-                            ctx.strokeStyle = "#1e293b";
-                            ctx.lineWidth = 1.5;
-                            ctx.stroke();
-                            // Valeur au-dessus
-                            ctx.fillStyle = "#0f172a";
-                            ctx.font = "bold 13px sans-serif";
-                            ctx.textAlign = "center";
-                            ctx.fillText(termes[i].toFixed(1), x, y - 10);
-                        }
-
-                        // Légende
-                        ctx.fillStyle = "#0f172a";
-                        ctx.font = "13px sans-serif";
-                        ctx.textAlign = "left";
-                        ctx.fillText("u₀ = " + u0 + ", q = " + q, pad.left + 10, pad.top + 22);
-                    }
-                    draw();
-
-                    // Redessiner au redimensionnement
-                    let resizeTimer;
-                    window.addEventListener('resize', function() {
-                        clearTimeout(resizeTimer);
-                        resizeTimer = setTimeout(draw, 150);
-                    });
-                })();
-            </script>
         </section>
 
         <!-- ============================================
@@ -840,7 +928,7 @@
             <div class="info-box python">
                 <span class="badge-python">🐍 PYTHON</span>
                 <strong>Fonction <code>termes_geo(u0, q, n)</code></strong> – retourne la liste
-                des $n$ premiers termes de la suite $(u_0, u_1, \dots, u_{n-1})$.
+                des \(n\) premiers termes de la suite \((u_0, u_1, \dots, u_{n-1})\).
             </div>
 
             <div class="code-block">
@@ -863,8 +951,8 @@
             </div>
 
             <div class="info-box astuce">
-                💡 <strong>À retenir :</strong> <code>range(n)</code> génère les entiers de $0$ à
-                $n-1$. On utilise <code>q ** i</code> pour calculer $q^i$.
+                💡 <strong>À retenir :</strong> <code>range(n)</code> génère les entiers de \(0\) à
+                \(n-1\). On utilise <code>q ** i</code> pour calculer \(q^i\).
             </div>
 
             <!-- Exemple interactif -->
@@ -874,9 +962,9 @@
                     <span class="badge">COMPRENDRE</span>
                 </div>
                 <p class="consigne">
-                    La fonction ci-dessous calcule la somme des $n$ premiers termes d'une suite
+                    La fonction ci-dessous calcule la somme des \(n\) premiers termes d'une suite
                     géométrique. <strong>Comprenez</strong> chaque ligne, puis cliquez sur
-                    <em>Exécuter</em> pour voir le résultat pour $u_0=3$, $q=2$, $n=5$.
+                    <em>Exécuter</em> pour voir le résultat pour \(u_0=3\), \(q=2\), \(n=5\).
                 </p>
                 <div class="code-block" style="background:#0f172a;color:#e2e8f0;border-radius:14px;">
                     <span class="py-keyword">def</span> <span class="py-function">somme_geo</span>(u0, q, n):
@@ -905,11 +993,6 @@
                     output.className = 'output';
 
                     try {
-                        // On utilise Brython via l'objet window.__BRYTHON__
-                        // Le code Python est exécuté dans le contexte de la page
-                        // On utilise une fonction Python définie dans la page.
-
-                        // Pour cet exemple, on définit la fonction en Python via eval
                         const code = `
                                     def _exec_somme_geo():
                                         def somme_geo(u0, q, n):
@@ -917,18 +1000,14 @@
                                                 return n * u0
                                             return u0 * (1 - q ** n) / (1 - q)
                                         result = somme_geo(3, 2, 5)
-                                        # Retourner le résultat sous forme de chaîne
                                         return f"u₀=3, q=2, n=5  →  S = {result}"
                                     _exec_somme_geo()
                                 `;
-                        // Utiliser brython pour exécuter
                         if (typeof brython !== 'undefined' && brython.__python__) {
-                            // Exécution via le module python
                             const pyResult = window.__BRYTHON__.runPython(code);
                             output.textContent = pyResult;
                             output.className = 'output success';
                         } else {
-                            // Fallback : simulation
                             const result = 3 * (1 - 2 ** 5) / (1 - 2);
                             output.textContent = `u₀=3, q=2, n=5  →  S = ${result}`;
                             output.className = 'output success';
@@ -942,7 +1021,7 @@
 
             <div class="info-box">
                 <strong>💬 Explication :</strong> la fonction <code>somme_geo</code> utilise la
-                formule de la somme. Si $q=1$, elle retourne $n \times u_0$. Sinon, elle applique
+                formule de la somme. Si \(q=1\), elle retourne \(n \times u_0\). Sinon, elle applique
                 la formule avec la division. <strong>Remarquez</strong> qu'il n'y a pas de
                 <code>print()</code> : le résultat est <strong>retourné</strong> (<code>return</code>).
             </div>
@@ -961,7 +1040,7 @@
             <div class="info-box python">
                 <span class="badge-python">🐍 PYTHON</span>
                 <strong>Fonction <code>rang_seuil(u0, q, seuil)</code></strong> – retourne le
-                plus petit entier $n$ tel que $u_n \geqslant \text{seuil}$.
+                plus petit entier \(n\) tel que \(u_n \geqslant \text{seuil}\).
             </div>
 
             <div class="code-block">
@@ -1031,7 +1110,6 @@
                 </div>
 
                 <p style="margin-top:0.8rem;font-weight:500;">Votre proposition :</p>
-                <!-- Le textarea est maintenant vide (ne rien pré-écrire) -->
                 <textarea id="code_completion" rows="4" placeholder="Écrivez ici le code complet de la fonction…"></textarea>
                 <button class="btn-run" onclick="verifierCompletion()">🔍 Vérifier</button>
                 <div id="output_completion" class="output">Complétez le code et cliquez sur Vérifier.</div>
@@ -1049,75 +1127,59 @@
                         return;
                     }
 
-                    // On construit un script Python qui va tester le code de l'utilisateur
-                    // On utilise Brython si disponible, sinon on fait une vérification basique.
                     if (typeof brython !== 'undefined' && window.__BRYTHON__) {
                         try {
-                            // Échapper les guillemets et les backslashes pour l'injection
                             const escapedCode = code.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                             const testCode = `
                                         import sys
                                         from io import StringIO
 
                                         def test_function(code_str):
-                                            # Compiler et exécuter le code fourni
                                             try:
-                                                # Utiliser exec dans un namespace propre
                                                 namespace = {}
                                                 exec(code_str, namespace)
-                                            except IndentationError as e:
-                                                return f"❌ Erreur d'indentation : {e}"
-                                            except SyntaxError as e:
-                                                return f"❌ Erreur de syntaxe : {e}"
                                             except Exception as e:
-                                                return f"❌ Erreur lors de l'exécution : {e}"
+                                                return f"❌ Erreur : {e}"
 
-                                            # Vérifier que la fonction est définie
                                             if 'somme_jusqu_a' not in namespace:
                                                 return "❌ La fonction 'somme_jusqu_a' n'est pas définie."
 
-                                            # Tester avec u0=2, q=1.5, seuil=20
                                             try:
                                                 result = namespace['somme_jusqu_a'](2, 1.5, 20)
                                             except Exception as e:
-                                                return f"❌ Erreur lors de l'appel de la fonction : {e}"
+                                                return f"❌ Erreur lors de l'appel : {e}"
 
                                             if not isinstance(result, tuple) or len(result) != 2:
                                                 return "❌ La fonction doit retourner un tuple (S, n)."
 
                                             S, n = result
-                                            # Attendu : S = 26.375, n = 5 (car on arrête quand S >= 20)
                                             if abs(S - 26.375) < 1e-9 and n == 5:
                                                 return f"✅ Succès ! Pour u₀=2, q=1.5, seuil=20 → S = {S}, n = {n}"
                                             else:
-                                                return f"❌ Résultat incorrect. Pour u₀=2, q=1.5, seuil=20, on attend S≈26.375 et n=5. Vous avez S={S}, n={n}."
+                                                return f"❌ Résultat incorrect. Attendu S≈26.375, n=5. Vous avez S={S}, n={n}."
 
                                         result = test_function("""${escapedCode}""")
                                         print(result)
                                     `;
-                            // Exécuter avec Brython
                             const output = window.__BRYTHON__.runPython(testCode);
                             out.textContent = output;
                             out.className = output.startsWith('✅') ? 'output success' : 'output error';
                         } catch (e) {
-                            out.textContent = '❌ Erreur lors de l\'exécution du test : ' + e.message;
+                            out.textContent = '❌ Erreur : ' + e.message;
                             out.className = 'output error';
                         }
                     } else {
-                        // Fallback : vérification basique (moins précise)
-                        // On vérifie simplement la présence de certains motifs
+                        // fallback
                         const hasWhile = code.includes('while');
-                        const hasSSeuil = code.includes('S < seuil') || code.includes('S < seuil') || code.includes(
-                            'S<seuil');
+                        const hasSSeuil = code.includes('S < seuil') || code.includes('S<seuil');
                         const hasTermeQ = code.includes('terme *= q') || code.includes('terme = terme * q');
                         const hasReturn = code.includes('return S, n') || code.includes('return (S, n)');
 
                         if (hasWhile && hasSSeuil && hasTermeQ && hasReturn) {
-                            out.textContent =
-                                '✅ La structure semble correcte (vérification basique). Pour u₀=2, q=1.5, seuil=20 → S = 26.375, n = 5.';
+                            out.textContent = '✅ La structure semble correcte (vérif basique). Pour u₀=2, q=1.5, seuil=20 → S = 26.375, n = 5.';
                             out.className = 'output success';
                         } else {
-                            let msg = '❌ Il manque ou il y a une erreur dans : ';
+                            let msg = '❌ Il manque : ';
                             if (!hasWhile) msg += 'boucle while, ';
                             if (!hasSSeuil) msg += 'condition S < seuil, ';
                             if (!hasTermeQ) msg += 'mise à jour terme *= q, ';
@@ -1143,13 +1205,13 @@
             <h2>🐍 Python – Conditions <code>if / else</code></h2>
             <p>
                 Les conditions permettent de traiter différents cas. Pour les suites géométriques,
-                le cas $q = 1$ est particulier pour la somme.
+                le cas \(q = 1\) est particulier pour la somme.
             </p>
 
             <div class="info-box python">
                 <span class="badge-python">🐍 PYTHON</span>
                 <strong>Fonction <code>somme_geo_condition(u0, q, n)</code></strong> – avec
-                gestion du cas $q = 1$.
+                gestion du cas \(q = 1\).
             </div>
 
             <div class="code-block">
@@ -1183,10 +1245,10 @@
                     <span class="badge">MODIFIER</span>
                 </div>
                 <p class="consigne">
-                    La fonction <code>somme_geo_condition</code> calcule la somme des $n$ premiers
+                    La fonction <code>somme_geo_condition</code> calcule la somme des \(n\) premiers
                     termes. <strong>Modifiez</strong> le code ci-dessous pour qu'elle retourne
                     <strong>la liste des sommes partielles</strong> :
-                    $[u_0,\; u_0+u_1,\; u_0+u_1+u_2,\; \dots,\; u_0+\cdots+u_{n-1}]$.
+                    \([u_0,\; u_0+u_1,\; u_0+u_1+u_2,\; \dots,\; u_0+\cdots+u_{n-1}]\).
                 </p>
                 <div class="code-block" style="background:#0f172a;color:#e2e8f0;border-radius:14px;">
                     <span class="py-keyword">def</span> <span class="py-function">sommes_partielles</span>(u0, q, n):
@@ -1320,8 +1382,8 @@
                     <span class="badge">COMPLÉTER</span>
                 </div>
                 <p class="consigne">
-                    La fonction <code>trouver_raison</code> doit retourner la raison $q$ d'une
-                    suite géométrique à partir de deux termes consécutifs $u_n$ et $u_{n+1}$.
+                    La fonction <code>trouver_raison</code> doit retourner la raison \(q\) d'une
+                    suite géométrique à partir de deux termes consécutifs \(u_n\) et \(u_{n+1}\).
                     <strong>Complétez</strong> la ligne manquante.
                 </p>
                 <div class="code-block" style="background:#0f172a;color:#e2e8f0;border-radius:14px;">
@@ -1349,9 +1411,7 @@
                     const zone = document.getElementById('exo1_completion');
                     const out = document.getElementById('exo1_output');
                     const rep = zone.value.trim();
-
-                    if (rep === 'un_plus_1 / un' || rep === 'un_plus_1/un' || rep.includes('un_plus_1') && rep.includes(
-                            'un')) {
+                    if (rep === 'un_plus_1 / un' || rep === 'un_plus_1/un' || rep.includes('un_plus_1') && rep.includes('un')) {
                         out.textContent = '✅ Parfait ! La raison est q = u_{n+1} / u_n.';
                         out.className = 'output success';
                     } else {
@@ -1369,7 +1429,7 @@
                 </div>
                 <p class="consigne">
                     Voici une fonction Python. <strong>Expliquez</strong> ce qu'elle calcule et
-                    quelle est sa valeur de retour pour $u_0=2$, $q=3$, $n=4$.
+                    quelle est sa valeur de retour pour \(u_0=2\), \(q=3\), \(n=4\).
                 </p>
                 <div class="code-block" style="background:#0f172a;color:#e2e8f0;border-radius:14px;">
                     <span class="py-keyword">def</span> <span class="py-function">mystere</span>(u0, q, n):
@@ -1402,13 +1462,10 @@
                     const zone = document.getElementById('exo2_compr');
                     const out = document.getElementById('exo2_output');
                     const rep = zone.value.toLowerCase();
-
                     const mots = ['somme', 'dépasse', 'premier', 'indice', 'retourne', 'calcul'];
                     const ok = mots.some(m => rep.includes(m));
-
                     if (ok && rep.length > 10) {
-                        out.textContent =
-                            '✅ Bien ! La fonction calcule la somme des termes jusqu\'à dépasser 50, et retourne le premier indice i où la somme dépasse 50. Pour u₀=2, q=3, n=4 : S: 2, 8, 26, 80 → retourne 3 (car 80 > 50).';
+                        out.textContent = '✅ Bien ! La fonction calcule la somme des termes jusqu\'à dépasser 50, et retourne le premier indice i où la somme dépasse 50. Pour u₀=2, q=3, n=4 : S: 2, 8, 26, 80 → retourne 3 (car 80 > 50).';
                         out.className = 'output success';
                     } else {
                         out.textContent = '❌ Relisez : la fonction accumule la somme et retourne l\'indice où elle dépasse 50, ou -1 si jamais. Pour u₀=2, q=3, n=4, la réponse est 3.';
@@ -1424,9 +1481,9 @@
                     <span class="badge">MODIFIER</span>
                 </div>
                 <p class="consigne">
-                    La fonction <code>termes_geo</code> retourne la liste des $n$ premiers termes.
+                    La fonction <code>termes_geo</code> retourne la liste des \(n\) premiers termes.
                     <strong>Modifiez</strong> le code pour qu'elle retourne <strong>la liste des
-                    termes de l'indice $p$ à l'indice $m$</strong> (inclus).
+                    termes de l'indice \(p\) à l'indice \(m\)</strong> (inclus).
                 </p>
                 <div class="code-block" style="background:#0f172a;color:#e2e8f0;border-radius:14px;">
                     <span class="py-keyword">def</span> <span class="py-function">termes_geo</span>(u0, q, n):
@@ -1447,15 +1504,12 @@
                     const zone = document.getElementById('exo3_modif');
                     const out = document.getElementById('exo3_output');
                     const code = zone.value;
-
                     const hasP = code.includes('p');
                     const hasM = code.includes('m');
                     const hasRange = code.includes('range(p, m') || code.includes('range(p,m');
                     const hasReturn = code.includes('return');
-
                     if (hasP && hasM && hasRange && hasReturn) {
-                        out.textContent =
-                            '✅ Excellente modification ! La fonction prend désormais p et m et retourne les termes de u_p à u_m. Exemple : termes_geo(2, 3, 1, 3) → [6, 18, 54]';
+                        out.textContent = '✅ Excellente modification ! La fonction prend désormais p et m et retourne les termes de u_p à u_m. Exemple : termes_geo(2, 3, 1, 3) → [6, 18, 54]';
                         out.className = 'output success';
                     } else {
                         let msg = '❌ La fonction modifiée doit : ';
@@ -1496,7 +1550,7 @@
                     </div>
                     <p>
                         La raison d'une suite géométrique est le quotient de deux termes
-                        consécutifs : $q = \dfrac{u_{n+1}}{u_n}$.
+                        consécutifs : \(q = \dfrac{u_{n+1}}{u_n}\).
                     </p>
                 </div>
             </div>
@@ -1508,21 +1562,21 @@
                 <div id="sol2" class="solution-cachee">
                     <p>
                         La fonction <code>mystere</code> calcule la somme des termes d'une suite
-                        géométrique en partant de $u_0$, et retourne le <strong>premier indice
+                        géométrique en partant de \(u_0\), et retourne le <strong>premier indice
                         <code>i</code></strong> pour lequel la somme partielle dépasse 50.
-                        Si aucune somme ne dépasse 50 sur les $n$ premiers termes, elle retourne
+                        Si aucune somme ne dépasse 50 sur les \(n\) premiers termes, elle retourne
                         <code>-1</code>.
                     </p>
                     <p>
-                        Pour $u_0=2$, $q=3$, $n=4$ :
+                        Pour \(u_0=2\), \(q=3\), \(n=4\) :
                         <br />
-                        $S_0 = 2$ (≤ 50)
+                        \(S_0 = 2\) (≤ 50)
                         <br />
-                        $S_1 = 2+6 = 8$ (≤ 50)
+                        \(S_1 = 2+6 = 8\) (≤ 50)
                         <br />
-                        $S_2 = 8+18 = 26$ (≤ 50)
+                        \(S_2 = 8+18 = 26\) (≤ 50)
                         <br />
-                        $S_3 = 26+54 = 80$ (&gt; 50) → retourne <strong>3</strong>.
+                        \(S_3 = 26+54 = 80\) (&gt; 50) → retourne <strong>3</strong>.
                     </p>
                 </div>
             </div>
@@ -1543,8 +1597,8 @@
                         </span>
                     </div>
                     <p>
-                        On utilise <code>range(p, m+1)</code> pour inclure l'indice $m$.
-                        Exemple : <code>termes_geo(2, 3, 1, 3)</code> retourne $[6, 18, 54]$.
+                        On utilise <code>range(p, m+1)</code> pour inclure l'indice \(m\).
+                        Exemple : <code>termes_geo(2, 3, 1, 3)</code> retourne \([6, 18, 54]\).
                     </p>
                 </div>
             </div>
@@ -1560,17 +1614,17 @@
                 <div style="background:#f1f5f9;border-radius:14px;padding:1.2rem;text-align:center;">
                     <div style="font-size:2rem;">📐</div>
                     <strong>Définition</strong>
-                    <p style="font-size:0.9rem;margin:0.4rem 0 0;">$u_{n+1} = q \times u_n$</p>
+                    <p style="font-size:0.9rem;margin:0.4rem 0 0;">\(u_{n+1} = q \times u_n\)</p>
                 </div>
                 <div style="background:#f1f5f9;border-radius:14px;padding:1.2rem;text-align:center;">
                     <div style="font-size:2rem;">🧮</div>
                     <strong>Formule explicite</strong>
-                    <p style="font-size:0.9rem;margin:0.4rem 0 0;">$u_n = u_0 \times q^n$</p>
+                    <p style="font-size:0.9rem;margin:0.4rem 0 0;">\(u_n = u_0 \times q^n\)</p>
                 </div>
                 <div style="background:#f1f5f9;border-radius:14px;padding:1.2rem;text-align:center;">
                     <div style="font-size:2rem;">➕</div>
                     <strong>Somme</strong>
-                    <p style="font-size:0.9rem;margin:0.4rem 0 0;">$S_n = u_0 \dfrac{1-q^n}{1-q}$</p>
+                    <p style="font-size:0.9rem;margin:0.4rem 0 0;">\(S_n = u_0 \dfrac{1-q^n}{1-q}\)</p>
                 </div>
                 <div style="background:#f1f5f9;border-radius:14px;padding:1.2rem;text-align:center;">
                     <div style="font-size:2rem;">🐍</div>
@@ -1582,9 +1636,9 @@
             <div class="info-box">
                 <strong>✅ Ce qu'il faut retenir :</strong>
                 <ul style="margin-top:0.4rem;padding-left:1.5rem;">
-                    <li>Une suite géométrique est définie par son premier terme $u_0$ et sa raison $q$.</li>
+                    <li>Une suite géométrique est définie par son premier terme \(u_0\) et sa raison \(q\).</li>
                     <li>La formule explicite permet un calcul direct de n'importe quel terme.</li>
-                    <li>La somme des termes consécutifs utilise une formule simple (attention au cas $q=1$).</li>
+                    <li>La somme des termes consécutifs utilise une formule simple (attention au cas \(q=1\)).</li>
                     <li>En Python, on utilise <code>for</code> pour un nombre connu d'itérations,
                         <code>while</code> pour une condition d'arrêt, et <code>if/else</code> pour
                         traiter les cas particuliers.
@@ -1649,17 +1703,12 @@
     </div>
 
     <!-- ============================================
-    JAVASCRIPT COMPLÉMENTAIRE
+    JAVASCRIPT COMPLÉMENTAIRE + DYNAMIQUE + PAN/ZOOM + AXE VERTICAL ADAPTÉ
     ============================================ -->
     <script>
-        // Basculer l'affichage des solutions
-        function toggleSolution(id) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.classList.toggle('visible');
-        }
-
+        // ------------------------------------------------------------
         // Gestion de la modale
+        // ------------------------------------------------------------
         function ouvrirModal() {
             document.getElementById('modalCopyright').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1675,23 +1724,445 @@
                 fermerModal();
             }
         }
-
-        // Fermer avec la touche Échap
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                fermerModal();
+            if (e.key === 'Escape') fermerModal();
+        });
+
+        // ------------------------------------------------------------
+        // Gestion des solutions
+        // ------------------------------------------------------------
+        function toggleSolution(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('visible');
+        }
+
+        // ------------------------------------------------------------
+        // DYNAMIQUE : mise à jour de tous les affichages
+        // ------------------------------------------------------------
+        // Éléments de contrôle
+        const u0Input = document.getElementById('u0_input');
+        const qInput = document.getElementById('q_input');
+        const nInput = document.getElementById('n_input');
+        const btnRandom = document.getElementById('btnRandom');
+
+        // Éléments d'affichage
+        const dynU0 = document.getElementById('dyn_u0');
+        const dynQ = document.getElementById('dyn_q');
+        const dynN = document.getElementById('dyn_n');
+        const dynTermes = document.getElementById('dyn_termes');
+        const dynSomme = document.getElementById('dyn_somme');
+
+        const exU0 = document.getElementById('ex_u0');
+        const exQ = document.getElementById('ex_q');
+        const exTermesAff = document.getElementById('ex_termes_aff');
+        const ex2U0 = document.getElementById('ex2_u0');
+        const ex2Q = document.getElementById('ex2_q');
+        const ex2U0_2 = document.getElementById('ex2_u0_2');
+        const ex2Q_2 = document.getElementById('ex2_q_2');
+        const ex2Q3 = document.getElementById('ex2_q3');
+        const ex2U3 = document.getElementById('ex2_u3');
+        const ex2Terms = document.getElementById('ex2_terms');
+
+        const sumU0 = document.getElementById('sum_u0');
+        const sumQ = document.getElementById('sum_q');
+        const sumN = document.getElementById('sum_n');
+        const sumN2 = document.getElementById('sum_n2');
+        const sumN3 = document.getElementById('sum_n3');
+        const sumU0_2 = document.getElementById('sum_u0_2');
+        const sumQ_n = document.getElementById('sum_q_n');
+        const sumQ_2 = document.getElementById('sum_q_2');
+        const sumResult = document.getElementById('sum_result');
+        const sumTermsAff = document.getElementById('sum_terms_aff');
+        const sumResult2 = document.getElementById('sum_result2');
+
+        const tbody = document.getElementById('dyn_tbody');
+
+        // Canvas
+        const canvas = document.getElementById('canvasSuite');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width,
+            H = canvas.height;
+        const pad = { top: 40, bottom: 50, left: 60, right: 30 };
+        const graphW = W - pad.left - pad.right;
+        const graphH = H - pad.top - pad.bottom;
+
+        // ------------------------------------------------------------
+        // Variables de transformation (pan et zoom)
+        // ------------------------------------------------------------
+        let offsetX = 0;
+        let offsetY = 0;
+        let scale = 1;
+
+        // ------------------------------------------------------------
+        // Fonction pour calculer une échelle "propre" pour un intervalle
+        // ------------------------------------------------------------
+        function niceScaleRange(minVal, maxVal, nbTicks) {
+            if (maxVal - minVal === 0) {
+                let center = minVal;
+                return { min: center - 1, max: center + 1, step: 1 };
+            }
+            let range = maxVal - minVal;
+            let margin = range * 0.15;
+            let rMin = minVal - margin;
+            let rMax = maxVal + margin;
+
+            let roughStep = (rMax - rMin) / nbTicks;
+            let exp = Math.floor(Math.log10(roughStep));
+            let frac = roughStep / Math.pow(10, exp);
+            let niceFrac;
+            if (frac <= 1.5) niceFrac = 1;
+            else if (frac <= 3.5) niceFrac = 2;
+            else if (frac <= 7.5) niceFrac = 5;
+            else niceFrac = 10;
+            let niceStep = niceFrac * Math.pow(10, exp);
+
+            let niceMin = Math.floor(rMin / niceStep) * niceStep;
+            let niceMax = Math.ceil(rMax / niceStep) * niceStep;
+            let nb = Math.ceil((niceMax - niceMin) / niceStep);
+            if (nb < nbTicks) {
+                let extra = (nbTicks - nb) * niceStep / 2;
+                niceMin = Math.floor((niceMin - extra) / niceStep) * niceStep;
+                niceMax = Math.ceil((niceMax + extra) / niceStep) * niceStep;
+            }
+            return { min: niceMin, max: niceMax, step: niceStep };
+        }
+
+        // ------------------------------------------------------------
+        // Dessin du canvas avec transformation et axe vertical adapté
+        // ------------------------------------------------------------
+        function drawCanvas(u0, q, n, termes) {
+            ctx.clearRect(0, 0, W, H);
+
+            if (n === 0 || !termes || termes.length === 0) {
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "16px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("Aucun terme à afficher", W / 2, H / 2);
+                return;
+            }
+
+            let minTerm = Math.min(...termes);
+            let maxTerm = Math.max(...termes);
+            let range = maxTerm - minTerm;
+            if (range === 0) {
+                let center = minTerm;
+                minTerm = center - 0.5;
+                maxTerm = center + 0.5;
+                range = 1;
+            }
+
+            const nbTicksTarget = 6;
+            const scaleInfo = niceScaleRange(minTerm, maxTerm, nbTicksTarget);
+            const niceMin = scaleInfo.min;
+            const niceMax = scaleInfo.max;
+            const step = scaleInfo.step;
+
+            const plotMin = niceMin;
+            const plotMax = niceMax;
+            const nMax = n - 1;
+
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+
+            // Grille horizontale (y)
+            ctx.strokeStyle = "#e2e8f0";
+            ctx.lineWidth = 0.5;
+            let v = niceMin;
+            while (v <= niceMax + step / 2) {
+                let roundedV = parseFloat(v.toFixed(10));
+                let y = pad.top + graphH - ((roundedV - plotMin) / (plotMax - plotMin)) * graphH;
+                if (y >= pad.top - 10 && y <= H - pad.bottom + 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(pad.left, y);
+                    ctx.lineTo(W - pad.right, y);
+                    ctx.stroke();
+                    let label;
+                    let absV = Math.abs(roundedV);
+                    if (absV < 0.001) label = "0";
+                    else if (absV < 0.01) label = roundedV.toFixed(4);
+                    else if (absV < 1) label = roundedV.toFixed(3);
+                    else if (absV < 10) label = roundedV.toFixed(2);
+                    else if (absV < 1000) label = roundedV.toFixed(1);
+                    else label = roundedV.toExponential(2);
+                    ctx.fillStyle = "#475569";
+                    ctx.font = "12px sans-serif";
+                    ctx.textAlign = "right";
+                    ctx.fillText(label, pad.left - 8, y + 4);
+                }
+                v += step;
+            }
+
+            // Grille verticale (indices n)
+            for (let i = 0; i <= nMax; i++) {
+                const x = pad.left + (i / nMax) * graphW;
+                ctx.beginPath();
+                ctx.moveTo(x, pad.top);
+                ctx.lineTo(x, H - pad.bottom);
+                ctx.stroke();
+                ctx.fillStyle = "#475569";
+                ctx.font = "12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(i, x, H - pad.bottom + 20);
+            }
+
+            // Axes
+            ctx.strokeStyle = "#0f172a";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, pad.top);
+            ctx.lineTo(pad.left, H - pad.bottom);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pad.left, pad.top + graphH);
+            ctx.lineTo(W - pad.right, pad.top + graphH);
+            ctx.stroke();
+
+            // Courbe
+            if (nMax > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = "#f59e0b";
+                ctx.lineWidth = 2.5;
+                const steps = nMax * 30;
+                for (let t = 0; t <= steps; t++) {
+                    const idx = t / 30;
+                    const val = u0 * Math.pow(q, idx);
+                    const x = pad.left + (idx / nMax) * graphW;
+                    const y = pad.top + graphH - ((val - plotMin) / (plotMax - plotMin)) * graphH;
+                    if (t === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            // Points
+            for (let i = 0; i < termes.length; i++) {
+                const x = pad.left + (i / nMax) * graphW;
+                const y = pad.top + graphH - ((termes[i] - plotMin) / (plotMax - plotMin)) * graphH;
+                ctx.beginPath();
+                ctx.arc(x, y, 6 / scale, 0, 2 * Math.PI);
+                ctx.fillStyle = "#3b82f6";
+                ctx.fill();
+                ctx.strokeStyle = "#1e293b";
+                ctx.lineWidth = 1.5 / scale;
+                ctx.stroke();
+                let label;
+                let v = termes[i];
+                let absV = Math.abs(v);
+                if (absV < 0.001) label = "0";
+                else if (absV < 0.01) label = v.toFixed(4);
+                else if (absV < 1) label = v.toFixed(3);
+                else if (absV < 100) label = v.toFixed(2);
+                else if (absV < 10000) label = v.toFixed(1);
+                else label = v.toExponential(2);
+                ctx.fillStyle = "#0f172a";
+                ctx.font = `bold ${12 / scale}px sans-serif`;
+                ctx.textAlign = "center";
+                ctx.fillText(label, x, y - 12 / scale);
+            }
+
+            ctx.restore();
+
+            // Légende fixe
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "13px sans-serif";
+            ctx.textAlign = "left";
+            let qDisplay = q;
+            if (Number.isInteger(q)) qDisplay = q.toString();
+            else qDisplay = q.toFixed(4);
+            ctx.fillText("u₀ = " + u0.toFixed(4) + ", q = " + qDisplay, pad.left + 10, pad.top + 22);
+        }
+
+        // ------------------------------------------------------------
+        // Gestion des événements de la souris pour pan/zoom
+        // ------------------------------------------------------------
+        let isDragging = false;
+        let startX, startY;
+        let startOffsetX, startOffsetY;
+
+        canvas.addEventListener('mousedown', function(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            isDragging = true;
+            startX = mouseX;
+            startY = mouseY;
+            startOffsetX = offsetX;
+            startOffsetY = offsetY;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const dx = mouseX - startX;
+            const dy = mouseY - startY;
+            offsetX = startOffsetX + dx;
+            offsetY = startOffsetY + dy;
+            const u0 = parseFloat(u0Input.value) || 0;
+            const q = parseFloat(qInput.value) || 1;
+            const n = parseInt(nInput.value, 10) || 1;
+            const termes = [];
+            for (let i = 0; i < n; i++) {
+                termes.push(u0 * Math.pow(q, i));
+            }
+            drawCanvas(u0, q, n, termes);
+        });
+
+        window.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                canvas.style.cursor = 'grab';
             }
         });
 
-        // Initialisation des outputs
-        document.querySelectorAll('.output').forEach(el => {
-            if (!el.textContent || el.textContent.trim() === '') {
-                el.textContent = 'Prêt.';
+        canvas.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.min(Math.max(scale * delta, 0.1), 10);
+
+            const xTrans = (mouseX - offsetX) / scale;
+            const yTrans = (mouseY - offsetY) / scale;
+            offsetX = mouseX - xTrans * newScale;
+            offsetY = mouseY - yTrans * newScale;
+            scale = newScale;
+
+            const u0 = parseFloat(u0Input.value) || 0;
+            const q = parseFloat(qInput.value) || 1;
+            const n = parseInt(nInput.value, 10) || 1;
+            const termes = [];
+            for (let i = 0; i < n; i++) {
+                termes.push(u0 * Math.pow(q, i));
             }
+            drawCanvas(u0, q, n, termes);
+        }, { passive: false });
+
+        document.getElementById('resetViewBtn').addEventListener('click', function() {
+            offsetX = 0;
+            offsetY = 0;
+            scale = 1;
+            const u0 = parseFloat(u0Input.value) || 0;
+            const q = parseFloat(qInput.value) || 1;
+            const n = parseInt(nInput.value, 10) || 1;
+            const termes = [];
+            for (let i = 0; i < n; i++) {
+                termes.push(u0 * Math.pow(q, i));
+            }
+            drawCanvas(u0, q, n, termes);
         });
 
-        console.log('📐 Cours sur les suites géométriques chargé avec succès.');
-        console.log('🐍 Python intégré via Brython – pas de print(), seulement return.');
+        // ------------------------------------------------------------
+        // Mise à jour complète
+        // ------------------------------------------------------------
+        function updateAll() {
+            let u0 = parseFloat(u0Input.value);
+            let q = parseFloat(qInput.value);
+            let n = parseInt(nInput.value, 10);
+
+            if (isNaN(u0)) u0 = 0;
+            if (isNaN(q)) q = 1;
+            if (isNaN(n) || n < 1) n = 1;
+            if (n > 15) n = 15;
+            u0Input.value = u0;
+            qInput.value = q;
+            nInput.value = n;
+
+            const termes = [];
+            for (let i = 0; i < n; i++) {
+                termes.push(u0 * Math.pow(q, i));
+            }
+            let somme;
+            if (q === 1) {
+                somme = n * u0;
+            } else {
+                somme = u0 * (1 - Math.pow(q, n)) / (1 - q);
+            }
+
+            const fmt = (x) => {
+                if (Number.isInteger(x)) return x.toString();
+                return parseFloat(x.toFixed(6)).toString();
+            };
+            const termesStr = termes.map(fmt).join(', ');
+
+            dynU0.textContent = fmt(u0);
+            dynQ.textContent = fmt(q);
+            dynN.textContent = n;
+            dynTermes.textContent = termesStr;
+            dynSomme.textContent = fmt(somme);
+
+            exU0.textContent = fmt(u0);
+            exQ.textContent = fmt(q);
+            exTermesAff.textContent = termesStr;
+
+            const u3 = u0 * Math.pow(q, 3);
+            ex2U0.textContent = fmt(u0);
+            ex2Q.textContent = fmt(q);
+            ex2U0_2.textContent = fmt(u0);
+            ex2Q_2.textContent = fmt(q);
+            ex2Q3.textContent = fmt(Math.pow(q, 3));
+            ex2U3.textContent = fmt(u3);
+            const firstTerms = termes.slice(0, 4).map(fmt).join(' → ');
+            ex2Terms.textContent = firstTerms;
+
+            sumU0.textContent = fmt(u0);
+            sumQ.textContent = fmt(q);
+            sumN.textContent = n;
+            sumN2.textContent = n;
+            sumN3.textContent = n;
+            sumU0_2.textContent = fmt(u0);
+            sumQ_n.textContent = fmt(Math.pow(q, n));
+            sumQ_2.textContent = fmt(q);
+            sumResult.textContent = fmt(somme);
+            sumTermsAff.textContent = termesStr;
+            sumResult2.textContent = fmt(somme);
+
+            let tableHtml = '';
+            for (let i = 0; i < n; i++) {
+                tableHtml += `<tr><td>${i}</td><td>${fmt(termes[i])}</td></tr>`;
+            }
+            tbody.innerHTML = tableHtml;
+
+            drawCanvas(u0, q, n, termes);
+        }
+
+        // ------------------------------------------------------------
+        // Événements
+        // ------------------------------------------------------------
+        u0Input.addEventListener('change', updateAll);
+        qInput.addEventListener('change', updateAll);
+        nInput.addEventListener('change', updateAll);
+        u0Input.addEventListener('input', updateAll);
+        qInput.addEventListener('input', updateAll);
+        nInput.addEventListener('input', updateAll);
+
+        btnRandom.addEventListener('click', function() {
+            let u0 = (Math.random() * 20 - 10);
+            u0 = Math.round(u0 * 10) / 10;
+            let q = (Math.random() * 6 - 3);
+            q = Math.round(q * 20) / 20;
+            let n = Math.floor(Math.random() * 15) + 1;
+            u0Input.value = u0;
+            qInput.value = q;
+            nInput.value = n;
+            updateAll();
+        });
+
+        updateAll();
+
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(updateAll, 150);
+        });
+
+        console.log('📐 Cours dynamique mis à jour.');
+        console.log('✅ Aucune balise HTML à l’intérieur des délimiteurs \\(...\\) ou \\[...\\].');
     </script>
 
 </body>

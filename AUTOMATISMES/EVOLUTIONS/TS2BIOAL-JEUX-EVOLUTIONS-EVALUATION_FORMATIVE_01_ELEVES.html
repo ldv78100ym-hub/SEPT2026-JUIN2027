@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Grand Défi des Évolutions — Version équipe</title>
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    chtml: { scale: 1.05 },
+    startup: { typeset: false }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+<style>
+  :root {
+    --bleufonce: #143c78;
+    --rouge: #b41e1e;
+    --vert: #148246;
+    --orange: #e67814;
+    --violet: #6e1e8c;
+    --grisclair: #f0f0f0;
+    --or: #dcaa14;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    margin: 0; padding: 0;
+    background: #eef1f5; color: #222; line-height: 1.55;
+  }
+
+  #controls {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+    padding: 10px 20px; background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
+  }
+  #timer-box {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 16px;
+    background: var(--bleufonce);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    transition: 0.3s;
+  }
+  #timer-box.hidden { display: none; }
+  #timer-box #timer-label { font-size: 0.9em; opacity: 0.85; }
+  #timer-box #timer-display {
+    font-size: 1.35em; letter-spacing: 1px;
+    min-width: 72px; text-align: center;
+  }
+  #timer-box.warning { background: var(--orange); animation: pulse 1.5s infinite; }
+  #timer-box.critical { background: var(--rouge); animation: pulse 0.7s infinite; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  #controls .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  #controls button {
+    font-family: inherit; font-size: 0.95em;
+    padding: 8px 16px;
+    border: 2px solid var(--bleufonce);
+    background: white; color: var(--bleufonce);
+    border-radius: 6px; cursor: pointer;
+    transition: 0.15s; font-weight: 600;
+  }
+  #controls button:hover { background: var(--bleufonce); color: white; }
+  #controls button.active {
+    background: var(--vert); border-color: var(--vert); color: white;
+  }
+  #controls button.hidden { display: none; }
+
+  .container {
+    max-width: 950px; margin: 20px auto 40px;
+    background: white; padding: 35px 45px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  header {
+    text-align: center; margin-bottom: 25px;
+    padding-bottom: 15px; border-bottom: 3px solid var(--bleufonce);
+  }
+  h1 { color: var(--bleufonce); margin: 0 0 8px; font-size: 2.1em; }
+  header .subtitle { font-size: 1.05em; color: #555; }
+  header .info { font-size: 0.95em; color: var(--rouge); font-weight: 600; margin-top: 5px; }
+  h2 {
+    color: var(--bleufonce);
+    border-bottom: 2px solid var(--bleufonce);
+    padding-bottom: 6px; margin-top: 30px; font-size: 1.4em;
+  }
+  h3 { font-size: 1.02em; margin: 0 0 10px; }
+  .regle {
+    background: var(--grisclair);
+    border-left: 5px solid var(--bleufonce);
+    padding: 15px 22px; border-radius: 6px; margin: 20px 0;
+  }
+  .regle ul { margin: 8px 0; padding-left: 22px; }
+  .carte {
+    border: 2px solid var(--bleufonce);
+    border-radius: 8px; padding: 15px 20px; margin: 15px 0;
+    background: white; transition: 0.15s;
+  }
+  .carte:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .carte h3 {
+    display: inline-block; padding: 4px 14px;
+    border-radius: 4px; color: white;
+    background: var(--bleufonce); margin-bottom: 12px;
+  }
+  .carte p { margin: 8px 0; }
+  .carte.bleufonce { border-color: var(--bleufonce); }
+  .carte.bleufonce h3 { background: var(--bleufonce); }
+  .carte.rouge { border-color: var(--rouge); }
+  .carte.rouge h3 { background: var(--rouge); }
+  .carte.orange { border-color: var(--orange); }
+  .carte.orange h3 { background: var(--orange); }
+  .carte.violet { border-color: var(--violet); }
+  .carte.violet h3 { background: var(--violet); }
+  .corrige {
+    display: none;
+    background: #e8f5e9;
+    border-left: 4px solid var(--vert);
+    padding: 10px 16px; margin-top: 12px;
+    border-radius: 4px; font-size: 0.96em;
+  }
+  .corrige::before {
+    content: "✔ Corrigé"; display: block;
+    font-weight: 700; color: var(--vert);
+    margin-bottom: 5px; font-size: 0.9em;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  body.show-answers .corrige { display: block; }
+  .rule-highlight {
+    background: #fff8e1; border-left: 4px solid var(--or);
+    padding: 10px 15px; margin: 10px 0;
+    border-radius: 4px; font-size: 0.95em;
+  }
+  .stars { color: var(--or); font-size: 1.15em; letter-spacing: 2px; }
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 15px 0; font-size: 0.95em;
+  }
+  table th, table td {
+    border: 1px solid #ccc; padding: 8px 12px; text-align: center;
+  }
+  table th { background: var(--bleufonce); color: white; font-weight: 600; }
+  table tr:nth-child(even) td { background: #f8f9fb; }
+  .fiche-table th { background: var(--orange); }
+  .fiche-table td.score-cell {
+    font-weight: 700;
+    color: var(--bleufonce);
+    font-size: 1.05em;
+  }
+  .fiche-table td.score-cell.total {
+    background: #fff8e1;
+    color: var(--orange);
+    font-size: 1.15em;
+  }
+  .final-message {
+    text-align: center; font-size: 1.3em;
+    font-weight: 700; color: var(--bleufonce); margin-top: 40px;
+  }
+  .intro { font-style: italic; color: #555; }
+  .euro, .pct { white-space: nowrap; }
+  #loader {
+    text-align: center; padding: 60px 20px;
+    font-style: italic; color: #666; font-size: 1.1em;
+  }
+  #loader.hidden { display: none; }
+
+  .team-card {
+    background: linear-gradient(135deg, #f0f4fb 0%, #e8eefa 100%);
+    border: 2px solid var(--bleufonce);
+    border-radius: 8px; padding: 18px 24px; margin: 20px 0;
+  }
+  .team-card h2 {
+    margin: 0 0 12px; border: none; padding: 0;
+    font-size: 1.15em; color: var(--bleufonce);
+  }
+  .team-card .field {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 10px; margin-bottom: 8px;
+  }
+  .team-card .field label {
+    min-width: 130px; font-weight: 600;
+    color: var(--bleufonce); font-size: 0.95em;
+  }
+  .team-card .field input {
+    flex: 1; min-width: 180px;
+    padding: 6px 10px;
+    border: 2px solid #ccc; border-radius: 4px;
+    font-family: inherit; font-size: 0.95em;
+  }
+  .team-card .field input:focus {
+    outline: none; border-color: var(--bleufonce);
+    box-shadow: 0 0 0 3px rgba(20,60,120,0.1);
+  }
+
+  #start-screen {
+    text-align: center; padding: 40px 20px;
+    background: linear-gradient(135deg, #fff8e1 0%, #ffeaa7 100%);
+    border: 2px dashed var(--orange);
+    border-radius: 12px; margin: 30px 0;
+  }
+  #start-screen h2 {
+    border: none; color: var(--orange);
+    font-size: 1.5em; margin-top: 0;
+  }
+  #start-screen p {
+    font-size: 1.05em; color: #555;
+    max-width: 600px; margin: 15px auto;
+  }
+  #start-btn {
+    display: inline-block; padding: 18px 50px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 10px;
+    font-family: inherit; font-size: 1.2em;
+    font-weight: 700; cursor: pointer;
+    transition: 0.15s; margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(230,120,20,0.3);
+  }
+  #start-btn:hover:not(:disabled) {
+    background: #c9620a; transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(230,120,20,0.4);
+  }
+  #start-btn:disabled {
+    background: #bbb; cursor: not-allowed; box-shadow: none;
+  }
+  #start-btn-hint {
+    display: block; margin-top: 10px;
+    font-size: 0.9em; color: #888; font-style: italic;
+  }
+
+  .progress-bar {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 8px;
+    margin: 25px 0 15px;
+  }
+  .step {
+    flex: 1; text-align: center;
+    padding: 10px 5px; border-radius: 6px;
+    background: #e8eefa; color: #666;
+    font-weight: 600; font-size: 0.9em;
+    border: 2px solid transparent;
+    transition: 0.2s; user-select: none;
+  }
+  .step.active {
+    background: var(--bleufonce); color: white;
+    border-color: var(--bleufonce);
+    box-shadow: 0 3px 8px rgba(20,60,120,0.25);
+  }
+  .step.done {
+    background: var(--vert); color: white;
+    border-color: var(--vert);
+  }
+  .step.done::before { content: "✓ "; font-weight: 700; }
+  .step.clickable {
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .step.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    filter: brightness(1.05);
+  }
+  .step-title {
+    text-align: center; color: var(--bleufonce);
+    font-size: 1em; font-style: italic;
+    margin: 5px 0 15px; font-weight: 600;
+  }
+
+  .input-row {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 10px; margin-top: 12px;
+    padding: 10px 14px; background: #f8f9fb;
+    border-radius: 6px; border-left: 3px solid var(--bleufonce);
+  }
+  .input-row label {
+    font-weight: 600; color: var(--bleufonce); white-space: nowrap;
+  }
+  .input-row input {
+    flex: 1; min-width: 220px; max-width: 320px;
+    padding: 8px 12px;
+    border: 2px solid #ccc; border-radius: 4px;
+    font-family: inherit; font-size: 1em;
+    transition: 0.15s;
+  }
+  .input-row input::placeholder {
+    color: #999;
+    font-style: italic;
+    font-size: 0.92em;
+  }
+  .input-row input:focus {
+    outline: none; border-color: var(--bleufonce);
+    box-shadow: 0 0 0 3px rgba(20,60,120,0.1);
+  }
+  .input-row input.correct {
+    border-color: var(--vert); background: #e8f5e9;
+  }
+  .input-row input.incorrect {
+    border-color: var(--rouge); background: #ffebee;
+  }
+  .input-row input:read-only {
+    background: #f0f0f0; cursor: not-allowed;
+  }
+  .input-row .feedback {
+    font-size: 0.95em; font-weight: 700; min-height: 1.2em;
+  }
+  .input-row .feedback.correct { color: var(--vert); }
+  .input-row .feedback.incorrect { color: var(--rouge); }
+
+  .nav-area {
+    margin-top: 30px; padding-top: 20px;
+    border-top: 2px dashed #ddd; text-align: center;
+  }
+  #progress-msg {
+    color: #666; font-style: italic;
+    margin: 0 0 15px; font-size: 0.95em;
+  }
+  #next-btn {
+    display: inline-block; padding: 14px 40px;
+    background: var(--bleufonce); color: white;
+    border: none; border-radius: 8px;
+    font-family: inherit; font-size: 1.1em;
+    font-weight: 700; cursor: pointer;
+    transition: 0.15s;
+  }
+  #next-btn:hover:not(:disabled) {
+    background: #0d2a5a; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(20,60,120,0.3);
+  }
+  #next-btn:disabled { background: #bbb; cursor: not-allowed; }
+  #next-btn.hidden { display: none; }
+
+  .envelope-header {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px;
+    background: var(--violet); color: white;
+    padding: 12px 20px;
+    border-radius: 8px 8px 0 0;
+    margin-top: 25px; font-weight: 600;
+  }
+  .envelope-header .env-counter { font-size: 1.05em; }
+  .envelope-header .env-pts {
+    font-size: 0.9em; opacity: 0.9;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 10px; border-radius: 12px;
+  }
+  .envelope-dots {
+    display: flex; justify-content: center;
+    gap: 8px; margin: 12px 0; flex-wrap: wrap;
+  }
+  .envelope-dots .dot {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #e8eefa; color: #999;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85em;
+    border: 2px solid #ccc; transition: 0.2s;
+    user-select: none;
+  }
+  .envelope-dots .dot.seen {
+    background: var(--violet); color: white; border-color: var(--violet);
+  }
+  .envelope-dots .dot.current {
+    background: white; color: var(--violet);
+    border-color: var(--violet); border-width: 3px;
+    box-shadow: 0 0 0 3px rgba(110,30,140,0.15);
+    transform: scale(1.1);
+  }
+  .envelope-dots .dot.correct {
+    background: var(--vert); border-color: var(--vert); color: white;
+  }
+  .envelope-dots .dot.incorrect {
+    background: var(--rouge); border-color: var(--rouge); color: white;
+  }
+  #envelope-area { min-height: 220px; margin-bottom: 20px; }
+  #envelope-area .carte {
+    margin-top: 0;
+    border-top-left-radius: 0; border-top-right-radius: 0;
+    animation: slideIn 0.3s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .envelope-nav {
+    display: flex; justify-content: center;
+    gap: 10px; margin-top: 20px; flex-wrap: wrap;
+  }
+  .envelope-nav button {
+    padding: 14px 40px; border: none;
+    border-radius: 8px; font-family: inherit;
+    font-size: 1.05em; font-weight: 700;
+    cursor: pointer; transition: 0.15s;
+    min-width: 200px;
+  }
+  #next-envelope-btn { background: var(--violet); color: white; }
+  #next-envelope-btn:hover:not(:disabled) {
+    background: #561a70; transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(110,30,140,0.3);
+  }
+  #next-envelope-btn:disabled { background: #bbb; cursor: not-allowed; }
+
+  .envelope-nav-post-validate {
+    display: flex; justify-content: center;
+    gap: 10px; margin-top: 20px; flex-wrap: wrap;
+  }
+  .envelope-nav-post-validate button {
+    padding: 12px 30px; border: none;
+    border-radius: 8px; font-family: inherit;
+    font-size: 1em; font-weight: 700;
+    cursor: pointer; transition: 0.15s;
+  }
+  .envelope-nav-post-validate .nav-prev {
+    background: white; color: var(--violet);
+    border: 2px solid var(--violet);
+  }
+  .envelope-nav-post-validate .nav-prev:hover:not(:disabled) {
+    background: var(--violet); color: white;
+  }
+  .envelope-nav-post-validate .nav-next {
+    background: var(--violet); color: white;
+  }
+  .envelope-nav-post-validate .nav-next:hover:not(:disabled) {
+    background: #561a70;
+  }
+  .envelope-nav-post-validate button:disabled {
+    background: #eee; color: #999; border-color: #ddd;
+    cursor: not-allowed;
+  }
+
+  #timeout-overlay {
+    position: fixed; inset: 0;
+    background: rgba(20, 30, 60, 0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  #timeout-overlay.visible { opacity: 1; pointer-events: auto; }
+  #timeout-overlay .msg {
+    background: white; padding: 40px 60px;
+    border-radius: 16px; text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    animation: popIn 0.4s ease-out;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  #timeout-overlay h2 {
+    border: none; color: var(--rouge);
+    font-size: 2em; margin: 0 0 15px;
+  }
+  #timeout-overlay p { font-size: 1.2em; color: #555; margin: 10px 0; }
+
+  /* ---------- PIED DE PAGE / DROITS D'AUTEUR ---------- */
+  #copyright-footer {
+    text-align: center;
+    padding: 25px 20px 40px;
+    background: #f8f9fb;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 30px;
+  }
+  #copyright-btn {
+    font-family: inherit;
+    font-size: 0.95em;
+    padding: 12px 26px;
+    background: white;
+    color: var(--bleufonce);
+    border: 2px solid var(--bleufonce);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.15s;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  #copyright-btn:hover {
+    background: var(--bleufonce);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(20,60,120,0.25);
+  }
+  #copyright-footer .footer-meta {
+    font-size: 0.82em;
+    color: #888;
+    margin-top: 12px;
+    font-style: italic;
+  }
+
+  #copyright-modal {
+    position: fixed; inset: 0;
+    background: rgba(20, 30, 60, 0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 20px;
+  }
+  #copyright-modal.visible {
+    opacity: 1; pointer-events: auto;
+  }
+  #copyright-modal .modal-content {
+    background: white;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    padding: 32px 38px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    animation: popIn 0.35s ease-out;
+    position: relative;
+  }
+  #copyright-modal h2 {
+    border: none;
+    color: var(--bleufonce);
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: 1.5em;
+    text-align: center;
+  }
+  #copyright-modal .author-line {
+    text-align: center;
+    font-size: 1em;
+    color: #444;
+    margin-bottom: 20px;
+  }
+  #copyright-modal .author-line strong { color: var(--bleufonce); }
+  #copyright-modal h3 {
+    color: var(--violet);
+    font-size: 1.1em;
+    margin: 20px 0 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+  }
+  #copyright-modal p {
+    margin: 10px 0;
+    font-size: 0.97em;
+    color: #333;
+  }
+  #copyright-modal ul {
+    margin: 10px 0;
+    padding-left: 0;
+    list-style: none;
+  }
+  #copyright-modal ul li {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: #f8f9fb;
+    font-size: 0.95em;
+    line-height: 1.5;
+  }
+  #copyright-modal ul li.allowed {
+    background: #e8f5e9;
+    border-left: 4px solid var(--vert);
+  }
+  #copyright-modal ul li.forbidden {
+    background: #ffebee;
+    border-left: 4px solid var(--rouge);
+  }
+  #copyright-modal ul li.attribution {
+    background: #fff8e1;
+    border-left: 4px solid var(--or);
+  }
+  #copyright-modal ul li.contact {
+    background: #e8eefa;
+    border-left: 4px solid var(--bleufonce);
+  }
+  #copyright-modal .modal-close {
+    display: block;
+    margin: 24px auto 0;
+    padding: 12px 36px;
+    background: var(--bleufonce);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  #copyright-modal .modal-close:hover {
+    background: #0d2a5a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(20,60,120,0.3);
+  }
+
+  @media (max-width: 700px) {
+    .container { padding: 20px; margin: 10px; }
+    h1 { font-size: 1.5em; }
+    table { font-size: 0.85em; }
+    .input-row { flex-direction: column; align-items: flex-start; }
+    .input-row input { width: 100%; max-width: none; }
+    .team-card .field { flex-direction: column; align-items: flex-start; }
+    .team-card .field input { width: 100%; }
+    .step { font-size: 0.75em; padding: 8px 3px; }
+    .envelope-dots .dot { width: 30px; height: 30px; font-size: 0.75em; }
+    #controls { flex-direction: column; align-items: stretch; }
+    #timer-box { justify-content: center; }
+    #copyright-modal .modal-content { padding: 24px 20px; }
+    #copyright-modal h2 { font-size: 1.2em; }
+  }
+</style>
+</head>
+
+<body>
+
+<div id="controls">
+  <div id="timer-box" class="hidden">
+    <span id="timer-label">Manche 1</span>
+    <span id="timer-display">12:00</span>
+  </div>
+  <div class="actions">
+    <button id="regen">🔄 Nouvelles valeurs</button>
+    <button id="toggleAnswers" class="hidden">👁️ Afficher les corrigés</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="loader">Chargement des formules…</div>
+  <div id="content"></div>
+</div>
+
+<div id="timeout-overlay">
+  <div class="msg">
+    <h2>⏰ Temps écoulé !</h2>
+    <p id="timeout-text">Passage automatique à la manche suivante…</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DROITS D'AUTEUR -->
+<!-- ============================================================ -->
+<footer id="copyright-footer">
+  <button id="copyright-btn">⚖️ Droits d'auteur</button>
+  <div class="footer-meta">
+    © Septembre 2026 — Yann Merdy — Licence d'utilisation non commerciale
+  </div>
+</footer>
+
+<div id="copyright-modal" role="dialog" aria-labelledby="copyright-title" aria-hidden="true">
+  <div class="modal-content">
+    <h2 id="copyright-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p class="author-line">
+      <strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — Septembre 2026
+    </p>
+
+    <h3>Licence d'Utilisation Non Commerciale</h3>
+    <p>
+      Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+      « Le Grand Défi des Évolutions » (sujets, exercices, corrigés, barèmes,
+      scripts de génération aléatoire, mise en page et interactions) sont la
+      propriété intellectuelle exclusive de l'auteur, Yann Merdy.
+    </p>
+
+    <h3>Conditions</h3>
+    <ul>
+      <li class="allowed">
+        ✅ <strong>Utilisation Privée et Éducative (Autorisée) :</strong>
+        Vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code
+        et son contenu uniquement à des fins personnelles, éducatives et
+        non lucratives. Cela inclut notamment l'usage en classe, en cours
+        particulier, en formation ou dans tout cadre pédagogique non payant.
+      </li>
+      <li class="forbidden">
+        ❌ <strong>Utilisation Commerciale (Interdite) :</strong>
+        Toute utilisation, distribution, intégration ou reproduction du code
+        ou du contenu (total ou partiel) à des fins commerciales, lucratives
+        ou professionnelles est strictement interdite sans un accord écrit
+        préalable et explicite de l'auteur. Cela inclut notamment la revente,
+        l'intégration dans une plateforme payante, l'usage dans un cadre
+        facturé à des clients, ou toute exploitation générant un revenu.
+      </li>
+      <li class="attribution">
+        📝 <strong>Attribution :</strong>
+        Toute reproduction ou modification doit conserver la mention de
+        l'auteur originale (Yann Merdy) ainsi que la présente notice de droits
+        d'auteur, y compris dans les versions dérivées.
+      </li>
+      <li class="contact">
+        ✉️ <strong>Contact :</strong>
+        Pour toute demande d'utilisation commerciale ou de licence spécifique,
+        veuillez contacter l'auteur à l'adresse
+        <strong>yann.merdy@gmail.com</strong>.
+      </li>
+    </ul>
+
+    <button class="modal-close" id="copyright-close">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function numHTML(x, maxDec = 3) {
+  if (typeof x !== 'number' || !isFinite(x)) return String(x);
+  const factor = Math.pow(10, maxDec);
+  const rounded = Math.round(x * factor) / factor;
+  if (Number.isInteger(rounded)) {
+    return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, '&nbsp;');
+  }
+  let s = rounded.toFixed(maxDec).replace(/0+$/, '').replace(/\.$/, '');
+  const [intPart, decPart] = s.split('.');
+  const withSep = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '&nbsp;');
+  return decPart ? withSep + ',' + decPart : withSep;
+}
+
+function texNum(x, maxDec = 3) {
+  if (typeof x !== 'number' || !isFinite(x)) return String(x);
+  const factor = Math.pow(10, maxDec);
+  const rounded = Math.round(x * factor) / factor;
+  if (Number.isInteger(rounded)) {
+    return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, '\\,');
+  }
+  let s = rounded.toFixed(maxDec).replace(/0+$/, '').replace(/\.$/, '');
+  const [intPart, decPart] = s.split('.');
+  const withSep = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '\\,');
+  return decPart ? withSep + '{,}' + decPart : withSep;
+}
+
+const PCT = '<span class="pct">&nbsp;%</span>';
+const EURO = '<span class="euro">&nbsp;€</span>';
+
+function pctHTML(x, maxDec = 3) {
+  return numHTML(x, maxDec) + PCT;
+}
+
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+function parseInput(str) {
+  if (!str) return NaN;
+  let s = str.trim().replace(/\s/g, '');
+  s = s.replace(/,/g, '.');
+  s = s.replace(/[^0-9.\-+]/g, '');
+  return parseFloat(s);
+}
+
+function formatFr(v) {
+  if (Number.isInteger(v)) return v.toLocaleString('fr-FR');
+  return parseFloat(v.toFixed(3)).toString().replace('.', ',');
+}
+
+/* =========================================================
+   ÉTAT GLOBAL
+   ========================================================= */
+let currentStep = 1;
+const TOTAL_STEPS = 5;
+let validated = false;
+let gameStarted = false;
+
+let ENVELOPE_ORDER = [];
+let SEEN_ENVELOPES = new Set();
+let envelopePos = 0;
+
+const ROUND_DURATIONS = { 1: 12 * 60, 2: 15 * 60, 3: 12 * 60, 4: 11 * 60 };
+const ROUND_LABELS = { 1: 'Manche 1', 2: 'Manche 2', 3: 'Manche 3', 4: 'Manche 4' };
+let timerStartTime = null;
+let timerInterval = null;
+let currentRound = 1;
+let roundActive = false;
+let timeoutInProgress = false;
+
+const ANSWERS = {};
+
+function registerAllAnswers(d) {
+  ANSWERS.q1 = { value: d.q1.cm, tol: 0.005, pts: 1, manche: 1 };
+  ANSWERS.q2 = { value: d.q2.cm, tol: 0.005, pts: 1, manche: 1 };
+  ANSWERS.q3 = { value: d.q3.t, tol: 0.5, pts: 1, manche: 1 };
+  ANSWERS.q4 = { value: d.q4.t, tol: 0.5, pts: 1, manche: 1 };
+  ANSWERS.q5 = { value: d.q5.t, tol: 0.5, pts: 1, manche: 1 };
+  ANSWERS.q6 = { value: d.q6.T, tol: 0.5, pts: 1, manche: 1 };
+  ANSWERS.q7 = { value: d.q7.p, tol: 0.0005, pts: 1, manche: 1 };
+  ANSWERS.q8 = { value: 2, tol: 0.05, pts: 1, manche: 1 };
+  ANSWERS.q9 = { value: d.q9.cm, tol: 0.0005, pts: 1, manche: 1 };
+  ANSWERS.q10 = { value: d.q10.cm, tol: 0.0005, pts: 1, manche: 1 };
+
+  ANSWERS.defiA = { value: d.defiA.vf, tol: 0.5, pts: 5, manche: 2 };
+  ANSWERS.defiB = { value: Math.round(d.defiB.vf), tol: 1, pts: 5, manche: 2 };
+  ANSWERS.defiC = { value: d.defiC.cm, tol: 0.005, pts: 5, manche: 2 };
+
+  ANSWERS.envA = { value: d.envA.cm, tol: 0.0005, pts: 0, manche: 3 };
+  ANSWERS.envB = { value: d.envB.t2, tol: 0.5,   pts: 0, manche: 3 };
+  ANSWERS.envC = { value: d.envC.t1, tol: 0.5,   pts: 0, manche: 3 };
+  ANSWERS.envD = { value: d.envD.tm, tol: 0.5,   pts: 0, manche: 3 };
+  ANSWERS.envE = { value: d.envE.x,  tol: 0.5,   pts: 0, manche: 3 };
+  ANSWERS.envF = { value: d.envF.T,  tol: 0.5,   pts: 0, manche: 3 };
+
+  ANSWERS.finFacile = { value: d.finFacile.coef, tol: 0.0005, pts: 2, manche: 4 };
+  ANSWERS.finMoyen = { value: d.finMoyen.vf, tol: 0.5, pts: 3, manche: 4 };
+  ANSWERS.finDifficile = { value: d.finDifficile.t, tol: 0.5, pts: 5, manche: 4 };
+}
+
+/* =========================================================
+   GÉNÉRATION DES DONNÉES
+   ========================================================= */
+let G;
+
+function generateData() {
+  const d = {};
+
+  d.q1 = { t: pick([10, 15, 20, 25, 30, 40]) };
+  d.q1.cm = 1 + d.q1.t / 100;
+
+  d.q2 = { t: pick([5, 10, 15, 20, 25, 30]) };
+  d.q2.cm = 1 - d.q2.t / 100;
+
+  d.q3 = { cm: pick([1.10, 1.20, 1.25, 1.40, 1.50, 1.60, 1.75, 2.00]) };
+  d.q3.t = (d.q3.cm - 1) * 100;
+
+  d.q4 = { cm: pick([0.50, 0.60, 0.75, 0.80, 0.85, 0.90, 0.95]) };
+  d.q4.t = (d.q4.cm - 1) * 100;
+
+  d.q5 = { vi: pick([40, 50, 60, 80, 100, 120, 150, 200]),
+           t: pick([10, 20, 25, 50]) };
+  d.q5.vf = d.q5.vi * (1 + d.q5.t / 100);
+
+  d.q6 = { t: pick([10, 15, 20, 25]) };
+  d.q6.cm = Math.pow(1 + d.q6.t / 100, 2);
+  d.q6.T = (d.q6.cm - 1) * 100;
+
+  d.q7 = { a: pick([1.10, 1.15, 1.20, 1.25]),
+           b: pick([0.80, 0.85, 0.90, 0.95]) };
+  d.q7.p = d.q7.a * d.q7.b;
+
+  d.q9 = { t1: pick([10, 15, 20]), t2: pick([10, 20, 25]) };
+  d.q9.cm = (1 + d.q9.t1 / 100) * (1 + d.q9.t2 / 100);
+  d.q9.T = (d.q9.cm - 1) * 100;
+
+  const q10pairs = [[20, 25], [25, 20], [20, 20], [25, 25], [10, 10], [15, 20]];
+  const q10 = pick(q10pairs);
+  d.q10 = { a: q10[0], b: q10[1] };
+  d.q10.cm = (1 - d.q10.a / 100) * (1 + d.q10.b / 100);
+  d.q10.returns = Math.abs(d.q10.cm - 1) < 1e-9;
+
+  d.defiA = {
+    p: pick([400, 500, 600, 800]),
+    t1: pick([10, 15, 20, 25]),
+    t2: pick([10, 15, 20, 25])
+  };
+  d.defiA.cm = (1 - d.defiA.t1 / 100) * (1 + d.defiA.t2 / 100);
+  d.defiA.vf = d.defiA.p * d.defiA.cm;
+  d.defiA.taux = (d.defiA.cm - 1) * 100;
+
+  d.defiB = {
+    n: pick([20000, 25000, 30000, 40000]),
+    t1: pick([3, 4, 5]),
+    t2: pick([4, 5, 6]),
+    t3: pick([2, 3, 4])
+  };
+  d.defiB.cm = (1 - d.defiB.t1 / 100) * (1 + d.defiB.t2 / 100) * (1 - d.defiB.t3 / 100);
+  d.defiB.vf = d.defiB.n * d.defiB.cm;
+  d.defiB.taux = (d.defiB.cm - 1) * 100;
+
+  d.defiC = { t: pick([10, 20, 30, 40]) };
+  d.defiC.cm = (1 + d.defiC.t / 100) * (1 - d.defiC.t / 100);
+  d.defiC.perte = (1 - d.defiC.cm) * 100;
+
+  d.envA = { t1: pick([20, 25, 30]), t2: pick([15, 20, 25]) };
+  d.envA.cm = (1 + d.envA.t1 / 100) * (1 - d.envA.t2 / 100);
+  d.envA.T = (d.envA.cm - 1) * 100;
+  d.envA.retour = (1 / (1 + d.envA.t1 / 100) - 1) * 100;
+
+  d.envB = { vi: pick([200, 250, 300]), t1: pick([10, 20, 25]), t2: pick([15, 20, 25]) };
+  d.envB.vf = d.envB.vi * (1 + d.envB.t1 / 100) * (1 + d.envB.t2 / 100);
+  d.envB.cmG = d.envB.vf / d.envB.vi;
+  d.envB.cm2 = (1 + d.envB.t2 / 100);
+
+  d.envC = {
+    t1: pick([5, 8, 10, 12]), n1: 3,
+    t2: pick([8, 10, 12]),    n2: 2
+  };
+  d.envC.T1 = (Math.pow(1 + d.envC.t1 / 100, d.envC.n1) - 1) * 100;
+  d.envC.T2 = (Math.pow(1 + d.envC.t2 / 100, d.envC.n2) - 1) * 100;
+
+  d.envD = { t1: pick([5, 8, 10]), t2: pick([10, 12, 15]) };
+  d.envD.cm = (1 + d.envD.t1 / 100) * (1 + d.envD.t2 / 100);
+  d.envD.T = (d.envD.cm - 1) * 100;
+  d.envD.tm = (Math.sqrt(d.envD.cm) - 1) * 100;
+
+  d.envE = { t: pick([10, 20, 25]) };
+  d.envE.x = (1 / (1 - d.envE.t / 100) - 1) * 100;
+
+  d.envF = { t1: pick([20, 30, 40]), t2: pick([10, 15, 20]) };
+  d.envF.cm = (1 + d.envF.t1 / 100) * (1 - d.envF.t2 / 100);
+  d.envF.T = (d.envF.cm - 1) * 100;
+
+  d.finFacile = { t: pick([20, 25, 30, 40, 50]) };
+  d.finFacile.coef = 1 / (1 + d.finFacile.t / 100);
+  d.finFacile.taux = (d.finFacile.coef - 1) * 100;
+
+  d.finMoyen = {
+    vi: pick([3000, 4000, 5000, 6000, 8000]),
+    ts: [pick([5, 8, 10]), pick([3, 5, 8]), pick([10, 12, 15]), pick([5, 8, 10])]
+  };
+  d.finMoyen.cm = d.finMoyen.ts.reduce((a, t) => a * (1 + t / 100), 1);
+  d.finMoyen.vf = d.finMoyen.vi * d.finMoyen.cm;
+
+  d.finDifficile = { t: pick([5, 8, 10, 12]), n: pick([3, 4, 5]) };
+  d.finDifficile.cm = Math.pow(1 + d.finDifficile.t / 100, d.finDifficile.n);
+  d.finDifficile.T = (d.finDifficile.cm - 1) * 100;
+
+  return d;
+}
+
+/* =========================================================
+   CONSTRUCTION HTML
+   ========================================================= */
+
+const PRECISIONS = {
+  entier:    "Écrire la réponse ici ... (nombre entier)",
+  dec1:      "Écrire la réponse ici ... (1 décimale max)",
+  dec2:      "Écrire la réponse ici ... (2 décimales max)",
+  dec3:      "Écrire la réponse ici ... (arrondir à 0,001)",
+  dec4:      "Écrire la réponse ici ... (jusqu'à 4 décimales)",
+  centime:   "Écrire la réponse ici ... (arrondir au centime)",
+  centPourcent: "Écrire la réponse ici ... (arrondir à 0,01)"
+};
+
+function inputRow(key, precision = 'entier') {
+  const placeholder = PRECISIONS[precision] || "Écrire la réponse ici ...";
+  return `<div class="input-row">
+    <label for="${key}_input">Réponse de l'équipe :</label>
+    <input type="text" id="${key}_input" data-key="${key}" placeholder="${placeholder}" autocomplete="off">
+    <span class="feedback" id="${key}_feedback"></span>
+  </div>`;
+}
+
+function card(color, title, body, corrige) {
+  return `<div class="carte ${color}">
+    <h3>${title}</h3>
+    ${body}
+    ${corrige ? `<div class="corrige">${corrige}</div>` : ''}
+  </div>`;
+}
+
+function buildHeader() {
+  return `<header>
+    <h1>Le Grand Défi des Évolutions</h1>
+    <div class="subtitle">Jeu mathématique en équipe — Durée : 50 minutes</div>
+    <div class="subtitle">Taux, coefficients multiplicateurs, taux global et moyen</div>
+    <div class="info">Groupes de 3 ou 4 élèves — Le capitaine remplit le document</div>
+  </header>`;
+}
+
+function buildTeamCard() {
+  return `<div class="team-card">
+    <h2>👥 Identification de l'équipe</h2>
+    <div class="field">
+      <label for="team_name">Nom de l'équipe :</label>
+      <input type="text" id="team_name" placeholder="ex : Les Multiplicateurs" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="team_captain">Capitaine :</label>
+      <input type="text" id="team_captain" placeholder="Nom et prénom du capitaine" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="team_members">Membres :</label>
+      <input type="text" id="team_members" placeholder="ex : Alice, Bob, Chloé (3 ou 4 élèves)" autocomplete="off">
+    </div>
+  </div>`;
+}
+
+function buildProgressBar() {
+  return `<div class="progress-bar" id="progress-bar">
+    <div class="step" data-step="1">Manche 1</div>
+    <div class="step" data-step="2">Manche 2</div>
+    <div class="step" data-step="3">Manche 3</div>
+    <div class="step" data-step="4">Manche 4</div>
+    <div class="step" data-step="5">Score</div>
+  </div>
+  <div class="step-title" id="step-title">En attente de démarrage…</div>`;
+}
+
+function buildRegles() {
+  return `<section>
+    <h2>Règles du jeu</h2>
+    <div class="regle">
+      <p><strong>But :</strong> répondre en équipe à toutes les questions du défi sur les évolutions.</p>
+      <p><strong>Organisation :</strong> groupes de <strong>3 ou 4 élèves</strong>. Un ou une <strong>capitaine</strong> est désigné(e) pour remplir le document.</p>
+      <p><strong>Déroulement :</strong> 4 manches chronométrées. <strong>Une seule manche est visible à la fois</strong>.</p>
+      <p><strong>Chronomètre :</strong> chaque manche a une durée fixe. <strong>À la fin du temps imparti, la manche suivante s'affiche automatiquement.</strong> <strong>Aucun retour en arrière n'est possible pendant le défi.</strong></p>
+      <p><strong>Après la validation finale :</strong> la barre de progression devient cliquable. Vous pouvez alors consulter chaque manche et afficher les corrigés.</p>
+    </div>
+    <table>
+      <thead><tr><th>Manche</th><th>Titre</th><th>Durée</th><th>Points max</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Échauffement éclair</td><td>12 min</td><td>10 pts</td></tr>
+        <tr><td>2</td><td>Défis en équipe</td><td>15 min</td><td>15 pts</td></tr>
+        <tr><td>3</td><td>Enveloppe mystère</td><td>12 min</td><td>15 pts</td></tr>
+        <tr><td>4</td><td>Finale « Tout ou rien »</td><td>11 min</td><td>10 pts</td></tr>
+        <tr><td colspan="2"><strong>Total</strong></td><td><strong>50 min</strong></td><td><strong>50 pts</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="rule-highlight">
+      <strong>Format des réponses :</strong> utilisez la virgule ou le point pour les décimales (<code>1,25</code> ou <code>1.25</code>). Les symboles <code>%</code> et <code>€</code> sont optionnels. La précision attendue est indiquée dans chaque champ de saisie.
+    </div>
+  </section>`;
+}
+
+function buildStartScreen() {
+  return `<div id="start-screen">
+    <h2>⏱️ Prêt à démarrer ?</h2>
+    <p>Une fois le défi lancé, le chronomètre démarre immédiatement.</p>
+    <p><strong>Chaque manche a une durée fixe :</strong> à la fin du temps, on passe automatiquement à la manche suivante, sans possibilité de revenir en arrière.</p>
+    <button id="start-btn" disabled>🚀 Commencer le défi (50 minutes)</button>
+    <span id="start-btn-hint">Complétez d'abord les 3 champs d'identification ci-dessus.</span>
+  </div>`;
+}
+
+/* ---------- MANCHE 1 ---------- */
+function buildManche1Content() {
+  const q = G;
+  let h = `<h2>Manche 1 — Échauffement éclair (10 pts)</h2>
+    <p class="intro">1 point par bonne réponse. Le capitaine saisit la réponse validée par l'équipe.</p>`;
+
+  h += card('bleufonce', 'Question 1',
+    `<p>Un prix augmente de ${pctHTML(q.q1.t)}. Quel est le coefficient multiplicateur ?</p>
+     ${inputRow('q1', 'dec2')}`,
+    `<p>$CM = 1 + \\dfrac{${q.q1.t}}{100} = ${texNum(q.q1.cm)}$.</p>`);
+
+  h += card('bleufonce', 'Question 2',
+    `<p>Un prix baisse de ${pctHTML(q.q2.t)}. Quel est le coefficient multiplicateur ?</p>
+     ${inputRow('q2', 'dec2')}`,
+    `<p>$CM = 1 - \\dfrac{${q.q2.t}}{100} = ${texNum(q.q2.cm)}$.</p>`);
+
+  h += card('bleufonce', 'Question 3',
+    `<p>Le coefficient multiplicateur est $${texNum(q.q3.cm)}$. Quel est le taux d'évolution en % ?</p>
+     ${inputRow('q3', 'entier')}`,
+    `<p>$t = (${texNum(q.q3.cm)} - 1) \\times 100 = +${texNum(q.q3.t)}$ ${PCT}.</p>`);
+
+  h += card('bleufonce', 'Question 4',
+    `<p>Le coefficient multiplicateur est $${texNum(q.q4.cm)}$. Quel est le taux d'évolution en % ?</p>
+     ${inputRow('q4', 'entier')}`,
+    `<p>$t = (${texNum(q.q4.cm)} - 1) \\times 100 = ${texNum(q.q4.t)}$ ${PCT}.</p>`);
+
+  h += card('bleufonce', 'Question 5',
+    `<p>Un article passe de $${texNum(q.q5.vi)}$${EURO} à $${texNum(q.q5.vf)}$${EURO}. Quel est le taux d'évolution ?</p>
+     ${inputRow('q5', 'entier')}`,
+    `<p>$t = \\dfrac{${texNum(q.q5.vf)} - ${texNum(q.q5.vi)}}{${texNum(q.q5.vi)}} \\times 100 = +${texNum(q.q5.t)}$ ${PCT}.</p>`);
+
+  h += card('bleufonce', 'Question 6',
+    `<p>Une grandeur augmente de ${pctHTML(q.q6.t)}, puis de ${pctHTML(q.q6.t)}. Quel est le taux global en % ?</p>
+     ${inputRow('q6', 'centPourcent')}`,
+    `<p>$CM_{\\text{global}} = ${texNum(1 + q.q6.t / 100)} \\times ${texNum(1 + q.q6.t / 100)} = ${texNum(q.q6.cm)}$, soit $+${texNum(q.q6.T)}$ ${PCT}.</p>`);
+
+  h += card('bleufonce', 'Question 7',
+    `<p>Que vaut $${texNum(q.q7.a)} \\times ${texNum(q.q7.b)}$ ?</p>
+     ${inputRow('q7', 'dec4')}`,
+    `<p>$${texNum(q.q7.a)} \\times ${texNum(q.q7.b)} = ${texNum(q.q7.p)}$.</p>`);
+
+  h += card('bleufonce', 'Question 8',
+    `<p>Un prix baisse de ${pctHTML(50)}. Par quel coefficient faut-il multiplier pour revenir au prix initial ?</p>
+     ${inputRow('q8', 'entier')}`,
+    `<p>Il faut multiplier par $\\dfrac{1}{0{,}5} = 2$.</p>`);
+
+  h += card('bleufonce', 'Question 9',
+    `<p>Un prix augmente de ${pctHTML(q.q9.t1)}, puis de ${pctHTML(q.q9.t2)}. Quel est le coefficient multiplicateur global ?</p>
+     ${inputRow('q9', 'dec4')}`,
+    `<p>$CM = ${texNum(1 + q.q9.t1 / 100)} \\times ${texNum(1 + q.q9.t2 / 100)} = ${texNum(q.q9.cm)}$, soit $+${texNum(q.q9.T)}$ ${PCT}.</p>`);
+
+  h += card('bleufonce', 'Question 10',
+    `<p>Un prix baisse de ${pctHTML(q.q10.a)}, puis augmente de ${pctHTML(q.q10.b)}. Quel est le coefficient multiplicateur global ?</p>
+     ${inputRow('q10', 'dec4')}`,
+    `<p>$CM = ${texNum(1 - q.q10.a / 100)} \\times ${texNum(1 + q.q10.b / 100)} = ${texNum(q.q10.cm)}$. ${q.q10.returns ? 'Le prix est revenu à sa valeur initiale.' : 'Le prix final est différent du prix initial.'}</p>`);
+
+  return h;
+}
+
+/* ---------- MANCHE 2 ---------- */
+function buildManche2Content() {
+  const d = G;
+  let h = `<h2>Manche 2 — Défis en équipe (15 pts)</h2>
+    <p class="intro">5 points par défi (3 pts démarche, 2 pts résultat). Ici, seule la valeur finale est demandée.</p>`;
+
+  h += card('rouge', 'Défi A',
+    `<p>Un smartphone coûte $${texNum(d.defiA.p)}$${EURO}. Son prix baisse de ${pctHTML(d.defiA.t1)}, puis augmente de ${pctHTML(d.defiA.t2)}.</p>
+     <p><strong>Quel est son prix final (en €) ?</strong></p>
+     ${inputRow('defiA', 'centime')}`,
+    `<p>$CM = ${texNum(1 - d.defiA.t1 / 100)} \\times ${texNum(1 + d.defiA.t2 / 100)} = ${texNum(d.defiA.cm)}$.</p>
+     <p>$V_f = ${texNum(d.defiA.p)} \\times ${texNum(d.defiA.cm)} = ${texNum(d.defiA.vf)}$${EURO}. Le prix a globalement ${d.defiA.cm > 1 ? 'augmenté' : 'baissé'} de $${texNum(Math.abs(d.defiA.taux))}$ ${PCT}.</p>`);
+
+  h += card('rouge', 'Défi B',
+    `<p>Une ville comptait $${texNum(d.defiB.n)}$ habitants en 2015. Elle a perdu ${pctHTML(d.defiB.t1)} d'habitants en 2016, puis gagné ${pctHTML(d.defiB.t2)} en 2017, puis perdu ${pctHTML(d.defiB.t3)} en 2018.</p>
+     <p><strong>Combien d'habitants compte-t-elle fin 2018 (arrondir à l'unité) ?</strong></p>
+     ${inputRow('defiB', 'entier')}`,
+    `<p>$CM = ${texNum(1 - d.defiB.t1 / 100)} \\times ${texNum(1 + d.defiB.t2 / 100)} \\times ${texNum(1 - d.defiB.t3 / 100)} = ${texNum(d.defiB.cm)}$.</p>
+     <p>$V_f = ${texNum(d.defiB.n)} \\times ${texNum(d.defiB.cm)} \\approx ${texNum(Math.round(d.defiB.vf))}$ habitants. Taux global : $${texNum(d.defiB.taux)}$ ${PCT}.</p>`);
+
+  h += card('rouge', 'Défi C',
+    `<p>Un article subit deux évolutions successives : $+${texNum(d.defiC.t)}$ ${PCT} puis $-${texNum(d.defiC.t)}$ ${PCT}.</p>
+     <p><strong>Quel est le coefficient multiplicateur global ?</strong></p>
+     ${inputRow('defiC', 'dec2')}`,
+    `<p>$CM = ${texNum(1 + d.defiC.t / 100)} \\times ${texNum(1 - d.defiC.t / 100)} = ${texNum(d.defiC.cm)}$. Le prix final est inférieur au prix initial de $${texNum(d.defiC.perte)}$ ${PCT}.</p>`);
+
+  return h;
+}
+
+/* ---------- MANCHE 3 : shell ---------- */
+function buildManche3Shell() {
+  return `<h2>Manche 3 — Enveloppe mystère (15 pts)</h2>
+    <div class="regle">
+      <p><strong>Le défi de la persévérance !</strong></p>
+      <p>6 enveloppes apparaissent <strong>une par une, dans un ordre aléatoire</strong>. Une enveloppe donnée <strong>n'apparaît qu'une seule fois</strong>. <strong>Aucun retour en arrière n'est possible pendant le défi.</strong></p>
+      <p><strong>Barème progressif :</strong></p>
+      <table>
+        <thead><tr><th>Réponse correcte</th><th>Étoiles</th><th>Points</th></tr></thead>
+        <tbody>
+          <tr><td>1<sup>re</sup> enveloppe correcte</td><td class="stars">★</td><td>4 pts</td></tr>
+          <tr><td>2<sup>e</sup> enveloppe correcte</td><td class="stars">★★</td><td>5 pts</td></tr>
+          <tr><td>3<sup>e</sup> enveloppe correcte</td><td class="stars">★★★</td><td>6 pts</td></tr>
+          <tr><td colspan="2"><strong>Total maximal</strong></td><td><strong>15 pts</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="envelope-header">
+      <span class="env-counter" id="env-counter">Enveloppe 1 / 6</span>
+      <span class="env-pts" id="env-pts">Valeur : jusqu'à 4 pts</span>
+    </div>
+    <div class="envelope-dots" id="envelope-dots"></div>
+    <div id="envelope-area"></div>
+    <div class="envelope-nav" id="envelope-nav-prev-next">
+      <button id="next-envelope-btn">Enveloppe suivante →</button>
+    </div>
+    <div class="envelope-nav-post-validate" id="envelope-nav-post" style="display:none;">
+      <button class="nav-prev" id="prev-envelope-post">← Enveloppe précédente</button>
+      <button class="nav-next" id="next-envelope-post">Enveloppe suivante →</button>
+    </div>`;
+}
+
+/* ---------- MANCHE 4 ---------- */
+function buildManche4Content() {
+  const d = G;
+  let h = `<h2>Manche 4 — Finale « Tout ou rien » (10 pts)</h2>
+    <p class="intro">3 questions de difficulté croissante (2, 3 et 5 points). Toutes les réponses sont attendues.</p>`;
+
+  h += card('orange', 'Niveau facile (2 pts)',
+    `<p>Un prix augmente de ${pctHTML(d.finFacile.t)}.</p>
+     <p><strong>Quel coefficient appliquer pour revenir au prix initial ?</strong></p>
+     ${inputRow('finFacile', 'dec3')}`,
+    `<p>$CM = ${texNum(1 + d.finFacile.t / 100)}$, coefficient retour $= \\dfrac{1}{${texNum(1 + d.finFacile.t / 100)}} \\approx ${texNum(d.finFacile.coef)}$.</p>
+     <p>Soit un taux de retour de $${texNum(d.finFacile.taux)}$ ${PCT}.</p>`);
+
+  h += card('orange', 'Niveau moyen (3 pts)',
+    `<p>Un capital de $${texNum(d.finMoyen.vi)}$${EURO} subit 4 évolutions : $+${texNum(d.finMoyen.ts[0])}$ ${PCT}, $-${texNum(d.finMoyen.ts[1])}$ ${PCT}, $+${texNum(d.finMoyen.ts[2])}$ ${PCT}, $-${texNum(d.finMoyen.ts[3])}$ ${PCT}.</p>
+     <p><strong>Quel est le capital final (en €) ?</strong></p>
+     ${inputRow('finMoyen', 'centime')}`,
+    `<p>$CM_G = ${d.finMoyen.ts.map(t => texNum(1 + t / 100)).join(' \\times ')} = ${texNum(d.finMoyen.cm)}$.</p>
+     <p>$V_f = ${texNum(d.finMoyen.vi)} \\times ${texNum(d.finMoyen.cm)} = ${texNum(d.finMoyen.vf)}$${EURO}.</p>`);
+
+  h += card('orange', 'Niveau difficile (5 pts)',
+    `<p>Une grandeur a subi ${d.finDifficile.n} évolutions annuelles identiques de taux $t$. Le taux global est $+${texNum(d.finDifficile.T)}$ ${PCT}.</p>
+     <p><strong>Déterminer $t$ (en %).</strong></p>
+     ${inputRow('finDifficile', 'entier')}`,
+    `<p>$(1+t)^{${d.finDifficile.n}} = ${texNum(d.finDifficile.cm)}$, donc $1+t = ${texNum(Math.pow(d.finDifficile.cm, 1 / d.finDifficile.n))}$, soit $t = ${texNum(d.finDifficile.t)}$ ${PCT}.</p>`);
+
+  return h;
+}
+
+/* ---------- SCORE ---------- */
+function buildScoreContent() {
+  return `<h2>Fiche de score de l'équipe</h2>
+    <table class="fiche-table">
+      <thead>
+        <tr><th>Manche</th><th>Points max</th><th>Points obtenus</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1 — Échauffement</td><td>10</td><td id="score-m1" class="score-cell">—</td></tr>
+        <tr><td>2 — Défis</td><td>15</td><td id="score-m2" class="score-cell">—</td></tr>
+        <tr><td>3 — Enveloppes</td><td>15</td><td id="score-m3" class="score-cell">—</td></tr>
+        <tr><td>4 — Finale</td><td>10</td><td id="score-m4" class="score-cell">—</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>50</strong></td><td id="score-total" class="score-cell total"><strong>—</strong></td></tr>
+      </tbody>
+    </table>
+    <p id="score-info" style="text-align:center;color:#666;font-style:italic;">Le défi est terminé. Les réponses sont automatiquement validées.</p>
+    <div class="rule-highlight" style="text-align:center;margin-top:20px;">
+      💡 <strong>Pour consulter les corrigés :</strong> cliquez sur les onglets <em>Manche 1</em> à <em>Manche 4</em> dans la barre de progression, puis cliquez sur <em>« Afficher les corrigés »</em> en haut à droite.
+    </div>`;
+}
+
+/* =========================================================
+   GESTION DES ENVELOPPES (Manche 3)
+   ========================================================= */
+
+function shuffleEnvelopes() {
+  const keys = ['envA', 'envB', 'envC', 'envD', 'envE', 'envF'];
+  for (let i = keys.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+  return keys;
+}
+
+function buildEnvelopeCard(key, position) {
+  const d = G;
+  let body, corrige;
+
+  if (key === 'envA') {
+    body = `<p>Un commerçant augmente ses prix de ${pctHTML(d.envA.t1)}, puis applique une remise de ${pctHTML(d.envA.t2)}.</p>
+            <p><strong>Quel est le coefficient multiplicateur global ?</strong></p>
+            ${inputRow('envA', 'dec4')}`;
+    corrige = `<p>$CM = ${texNum(1 + d.envA.t1 / 100)} \\times ${texNum(1 - d.envA.t2 / 100)} = ${texNum(d.envA.cm)}$.</p>
+               <p>Baisse globale de $${texNum(Math.abs(d.envA.T))}$ ${PCT}.</p>`;
+  } else if (key === 'envB') {
+    body = `<p>Un article passe de $${texNum(d.envB.vi)}$${EURO} à $${texNum(d.envB.vf)}$${EURO} après deux hausses successives. La première hausse est de ${pctHTML(d.envB.t1)}.</p>
+            <p><strong>Quel est le taux $t$ de la deuxième hausse (en %) ?</strong></p>
+            ${inputRow('envB', 'entier')}`;
+    corrige = `<p>$CM_G = \\dfrac{${texNum(d.envB.vf)}}{${texNum(d.envB.vi)}} = ${texNum(d.envB.cmG)}$.</p>
+               <p>$1 + t/100 = \\dfrac{${texNum(d.envB.cmG)}}{${texNum(1 + d.envB.t1 / 100)}} = ${texNum(d.envB.cm2)}$, soit $t = ${texNum(d.envB.t2)}$ ${PCT}.</p>`;
+  } else if (key === 'envC') {
+    body = `<p>Un placement a rapporté ${pctHTML(d.envC.T1)} en ${d.envC.n1} ans, avec le même taux annuel $t_1$.</p>
+            <p><strong>Déterminer $t_1$ (en %).</strong></p>
+            ${inputRow('envC', 'entier')}`;
+    corrige = `<p>$(1 + t_1/100)^{${d.envC.n1}} = ${texNum(1 + d.envC.T1 / 100)}$, donc $t_1 = ${texNum(d.envC.t1)}$ ${PCT}.</p>`;
+  } else if (key === 'envD') {
+    body = `<p>Une population augmente de ${pctHTML(d.envD.t1)} la première année, puis de ${pctHTML(d.envD.t2)} la deuxième.</p>
+            <p><strong>Quel est le taux annuel moyen $t_m$ (en %) ?</strong></p>
+            ${inputRow('envD', 'centPourcent')}`;
+    corrige = `<p>$CM = ${texNum(1 + d.envD.t1 / 100)} \\times ${texNum(1 + d.envD.t2 / 100)} = ${texNum(d.envD.cm)}$.</p>
+               <p>$T = ${texNum(d.envD.T)}$ ${PCT} et $t_m = \\left(\\sqrt{${texNum(d.envD.cm)}} - 1\\right) \\times 100 \\approx ${texNum(d.envD.tm)}$ ${PCT}.</p>`;
+  } else if (key === 'envE') {
+    body = `<p>Une action baisse de ${pctHTML(d.envE.t)}, puis remonte de $x$ ${PCT}. Après ces deux évolutions, elle est revenue exactement à son cours initial.</p>
+            <p><strong>Déterminer $x$ (en %).</strong></p>
+            ${inputRow('envE', 'centPourcent')}`;
+    corrige = `<p>$1 + x/100 = \\dfrac{1}{${texNum(1 - d.envE.t / 100)}} = ${texNum(1 / (1 - d.envE.t / 100))}$, soit $x \\approx ${texNum(d.envE.x)}$ ${PCT}.</p>`;
+  } else if (key === 'envF') {
+    body = `<p>Deux articles identiques subissent : $+${texNum(d.envF.t1)}$ ${PCT} puis $-${texNum(d.envF.t2)}$ ${PCT} (article 1) ; $-${texNum(d.envF.t2)}$ ${PCT} puis $+${texNum(d.envF.t1)}$ ${PCT} (article 2).</p>
+            <p><strong>Quel taux unique (en %) aurait donné le même résultat ?</strong></p>
+            ${inputRow('envF', 'dec1')}`;
+    corrige = `<p>$CM_1 = ${texNum(1 + d.envF.t1 / 100)} \\times ${texNum(1 - d.envF.t2 / 100)} = ${texNum(d.envF.cm)}$. $CM_2$ est identique (commutativité).</p>
+               <p>Taux unique : $${texNum(d.envF.T)}$ ${PCT}.</p>`;
+  }
+
+  const title = `Enveloppe n°${position + 1}`;
+  return card('violet', title, body, corrige);
+}
+
+function renderCurrentEnvelope() {
+  const container = document.getElementById('envelope-area');
+  if (!container) return;
+
+  const key = ENVELOPE_ORDER[envelopePos];
+  if (!key) return;
+
+  SEEN_ENVELOPES.add(key);
+  container.innerHTML = buildEnvelopeCard(key, envelopePos);
+
+  const inp = container.querySelector('input[data-key]');
+  if (inp) {
+    if (validated) {
+      inp.readOnly = true;
+      const q = ANSWERS[key];
+      const val = parseInput(inp.value);
+      const ok = !isNaN(val) && Math.abs(val - q.value) <= q.tol;
+      inp.classList.add(ok ? 'correct' : 'incorrect');
+      const fb = container.querySelector('.feedback');
+      if (fb) {
+        fb.textContent = ok ? '✔' : `✗ (attendu : ${formatFr(q.value)})`;
+        fb.classList.add(ok ? 'correct' : 'incorrect');
+      }
+    } else {
+      inp.addEventListener('input', () => {
+        checkStep3();
+        updateDots();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const btn = document.getElementById('next-envelope-btn');
+          if (btn && !btn.disabled) btn.click();
+        }
+      });
+      setTimeout(() => inp.focus(), 100);
+    }
+  }
+
+  const counter = document.getElementById('env-counter');
+  if (counter) {
+    counter.textContent = `Enveloppe ${envelopePos + 1} / 6`;
+  }
+
+  const ptsInd = document.getElementById('env-pts');
+  if (ptsInd) {
+    const envPts = [4, 5, 6, 'hors barème', 'hors barème', 'hors barème'];
+    const v = envPts[envelopePos];
+    ptsInd.textContent = (typeof v === 'number') ? `Valeur : jusqu'à ${v} pts` : `Hors barème (bonus)`;
+  }
+
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+
+  updateDots();
+  updateEnvelopeNav();
+}
+
+function updateDots() {
+  const dotsContainer = document.getElementById('envelope-dots');
+  if (!dotsContainer) return;
+
+  dotsContainer.innerHTML = ENVELOPE_ORDER.map((key, i) => {
+    let cls = 'dot';
+    if (i === envelopePos) cls += ' current';
+    else if (SEEN_ENVELOPES.has(key)) cls += ' seen';
+
+    if (validated) {
+      const inp = document.getElementById(key + '_input');
+      const q = ANSWERS[key];
+      if (inp) {
+        const val = parseInput(inp.value);
+        const ok = !isNaN(val) && Math.abs(val - q.value) <= q.tol;
+        cls += ok ? ' correct' : ' incorrect';
+      }
+    }
+
+    return `<div class="${cls}" title="Enveloppe ${i + 1}">${i + 1}</div>`;
+  }).join('');
+
+  if (validated) {
+    dotsContainer.querySelectorAll('.dot').forEach((el, i) => {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => {
+        envelopePos = i;
+        renderCurrentEnvelope();
+      });
+    });
+  }
+}
+
+function updateEnvelopeNav() {
+  const nextBtn = document.getElementById('next-envelope-btn');
+  const navPrevNext = document.getElementById('envelope-nav-prev-next');
+  const navPost = document.getElementById('envelope-nav-post');
+
+  if (!nextBtn || !navPrevNext || !navPost) return;
+
+  if (validated) {
+    navPrevNext.style.display = 'none';
+    navPost.style.display = 'flex';
+
+    const prevPost = document.getElementById('prev-envelope-post');
+    const nextPost = document.getElementById('next-envelope-post');
+
+    prevPost.disabled = (envelopePos === 0);
+    prevPost.onclick = () => {
+      if (envelopePos > 0) {
+        envelopePos--;
+        renderCurrentEnvelope();
+      }
+    };
+
+    if (envelopePos >= 5) {
+      nextPost.textContent = 'Terminer la consultation →';
+      nextPost.onclick = () => showStep(5);
+    } else {
+      nextPost.textContent = 'Enveloppe suivante →';
+      nextPost.onclick = () => {
+        envelopePos++;
+        renderCurrentEnvelope();
+      };
+    }
+    return;
+  }
+
+  navPrevNext.style.display = 'flex';
+  navPost.style.display = 'none';
+
+  if (envelopePos >= 5) {
+    nextBtn.textContent = 'Terminer la manche 3 →';
+    nextBtn.onclick = () => showStep(4);
+  } else {
+    nextBtn.textContent = 'Enveloppe suivante →';
+    nextBtn.onclick = () => {
+      envelopePos++;
+      renderCurrentEnvelope();
+      checkStep3();
+    };
+  }
+  nextBtn.disabled = false;
+}
+
+function checkStep3() {
+  if (validated) return;
+  const filled = ENVELOPE_ORDER.filter(key => {
+    const inp = document.getElementById(key + '_input');
+    return inp && inp.value.trim() !== '';
+  }).length;
+
+  const msg = document.getElementById('progress-msg');
+  if (msg) {
+    msg.textContent = `Manche 3 : ${filled} / 6 enveloppes remplies.`;
+    msg.style.color = '#666';
+  }
+  updateEnvelopeNav();
+}
+
+/* =========================================================
+   CHRONOMÈTRE
+   ========================================================= */
+
+function startTimer(round) {
+  clearInterval(timerInterval);
+  if (!ROUND_DURATIONS[round]) return;
+
+  currentRound = round;
+  timerStartTime = Date.now();
+  roundActive = true;
+
+  const box = document.getElementById('timer-box');
+  const label = document.getElementById('timer-label');
+  box.classList.remove('hidden');
+  label.textContent = ROUND_LABELS[round];
+
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    if (!roundActive) return;
+    const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+    const remaining = ROUND_DURATIONS[round] - elapsed;
+    if (remaining <= 0) {
+      handleTimeUp(round);
+    } else {
+      updateTimerDisplay();
+    }
+  }, 250);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timer-display');
+  const box = document.getElementById('timer-box');
+  if (!el || !box) return;
+
+  const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+  const remaining = Math.max(0, ROUND_DURATIONS[currentRound] - elapsed);
+
+  const min = Math.floor(remaining / 60);
+  const sec = remaining % 60;
+  el.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+
+  box.classList.toggle('warning', remaining <= 60 && remaining > 20);
+  box.classList.toggle('critical', remaining <= 20);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  roundActive = false;
+  const box = document.getElementById('timer-box');
+  if (box) box.classList.add('hidden');
+}
+
+function handleTimeUp(round) {
+  if (timeoutInProgress || validated) return;
+  timeoutInProgress = true;
+  roundActive = false;
+  clearInterval(timerInterval);
+
+  const overlay = document.getElementById('timeout-overlay');
+  const txt = document.getElementById('timeout-text');
+
+  if (round < 4) {
+    txt.textContent = `Passage automatique à la manche ${round + 1}…`;
+  } else {
+    txt.textContent = `Fin du défi ! Calcul des scores…`;
+  }
+  overlay.classList.add('visible');
+
+  setTimeout(() => {
+    overlay.classList.remove('visible');
+    if (round < 4) {
+      showStep(round + 1);
+    } else {
+      showStep(5);
+    }
+    timeoutInProgress = false;
+  }, 2000);
+}
+
+/* =========================================================
+   CONSTRUCTION GLOBALE
+   ========================================================= */
+
+function buildAll() {
+  G = generateData();
+  ENVELOPE_ORDER = shuffleEnvelopes();
+  SEEN_ENVELOPES = new Set();
+  envelopePos = 0;
+  validated = false;
+  gameStarted = false;
+  currentStep = 1;
+  timeoutInProgress = false;
+
+  clearInterval(timerInterval);
+  roundActive = false;
+  const tbox = document.getElementById('timer-box');
+  if (tbox) {
+    tbox.classList.add('hidden');
+    tbox.classList.remove('warning', 'critical');
+  }
+
+  Object.keys(ANSWERS).forEach(k => delete ANSWERS[k]);
+  registerAllAnswers(G);
+
+  const html =
+    buildHeader() +
+    buildTeamCard() +
+    buildProgressBar() +
+    buildRegles() +
+    buildStartScreen() +
+    `<div id="step-1" class="step-content" hidden>${buildManche1Content()}</div>` +
+    `<div id="step-2" class="step-content" hidden>${buildManche2Content()}</div>` +
+    `<div id="step-3" class="step-content" hidden>${buildManche3Shell()}</div>` +
+    `<div id="step-4" class="step-content" hidden>${buildManche4Content()}</div>` +
+    `<div id="step-5" class="step-content" hidden>${buildScoreContent()}</div>` +
+    `<div class="nav-area" id="nav-area" hidden>
+      <p id="progress-msg">Manche 1 : 0/10 réponses remplies.</p>
+      <button id="next-btn">Manche 2 →</button>
+    </div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  const toggleBtn = document.getElementById('toggleAnswers');
+  toggleBtn.classList.add('hidden');
+  toggleBtn.classList.remove('active');
+  toggleBtn.textContent = '👁️ Afficher les corrigés';
+  document.body.classList.remove('show-answers');
+
+  updateStartBtnState();
+
+  ['team_name', 'team_captain', 'team_members'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateStartBtnState);
+  });
+
+  document.getElementById('start-btn').addEventListener('click', startGame);
+
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentStep < 5) {
+      showStep(currentStep + 1);
+    }
+  });
+
+  document.querySelectorAll('.step').forEach(el => {
+    el.addEventListener('click', () => {
+      if (validated) {
+        const target = parseInt(el.dataset.step);
+        if (target >= 1 && target <= 5) {
+          showStep(target);
+        }
+      }
+    });
+  });
+
+  const loader = document.getElementById('loader');
+  const runTypeset = () => {
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise().then(() => {
+        loader.classList.add('hidden');
+      }).catch(() => {
+        loader.classList.add('hidden');
+      });
+    } else {
+      setTimeout(runTypeset, 100);
+    }
+  };
+  runTypeset();
+}
+
+function updateStartBtnState() {
+  const name = document.getElementById('team_name');
+  const captain = document.getElementById('team_captain');
+  const members = document.getElementById('team_members');
+  const btn = document.getElementById('start-btn');
+  const hint = document.getElementById('start-btn-hint');
+  if (!name || !captain || !members || !btn) return;
+
+  const ready = name.value.trim() !== '' && captain.value.trim() !== '' && members.value.trim() !== '';
+  btn.disabled = !ready;
+  if (hint) hint.style.display = ready ? 'none' : 'block';
+}
+
+function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
+
+  const startScreen = document.getElementById('start-screen');
+  if (startScreen) startScreen.style.display = 'none';
+
+  const navArea = document.getElementById('nav-area');
+  if (navArea) navArea.hidden = false;
+
+  document.querySelectorAll('input[data-key]').forEach((inp) => {
+    inp.addEventListener('input', checkCurrentStep);
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const btn = document.getElementById('next-btn');
+        if (btn && !btn.disabled && !btn.classList.contains('hidden')) btn.click();
+      }
+    });
+  });
+
+  showStep(1);
+}
+
+/* =========================================================
+   NAVIGATION ENTRE LES MANCHES
+   ========================================================= */
+
+const STEP_TITLES = {
+  1: 'Manche 1 — Échauffement éclair (10 pts)',
+  2: 'Manche 2 — Défis en équipe (15 pts)',
+  3: 'Manche 3 — Enveloppe mystère (15 pts)',
+  4: 'Manche 4 — Finale « Tout ou rien » (10 pts)',
+  5: 'Fiche de score de l\'équipe'
+};
+
+function showStep(step) {
+  currentStep = step;
+
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const el = document.getElementById('step-' + i);
+    if (el) el.hidden = (i !== step);
+  }
+
+  document.querySelectorAll('.step').forEach((el) => {
+    const s = parseInt(el.dataset.step);
+    el.classList.toggle('active', s === step);
+    el.classList.toggle('done', s < step || (validated && s <= step));
+    el.classList.toggle('clickable', validated);
+  });
+
+  document.getElementById('step-title').textContent = STEP_TITLES[step];
+
+  const btn = document.getElementById('next-btn');
+  if (validated) {
+    btn.classList.add('hidden');
+  } else if (step === 3 || step >= 5) {
+    btn.classList.add('hidden');
+  } else {
+    btn.classList.remove('hidden');
+    if (step === 4) {
+      btn.textContent = 'Voir la fiche de score →';
+    } else {
+      btn.textContent = `Manche ${step + 1} →`;
+    }
+  }
+
+  if (!validated && step <= 4) {
+    startTimer(step);
+  } else {
+    stopTimer();
+  }
+
+  if (step === 3) {
+    renderCurrentEnvelope();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+
+  if (!validated && (step <= 2 || step === 4)) {
+    const firstInput = document.querySelector(`#step-${step} input[data-key]`);
+    if (firstInput && !firstInput.readOnly) setTimeout(() => firstInput.focus(), 150);
+  }
+
+  if (step === 5 && !validated) {
+    setTimeout(() => {
+      if (!validated) validateAll();
+    }, 100);
+  } else {
+    checkCurrentStep();
+  }
+}
+
+function checkCurrentStep() {
+  if (validated) return;
+
+  if (currentStep === 3) {
+    checkStep3();
+    return;
+  }
+
+  const section = document.getElementById('step-' + currentStep);
+  if (!section) return;
+  const inputs = section.querySelectorAll('input[data-key]');
+  if (inputs.length === 0) return;
+
+  const filled = Array.from(inputs).filter(i => i.value.trim() !== '').length;
+  const allFilled = filled === inputs.length;
+
+  const btn = document.getElementById('next-btn');
+  if (btn) btn.disabled = false;
+
+  const msg = document.getElementById('progress-msg');
+  if (!msg) return;
+
+  if (allFilled) {
+    msg.textContent = `✅ Toutes les réponses de la manche ${currentStep} sont remplies. Vous pouvez avancer ou attendre la fin du chrono.`;
+    msg.style.color = '#148246';
+  } else {
+    msg.textContent = `Manche ${currentStep} : ${filled}/${inputs.length} réponses remplies.`;
+    msg.style.color = '#666';
+  }
+}
+
+/* =========================================================
+   VALIDATION GLOBALE
+   ========================================================= */
+
+function validateAll() {
+  if (validated) return;
+  validated = true;
+
+  const teamName = (document.getElementById('team_name').value || '').trim() || '(non renseigné)';
+  const captainName = (document.getElementById('team_captain').value || '').trim() || '(non renseigné)';
+  const members = (document.getElementById('team_members').value || '').trim() || '(non renseigné)';
+
+  const inputs = document.querySelectorAll('input[data-key]');
+  const scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+
+  inputs.forEach(inp => {
+    const key = inp.dataset.key;
+    const q = ANSWERS[key];
+    if (q.manche === 3) return;
+
+    const val = parseInput(inp.value);
+    const ok = !isNaN(val) && Math.abs(val - q.value) <= q.tol;
+
+    const fb = document.getElementById(`${key}_feedback`);
+    if (ok) {
+      scores[q.manche] += q.pts;
+      inp.classList.add('correct');
+      if (fb) { fb.textContent = '✔'; fb.classList.add('correct'); }
+    } else {
+      inp.classList.add('incorrect');
+      if (fb) { fb.textContent = `✗ (attendu : ${formatFr(q.value)})`; fb.classList.add('incorrect'); }
+    }
+    inp.readOnly = true;
+  });
+
+  const envPtsByRank = [4, 5, 6, 0, 0, 0];
+  let correctEnvs = 0;
+  ENVELOPE_ORDER.forEach(key => {
+    const inp = document.getElementById(key + '_input');
+    if (!inp) return;
+    const q = ANSWERS[key];
+    const val = parseInput(inp.value);
+    const ok = !isNaN(val) && Math.abs(val - q.value) <= q.tol;
+    if (ok) {
+      scores[3] += envPtsByRank[correctEnvs] || 0;
+      correctEnvs++;
+    }
+  });
+
+  if (currentStep === 3) {
+    renderCurrentEnvelope();
+  }
+
+  document.getElementById('score-m1').textContent = `${round2(scores[1])}`;
+  document.getElementById('score-m2').textContent = `${round2(scores[2])}`;
+  document.getElementById('score-m3').textContent = `${round2(scores[3])}`;
+  document.getElementById('score-m4').textContent = `${round2(scores[4])}`;
+  const total = scores[1] + scores[2] + scores[3] + scores[4];
+  document.getElementById('score-total').innerHTML = `<strong>${round2(total)}</strong>`;
+
+  const info = document.getElementById('score-info');
+  info.innerHTML = `<strong>Équipe :</strong> ${escapeHtml(teamName)} — <strong>Capitaine :</strong> ${escapeHtml(captainName)}<br>` +
+                   `<strong>Membres :</strong> ${escapeHtml(members)}<br>` +
+                   `<strong>Score final : ${round2(total)} / 50.</strong> Les corrigés sont maintenant disponibles.`;
+  info.style.color = '#143c78';
+  info.style.fontStyle = 'normal';
+
+  const msg = document.getElementById('progress-msg');
+  if (msg) {
+    msg.textContent = `Score final : ${round2(total)} / 50. Les corrigés sont maintenant disponibles.`;
+    msg.style.color = '#143c78';
+    msg.style.fontWeight = '600';
+  }
+
+  document.querySelectorAll('.step').forEach((el) => {
+    el.classList.add('clickable');
+  });
+
+  document.getElementById('toggleAnswers').classList.remove('hidden');
+  stopTimer();
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function round2(x) {
+  return Math.round(x * 100) / 100;
+}
+
+/* =========================================================
+   GESTION DE LA MODALE DROITS D'AUTEUR
+   ========================================================= */
+
+function openCopyrightModal() {
+  const modal = document.getElementById('copyright-modal');
+  if (!modal) return;
+  modal.classList.add('visible');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCopyrightModal() {
+  const modal = document.getElementById('copyright-modal');
+  if (!modal) return;
+  modal.classList.remove('visible');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+/* =========================================================
+   ÉVÉNEMENTS
+   ========================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  buildAll();
+
+  document.getElementById('regen').addEventListener('click', () => {
+    if (gameStarted && !validated) {
+      if (!confirm('Le défi est en cours. Voulez-vous vraiment tout réinitialiser ?')) {
+        return;
+      }
+    }
+    document.getElementById('loader').classList.remove('hidden');
+    buildAll();
+  });
+
+  document.getElementById('toggleAnswers').addEventListener('click', (e) => {
+    document.body.classList.toggle('show-answers');
+    e.target.classList.toggle('active');
+    e.target.textContent = document.body.classList.contains('show-answers')
+      ? '🙈 Masquer les corrigés'
+      : '👁️ Afficher les corrigés';
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise();
+    }
+  });
+
+  // Bouton Droits d'auteur
+  document.getElementById('copyright-btn').addEventListener('click', openCopyrightModal);
+  document.getElementById('copyright-close').addEventListener('click', closeCopyrightModal);
+
+  // Clic sur l'overlay (hors contenu) → fermeture
+  document.getElementById('copyright-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'copyright-modal') {
+      closeCopyrightModal();
+    }
+  });
+
+  // Touche Échap → fermeture
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeCopyrightModal();
+    }
+  });
+});
+</script>
+
+</body>
+</html>

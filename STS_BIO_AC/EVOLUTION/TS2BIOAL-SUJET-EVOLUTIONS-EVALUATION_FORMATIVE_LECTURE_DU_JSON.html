@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecteur de sauvegarde — Le Grand Défi des Évolutions</title>
+
+<style>
+  :root {
+    --bleufonce: #143c78;
+    --rouge: #b41e1e;
+    --vert: #148246;
+    --orange: #e67814;
+    --violet: #6e1e8c;
+    --grisclair: #f0f0f0;
+    --or: #dcaa14;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    margin: 0; padding: 0;
+    background: #eef1f5; color: #222; line-height: 1.55;
+  }
+  .container {
+    max-width: 1000px; margin: 20px auto 40px;
+    background: white; padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  header {
+    text-align: center; margin-bottom: 25px;
+    padding-bottom: 15px; border-bottom: 3px solid var(--bleufonce);
+  }
+  h1 { color: var(--bleufonce); margin: 0 0 8px; font-size: 1.9em; }
+  header .subtitle { font-size: 1.02em; color: #555; }
+  h2 {
+    color: var(--bleufonce);
+    border-bottom: 2px solid var(--bleufonce);
+    padding-bottom: 6px; margin-top: 30px; font-size: 1.35em;
+  }
+  h3 { color: var(--violet); font-size: 1.08em; margin: 18px 0 8px; }
+  #drop-zone {
+    border: 3px dashed var(--bleufonce);
+    border-radius: 12px;
+    padding: 50px 20px;
+    text-align: center;
+    background: #f8f9fb;
+    transition: 0.2s;
+    cursor: pointer;
+    margin: 20px 0;
+  }
+  #drop-zone:hover, #drop-zone.hover {
+    background: #e8eefa;
+    border-color: var(--violet);
+    transform: translateY(-2px);
+  }
+  #drop-zone .icon { font-size: 3em; display: block; margin-bottom: 10px; }
+  #drop-zone .label {
+    font-size: 1.15em; font-weight: 700;
+    color: var(--bleufonce); margin-bottom: 8px;
+  }
+  #drop-zone .hint { font-size: 0.92em; color: #777; font-style: italic; }
+  #file-input { display: none; }
+  #file-name {
+    display: none;
+    text-align: center;
+    font-size: 0.95em;
+    color: var(--vert);
+    font-weight: 700;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: #e8f5e9;
+    border-radius: 6px;
+    border-left: 4px solid var(--vert);
+  }
+  #error-zone {
+    display: none;
+    padding: 15px 20px;
+    background: #ffebee;
+    border-left: 5px solid var(--rouge);
+    border-radius: 6px;
+    color: var(--rouge);
+    font-weight: 600;
+    margin: 20px 0;
+  }
+  .signature-badge {
+    display: flex; align-items: center; gap: 15px;
+    padding: 16px 22px; border-radius: 8px; margin: 20px 0;
+    font-weight: 600; font-size: 1.05em;
+  }
+  .signature-badge.valid {
+    background: #e8f5e9; border-left: 5px solid var(--vert); color: var(--vert);
+  }
+  .signature-badge.invalid {
+    background: #ffebee; border-left: 5px solid var(--rouge); color: var(--rouge);
+  }
+  .signature-badge .badge-icon { font-size: 1.8em; }
+  .signature-badge .badge-text { flex: 1; }
+  .signature-badge .badge-text small {
+    display: block; font-weight: 400; font-size: 0.82em;
+    opacity: 0.75; margin-top: 4px;
+    font-family: 'Consolas', 'Monaco', monospace; word-break: break-all;
+  }
+  .info-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px; margin: 20px 0;
+  }
+  .info-card {
+    background: linear-gradient(135deg, #f0f4fb 0%, #e8eefa 100%);
+    border: 2px solid var(--bleufonce); border-radius: 8px; padding: 14px 18px;
+  }
+  .info-card .info-label {
+    font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--bleufonce); font-weight: 700; margin-bottom: 6px;
+  }
+  .info-card .info-value {
+    font-size: 1.15em; font-weight: 700; color: #222; word-break: break-word;
+  }
+  .info-card.accent-orange { border-color: var(--orange); }
+  .info-card.accent-orange .info-label { color: var(--orange); }
+  .info-card.accent-violet { border-color: var(--violet); }
+  .info-card.accent-violet .info-label { color: var(--violet); }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.93em; }
+  table th, table td {
+    border: 1px solid #ccc; padding: 8px 10px;
+    text-align: center; vertical-align: middle;
+  }
+  table th { background: var(--bleufonce); color: white; font-weight: 600; }
+  table tr:nth-child(even) td { background: #f8f9fb; }
+  table td.left { text-align: left; }
+  .ok { color: var(--vert); font-weight: 700; }
+  .ko { color: var(--rouge); font-weight: 700; }
+  .neutral { color: #888; font-style: italic; }
+  .score-table th { background: var(--orange); }
+  .score-table td.total-cell {
+    background: #fff8e1; color: var(--orange);
+    font-size: 1.2em; font-weight: 700;
+  }
+  .badge-points {
+    display: inline-block; padding: 2px 10px; border-radius: 10px;
+    font-weight: 700; font-size: 0.85em;
+  }
+  .badge-points.full { background: var(--vert); color: white; }
+  .badge-points.zero { background: #ccc; color: #555; }
+  .badge-points.partial { background: var(--orange); color: white; }
+  .diag-box {
+    background: #fff8e1; border-left: 5px solid var(--or);
+    border-radius: 6px; padding: 18px 22px; margin: 20px 0; font-size: 1em;
+  }
+  .diag-box .diag-title {
+    font-weight: 700; color: var(--or); font-size: 1.1em;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .diag-box .diag-line { margin: 8px 0; padding-left: 20px; position: relative; }
+  .diag-box .diag-line::before {
+    content: "▸"; position: absolute; left: 0;
+    color: var(--or); font-weight: 700;
+  }
+  .diag-box .diag-line strong { color: var(--bleufonce); }
+  .progress-bar-diag {
+    height: 24px; background: #e8eefa; border-radius: 12px;
+    overflow: hidden; margin: 12px 0; position: relative;
+    border: 1px solid #ccc;
+  }
+  .progress-bar-diag .bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--vert) 0%, #4caf50 100%);
+    transition: width 0.6s ease-out;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 10px; color: white; font-weight: 700; font-size: 0.82em;
+  }
+  .progress-bar-diag .bar.low { background: linear-gradient(90deg, var(--rouge) 0%, #d44 100%); }
+  .progress-bar-diag .bar.medium { background: linear-gradient(90deg, var(--orange) 0%, #f5a742 100%); }
+  .surv-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin: 15px 0;
+  }
+  .surv-card {
+    border-radius: 8px; padding: 14px 18px;
+    text-align: center; border: 2px solid;
+  }
+  .surv-card.ok    { background: #e8f5e9; border-color: var(--vert);   color: var(--vert); }
+  .surv-card.warn  { background: #fff8e1; border-color: var(--or);     color: #8a6d00; }
+  .surv-card.alert { background: #ffebee; border-color: var(--rouge);  color: var(--rouge); }
+  .surv-card .surv-num {
+    display: block; font-size: 1.8em; font-weight: 800; line-height: 1.1;
+  }
+  .surv-card .surv-lbl {
+    display: block; font-size: 0.82em; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px;
+  }
+  .incident-type {
+    display: inline-block; padding: 2px 10px; border-radius: 10px;
+    font-size: 0.82em; font-weight: 700;
+    background: var(--grisclair); color: #444;
+  }
+  .incident-type.focus    { background: #e8eefa; color: var(--bleufonce); }
+  .incident-type.onglet   { background: #f3e5f5; color: var(--violet); }
+  .incident-type.fullscr  { background: #fff3e0; color: var(--orange); }
+  .export-zone {
+    margin-top: 34px; padding: 20px 24px;
+    background: #f8f9fb; border: 2px solid var(--bleufonce); border-radius: 10px;
+  }
+  .export-zone h2 { margin-top: 0; }
+  .export-zone h3 { color: var(--bleufonce); margin-top: 0; }
+  .export-zone p { margin: 0 0 14px; font-size: 0.95em; color: #555; }
+  .btn-latex {
+    display: inline-block; padding: 10px 20px; border-radius: 6px; border: none;
+    background: var(--bleufonce); color: white;
+    font-weight: 700; font-size: 0.95em; cursor: pointer;
+    transition: 0.2s; margin-right: 10px; margin-bottom: 10px;
+    font-family: inherit;
+  }
+  .btn-latex:hover { background: var(--violet); transform: translateY(-1px); }
+  .btn-latex.secondary { background: var(--vert); }
+  .btn-latex.secondary:hover { background: #1aa557; }
+  .latex-status {
+    font-size: 0.9em; font-weight: 700; color: var(--vert);
+    margin: 8px 0; min-height: 1.2em;
+  }
+  .latex-output {
+    width: 100%; min-height: 360px; margin-top: 12px; padding: 14px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.78em; line-height: 1.45;
+    border: 1px solid #ccc; border-radius: 6px;
+    background: #1e1e1e; color: #d4d4d4;
+    resize: vertical; white-space: pre; overflow: auto;
+  }
+  .file-report {
+    margin: 22px 0;
+    border: 2px solid var(--bleufonce);
+    border-radius: 10px;
+    background: #fdfdfd;
+    overflow: hidden;
+  }
+  .file-report > summary {
+    padding: 14px 20px 14px 44px;
+    background: linear-gradient(135deg, #f0f4fb 0%, #e8eefa 100%);
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--bleufonce);
+    font-size: 1.05em;
+    list-style: none;
+    position: relative;
+    user-select: none;
+  }
+  .file-report > summary::-webkit-details-marker { display: none; }
+  .file-report > summary::before {
+    content: "▶";
+    position: absolute;
+    left: 18px; top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.2s;
+    font-size: 0.8em;
+    color: var(--bleufonce);
+  }
+  .file-report[open] > summary::before {
+    transform: translateY(-50%) rotate(90deg);
+  }
+  .file-report > summary:hover { background: #e0e8f5; }
+  .file-report-content { padding: 20px 24px; }
+  .error-msg {
+    color: var(--rouge); font-weight: 700;
+    padding: 14px 18px; background: #ffebee;
+    border-left: 5px solid var(--rouge); border-radius: 6px;
+  }
+  footer {
+    text-align: center; padding: 20px 10px 30px;
+    color: #888; font-size: 0.85em; font-style: italic;
+  }
+  @media (max-width: 700px) {
+    .container { padding: 20px; margin: 10px; }
+    h1 { font-size: 1.4em; }
+    table { font-size: 0.82em; }
+    table th, table td { padding: 5px 6px; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <header>
+    <h1>📂 Lecteur de sauvegarde</h1>
+    <div class="subtitle">Le Grand Défi des Évolutions — Vérification et analyse par lot</div>
+    <div class="subtitle" style="font-size:0.9em;color:#888;font-style:italic;margin-top:6px;">
+      Déposez un ou plusieurs fichiers <code>equipe_*.json</code> pour vérifier leur signature HMAC-SHA-256
+      et afficher le bilan détaillé de chaque équipe. Chaque fichier JSON donne lieu à un
+      <strong>document LaTeX distinct</strong>, téléchargeable individuellement ou par lot.
+    </div>
+  </header>
+
+  <div id="drop-zone">
+    <span class="icon">📁</span>
+    <div class="label">Déposez ici un ou plusieurs fichiers JSON de sauvegarde</div>
+    <div class="hint">ou cliquez pour parcourir vos fichiers (sélection multiple possible)</div>
+    <input type="file" id="file-input" accept=".json,application/json" multiple>
+  </div>
+
+  <div id="file-name"></div>
+  <div id="error-zone"></div>
+  <div id="result"></div>
+</div>
+
+<footer>
+  © Septembre 2026 — Yann Merdy — Licence d'utilisation non commerciale
+</footer>
+
+<script>
+/* =========================================================
+   SHA-256 / HMAC-SHA-256 (implémentation autonome)
+   ========================================================= */
+
+const SHA256_K = new Uint32Array([
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+]);
+function rotr32(x, n) { return ((x >>> n) | (x << (32 - n))) >>> 0; }
+function sha256Bytes(msg) {
+  const H = new Uint32Array([
+    0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
+    0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19
+  ]);
+  const len = msg.length;
+  const paddedLen = (((len + 8) >> 6) + 1) << 6;
+  const buf = new Uint8Array(paddedLen);
+  buf.set(msg);
+  buf[len] = 0x80;
+  const dv = new DataView(buf.buffer);
+  const bitLen = len * 8;
+  dv.setUint32(paddedLen - 8, Math.floor(bitLen / 0x100000000), false);
+  dv.setUint32(paddedLen - 4, bitLen >>> 0, false);
+  const w = new Uint32Array(64);
+  for (let i = 0; i < paddedLen; i += 64) {
+    for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4, false);
+    for (let t = 16; t < 64; t++) {
+      const s0 = (rotr32(w[t - 15], 7) ^ rotr32(w[t - 15], 18) ^ (w[t - 15] >>> 3)) >>> 0;
+      const s1 = (rotr32(w[t - 2], 17) ^ rotr32(w[t - 2], 19) ^ (w[t - 2] >>> 10)) >>> 0;
+      w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+    }
+    let a = H[0], b = H[1], c = H[2], d = H[3];
+    let e = H[4], f = H[5], g = H[6], h = H[7];
+    for (let t = 0; t < 64; t++) {
+      const S1 = (rotr32(e, 6) ^ rotr32(e, 11) ^ rotr32(e, 25)) >>> 0;
+      const ch = ((e & f) ^ (~e & g)) >>> 0;
+      const t1 = (h + S1 + ch + SHA256_K[t] + w[t]) >>> 0;
+      const S0 = (rotr32(a, 2) ^ rotr32(a, 13) ^ rotr32(a, 22)) >>> 0;
+      const maj = ((a & b) ^ (a & c) ^ (b & c)) >>> 0;
+      const t2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0;
+    H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0;
+    H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  const out = new Uint8Array(32);
+  const odv = new DataView(out.buffer);
+  for (let i = 0; i < 8; i++) odv.setUint32(i * 4, H[i], false);
+  return out;
+}
+function hmacSha256Bytes(keyBytes, msgBytes) {
+  const BLOCK = 64;
+  let k = keyBytes;
+  if (k.length > BLOCK) k = sha256Bytes(k);
+  const kPad = new Uint8Array(BLOCK); kPad.set(k);
+  const iPad = new Uint8Array(BLOCK + msgBytes.length);
+  const oPad = new Uint8Array(BLOCK + 32);
+  for (let i = 0; i < BLOCK; i++) {
+    iPad[i] = kPad[i] ^ 0x36;
+    oPad[i] = kPad[i] ^ 0x5c;
+  }
+  iPad.set(msgBytes, BLOCK);
+  oPad.set(sha256Bytes(iPad), BLOCK);
+  return sha256Bytes(oPad);
+}
+function bufToHex(buf) {
+  let s = '';
+  for (let i = 0; i < buf.length; i++) s += buf[i].toString(16).padStart(2, '0');
+  return s;
+}
+async function hmacSha256Hex(secret, message) {
+  const enc = new TextEncoder();
+  const keyBytes = enc.encode(secret);
+  const msgBytes = enc.encode(message);
+  if (window.crypto && crypto.subtle && crypto.subtle.importKey) {
+    try {
+      const key = await crypto.subtle.importKey(
+        'raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+      );
+      const sig = await crypto.subtle.sign('HMAC', key, msgBytes);
+      return bufToHex(new Uint8Array(sig));
+    } catch (e) { /* repli */ }
+  }
+  return bufToHex(hmacSha256Bytes(keyBytes, msgBytes));
+}
+async function sha256Hex(message) {
+  const enc = new TextEncoder();
+  const msgBytes = enc.encode(message);
+  if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+    try {
+      const d = await crypto.subtle.digest('SHA-256', msgBytes);
+      return bufToHex(new Uint8Array(d));
+    } catch (e) { /* repli */ }
+  }
+  return bufToHex(sha256Bytes(msgBytes));
+}
+
+/* =========================================================
+   CONSTANTES
+   ========================================================= */
+
+const HMAC_SECRET = 'TS2BIOAL-JEUX-EVOLUTIONS|Yann Merdy|2026|HMAC-SHA-256|v1';
+
+const LABELS_MANCHES = {
+  1: 'Manche 1 — Échauffement éclair',
+  2: 'Manche 2 — Défis en équipe',
+  3: 'Manche 3 — Enveloppe mystère',
+  4: 'Manche 4 — Finale « Tout ou rien »'
+};
+const MAX_PAR_MANCHE = { 1: 10, 2: 15, 3: 15, 4: 10 };
+const LABELS_QUESTIONS = {
+  q1: 'Q1 — Coefficient d\'une hausse',
+  q2: 'Q2 — Coefficient d\'une baisse',
+  q3: 'Q3 — Taux à partir du coefficient',
+  q4: 'Q4 — Taux à partir du coefficient',
+  q5: 'Q5 — Taux entre deux valeurs',
+  q6: 'Q6 — Taux global (deux hausses identiques)',
+  q7: 'Q7 — Produit de deux coefficients',
+  q8: 'Q8 — Coefficient de retour (baisse 50%)',
+  q9: 'Q9 — Coefficient global (deux hausses)',
+  q10: 'Q10 — Coefficient global (baisse puis hausse)',
+  defiA: 'Défi A — Prix final d\'un smartphone',
+  defiB: 'Défi B — Population d\'une ville',
+  defiC: 'Défi C — Coefficient global (+t puis −t)',
+  envA: 'Enveloppe A — Coefficient global (hausse puis remise)',
+  envB: 'Enveloppe B — Taux de la 2ᵉ hausse',
+  envC: 'Enveloppe C — Taux annuel sur n années',
+  envD: 'Enveloppe D — Taux annuel moyen',
+  envE: 'Enveloppe E — Taux de remontée',
+  envF: 'Enveloppe F — Taux unique équivalent',
+  finFacile: 'Finale facile — Coefficient de retour',
+  finMoyen: 'Finale moyenne — Capital final',
+  finDifficile: 'Finale difficile — Taux annuel constant'
+};
+const COMPETENCES_DEF = {
+  'Coefficient multiplicateur ↔ taux (aller-retour)': ['q1', 'q2', 'q3', 'q4'],
+  'Calcul de taux entre deux valeurs': ['q5'],
+  'Évolutions successives (coefficient global)': ['q6', 'q9', 'q10', 'defiC', 'envA', 'envF'],
+  'Produit de coefficients (commutativité)': ['q7'],
+  'Coefficient de retour (réciproque)': ['q8', 'finFacile', 'envE'],
+  'Application numérique avec contexte (prix, population, capital)': ['defiA', 'defiB', 'finMoyen'],
+  'Taux annuel moyen / taux équivalent': ['envD'],
+  'Taux annuel à partir d\'un taux global pluriannuel': ['envC', 'finDifficile'],
+  'Retrouver un taux inconnu dans une chaîne': ['envB']
+};
+
+/* Rapport courant utilisé par le moteur LaTeX (une entrée à la fois). */
+let dernierRapport = null;
+
+/* Tableau des rapports reçus (un par fichier JSON). */
+let rapportsRecus = [];
+
+/* =========================================================
+   HELPERS D'AFFICHAGE
+   ========================================================= */
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = (s == null ? '' : String(s));
+  return d.innerHTML;
+}
+function formatFr(v, maxDec = 4) {
+  if (v == null || (typeof v === 'number' && !isFinite(v))) return '—';
+  if (typeof v !== 'number') return escapeHtml(String(v));
+  if (Number.isInteger(v)) return v.toLocaleString('fr-FR');
+  return parseFloat(v.toFixed(maxDec)).toString().replace('.', ',');
+}
+function formatDateHeure(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('fr-FR', {
+      weekday: 'long', year: 'numeric', month: 'long',
+      day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  } catch (e) { return iso; }
+}
+function formatDateHeureCourt(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('fr-FR', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  } catch (e) { return String(iso); }
+}
+function formatDuree(sec) {
+  if (sec == null || isNaN(sec)) return '—';
+  const s = Math.max(0, Math.floor(sec));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  if (h > 0) return h + ' h ' + String(m).padStart(2, '0') + ' min ' + String(r).padStart(2, '0') + ' s';
+  return m + ' min ' + String(r).padStart(2, '0') + ' s';
+}
+function badgePoints(pts, maxPts) {
+  if (pts === maxPts && maxPts > 0) return `<span class="badge-points full">${formatFr(pts)} / ${formatFr(maxPts)}</span>`;
+  if (pts === 0) return `<span class="badge-points zero">0 / ${formatFr(maxPts)}</span>`;
+  return `<span class="badge-points partial">${formatFr(pts)} / ${formatFr(maxPts)}</span>`;
+}
+
+/* =========================================================
+   HELPERS D'ANALYSE PARTAGÉS
+   ========================================================= */
+
+function calculerCompetences(reponses) {
+  const out = {};
+  Object.keys(COMPETENCES_DEF).forEach(function (nom) {
+    const cles = COMPETENCES_DEF[nom];
+    let reussies = 0, total = 0;
+    const detail = [];
+    cles.forEach(function (k) {
+      const r = reponses[k];
+      if (r) {
+        total++;
+        if (r.correcte) reussies++;
+        detail.push({ cle: k, r: r });
+      }
+    });
+    out[nom] = { cles: cles, reussies: reussies, total: total, detail: detail };
+  });
+  return out;
+}
+function evaluerNiveau(pourcentage) {
+  if (pourcentage >= 85) return { niveau: 'Excellent — maîtrise solide', emoji: '🌟', couleurCss: 'var(--vert)', couleurTex: 'vert' };
+  if (pourcentage >= 70) return { niveau: 'Très bon — quelques points à consolider', emoji: '✅', couleurCss: 'var(--vert)', couleurTex: 'vert' };
+  if (pourcentage >= 50) return { niveau: 'Moyen — des bases à renforcer', emoji: '⚠️', couleurCss: 'var(--orange)', couleurTex: 'orange' };
+  if (pourcentage >= 30) return { niveau: 'Fragile — plusieurs notions à retravailler', emoji: '🔶', couleurCss: 'var(--orange)', couleurTex: 'orange' };
+  return { niveau: 'Insuffisant — reprise des notions fondamentales nécessaire', emoji: '🚨', couleurCss: 'var(--rouge)', couleurTex: 'rouge' };
+}
+function recommandationPour(pourcentage) {
+  if (pourcentage < 50) return "Reprendre les notions de base : coefficient multiplicateur, calcul d'un taux, évolutions successives. Multiplier les exercices d'application directe avant de passer aux problèmes contextualisés.";
+  if (pourcentage < 70) return "Consolider les enchaînements d'évolutions (coefficient global) et le calcul d'un taux inconnu. Travailler les problèmes à contexte (prix, population, capital).";
+  if (pourcentage < 85) return "Approfondir les cas particuliers : taux annuel moyen, taux équivalent, retour à la valeur initiale. Soigner la rédaction et la vérification des arrondis.";
+  return "Très bonne maîtrise. Proposer des problèmes ouverts (optimisation, comparaison de placements) pour aller plus loin.";
+}
+
+/* =========================================================
+   LECTURE DES FICHIERS (LOT)
+   ========================================================= */
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileNameEl = document.getElementById('file-name');
+const errorZone = document.getElementById('error-zone');
+const resultEl = document.getElementById('result');
+
+dropZone.addEventListener('click', function () { fileInput.click(); });
+dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('hover'); });
+dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('hover'); });
+dropZone.addEventListener('drop', function (e) {
+  e.preventDefault();
+  dropZone.classList.remove('hover');
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) traiterFichiers(files);
+});
+fileInput.addEventListener('change', function (e) {
+  if (e.target.files && e.target.files.length > 0) traiterFichiers(e.target.files);
+});
+
+function afficherErreur(msg) {
+  errorZone.style.display = 'block';
+  errorZone.innerHTML = '❌ ' + escapeHtml(msg);
+  resultEl.innerHTML = '';
+  fileNameEl.style.display = 'none';
+  rapportsRecus = [];
+}
+function effacerErreur() {
+  errorZone.style.display = 'none';
+  errorZone.innerHTML = '';
+}
+function lireFichier(file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function () { resolve(reader.result); };
+    reader.onerror = function () { reject(new Error('erreur de lecture')); };
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+async function traiterFichiers(files) {
+  effacerErreur();
+  resultEl.innerHTML = '';
+  rapportsRecus = [];
+  fileNameEl.style.display = 'none';
+
+  const all = Array.prototype.slice.call(files);
+  const jsonFiles = all.filter(function (f) { return f.name.toLowerCase().endsWith('.json'); });
+
+  if (jsonFiles.length === 0) {
+    afficherErreur('Aucun fichier .json détecté dans la sélection.');
+    return;
+  }
+
+  fileNameEl.style.display = 'block';
+  fileNameEl.textContent = '📄 ' + jsonFiles.length + ' fichier(s) en cours de traitement…';
+
+  for (let i = 0; i < jsonFiles.length; i++) {
+    const file = jsonFiles[i];
+    let rapport;
+    try {
+      const texte = await lireFichier(file);
+      const data = JSON.parse(texte);
+      rapport = await construireRapport(data, file.name, i);
+    } catch (e) {
+      rapport = {
+        index: i,
+        nomFichier: file.name,
+        equipeNom: null,
+        error: (e && e.message) ? e.message : String(e),
+        htmlContenu: '<p class="error-msg">❌ ' + escapeHtml((e && e.message) ? e.message : String(e)) + '</p>',
+        latexTex: null
+      };
+    }
+    rapportsRecus.push(rapport);
+  }
+
+  fileNameEl.textContent = '📄 ' + jsonFiles.length + ' fichier(s) JSON traité(s).';
+  afficherResultats();
+}
+
+/* =========================================================
+   VÉRIFICATION DE LA SIGNATURE
+   ========================================================= */
+
+async function verifierSignature(data) {
+  const result = {
+    structureOk: false, hmacOk: false, shaOk: false,
+    hmacCalcule: null, shaCalcule: null,
+    hmacAttendu: null, shaAttendu: null, message: ''
+  };
+  if (!data || typeof data !== 'object') { result.message = 'Structure JSON invalide.'; return result; }
+  if (!data.donnees || !data.signature) { result.message = 'Champs "donnees" et/ou "signature" manquants.'; return result; }
+  if (!data.signature.hmac_sha256) { result.message = 'Signature HMAC-SHA-256 absente.'; return result; }
+  result.structureOk = true;
+  result.hmacAttendu = data.signature.hmac_sha256;
+  result.shaAttendu = data.signature.sha256_donnees || null;
+  const signe = JSON.stringify(data.donnees);
+  try {
+    result.hmacCalcule = await hmacSha256Hex(HMAC_SECRET, signe);
+    result.hmacOk = (result.hmacCalcule === result.hmacAttendu);
+    if (result.shaAttendu) {
+      result.shaCalcule = await sha256Hex(signe);
+      result.shaOk = (result.shaCalcule === result.shaAttendu);
+    } else { result.shaOk = true; }
+  } catch (e) {
+    result.message = 'Erreur lors du calcul : ' + e.message;
+    return result;
+  }
+  if (!result.hmacOk) {
+    result.message = "La signature HMAC ne correspond pas : le fichier a été modifié ou n'est pas authentique.";
+  } else if (!result.shaOk) {
+    result.message = "L'empreinte SHA-256 ne correspond pas : le fichier a été altéré.";
+  } else {
+    result.message = 'Signature HMAC-SHA-256 et empreinte SHA-256 vérifiées avec succès.';
+  }
+  return result;
+}
+
+/* =========================================================
+   CONSTRUCTION D'UN RAPPORT (HTML + LATEX)
+   ========================================================= */
+
+async function construireRapport(data, nomFichier, index) {
+  const sig = await verifierSignature(data);
+  const donnees = data.donnees || {};
+  const equipe = donnees.equipe || {};
+  const etat = donnees.etat || {};
+  const reponses = donnees.reponses || {};
+  const scores = donnees.scores || {};
+  const manche3Detail = donnees.manche3_detail || [];
+
+  /* --- HTML de la carte fichier --- */
+  let html = '';
+
+  if (sig.hmacOk && sig.shaOk) {
+    html += '<div class="signature-badge valid">'
+      + '<span class="badge-icon">🔒</span>'
+      + '<div class="badge-text">'
+      + '<strong>Fichier authentique — signature valide</strong>'
+      + '<small>HMAC-SHA-256 : ' + escapeHtml(sig.hmacCalcule) + '</small>'
+      + '<small>SHA-256 des données : ' + escapeHtml(sig.shaCalcule) + '</small>'
+      + '</div></div>';
+  } else {
+    html += '<div class="signature-badge invalid">'
+      + '<span class="badge-icon">⚠️</span>'
+      + '<div class="badge-text">'
+      + '<strong>Signature invalide</strong> '
+      + escapeHtml(sig.message)
+      + (sig.hmacCalcule
+          ? '<small>Attendu : ' + escapeHtml(sig.hmacAttendu) + '</small>'
+            + '<small>Calculé : ' + escapeHtml(sig.hmacCalcule) + '</small>'
+          : '')
+      + '</div></div>';
+  }
+
+  html += '<h2>👥 Identification de l\'équipe</h2>'
+    + '<div class="info-grid">'
+    + '<div class="info-card"><div class="info-label">Nom de l\'équipe</div>'
+    + '<div class="info-value">' + escapeHtml(equipe.nom || '(non renseigné)') + '</div></div>'
+    + '<div class="info-card accent-violet"><div class="info-label">Capitaine</div>'
+    + '<div class="info-value">' + escapeHtml(equipe.capitaine || '(non renseigné)') + '</div></div>'
+    + '<div class="info-card accent-orange"><div class="info-label">Effectif</div>'
+    + '<div class="info-value">' + escapeHtml(equipe.effectif != null ? equipe.effectif : (equipe.membres ? equipe.membres.length : '—')) + ' élève(s)</div></div>'
+    + '<div class="info-card"><div class="info-label">Horodatage de la sauvegarde</div>'
+    + '<div class="info-value" style="font-size:1em;">' + escapeHtml(formatDateHeure(donnees.horodatage_iso)) + '</div></div>'
+    + '</div>';
+
+  if (Array.isArray(equipe.membres) && equipe.membres.length > 0) {
+    html += '<h3>Membres de l\'équipe</h3>'
+      + '<table><thead><tr><th style="width:60px;">#</th><th class="left">Nom</th></tr></thead><tbody>'
+      + equipe.membres.map(function (m, i) {
+          return '<tr><td>' + (i + 1) + '</td><td class="left">' + escapeHtml(m) + '</td></tr>';
+        }).join('')
+      + '</tbody></table>';
+  } else {
+    html += '<h3>Membres de l\'équipe</h3><p class="neutral">Aucun membre renseigné dans le fichier.</p>';
+  }
+
+  html += '<h2>📋 Métadonnées de la session</h2>'
+    + '<table><tbody>'
+    + '<tr><td class="left"><strong>Motif de la sauvegarde</strong></td><td class="left">' + escapeHtml(donnees.motif || '—') + '</td></tr>'
+    + '<tr><td class="left"><strong>Horodatage ISO</strong></td><td class="left"><code>' + escapeHtml(donnees.horodatage_iso || '—') + '</code></td></tr>'
+    + '<tr><td class="left"><strong>Horodatage local</strong></td><td class="left">' + escapeHtml(donnees.horodatage_local || '—') + '</td></tr>'
+    + '<tr><td class="left"><strong>Application</strong></td><td class="left">' + escapeHtml((donnees.application && donnees.application.nom) || '—') + ' — v' + escapeHtml((donnees.application && donnees.application.version) || '?') + '</td></tr>'
+    + '<tr><td class="left"><strong>Partie démarrée</strong></td><td class="left">' + (etat.partie_demarree ? '✔ Oui' : '✗ Non') + '</td></tr>'
+    + '<tr><td class="left"><strong>Partie validée</strong></td><td class="left">' + (etat.partie_validee ? '✔ Oui' : '✗ Non') + '</td></tr>'
+    + '<tr><td class="left"><strong>Étape courante</strong></td><td class="left">' + escapeHtml(etat.etape_courante != null ? etat.etape_courante + ' / 5' : '—') + '</td></tr>'
+    + '<tr><td class="left"><strong>Manche chronométrée</strong></td><td class="left">' + (etat.manche_chronometree ? escapeHtml(LABELS_MANCHES[etat.manche_chronometree] || ('Manche ' + etat.manche_chronometree)) : '—') + '</td></tr>'
+    + '<tr><td class="left"><strong>Temps restant (chrono)</strong></td><td class="left">' + (etat.secondes_restantes != null ? formatDuree(etat.secondes_restantes) : '—') + '</td></tr>'
+    + '<tr><td class="left"><strong>Durée totale écoulée</strong></td><td class="left">' + formatDuree(etat.duree_totale_ecoulee_s) + '</td></tr>'
+    + '</tbody></table>';
+
+  html += construireSectionSurveillance(donnees.surveillance);
+
+  html += '<h2>📝 Réponses de l\'équipe</h2>';
+  for (let m = 1; m <= 4; m++) {
+    const cles = Object.keys(reponses).filter(function (k) { return reponses[k] && reponses[k].manche === m; });
+    if (cles.length === 0) continue;
+    let ordonnees = cles;
+    if (m === 3 && manche3Detail.length) {
+      ordonnees = manche3Detail.map(function (d) { return d.cle; }).filter(function (k) { return cles.includes(k); });
+    }
+    html += '<h3>' + escapeHtml(LABELS_MANCHES[m]) + ' — ' + MAX_PAR_MANCHE[m] + ' pts</h3>'
+      + '<table><thead><tr>'
+      + '<th class="left">Question</th><th>Réponse saisie</th><th>Valeur attendue</th>'
+      + '<th>Tolérance</th><th>Résultat</th><th>Points</th>'
+      + '</tr></thead><tbody>';
+    ordonnees.forEach(function (key) {
+      const r = reponses[key];
+      const label = LABELS_QUESTIONS[key] || key;
+      const saisie = (r.saisie != null && String(r.saisie).trim() !== '')
+        ? escapeHtml(r.saisie)
+        : '<span class="neutral">(vide)</span>';
+      const attendu = formatFr(r.valeur_attendue);
+      const tol = (r.tolerance != null) ? '± ' + formatFr(r.tolerance) : '—';
+      const res = r.correcte ? '<span class="ok">✔ Correct</span>' : '<span class="ko">✗ Incorrect</span>';
+      const maxPts = r.points_max || 0;
+      const pts = r.points || 0;
+      const ptCell = (m === 3 && !r.correcte) ? '<span class="badge-points zero">0 / 0</span>' : badgePoints(pts, maxPts);
+      html += '<tr>'
+        + '<td class="left">' + escapeHtml(label) + '</td>'
+        + '<td><code>' + saisie + '</code></td>'
+        + '<td><strong>' + escapeHtml(attendu) + '</strong></td>'
+        + '<td>' + escapeHtml(tol) + '</td>'
+        + '<td>' + res + '</td>'
+        + '<td>' + ptCell + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  const s1 = scores.manche1 || 0;
+  const s2 = scores.manche2 || 0;
+  const s3 = scores.manche3 || 0;
+  const s4 = scores.manche4 || 0;
+  const total = scores.total != null ? scores.total : (s1 + s2 + s3 + s4);
+  const totalMax = scores.total_max || 50;
+  const pourcentage = totalMax > 0 ? Math.round((total / totalMax) * 1000) / 10 : 0;
+
+  html += '<h2>🏆 Bilan des points</h2>'
+    + '<table class="score-table"><thead><tr>'
+    + '<th class="left">Manche</th><th>Points obtenus</th><th>Points max</th><th>Pourcentage</th>'
+    + '</tr></thead><tbody>'
+    + '<tr><td class="left">Manche 1 — Échauffement éclair</td><td><strong>' + formatFr(s1) + '</strong></td><td>' + formatFr(MAX_PAR_MANCHE[1]) + '</td><td>' + (MAX_PAR_MANCHE[1] > 0 ? Math.round((s1 / MAX_PAR_MANCHE[1]) * 1000) / 10 : 0) + ' %</td></tr>'
+    + '<tr><td class="left">Manche 2 — Défis en équipe</td><td><strong>' + formatFr(s2) + '</strong></td><td>' + formatFr(MAX_PAR_MANCHE[2]) + '</td><td>' + (MAX_PAR_MANCHE[2] > 0 ? Math.round((s2 / MAX_PAR_MANCHE[2]) * 1000) / 10 : 0) + ' %</td></tr>'
+    + '<tr><td class="left">Manche 3 — Enveloppe mystère</td><td><strong>' + formatFr(s3) + '</strong></td><td>' + formatFr(MAX_PAR_MANCHE[3]) + '</td><td>' + (MAX_PAR_MANCHE[3] > 0 ? Math.round((s3 / MAX_PAR_MANCHE[3]) * 1000) / 10 : 0) + ' %</td></tr>'
+    + '<tr><td class="left">Manche 4 — Finale « Tout ou rien »</td><td><strong>' + formatFr(s4) + '</strong></td><td>' + formatFr(MAX_PAR_MANCHE[4]) + '</td><td>' + (MAX_PAR_MANCHE[4] > 0 ? Math.round((s4 / MAX_PAR_MANCHE[4]) * 1000) / 10 : 0) + ' %</td></tr>'
+    + '<tr><td class="left"><strong>TOTAL</strong></td>'
+    + '<td class="total-cell"><strong>' + formatFr(total) + '</strong></td>'
+    + '<td class="total-cell"><strong>' + formatFr(totalMax) + '</strong></td>'
+    + '<td class="total-cell"><strong>' + pourcentage + ' %</strong></td></tr>'
+    + '</tbody></table>'
+    + '<div class="progress-bar-diag">'
+    + '<div class="bar ' + (pourcentage < 40 ? 'low' : (pourcentage < 70 ? 'medium' : '')) + '" '
+    + 'style="width: ' + Math.max(2, Math.min(100, pourcentage)) + '%;">'
+    + (pourcentage >= 15 ? pourcentage + ' %' : '')
+    + '</div></div>';
+
+  html += construireDiagnostic(reponses, scores, manche3Detail, total, totalMax, pourcentage);
+
+  /* --- Génération du LaTeX associé --- */
+  dernierRapport = { data: data, sig: sig, nomFichier: nomFichier };
+  let latexTex = null;
+  let latexErr = null;
+  try {
+    latexTex = genererLatex();
+  } catch (e) {
+    latexErr = (e && e.message) ? e.message : String(e);
+  }
+
+  return {
+    index: index,
+    nomFichier: nomFichier,
+    equipeNom: equipe.nom || '(sans nom)',
+    error: null,
+    htmlContenu: html,
+    latexTex: latexTex,
+    latexErr: latexErr,
+    sig: sig
+  };
+}
+
+/* =========================================================
+   AFFICHAGE DES RÉSULTATS (LOT)
+   ========================================================= */
+
+function afficherResultats() {
+  let html = '';
+
+  if (rapportsRecus.length === 1) {
+    /* Cas mono-fichier : mise en page identique à l'original. */
+    const r = rapportsRecus[0];
+    html += r.htmlContenu;
+    html += construireBlocActionsFichier(r);
+  } else {
+    for (let i = 0; i < rapportsRecus.length; i++) {
+      const r = rapportsRecus[i];
+      const titre = r.error
+        ? '📄 ' + r.nomFichier + ' — ❌ Erreur'
+        : '📄 ' + r.nomFichier + ' — ' + (r.equipeNom || '(sans nom)');
+      html += '<details class="file-report" open>'
+        + '<summary>' + escapeHtml(titre) + '</summary>'
+        + '<div class="file-report-content">'
+        + r.htmlContenu
+        + construireBlocActionsFichier(r)
+        + '</div></details>';
+    }
+  }
+
+  /* Bloc global : uniquement si plus d'un fichier valide. */
+  const valides = rapportsRecus.filter(function (r) { return !r.error && r.latexTex; });
+  if (valides.length > 1) {
+    html += '<div class="export-zone">'
+      + '<h2>📤 Export global LaTeX</h2>'
+      + '<p>Générer et télécharger l\'ensemble des <strong>' + valides.length
+      + ' documents LaTeX</strong> associés aux fichiers JSON chargés. '
+      + 'Chaque document est spécifique à son fichier JSON d\'origine.</p>'
+      + '<button type="button" class="btn-latex" id="btn-download-all">💾 Télécharger tous les .tex ('
+      + valides.length + ')</button>'
+      + '<div class="latex-status" id="latex-status-global"></div>'
+      + '</div>';
+  }
+
+  resultEl.innerHTML = html;
+  attacherHandlersGlobaux();
+}
+
+function construireBlocActionsFichier(rapport) {
+  if (rapport.error || !rapport.latexTex) {
+    if (rapport.latexErr) {
+      return '<div class="export-zone" style="border-color:var(--rouge);">'
+        + '<h3 style="color:var(--rouge);">📤 Export LaTeX indisponible</h3>'
+        + '<p>' + escapeHtml(rapport.latexErr) + '</p></div>';
+    }
+    return '';
+  }
+  const idx = rapport.index;
+  const nomBase = rapport.nomFichier.replace(/\.json$/i, '');
+  return '<div class="export-zone">'
+    + '<h3>📤 Export LaTeX — <code>' + escapeHtml(nomBase) + '_compte_rendu.tex</code></h3>'
+    + '<p>Document LaTeX associé au fichier <strong>' + escapeHtml(rapport.nomFichier)
+    + '</strong>. Il peut être compilé directement avec pdflatex.</p>'
+    + '<button type="button" class="btn-latex" data-action="download" data-index="' + idx + '">💾 Télécharger ce .tex</button>'
+    + '<button type="button" class="btn-latex secondary" data-action="view" data-index="' + idx + '">👁 Afficher le code LaTeX</button>'
+    + '<button type="button" class="btn-latex secondary" data-action="copy" data-index="' + idx + '">📋 Copier</button>'
+    + '<div class="latex-status" data-status-index="' + idx + '"></div>'
+    + '<textarea class="latex-output" data-output-index="' + idx + '" style="display:none;" readonly spellcheck="false"></textarea>'
+    + '</div>';
+}
+
+function attacherHandlersGlobaux() {
+  if (!resultEl._handlersAttached) {
+    resultEl.addEventListener('click', handleResultClick);
+    resultEl._handlersAttached = true;
+  }
+  const btnAll = document.getElementById('btn-download-all');
+  if (btnAll) btnAll.addEventListener('click', telechargerTousLesTex);
+}
+
+function handleResultClick(e) {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const action = btn.getAttribute('data-action');
+  const index = parseInt(btn.getAttribute('data-index'), 10);
+  const rapport = rapportsRecus.find(function (r) { return r.index === index; });
+  if (!rapport || !rapport.latexTex) return;
+
+  if (action === 'download') {
+    telechargerTex(rapport);
+  } else if (action === 'view') {
+    const ta = resultEl.querySelector('textarea[data-output-index="' + index + '"]');
+    if (ta) {
+      ta.value = rapport.latexTex;
+      ta.style.display = (ta.style.display === 'none' || !ta.style.display) ? 'block' : 'none';
+    }
+  } else if (action === 'copy') {
+    const status = resultEl.querySelector('[data-status-index="' + index + '"]');
+    const ok = function () {
+      if (status) { status.style.color = 'var(--vert)'; status.textContent = '✔ Code LaTeX copié.'; }
+    };
+    const ko = function () {
+      if (status) { status.style.color = 'var(--rouge)'; status.textContent = '❌ Copie impossible.'; }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(rapport.latexTex).then(ok).catch(ko);
+    } else {
+      const ta = resultEl.querySelector('textarea[data-output-index="' + index + '"]');
+      if (ta) { ta.value = rapport.latexTex; ta.style.display = 'block'; ta.select(); }
+      try { document.execCommand('copy'); ok(); } catch (e2) { ko(); }
+    }
+  }
+}
+
+function telechargerTex(rapport) {
+  if (!rapport || !rapport.latexTex) return;
+  const blob = new Blob([rapport.latexTex], { type: 'application/x-tex;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const base = rapport.nomFichier.replace(/\.json$/i, '');
+  a.href = url;
+  a.download = base + '_compte_rendu.tex';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+}
+
+async function telechargerTousLesTex() {
+  const status = document.getElementById('latex-status-global');
+  const valides = rapportsRecus.filter(function (r) { return !r.error && r.latexTex; });
+  if (valides.length === 0) {
+    if (status) { status.style.color = 'var(--rouge)'; status.textContent = '❌ Aucun document LaTeX à télécharger.'; }
+    return;
+  }
+  if (status) {
+    status.style.color = 'var(--vert)';
+    status.textContent = '⏳ Téléchargement de ' + valides.length + ' fichier(s) .tex…';
+  }
+  for (let i = 0; i < valides.length; i++) {
+    telechargerTex(valides[i]);
+    await new Promise(function (resolve) { setTimeout(resolve, 350); });
+  }
+  if (status) {
+    status.style.color = 'var(--vert)';
+    status.textContent = '✔ ' + valides.length + ' document(s) LaTeX téléchargé(s).';
+  }
+}
+
+/* =========================================================
+   SURVEILLANCE / INCIDENTS (HTML)
+   ========================================================= */
+
+function construireSectionSurveillance(surveillance) {
+  const s = surveillance || {};
+  const incidents = Array.isArray(s.incidents) ? s.incidents : [];
+  const nbSorties = (s.nb_sorties != null) ? s.nb_sorties : incidents.length;
+  const tempsTotal = (s.temps_hors_page_total_s != null)
+    ? s.temps_hors_page_total_s
+    : incidents.reduce(function (acc, i) { return acc + (i.duree_s || 0); }, 0);
+
+  const labelType = function (t) {
+    switch (t) {
+      case 'onglet_masque':      return { txt: "Changement d'onglet / minimisation", cls: 'onglet' };
+      case 'perte_focus':        return { txt: 'Perte de focus de la fenêtre',       cls: 'focus' };
+      case 'sortie_plein_ecran': return { txt: 'Sortie du mode plein écran',         cls: 'fullscr' };
+      default:                   return { txt: t || 'Incident',                      cls: '' };
+    }
+  };
+
+  let niveauCls = 'ok';
+  let niveauTxt = 'Aucune sortie détectée — comportement conforme';
+  if (nbSorties >= 1 && nbSorties <= 2 && tempsTotal <= 30) {
+    niveauCls = 'warn';
+    niveauTxt = 'Quelques sorties brèves — vigilance légère';
+  } else if (nbSorties >= 3 || tempsTotal > 30) {
+    niveauCls = 'alert';
+    niveauTxt = 'Sorties fréquentes ou prolongées — attention';
+  }
+
+  if (surveillance == null) {
+    return '<h2>🛡️ Surveillance de l\'épreuve</h2>'
+      + '<p class="neutral">Aucune donnée de surveillance n\'est présente dans ce fichier. '
+      + 'La version du jeu utilisée est antérieure à l\'ajout du module anti-sortie.</p>';
+  }
+
+  let html = '<h2>🛡️ Surveillance de l\'épreuve</h2>'
+    + '<div class="surv-summary">'
+    + '<div class="surv-card ' + niveauCls + '"><span class="surv-num">' + nbSorties + '</span><span class="surv-lbl">Sortie(s) détectée(s)</span></div>'
+    + '<div class="surv-card ' + niveauCls + '"><span class="surv-num">' + formatDuree(tempsTotal) + '</span><span class="surv-lbl">Temps cumulé hors page</span></div>'
+    + '<div class="surv-card ' + niveauCls + '"><span class="surv-num">'
+    + (niveauCls === 'ok' ? '✔' : (niveauCls === 'warn' ? '⚠' : '✗'))
+    + '</span><span class="surv-lbl">' + escapeHtml(niveauTxt) + '</span></div>'
+    + '</div>';
+
+  if (incidents.length === 0) {
+    html += '<p class="neutral">Aucun incident enregistré : l\'élève est resté sur la page pendant toute la durée de l\'épreuve.</p>';
+  } else {
+    html += '<h3>Détail des incidents</h3>'
+      + '<table><thead><tr>'
+      + '<th style="width:60px;">#</th><th class="left">Type d\'incident</th>'
+      + '<th>Début (local)</th><th>Fin (local)</th><th>Durée</th>'
+      + '</tr></thead><tbody>'
+      + incidents.map(function (inc, i) {
+          const t = labelType(inc.type);
+          const debut = inc.debut_iso ? formatDateHeure(inc.debut_iso) : '—';
+          const fin = inc.fin_iso
+            ? formatDateHeure(inc.fin_iso)
+            : '<em style="color:var(--rouge);">en cours / non clôturé</em>';
+          const duree = (inc.duree_s != null)
+            ? formatDuree(inc.duree_s)
+            : '<span class="neutral">—</span>';
+          return '<tr>'
+            + '<td>' + (i + 1) + '</td>'
+            + '<td class="left"><span class="incident-type ' + t.cls + '">' + escapeHtml(t.txt) + '</span></td>'
+            + '<td><small>' + escapeHtml(debut) + '</small></td>'
+            + '<td><small>' + fin + '</small></td>'
+            + '<td><strong>' + duree + '</strong></td>'
+            + '</tr>';
+        }).join('')
+      + '</tbody></table>';
+  }
+
+  html += '<div class="diag-box" style="background:#f8f9fb; border-left-color: var(--bleufonce);">'
+    + '<div class="diag-title" style="color: var(--bleufonce);">'
+    + (niveauCls === 'ok' ? '✅' : (niveauCls === 'warn' ? '⚠️' : '🚨'))
+    + ' Interprétation pédagogique</div>';
+
+  if (niveauCls === 'ok') {
+    html += '<div class="diag-line">L\'élève (ou l\'équipe) est resté concentré sur l\'épreuve. Aucun signe de distraction ou de recherche extérieure.</div>';
+  } else if (niveauCls === 'warn') {
+    html += '<div class="diag-line">Quelques sorties brèves ont été enregistrées. Elles peuvent correspondre à des distractions ponctuelles (notification, vérification d\'heure) ou à une recherche rapide d\'information. À confirmer par entretien si nécessaire.</div>';
+  } else {
+    html += '<div class="diag-line">Le nombre et/ou la durée cumulée des sorties suggèrent une utilisation détournée de l\'épreuve (recherche de réponses, échange avec l\'extérieur). Un entretien avec l\'élève ou l\'équipe est recommandé avant validation du score.</div>';
+  }
+
+  html += '<div class="diag-line" style="font-size:0.9em; color:#666; margin-top:8px;">'
+    + '<strong>Note technique :</strong> certaines sorties peuvent être involontaires '
+    + '(économiseur d\'écran, fenêtre système, notification). Le nombre et la durée cumulée '
+    + 'doivent être interprétés avec prudence, en complément d\'observations directes.</div>'
+    + '</div>';
+
+  return html;
+}
+
+/* =========================================================
+   DIAGNOSTIC PÉDAGOGIQUE (HTML)
+   ========================================================= */
+
+function construireDiagnostic(reponses, scores, manche3Detail, total, totalMax, pourcentage) {
+  const competences = calculerCompetences(reponses);
+  const niv = evaluerNiveau(pourcentage);
+  const niveau = niv.niveau;
+  const niveauCouleur = niv.couleurCss;
+  const niveauEmoji = niv.emoji;
+
+  const faibles = Object.keys(competences).filter(function (nom) {
+    const c = competences[nom];
+    return c.total > 0 && (c.reussies / c.total) < 0.5;
+  });
+  const maitrisees = Object.keys(competences).filter(function (nom) {
+    const c = competences[nom];
+    return c.total > 0 && c.reussies === c.total;
+  });
+
+  const s1 = scores.manche1 || 0;
+  const s2 = scores.manche2 || 0;
+  const s3 = scores.manche3 || 0;
+  const s4 = scores.manche4 || 0;
+  const pertes = [
+    { manche: 1, perdus: MAX_PAR_MANCHE[1] - s1, max: MAX_PAR_MANCHE[1] },
+    { manche: 2, perdus: MAX_PAR_MANCHE[2] - s2, max: MAX_PAR_MANCHE[2] },
+    { manche: 3, perdus: MAX_PAR_MANCHE[3] - s3, max: MAX_PAR_MANCHE[3] },
+    { manche: 4, perdus: MAX_PAR_MANCHE[4] - s4, max: MAX_PAR_MANCHE[4] }
+  ];
+  pertes.sort(function (a, b) { return b.perdus - a.perdus; });
+  const mancheLaPlusCouteuse = pertes[0];
+  const envReussies = manche3Detail.filter(function (d) { return d.correcte; }).length;
+
+  let html = '<h2>🩺 Diagnostic pédagogique</h2>'
+    + '<div class="diag-box">'
+    + '<div class="diag-title">' + niveauEmoji + ' Niveau global : '
+    + '<span style="color:' + niveauCouleur + ';">' + escapeHtml(niveau) + '</span></div>'
+    + '<div class="diag-line">Score total : <strong>' + formatFr(total) + ' / ' + formatFr(totalMax)
+    + '</strong> — soit <strong>' + pourcentage + ' %</strong>.</div>'
+    + '<div class="diag-line">Répartition par manche : '
+    + '<strong>M1</strong> ' + formatFr(s1) + '/10, '
+    + '<strong>M2</strong> ' + formatFr(s2) + '/15, '
+    + '<strong>M3</strong> ' + formatFr(s3) + '/15, '
+    + '<strong>M4</strong> ' + formatFr(s4) + '/10.</div>';
+
+  if (mancheLaPlusCouteuse.perdus > 0) {
+    html += '<div class="diag-line">Manche la plus coûteuse en points : '
+      + '<strong>Manche ' + mancheLaPlusCouteuse.manche + '</strong> '
+      + '(' + formatFr(mancheLaPlusCouteuse.perdus) + ' point(s) perdu(s) sur '
+      + formatFr(mancheLaPlusCouteuse.max) + ').</div>';
+  }
+  if (envReussies > 0) {
+    html += '<div class="diag-line">Enveloppe mystère (M3) : <strong>'
+      + envReussies + ' enveloppe(s) correcte(s) sur 6</strong>.</div>';
+  }
+  if (maitrisees.length > 0) {
+    html += '<div class="diag-line">Points forts (compétences maîtrisées) : <strong>'
+      + maitrisees.map(escapeHtml).join(' • ') + '</strong>.</div>';
+  }
+  if (faibles.length > 0) {
+    html += '<div class="diag-line">Points à retravailler (moins de 50 % de réussite) : '
+      + '<strong style="color:var(--rouge);">' + faibles.map(escapeHtml).join(' • ') + '</strong>.</div>';
+  } else {
+    html += '<div class="diag-line">Aucune compétence n\'est en dessous de 50 % de réussite. Bon équilibre général.</div>';
+  }
+
+  const reco = recommandationPour(pourcentage);
+  html += '<div class="diag-line" style="margin-top:12px; padding-top:10px; border-top:1px dashed #e0c98a;">'
+    + '<strong>Recommandation :</strong> ' + escapeHtml(reco) + '</div>'
+    + '</div>';
+  return html;
+}
+
+/* =========================================================
+   EXPORT LATEX — CORRECTIF UNICODE
+   ========================================================= */
+
+const UNICODE_LATEX_MAP = {
+  '\u2212': '$-$', '\u00B1': '$\\pm$', '\u00D7': '$\\times$',
+  '\u00F7': '$\\div$', '\u2264': '$\\leq$', '\u2265': '$\\geq$',
+  '\u2260': '$\\neq$', '\u2248': '$\\approx$', '\u221E': '$\\infty$',
+  '\u221A': '$\\sqrt{\\ }$', '\u2211': '$\\sum$', '\u220F': '$\\prod$',
+  '\u222B': '$\\int$', '\u2202': '$\\partial$',
+  '\u2190': '$\\leftarrow$', '\u2192': '$\\rightarrow$',
+  '\u2194': '$\\leftrightarrow$', '\u21D0': '$\\Leftarrow$',
+  '\u21D2': '$\\Rightarrow$', '\u21D4': '$\\Leftrightarrow$',
+  '\u21A6': '$\\mapsto$',
+  '\u03B1': '$\\alpha$', '\u03B2': '$\\beta$', '\u03B3': '$\\gamma$',
+  '\u03B4': '$\\delta$', '\u03B5': '$\\epsilon$', '\u03B6': '$\\zeta$',
+  '\u03B7': '$\\eta$', '\u03B8': '$\\theta$', '\u03B9': '$\\iota$',
+  '\u03BA': '$\\kappa$', '\u03BB': '$\\lambda$', '\u03BC': '$\\mu$',
+  '\u03BD': '$\\nu$', '\u03BE': '$\\xi$', '\u03C0': '$\\pi$',
+  '\u03C1': '$\\rho$', '\u03C3': '$\\sigma$', '\u03C4': '$\\tau$',
+  '\u03C5': '$\\upsilon$', '\u03C6': '$\\phi$', '\u03C7': '$\\chi$',
+  '\u03C8': '$\\psi$', '\u03C9': '$\\omega$',
+  '\u0393': '$\\Gamma$', '\u0394': '$\\Delta$', '\u0398': '$\\Theta$',
+  '\u039B': '$\\Lambda$', '\u039E': '$\\Xi$', '\u03A0': '$\\Pi$',
+  '\u03A3': '$\\Sigma$', '\u03A6': '$\\Phi$', '\u03A8': '$\\Psi$',
+  '\u03A9': '$\\Omega$',
+  '\u00B9': '\\textsuperscript{1}', '\u00B2': '\\textsuperscript{2}',
+  '\u00B3': '\\textsuperscript{3}', '\u2070': '\\textsuperscript{0}',
+  '\u2074': '\\textsuperscript{4}', '\u2075': '\\textsuperscript{5}',
+  '\u2076': '\\textsuperscript{6}', '\u2077': '\\textsuperscript{7}',
+  '\u2078': '\\textsuperscript{8}', '\u2079': '\\textsuperscript{9}',
+  '\u207A': '\\textsuperscript{+}', '\u207B': '\\textsuperscript{-}',
+  '\u207F': '\\textsuperscript{n}', '\u1D49': '\\textsuperscript{e}',
+  '\u02B0': '\\textsuperscript{h}', '\u02B3': '\\textsuperscript{r}',
+  '\u1D48': '\\textsuperscript{d}',
+  '\u2013': '--', '\u2014': '---', '\u2015': '---',
+  '\u2026': '\\ldots{}',
+  '\u00AB': '\\guillemotleft{}', '\u00BB': '\\guillemotright{}',
+  '\u2018': '`', '\u2019': "'", '\u201A': ',',
+  '\u201C': '``', '\u201D': "''",
+  '\u2032': "$'$", '\u2033': "$''$",
+  '\u2022': '\\textbullet{}', '\u00B7': '\\textperiodcentered{}',
+  '\u2020': '\\textdagger{}', '\u2021': '\\textdaggerdbl{}',
+  '\u00A7': '\\S{}', '\u00B6': '\\P{}',
+  '\u00B0': '\\textdegree{}', '\u00A9': '\\textcopyright{}',
+  '\u00AE': '\\textregistered{}', '\u2122': '\\texttrademark{}',
+  '\u20AC': '\\texteuro{}', '\u00A3': '\\pounds{}',
+  '\u00A5': '\\textyen{}', '\u00A2': '\\textcent{}',
+  '\u0153': '\\oe{}', '\u0152': '\\OE{}',
+  '\u00E6': '\\ae{}', '\u00C6': '\\AE{}',
+  '\u00DF': '\\ss{}',
+  '\u00F0': '\\dh{}', '\u00D0': '\\DH{}',
+  '\u00FE': '\\th{}', '\u00DE': '\\TH{}',
+  '\u00AD': '', '\u200B': '', '\u200C': '', '\u200D': '', '\uFEFF': ''
+};
+const SAFE_FRENCH_UNICODE = /[\u00C0-\u00FF\u0152\u0153\u0178]/;
+
+function remplacerCaracteresUnicode(str) {
+  if (str == null) return '';
+  return String(str).replace(/[\u{0080}-\u{10FFFF}]/gu, function (ch) {
+    if (UNICODE_LATEX_MAP[ch] != null) return UNICODE_LATEX_MAP[ch];
+    if (SAFE_FRENCH_UNICODE.test(ch)) return ch;
+    const code = ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+    console.warn('LaTeX export : caractère Unicode non mappé supprimé — U+' + code, JSON.stringify(ch));
+    return '';
+  });
+}
+
+function latexEscape(s) {
+  if (s == null) return '';
+  let str = String(s);
+  str = str.replace(/[\u00A0\u2007\u2009\u202F\u2060]/g, ' ');
+  const map = {
+    '\\': '\\textbackslash{}', '&': '\\&', '%': '\\%', '$': '\\$',
+    '#': '\\#', '_': '\\_', '{': '\\{', '}': '\\}',
+    '~': '\\textasciitilde{}', '^': '\\textasciicircum{}',
+    '<': '\\textless{}', '>': '\\textgreater{}'
+  };
+  str = str.replace(/[\\&%$#_{}~^<>]/g, function (ch) { return map[ch]; });
+  str = remplacerCaracteresUnicode(str);
+  return str;
+}
+
+/* =========================================================
+   EXPORT LATEX — MOTEUR DE GÉNÉRATION
+   ---------------------------------------------------------
+   Modifications par rapport aux versions précédentes :
+    • La section « Vérification de l'intégrité du fichier »
+      n'est PAS émise dans le document .tex.
+    • La « Note technique » de la sous-section
+      « Interprétation pédagogique » n'est PAS émise dans
+      le document .tex.
+   ========================================================= */
+
+function fmtTex(v, maxDec) {
+  if (maxDec == null) maxDec = 4;
+  if (v == null) return '---';
+  if (typeof v === 'number') {
+    if (!isFinite(v)) return '---';
+    if (Number.isInteger(v)) return String(v);
+    return parseFloat(v.toFixed(maxDec)).toString().replace('.', ',');
+  }
+  return String(v);
+}
+
+function genererLatex() {
+  if (!dernierRapport) throw new Error('Aucun fichier analysé.');
+
+  const data = dernierRapport.data;
+  const nomFichier = dernierRapport.nomFichier || 'equipe.json';
+
+  const donnees = data.donnees || {};
+  const equipe = donnees.equipe || {};
+  const etat = donnees.etat || {};
+  const reponses = donnees.reponses || {};
+  const scores = donnees.scores || {};
+  const manche3Detail = Array.isArray(donnees.manche3_detail) ? donnees.manche3_detail : [];
+
+  const L = [];
+  const P = function (s) { L.push(s == null ? '' : s); };
+  const E = latexEscape;
+  const NB = function (v, d) { return E(fmtTex(v, d)); };
+
+  /* ---------- Préambule ---------- */
+  P("\\documentclass[11pt,a4paper]{article}");
+  P("\\usepackage[utf8]{inputenc}");
+  P("\\usepackage[T1]{fontenc}");
+  P("\\usepackage[french]{babel}");
+  P("\\usepackage[margin=2cm]{geometry}");
+  P("\\usepackage{booktabs}");
+  P("\\usepackage{longtable}");
+  P("\\usepackage{array}");
+  P("\\usepackage{xcolor}");
+  P("\\usepackage{amsmath,amssymb}");
+  P("\\usepackage{enumitem}");
+  P("\\usepackage{fancyhdr}");
+  P("\\usepackage[hidelinks]{hyperref}");
+  P("");
+  P("\\definecolor{bleufonce}{HTML}{143C78}");
+  P("\\definecolor{rouge}{HTML}{B41E1E}");
+  P("\\definecolor{vert}{HTML}{148246}");
+  P("\\definecolor{orange}{HTML}{E67814}");
+  P("\\definecolor{violet}{HTML}{6E1E8C}");
+  P("\\definecolor{or}{HTML}{DCAA14}");
+  P("");
+  P("\\newcommand{\\correct}{\\textcolor{vert}{\\textbf{Correct}}}");
+  P("\\newcommand{\\incorrect}{\\textcolor{rouge}{\\textbf{Incorrect}}}");
+  P("");
+  P("\\pagestyle{fancy}");
+  P("\\fancyhf{}");
+  P("\\fancyhead[L]{\\small\\textcolor{bleufonce}{Le Grand Défi des Évolutions}}");
+  P("\\fancyhead[R]{\\small\\textcolor{bleufonce}{Compte rendu}}");
+  P("\\fancyfoot[C]{\\thepage}");
+  P("\\setlength{\\headheight}{14pt}");
+  P("\\setlength{\\parindent}{0pt}");
+  P("");
+  P("\\begin{document}");
+  P("");
+
+  /* ---------- Titre ---------- */
+  P("\\begin{center}");
+  P("{\\LARGE\\bfseries\\textcolor{bleufonce}{Le Grand Défi des Évolutions}}\\\\[3mm]");
+  P("{\\large\\bfseries Compte rendu détaillé --- analyse question par question}\\\\[3mm]");
+  P("{\\small Fichier source : \\texttt{" + E(nomFichier) + "}}\\\\[1mm]");
+  P("{\\small Rapport généré le " + E(new Date().toLocaleString('fr-FR')) + "}");
+  P("\\end{center}");
+  P("\\vspace{4mm}");
+  P("\\hrule");
+  P("\\vspace{4mm}");
+
+  /* ---------- 1. Identification ---------- */
+  const effectifTxt = (equipe.effectif != null)
+    ? String(equipe.effectif) + " élève(s)"
+    : (Array.isArray(equipe.membres) ? String(equipe.membres.length) + " élève(s)" : "---");
+
+  P("\\section{Identification de l'équipe}");
+  P("");
+  P("\\begin{center}");
+  P("\\begin{tabular}{@{}p{6cm}p{9.5cm}@{}}");
+  P("\\toprule");
+  P("\\textbf{Nom de l'équipe} & " + E(equipe.nom || "(non renseigné)") + " \\\\");
+  P("\\textbf{Capitaine} & " + E(equipe.capitaine || "(non renseigné)") + " \\\\");
+  P("\\textbf{Effectif} & " + E(effectifTxt) + " \\\\");
+  P("\\textbf{Horodatage de la sauvegarde} & " + E(formatDateHeure(donnees.horodatage_iso)) + " \\\\");
+  P("\\bottomrule");
+  P("\\end{tabular}");
+  P("\\end{center}");
+  P("");
+
+  if (Array.isArray(equipe.membres) && equipe.membres.length > 0) {
+    P("\\subsection*{Membres de l'équipe}");
+    P("\\begin{enumerate}[leftmargin=*]");
+    equipe.membres.forEach(function (m) { P("  \\item " + E(m)); });
+    P("\\end{enumerate}");
+    P("");
+  }
+
+  /* ---------- NOTE : La section « Vérification de l'intégrité du fichier »
+     a été volontairement supprimée du document LaTeX, conformément à la
+     demande. Les calculs HMAC/SHA-256 restent effectués côté HTML, mais
+     n'apparaissent plus dans le .tex. ---------- */
+
+  /* ---------- 2. Métadonnées ---------- */
+  P("\\section{Métadonnées de la session}");
+  P("");
+  P("\\begin{center}");
+  P("\\begin{tabular}{@{}p{6cm}p{9.5cm}@{}}");
+  P("\\toprule");
+  P("\\textbf{Motif de la sauvegarde} & " + E(donnees.motif || '---') + " \\\\");
+  P("\\textbf{Horodatage ISO} & \\texttt{" + E(donnees.horodatage_iso || '---') + "} \\\\");
+  P("\\textbf{Horodatage local} & " + E(donnees.horodatage_local || '---') + " \\\\");
+  P("\\textbf{Application} & " + E((donnees.application && donnees.application.nom) || '---')
+    + " --- v" + E((donnees.application && donnees.application.version) || '?') + " \\\\");
+  P("\\textbf{Partie démarrée} & " + (etat.partie_demarree ? "Oui" : "Non") + " \\\\");
+  P("\\textbf{Partie validée} & " + (etat.partie_validee ? "Oui" : "Non") + " \\\\");
+  P("\\textbf{Étape courante} & " + E(etat.etape_courante != null ? etat.etape_courante + ' / 5' : '---') + " \\\\");
+  P("\\textbf{Manche chronométrée} & " + E(etat.manche_chronometree
+      ? (LABELS_MANCHES[etat.manche_chronometree] || ('Manche ' + etat.manche_chronometree))
+      : '---') + " \\\\");
+  P("\\textbf{Temps restant (chrono)} & " + E(etat.secondes_restantes != null ? formatDuree(etat.secondes_restantes) : '---') + " \\\\");
+  P("\\textbf{Durée totale écoulée} & " + E(formatDuree(etat.duree_totale_ecoulee_s)) + " \\\\");
+  P("\\bottomrule");
+  P("\\end{tabular}");
+  P("\\end{center}");
+  P("");
+
+  /* ---------- 3. Surveillance ---------- */
+  genererLatexSurveillance(P, E, donnees.surveillance);
+
+  /* ---------- 4. Réponses détaillées ---------- */
+  P("\\section{Réponses détaillées, question par question}");
+  P("");
+  let aucuneReponse = true;
+
+  for (let m = 1; m <= 4; m++) {
+    const cles = Object.keys(reponses).filter(function (k) { return reponses[k] && reponses[k].manche === m; });
+    if (cles.length === 0) continue;
+    aucuneReponse = false;
+
+    let ordonnees = cles;
+    if (m === 3 && manche3Detail.length) {
+      ordonnees = manche3Detail.map(function (d) { return d.cle; }).filter(function (k) { return cles.includes(k); });
+    }
+
+    P("\\subsection{" + E(LABELS_MANCHES[m]) + " --- " + MAX_PAR_MANCHE[m] + " points}");
+    P("");
+    P("\\begin{longtable}{@{}p{4.6cm}p{2.1cm}p{2.1cm}p{1.7cm}p{2.0cm}p{1.5cm}@{}}");
+    P("\\toprule");
+    P("\\textbf{Question} & \\textbf{Réponse} & \\textbf{Attendue} & \\textbf{Tolérance} & \\textbf{Résultat} & \\textbf{Points} \\\\");
+    P("\\midrule");
+    P("\\endfirsthead");
+    P("\\toprule");
+    P("\\textbf{Question} & \\textbf{Réponse} & \\textbf{Attendue} & \\textbf{Tolérance} & \\textbf{Résultat} & \\textbf{Points} \\\\");
+    P("\\midrule");
+    P("\\endhead");
+    P("\\bottomrule");
+    P("\\endfoot");
+    P("\\bottomrule");
+    P("\\endlastfoot");
+
+    ordonnees.forEach(function (key) {
+      const r = reponses[key];
+      if (!r) return;
+      const label = LABELS_QUESTIONS[key] || key;
+      const saisieBrute = (r.saisie != null && String(r.saisie).trim() !== '') ? String(r.saisie) : '(vide)';
+      const attendu = fmtTex(r.valeur_attendue);
+      const tolTex = (r.tolerance != null) ? "$\\pm$~" + E(fmtTex(r.tolerance)) : "---";
+      const res = r.correcte ? "\\correct" : "\\incorrect";
+      const maxPts = r.points_max || 0;
+      const pts = r.points || 0;
+      const ptCell = (m === 3 && !r.correcte)
+        ? "0 / 0"
+        : fmtTex(pts) + " / " + fmtTex(maxPts);
+
+      P(E(label) + " & \\texttt{" + E(saisieBrute) + "} & " + E(attendu) + " & "
+        + tolTex + " & " + res + " & " + E(ptCell) + " \\\\");
+    });
+
+    P("\\end{longtable}");
+    P("");
+  }
+
+  if (aucuneReponse) {
+    P("\\textit{Aucune réponse enregistrée dans ce fichier.}");
+    P("");
+  }
+
+  /* ---------- 5. Bilan ---------- */
+  const s1 = scores.manche1 || 0;
+  const s2 = scores.manche2 || 0;
+  const s3 = scores.manche3 || 0;
+  const s4 = scores.manche4 || 0;
+  const total = scores.total != null ? scores.total : (s1 + s2 + s3 + s4);
+  const totalMax = scores.total_max || 50;
+  const pourcentage = totalMax > 0 ? Math.round((total / totalMax) * 1000) / 10 : 0;
+  const pct = function (v, mx) { return (mx > 0 ? Math.round((v / mx) * 1000) / 10 : 0); };
+  const pctTex = function (v, mx) { return E(String(pct(v, mx)).replace('.', ',')) + " \\%"; };
+
+  P("\\section{Bilan des points}");
+  P("");
+  P("\\begin{center}");
+  P("\\begin{tabular}{@{}lrrr@{}}");
+  P("\\toprule");
+  P("\\textbf{Manche} & \\textbf{Points obtenus} & \\textbf{Points max} & \\textbf{Pourcentage} \\\\");
+  P("\\midrule");
+  P("Manche 1 --- Échauffement éclair & " + NB(s1) + " & " + MAX_PAR_MANCHE[1] + " & " + pctTex(s1, MAX_PAR_MANCHE[1]) + " \\\\");
+  P("Manche 2 --- Défis en équipe & " + NB(s2) + " & " + MAX_PAR_MANCHE[2] + " & " + pctTex(s2, MAX_PAR_MANCHE[2]) + " \\\\");
+  P("Manche 3 --- Enveloppe mystère & " + NB(s3) + " & " + MAX_PAR_MANCHE[3] + " & " + pctTex(s3, MAX_PAR_MANCHE[3]) + " \\\\");
+  P("Manche 4 --- Finale « Tout ou rien » & " + NB(s4) + " & " + MAX_PAR_MANCHE[4] + " & " + pctTex(s4, MAX_PAR_MANCHE[4]) + " \\\\");
+  P("\\midrule");
+  P("\\textbf{TOTAL} & \\textbf{" + NB(total) + "} & \\textbf{" + NB(totalMax) + "} & \\textbf{"
+    + E(String(pourcentage).replace('.', ',')) + " \\%} \\\\");
+  P("\\bottomrule");
+  P("\\end{tabular}");
+  P("\\end{center}");
+  P("");
+
+  /* ---------- 6. Diagnostic ---------- */
+  const competences = calculerCompetences(reponses);
+  const niv = evaluerNiveau(pourcentage);
+
+  P("\\section{Diagnostic pédagogique}");
+  P("");
+  P("\\subsection{Niveau global}");
+  P("");
+  P("\\textbf{Niveau :} \\textcolor{" + niv.couleurTex + "}{\\textbf{" + E(niv.niveau) + "}} \\\\[1mm]");
+  P("Score total : \\textbf{" + NB(total) + " / " + NB(totalMax) + "}, soit \\textbf{"
+    + E(String(pourcentage).replace('.', ',')) + " \\%}.");
+  P("");
+  P("Répartition par manche : \\textbf{M1} " + NB(s1) + "/10, \\textbf{M2} " + NB(s2) + "/15, "
+    + "\\textbf{M3} " + NB(s3) + "/15, \\textbf{M4} " + NB(s4) + "/10.");
+  P("");
+
+  const pertes = [
+    { manche: 1, perdus: MAX_PAR_MANCHE[1] - s1, max: MAX_PAR_MANCHE[1] },
+    { manche: 2, perdus: MAX_PAR_MANCHE[2] - s2, max: MAX_PAR_MANCHE[2] },
+    { manche: 3, perdus: MAX_PAR_MANCHE[3] - s3, max: MAX_PAR_MANCHE[3] },
+    { manche: 4, perdus: MAX_PAR_MANCHE[4] - s4, max: MAX_PAR_MANCHE[4] }
+  ];
+  pertes.sort(function (a, b) { return b.perdus - a.perdus; });
+
+  if (pertes[0].perdus > 0) {
+    P("Manche la plus coûteuse en points : \\textbf{Manche " + pertes[0].manche + "} ("
+      + NB(pertes[0].perdus) + " point(s) perdu(s) sur " + NB(pertes[0].max) + ").");
+    P("");
+  }
+
+  const envReussies = manche3Detail.filter(function (d) { return d.correcte; }).length;
+  if (manche3Detail.length > 0) {
+    P("Enveloppe mystère (Manche 3) : \\textbf{" + envReussies + " enveloppe(s) correcte(s) sur 6}.");
+    P("");
+  }
+
+  P("\\subsection{Synthèse par compétence}");
+  P("");
+  P("\\begin{center}");
+  P("\\small");
+  P("\\begin{tabular}{@{}p{9cm}cc@{}}");
+  P("\\toprule");
+  P("\\textbf{Compétence évaluée} & \\textbf{Réussies} & \\textbf{Taux} \\\\");
+  P("\\midrule");
+
+  Object.keys(competences).forEach(function (nom) {
+    const c = competences[nom];
+    if (c.total === 0) {
+      P(E(nom) + " & --- & \\textit{non évaluée} \\\\");
+    } else {
+      const taux = Math.round((c.reussies / c.total) * 1000) / 10;
+      const couleur = (c.reussies === c.total) ? 'vert' : (taux < 50 ? 'rouge' : 'orange');
+      P(E(nom) + " & " + c.reussies + " / " + c.total + " & \\textcolor{" + couleur + "}{\\textbf{"
+        + E(String(taux).replace('.', ',')) + " \\%}} \\\\");
+    }
+  });
+
+  P("\\bottomrule");
+  P("\\end{tabular}");
+  P("\\end{center}");
+  P("");
+
+  P("\\subsection{Détail question par question}");
+  P("");
+
+  Object.keys(competences).forEach(function (nom) {
+    const c = competences[nom];
+    if (c.total === 0) return;
+
+    const taux = Math.round((c.reussies / c.total) * 1000) / 10;
+    const couleur = (c.reussies === c.total) ? 'vert' : (taux < 50 ? 'rouge' : 'orange');
+
+    P("\\paragraph{" + E(nom) + " \\hfill \\normalfont\\small\\textcolor{" + couleur + "}{"
+      + c.reussies + "/" + c.total + " --- " + E(String(taux).replace('.', ',')) + " \\%}}");
+    P("");
+    P("\\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]");
+
+    c.detail.forEach(function (item) {
+      const r = item.r;
+      const label = LABELS_QUESTIONS[item.cle] || item.cle;
+      const saisieBrute = (r.saisie != null && String(r.saisie).trim() !== '') ? String(r.saisie) : '(vide)';
+      const attendu = fmtTex(r.valeur_attendue);
+      const tolTex = (r.tolerance != null) ? "$\\pm$~" + E(fmtTex(r.tolerance)) : "---";
+      const statut = r.correcte ? "\\correct" : "\\incorrect";
+      const maxPts = r.points_max || 0;
+      const pts = r.points || 0;
+
+      P("  \\item \\textbf{" + E(label) + "} : " + statut
+        + " --- réponse \\texttt{" + E(saisieBrute) + "}, valeur attendue \\texttt{" + E(attendu)
+        + "}, tolérance " + tolTex + " (points : " + NB(pts) + " / " + NB(maxPts) + ").");
+    });
+
+    P("\\end{itemize}");
+    P("");
+  });
+
+  const faibles = Object.keys(competences).filter(function (n) {
+    const c = competences[n];
+    return c.total > 0 && (c.reussies / c.total) < 0.5;
+  });
+  const maitrisees = Object.keys(competences).filter(function (n) {
+    const c = competences[n];
+    return c.total > 0 && c.reussies === c.total;
+  });
+
+  P("\\subsection{Synthèse et recommandation}");
+  P("");
+
+  if (maitrisees.length > 0) {
+    P("\\textbf{Points forts (compétences maîtrisées) :}");
+    P("\\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]");
+    maitrisees.forEach(function (n) { P("  \\item " + E(n)); });
+    P("\\end{itemize}");
+    P("");
+  } else {
+    P("Aucune compétence n'est intégralement maîtrisée.");
+    P("");
+  }
+
+  if (faibles.length > 0) {
+    P("\\textbf{Points à retravailler (moins de 50~\\% de réussite) :}");
+    P("\\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]");
+    faibles.forEach(function (n) {
+      const c = competences[n];
+      P("  \\item " + E(n) + " (" + c.reussies + " / " + c.total + ")");
+    });
+    P("\\end{itemize}");
+    P("");
+  } else {
+    P("Aucune compétence n'est en dessous de 50~\\% de réussite : bon équilibre général.");
+    P("");
+  }
+
+  P("\\textbf{Recommandation :} " + E(recommandationPour(pourcentage)));
+  P("");
+
+  P("\\vfill");
+  P("\\begin{center}");
+  P("{\\footnotesize\\itshape Compte rendu généré automatiquement par le lecteur de sauvegarde --- Le Grand Défi des Évolutions.}");
+  P("\\end{center}");
+  P("");
+  P("\\end{document}");
+
+  return L.join("\n");
+}
+
+/* ---------------------------------------------------------
+   Section surveillance (version LaTeX)
+   ---------------------------------------------------------
+   La « Note technique » a été retirée du .tex, conformément
+   à la demande. Elle reste présente dans le rendu HTML.
+   --------------------------------------------------------- */
+function genererLatexSurveillance(P, E, surveillance) {
+  P("\\section{Surveillance de l'épreuve}");
+  P("");
+
+  if (surveillance == null) {
+    P("\\textit{Aucune donnée de surveillance n'est présente dans ce fichier. "
+      + "La version du jeu utilisée est antérieure à l'ajout du module anti-sortie.}");
+    P("");
+    return;
+  }
+
+  const s = surveillance || {};
+  const incidents = Array.isArray(s.incidents) ? s.incidents : [];
+  const nbSorties = (s.nb_sorties != null) ? s.nb_sorties : incidents.length;
+  const tempsTotal = (s.temps_hors_page_total_s != null)
+    ? s.temps_hors_page_total_s
+    : incidents.reduce(function (acc, i) { return acc + (i.duree_s || 0); }, 0);
+
+  let niveauCls = 'ok';
+  let niveauTxt = "Aucune sortie détectée --- comportement conforme";
+  if (nbSorties >= 1 && nbSorties <= 2 && tempsTotal <= 30) {
+    niveauCls = 'warn';
+    niveauTxt = "Quelques sorties brèves --- vigilance légère";
+  } else if (nbSorties >= 3 || tempsTotal > 30) {
+    niveauCls = 'alert';
+    niveauTxt = "Sorties fréquentes ou prolongées --- attention";
+  }
+
+  const couleurTex = (niveauCls === 'ok') ? 'vert' : (niveauCls === 'warn' ? 'orange' : 'rouge');
+
+  P("\\begin{center}");
+  P("\\begin{tabular}{@{}p{6cm}p{9.5cm}@{}}");
+  P("\\toprule");
+  P("\\textbf{Nombre de sorties détectées} & \\textbf{" + nbSorties + "} \\\\");
+  P("\\textbf{Temps cumulé hors page} & " + E(formatDuree(tempsTotal)) + " \\\\");
+  P("\\textbf{Appréciation} & \\textcolor{" + couleurTex + "}{\\textbf{" + E(niveauTxt) + "}} \\\\");
+  P("\\bottomrule");
+  P("\\end{tabular}");
+  P("\\end{center}");
+  P("");
+
+  const labelType = function (t) {
+    switch (t) {
+      case 'onglet_masque':      return "Changement d'onglet / minimisation";
+      case 'perte_focus':        return "Perte de focus de la fenêtre";
+      case 'sortie_plein_ecran': return "Sortie du mode plein écran";
+      default:                   return t || "Incident";
+    }
+  };
+
+  if (incidents.length === 0) {
+    P("Aucun incident enregistré : l'élève est resté sur la page pendant toute la durée de l'épreuve.");
+    P("");
+  } else {
+    P("\\subsection{Détail des incidents}");
+    P("");
+    P("\\begin{longtable}{@{}cp{4.6cm}p{3.4cm}p{3.4cm}p{2.0cm}@{}}");
+    P("\\toprule");
+    P("\\textbf{\\#} & \\textbf{Type d'incident} & \\textbf{Début (local)} & \\textbf{Fin (local)} & \\textbf{Durée} \\\\");
+    P("\\midrule");
+    P("\\endfirsthead");
+    P("\\toprule");
+    P("\\textbf{\\#} & \\textbf{Type d'incident} & \\textbf{Début (local)} & \\textbf{Fin (local)} & \\textbf{Durée} \\\\");
+    P("\\midrule");
+    P("\\endhead");
+    P("\\bottomrule");
+    P("\\endfoot");
+    P("\\bottomrule");
+    P("\\endlastfoot");
+
+    incidents.forEach(function (inc, i) {
+      const debut = inc.debut_iso ? formatDateHeureCourt(inc.debut_iso) : '---';
+      const fin = inc.fin_iso ? formatDateHeureCourt(inc.fin_iso) : "en cours / non clôturé";
+      const duree = (inc.duree_s != null) ? formatDuree(inc.duree_s) : '---';
+      P((i + 1) + " & " + E(labelType(inc.type)) + " & " + E(debut) + " & " + E(fin) + " & " + E(duree) + " \\\\");
+    });
+
+    P("\\end{longtable}");
+    P("");
+  }
+
+  P("\\subsection{Interprétation pédagogique}");
+  P("");
+  if (niveauCls === 'ok') {
+    P("L'élève (ou l'équipe) est resté concentré sur l'épreuve. "
+      + "Aucun signe de distraction ou de recherche extérieure.");
+  } else if (niveauCls === 'warn') {
+    P("Quelques sorties brèves ont été enregistrées. Elles peuvent correspondre à des distractions "
+      + "ponctuelles (notification, vérification d'heure) ou à une recherche rapide d'information. "
+      + "À confirmer par entretien si nécessaire.");
+  } else {
+    P("Le nombre et/ou la durée cumulée des sorties suggèrent une utilisation détournée de l'épreuve "
+      + "(recherche de réponses, échange avec l'extérieur). Un entretien avec l'élève ou l'équipe est "
+      + "recommandé avant validation du score.");
+  }
+  P("");
+  /* La « Note technique » n'est volontairement PAS émise dans le .tex. */
+}
+</script>
+
+</body>
+</html>

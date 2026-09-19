@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Évaluation — Droites (équations réduites)</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+<style>
+  :root{
+    --bleu-fonce:#1e3a8a; --bleu:#2563eb; --bleu-clair:#dbeafe;
+    --vert:#047857; --vert-clair:#ecfdf5; --vert-bord:#a7f3d0;
+    --texte:#1e293b; --texte-doux:#64748b; --bord:#e2e8f0;
+    --fond:#eef2f7; --carte:#ffffff;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    font-size:17px; line-height:1.65; color:var(--texte); background:var(--fond);
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding:28px 16px 80px; }
+
+  header.entete{
+    background:linear-gradient(135deg,#1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+    color:#fff; border-radius:18px; padding:28px 30px; margin-bottom:26px;
+    box-shadow:0 10px 28px rgba(30,58,138,.25);
+  }
+  header.entete h1{ margin:0 0 6px; font-size:1.9rem; letter-spacing:.3px; }
+  header.entete p{ margin:0; opacity:.9; font-size:1rem; }
+
+  .rappel{
+    background:var(--bleu-clair); border-left:6px solid var(--bleu);
+    border-radius:12px; padding:16px 20px; margin-bottom:28px;
+  }
+  .rappel h2{ margin:0 0 8px; font-size:1.05rem; text-transform:uppercase;
+    letter-spacing:.6px; color:var(--bleu-fonce); }
+  .rappel p{ margin:0; }
+
+  .card{
+    background:var(--carte); border:1px solid var(--bord); border-radius:16px;
+    padding:22px 24px 24px; margin-bottom:24px;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);
+  }
+  .card h2{
+    display:flex; align-items:center; gap:12px; margin:0 0 10px;
+    font-size:1.22rem; color:var(--bleu-fonce);
+  }
+  .card h2 .num{
+    flex:0 0 auto; width:32px; height:32px; display:grid; place-items:center;
+    background:var(--bleu); color:#fff; border-radius:50%;
+    font-size:.95rem; font-weight:700;
+  }
+  .consigne{ color:var(--texte-doux); font-size:.97rem; margin:0 0 12px; }
+  .enonce{
+    background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px;
+    padding:12px 16px; margin:0 0 16px; font-size:1.05rem;
+  }
+
+  .btn-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; font:inherit;
+    font-size:.95rem; font-weight:600; color:#fff; border:none;
+    border-radius:10px; padding:9px 18px; cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+  .btn:hover{ filter:brightness(1.06); transform:translateY(-1px); }
+  .btn:active{ transform:translateY(0); }
+  .btn:focus-visible{ outline:3px solid #93c5fd; outline-offset:2px; }
+
+  .btn-sol{
+    background:linear-gradient(135deg,#059669,#10b981);
+    box-shadow:0 4px 12px rgba(5,150,105,.28);
+  }
+  .btn-sol::before{ content:"🔎"; }
+  .btn-sol.ouvert{
+    background:linear-gradient(135deg,#b45309,#f59e0b);
+    box-shadow:0 4px 12px rgba(180,83,9,.28);
+  }
+  .btn-sol.ouvert::before{ content:"🙈"; }
+
+  .btn-exemple{
+    background:linear-gradient(135deg,#1d4ed8,#3b82f6);
+    box-shadow:0 4px 12px rgba(29,78,216,.28);
+  }
+  .btn-exemple::before{ content:"🎲"; }
+
+  .solution{
+    margin-top:18px; background:var(--vert-clair);
+    border:1px solid var(--vert-bord); border-left:6px solid var(--vert);
+    border-radius:12px; padding:18px 20px 20px;
+    animation:apparition .22s ease;
+  }
+  @keyframes apparition{
+    from{ opacity:0; transform:translateY(-6px); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+  .solution.cache{ display:none; }
+
+  .solution h3{
+    margin:0 0 12px; font-size:1.02rem; color:var(--vert);
+    text-transform:uppercase; letter-spacing:.5px;
+  }
+  .solution h4{ margin:16px 0 6px; font-size:1rem; color:#065f46; }
+  .solution p{ margin:8px 0; }
+  .solution ul{ margin:8px 0 8px 4px; padding-left:20px; }
+  .solution li{ margin:4px 0; }
+
+  .conclusion{
+    margin-top:16px !important; background:#ffffff;
+    border:1px solid var(--vert-bord); border-radius:8px;
+    padding:10px 14px; font-weight:600; color:#065f46;
+  }
+  .conclusion::before{ content:"✅ "; }
+
+  .astuce{
+    margin-top:14px; background:#fffbeb; border:1px solid #fde68a;
+    border-left:4px solid #f59e0b; border-radius:8px;
+    padding:10px 14px; font-size:.95rem;
+  }
+  .astuce::before{ content:"💡 "; }
+
+  .graph-zone{
+    display:flex; justify-content:center; margin:16px 0 4px;
+    overflow-x:auto; padding:4px;
+  }
+  canvas{
+    background:#fff; border:1px solid var(--bord); border-radius:12px;
+    box-shadow:0 2px 8px rgba(15,23,42,.06); max-width:100%; height:auto;
+  }
+
+  /* ---------- Pied de page ---------- */
+  footer{
+    text-align:center; color:var(--texte-doux);
+    font-size:.85rem; margin-top:34px;
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+  .btn-droit{
+    background:linear-gradient(135deg,#475569,#64748b);
+    box-shadow:0 4px 12px rgba(71,85,105,.28);
+    font-size:.88rem; padding:8px 16px;
+  }
+  .btn-droit::before{ content:"⚖️"; }
+
+  /* ---------- Modale ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(15,23,42,.55);
+    backdrop-filter:blur(3px);
+    display:none;
+    align-items:center; justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .modal-overlay.ouverte{ display:flex; }
+  .modal{
+    background:#fff;
+    border-radius:16px;
+    max-width:640px;
+    width:100%;
+    max-height:85vh;
+    overflow-y:auto;
+    padding:28px 30px 26px;
+    box-shadow:0 20px 50px rgba(15,23,42,.35);
+    animation:apparitionModale .22s ease;
+    position:relative;
+  }
+  @keyframes apparitionModale{
+    from{ opacity:0; transform:translateY(-14px) scale(.98); }
+    to  { opacity:1; transform:translateY(0) scale(1); }
+  }
+  .modal h2{
+    margin:0 0 6px;
+    font-size:1.25rem;
+    color:var(--bleu-fonce);
+    display:flex; align-items:center; gap:8px;
+  }
+  .modal .auteur{
+    font-size:.9rem; color:var(--texte-doux);
+    margin:0 0 16px;
+    border-bottom:1px solid var(--bord);
+    padding-bottom:12px;
+  }
+  .modal h3{
+    font-size:1rem;
+    margin:16px 0 6px;
+    color:var(--bleu);
+  }
+  .modal p{ margin:8px 0; font-size:.95rem; }
+  .modal ul{ margin:8px 0 8px 0; padding-left:22px; font-size:.95rem; }
+  .modal li{ margin:6px 0; }
+  .modal li strong{ color:#065f46; }
+  .modal .fermer{
+    position:absolute; top:12px; right:14px;
+    background:transparent; border:none;
+    font-size:1.5rem; line-height:1;
+    color:var(--texte-doux); cursor:pointer;
+    padding:4px 8px; border-radius:8px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .modal .fermer:hover{ background:#f1f5f9; color:var(--texte); }
+  .modal .contact{
+    margin-top:16px; padding-top:12px;
+    border-top:1px solid var(--bord);
+    font-size:.9rem; color:var(--texte-doux);
+    text-align:center;
+  }
+
+  @media (max-width:520px){
+    body{ font-size:16px; }
+    header.entete{ padding:22px 20px; }
+    header.entete h1{ font-size:1.45rem; }
+    .card{ padding:18px 16px 20px; }
+    .modal{ padding:22px 18px; }
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header class="entete">
+    <h1>Évaluation — Droites et équations réduites</h1>
+    <p>Déterminer, lire et tracer l'équation réduite d'une droite dans le plan repéré.</p>
+  </header>
+
+  <!-- ============ RAPPEL ============ -->
+  <div class="rappel">
+    <h2>Rappel</h2>
+    <p>
+      Une droite non verticale a une équation réduite de la forme
+      \[ y = mx + p, \]
+      où $m$ est le <strong>coefficient directeur</strong> (pente de la droite) et
+      $p$ l'<strong>ordonnée à l'origine</strong> (ordonnée du point d'intersection
+      de la droite avec l'axe des ordonnées).
+    </p>
+  </div>
+
+  <!-- ============ EX 1 ============ -->
+  <section class="card">
+    <h2><span class="num">1</span> Deux points de coordonnées connues</h2>
+    <p class="consigne">Déterminer l'équation réduite de la droite passant par les deux points donnés.</p>
+    <p class="enonce" id="enonce1"></p>
+    <div class="btn-row">
+      <button class="btn btn-exemple" onclick="nouvelExemple(1)">Nouvel exemple</button>
+      <button class="btn btn-sol" id="btn-sol-1" onclick="toggleSol(this,'sol1')">Solution</button>
+    </div>
+    <div class="solution cache" id="sol1"></div>
+  </section>
+
+  <!-- ============ EX 2 ============ -->
+  <section class="card">
+    <h2><span class="num">2</span> Un point et le coefficient directeur connus</h2>
+    <p class="consigne">Déterminer l'équation réduite de la droite passant par le point donné et ayant pour coefficient directeur \(m\).</p>
+    <p class="enonce" id="enonce2"></p>
+    <div class="btn-row">
+      <button class="btn btn-exemple" onclick="nouvelExemple(2)">Nouvel exemple</button>
+      <button class="btn btn-sol" id="btn-sol-2" onclick="toggleSol(this,'sol2')">Solution</button>
+    </div>
+    <div class="solution cache" id="sol2"></div>
+  </section>
+
+  <!-- ============ EX 3 ============ -->
+  <section class="card">
+    <h2><span class="num">3</span> Un point et l'ordonnée à l'origine connus</h2>
+    <p class="consigne">Déterminer l'équation réduite de la droite passant par le point donné et dont l'ordonnée à l'origine est \(p\).</p>
+    <p class="enonce" id="enonce3"></p>
+    <div class="btn-row">
+      <button class="btn btn-exemple" onclick="nouvelExemple(3)">Nouvel exemple</button>
+      <button class="btn btn-sol" id="btn-sol-3" onclick="toggleSol(this,'sol3')">Solution</button>
+    </div>
+    <div class="solution cache" id="sol3"></div>
+  </section>
+
+  <!-- ============ EX 4 ============ -->
+  <section class="card">
+    <h2><span class="num">4</span> Droite parallèle à une droite donnée</h2>
+    <p class="consigne">On donne l'équation d'une droite \(d\) et un point \(A\) n'appartenant pas à \(d\). Déterminer l'équation réduite de la droite \(d'\) parallèle à \(d\) et passant par \(A\).</p>
+    <p class="enonce" id="enonce4"></p>
+    <div class="btn-row">
+      <button class="btn btn-exemple" onclick="nouvelExemple(4)">Nouvel exemple</button>
+      <button class="btn btn-sol" id="btn-sol-4" onclick="toggleSol(this,'sol4')">Solution</button>
+    </div>
+    <div class="solution cache" id="sol4"></div>
+  </section>
+
+  <!-- ============ EX 5 ============ -->
+  <section class="card">
+    <h2><span class="num">5</span> À partir d'un graphique</h2>
+    <p class="consigne">Le graphique ci-dessous représente une droite \(d\) dans un repère orthonormé. Déterminer graphiquement deux points de \(d\), puis en déduire son équation réduite.</p>
+    <div class="graph-zone">
+      <canvas id="graph5" width="440" height="440" aria-label="Repère orthonormé avec la droite d"></canvas>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-exemple" onclick="nouvelExemple(5)">Nouvel exemple</button>
+      <button class="btn btn-sol" id="btn-sol-5" onclick="toggleSol(this,'sol5')">Solution</button>
+    </div>
+    <div class="solution cache" id="sol5"></div>
+  </section>
+
+  <!-- ============ EX 6 ============ -->
+  <section class="card">
+    <h2><span class="num">6</span> Tracer une droite dans un repère</h2>
+    <p class="consigne">Dans le repère ci-dessous, tracer la droite \(d\) passant par le point \(A\) et de coefficient directeur \(m\). Donner ensuite son équation réduite.</p>
+    <p class="enonce" id="enonce6"></p>
+    <div class="graph-zone">
+      <canvas id="graph6" width="440" height="440" aria-label="Repère orthonormé avec le point A"></canvas>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-exemple" onclick="nouvelExemple(6)">Nouvel exemple</button>
+      <button class="btn btn-sol" id="btn-sol-6" onclick="toggleSol(this,'sol6')">Solution</button>
+    </div>
+    <div class="solution cache" id="sol6"></div>
+  </section>
+
+  <!-- ============ PIED DE PAGE ============ -->
+  <footer>
+    <span>Évaluation — Droites · Document interactif</span>
+    <button class="btn btn-droit" onclick="ouvrirModale()">Droits d'auteurs</button>
+  </footer>
+</div>
+
+<!-- ============================================================
+     MODALE DROITS D'AUTEURS
+============================================================ -->
+<div class="modal-overlay" id="modalDroit" onclick="clicSurFond(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titreModal">
+    <button class="fermer" onclick="fermerModale()" aria-label="Fermer">×</button>
+
+    <h2 id="titreModal">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p class="auteur">
+      Auteur : <strong>Yann Merdy</strong> (yann.merdy@gmail.com) — Septembre 2026
+    </p>
+
+    <h3>Licence d'Utilisation Non Commerciale</h3>
+    <p>
+      Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+      (« Évaluation — Droites et équations réduites ») sont la propriété
+      intellectuelle exclusive de l'auteur, Yann Merdy.
+    </p>
+
+    <h3>Conditions :</h3>
+    <ul>
+      <li>
+        <strong>Utilisation Privée et Éducative (Autorisée) :</strong>
+        Vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code
+        et son contenu uniquement à des fins personnelles, éducatives et non
+        lucratives.
+      </li>
+      <li>
+        <strong>Utilisation Commerciale (Interdite) :</strong>
+        Toute utilisation, distribution, intégration ou reproduction du code ou
+        du contenu (total ou partiel) à des fins commerciales, lucratives ou
+        professionnelles est strictement interdite sans un accord écrit préalable
+        et explicite de l'auteur.
+      </li>
+      <li>
+        <strong>Attribution :</strong>
+        Toute reproduction ou modification doit conserver la mention de l'auteur
+        d'origine (Yann Merdy) et la présente notice de droits d'auteur.
+      </li>
+    </ul>
+
+    <p class="contact">
+      Pour toute demande d'utilisation commerciale ou de licence spécifique,
+      veuillez contacter l'auteur à l'adresse indiquée ci-dessus.
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+/* ---------- Utilitaires ---------- */
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const fmtSub = v => v < 0 ? `(${v})` : `${v}`;
+function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while(b){ [a,b] = [b, a%b]; } return a || 1; }
+
+function eqReduite(m, p){
+  let s = 'y=';
+  if (m === 1) s += 'x';
+  else if (m === -1) s += '-x';
+  else s += `${m}x`;
+  if (p > 0) s += `+${p}`;
+  else if (p < 0) s += `${p}`;
+  return s;
+}
+
+function mTex(m){
+  if (m === 0.5) return '\\dfrac{1}{2}';
+  if (m === -0.5) return '-\\dfrac{1}{2}';
+  if (m === 1) return '1';
+  if (m === -1) return '-1';
+  return `${m}`;
+}
+
+function eqReduiteFrac(m, p){
+  let s = 'y=';
+  if (m === 1) s += 'x';
+  else if (m === -1) s += '-x';
+  else if (m === 0.5) s += '\\dfrac{1}{2}x';
+  else if (m === -0.5) s += '-\\dfrac{1}{2}x';
+  else s += `${m}x`;
+  if (p > 0) s += `+${p}`;
+  else if (p < 0) s += `${p}`;
+  return s;
+}
+
+/* ---------- État global ---------- */
+const state = {};
+
+/* ============================================================
+   GÉNÉRATEURS D'EXEMPLES
+============================================================ */
+function genEx1(){
+  for(;;){
+    const xA = randInt(-3, 3);
+    const delta = pick([-3,-2,-1,1,2,3]);
+    const xB = xA + delta;
+    if (xB < -4 || xB > 4) continue;
+    const m = pick([-3,-2,-1,1,2,3]);
+    const yA = randInt(-3, 3);
+    const yB = yA + m * delta;
+    if (Math.abs(yB) > 9) continue;
+    const p = yA - m * xA;
+    if (Math.abs(p) > 9) continue;
+    return { xA, yA, xB, yB, m, p };
+  }
+}
+
+function genEx2(){
+  for(;;){
+    const m = pick([-3,-2,-1,1,2,3]);
+    const xA = pick([-3,-2,-1,1,2,3]);
+    const yA = randInt(-4, 4);
+    const p = yA - m * xA;
+    if (Math.abs(p) > 9) continue;
+    return { xA, yA, m, p };
+  }
+}
+
+function genEx3(){
+  for(;;){
+    const p = randInt(-3, 3);
+    const xA = pick([-3,-2,-1,1,2,3]);
+    const m = pick([-3,-2,-1,1,2,3]);
+    const yA = m * xA + p;
+    if (Math.abs(yA) > 8) continue;
+    return { xA, yA, m, p };
+  }
+}
+
+function genEx4(){
+  for(;;){
+    const m = pick([-3,-2,-1,1,2,3]);
+    const pd = randInt(-3, 3);
+    const xA = pick([-3,-2,-1,1,2,3]);
+    const yA = randInt(-4, 4);
+    if (yA === m * xA + pd) continue;
+    const pp = yA - m * xA;
+    if (pp === pd) continue;
+    if (Math.abs(pp) > 9) continue;
+    return { m, pd, xA, yA, pp };
+  }
+}
+
+function genEx5(){
+  for(;;){
+    const m = pick([-2,-1,-0.5,0.5,1,2]);
+    const p = randInt(-3, 3);
+    const pts = [];
+    for (let x = -4; x <= 4; x++){
+      const y = m * x + p;
+      if (Number.isInteger(y) && Math.abs(y) <= 4) pts.push({ x, y });
+    }
+    if (pts.length < 2) continue;
+    const P = pts[0];
+    const Q = pts[pts.length - 1];
+    if (Q.x - P.x < 3) continue;
+    return { m, p, P, Q };
+  }
+}
+
+function genEx6(){
+  for(;;){
+    const m = pick([-3,-2,-1,1,2,3]);
+    const xA = randInt(-3, 3);
+    const yA = randInt(-4, 4);
+    const p = yA - m * xA;
+    if (Math.abs(p) > 8) continue;
+    return { m, xA, yA, p };
+  }
+}
+
+/* ============================================================
+   RÉDACTION DES SOLUTIONS
+============================================================ */
+function solEx1(d){
+  let num = d.yB - d.yA;
+  let den = d.xB - d.xA;
+  if (den < 0){ num = -num; den = -den; }
+  return `
+    <h3>Corrigé détaillé</h3>
+    <h4>Étape 1 — Calculer le coefficient directeur \\(m\\)</h4>
+    <p>Lorsqu'on connaît deux points \\(A(x_A\\,;y_A)\\) et \\(B(x_B\\,;y_B)\\) d'une droite non verticale, le coefficient directeur se calcule par la formule du taux d'accroissement :</p>
+    \\[ m=\\frac{y_B-y_A}{x_B-x_A}=\\frac{\\Delta y}{\\Delta x}. \\]
+    <p>Avec \\(A(${d.xA}\\,;\\,${d.yA})\\) et \\(B(${d.xB}\\,;\\,${d.yB})\\) :</p>
+    \\[ m=\\frac{${d.yB}-${fmtSub(d.yA)}}{${d.xB}-${fmtSub(d.xA)}}=\\frac{${num}}{${den}}=${d.m}. \\]
+    <p>La droite a donc une équation de la forme \\(y=${d.m}x+p\\).</p>
+
+    <h4>Étape 2 — Déterminer l'ordonnée à l'origine \\(p\\)</h4>
+    <p>Le point \\(A\\) appartient à la droite : ses coordonnées vérifient donc l'équation. On remplace \\(x\\) par \\(${d.xA}\\) et \\(y\\) par \\(${d.yA}\\) :</p>
+    \\[ ${d.yA} = ${d.m}\\times${fmtSub(d.xA)}+p \\;\\Longrightarrow\\; ${d.yA}=${d.m * d.xA}+p \\;\\Longrightarrow\\; p=${d.p}. \\]
+
+    <h4>Étape 3 — Vérification</h4>
+    <p>On teste l'équation obtenue avec le second point \\(B(${d.xB}\\,;\\,${d.yB})\\) : \\(${d.m}\\times${fmtSub(d.xB)}${d.p >= 0 ? '+' : ''}${d.p} = ${d.m * d.xB}${d.p >= 0 ? '+' : ''}${d.p} = ${d.yB}\\). ✔</p>
+
+    <p class="conclusion">Conclusion : la droite a pour équation réduite \\(${eqReduite(d.m, d.p)}\\).</p>
+  `;
+}
+
+function solEx2(d){
+  const pStr = d.p === 0 ? '' : (d.p > 0 ? `+${d.p}` : `${d.p}`);
+  return `
+    <h3>Corrigé détaillé</h3>
+    <h4>Étape 1 — Écrire la forme générale</h4>
+    <p>Le coefficient directeur est connu : \\(m=${d.m}\\). L'équation réduite est donc de la forme</p>
+    \\[ y=${d.m}x+p. \\]
+    <p>Il ne reste qu'une inconnue à déterminer : l'ordonnée à l'origine \\(p\\).</p>
+
+    <h4>Étape 2 — Utiliser le point \\(A\\)</h4>
+    <p>Le point \\(A(${d.xA}\\,;\\,${d.yA})\\) appartient à la droite, donc ses coordonnées satisfont l'équation. On remplace \\(x\\) par \\(${d.xA}\\) et \\(y\\) par \\(${d.yA}\\) :</p>
+    \\[ ${d.yA} = ${d.m}\\times${fmtSub(d.xA)}+p \\;\\Longrightarrow\\; ${d.yA}=${d.m * d.xA}+p \\;\\Longrightarrow\\; p=${d.p}. \\]
+
+    <h4>Étape 3 — Vérification</h4>
+    <p>Pour \\(x=${d.xA}\\) : \\(${d.m}\\times${fmtSub(d.xA)}${pStr} = ${d.yA}\\). ✔ Le point \\(A\\) est bien sur la droite.</p>
+
+    <p class="conclusion">Conclusion : la droite a pour équation réduite \\(${eqReduite(d.m, d.p)}\\).</p>
+
+    ${d.p === 0 ? `<p class="astuce">L'ordonnée à l'origine vaut \\(0\\) : la droite passe par l'origine \\(O(0\\,;\\,0)\\). C'est une <strong>fonction linéaire</strong> (et non affine).</p>` : ''}
+  `;
+}
+
+function solEx3(d){
+  const coefM = d.xA === 1 ? 'm' : d.xA === -1 ? '-m' : `${d.xA}m`;
+  const cst = d.yA - d.p;
+  const pStr = d.p === 0 ? '' : (d.p > 0 ? `+${d.p}` : `${d.p}`);
+  return `
+    <h3>Corrigé détaillé</h3>
+    <h4>Étape 1 — Écrire la forme générale</h4>
+    <p>L'ordonnée à l'origine est \\(p=${d.p}\\), c'est-à-dire que la droite coupe l'axe des ordonnées au point \\((0\\,;\\,${d.p})\\). L'équation est donc de la forme</p>
+    \\[ y=mx${d.p === 0 ? '' : (d.p > 0 ? '+'+d.p : ''+d.p)}. \\]
+    <p>Il reste à déterminer le coefficient directeur \\(m\\).</p>
+
+    <h4>Étape 2 — Utiliser le point \\(A\\)</h4>
+    <p>Le point \\(A(${d.xA}\\,;\\,${d.yA})\\) appartient à la droite. On remplace \\(x\\) par \\(${d.xA}\\) et \\(y\\) par \\(${d.yA}\\) :</p>
+    \\[ ${d.yA} = ${coefM}${pStr} \\;\\Longrightarrow\\; ${cst} = ${coefM} \\;\\Longrightarrow\\; m = \\frac{${cst}}{${d.xA}} = ${d.m}. \\]
+
+    <h4>Étape 3 — Vérification</h4>
+    <p>Pour \\(x=${d.xA}\\) : \\(${d.m}\\times${fmtSub(d.xA)}${d.p >= 0 ? '+' : ''}${d.p} = ${d.m * d.xA}${d.p >= 0 ? '+' : ''}${d.p} = ${d.yA}\\). ✔ On retrouve bien l'ordonnée du point \\(A\\).</p>
+
+    <p class="conclusion">Conclusion : la droite a pour équation réduite \\(${eqReduite(d.m, d.p)}\\).</p>
+  `;
+}
+
+function solEx4(d){
+  const coef = d.m === 1 ? 'x' : d.m === -1 ? '-x' : `${d.m}x`;
+  return `
+    <h3>Corrigé détaillé</h3>
+    <h4>Étape 1 — Propriété des droites parallèles</h4>
+    <p>Deux droites non verticales sont parallèles <strong>si et seulement si</strong> elles ont le <strong>même coefficient directeur</strong> :</p>
+    \\[ d \\parallel d' \\;\\Longleftrightarrow\\; m_d = m_{d'}. \\]
+    <p>Ici \\(d : y=${coef}${d.pd > 0 ? '+'+d.pd : (d.pd < 0 ? ''+d.pd : '')}\\), donc \\(m_d = ${d.m}\\). La droite \\(d'\\) cherchée a donc aussi pour coefficient directeur \\(${d.m}\\) :</p>
+    \\[ y=${coef}+p. \\]
+
+    <h4>Étape 2 — Utiliser le point \\(A\\)</h4>
+    <p>La droite \\(d'\\) passe par \\(A(${d.xA}\\,;\\,${d.yA})\\). On remplace \\(x\\) par \\(${d.xA}\\) et \\(y\\) par \\(${d.yA}\\) :</p>
+    \\[ ${d.yA} = ${d.m}\\times${fmtSub(d.xA)}+p \\;\\Longrightarrow\\; ${d.yA}=${d.m * d.xA}+p \\;\\Longrightarrow\\; p=${d.pp}. \\]
+
+    <h4>Étape 3 — Vérification et remarque</h4>
+    <p>Pour \\(x=${d.xA}\\) : \\(${d.m}\\times${fmtSub(d.xA)}${d.pp >= 0 ? '+' : ''}${d.pp} = ${d.yA}\\). ✔</p>
+    <p>Les deux droites ont le même coefficient directeur (\\(${d.m}\\)) mais des ordonnées à l'origine différentes (\\(${d.pd} \\neq ${d.pp}\\)) : elles sont <strong>strictement parallèles</strong> (distinctes).</p>
+
+    <p class="conclusion">Conclusion : \\(d' : ${eqReduite(d.m, d.pp)}\\).</p>
+  `;
+}
+
+function solEx5(d){
+  const {m, p, P, Q} = d;
+  const num = Q.y - P.y;
+  const den = Q.x - P.x;
+  const g = gcd(num, den);
+  const numR = num / g, denR = den / g;
+
+  let fracFin;
+  if (denR === 1) fracFin = `${numR}`;
+  else fracFin = `\\dfrac{${numR}}{${denR}}`;
+
+  return `
+    <h3>Corrigé détaillé</h3>
+    <h4>Étape 1 — Lire deux points sur le graphique</h4>
+    <p>On choisit de préférence des points dont les coordonnées sont <strong>entières</strong> (intersections de la grille). La droite \\(d\\) passe par exemple par :</p>
+    <ul>
+      <li>\\(P(${P.x}\\,;\\,${P.y})\\) ;</li>
+      <li>\\(Q(${Q.x}\\,;\\,${Q.y})\\).</li>
+    </ul>
+    <p>On peut également lire directement l'ordonnée à l'origine : la droite coupe l'axe des ordonnées au point \\((0\\,;\\,${p})\\).</p>
+
+    <h4>Étape 2 — Calculer le coefficient directeur \\(m\\)</h4>
+    \\[ m=\\frac{y_Q-y_P}{x_Q-x_P}=\\frac{${Q.y}-${fmtSub(P.y)}}{${Q.x}-${fmtSub(P.x)}}=\\frac{${num}}{${den}}=${fracFin}. \\]
+
+    <h4>Étape 3 — Déterminer l'ordonnée à l'origine \\(p\\)</h4>
+    <p>Graphiquement, la droite coupe l'axe des ordonnées en \\((0\\,;\\,${p})\\), donc \\(p=${p}\\).</p>
+    <p>On peut aussi le retrouver par le calcul, avec le point \\(P(${P.x}\\,;\\,${P.y})\\) :</p>
+    \\[ ${P.y}=${mTex(m)}\\times${fmtSub(P.x)}+p \\;\\Longrightarrow\\; ${P.y}=${m * P.x}+p \\;\\Longrightarrow\\; p=${p}. \\]
+
+    <h4>Étape 4 — Vérification</h4>
+    <p>Avec \\(Q(${Q.x}\\,;\\,${Q.y})\\) : \\(${mTex(m)}\\times${fmtSub(Q.x)}${p >= 0 ? '+' : ''}${p} = ${m * Q.x}${p >= 0 ? '+' : ''}${p} = ${Q.y}\\). ✔</p>
+
+    <p class="conclusion">Conclusion : la droite \\(d\\) a pour équation réduite \\(${eqReduiteFrac(m, p)}\\).</p>
+  `;
+}
+
+function solEx6(d){
+  const {m, xA, yA, p} = d;
+  const pStr = p === 0 ? '' : (p > 0 ? `+${p}` : `${p}`);
+  const xSuiv = xA + 1;
+  const ySuiv = yA + m;
+  return `
+    <h3>Corrigé détaillé</h3>
+    <h4>Étape 1 — Déterminer l'équation réduite</h4>
+    <p>Le coefficient directeur est \\(m=${m}\\), donc l'équation est de la forme</p>
+    \\[ y=${m}x+p. \\]
+    <p>Le point \\(A(${xA}\\,;\\,${yA})\\) appartient à la droite. On remplace \\(x\\) par \\(${xA}\\) et \\(y\\) par \\(${yA}\\) :</p>
+    \\[ ${yA}=${m}\\times${fmtSub(xA)}+p \\;\\Longrightarrow\\; ${yA}=${m * xA}+p \\;\\Longrightarrow\\; p=${p}. \\]
+    <p>D'où l'équation réduite : \\(${eqReduite(m, p)}\\).</p>
+
+    <h4>Étape 2 — Méthode de tracé</h4>
+    <p>Le coefficient directeur s'interprète comme \\(m=\\dfrac{\\Delta y}{\\Delta x}=\\dfrac{${m}}{1}\\) :</p>
+    <ul>
+      <li>on part du point \\(A(${xA}\\,;\\,${yA})\\) ;</li>
+      <li>on se déplace de \\(1\\) unité <strong>vers la droite</strong> ;</li>
+      <li>puis de \\(${Math.abs(m)}\\) unité${Math.abs(m) > 1 ? 's' : ''} <strong>vers le ${m > 0 ? 'haut' : 'bas'}</strong> (car \\(m ${m > 0 ? '>' : '<'} 0\\)) ;</li>
+      <li>on obtient le point \\((${xSuiv}\\,;\\,${ySuiv})\\), qui est sur la droite.</li>
+    </ul>
+    <p>Il suffit alors de tracer la droite passant par \\(A(${xA}\\,;\\,${yA})\\) et \\((${xSuiv}\\,;\\,${ySuiv})\\). On peut aussi placer l'ordonnée à l'origine \\((0\\,;\\,${p})\\) et vérifier l'alignement.</p>
+
+    <h4>Étape 3 — Vérification</h4>
+    <p>Pour \\(x=${xA}\\) : \\(y=${m}\\times${fmtSub(xA)}${pStr} = ${yA}\\). ✔</p>
+
+    <p class="conclusion">Conclusion : \\(d : ${eqReduite(m, p)}\\). La droite tracée en rouge sur le graphique passe bien par \\(A(${xA}\\,;\\,${yA})\\).</p>
+  `;
+}
+
+/* ============================================================
+   RENDU DES EXERCICES
+============================================================ */
+function rendreExercice(n){
+  switch(n){
+    case 1: {
+      const d = genEx1(); state[1] = d;
+      document.getElementById('enonce1').innerHTML =
+        `\\(A(${d.xA}\\,;\\,${d.yA})\\) et \\(B(${d.xB}\\,;\\,${d.yB})\\)`;
+      document.getElementById('sol1').innerHTML = solEx1(d);
+      break;
+    }
+    case 2: {
+      const d = genEx2(); state[2] = d;
+      document.getElementById('enonce2').innerHTML =
+        `\\(A(${d.xA}\\,;\\,${d.yA})\\), \\(m = ${d.m}\\)`;
+      document.getElementById('sol2').innerHTML = solEx2(d);
+      break;
+    }
+    case 3: {
+      const d = genEx3(); state[3] = d;
+      document.getElementById('enonce3').innerHTML =
+        `\\(A(${d.xA}\\,;\\,${d.yA})\\), \\(p = ${d.p}\\)`;
+      document.getElementById('sol3').innerHTML = solEx3(d);
+      break;
+    }
+    case 4: {
+      const d = genEx4(); state[4] = d;
+      const eqD = eqReduite(d.m, d.pd);
+      document.getElementById('enonce4').innerHTML =
+        `\\(d : ${eqD}\\) &nbsp;&nbsp;et&nbsp;&nbsp; \\(A(${d.xA}\\,;\\,${d.yA})\\)`;
+      document.getElementById('sol4').innerHTML = solEx4(d);
+      break;
+    }
+    case 5: {
+      const d = genEx5(); state[5] = d;
+      document.getElementById('sol5').innerHTML = solEx5(d);
+      dessinerGraph5(false);
+      break;
+    }
+    case 6: {
+      const d = genEx6(); state[6] = d;
+      document.getElementById('enonce6').innerHTML =
+        `\\(A(${d.xA}\\,;\\,${d.yA})\\), \\(m = ${d.m}\\)`;
+      document.getElementById('sol6').innerHTML = solEx6(d);
+      dessinerGraph6(false);
+      break;
+    }
+  }
+
+  const sol = document.getElementById('sol' + n);
+  sol.classList.add('cache');
+  const btn = document.getElementById('btn-sol-' + n);
+  if (btn){
+    btn.textContent = 'Solution';
+    btn.classList.remove('ouvert');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise().catch(() => {});
+  }
+}
+
+/* ============================================================
+   BOUTONS
+============================================================ */
+function toggleSol(btn, id){
+  const bloc = document.getElementById(id);
+  const ouvert = !bloc.classList.toggle('cache');
+  btn.textContent = ouvert ? 'Masquer la solution' : 'Solution';
+  btn.classList.toggle('ouvert', ouvert);
+  btn.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+
+  if (id === 'sol5') dessinerGraph5(ouvert);
+  if (id === 'sol6') dessinerGraph6(ouvert);
+
+  if (window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([bloc]).catch(() => {});
+  }
+  if (ouvert){
+    setTimeout(() => bloc.scrollIntoView({ behavior:'smooth', block:'nearest' }), 60);
+  }
+}
+
+function nouvelExemple(n){
+  rendreExercice(n);
+  const card = document.getElementById('sol' + n).closest('.card');
+  if (card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ============================================================
+   MODALE DROITS D'AUTEURS
+============================================================ */
+function ouvrirModale(){
+  const m = document.getElementById('modalDroit');
+  m.classList.add('ouverte');
+  document.body.style.overflow = 'hidden';
+}
+function fermerModale(){
+  const m = document.getElementById('modalDroit');
+  m.classList.remove('ouverte');
+  document.body.style.overflow = '';
+}
+function clicSurFond(e){
+  if (e.target.id === 'modalDroit') fermerModale();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fermerModale();
+});
+
+/* ============================================================
+   OUTILS DE DESSIN (canvas)
+============================================================ */
+function fleche(ctx, x1, y1, x2, y2){
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const ang = Math.atan2(y2 - y1, x2 - x1), L = 10;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - L * Math.cos(ang - 0.42), y2 - L * Math.sin(ang - 0.42));
+  ctx.lineTo(x2 - L * Math.cos(ang + 0.42), y2 - L * Math.sin(ang + 0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+function point(ctx, x, y, couleur){
+  ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+  ctx.fillStyle = couleur; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+}
+
+function initGraph(canvas, extra){
+  const dpr = window.devicePixelRatio || 1;
+  const W = 440, H = 440;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const unit = 40, ox = W / 2, oy = H / 2;
+  const X = x => ox + x * unit, Y = y => oy - y * unit;
+
+  ctx.strokeStyle = '#e8edf4'; ctx.lineWidth = 1;
+  for (let i = -5; i <= 5; i++){
+    ctx.beginPath(); ctx.moveTo(X(i), Y(-5.5)); ctx.lineTo(X(i), Y(5.5)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X(-5.5), Y(i)); ctx.lineTo(X(5.5), Y(i)); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#334155'; ctx.fillStyle = '#334155'; ctx.lineWidth = 1.7;
+  fleche(ctx, X(-5.4), Y(0), X(5.4), Y(0));
+  fleche(ctx, X(0), Y(-5.4), X(0), Y(5.4));
+
+  ctx.font = '12px system-ui, sans-serif'; ctx.lineWidth = 1.3;
+  ctx.fillStyle = '#64748b';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i = -5; i <= 5; i++){
+    if (i === 0) continue;
+    ctx.beginPath(); ctx.moveTo(X(i), Y(0) - 3.5); ctx.lineTo(X(i), Y(0) + 3.5); ctx.stroke();
+    ctx.fillText(i, X(i), Y(0) + 7);
+  }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i = -5; i <= 5; i++){
+    if (i === 0) continue;
+    ctx.beginPath(); ctx.moveTo(X(0) - 3.5, Y(i)); ctx.lineTo(X(0) + 3.5, Y(i)); ctx.stroke();
+    ctx.fillText(i, X(0) - 8, Y(i));
+  }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  ctx.fillText('0', X(0) - 7, Y(0) + 5);
+
+  ctx.font = 'italic bold 16px Georgia, serif';
+  ctx.fillStyle = '#1e293b';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  ctx.fillText('x', X(5.4), Y(0) - 6);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText('y', X(0) + 9, Y(5.4) + 2);
+
+  if (typeof extra === 'function') extra(ctx, X, Y, unit);
+}
+
+/* ============================================================
+   GRAPHIQUE EX 5
+============================================================ */
+function dessinerGraph5(montrerPoints){
+  const d = state[5];
+  if (!d) return;
+  initGraph(document.getElementById('graph5'), (ctx, X, Y) => {
+    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(X(-5.5), Y(d.m * -5.5 + d.p));
+    ctx.lineTo(X(5.5),  Y(d.m *  5.5 + d.p));
+    ctx.stroke();
+
+    ctx.fillStyle = '#dc2626';
+    ctx.font = 'italic bold 18px Georgia, serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    const xLbl = 4;
+    const yLbl = d.m * xLbl + d.p;
+    if (yLbl >= -5.5 && yLbl <= 5.5){
+      ctx.fillText('d', X(xLbl) + 6, Y(yLbl) - 6);
+    }
+
+    if (montrerPoints){
+      point(ctx, X(d.P.x), Y(d.P.y), '#dc2626');
+      point(ctx, X(d.Q.x), Y(d.Q.y), '#dc2626');
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(`P(${d.P.x} ; ${d.P.y})`, X(d.P.x) + 9, Y(d.P.y) - 6);
+      ctx.textAlign = 'right';
+      ctx.fillText(`Q(${d.Q.x} ; ${d.Q.y})`, X(d.Q.x) - 9, Y(d.Q.y) - 6);
+    }
+  });
+}
+
+/* ============================================================
+   GRAPHIQUE EX 6
+============================================================ */
+function dessinerGraph6(montrerSolution){
+  const d = state[6];
+  if (!d) return;
+  initGraph(document.getElementById('graph6'), (ctx, X, Y) => {
+    if (montrerSolution){
+      ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(X(-5.5), Y(d.m * -5.5 + d.p));
+      ctx.lineTo(X(5.5),  Y(d.m *  5.5 + d.p));
+      ctx.stroke();
+
+      const pts = [];
+      if (Math.abs(d.p) <= 5) pts.push({ x: 0, y: d.p });
+      const xZero = -d.p / d.m;
+      if (Number.isInteger(xZero) && Math.abs(xZero) <= 5){
+        pts.push({ x: xZero, y: 0 });
+      }
+      pts.push({ x: d.xA + 1, y: d.yA + d.m });
+
+      const seen = new Set();
+      pts.forEach(pt => {
+        const k = pt.x + ',' + pt.y;
+        if (seen.has(k)) return;
+        seen.add(k);
+        if (Math.abs(pt.x) > 5.4 || Math.abs(pt.y) > 5.4) return;
+        point(ctx, X(pt.x), Y(pt.y), '#dc2626');
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 12px system-ui, sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText(`(${pt.x} ; ${pt.y})`, X(pt.x) + 8, Y(pt.y) - 5);
+      });
+
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'italic bold 18px Georgia, serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      const xLbl = 4;
+      const yLbl = d.m * xLbl + d.p;
+      if (yLbl >= -5.5 && yLbl <= 5.5){
+        ctx.fillText('d', X(xLbl) + 6, Y(yLbl) - 6);
+      }
+    }
+
+    point(ctx, X(d.xA), Y(d.yA), '#1d4ed8');
+    ctx.fillStyle = '#1d4ed8';
+    ctx.font = 'bold 14px system-ui, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`A(${d.xA} ; ${d.yA})`, X(d.xA) + 9, Y(d.yA) - 7);
+  });
+}
+
+/* ============================================================
+   INITIALISATION
+============================================================ */
+for (let i = 1; i <= 6; i++) rendreExercice(i);
+
+window.addEventListener('resize', () => {
+  const s5 = document.getElementById('sol5');
+  const s6 = document.getElementById('sol6');
+  dessinerGraph5(s5 && !s5.classList.contains('cache'));
+  dessinerGraph6(s6 && !s6.classList.contains('cache'));
+});
+</script>
+</body>
+</html>

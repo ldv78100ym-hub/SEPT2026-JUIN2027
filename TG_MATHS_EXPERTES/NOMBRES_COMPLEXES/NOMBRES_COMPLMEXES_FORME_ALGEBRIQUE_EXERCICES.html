@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nombres complexes — générateur d'exercices</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#fff; --ink:#1f2937; --muted:#64748b;
+    --acc:#2563eb; --ok:#059669;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:26px 16px 70px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg,#eef2ff, #f8fafc 420px);
+    color:var(--ink);
+  }
+  header{max-width:980px;margin:0 auto 26px}
+  h1{font-size:1.65rem;margin:0 0 8px;letter-spacing:-.01em}
+  .lead{color:var(--muted);font-size:.95rem;line-height:1.55}
+  main{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+  .card{
+    background:var(--card); border-radius:14px; padding:18px 20px 20px;
+    box-shadow:0 1px 3px rgba(15,23,42,.08), 0 10px 26px -14px rgba(15,23,42,.3);
+    border:1px solid #e5e7eb;
+  }
+  .card h2{
+    font-size:1.02rem; margin:0 0 10px; color:#1e3a8a;
+    display:flex; align-items:center; gap:9px; line-height:1.35;
+  }
+  .card h2 .num{
+    background:var(--acc); color:#fff; font-size:.72rem; font-weight:700;
+    border-radius:999px; padding:3px 9px; flex:none;
+  }
+  .enonce{font-size:1rem; line-height:1.65}
+  .enonce ul{margin:8px 0 0 18px; padding:0}
+  .enonce li{margin:3px 0}
+  canvas{display:block; margin:14px auto 4px; background:#fff; border-radius:10px;
+         border:1px solid #e5e7eb; max-width:100%; height:auto}
+  .btns{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+  button{
+    font:inherit; font-size:.88rem; font-weight:600; cursor:pointer;
+    border-radius:9px; padding:9px 15px; border:1px solid transparent; transition:.15s;
+  }
+  .btn-new{background:var(--acc); color:#fff}
+  .btn-new:hover{background:#1d4ed8}
+  .btn-sol{background:#fff; color:var(--acc); border-color:#c7d2fe}
+  .btn-sol:hover{background:#eff6ff}
+  .btn-sol.on{background:#eff6ff;border-color:#a5b4fc}
+  .solution{
+    display:none; margin-top:16px; padding:15px 18px; border-radius:10px;
+    background:#f8fafc; border-left:4px solid var(--ok); font-size:.97rem; line-height:1.7;
+  }
+  .solution.show{display:block}
+  .solution h3{margin:0 0 10px; font-size:.82rem; color:var(--ok);
+               text-transform:uppercase; letter-spacing:.06em}
+  .solution p{margin:8px 0}
+  .solution ul{margin:8px 0 8px 18px; padding:0}
+  .solution li{margin:4px 0}
+  .solbox{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin:10px 0}
+  mjx-container{overflow-x:auto; overflow-y:hidden; max-width:100%}
+</style>
+</head>
+<body>
+<header>
+  <h1>Nombres complexes — générateur d'exercices</h1>
+  <p class="lead">
+    Écriture algébrique $z = a+ib$ · Dans le plan complexe muni du repère orthonormé
+    $\left(O,\vec{u},\vec{v}\right)$. Pour chaque exercice : <strong>Nouvel exercice</strong>
+    génère un nouvel énoncé, <strong>Solution</strong> affiche la correction détaillée.
+  </p>
+</header>
+<main id="app"></main>
+
+<script>
+/* ============================================================
+   1. OUTILS GÉNÉRAUX
+   ============================================================ */
+const rnd  = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const nz   = (a,b) => { let v; do { v = rnd(a,b); } while(v === 0); return v; };
+
+function gcd(a,b){
+  a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b));
+  while(b){ const t = a % b; a = b; b = t; }
+  return a || 1;
+}
+function lcm(a,b){ return Math.abs(a*b)/gcd(a,b); }
+
+/* ---------- Nombres complexes (coefficients entiers) ---------- */
+const C      = (re,im) => ({re, im});
+const cAdd   = (a,b) => C(a.re+b.re, a.im+b.im);
+const cSub   = (a,b) => C(a.re-b.re, a.im-b.im);
+const cMul   = (a,b) => C(a.re*b.re-a.im*b.im, a.re*b.im+a.im*b.re);
+const cDiv   = (a,b) => { const d = b.re*b.re+b.im*b.im;
+                          return C((a.re*b.re+a.im*b.im)/d, (a.im*b.re-a.re*b.im)/d); };
+const cConj  = z => C(z.re, -z.im);
+const cAbs2  = z => z.re*z.re + z.im*z.im;
+const isGauss= z => Math.abs(z.re-Math.round(z.re)) < 1e-9 &&
+                    Math.abs(z.im-Math.round(z.im)) < 1e-9;
+
+/* ---------- Écriture LaTeX ---------- */
+function zTex(re, im){
+  if(im === 0) return `${re}`;
+  let s = '';
+  if(re !== 0) s += `${re}`;
+  if(im === 1)        s += (re !== 0 ? '+' : '') + 'i';
+  else if(im === -1)  s += '-i';
+  else                s += ((re !== 0 && im > 0) ? '+' : '') + `${im}i`;
+  return s;
+}
+function zTexC(z){ return zTex(z.re, z.im); }
+
+function coefVar(z, v){
+  if(z.re === 0 && z.im === 0) return '';
+  const s = zTex(z.re, z.im);
+  return (/[+-]/.test(s) ? `\\left(${s}\\right)` : s) + v;
+}
+function signedTerm(z, v){
+  if(z.re === 0 && z.im === 0) return '';
+  const s = zTex(z.re, z.im);
+  const neg = s.startsWith('-');
+  const body = neg ? s.slice(1) : s;
+  const paren = /[+-]/.test(body) || (!v && neg);
+  const core = (paren ? '\\left(' + body + '\\right)' : body) + v;
+  return (neg ? ' - ' : ' + ') + core;
+}
+function fracTex(n, d){
+  if(d < 0){ n = -n; d = -d; }
+  const g = gcd(n, d);
+  n /= g; d /= g;
+  if(d === 1) return `${n}`;
+  return n < 0 ? `-\\frac{${-n}}{${d}}` : `\\frac{${n}}{${d}}`;
+}
+
+function sqrtSimp(n){
+  n = Math.round(n);
+  let k = 1, m = n;
+  for(let i = 2; i*i <= m; i++){
+    while(m % (i*i) === 0){ m /= (i*i); k *= i; }
+  }
+  return {k, m};
+}
+function sqrtTex(n){
+  n = Math.round(n);
+  if(n === 0) return '0';
+  const {k,m} = sqrtSimp(n);
+  if(m === 1) return `${k}`;
+  if(k === 1) return `\\sqrt{${m}}`;
+  return `${k}\\sqrt{${m}}`;
+}
+
+function linEqTex(A, B, Cst){
+  const parts = [];
+  if(A !== 0) parts.push([A,'x']);
+  if(B !== 0) parts.push([B,'y']);
+  if(Cst !== 0) parts.push([Cst,'']);
+  if(parts.length === 0) return '0 = 0';
+  let s = '';
+  parts.forEach(([c,v], i) => {
+    const a = Math.abs(c);
+    const cs = (a === 1 && v !== '') ? '' : `${a}`;
+    if(i === 0) s += (c < 0 ? '-' : '') + cs + v;
+    else        s += (c < 0 ? ' - ' : ' + ') + cs + v;
+  });
+  return s + ' = 0';
+}
+function circEqTex(D, E, F){
+  let s = 'x^2+y^2';
+  s += signedTerm(C(D,0), 'x');
+  s += signedTerm(C(E,0), 'y');
+  s += signedTerm(C(F,0), '');
+  return s + ' = 0';
+}
+
+/* ============================================================
+   2. TRACÉ DANS LE PLAN COMPLEXE
+   ============================================================ */
+function initPlane(canvas){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const u = 40, cx = W/2, cy = H/2;
+  return { ctx, W, H, u, cx, cy,
+           X: x => cx + x*u, Y: y => cy - y*u };
+}
+function drawBase(canvas){
+  const P = initPlane(canvas);
+  const { ctx, W, H, cx, cy, X, Y } = P;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.strokeStyle = '#eaeff7'; ctx.lineWidth = 1;
+  for(let i = -6; i <= 6; i++){
+    ctx.beginPath(); ctx.moveTo(X(i),0); ctx.lineTo(X(i),H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,Y(i)); ctx.lineTo(W,Y(i)); ctx.stroke();
+  }
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W-6,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,H);  ctx.lineTo(cx,6);  ctx.stroke();
+  ctx.fillStyle = '#94a3b8';
+  ctx.beginPath(); ctx.moveTo(W,cy); ctx.lineTo(W-12,cy-5); ctx.lineTo(W-12,cy+5);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx-5,12); ctx.lineTo(cx+5,12);
+  ctx.closePath(); ctx.fill();
+  ctx.font = '11px system-ui'; ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for(let i = -5; i <= 5; i++){
+    if(i === 0) continue;
+    ctx.beginPath(); ctx.moveTo(X(i),cy-3); ctx.lineTo(X(i),cy+3); ctx.stroke();
+    ctx.fillText(i, X(i), cy+7);
+  }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for(let i = -5; i <= 5; i++){
+    if(i === 0) continue;
+    ctx.beginPath(); ctx.moveTo(cx-3,Y(i)); ctx.lineTo(cx+3,Y(i)); ctx.stroke();
+    ctx.fillText(i, cx-7, Y(i));
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#64748b'; ctx.font = 'italic 13px Georgia, serif';
+  ctx.fillText('Re', W-30, cy+16);
+  ctx.fillText('Im', cx+9, 14);
+  return P;
+}
+
+function plotPt(P, x, y, label, color){
+  const { ctx, X, Y } = P;
+  ctx.beginPath(); ctx.arc(X(x), Y(y), 5, 0, 2*Math.PI);
+  ctx.fillStyle = color || '#dc2626'; ctx.fill();
+  ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+  if(label){
+    ctx.fillStyle = '#111827'; ctx.font = 'bold 14px system-ui';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(label, X(x)+8, Y(y)-6);
+  }
+}
+function dashToAxes(P, x, y, color){
+  const { ctx, X, Y, cx, cy } = P;
+  ctx.save();
+  ctx.setLineDash([5,4]); ctx.lineWidth = 1.4;
+  ctx.strokeStyle = color || '#f97316';
+  ctx.beginPath(); ctx.moveTo(X(x),Y(y)); ctx.lineTo(X(x),cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(X(x),Y(y)); ctx.lineTo(cx,Y(y)); ctx.stroke();
+  ctx.restore();
+}
+function drawLineThru(P, A, B, color){
+  const { ctx, X, Y } = P;
+  const dx = B[0]-A[0], dy = B[1]-A[1];
+  const L = Math.hypot(dx,dy) || 1;
+  const T = 40;
+  ctx.strokeStyle = color || '#2563eb'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(X(A[0]-dx/L*T), Y(A[1]-dy/L*T));
+  ctx.lineTo(X(A[0]+dx/L*T), Y(A[1]+dy/L*T));
+  ctx.stroke();
+}
+function drawSeg(P, A, B, color, w){
+  const { ctx, X, Y } = P;
+  ctx.strokeStyle = color || '#2563eb'; ctx.lineWidth = w || 2;
+  ctx.beginPath(); ctx.moveTo(X(A[0]),Y(A[1])); ctx.lineTo(X(B[0]),Y(B[1])); ctx.stroke();
+}
+function drawArrow(P, A, B, color){
+  const { ctx, X, Y } = P;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(X(A[0]),Y(A[1])); ctx.lineTo(X(B[0]),Y(B[1])); ctx.stroke();
+  const ang = Math.atan2(Y(B[1])-Y(A[1]), X(B[0])-X(A[0]));
+  const hl = 10;
+  ctx.beginPath();
+  ctx.moveTo(X(B[0]), Y(B[1]));
+  ctx.lineTo(X(B[0])-hl*Math.cos(ang-0.42), Y(B[1])-hl*Math.sin(ang-0.42));
+  ctx.lineTo(X(B[0])-hl*Math.cos(ang+0.42), Y(B[1])-hl*Math.sin(ang+0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+/* ============================================================
+   3. LISTE DES EXERCICES
+   ============================================================ */
+const EX = [];
+
+/* ------------------------------------------------------------
+   (1) Placer des points d'affixe donnée
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Placer des points d'affixe donnée",
+  canvas: true,
+  gen(){
+    const labels = ['A','B','C','D'];
+    const n = rnd(3,4);
+    const pts = []; const seen = new Set();
+    while(pts.length < n){
+      const x = rnd(-4,4), y = rnd(-4,4);
+      if(x === 0 && y === 0) continue;
+      const k = x+'|'+y;
+      if(seen.has(k)) continue;
+      seen.add(k); pts.push([x,y]);
+    }
+    const items = pts.map((p,i) =>
+      `<li>$z_{${labels[i]}} = ${zTex(p[0],p[1])}$</li>`).join('');
+
+    const enonce = `Dans le repère orthonormé $(O,\\vec{u},\\vec{v})$, placer les points
+      $${labels.slice(0,n).join('$, $')}$ d'affixes respectives :<ul>${items}</ul>`;
+
+    const sol = `<p>Un nombre complexe $z = a+ib$ (avec $a,b\\in\\mathbb{R}$) est représenté
+      par le point $M$ de coordonnées $(a\\,;\\,b)$ : la <strong>partie réelle</strong> $a$ donne
+      l'<strong>abscisse</strong>, la <strong>partie imaginaire</strong> $b$ donne l'<strong>ordonnée</strong>.</p>
+      <div class="solbox"><ul>
+      ${pts.map((p,i)=>`<li>$z_{${labels[i]}} = ${zTex(p[0],p[1])} = ${p[0]} + ${p[1]}i$
+        donc $${labels[i]}\\,(${p[0]}\\,;\\,${p[1]})$.</li>`).join('')}
+      </ul></div>
+      <p>On place alors chaque point à l'aide de ses coordonnées : voir le graphique ci-dessus.</p>`;
+
+    return {
+      enonce, solution: sol,
+      drawSolution(P){ pts.forEach((p,i)=>plotPt(P, p[0], p[1], labels[i])); }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (2) Lire l'affixe d'un point tracé
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Lire l'affixe d'un point tracé",
+  canvas: true,
+  gen(){
+    let x, y;
+    do { x = rnd(-4,4); y = rnd(-4,4); } while(x === 0 && y === 0);
+
+    const enonce = `Dans le repère orthonormé $(O,\\vec{u},\\vec{v})$, lire l'affixe du point
+      $A$ représenté ci-dessous.`;
+
+    const sol = `<p>On lit d'abord les coordonnées du point $A$ sur le graphique :
+      $A\\,(${x}\\,;\\,${y})$.</p>
+      <p>Or le point d'affixe $z = a+ib$ a pour coordonnées $(a\\,;\\,b)$ : la partie réelle
+      est l'abscisse, la partie imaginaire est l'ordonnée.</p>
+      <div class="solbox">$$z_A = ${zTex(x,y)}$$</div>`;
+
+    return {
+      enonce, solution: sol,
+      drawInitial(P){ plotPt(P, x, y, 'A'); },
+      drawSolution(P){
+        dashToAxes(P, x, y);
+        plotPt(P, x, y, 'A');
+        const { ctx, X, Y } = P;
+        ctx.font = '12px system-ui'; ctx.fillStyle = '#ea580c';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(`${x}`, X(x), P.cy + 8);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(`${y}`, P.cx - 8, Y(y));
+      }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (3) Lien affixe ↔ coordonnées
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Lien entre affixe et coordonnées",
+  canvas: false,
+  gen(){
+    const x = rnd(-5,5), y = nz(-5,5);
+
+    if(Math.random() < 0.5){
+      const enonce = `Soit $z = ${zTex(x,y)}$. On note $M$ le point d'affixe $z$.
+        Donner les coordonnées de $M$ ainsi que la partie réelle et la partie imaginaire de $z$.`;
+      const sol = `<p>Par définition, le point $M$ d'affixe $z = a+ib$ a pour coordonnées
+        $(a\\,;\\,b)$ où $a = \\operatorname{Re}(z)$ et $b = \\operatorname{Im}(z)$.</p>
+        <div class="solbox">
+        <p>$z = ${zTex(x,y)}$ : on identifie $a = ${x}$ et $b = ${y}$.</p>
+        <p>Donc $\\operatorname{Re}(z) = ${x}$, $\\operatorname{Im}(z) = ${y}$ et
+        $M\\,(${x}\\,;\\,${y})$.</p></div>`;
+      return { enonce, solution: sol };
+    } else {
+      const enonce = `Dans le plan complexe, on considère le point $M\\,(${x}\\,;\\,${y})$.
+        Donner l'affixe $z_M$ de $M$.`;
+      const sol = `<p>Le point de coordonnées $(a\\,;\\,b)$ a pour affixe $z = a+ib$.</p>
+        <div class="solbox"><p>Ici $a = ${x}$ et $b = ${y}$, donc $z_M = ${zTex(x,y)}$.</p></div>`;
+      return { enonce, solution: sol };
+    }
+  }
+});
+
+/* ------------------------------------------------------------
+   (4) Équation d'une droite passant par deux points
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation d'une droite passant par deux points",
+  canvas: true,
+  gen(){
+    let A, B;
+    do {
+      A = [rnd(-4,4), rnd(-4,4)];
+      B = [rnd(-4,4), rnd(-4,4)];
+    } while(A[0] === B[0] && A[1] === B[1]);
+
+    let a = B[1]-A[1];
+    let b = A[0]-B[0];
+    let c = B[0]*A[1] - A[0]*B[1];
+    let g = gcd(gcd(a,b), c);
+    a /= g; b /= g; c /= g;
+    if(a < 0 || (a === 0 && b < 0)){ a = -a; b = -b; c = -c; }
+
+    const dx = B[0]-A[0], dy = B[1]-A[1];
+
+    const enonce = `Dans le repère orthonormé $(O,\\vec{u},\\vec{v})$, on donne les points
+      $A$ et $B$ d'affixes respectives $z_A = ${zTex(A[0],A[1])}$ et $z_B = ${zTex(B[0],B[1])}$.
+      <br>Déterminer une équation cartésienne de la droite $(AB)$.`;
+
+    const sol = `<p><strong>Méthode.</strong> Un point $M(x\\,;\\,y)$ appartient à la droite $(AB)$
+      si et seulement si les vecteurs $\\overrightarrow{AB}$ et $\\overrightarrow{AM}$ sont
+      colinéaires.</p>
+      <p><em>Lien avec les complexes :</em> $M\\in(AB) \\iff \\dfrac{z_M-z_A}{z_B-z_A}\\in\\mathbb{R}$.</p>
+      <div class="solbox">
+      <p>Coordonnées : $A\\,(${A[0]}\\,;\\,${A[1]})$ et $B\\,(${B[0]}\\,;\\,${B[1]})$.</p>
+      <p>$\\overrightarrow{AB}\\begin{pmatrix}${dx}\\\\ ${dy}\\end{pmatrix}$ et
+         $\\overrightarrow{AM}\\begin{pmatrix}x-${A[0]}\\\\ y-${A[1]}\\end{pmatrix}$.</p>
+      <p>La colinéarité se traduit par
+        $${dx}\\,(y-${A[1]}) - ${dy}\\,(x-${A[0]}) = 0$.</p>
+      <p>En développant et en simplifiant :</p>
+      <p>$$${linEqTex(a,b,c)}$$</p>
+      </div>
+      <p>Vérification : les coordonnées de $A$ et de $B$ satisfont bien cette équation.</p>`;
+
+    return {
+      enonce, solution: sol,
+      drawInitial(P){
+        drawLineThru(P, A, B, '#93c5fd');
+        plotPt(P, A[0], A[1], 'A'); plotPt(P, B[0], B[1], 'B');
+      },
+      drawSolution(P){
+        drawLineThru(P, A, B, '#2563eb');
+        plotPt(P, A[0], A[1], 'A'); plotPt(P, B[0], B[1], 'B');
+      }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (5) Distance entre deux points d'affixes données
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Distance entre deux points d'affixes données",
+  canvas: true,
+  gen(){
+    let A, B;
+    do {
+      A = [rnd(-4,4), rnd(-4,4)];
+      B = [rnd(-4,4), rnd(-4,4)];
+    } while(A[0] === B[0] && A[1] === B[1]);
+
+    const dx = B[0]-A[0], dy = B[1]-A[1];
+    const d2 = dx*dx + dy*dy;
+
+    const enonce = `Dans le repère orthonormé $(O,\\vec{u},\\vec{v})$, on donne les points
+      $A$ et $B$ d'affixes $z_A = ${zTex(A[0],A[1])}$ et $z_B = ${zTex(B[0],B[1])}$.
+      <br>Calculer la distance $AB$.`;
+
+    const sol = `<p><strong>Notion clé.</strong> Si $M$ et $N$ ont pour affixes $z_M$ et $z_N$,
+      alors $MN = \\left|z_N - z_M\\right|$ (module de l'affixe du vecteur $\\overrightarrow{MN}$).</p>
+      <div class="solbox">
+      <p>$z_B - z_A = \\left(${zTex(B[0],B[1])}\\right) - \\left(${zTex(A[0],A[1])}\\right)
+        = ${zTex(dx,dy)}$.</p>
+      <p>D'où :
+      $$AB = \\left|z_B-z_A\\right| = \\sqrt{${dx}^2 + \\left(${dy}\\right)^2}
+        = \\sqrt{${d2}} = ${sqrtTex(d2)}$$</p>
+      </div>
+      <p>On retrouve bien la formule de distance entre deux points du plan :
+      $AB = \\sqrt{(x_B-x_A)^2+(y_B-y_A)^2}$.</p>`;
+
+    return {
+      enonce, solution: sol,
+      drawInitial(P){ plotPt(P, A[0], A[1], 'A'); plotPt(P, B[0], B[1], 'B'); },
+      drawSolution(P){
+        drawSeg(P, A, B, '#2563eb', 2.4);
+        plotPt(P, A[0], A[1], 'A'); plotPt(P, B[0], B[1], 'B');
+      }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (6) Distance d'un point à une droite — résolution purement complexe
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Distance d'un point à une droite (vue par les complexes)",
+  canvas: true,
+  gen(){
+    const dirs = [[3,4],[4,3],[-3,4],[3,-4],[-4,3],[4,-3],[-3,-4],[-4,-3],
+                  [1,0],[0,1],[-1,0],[0,-1],[2,0],[0,2],[-2,0],[0,-2],[1,1],[1,-1],[-1,1],[-1,-1]];
+    let A, B, M, d, L;
+    for(let t = 0; t < 500; t++){
+      d = pick(dirs);
+      L = Math.round(Math.hypot(d[0], d[1]));
+      if(L*L !== d[0]*d[0]+d[1]*d[1]) continue;
+      A = [rnd(-2,2), rnd(-2,2)];
+      B = [A[0]+d[0], A[1]+d[1]];
+      if(Math.abs(B[0]) > 5 || Math.abs(B[1]) > 5) continue;
+      M = [rnd(-4,4), rnd(-4,4)];
+      const det = d[0]*(M[1]-A[1]) - d[1]*(M[0]-A[0]);
+      if(det === 0) continue;
+      if(M[0] === A[0] && M[1] === A[1]) continue;
+      return build(A, B, M, d, L);
+    }
+    return build([0,0],[3,4],[2,1],[3,4],5);
+
+    function build(A, B, M, d, L){
+      const dx = d[0], dy = d[1];
+      const ux = M[0] - A[0], uy = M[1] - A[1];
+
+      const P = ux*dx + uy*dy;
+      const Q = uy*dx - ux*dy;
+      const L2 = L*L;
+
+      let g = gcd(Math.abs(P), L2);
+      let tN = P/g, tD = L2/g;
+      if(tD < 0){ tN = -tN; tD = -tD; }
+
+      const hxN = A[0]*tD + tN*dx;
+      const hyN = A[1]*tD + tN*dy;
+      const vxN = M[0]*tD - hxN;
+      const vyN = M[1]*tD - hyN;
+      const num2 = vxN*vxN + vyN*vyN;
+      const S = Math.round(Math.sqrt(num2));
+
+      function red(n, dd){
+        if(n === 0) return [0, 1];
+        const g2 = gcd(Math.abs(n), Math.abs(dd));
+        let a = n/g2, b = dd/g2;
+        if(b < 0){ a = -a; b = -b; }
+        return [a, b];
+      }
+      function fTex(n, dd){
+        const [a, b] = red(n, dd);
+        if(b === 1) return `${a}`;
+        return a < 0 ? `-\\frac{${-a}}{${b}}` : `\\frac{${a}}{${b}}`;
+      }
+      function cTex(nr, dr, ni, di){
+        const [ar, br] = red(nr, dr);
+        const [ai, bi] = red(ni, di);
+        let reStr = br === 1 ? `${ar}`
+                    : (ar < 0 ? `-\\frac{${-ar}}{${br}}` : `\\frac{${ar}}{${br}}`);
+        if(ai === 0) return reStr;
+        const absAi = Math.abs(ai);
+        let aiStr;
+        if(bi === 1 && absAi === 1) aiStr = 'i';
+        else if(bi === 1)           aiStr = `${absAi}i`;
+        else                        aiStr = `\\frac{${absAi}}{${bi}}i`;
+        const sign = ai > 0 ? (ar !== 0 ? ' + ' : '') : ' - ';
+        return reStr + sign + aiStr;
+      }
+
+      const tTex  = fTex(tN, tD);
+      const hTex  = cTex(hxN, tD, hyN, tD);
+      const vTex  = cTex(vxN, tD, vyN, tD);
+      const distTex = fTex(S, tD);
+
+      const enonce = `Dans le repère orthonormé $(O,\\vec{u},\\vec{v})$, on donne les points
+        $A$, $B$ et $M$ d'affixes respectives $z_A = ${zTex(A[0],A[1])}$,
+        $z_B = ${zTex(B[0],B[1])}$ et $z_M = ${zTex(M[0],M[1])}$.
+        <br>Calculer la distance du point $M$ à la droite $(AB)$.`;
+
+      const sol = `<p><strong>Notion clé.</strong> Soit $H$ le projeté orthogonal de $M$ sur la
+        droite $(AB)$. La distance cherchée est $MH = \\left|z_M - z_H\\right|$.</p>
+        <p>On caractérise $H$ à l'aide de <em>deux conditions</em> exprimées uniquement avec
+        les nombres complexes :</p>
+        <ul>
+          <li><strong>$H \\in (AB)$</strong> : le vecteur $\\overrightarrow{AH}$ est colinéaire à
+              $\\overrightarrow{AB}$, ce qui se traduit par
+              $\\dfrac{z_H - z_A}{z_B - z_A} \\in \\mathbb{R}$, c'est-à-dire
+              $$z_H = z_A + t\\,(z_B - z_A), \\quad t \\in \\mathbb{R}.$$</li>
+          <li><strong>$(MH) \\perp (AB)$</strong> : le vecteur $\\overrightarrow{MH}$ est orthogonal
+              à $\\overrightarrow{AB}$. En nombres complexes, cela équivaut à
+              $\\dfrac{z_M - z_H}{z_B - z_A} \\in i\\mathbb{R}$, c'est-à-dire
+              $$\\operatorname{Re}\\!\\left((z_M - z_H)\\,\\overline{(z_B - z_A)}\\right) = 0.$$</li>
+        </ul>
+        <p>En reportant $z_H = z_A + t\\,(z_B - z_A)$ dans la condition d'orthogonalité, on obtient :
+        $$\\operatorname{Re}\\!\\left((z_M - z_A)\\,\\overline{(z_B - z_A)}\\right)
+          - t\\,\\left|z_B - z_A\\right|^2 = 0,$$
+        d'où
+        $$t = \\frac{\\operatorname{Re}\\!\\left((z_M - z_A)\\,\\overline{(z_B - z_A)}\\right)}
+                  {\\left|z_B - z_A\\right|^2}.$$</p>
+        <div class="solbox">
+        <p>On calcule d'abord $z_B - z_A$ et son conjugué :
+        $$z_B - z_A = ${zTex(dx,dy)}, \\qquad \\overline{z_B - z_A} = ${zTex(dx,-dy)}.$$
+        Donc $\\left|z_B - z_A\\right|^2 = ${dx}^2 + (${dy})^2 = ${L2}$.</p>
+        <p>Puis $z_M - z_A = ${zTex(ux,uy)}$, et
+        $$(z_M - z_A)\\,\\overline{(z_B - z_A)}
+          = \\left(${zTex(ux,uy)}\\right)\\left(${zTex(dx,-dy)}\\right)
+          = ${zTex(P,Q)}.$$
+        Sa partie réelle vaut $\\operatorname{Re} = ${P}$.</p>
+        <p>On en déduit :
+        $$t = \\frac{${P}}{${L2}} = ${tTex}.$$</p>
+        <p>Le point $H$ a donc pour affixe
+        $$z_H = z_A + t\\,(z_B - z_A)
+          = ${zTex(A[0],A[1])} + ${tTex}\\,\\left(${zTex(dx,dy)}\\right)
+          = ${hTex}.$$</p>
+        <p>On calcule ensuite
+        $$z_M - z_H = \\left(${zTex(M[0],M[1])}\\right) - \\left(${hTex}\\right)
+          = ${vTex}.$$</p>
+        <p>Finalement, la distance cherchée est
+        $$MH = \\left|z_M - z_H\\right|
+          = \\sqrt{\\left(${fTex(vxN,tD)}\\right)^2 + \\left(${fTex(vyN,tD)}\\right)^2}
+          = \\sqrt{\\frac{${num2}}{${tD*tD}}}
+          = \\frac{${S}}{${tD}}
+          = ${distTex}.$$</p>
+        </div>
+        <p><strong>Conclusion :</strong> la distance du point $M$ à la droite $(AB)$ est
+        $\\boxed{${distTex}}$.</p>`;
+
+      return {
+        enonce, solution: sol,
+        drawInitial(P){
+          drawLineThru(P, A, B, '#93c5fd');
+          plotPt(P, A[0], A[1], 'A'); plotPt(P, B[0], B[1], 'B');
+          plotPt(P, M[0], M[1], 'M', '#7c3aed');
+        },
+        drawSolution(P){
+          drawLineThru(P, A, B, '#2563eb');
+          const t = ((M[0]-A[0])*d[0] + (M[1]-A[1])*d[1]) / (d[0]*d[0]+d[1]*d[1]);
+          const H = [A[0]+t*d[0], A[1]+t*d[1]];
+          P.ctx.save();
+          P.ctx.setLineDash([6,4]);
+          drawSeg(P, M, H, '#f97316', 2);
+          P.ctx.restore();
+          plotPt(P, A[0], A[1], 'A'); plotPt(P, B[0], B[1], 'B');
+          plotPt(P, M[0], M[1], 'M', '#7c3aed');
+          plotPt(P, H[0], H[1], 'H', '#f97316');
+        }
+      };
+    }
+  }
+});
+
+/* ------------------------------------------------------------
+   (7) Angle (u, OA) — produit scalaire + forme algébrique uniquement
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Angle $\\left(\\vec{u},\\overrightarrow{OA}\\right)$",
+  canvas: true,
+  gen(){
+    const dirs = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+    const angTex = ['0','\\frac{\\pi}{4}','\\frac{\\pi}{2}','\\frac{3\\pi}{4}',
+                    '\\pi','-\\frac{3\\pi}{4}','-\\frac{\\pi}{2}','-\\frac{\\pi}{4}'];
+    const idx = rnd(0,7);
+    const d = dirs[idx];
+    const k = rnd(1,4);
+    const x = d[0]*k, y = d[1]*k;
+    const r2 = x*x + y*y;
+
+    const enonce = `Dans le plan complexe muni du repère orthonormé $(O,\\vec{u},\\vec{v})$,
+      on considère le point $A$ d'affixe $z_A = ${zTex(x,y)}$.
+      <br>Déterminer une mesure en radians de l'angle
+      $\\left(\\vec{u},\\overrightarrow{OA}\\right)$.`;
+
+    const sol = `<p><strong>Notion clé.</strong> On cherche $\\theta = \\left(\\vec{u},\\overrightarrow{OA}\\right)$.
+      Le vecteur $\\vec{u}$ a pour coordonnées $(1\\,;\\,0)$ et le vecteur $\\overrightarrow{OA}$
+      a pour coordonnées $(x\\,;\\,y)$.</p>
+      <p>Le <strong>produit scalaire</strong> donne le cosinus de l'angle :
+      $$\\vec{u}\\cdot\\overrightarrow{OA}
+        = \\left|\\vec{u}\\right|\\,\\left|\\overrightarrow{OA}\\right|\\cos\\theta.$$</p>
+      <p>En coordonnées :
+      $$\\vec{u}\\cdot\\overrightarrow{OA} = 1\\times x + 0\\times y = x.$$</p>
+      <p>Pour déterminer complètement l'angle $\\theta$, on utilise aussi le <strong>signe</strong>
+      de $\\theta$, donné par la position du point $A$ : si $A$ est dans le demi-plan
+      $y > 0$ (au-dessus de l'axe des réels), alors $\\theta \\in \\,]0\\,;\\,\\pi[$, et si
+      $A$ est dans le demi-plan $y < 0$, alors $\\theta \\in \\,]-\\pi\\,;\\,0[$.</p>
+      <div class="solbox">
+      <p>$\\left|\\vec{u}\\right| = 1$ et
+      $\\left|\\overrightarrow{OA}\\right|
+        = \\sqrt{${x}^2+\\left(${y}\\right)^2} = \\sqrt{${r2}} = ${sqrtTex(r2)}$.</p>
+      <p>D'où :
+      $$\\cos\\theta = \\frac{x}{\\sqrt{${x}^2+\\left(${y}\\right)^2}}
+        = \\frac{${x}}{${sqrtTex(r2)}}.$$</p>
+      <p>Le point $A$ est situé ${y > 0 ? 'au-dessus' : y < 0 ? 'en dessous' : 'sur'}
+        de l'axe des réels, donc $\\theta$ est ${y > 0 ? 'positif' : y < 0 ? 'négatif' : 'nul ou égal à $\\pi$'}.</p>
+      <p>En reconnaissant la valeur remarquable du cosinus et le quadrant
+      correspondant, on obtient :</p>
+      <p>$$\\theta = ${angTex[idx]} \\quad [2\\pi]$$</p>
+      </div>
+      <p><em>Vérification géométrique.</em> Le point $A\\,(${x}\\,;\\,${y})$ se trouve
+      ${y > 0 ? 'dans le demi-plan supérieur' : y < 0 ? 'dans le demi-plan inférieur' : 'sur l\'axe des réels'},
+      et l'angle $\\theta$ ainsi trouvé est bien compatible avec sa position.</p>`;
+
+    return {
+      enonce, solution: sol,
+      drawInitial(P){
+        drawArrow(P, [0,0], [x,y], '#16a34a');
+        plotPt(P, x, y, 'A', '#16a34a');
+      },
+      drawSolution(P){
+        drawArrow(P, [0,0], [x,y], '#16a34a');
+        plotPt(P, x, y, 'A', '#16a34a');
+        const { ctx, X, Y } = P;
+        const ang = Math.atan2(-y, x);
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(X(0), Y(0), 34, 0, ang, ang > 0 ? false : true);
+        ctx.stroke();
+      }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (8) Angle (AB, CD) — produit scalaire + forme algébrique uniquement
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Angle $\\left(\\overrightarrow{AB},\\overrightarrow{CD}\\right)$",
+  canvas: true,
+  gen(){
+    const dirs = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+    const angTex = {0:'0', 1:'\\frac{\\pi}{4}', 2:'\\frac{\\pi}{2}', 3:'\\frac{3\\pi}{4}',
+                    4:'\\pi', '-1':'-\\frac{\\pi}{4}', '-2':'-\\frac{\\pi}{2}', '-3':'-\\frac{3\\pi}{4}'};
+
+    const i = rnd(0,7), j = rnd(0,7);
+    const k1 = rnd(1,2), k2 = rnd(1,2);
+
+    let A, B, C, D;
+    for(let t = 0; t < 400; t++){
+      A = [rnd(-2,2), rnd(-2,2)];
+      B = [A[0]+k1*dirs[i][0], A[1]+k1*dirs[i][1]];
+      C = [rnd(-2,2), rnd(-2,2)];
+      D = [C[0]+k2*dirs[j][0], C[1]+k2*dirs[j][1]];
+      if([B,D].some(p => Math.abs(p[0]) > 5 || Math.abs(p[1]) > 5)) continue;
+      if(A[0]===C[0] && A[1]===C[1]) continue;
+      break;
+    }
+
+    let diff = ((j - i) % 8 + 8) % 8;
+    if(diff > 4) diff -= 8;
+    const measTex = angTex[diff];
+
+    const p = B[0]-A[0], q = B[1]-A[1];
+    const r = D[0]-C[0], s = D[1]-C[1];
+    const reProd = p*r + q*s;   /* produit scalaire AB·CD */
+    const imProd = p*s - q*r;   /* p·s − q·r, lié au sinus */
+    const AB2 = p*p + q*q;
+    const CD2 = r*r + s*s;
+
+    const enonce = `Dans le plan complexe muni du repère orthonormé $(O,\\vec{u},\\vec{v})$,
+      on donne les points :
+      <ul>
+        <li>$A$ d'affixe $z_A = ${zTex(A[0],A[1])}$ ;</li>
+        <li>$B$ d'affixe $z_B = ${zTex(B[0],B[1])}$ ;</li>
+        <li>$C$ d'affixe $z_C = ${zTex(C[0],C[1])}$ ;</li>
+        <li>$D$ d'affixe $z_D = ${zTex(D[0],D[1])}$.</li>
+      </ul>
+      Déterminer une mesure de l'angle
+      $\\left(\\overrightarrow{AB},\\overrightarrow{CD}\\right)$.`;
+
+    const sol = `<p><strong>Notion clé.</strong> On pose
+      $z_1 = z_B - z_A = a+ib$ et $z_2 = z_D - z_C = c+id$, les affixes respectives de
+      $\\overrightarrow{AB}$ et $\\overrightarrow{CD}$. On note
+      $\\theta = \\left(\\overrightarrow{AB},\\overrightarrow{CD}\\right)$.</p>
+      <p>En calculant le produit $z_2\\,\\overline{z_1}$ sous <em>forme algébrique</em> :
+      $$z_2\\,\\overline{z_1} = (c+id)(a-ib) = (ac+bd) + i\\,(ad-bc).$$
+      On obtient deux informations :</p>
+      <ul>
+        <li>sa <strong>partie réelle</strong> est le <strong>produit scalaire</strong>
+            $\\overrightarrow{AB}\\cdot\\overrightarrow{CD} = ac+bd$ ;</li>
+        <li>sa <strong>partie imaginaire</strong> $ad-bc$ est liée au <strong>sinus</strong>
+            de l'angle : $ad-bc = \\left|z_1\\right|\\left|z_2\\right|\\sin\\theta$.
+            <br><em>Justification.</em> La multiplication par $i$ correspond à une rotation de
+            $+\\pi/2$. Le vecteur $i\\,\\overrightarrow{CD}$ a pour affixe
+            $i(c+id) = -d+ic$, donc pour coordonnées $(-d\\,;\\,c)$. Son produit scalaire avec
+            $\\overrightarrow{AB}$ vaut $a(-d)+bc = -(ad-bc)$. Or l'angle entre
+            $\\overrightarrow{AB}$ et $i\\,\\overrightarrow{CD}$ est $\\theta+\\pi/2$, donc ce
+            produit scalaire vaut aussi $\\left|z_1\\right|\\left|z_2\\right|\\cos(\\theta+\\pi/2)
+            = -\\left|z_1\\right|\\left|z_2\\right|\\sin\\theta$. On en déduit
+            $ad-bc = \\left|z_1\\right|\\left|z_2\\right|\\sin\\theta$.</li>
+      </ul>
+      <p>On a donc les deux formules :
+      $$\\cos\\theta = \\frac{ac+bd}{\\left|z_1\\right|\\left|z_2\\right|},
+        \\qquad \\sin\\theta = \\frac{ad-bc}{\\left|z_1\\right|\\left|z_2\\right|}.$$</p>
+      <div class="solbox">
+      <p>Affixes des vecteurs :
+      $$z_{\\overrightarrow{AB}} = z_B - z_A = ${zTex(p,q)},
+        \\qquad z_{\\overrightarrow{CD}} = z_D - z_C = ${zTex(r,s)}.$$</p>
+      <p>On calcule le produit $z_{\\overrightarrow{CD}}\\,\\overline{z_{\\overrightarrow{AB}}}$
+      sous forme algébrique :
+      $$\\left(${zTex(r,s)}\\right)\\left(${zTex(p,-q)}\\right)
+        = ${zTex(reProd, imProd)}.$$</p>
+      <p>On identifie :
+      <ul>
+        <li>partie réelle : $\\overrightarrow{AB}\\cdot\\overrightarrow{CD} = ${reProd}$ ;</li>
+        <li>partie imaginaire : $${imProd}$.</li>
+      </ul></p>
+      <p>Normes des vecteurs :
+      $$\\left|z_{\\overrightarrow{AB}}\\right|
+        = \\sqrt{${p}^2+\\left(${q}\\right)^2} = ${sqrtTex(AB2)},
+        \\qquad \\left|z_{\\overrightarrow{CD}}\\right|
+        = \\sqrt{${r}^2+\\left(${s}\\right)^2} = ${sqrtTex(CD2)}.$$</p>
+      <p>D'où :
+      $$\\cos\\theta = \\frac{${reProd}}{${sqrtTex(AB2)}\\times${sqrtTex(CD2)}},
+        \\qquad \\sin\\theta = \\frac{${imProd}}{${sqrtTex(AB2)}\\times${sqrtTex(CD2)}}.$$</p>
+      <p>Ces deux valeurs (avec leurs signes) caractérisent l'angle :</p>
+      <p>$$\\theta = ${measTex} \\quad [2\\pi]$$</p>
+      </div>
+      <p><em>Vérification géométrique.</em> Le sens de l'angle est bien cohérent avec la position
+      relative des deux vecteurs sur le graphique ci-dessus.</p>`;
+
+    return {
+      enonce, solution: sol,
+      drawInitial(P){
+        drawArrow(P, A, B, '#2563eb');
+        drawArrow(P, C, D, '#dc2626');
+        plotPt(P, A[0],A[1],'A','#2563eb'); plotPt(P, B[0],B[1],'B','#2563eb');
+        plotPt(P, C[0],C[1],'C','#dc2626'); plotPt(P, D[0],D[1],'D','#dc2626');
+      },
+      drawSolution(P){
+        drawArrow(P, A, B, '#2563eb');
+        drawArrow(P, C, D, '#dc2626');
+        plotPt(P, A[0],A[1],'A','#2563eb'); plotPt(P, B[0],B[1],'B','#2563eb');
+        plotPt(P, C[0],C[1],'C','#dc2626'); plotPt(P, D[0],D[1],'D','#dc2626');
+      }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (9) Nature d'un triangle
+   ------------------------------------------------------------ */
+function dist2(A,B){ const dx=A[0]-B[0], dy=A[1]-B[1]; return dx*dx + dy*dy; }
+function classifyTri(d){
+  const s = [...d].sort((x,y)=>x-y);
+  const [p,q,r] = s;
+  const eq = (x,y) => Math.abs(x-y) < 1e-7;
+  if(eq(p,q) && eq(q,r)) return 'équilatéral';
+  const iso = eq(p,q) || eq(q,r);
+  const right = eq(p+q, r);
+  if(iso && right) return 'rectangle isocèle';
+  if(iso) return 'isocèle';
+  if(right) return 'rectangle';
+  return 'quelconque';
+}
+EX.push({
+  title: "Nature d'un triangle",
+  canvas: true,
+  gen(){
+    let A, B, C, equi = false, dAB, dAC, dBC;
+
+    if(Math.random() < 0.16){
+      const k = pick([1,2]);
+      A = [0,0]; B = [2*k,0]; C = [k, k*Math.sqrt(3)];
+      dAB = 4*k*k; dAC = 4*k*k; dBC = 4*k*k;
+      equi = true;
+    } else {
+      const want = pick(['quelconque','isocèle','isocèle','rectangle',
+                         'rectangle isocèle','rectangle isocèle']);
+      let found = null;
+      for(let t = 0; t < 8000; t++){
+        const a = [rnd(-4,4), rnd(-4,4)], b = [rnd(-4,4), rnd(-4,4)], c = [rnd(-4,4), rnd(-4,4)];
+        const dd = [dist2(a,b), dist2(a,c), dist2(b,c)];
+        if(dd.some(v => v < 1)) continue;
+        const det = (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]);
+        if(det === 0) continue;
+        if(classifyTri(dd) === want){ found = {a,b,c,dd}; break; }
+      }
+      if(!found) found = {a:[0,0], b:[3,0], c:[0,4], dd:[9,16,25]};
+      A = found.a; B = found.b; C = found.c;
+      dAB = found.dd[0]; dAC = found.dd[1]; dBC = found.dd[2];
+    }
+
+    const zA = equi ? '0' : zTex(A[0],A[1]);
+    const zB = equi ? `${B[0]}` : zTex(B[0],B[1]);
+    const zCfix = equi ? (C[0] === 1 ? '1+i\\sqrt{3}' : '2+2i\\sqrt{3}') : zTex(C[0],C[1]);
+
+    const nature = classifyTri([dAB, dAC, dBC]);
+
+    const enonce = `Dans le plan complexe muni du repère orthonormé $(O,\\vec{u},\\vec{v})$,
+      on considère les points $A$, $B$, $C$ d'affixes respectives
+      $z_A = ${zA}$, $z_B = ${zB}$ et $z_C = ${zCfix}$.
+      <br>Déterminer la nature du triangle $ABC$.`;
+
+    const sol = `<p><strong>Notions clés.</strong></p>
+      <ul>
+        <li>$MN = \\left|z_N - z_M\\right|$ ;</li>
+        <li>le triangle est <em>isocèle</em> si deux côtés ont même longueur ;</li>
+        <li>il est <em>rectangle</em> si le carré du plus grand côté est la somme des carrés des deux autres
+            (réciproque du théorème de Pythagore) ;</li>
+        <li>il est <em>équilatéral</em> si les trois côtés ont même longueur.</li>
+      </ul>
+      <div class="solbox">
+      <p>$AB^2 = ${Math.round(dAB)}$, &nbsp; $AC^2 = ${Math.round(dAC)}$, &nbsp;
+         $BC^2 = ${Math.round(dBC)}$.</p>
+      <p>Donc $AB = ${sqrtTex(dAB)}$, &nbsp; $AC = ${sqrtTex(dAC)}$, &nbsp;
+         $BC = ${sqrtTex(dBC)}$.</p>
+      <p>Comparaison : ${(
+        (() => {
+          const s = [...[dAB,dAC,dBC]].sort((x,y)=>x-y);
+          const eq = (x,y) => Math.abs(x-y) < 1e-7;
+          const parts = [];
+          if(eq(s[0],s[1])) parts.push('$' + sqrtTex(s[0]) + ' = ' + sqrtTex(s[1]) + '$ (deux côtés égaux)');
+          if(eq(s[1],s[2])) parts.push('$' + sqrtTex(s[1]) + ' = ' + sqrtTex(s[2]) + '$ (deux côtés égaux)');
+          if(eq(s[0]+s[1], s[2])) parts.push('$' + s[0] + ' + ' + s[1] + ' = ' + s[2] + '$ (Pythagore)');
+          return parts.length ? parts.join(' ; ') : 'aucune égalité remarquable';
+        })()
+      )}.</p>
+      <p>Conclusion : le triangle $ABC$ est <strong>${nature}</strong>.</p>
+      </div>`;
+
+    return {
+      enonce, solution: sol,
+      drawInitial(P){
+        drawSeg(P, A, B, '#94a3b8', 2);
+        drawSeg(P, B, C, '#94a3b8', 2);
+        drawSeg(P, C, A, '#94a3b8', 2);
+        plotPt(P, A[0],A[1],'A'); plotPt(P, B[0],B[1],'B'); plotPt(P, C[0],C[1],'C');
+      },
+      drawSolution(P){
+        drawSeg(P, A, B, '#2563eb', 2.4);
+        drawSeg(P, B, C, '#2563eb', 2.4);
+        drawSeg(P, C, A, '#2563eb', 2.4);
+        plotPt(P, A[0],A[1],'A'); plotPt(P, B[0],B[1],'B'); plotPt(P, C[0],C[1],'C');
+      }
+    };
+  }
+});
+
+/* ------------------------------------------------------------
+   (10a) Équation du premier degré : az + b = c
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation du premier degré : $az+b=c$",
+  canvas: false,
+  gen(){
+    const a  = C(nz(-4,4), nz(-3,3));
+    const z0 = C(rnd(-3,3), rnd(-3,3));
+    const b  = C(rnd(-5,5), rnd(-5,5));
+    const c  = cAdd(cMul(a, z0), b);
+    const u  = cSub(c, b);
+
+    const enonce = `Résoudre dans $\\mathbb{C}$ l'équation :
+      $${coefVar(a,'z')}${signedTerm(b,'')} = ${zTexC(c)}$.`;
+
+    const aC = cConj(a);
+    const num = cMul(u, aC);
+    const den = cAbs2(a);
+    const sol = `<p><strong>Méthode.</strong> Comme $a \\neq 0$, on isole $z$ :
+      $$az+b=c \\iff az = c-b \\iff z = \\frac{c-b}{a}.$$</p>
+      <p>Pour calculer ce quotient, on multiplie numérateur et dénominateur par $\\bar a$
+      (l'inverse de $a$ est $\\dfrac{\\bar a}{\\left|a\\right|^2}$).</p>
+      <div class="solbox">
+      <p>$c - b = \\left(${zTexC(c)}\\right) - \\left(${zTexC(b)}\\right) = ${zTexC(u)}$.</p>
+      <p>$\\left|a\\right|^2 = ${den}$ et $\\bar a = ${zTexC(aC)}$.</p>
+      <p>$$z = \\frac{${zTexC(u)}}{${zTexC(a)}} = \\frac{${zTexC(u)} \\times ${zTexC(aC)}}{${den}}
+        = \\frac{${zTexC(num)}}{${den}} = ${zTexC(z0)}$$</p>
+      </div>
+      <p><strong>Vérification :</strong>
+      $${coefVar(a,'z_0')}${signedTerm(b,'')} = ${zTexC(cAdd(cMul(a,z0), b))} = c$. ✔</p>
+      <p>L'ensemble des solutions est $\\mathcal{S} = \\left\\{${zTexC(z0)}\\right\\}$.</p>`;
+
+    return { enonce, solution: sol };
+  }
+});
+
+/* ------------------------------------------------------------
+   (10b) Équation az + b z̄ = c
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation du premier degré avec conjugué : $az+b\\bar z=c$",
+  canvas: false,
+  gen(){
+    let a, b;
+    do {
+      a = C(nz(-4,4), rnd(-3,3));
+      b = C(rnd(-4,4), rnd(-3,3));
+    } while(cAbs2(a) === cAbs2(b));
+
+    const z0 = C(rnd(-3,3), rnd(-3,3));
+    const c  = cAdd(cMul(a,z0), cMul(b, cConj(z0)));
+
+    const a1 = a.re, a2 = a.im, b1 = b.re, b2 = b.im;
+    const A11 = a1+b1, A12 = b2-a2;
+    const A21 = a2+b2, A22 = a1-b1;
+    const det = A11*A22 - A12*A21;
+
+    const enonce = `Résoudre dans $\\mathbb{C}$ l'équation :
+      $${coefVar(a,'z')}${signedTerm(b,'\\bar z')} = ${zTexC(c)}$.`;
+
+    const sol = `<p><strong>Méthode.</strong> On pose $z = x+iy$ avec $x, y \\in \\mathbb{R}$,
+      donc $\\bar z = x-iy$. On identifie ensuite parties réelle et imaginaire.</p>
+      <div class="solbox">
+      <p>$$\\left(${zTexC(a)}\\right)(x+iy) + \\left(${zTexC(b)}\\right)(x-iy)
+        = ${zTexC(c)}$$</p>
+      <p>En développant et en regroupant :
+      $$\\left[(${A11})x + (${A12})y\\right] + i\\left[(${A21})x + (${A22})y\\right]
+        = ${c.re} + ${c.im}i$$</p>
+      <p>L'équation équivaut donc au système linéaire :
+      $$\\begin{cases} ${linEqNum(A11,'x',A12,'y',' = ' + c.re)} \\\\
+                        ${linEqNum(A21,'x',A22,'y',' = ' + c.im)} \\end{cases}$$</p>
+      <p>Le déterminant vaut
+      $\\Delta = (${A11})(${A22}) - (${A12})(${A21}) = ${det}$.</p>
+      <p>Or $\\Delta = \\left|a\\right|^2 - \\left|b\\right|^2 = ${cAbs2(a)} - ${cAbs2(b)}
+        = ${cAbs2(a)-cAbs2(b)} \\neq 0$ : le système admet donc une <strong>unique</strong> solution.</p>
+      </div>
+      <p><strong>Résolution :</strong> on trouve $x = ${z0.re}$ et $y = ${z0.im}$.</p>
+      <div class="solbox"><p>$$\\mathcal{S} = \\left\\{${zTexC(z0)}\\right\\}$$</p></div>
+      <p><strong>Vérification :</strong> $${coefVar(a,'z_0')}${signedTerm(b,'\\overline{z_0}')}
+        = ${zTexC(cAdd(cMul(a,z0), cMul(b, cConj(z0))))} = c$. ✔</p>`;
+
+    function linEqNum(p, v1, q, v2, rhs){
+      let s = '';
+      if(p !== 0) s += (p === 1 ? '' : p === -1 ? '-' : p) + v1;
+      if(q !== 0){
+        if(s === '') s += (q === 1 ? '' : q === -1 ? '-' : q) + v2;
+        else s += (q > 0 ? ' + ' : ' - ') + (Math.abs(q) === 1 ? '' : Math.abs(q)) + v2;
+      }
+      return s + rhs;
+    }
+
+    return { enonce, solution: sol };
+  }
+});
+
+/* ------------------------------------------------------------
+   (10c) Équation z + b / z̄ = c
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation avec $\\bar z$ au dénominateur : $z+\\dfrac{b}{\\bar z}=c$",
+  canvas: false,
+  gen(){
+    let z1, z2, b, c;
+    for(let t = 0; t < 60000; t++){
+      z1 = C(rnd(-3,3), rnd(-3,3));
+      z2 = C(rnd(-3,3), rnd(-3,3));
+      if(cAbs2(z1) === 0 || cAbs2(z2) === 0) continue;
+      if(z1.re === z2.re && z1.im === z2.im) continue;
+      const num = cAbs2(z1) - cAbs2(z2);
+      const cc = cDiv(C(num,0), cConj(cSub(z1, z2)));
+      if(!isGauss(cc) || Math.abs(cc.re) < 1e-9) continue;
+      const bb = cSub(cMul(cc, cConj(z1)), C(cAbs2(z1), 0));
+      if(!isGauss(bb)) continue;
+      if(bb.re === 0 && bb.im === 0) continue;
+      b = bb; c = cc;
+      break;
+    }
+    if(!b){ z1 = C(1,1); z2 = C(3,1); b = C(2,-4); c = C(4,0); }
+
+    const b1 = b.re, b2 = b.im, c1 = c.re, c2 = c.im;
+    const A2 = c1*c1 + c2*c2;
+    const B2 = -(2*c2*b2 + c1*A2);
+    const C2 = b2*b2 + c1*c2*b2 + b1*A2;
+    const g = gcd(gcd(Math.abs(A2), Math.abs(B2)), Math.abs(C2));
+    const a2s = A2/g, b2s = B2/g, c2s = C2/g;
+    const disc = b2s*b2s - 4*a2s*c2s;
+    const x1 = z1.re, x2 = z2.re;
+    const y1 = z1.im, y2 = z2.im;
+
+    const enonce = `Résoudre dans $\\mathbb{C}\\setminus\\{0\\}$ l'équation :
+      $$z + \\dfrac{${zTexC(b)}}{\\bar z} = ${zTexC(c)}.$$`;
+
+    const sol = `<p><strong>Méthode.</strong> On multiplie les deux membres par $\\bar z$
+      (qui est non nul car $z \\neq 0$) :
+      $$z\\bar z + b = c\\bar z \\iff \\left|z\\right|^2 - c\\bar z + b = 0.$$</p>
+      <p>On pose ensuite $z = x+iy$ avec $x,y\\in\\mathbb{R}$, donc $\\left|z\\right|^2 = x^2+y^2$
+      et $\\bar z = x-iy$.</p>
+      <div class="solbox">
+      <p>$x^2+y^2 - \\left(${zTexC(c)}\\right)(x-iy) + \\left(${zTexC(b)}\\right) = 0$.</p>
+      <p>En identifiant parties réelle et imaginaire on obtient :</p>
+      <p><strong>(I)</strong> &nbsp; $${linEqTex(-c2, c1, -b2)}$ &nbsp; (équation d'une <em>droite</em>)</p>
+      <p><strong>(R)</strong> &nbsp; $${circEqTex(-c1, -c2, b1)}$ &nbsp; (équation d'un <em>cercle</em>)</p>
+      <p>Les solutions cherchées sont les points d'intersection de cette droite et de ce cercle.</p>
+      </div>
+      <p><strong>Résolution.</strong> De (I) on tire $y = \\dfrac{${c2}\\,x - ${b2}}{${c1}}$,
+      que l'on reporte dans (R). Après simplification on obtient
+      $$x^2 ${b2s < 0 ? '- ' + Math.abs(b2s) : '+ ' + b2s}x
+        ${c2s < 0 ? '- ' + Math.abs(c2s) : '+ ' + c2s} = 0,
+        \\quad \\text{de discriminant } \\Delta = ${disc}.$$</p>
+      <p>D'où $x = ${x1}$ ou $x = ${x2}$, puis $y = ${y1}$ ou $y = ${y2}$
+      (on associe correctement les couples en utilisant l'équation (I)).</p>
+      <div class="solbox">
+      <p>$$\\mathcal{S} = \\left\\{${zTexC(z1)}\\,;\\;${zTexC(z2)}\\right\\}$$</p>
+      </div>
+      <p><strong>Vérification.</strong> Pour $z = ${zTexC(z1)}$ :
+      $\\dfrac{${zTexC(b)}}{\\overline{z_1}} = \\dfrac{${zTexC(b)}}{${zTexC(cConj(z1))}}
+       = ${zTexC(cDiv(b, cConj(z1)))}$, et
+      $${zTexC(z1)} + ${zTexC(cDiv(b, cConj(z1)))} = ${zTexC(cAdd(z1, cDiv(b, cConj(z1))))} = ${zTexC(c)}$. ✔</p>`;
+
+    return { enonce, solution: sol };
+  }
+});
+
+/* ------------------------------------------------------------
+   (11a) Équation du second degré : z² + a = 0
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation $z^2+a=0$",
+  canvas: false,
+  gen(){
+    const a = nz(-9,9);
+    const eq = a > 0 ? `z^2 + ${a} = 0` : `z^2 - ${-a} = 0`;
+    const m = -a;
+
+    const enonce = `Résoudre dans $\\mathbb{C}$ l'équation : $${eq}$.`;
+
+    let sol;
+    if(m > 0){
+      sol = `<p><strong>Méthode.</strong> L'équation s'écrit $z^2 = ${m}$, avec $${m} > 0$.
+        Les deux solutions sont les racines carrées de $${m}$ : $z = \\pm\\sqrt{${m}}$.</p>
+        <div class="solbox">
+        <p>$z^2 = ${m} \\iff z = \\sqrt{${m}}$ ou $z = -\\sqrt{${m}}$.</p>
+        <p>$$\\mathcal{S} = \\left\\{${sqrtTex(m)}\\,;\\;-${sqrtTex(m)}\\right\\}$$</p>
+        </div>`;
+    } else {
+      sol = `<p><strong>Méthode.</strong> L'équation s'écrit $z^2 = ${m}$, avec $${m} < 0$.
+        On écrit $${m} = ${-m}\\times(-1) = ${-m}\\,i^2$, donc
+        $z = \\pm i\\sqrt{${-m}}$.</p>
+        <div class="solbox">
+        <p>$z^2 = ${m} \\iff z^2 = ${-m}\\,i^2 \\iff z = i\\sqrt{${-m}}$ ou $z = -i\\sqrt{${-m}}$.</p>
+        <p>$$\\mathcal{S} = \\left\\{${sqrtTex(-m)}i\\,;\\;-${sqrtTex(-m)}i\\right\\}$$</p>
+        </div>`;
+    }
+
+    return { enonce, solution: sol };
+  }
+});
+
+/* ------------------------------------------------------------
+   (11b) Équation az² + bz = 0
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation $az^2+bz=0$",
+  canvas: false,
+  gen(){
+    const a  = C(nz(-4,4), rnd(-2,2));
+    const z0 = C(rnd(-3,3), rnd(-3,3));
+    const b  = cMul(C(-1,0), cMul(a, z0));
+
+    const enonce = `Résoudre dans $\\mathbb{C}$ l'équation :
+      $${coefVar(a,'z^2')}${signedTerm(b,'z')} = 0$.`;
+
+    const sol = `<p><strong>Méthode.</strong> On factorise par $z$ :
+      $$z\\left(${coefVar(a,'z')}${signedTerm(b,'')}\\right) = 0.$$</p>
+      <p>Un produit de facteurs est nul si et seulement si l'un des facteurs est nul
+      (l'anneau $\\mathbb{C}$ est un corps, donc intègre).</p>
+      <div class="solbox">
+      <p>$$z = 0 \\quad \\text{ou} \\quad ${coefVar(a,'z')}${signedTerm(b,'')} = 0.$$</p>
+      <p>La deuxième équation donne
+      $z = -\\dfrac{${zTexC(b)}}{${zTexC(a)}} = ${zTexC(z0)}$
+      (on divise par $a \\neq 0$).</p>
+      <p>$$\\mathcal{S} = \\left\\{0\\,;\\;${zTexC(z0)}\\right\\}$$</p>
+      </div>`;
+
+    return { enonce, solution: sol };
+  }
+});
+
+/* ------------------------------------------------------------
+   (11c) Équation az² + bz + c = 0 (coefficients réels)
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation $az^2+bz+c=0$ à coefficients réels",
+  canvas: false,
+  gen(){
+    let A, b, c, D;
+    const kind = Math.random();
+    if(kind < 0.42){
+      for(;;){
+        A = pick([1,1,2,3]); b = rnd(-8,8);
+        const k = nz(1,8);
+        const num = b*b - k*k;
+        if(num % (4*A) !== 0) continue;
+        c = num/(4*A);
+        if(c === 0) continue;
+        D = k*k; break;
+      }
+    } else if(kind < 0.84){
+      for(;;){
+        A = pick([1,1,2,3]); b = rnd(-8,8);
+        const k = nz(1,7);
+        const num = b*b + k*k;
+        if(num % (4*A) !== 0) continue;
+        c = num/(4*A);
+        if(c === 0) continue;
+        D = -k*k; break;
+      }
+    } else {
+      for(;;){
+        A = pick([1,2,3]); b = rnd(-8,8);
+        const num = b*b;
+        if(num % (4*A) !== 0) continue;
+        c = num/(4*A);
+        if(c === 0) continue;
+        D = 0; break;
+      }
+    }
+
+    const eqTex = `${A === 1 ? '' : A}z^2 ${b >= 0 ? '+ ' + b : '- ' + (-b)}z
+                   ${c >= 0 ? '+ ' + c : '- ' + (-c)} = 0`;
+    const enonce = `Résoudre dans $\\mathbb{C}$ l'équation : $${eqTex}$.`;
+
+    let sol;
+    if(D > 0){
+      const k = Math.sqrt(D);
+      sol = `<p><strong>Méthode.</strong> On calcule le discriminant
+        $\\Delta = b^2-4ac$.</p>
+        <div class="solbox">
+        <p>$\\Delta = \\left(${b}\\right)^2 - 4\\times${A}\\times\\left(${c}\\right) = ${D} > 0$ :
+        l'équation admet <strong>deux solutions réelles</strong> :
+        $$z = \\frac{-b\\pm\\sqrt{\\Delta}}{2a}.$$</p>
+        <p>$$z_1 = \\frac{${-b}+${k}}{${2*A}} = ${fracTex(-b + k, 2*A)}, \\qquad
+           z_2 = \\frac{${-b}-${k}}{${2*A}} = ${fracTex(-b - k, 2*A)}.$$</p>
+        <p>$$\\mathcal{S} = \\left\\{${fracTex(-b+k,2*A)}\\,;\\;${fracTex(-b-k,2*A)}\\right\\}$$</p>
+        </div>`;
+    } else if(D < 0){
+      const k = Math.sqrt(-D);
+      sol = `<p><strong>Méthode.</strong> On calcule le discriminant
+        $\\Delta = b^2-4ac$.</p>
+        <div class="solbox">
+        <p>$\\Delta = \\left(${b}\\right)^2 - 4\\times${A}\\times\\left(${c}\\right) = ${D} < 0$ :
+        l'équation admet <strong>deux solutions complexes conjuguées</strong> :
+        $$z = \\frac{-b\\pm i\\sqrt{-\\Delta}}{2a}.$$</p>
+        <p>Ici $\\sqrt{-\\Delta} = ${sqrtTex(-D)}$, donc
+        $$z_1 = \\frac{${-b}+${sqrtTex(-D)}i}{${2*A}}, \\qquad
+           z_2 = \\overline{z_1} = \\frac{${-b}-${sqrtTex(-D)}i}{${2*A}}.$$</p>
+        <p>$$\\mathcal{S} = \\left\\{
+          ${fracTex(-b,2*A)} + ${fracTex(k,2*A)}i\\,;\\;
+          ${fracTex(-b,2*A)} - ${fracTex(k,2*A)}i\\right\\}$$</p>
+        </div>`;
+    } else {
+      sol = `<p><strong>Méthode.</strong> $\\Delta = b^2-4ac = 0$.</p>
+        <div class="solbox">
+        <p>L'équation admet une <strong>solution double</strong> (réelle) :
+        $$z = \\frac{-b}{2a} = ${fracTex(-b, 2*A)}.$$</p>
+        <p>$$\\mathcal{S} = \\left\\{${fracTex(-b,2*A)}\\right\\}$$</p>
+        </div>
+        <p>Remarque : on peut aussi écrire
+        $${A}z^2 ${b>=0?'+ '+b:'- '+(-b)}z ${c>=0?'+ '+c:'- '+(-c)}
+        = ${A}\\left(z - ${fracTex(-b,2*A)}\\right)^2$.</p>`;
+    }
+
+    return { enonce, solution: sol };
+  }
+});
+
+/* ------------------------------------------------------------
+   (12) Équation f(z,z̄) = g(z,z̄) : z z̄ + α z + β z̄ + γ = 0
+   ------------------------------------------------------------ */
+EX.push({
+  title: "Équation mixte $f(z,\\bar z)=g(z,\\bar z)$",
+  canvas: true,
+  gen(){
+    let z1, z2, alpha, beta, gamma, A0, B0, C0;
+
+    for(let t = 0; t < 30000; t++){
+      z1 = C(rnd(-3,3), rnd(-3,3));
+      z2 = C(rnd(-3,3), rnd(-3,3));
+      if(z1.re === z2.re && z1.im === z2.im) continue;
+
+      A0 = z2.im - z1.im;
+      B0 = z1.re - z2.re;
+      C0 = z2.re*z1.im - z1.re*z2.im;
+
+      const mx = (z1.re + z2.re)/2, my = (z1.im + z2.im)/2;
+      const ux = z1.re - z2.re, uy = z1.im - z2.im;
+      const t2 = pick([-1,1]) * pick([1,2]);
+      const u = Math.round(mx - t2*uy);
+      const v = Math.round(my + t2*ux);
+
+      const alpha1 = B0 - u,  beta1 = -u - B0;
+      const alpha2 = A0 + v,  beta2 = A0 - v;
+      const r2 = (z1.re-u)*(z1.re-u) + (z1.im-v)*(z1.im-v);
+      const gamma1 = u*u + v*v - r2;
+      const gamma2 = 2*C0;
+
+      alpha = C(alpha1, alpha2);
+      beta  = C(beta1, beta2);
+      gamma = C(gamma1, gamma2);
+
+      if(alpha.re===0 && alpha.im===0 && beta.re===0 && beta.im===0) continue;
+      if(A0===0 && B0===0) continue;
+
+      const f = (z) => cAdd(cAdd(cMul(z, cConj(z)), cMul(alpha,z)),
+                            cAdd(cMul(beta, cConj(z)), gamma));
+      const ok = (w) => Math.abs(f(w).re) < 1e-7 && Math.abs(f(w).im) < 1e-7;
+      if(!ok(z1) || !ok(z2)) continue;
+
+      return build();
+    }
+
+    z1 = C(1,1); z2 = C(3,1);
+    alpha = C(0,3); beta = C(-4,-3); gamma = C(8,-4);
+    return build();
+
+    function build(){
+      const eqTex = `z\\bar z${signedTerm(alpha,'z')}${signedTerm(beta,'\\bar z')}
+                     ${signedTerm(gamma,'')} = 0`;
+
+      const A = alpha.im + beta.im;
+      const B = alpha.re - beta.re;
+      const Cst = gamma.im;
+      const D = alpha.re + beta.re;
+      const E = -alpha.im + beta.im;
+      const F = gamma.re;
+
+      const enonce = `Résoudre dans $\\mathbb{C}$ l'équation :
+        $${eqTex}$.`;
+
+      const sol = `<p><strong>Méthode.</strong> On pose $z = x+iy$ avec $x,y\\in\\mathbb{R}$.
+        Alors $\\bar z = x-iy$ et $z\\bar z = \\left|z\\right|^2 = x^2+y^2$, qui est un
+        <em>nombre réel</em>.</p>
+        <p>On développe, puis on identifie parties réelle et imaginaire : on obtient un
+        système de deux équations réelles.</p>
+        <div class="solbox">
+        <p>$z\\bar z = x^2+y^2$ ;</p>
+        <p>$\\left(${zTexC(alpha)}\\right)z = ${zTexC(alpha)}(x+iy)$ ;</p>
+        <p>$\\left(${zTexC(beta)}\\right)\\bar z = ${zTexC(beta)}(x-iy)$.</p>
+        <p>En regroupant :</p>
+        <p><strong>Partie imaginaire :</strong> &nbsp; $${linEqTex(A, B, Cst)}$
+           &nbsp; → c'est l'équation d'une <em>droite</em> $(\\mathcal{D})$.</p>
+        <p><strong>Partie réelle :</strong> &nbsp; $${circEqTex(D, E, F)}$
+           &nbsp; → c'est l'équation d'un <em>cercle</em> $(\\mathcal{C})$.</p>
+        <p>Les solutions sont donc les points d'intersection de $(\\mathcal{D})$ et $(\\mathcal{C})$.</p>
+        </div>
+        <p><strong>Résolution.</strong> Les calculs donnent deux points d'intersection :</p>
+        <div class="solbox">
+        <p>$$\\mathcal{S} = \\left\\{${zTexC(z1)}\\,;\\;${zTexC(z2)}\\right\\}$$</p>
+        </div>
+        <p><strong>Vérification.</strong> Pour $z = ${zTexC(z1)}$ :
+        $z\\bar z = ${cAbs2(z1)}$, et
+        $${cAbs2(z1)} + ${zTexC(cMul(alpha,z1))} + ${zTexC(cMul(beta,cConj(z1)))}
+          + ${zTexC(gamma)} = 0$. ✔</p>`;
+
+      return {
+        enonce, solution: sol,
+        drawInitial(P){
+          const pt1 = A !== 0
+            ? [(-B*0 - Cst)/A, 0]
+            : [0, (-A*0 - Cst)/B];
+          const dx2 = A !== 0 ? -B/A : 0;
+          drawLineThru(P, pt1, [pt1[0] + (A!==0?1:0), pt1[1] + (A!==0? dx2 : 1)], '#93c5fd');
+          if(Math.abs(D*D + E*E - 4*F) > 0){
+            const cx0 = -D/2, cy0 = -E/2;
+            const rr = Math.sqrt(Math.max(cx0*cx0 + cy0*cy0 - F, 0));
+            const { ctx, X, Y } = P;
+            ctx.strokeStyle = '#86efac'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(X(cx0), Y(cy0), rr*P.u, 0, 2*Math.PI);
+            ctx.stroke();
+          }
+          plotPt(P, z1.re, z1.im, '', '#94a3b8');
+          plotPt(P, z2.re, z2.im, '', '#94a3b8');
+        },
+        drawSolution(P){
+          if(Math.abs(D*D + E*E - 4*F) > 0){
+            const cx0 = -D/2, cy0 = -E/2;
+            const rr = Math.sqrt(Math.max(cx0*cx0 + cy0*cy0 - F, 0));
+            const { ctx, X, Y } = P;
+            ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(X(cx0), Y(cy0), rr*P.u, 0, 2*Math.PI);
+            ctx.stroke();
+          }
+          const pt1 = A !== 0 ? [-Cst/A, 0] : [0, -Cst/B];
+          drawLineThru(P, pt1, A !== 0 ? [pt1[0] + 1, pt1[1] - B/A] : [pt1[0] + 1, pt1[1]], '#3b82f6');
+          plotPt(P, z1.re, z1.im, zTexC(z1), '#dc2626');
+          plotPt(P, z2.re, z2.im, zTexC(z2), '#dc2626');
+        }
+      };
+    }
+  }
+});
+
+/* ============================================================
+   4. CONSTRUCTION DE L'INTERFACE
+   ============================================================ */
+function typeset(el, tries){
+  tries = tries || 0;
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([el]).catch(() => {});
+  } else if(tries < 100){
+    setTimeout(() => typeset(el, tries + 1), 200);
+  }
+}
+
+function buildSection(ex, index){
+  const sec = document.createElement('section');
+  sec.className = 'card';
+
+  const h = document.createElement('h2');
+  h.innerHTML = `<span class="num">${index + 1}</span><span>${ex.title}</span>`;
+  sec.appendChild(h);
+
+  const en = document.createElement('div');
+  en.className = 'enonce';
+  sec.appendChild(en);
+
+  let canvas = null;
+  if(ex.canvas){
+    canvas = document.createElement('canvas');
+    canvas.width = 440; canvas.height = 440;
+    sec.appendChild(canvas);
+  }
+
+  const btns = document.createElement('div');
+  btns.className = 'btns';
+  const bNew = document.createElement('button');
+  bNew.className = 'btn-new'; bNew.textContent = 'Nouvel exercice';
+  const bSol = document.createElement('button');
+  bSol.className = 'btn-sol'; bSol.textContent = 'Solution';
+  btns.appendChild(bNew); btns.appendChild(bSol);
+  sec.appendChild(btns);
+
+  const solDiv = document.createElement('div');
+  solDiv.className = 'solution';
+  sec.appendChild(solDiv);
+
+  let current = null;
+
+  function nouveau(){
+    current = ex.gen();
+    en.innerHTML = current.enonce;
+    solDiv.innerHTML = '';
+    solDiv.classList.remove('show');
+    bSol.classList.remove('on');
+    if(canvas){
+      const P = drawBase(canvas);
+      if(current.drawInitial) current.drawInitial(P);
+    }
+    typeset(en);
+  }
+
+  bNew.addEventListener('click', nouveau);
+
+  bSol.addEventListener('click', () => {
+    if(!solDiv.classList.contains('show')){
+      solDiv.innerHTML = current.solution;
+      solDiv.classList.add('show');
+      bSol.classList.add('on');
+      if(canvas){
+        const P = drawBase(canvas);
+        if(current.drawSolution) current.drawSolution(P);
+      }
+      typeset(solDiv);
+    } else {
+      solDiv.classList.remove('show');
+      bSol.classList.remove('on');
+      if(canvas){
+        const P = drawBase(canvas);
+        if(current.drawInitial) current.drawInitial(P);
+      }
+    }
+  });
+
+  nouveau();
+  return sec;
+}
+
+const app = document.getElementById('app');
+EX.forEach((ex, i) => app.appendChild(buildSection(ex, i)));
+
+typeset(document.querySelector('header'));
+</script>
+</body>
+</html>

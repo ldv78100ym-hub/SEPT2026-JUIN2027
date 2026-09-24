@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Des puissances de 10 à la fonction exponentielle — Terminale STI2D</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\\[','\\]']]
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --accent:#2563eb;
+  --accent-soft:#e8f0fe;
+  --ink:#1e293b;
+  --muted:#64748b;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;padding:0;}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  background:radial-gradient(circle at 18% 0%, #ffffff 0%, #eef3fb 45%, #dde8f7 100%);
+  color:var(--ink);
+  display:flex;flex-direction:column;
+  height:100dvh;
+  overflow:hidden;
+}
+
+/* ---------- HEADER ---------- */
+header{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;
+  background:rgba(255,255,255,.75);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid #e2e8f0;
+}
+#prevBtn{
+  flex:0 0 auto;
+  width:42px;height:42px;border-radius:50%;
+  border:2px solid #dbe4f0;background:#fff;color:var(--accent);
+  font-size:1rem;font-weight:700;cursor:pointer;
+  transition:.18s;
+  display:flex;align-items:center;justify-content:center;
+}
+#prevBtn:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent);transform:translateX(-2px);}
+#prevBtn:disabled{opacity:.35;cursor:not-allowed;}
+
+.head-mid{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px;}
+.brand{
+  font-weight:700;letter-spacing:.2px;color:#0f172a;font-size:.9rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.brand span{color:var(--accent);}
+.progress{height:6px;background:#dbe4f0;border-radius:99px;overflow:hidden;}
+.progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2563eb,#0d9488);border-radius:99px;transition:width .35s ease;}
+
+.counter{
+  flex:0 0 auto;font-variant-numeric:tabular-nums;color:var(--muted);
+  font-size:.85rem;font-weight:600;white-space:nowrap;
+  background:#f1f5f9;border-radius:99px;padding:6px 12px;
+}
+
+/* ---------- MAIN ---------- */
+main{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:16px 18px;
+  scroll-behavior:smooth;
+}
+
+.slide{
+  width:100%;max-width:1000px;background:#fff;border-radius:18px;
+  box-shadow:0 18px 45px rgba(15,23,42,.13), 0 2px 6px rgba(15,23,42,.06);
+  padding:24px 34px 28px;border-top:7px solid var(--accent);
+  animation:pop .32s ease;
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+.badge{
+  display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--accent);background:var(--accent-soft);
+  padding:5px 12px;border-radius:99px;margin-bottom:12px;
+}
+h2{margin:0 0 16px;font-size:1.4rem;line-height:1.28;}
+.question{font-size:1.08rem;line-height:1.75;margin:0 0 14px;}
+.hint{
+  font-size:.93rem;color:var(--muted);background:#f5f8fd;border-left:4px solid #cbd5e1;
+  padding:10px 14px;border-radius:0 10px 10px 0;margin:0 0 16px;line-height:1.6;
+}
+.canvas-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:8px;margin:14px 0;}
+canvas{display:block;width:100%;height:clamp(160px, 28vh, 280px);}
+
+/* ---------- ZONE DE RÉPONSE ---------- */
+.answer-zone{
+  margin:18px 0 6px;
+  background:#f8fafc;
+  border:2px dashed #dbe4f0;
+  border-radius:16px;
+  padding:16px 18px;
+  transition:.2s;
+}
+.answer-zone.solved{
+  background:#ecfdf5;
+  border-color:#6ee7b7;
+  border-style:solid;
+}
+.answer-zone.failed{
+  background:#fef2f2;
+  border-color:#fca5a5;
+  border-style:solid;
+}
+.answer-label{
+  display:block;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.input-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+.answer-input{
+  flex:1 1 auto;
+  min-width:0;
+  font-size:1.25rem;
+  font-family:"SF Mono",Consolas,"Courier New",monospace;
+  padding:14px 18px;
+  border:3px solid #cbd5e1;
+  border-radius:12px;
+  background:#fff;
+  color:var(--ink);
+  transition:.18s;
+  outline:none;
+}
+.answer-input::placeholder{color:#94a3b8;font-family:inherit;}
+.answer-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px var(--accent-soft);
+}
+.answer-input:disabled{
+  background:#f1f5f9;
+  color:#475569;
+  cursor:not-allowed;
+}
+.answer-input.correct{
+  border-color:#10b981;
+  background:#fff;
+  color:#065f46;
+}
+.answer-input.incorrect{
+  border-color:#ef4444;
+  background:#fff;
+  animation:shake .38s;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-7px);}
+  40%{transform:translateX(7px);}
+  60%{transform:translateX(-4px);}
+  80%{transform:translateX(4px);}
+}
+#checkBtn{
+  flex:0 0 auto;
+  padding:0 22px;
+  font:inherit;
+  font-weight:700;
+  font-size:1rem;
+  border:none;
+  border-radius:12px;
+  background:var(--accent);
+  color:#fff;
+  cursor:pointer;
+  transition:.18s;
+  white-space:nowrap;
+}
+#checkBtn:hover:not(:disabled){filter:brightness(1.08);}
+#checkBtn:disabled{background:#cbd5e1;cursor:not-allowed;}
+
+.feedback{
+  margin-top:10px;
+  font-size:.98rem;
+  font-weight:600;
+  min-height:1.4em;
+  line-height:1.5;
+}
+.feedback.ok{color:#059669;}
+.feedback.ko{color:#dc2626;}
+.feedback.info{color:#64748b;font-weight:500;}
+
+.answer{
+  margin-top:20px;border-radius:14px;background:#f0fdfa;border:1px solid #99f6e4;
+  padding:16px 20px;animation:pop .3s ease;
+}
+.answer h3{margin:0 0 10px;font-size:.75rem;letter-spacing:1.1px;text-transform:uppercase;color:#0f766e;}
+.answer p{margin:.5em 0;line-height:1.7;}
+.answer > div{line-height:1.75;}
+.hidden{display:none;}
+
+table.recap{border-collapse:collapse;margin:10px 0;font-size:.95rem;width:100%;}
+table.recap th,table.recap td{border:1px solid #cbd5e1;padding:7px 10px;text-align:center;}
+table.recap th{background:#f1f5f9;font-weight:600;}
+
+/* ---------- BARRE INFÉRIEURE PLEIN ÉCRAN ---------- */
+.bottom-bar{
+  flex:0 0 auto;
+  display:flex;
+  width:100%;
+  height:88px;
+  background:#fff;
+  border-top:2px solid #e2e8f0;
+  box-shadow:0 -10px 30px rgba(15,23,42,.08);
+  z-index:10;
+}
+.bottom-bar button{
+  flex:1 1 50%;
+  width:50%;
+  border:none;
+  font:inherit;
+  font-size:1.2rem;
+  font-weight:800;
+  letter-spacing:.5px;
+  cursor:pointer;
+  transition:.18s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+#revealBtn{
+  background:linear-gradient(135deg,#f8fafc,#eef3fb);
+  color:var(--accent);
+  border-right:2px solid #e2e8f0;
+}
+#revealBtn:hover:not(:disabled){background:var(--accent-soft);}
+#revealBtn:disabled,
+#revealBtn.revealed{
+  background:#ecfdf5;color:#0f766e;cursor:default;
+}
+#nextBtn{
+  background:var(--accent);
+  color:#fff;
+}
+#nextBtn:hover:not(:disabled){filter:brightness(1.08);}
+#nextBtn.finish{background:linear-gradient(135deg,#0d9488,#059669);}
+
+@media (max-width:640px){
+  .brand{font-size:.78rem;}
+  .bottom-bar{height:72px;}
+  .bottom-bar button{font-size:1rem;}
+  .slide{padding:18px 18px 22px;}
+  h2{font-size:1.18rem;}
+  .question{font-size:1rem;}
+  .answer-input{font-size:1.05rem;padding:12px 14px;}
+  .input-row{flex-direction:column;}
+  #checkBtn{padding:12px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button id="prevBtn" title="Diapositive précédente" aria-label="Précédent">◀</button>
+  <div class="head-mid">
+    <div class="brand">Des puissances de 10 à la <span>fonction exponentielle</span> — Terminale STI2D</div>
+    <div class="progress"><i id="progressBar"></i></div>
+  </div>
+  <span class="counter" id="counter">1 / 22</span>
+</header>
+
+<main><div id="stage" style="width:100%;display:flex;justify-content:center;"></div></main>
+
+<footer class="bottom-bar">
+  <button id="revealBtn">💡 Solution</button>
+  <button id="nextBtn">Suivant ▶</button>
+</footer>
+
+<script>
+/* =========================================================
+   NORMALISATION DES RÉPONSES SAISIES
+   ========================================================= */
+const SUP = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-','⁺':'+','√':'sqrt','π':'pi','∞':'infini'};
+function norm(s){
+  return String(s)
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺√π∞]/g, c => SUP[c] || c)
+    .toLowerCase()
+    .replace(/\s+/g,'')
+    .replace(/,/g,'.')
+    .replace(/×/g,'*')
+    .replace(/\u00a0/g,'');
+}
+// Teste si la saisie correspond à l'une des formes acceptées
+function match(s, patterns){
+  const t = norm(s);
+  return patterns.some(p => p instanceof RegExp ? p.test(t) : p === t);
+}
+// Version "numérique" : accepte une valeur décimale proche
+function near(s, target, tol){
+  const t = norm(s).replace(/^\+/, '');
+  const v = parseFloat(t);
+  if (!isFinite(v)) return false;
+  return Math.abs(v - target) <= (tol || 1e-6);
+}
+
+/* =========================================================
+   OUTILS DE DESSIN (canvas)
+   ========================================================= */
+const fmt = v => {
+  const n = Math.abs(v) >= 1000 ? v : +(+v).toFixed(2);
+  return String(n).replace('.', ',');
+};
+
+function mapper(w, h, o){
+  const pad = Object.assign({l:52, r:22, t:20, b:38}, o.pad || {});
+  const X = x => pad.l + (x - o.xmin) / (o.xmax - o.xmin) * (w - pad.l - pad.r);
+  const Y = y => h - pad.b - (y - o.ymin) / (o.ymax - o.ymin) * (h - pad.t - pad.b);
+  return {X, Y, pad, w, h};
+}
+
+function frame(ctx, m, o){
+  const {xmin, xmax, ymin, ymax} = o;
+  const w = m.w, h = m.h;
+  ctx.save();
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+
+  const sx = o.stepX || 1, sy = o.stepY || 1;
+  ctx.strokeStyle = '#eef3fa'; ctx.lineWidth = 1;
+  for (let x = Math.ceil(xmin / sx) * sx; x <= xmax + 1e-9; x += sx){
+    ctx.beginPath(); ctx.moveTo(m.X(x), m.Y(ymin)); ctx.lineTo(m.X(x), m.Y(ymax)); ctx.stroke();
+  }
+  for (let y = Math.ceil(ymin / sy) * sy; y <= ymax + 1e-9; y += sy){
+    ctx.beginPath(); ctx.moveTo(m.X(xmin), m.Y(y)); ctx.lineTo(m.X(xmax), m.Y(y)); ctx.stroke();
+  }
+
+  const y0 = Math.min(Math.max(0, ymin), ymax);
+  const x0 = Math.min(Math.max(0, xmin), xmax);
+
+  ctx.strokeStyle = '#a8b4c4'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(m.X(xmin), m.Y(y0)); ctx.lineTo(m.X(xmax), m.Y(y0)); ctx.stroke();
+  if (xmin <= 0 && xmax >= 0){
+    ctx.beginPath(); ctx.moveTo(m.X(0), m.Y(ymin)); ctx.lineTo(m.X(0), m.Y(ymax)); ctx.stroke();
+  }
+
+  ctx.fillStyle = '#7b8794'; ctx.font = '12px system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let x = Math.ceil(xmin / sx) * sx; x <= xmax + 1e-9; x += sx){
+    if (Math.abs(x) < 1e-9) continue;
+    ctx.fillText(fmt(x), m.X(x), m.Y(y0) + 6);
+  }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let y = Math.ceil(ymin / sy) * sy; y <= ymax + 1e-9; y += sy){
+    if (Math.abs(y) < 1e-9) continue;
+    ctx.fillText(fmt(y), m.X(x0) - 7, m.Y(y));
+  }
+  ctx.restore();
+}
+
+function clipPlot(ctx, m){
+  ctx.beginPath();
+  ctx.rect(m.pad.l, m.pad.t, m.w - m.pad.l - m.pad.r, m.h - m.pad.t - m.pad.b);
+  ctx.clip();
+}
+
+function curve(ctx, m, f, a, b, color, opt){
+  opt = opt || {};
+  ctx.save();
+  clipPlot(ctx, m);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = opt.width || 2.6;
+  ctx.lineJoin = 'round';
+  if (opt.dash) ctx.setLineDash(opt.dash);
+  ctx.beginPath();
+  const N = 500;
+  let started = false;
+  for (let i = 0; i <= N; i++){
+    const x = a + (b - a) * i / N;
+    const y = f(x);
+    if (!isFinite(y)){ started = false; continue; }
+    const px = m.X(x), py = m.Y(y);
+    if (!started){ ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function dot(ctx, m, x, y, color, r){
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(m.X(x), m.Y(y), r || 5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function label(ctx, x, y, text, color, size, align){
+  ctx.save();
+  ctx.fillStyle = color || '#334155';
+  ctx.font = (size || 13) + 'px system-ui, sans-serif';
+  ctx.textAlign = align || 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+/* =========================================================
+   LES DIAPOS
+   Chaque diapo : question + champ de saisie + validation.
+   ========================================================= */
+const slides = [
+
+/* ---------------- PARTIE A : PUISSANCES DE 10 ---------------- */
+{
+  part:'A',
+  title:"Produit de deux puissances de 10",
+  question: String.raw`Sans calculatrice, écrire $10^{3}\times 10^{4}$ sous la forme d'une seule puissance de 10.`,
+  hint: String.raw`$10^{3}=10\times10\times10$ et $10^{4}=10\times10\times10\times10$.`,
+  placeholder: "Ex : 10^7",
+  validate: s => match(s, [/^10\^7$/, /^10\*\*7$/, /^10puissance7$/, /^10p7$/, /^dixmillions?$/, '10000000', '10^7']),
+  success: "Exact ! On additionne les exposants.",
+  answer: String.raw`$10^{3}\times10^{4}=10^{3+4}=10^{7}=10\,000\,000$ (dix millions).`,
+  explain: String.raw`<strong>Règle du produit :</strong> $10^{m}\times10^{n}=10^{m+n}$. On <em>additionne</em> les exposants, on ne les multiplie pas !`
+},
+{
+  part:'A',
+  title:"Quotient de deux puissances de 10",
+  question: String.raw`Un fichier de $10^{7}$ octets est découpé en blocs de $10^{4}$ octets. Combien de blocs obtient-on ? Donner le résultat sous forme d'une puissance de 10.`,
+  placeholder: "Ex : 10^3",
+  validate: s => match(s, [/^10\^3$/, /^10\*\*3$/, /^10puissance3$/, /^10p3$/, '1000', /^mille$/]),
+  success: "Bien joué ! On soustrait les exposants.",
+  answer: String.raw`$\dfrac{10^{7}}{10^{4}}=10^{7-4}=10^{3}=1\,000$ blocs.`,
+  explain: String.raw`<strong>Règle du quotient :</strong> $\dfrac{10^{m}}{10^{n}}=10^{m-n}$.`
+},
+{
+  part:'A',
+  title:"Puissance d'une puissance",
+  question: String.raw`Un cube possède une arête de $10^{2}$ mm. Quel est son volume en mm³ ? Donner le résultat sous forme de puissance de 10.`,
+  placeholder: "Ex : 10^6",
+  validate: s => match(s, [/^10\^6$/, /^10\*\*6$/, /^10puissance6$/, /^10p6$/, '1000000', /^unmillion$/]),
+  success: "Parfait ! On multiplie les exposants.",
+  answer: String.raw`$V=(10^{2})^{3}=10^{2\times3}=10^{6}$ mm³, soit un million de mm³.`,
+  explain: String.raw`<strong>Règle :</strong> $(10^{m})^{n}=10^{m\times n}$. On <em>multiplie</em> cette fois les exposants.`
+},
+{
+  part:'A',
+  title:"Exposant négatif",
+  question: String.raw`Un processeur grave des transistors de $10^{-8}$ m. Écrire $10^{-8}$ sous forme d'un nombre décimal.`,
+  placeholder: "Ex : 0,00000001",
+  validate: s => match(s, ['0.00000001', '1/10^8', '1/10**8', /^10\^-8$/, /^10\*\*-8$/, '1e-8', /^10puissance-8$/]),
+  success: "Bravo ! L'exposant négatif donne bien un très petit nombre positif.",
+  answer: String.raw`$10^{-8}=\dfrac{1}{10^{8}}=0,00000001$ m (un cent millionième de mètre).`,
+  explain: String.raw`<strong>Règle :</strong> $a^{-n}=\dfrac{1}{a^{n}}$. Attention : un exposant négatif ne donne <em>pas</em> un nombre négatif !`
+},
+{
+  part:'A',
+  title:"Exposant nul",
+  question: String.raw`En utilisant le quotient $\dfrac{10^{5}}{10^{5}}$, justifier que $10^{0}$ vaut un nombre simple. Combien vaut $10^{0}$ ?`,
+  placeholder: "Ex : 1",
+  validate: s => match(s, ['1', 'un', /^1\.0*$/]),
+  success: "Exact ! Tout nombre non nul divisé par lui-même vaut 1.",
+  answer: String.raw`D'une part $\dfrac{10^{5}}{10^{5}}=10^{5-5}=10^{0}$ ; d'autre part tout nombre divisé par lui-même vaut $1$. Donc $10^{0}=1$.`,
+  explain: String.raw`Cette convention vaut pour toute base $a>0$ : $a^{0}=1$.`
+},
+{
+  part:'A',
+  title:"Ranger des puissances de 10",
+  question: String.raw`Parmi $10^{3}\;;\; 10^{-4}\;;\; 10^{0}\;;\; 10^{-1}\;;\; 10^{2}$, lequel est le plus petit ? Répondre sous la forme d'une puissance de 10.`,
+  placeholder: "Ex : 10^-4",
+  validate: s => match(s, [/^10\^-4$/, /^10\*\*-4$/, /^10puissance-4$/, '0.0001', /^1\/10\^?4$/, /^1\/100

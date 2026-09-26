@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symétries orthogonales et centrale — Exercices interactifs</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']]
+  },
+  svg: { fontCache: 'global' },
+  startup: {
+    pageReady: () => MathJax.startup.defaultPageReady().then(() => {
+      if (typeof initExercises === 'function') initExercises();
+    })
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;max-width:1100px;margin:0 auto;padding:20px;background:#f5f7fa;color:#2c3e50;line-height:1.6}
+h1{text-align:center;color:#1a5276;border-bottom:3px solid #3498db;padding-bottom:10px;margin-bottom:5px}
+.subtitle{text-align:center;font-style:italic;color:#7f8c8d;margin-top:0;margin-bottom:15px}
+h2{color:#2874a6;border-left:5px solid #3498db;padding-left:12px;margin-top:20px}
+.recall{background:#fff8e1;border-left:4px solid #f39c12;padding:12px 18px;border-radius:4px;margin-bottom:20px}
+
+.layout{display:grid;grid-template-columns:270px 1fr;gap:22px;align-items:start;margin-top:10px}
+.sidebar{position:sticky;top:20px;background:white;border-radius:10px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);border:1px solid #e8ecef}
+.sidebar h3{margin:0 0 12px 0;font-size:14px;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #ecf0f1;padding-bottom:10px}
+.nav-item{display:block;width:100%;text-align:left;background:transparent;color:#2c3e50;padding:10px 12px;border-radius:6px;margin-bottom:6px;cursor:pointer;border:1px solid transparent;font-size:13px;transition:all 0.15s;font-family:inherit}
+.nav-item:hover{background:#ebf5fb;border-color:#aed6f1}
+.nav-item.active{background:#3498db;color:white;border-color:#2980b9;box-shadow:0 2px 6px rgba(52,152,219,0.3)}
+.nav-item.active .nav-objective{color:rgba(255,255,255,0.9)}
+.nav-title{display:block;font-weight:700;font-size:13px}
+.nav-objective{display:block;font-size:11.5px;color:#7f8c8d;margin-top:3px;line-height:1.35;font-weight:400}
+.nav-random{margin-top:12px;border-top:1px solid #ecf0f1;padding-top:12px;border-radius:6px;background:#fef9e7;border:1px solid #f7dc6f}
+.nav-random:hover{background:#fcf3cf;border-color:#f1c40f}
+.nav-random.active{background:#8e44ad;color:white;border-color:#6c3483;box-shadow:0 2px 6px rgba(142,68,173,0.3)}
+.nav-random.active .nav-objective{color:rgba(255,255,255,0.9)}
+
+.main-content{min-width:0}
+.part-header{margin-top:10px}
+.part-header h2{margin-top:0}
+.random-header{background:#f4ecf7;border-radius:8px;padding:15px 20px;border-left:5px solid #8e44ad;margin-bottom:20px}
+.random-header h2{color:#6c3483;border-left-color:#8e44ad;margin-top:0;margin-bottom:4px}
+.random-header .hint{margin:0 0 10px 0;text-align:left}
+.random-header .btn-random-new{background:#8e44ad;color:white;padding:8px 16px;border-radius:5px;cursor:pointer;font-weight:600;font-size:14px;border:none;transition:all 0.2s}
+.random-header .btn-random-new:hover{background:#6c3483}
+
+.exercise{background:white;border-radius:8px;padding:20px;margin-bottom:25px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.exercise h3{color:#1a5276;margin-top:0;border-bottom:1px solid #ecf0f1;padding-bottom:8px}
+.canvas-wrap{display:flex;justify-content:center;margin:15px 0}
+canvas{border:1px solid #bdc3c7;border-radius:4px;background:white;max-width:100%;height:auto;touch-action:none}
+.buttons{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+button{padding:8px 16px;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s}
+.btn-new{background:#3498db;color:white}.btn-new:hover{background:#2980b9}
+.btn-sol{background:#27ae60;color:white}.btn-sol:hover{background:#229954}
+.solution{margin-top:15px;padding:15px 20px;background:#eafaf1;border-left:4px solid #27ae60;border-radius:4px;display:none}
+.solution.visible{display:block;animation:fadeIn 0.4s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.solution h4{margin:0 0 12px 0;color:#1e8449;font-size:17px}
+.solution ul{margin:5px 0;padding-left:22px}
+.solution li{margin:4px 0}
+.step{margin:12px 0;padding:10px 14px;background:white;border-radius:4px;border:1px solid #d5f5e3}
+.correct{color:#27ae60;font-weight:600}
+.incorrect{color:#c0392b}
+.hint{font-style:italic;color:#7f8c8d;font-size:13px;margin-top:6px}
+
+.btn-copyright{display:block;margin:40px auto 20px;padding:12px 24px;background:#8e44ad;color:white;font-size:15px}
+.btn-copyright:hover{background:#71368a}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal.visible{display:flex}
+.modal-content{background:white;padding:25px 30px;border-radius:10px;max-width:700px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.3);position:relative}
+.modal-content h2{margin-top:0;border-left:none;padding-left:0;text-align:center;color:#8e44ad}
+.modal-content h3{color:#8e44ad;margin-top:20px}
+.close-modal{position:absolute;top:8px;right:12px;font-size:26px;cursor:pointer;color:#7f8c8d;background:none;padding:0 8px;line-height:1}
+.close-modal:hover{color:#c0392b}
+
+@media (max-width:780px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static}
+}
+</style>
+</head>
+<body>
+
+<h1>Symétries orthogonales et centrale</h1>
+<p class="subtitle">Repère orthonormé $(O,\vec{i},\vec{j})$ — travail en degrés</p>
+
+
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <h3>Sommaire</h3>
+
+    <button class="nav-item active" data-part="part1">
+      <span class="nav-title">Partie 1 — Placer des points</span>
+      <span class="nav-objective">Construire $A$, $A_1$, $A_2$, $A_3$ à partir des transformations indiquées.</span>
+    </button>
+
+    <button class="nav-item" data-part="part2">
+      <span class="nav-title">Partie 2 — Coordonnées</span>
+      <span class="nav-objective">Calculer les coordonnées des images (entiers, fractions, racines, mixtes).</span>
+    </button>
+
+    <button class="nav-item" data-part="part3">
+      <span class="nav-title">Partie 3 — Mesures d'angles</span>
+      <span class="nav-objective">Calculer les mesures des angles images d'un angle donné.</span>
+    </button>
+
+    <button class="nav-item" data-part="part4">
+      <span class="nav-title">Partie 4 — Identifier (coordonnées)</span>
+      <span class="nav-objective">Retrouver la transformation à partir des coordonnées de $A$ et $A'$.</span>
+    </button>
+
+    <button class="nav-item" data-part="part5">
+      <span class="nav-title">Partie 5 — Identifier (angles)</span>
+      <span class="nav-objective">Retrouver la transformation à partir des mesures d'angles.</span>
+    </button>
+
+    <button class="nav-item nav-random" data-part="random">
+      <span class="nav-title">🎲 Choix aléatoire</span>
+      <span class="nav-objective">Afficher un exercice tiré au hasard parmi toutes les parties.</span>
+    </button>
+  </nav>
+
+  <div class="main-content">
+
+    <div id="random-header" class="random-header" style="display:none">
+      <h2>🎲 Choix aléatoire</h2>
+      <p class="hint">Un exercice tiré au hasard : <span id="random-origin"></span>. Clique sur « Nouvel exemple » pour tirer un autre exercice au hasard, dans n'importe quelle partie.</p>
+      <button class="btn-random-new" id="btn-random-new">🔄 Nouvel exemple (tirage aléatoire)</button>
+    </div>
+
+    <!-- ================== PARTIE 1 ================== -->
+    <div class="part-header" data-part="part1">
+      <h2>Partie 1 — Placer des points</h2>
+      <p class="hint">Le bouton « Nouvel exemple » mélange tous les exercices de cette partie : la position d'un exercice ne donne aucune indication sur la transformation à utiliser. Le tracé n'apparaît qu'après avoir cliqué sur « Solution ».</p>
+    </div>
+    <div class="exercise" id="ex1" data-part="part1"><h3>Exercice 1</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex2" data-part="part1"><h3>Exercice 2</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex3" data-part="part1"><h3>Exercice 3</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+
+    <!-- ================== PARTIE 2 ================== -->
+    <div class="part-header" data-part="part2">
+      <h2>Partie 2 — Déterminer des coordonnées</h2>
+      <p class="hint">Le bouton « Nouvel exemple » mélange tous les exercices de cette partie : la position d'un exercice ne donne aucune indication sur le type de coordonnées. La construction n'apparaît qu'à la solution.</p>
+    </div>
+    <div class="exercise" id="ex4" data-part="part2"><h3>Exercice 4</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex5" data-part="part2"><h3>Exercice 5</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex6" data-part="part2"><h3>Exercice 6</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex7" data-part="part2"><h3>Exercice 7</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+
+    <!-- ================== PARTIE 3 ================== -->
+    <div class="part-header" data-part="part3">
+      <h2>Partie 3 — Déterminer des mesures d'angles</h2>
+      <p class="hint">Le bouton « Nouvel exemple » mélange tous les exercices de cette partie : la position d'un exercice ne donne aucune indication sur le type d'angle. Les rayons n'apparaissent qu'à la solution.</p>
+    </div>
+    <div class="exercise" id="ex8" data-part="part3"><h3>Exercice 8</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex9" data-part="part3"><h3>Exercice 9</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex10" data-part="part3"><h3>Exercice 10</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex11" data-part="part3"><h3>Exercice 11</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex12" data-part="part3"><h3>Exercice 12</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+
+    <!-- ================== PARTIE 4 ================== -->
+    <div class="part-header" data-part="part4">
+      <h2>Partie 4 — Identifier la transformation (coordonnées)</h2>
+      <p class="hint">Le bouton « Nouvel exemple » mélange tous les exercices de cette partie : la position d'un exercice ne donne aucune indication sur le type de coordonnées. Seul $A$ est affiché ; $A'$ n'apparaît qu'à la solution.</p>
+    </div>
+    <div class="exercise" id="ex13" data-part="part4"><h3>Exercice 13</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex14" data-part="part4"><h3>Exercice 14</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex15" data-part="part4"><h3>Exercice 15</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex16" data-part="part4"><h3>Exercice 16</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex17" data-part="part4"><h3>Exercice 17</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex18" data-part="part4"><h3>Exercice 18</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Mélange tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+
+    <!-- ================== PARTIE 5 ================== -->
+    <div class="part-header" data-part="part5">
+      <h2>Partie 5 — Identifier la transformation (angles)</h2>
+      <p class="hint">Le bouton « Nouvel exemple » régénère tous les exercices de cette partie. Seul le rayon $OA$ est affiché ; le rayon $OA'$ n'apparaît qu'à la solution.</p>
+    </div>
+    <div class="exercise" id="ex19" data-part="part5"><h3>Exercice 19</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Régénère tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex20" data-part="part5"><h3>Exercice 20</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Régénère tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex21" data-part="part5"><h3>Exercice 21</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Régénère tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex22" data-part="part5"><h3>Exercice 22</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Régénère tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex23" data-part="part5"><h3>Exercice 23</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Régénère tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+    <div class="exercise" id="ex24" data-part="part5"><h3>Exercice 24</h3><div class="enonce"></div><div class="canvas-wrap"><canvas width="480" height="480"></canvas></div><div class="buttons"><button class="btn-new" title="Régénère tous les exercices de cette partie">🔄 Nouvel exemple</button><button class="btn-sol">💡 Solution</button></div><div class="solution"></div></div>
+
+  </div>
+</div>
+
+<button class="btn-copyright" id="btn-copyright">⚖️ Droits d'auteur</button>
+
+<div id="copyright-modal" class="modal">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Fermer">×</button>
+    <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) – Septembre 2026</p>
+    <h3>Licence d'Utilisation Non Commerciale</h3>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application («&nbsp;Symétries orthogonales et centrale — Exercices interactifs&nbsp;») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <h3>Conditions :</h3>
+    <ul>
+      <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+      <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+      <li><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur d'origine (Yann Merdy) et la présente notice de droits d'auteur.</li>
+    </ul>
+    <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+  </div>
+</div>
+
+<script>
+/* ============ CONSTANTES ============ */
+const SCALE = 40, SIZE = 480, HALF = SIZE / 2;
+
+/* ============ UTILITAIRES ============ */
+function randInt(a, b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function randNonZero(a, b){ let n=0; while(n===0) n=randInt(a,b); return n; }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function typeset(el){ if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([el]).catch(()=>{}); }
+function shuffleArray(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* ============ REGISTRE DES PARTIES ============ */
+const parts = {};
+function createPart(partId, configs){
+  parts[partId] = { configs: configs.slice(), exercises: [] };
+}
+function shufflePart(partId){
+  const p = parts[partId];
+  if(!p) return;
+  shuffleArray(p.configs);
+  p.exercises.forEach(e => e.newExample());
+}
+
+/* ============ ÉTAT DU MODE ALÉATOIRE ============ */
+let randomMode = false;
+let currentRandomId = null;   // id de l'exercice aléatoire actuellement affiché
+const PART_LABELS = {
+  part1: 'Partie 1 — Placer des points',
+  part2: 'Partie 2 — Déterminer des coordonnées',
+  part3: "Partie 3 — Déterminer des mesures d'angles",
+  part4: 'Partie 4 — Identifier la transformation (coordonnées)',
+  part5: 'Partie 5 — Identifier la transformation (angles)'
+};
+
+/* ============ NAVIGATION ============ */
+function selectNav(partId){
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.part === partId);
+  });
+}
+
+function showPart(partId){
+  randomMode = false;
+  currentRandomId = null;
+  document.querySelectorAll('.part-header, .exercise').forEach(el => {
+    if (el.classList.contains('random-header')) { el.style.display = 'none'; return; }
+    el.style.display = (el.dataset.part === partId) ? '' : 'none';
+  });
+  selectNav(partId);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* Tire un exercice au hasard PARMI TOUTES LES PARTIES.
+   Exclut l'exercice actuellement affiché pour garantir un vrai changement. */
+function showRandom(){
+  randomMode = true;
+  document.querySelectorAll('.part-header, .exercise').forEach(el => el.style.display = 'none');
+  document.getElementById('random-header').style.display = '';
+
+  const allExercises = Array.from(document.querySelectorAll('.exercise'));
+  // On exclut le précédent pour éviter de retomber sur le même exercice
+  const pool = allExercises.filter(ex => ex.id !== currentRandomId);
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  currentRandomId = target.id;
+
+  // Masquer tous les exercices puis n'afficher que la cible
+  allExercises.forEach(ex => ex.style.display = 'none');
+  target.style.display = '';
+  if (typeof target._newExample === 'function') target._newExample();
+
+  document.getElementById('random-origin').textContent =
+    PART_LABELS[target.dataset.part] || '';
+  selectNav('random');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============ FABRIQUES DE VALEURS ============ */
+function makeInt(v){ return {pos:String(v), neg:String(-v), num:v}; }
+function makeFraction(num, den){
+  if(den<0){ num=-num; den=-den; }
+  const a = Math.abs(num), isNeg = num<0;
+  return { pos:(isNeg?'-':'')+`\\dfrac{${a}}{${den}}`, neg:(isNeg?'':'-')+`\\dfrac{${a}}{${den}}`, num:num/den };
+}
+function makeSqrt(n, sign){
+  return { pos:(sign<0?'-':'')+`\\sqrt{${n}}`, neg:(sign<0?'':'-')+`\\sqrt{${n}}`, num:sign*Math.sqrt(n) };
+}
+function makeMixed(num, den, n, sign){
+  const f = makeFraction(num, den);
+  const sep = sign<0?'-':'+', negSep = sign<0?'+':'-';
+  return {
+    pos: `${f.pos} ${sep} \\sqrt{${n}}`,
+    neg: `${f.neg} ${negSep} \\sqrt{${n}}`,
+    num: f.num + sign*Math.sqrt(n)
+  };
+}
+function negVal(v){ return {pos:v.neg, neg:v.pos, num:-v.num}; }
+
+function genVal(type){
+  if(type==='int')   return makeInt(randNonZero(-5,5));
+  if(type==='frac')  return makeFraction(randNonZero(-4,4), randInt(2,4));
+  if(type==='sqrt')  return makeSqrt(pick([2,3,5,6,7]), Math.random()<0.5?-1:1);
+  if(type==='mixed') return makeMixed(randNonZero(-3,3), randInt(2,3), pick([2,3,5]), Math.random()<0.5?-1:1);
+}
+function genPoint(type){ return {x:genVal(type), y:genVal(type)}; }
+function texPoint(p){ return `\\left(${p.x.pos}\\,;\\,${p.y.pos}\\right)`; }
+
+/* ============ TRANSFORMATIONS ============ */
+const T_NAMES = {
+  axisX: "symétrie d'axe $(O,\\vec{i})$",
+  axisY: "symétrie d'axe $(O,\\vec{j})$",
+  center: "symétrie de centre $O$"
+};
+const T_RULES = { axisX:"(x;-y)", axisY:"(-x;y)", center:"(-x;-y)" };
+const T_COLORS = { axisX:'#e74c3c', axisY:'#27ae60', center:'#8e44ad' };
+
+function applyTransform(p, t){
+  if(t==='axisX') return {x:p.x, y:negVal(p.y)};
+  if(t==='axisY') return {x:negVal(p.x), y:p.y};
+  return {x:negVal(p.x), y:negVal(p.y)};
+}
+function applyInt(p, t){
+  if(t==='axisX') return {x:p.x, y:-p.y};
+  if(t==='axisY') return {x:-p.x, y:p.y};
+  return {x:-p.x, y:-p.y};
+}
+
+/* ============ CANVAS ============ */
+function toCanvas(x, y){ return {cx:HALF+x*SCALE, cy:HALF-y*SCALE}; }
+function drawGrid(ctx){
+  ctx.clearRect(0,0,SIZE,SIZE);
+  ctx.strokeStyle='#e8e8e8'; ctx.lineWidth=1;
+  for(let i=-6;i<=6;i++){
+    ctx.beginPath(); ctx.moveTo(HALF+i*SCALE,0); ctx.lineTo(HALF+i*SCALE,SIZE); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,HALF+i*SCALE); ctx.lineTo(SIZE,HALF+i*SCALE); ctx.stroke();
+  }
+  ctx.strokeStyle='#2c3e50'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,HALF); ctx.lineTo(SIZE-2,HALF); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(HALF,SIZE); ctx.lineTo(HALF,2); ctx.stroke();
+  ctx.fillStyle='#2c3e50';
+  ctx.beginPath(); ctx.moveTo(SIZE-12,HALF-6); ctx.lineTo(SIZE-2,HALF); ctx.lineTo(SIZE-12,HALF+6); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(HALF-6,12); ctx.lineTo(HALF,2); ctx.lineTo(HALF+6,12); ctx.closePath(); ctx.fill();
+  ctx.font='bold 16px Georgia'; ctx.fillText('i', SIZE-20, HALF+22); ctx.fillText('j', HALF+10, 20);
+  ctx.font='bold 14px Georgia'; ctx.fillText('O', HALF+6, HALF+18);
+}
+function drawPoint(ctx, x, y, label, color, alpha=1, r=6){
+  const {cx,cy}=toCanvas(x,y);
+  ctx.globalAlpha=alpha;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fillStyle=color; ctx.fill();
+  ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+  if(label){
+    ctx.font='bold 16px Georgia'; ctx.strokeStyle='white'; ctx.lineWidth=3;
+    ctx.strokeText(label, cx+9, cy-9); ctx.fillStyle=color; ctx.fillText(label, cx+9, cy-9);
+  }
+  ctx.globalAlpha=1;
+}
+function drawDashed(ctx, x1,y1,x2,y2, color, alpha=1){
+  const a=toCanvas(x1,y1), b=toCanvas(x2,y2);
+  ctx.save(); ctx.globalAlpha=alpha; ctx.setLineDash([6,4]);
+  ctx.strokeStyle=color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(a.cx,a.cy); ctx.lineTo(b.cx,b.cy); ctx.stroke(); ctx.restore();
+}
+function drawRay(ctx, angleDeg, length, color, label, alpha=1, dashed=false){
+  const rad=angleDeg*Math.PI/180;
+  const p2=toCanvas(length*Math.cos(rad), length*Math.sin(rad));
+  ctx.save(); ctx.globalAlpha=alpha;
+  ctx.strokeStyle=color; ctx.lineWidth=2.5;
+  if(dashed) ctx.setLineDash([8,5]);
+  ctx.beginPath(); ctx.moveTo(HALF,HALF); ctx.lineTo(p2.cx,p2.cy); ctx.stroke();
+  const ang=Math.atan2(p2.cy-HALF, p2.cx-HALF), s=11;
+  ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(p2.cx,p2.cy);
+  ctx.lineTo(p2.cx-s*Math.cos(ang-Math.PI/7), p2.cy-s*Math.sin(ang-Math.PI/7));
+  ctx.lineTo(p2.cx-s*Math.cos(ang+Math.PI/7), p2.cy-s*Math.sin(ang+Math.PI/7));
+  ctx.closePath(); ctx.fill();
+  if(label){
+    ctx.font='bold 16px Georgia'; ctx.strokeStyle='white'; ctx.lineWidth=3;
+    ctx.strokeText(label, p2.cx+8, p2.cy-8); ctx.fillStyle=color; ctx.fillText(label, p2.cx+8, p2.cy-8);
+  }
+  ctx.restore();
+}
+
+/* ============ EXERCICE : STRUCTURE ============ */
+function createExercise(cfg){
+  const part = parts[cfg.partId];
+  const configIndex = part.exercises.length;
+  const el = document.getElementById(cfg.id);
+  const canvas = el.querySelector('canvas'), ctx = canvas.getContext('2d');
+  const enonceEl = el.querySelector('.enonce'), solEl = el.querySelector('.solution');
+  let data = null, solVisible = false, animHandle = null;
+
+  const getConfig = () => parts[cfg.partId].configs[configIndex];
+
+  function stopAnim(){ if(animHandle){ cancelAnimationFrame(animHandle); animHandle=null; } }
+  function baseDraw(t){
+    drawGrid(ctx);
+    if(cfg.draw) cfg.draw(ctx, data, t, getConfig());
+  }
+  function newExample(){
+    stopAnim(); solVisible=false; solEl.classList.remove('visible'); solEl.innerHTML='';
+    data = cfg.generate(getConfig());
+    baseDraw(0);
+    enonceEl.innerHTML = cfg.enonce(data, getConfig());
+    typeset(enonceEl);
+  }
+  function toggleSolution(){
+    if(solVisible){
+      solVisible=false; solEl.classList.remove('visible'); stopAnim(); baseDraw(0); return;
+    }
+    solVisible=true;
+    solEl.innerHTML = cfg.solution(data, getConfig());
+    solEl.classList.add('visible');
+    typeset(solEl);
+    stopAnim();
+    const dur = cfg.animDuration || 2200, start = performance.now();
+    (function frame(now){
+      const t=Math.min((now-start)/dur,1);
+      baseDraw(t);
+      if(t<1) animHandle=requestAnimationFrame(frame); else animHandle=null;
+    })(start);
+  }
+
+  /* Bouton « Nouvel exemple » */
+  el.querySelector('.btn-new').addEventListener('click', ()=>{
+    if (randomMode){
+      // En mode aléatoire : on tire un NOUVEL exercice au hasard dans TOUTES les parties
+      showRandom();
+    } else {
+      // En mode partie : on mélange tous les exercices de la partie
+      shufflePart(cfg.partId);
+    }
+  });
+  el.querySelector('.btn-sol').addEventListener('click', toggleSolution);
+
+  el._newExample = newExample;
+  part.exercises.push({ newExample });
+  newExample();
+}
+
+/* ============================================================
+   PARTIE 1
+   ============================================================ */
+function genPart1(transforms){
+  const A={x:randNonZero(-5,5), y:randNonZero(-5,5)};
+  const pts={A};
+  for(const tr of transforms) pts[tr.to]=applyInt(pts[tr.from], tr.t);
+  return {A, pts, transforms};
+}
+function enoncePart1(d){
+  let items = `<li>Placer le point $A$ de coordonnées $\\left(${d.A.x}\\,;\\,${d.A.y}\\right)$.</li>`;
+  for(const tr of d.transforms){
+    const src = tr.from==='A' ? '$A$' : `$${tr.from}$`;
+    items += `<li>Placer $${tr.to}$, image de ${src} par la ${T_NAMES[tr.t]}.</li>`;
+  }
+  return `<p>Dans le repère orthonormé ci-dessous :</p><ol>${items}</ol>`;
+}
+function drawPart1(ctx, d, t){
+  if(t<=0) return;
+  const items = [
+    {pt:d.pts.A, label:'A', color:'#2c3e50', src:null},
+    ...d.transforms.map(tr=>({pt:d.pts[tr.to], label:tr.to, color:T_COLORS[tr.t], src:d.pts[tr.from]}))
+  ];
+  const N=items.length;
+  for(let i=0;i<N;i++){
+    const s=i/N, e=(i+1)/N;
+    if(t<s) break;
+    const lt=Math.min((t-s)/(e-s),1);
+    const it=items[i];
+    if(it.src) drawDashed(ctx, it.src.x, it.src.y, it.pt.x, it.pt.y, it.color, lt);
+    drawPoint(ctx, it.pt.x, it.pt.y, it.label, it.color, lt);
+  }
+}
+function solPart1(d){
+  let html = `<h4>Solution</h4>
+  <div class="step"><strong>Rappel des règles :</strong>
+  <ul>
+    <li>Symétrie d'axe $(O,\\vec{i})$ : $(x;y) \\mapsto (x;-y)$</li>
+    <li>Symétrie d'axe $(O,\\vec{j})$ : $(x;y) \\mapsto (-x;y)$</li>
+    <li>Symétrie de centre $O$ : $(x;y) \\mapsto (-x;-y)$</li>
+  </ul></div>
+  <div class="step"><strong>Point de départ :</strong> $A\\left(${d.A.x}\\,;\\,${d.A.y}\\right)$</div>`;
+  for(const tr of d.transforms){
+    const src=d.pts[tr.from], dst=d.pts[tr.to];
+    const name = tr.from==='A' ? 'A' : tr.from;
+    html += `<div class="step"><strong>$${tr.to}$ :</strong> image de $${name}$ par la ${T_NAMES[tr.t]}.<br>
+      Règle : $(x;y) \\mapsto ${T_RULES[tr.t]}$.<br>
+      $${name}\\left(${src.x}\\,;\\,${src.y}\\right) \\mapsto ${tr.to}\\left(${dst.x}\\,;\\,${dst.y}\\right)$.</div>`;
+  }
+  html += `<p style="text-align:center;margin-top:14px"><em>Le tracé animé ci-dessus montre la construction pas à pas.</em></p>`;
+  return html;
+}
+
+/* ============================================================
+   PARTIE 2
+   ============================================================ */
+function genPart2(config){
+  const A=genPoint(config.type);
+  const pts={A};
+  for(const tr of config.transforms) pts[tr.to]=applyTransform(pts[tr.from], tr.t);
+  return {A, pts, transforms: config.transforms};
+}
+function enoncePart2(d){
+  let items='';
+  for(const tr of d.transforms){
+    const src = tr.from==='A' ? 'de $A$' : `de $${tr.from}$`;
+    items += `<li>$${tr.to}$ est l'image ${src} par la ${T_NAMES[tr.t]}.</li>`;
+  }
+  return `<p>On donne $A${texPoint(d.A)}$.</p>
+  <p>On note :</p><ul>${items}</ul>
+  <p><strong>Déterminer les coordonnées de $A_1$, $A_2$ et $A_3$.</strong></p>`;
+}
+function drawPart2(ctx, d, t){
+  if(t<=0) return;
+  const items=[{pt:d.A, label:'A', color:'#2c3e50'},
+    ...d.transforms.map(tr=>({pt:d.pts[tr.to], label:tr.to, color:T_COLORS[tr.t]}))];
+  const N=items.length;
+  for(let i=0;i<N;i++){
+    const s=i/N, e=(i+1)/N;
+    if(t<s) break;
+    const lt=Math.min((t-s)/(e-s),1);
+    const p = items[i].pt;
+    drawPoint(ctx, p.x.num, p.y.num, items[i].label, items[i].color, lt);
+  }
+}
+function solPart2(d){
+  let html = `<h4>Solution</h4>
+  <div class="step"><strong>Rappel des règles :</strong>
+  <ul>
+    <li>Symétrie d'axe $(O,\\vec{i})$ : $(x;y) \\mapsto (x;-y)$</li>
+    <li>Symétrie d'axe $(O,\\vec{j})$ : $(x;y) \\mapsto (-x;y)$</li>
+    <li>Symétrie de centre $O$ : $(x;y) \\mapsto (-x;-y)$</li>
+  </ul></div>
+  <div class="step"><strong>Point de départ :</strong> $A${texPoint(d.A)}$.</div>`;
+  for(const tr of d.transforms){
+    const src=d.pts[tr.from], dst=d.pts[tr.to];
+    const name = tr.from==='A' ? 'A' : tr.from;
+    html += `<div class="step"><strong>$${tr.to}$ :</strong> image de $${name}$ par la ${T_NAMES[tr.t]}.<br>
+      $(x;y) \\mapsto ${T_RULES[tr.t]}$, donc $${name}${texPoint(src)} \\mapsto ${tr.to}${texPoint(dst)}$.</div>`;
+  }
+  html += `<p style="text-align:center;margin-top:14px"><em>Le tracé animé ci-dessus permet de vérifier la position des points sur le repère.</em></p>`;
+  return html;
+}
+
+/* ============================================================
+   PARTIE 3
+   ============================================================ */
+function genAngleVal(type){
+  if(type==='int'){
+    const v=randInt(15,75);
+    return {pos:String(v), neg:'-'+v, plus180:String(v+180), minus180:String(180-v), num:v};
+  }
+  if(type==='negInt'){
+    const v=-randInt(15,150);
+    return {pos:String(v), neg:String(-v), plus180:String(v+180), minus180:String(180-v), num:v};
+  }
+  if(type==='frac'){
+    const num=randInt(100,300), den=randInt(3,9);
+    return {
+      pos:`\\dfrac{${num}}{${den}}`, neg:`-\\dfrac{${num}}{${den}}`,
+      plus180:`\\dfrac{${num+180*den}}{${den}}`, minus180:`\\dfrac{${180*den-num}}{${den}}`,
+      num:num/den
+    };
+  }
+  if(type==='sqrt'){
+    const n=pick([2,3,5]), c=randInt(5,25);
+    return {
+      pos:`${c}\\sqrt{${n}}`, neg:`-${c}\\sqrt{${n}}`,
+      plus180:`180 + ${c}\\sqrt{${n}}`, minus180:`180 - ${c}\\sqrt{${n}}`,
+      num:c*Math.sqrt(n)
+    };
+  }
+  const num=randInt(1,3), den=randInt(2,4), n=pick([2,3,5]), c=randInt(1,2);
+  return {
+    pos:`\\dfrac{${num}}{${den}} + ${c}\\sqrt{${n}}`,
+    neg:`-\\dfrac{${num}}{${den}} - ${c}\\sqrt{${n}}`,
+    plus180:`180 + \\dfrac{${num}}{${den}} + ${c}\\sqrt{${n}}`,
+    minus180:`180 - \\dfrac{${num}}{${den}} - ${c}\\sqrt{${n}}`,
+    num:num/den + c*Math.sqrt(n)
+  };
+}
+function enoncePart3(d){
+  return `<p>On donne $\\left(\\vec{i},\\overrightarrow{OA}\\right) = ${d.theta.pos}^\\circ$.</p>
+  <p>On note $A_1$, $A_2$, $A_3$ les images respectives de $A$ par la symétrie d'axe $(O,\\vec{i})$, la symétrie d'axe $(O,\\vec{j})$ et la symétrie de centre $O$.</p>
+  <p><strong>Déterminer une mesure de chacun des angles $\\left(\\vec{i},\\overrightarrow{OA_1}\\right)$, $\\left(\\vec{i},\\overrightarrow{OA_2}\\right)$, $\\left(\\vec{i},\\overrightarrow{OA_3}\\right)$.</strong></p>`;
+}
+function drawPart3(ctx, d, t){
+  if(t<=0) return;
+  const theta=d.theta.num;
+  const rays = [
+    {angle: theta,     label:'A',  color:'#2c3e50'},
+    {angle: -theta,    label:'A1', color:T_COLORS.axisX},
+    {angle: 180-theta, label:'A2', color:T_COLORS.axisY},
+    {angle: 180+theta, label:'A3', color:T_COLORS.center}
+  ];
+  const N=rays.length;
+  for(let i=0;i<N;i++){
+    const s=i/N, e=(i+1)/N;
+    if(t<s) break;
+    const lt=Math.min((t-s)/(e-s),1);
+    drawRay(ctx, rays[i].angle, 4.5, rays[i].color, rays[i].label, lt);
+  }
+}
+function solPart3(d){
+  return `<h4>Solution</h4>
+  <div class="step"><strong>Règles sur les angles :</strong>
+  <ul>
+    <li>Symétrie d'axe $(O,\\vec{i})$ : $\\theta \\mapsto -\\theta$</li>
+    <li>Symétrie d'axe $(O,\\vec{j})$ : $\\theta \\mapsto 180^\\circ - \\theta$</li>
+    <li>Symétrie de centre $O$ : $\\theta \\mapsto 180^\\circ + \\theta$</li>
+  </ul></div>
+  <div class="step"><strong>$A_1$ :</strong> symétrie d'axe $(O,\\vec{i})$, donc $\\left(\\vec{i},\\overrightarrow{OA_1}\\right) = -\\theta = ${d.theta.neg}^\\circ$.</div>
+  <div class="step"><strong>$A_2$ :</strong> symétrie d'axe $(O,\\vec{j})$, donc $\\left(\\vec{i},\\overrightarrow{OA_2}\\right) = 180^\\circ - \\theta = ${d.theta.minus180}^\\circ$.</div>
+  <div class="step"><strong>$A_3$ :</strong> symétrie de centre $O$, donc $\\left(\\vec{i},\\overrightarrow{OA_3}\\right) = 180^\\circ + \\theta = ${d.theta.plus180}^\\circ$.</div>
+  <p style="text-align:center;margin-top:14px"><em>Les quatre rayons sont tracés ci-dessus au fur et à mesure : $A$ (noir), $A_1$ (rouge), $A_2$ (vert), $A_3$ (violet).</em></p>`;
+}
+
+/* ============================================================
+   PARTIE 4
+   ============================================================ */
+function genPart4(type){
+  const A=genPoint(type);
+  const t=pick(['axisX','axisY','center']);
+  const Aprime=applyTransform(A, t);
+  return {A, Aprime, t};
+}
+function enoncePart4(d){
+  return `<p>Dans le repère orthonormé, on donne deux points :</p>
+  <p style="text-align:center">$A${texPoint(d.A)} \\quad$ et $\\quad A'${texPoint(d.Aprime)}$</p>
+  <p>Parmi les trois transformations suivantes, laquelle permet de passer de $A$ à $A'$ ?</p>
+  <ul>
+    <li>la symétrie d'axe $(O,\\vec{i})$ ;</li>
+    <li>la symétrie d'axe $(O,\\vec{j})$ ;</li>
+    <li>la symétrie de centre $O$.</li>
+  </ul>`;
+}
+function drawPart4(ctx, d, t){
+  if(t<=0) return;
+  const half=0.5;
+  const aT = Math.min(t/half, 1);
+  const apT = t<=half ? 0 : Math.min((t-half)/half, 1);
+  drawPoint(ctx, d.A.x.num, d.A.y.num, 'A', '#2c3e50', aT);
+  if(apT>0){
+    drawDashed(ctx, d.A.x.num, d.A.y.num, d.Aprime.x.num, d.Aprime.y.num, '#7f8c8d', apT*0.6);
+    drawPoint(ctx, d.Aprime.x.num, d.Aprime.y.num, "A'", '#e74c3c', apT);
+  }
+}
+function solPart4(d){
+  const order=['axisX','axisY','center'];
+  let tests='';
+  for(const t of order){
+    const p=applyTransform(d.A, t);
+    const isC=(t===d.t);
+    const mark=isC?'✓':'✗';
+    const cls=isC?'correct':'incorrect';
+    tests += `<li class="${cls}">${T_NAMES[t]} : $A${texPoint(d.A)} \\mapsto ${texPoint(p)}$ ${isC?'$= A\'$':''} ${mark}</li>`;
+  }
+  return `<h4>Solution</h4>
+  <div class="step"><strong>Rappel des règles :</strong>
+  <ul>
+    <li>Symétrie d'axe $(O,\\vec{i})$ : $(x;y) \\mapsto (x;-y)$</li>
+    <li>Symétrie d'axe $(O,\\vec{j})$ : $(x;y) \\mapsto (-x;y)$</li>
+    <li>Symétrie de centre $O$ : $(x;y) \\mapsto (-x;-y)$</li>
+  </ul></div>
+  <div class="step"><strong>Données :</strong> $A${texPoint(d.A)}$ et $A'${texPoint(d.Aprime)}$.</div>
+  <div class="step"><strong>Test des trois transformations :</strong><ul>${tests}</ul></div>
+  <div class="step"><strong>Conclusion :</strong> la transformation qui permet de passer de $A$ à $A'$ est la <strong>${T_NAMES[d.t]}</strong>.</div>
+  <p style="text-align:center;margin-top:14px"><em>Le tracé animé ci-dessus montre $A$ puis $A'$ avec le segment $[AA']$ en pointillés.</em></p>`;
+}
+
+/* ============================================================
+   PARTIE 5
+   ============================================================ */
+function genPart5(){
+  let theta;
+  do { theta=randInt(-80,80); } while(theta===0 || theta===90 || theta===-90);
+  const t=pick(['axisX','axisY','center']);
+  const thetaPrime = t==='axisX'? -theta : t==='axisY'? 180-theta : 180+theta;
+  return {theta, thetaPrime, t};
+}
+function enoncePart5(d){
+  return `<p>On donne deux mesures d'angles :</p>
+  <p style="text-align:center">$\\left(\\vec{i},\\overrightarrow{OA}\\right) = ${d.theta}^\\circ \\quad$ et $\\quad \\left(\\vec{i},\\overrightarrow{OA'}\\right) = ${d.thetaPrime}^\\circ$</p>
+  <p>Parmi les trois transformations suivantes, laquelle permet de passer de $A$ à $A'$ ?</p>
+  <ul>
+    <li>la symétrie d'axe $(O,\\vec{i})$ ;</li>
+    <li>la symétrie d'axe $(O,\\vec{j})$ ;</li>
+    <li>la symétrie de centre $O$.</li>
+  </ul>`;
+}
+function drawPart5(ctx, d, t){
+  if(t<=0) return;
+  const half=0.5;
+  const aT = Math.min(t/half, 1);
+  const apT = t<=half ? 0 : Math.min((t-half)/half, 1);
+  drawRay(ctx, d.theta, 4.5, '#2c3e50', 'A', aT);
+  if(apT>0){
+    drawRay(ctx, d.thetaPrime, 4.5, '#e74c3c', "A'", apT, true);
+  }
+}
+function solPart5(d){
+  const cand = [
+    {t:'axisX', val:-d.theta,    formula:'-\\theta'},
+    {t:'axisY', val:180-d.theta, formula:'180^\\circ - \\theta'},
+    {t:'center',val:180+d.theta, formula:'180^\\circ + \\theta'}
+  ];
+  let tests='';
+  for(const c of cand){
+    const isC=(c.t===d.t);
+    const mark=isC?'✓':'✗';
+    const cls=isC?'correct':'incorrect';
+    tests += `<li class="${cls}">${T_NAMES[c.t]} : $\\theta \\mapsto ${c.formula} = ${c.val}^\\circ$ ${mark}</li>`;
+  }
+  return `<h4>Solution</h4>
+  <div class="step"><strong>Rappel des règles sur les angles :</strong>
+  <ul>
+    <li>Symétrie d'axe $(O,\\vec{i})$ : $\\theta \\mapsto -\\theta$</li>
+    <li>Symétrie d'axe $(O,\\vec{j})$ : $\\theta \\mapsto 180^\\circ - \\theta$</li>
+    <li>Symétrie de centre $O$ : $\\theta \\mapsto 180^\\circ + \\theta$</li>
+  </ul></div>
+  <div class="step"><strong>Données :</strong> $\\left(\\vec{i},\\overrightarrow{OA}\\right) = ${d.theta}^\\circ$ et $\\left(\\vec{i},\\overrightarrow{OA'}\\right) = ${d.thetaPrime}^\\circ$.</div>
+  <div class="step"><strong>Test des trois hypothèses :</strong><ul>${tests}</ul></div>
+  <div class="step"><strong>Conclusion :</strong> la transformation qui permet de passer de $A$ à $A'$ est la <strong>${T_NAMES[d.t]}</strong>.</div>
+  <p style="text-align:center;margin-top:14px"><em>Le tracé animé ci-dessus montre le rayon $OA$ (plein) puis le rayon $OA'$ (pointillé rouge).</em></p>`;
+}
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+function initExercises(){
+
+  /* ---------- Partie 1 ---------- */
+  createPart('part1', [
+    [{to:'A1',from:'A',t:'axisX'},{to:'A2',from:'A1',t:'axisY'},{to:'A3',from:'A2',t:'center'}],
+    [{to:'A1',from:'A',t:'center'},{to:'A2',from:'A1',t:'axisX'},{to:'A3',from:'A',t:'axisY'}],
+    [{to:'A1',from:'A',t:'axisY'},{to:'A2',from:'A',t:'center'},{to:'A3',from:'A1',t:'axisX'}]
+  ]);
+  for(let i=1;i<=3;i++){
+    createExercise({id:'ex'+i, partId:'part1', generate:(cfg)=>genPart1(cfg), enonce:enoncePart1, draw:drawPart1, solution:solPart1, animDuration:2200});
+  }
+
+  /* ---------- Partie 2 ---------- */
+  createPart('part2', [
+    {type:'int',   transforms:[{to:'A1',from:'A',t:'axisX'},{to:'A2',from:'A',t:'axisY'},{to:'A3',from:'A',t:'center'}]},
+    {type:'frac',  transforms:[{to:'A1',from:'A',t:'axisX'},{to:'A2',from:'A1',t:'axisY'},{to:'A3',from:'A',t:'center'}]},
+    {type:'sqrt',  transforms:[{to:'A1',from:'A',t:'axisX'},{to:'A2',from:'A',t:'axisY'},{to:'A3',from:'A1',t:'center'}]},
+    {type:'mixed', transforms:[{to:'A1',from:'A',t:'center'},{to:'A2',from:'A1',t:'axisX'},{to:'A3',from:'A',t:'axisY'}]}
+  ]);
+  for(let i=4;i<=7;i++){
+    createExercise({id:'ex'+i, partId:'part2', generate:(cfg)=>genPart2(cfg), enonce:enoncePart2, draw:drawPart2, solution:solPart2, animDuration:2200});
+  }
+
+  /* ---------- Partie 3 ---------- */
+  createPart('part3', ['int','negInt','frac','sqrt','mixed']);
+  for(let i=8;i<=12;i++){
+    createExercise({id:'ex'+i, partId:'part3', generate:(type)=>({theta:genAngleVal(type)}), enonce:enoncePart3, draw:drawPart3, solution:solPart3, animDuration:2000});
+  }
+
+  /* ---------- Partie 4 ---------- */
+  createPart('part4', ['int','int','int','frac','sqrt','mixed']);
+  for(let i=13;i<=18;i++){
+    createExercise({id:'ex'+i, partId:'part4', generate:(type)=>genPart4(type), enonce:enoncePart4, draw:drawPart4, solution:solPart4, animDuration:2400});
+  }
+
+  /* ---------- Partie 5 ---------- */
+  createPart('part5', [0,1,2,3,4,5]);
+  for(let i=19;i<=24;i++){
+    createExercise({id:'ex'+i, partId:'part5', generate:()=>genPart5(), enonce:enoncePart5, draw:drawPart5, solution:solPart5, animDuration:2400});
+  }
+
+  /* ---------- Menu : gestion des clics ---------- */
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const partId = btn.dataset.part;
+      if (partId === 'random') showRandom();
+      else showPart(partId);
+    });
+  });
+
+  /* ---------- Bouton « Nouvel exemple » dans l'en-tête aléatoire ---------- */
+  document.getElementById('btn-random-new').addEventListener('click', showRandom);
+
+  /* ---------- Modale Droits d'auteur ---------- */
+  const modal=document.getElementById('copyright-modal');
+  document.getElementById('btn-copyright').addEventListener('click', ()=>modal.classList.add('visible'));
+  modal.querySelector('.close-modal').addEventListener('click', ()=>modal.classList.remove('visible'));
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('visible'); });
+
+  /* ---------- Affichage initial ---------- */
+  showPart('part1');
+}
+</script>
+</body>
+</html>

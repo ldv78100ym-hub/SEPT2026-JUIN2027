@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculs et opérations sur les puissances entières</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\\[','\\]']]
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --accent:#2563eb;
+  --accent-soft:#e8f0fe;
+  --ink:#1e293b;
+  --muted:#64748b;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;padding:0;}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  background:radial-gradient(circle at 18% 0%, #ffffff 0%, #eef3fb 45%, #dde8f7 100%);
+  color:var(--ink);
+  display:flex;flex-direction:column;
+  height:100dvh;
+  overflow:hidden;
+}
+
+/* ---------- HEADER ---------- */
+header{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;
+  background:rgba(255,255,255,.75);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid #e2e8f0;
+}
+#prevBtn{
+  flex:0 0 auto;
+  width:42px;height:42px;border-radius:50%;
+  border:2px solid #dbe4f0;background:#fff;color:var(--accent);
+  font-size:1rem;font-weight:700;cursor:pointer;
+  transition:.18s;
+  display:flex;align-items:center;justify-content:center;
+}
+#prevBtn:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent);transform:translateX(-2px);}
+#prevBtn:disabled{opacity:.35;cursor:not-allowed;}
+
+.head-mid{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px;}
+.brand{
+  font-weight:700;letter-spacing:.2px;color:#0f172a;font-size:.9rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.brand span{color:var(--accent);}
+.progress{height:6px;background:#dbe4f0;border-radius:99px;overflow:hidden;}
+.progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2563eb,#0d9488);border-radius:99px;transition:width .35s ease;}
+
+.counter{
+  flex:0 0 auto;font-variant-numeric:tabular-nums;color:var(--muted);
+  font-size:.85rem;font-weight:600;white-space:nowrap;
+  background:#f1f5f9;border-radius:99px;padding:6px 12px;
+}
+
+/* ---------- MAIN ---------- */
+main{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:16px 18px;
+  scroll-behavior:smooth;
+}
+
+.slide{
+  width:100%;max-width:1000px;background:#fff;border-radius:18px;
+  box-shadow:0 18px 45px rgba(15,23,42,.13), 0 2px 6px rgba(15,23,42,.06);
+  padding:24px 34px 28px;border-top:7px solid var(--accent);
+  animation:pop .32s ease;
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+.badge{
+  display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--accent);background:var(--accent-soft);
+  padding:5px 12px;border-radius:99px;margin-bottom:12px;
+}
+h2{margin:0 0 16px;font-size:1.4rem;line-height:1.28;}
+.question{font-size:1.08rem;line-height:1.75;margin:0 0 14px;}
+
+/* ---------- ZONE DE RÉPONSE ---------- */
+.answer-zone{
+  margin:18px 0 6px;
+  background:#f8fafc;
+  border:2px dashed #dbe4f0;
+  border-radius:16px;
+  padding:16px 18px;
+  transition:.2s;
+}
+.answer-zone.solved{
+  background:#ecfdf5;
+  border-color:#6ee7b7;
+  border-style:solid;
+}
+.answer-zone.failed{
+  background:#fef2f2;
+  border-color:#fca5a5;
+  border-style:solid;
+}
+.answer-label{
+  display:block;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.input-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+.answer-input{
+  flex:1 1 auto;
+  min-width:0;
+  font-size:1.25rem;
+  font-family:"SF Mono",Consolas,"Courier New",monospace;
+  padding:14px 18px;
+  border:3px solid #cbd5e1;
+  border-radius:12px;
+  background:#fff;
+  color:var(--ink);
+  transition:.18s;
+  outline:none;
+}
+.answer-input::placeholder{color:#94a3b8;font-family:inherit;}
+.answer-input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px var(--accent-soft);
+}
+.answer-input:disabled{
+  background:#f1f5f9;
+  color:#475569;
+  cursor:not-allowed;
+}
+.answer-input.correct{
+  border-color:#10b981;
+  background:#fff;
+  color:#065f46;
+}
+.answer-input.incorrect{
+  border-color:#ef4444;
+  background:#fff;
+  animation:shake .38s;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-7px);}
+  40%{transform:translateX(7px);}
+  60%{transform:translateX(-4px);}
+  80%{transform:translateX(4px);}
+}
+#checkBtn{
+  flex:0 0 auto;
+  padding:0 22px;
+  font:inherit;
+  font-weight:700;
+  font-size:1rem;
+  border:none;
+  border-radius:12px;
+  background:var(--accent);
+  color:#fff;
+  cursor:pointer;
+  transition:.18s;
+  white-space:nowrap;
+}
+#checkBtn:hover:not(:disabled){filter:brightness(1.08);}
+#checkBtn:disabled{background:#cbd5e1;cursor:not-allowed;}
+
+.feedback{
+  margin-top:10px;
+  font-size:.98rem;
+  font-weight:600;
+  min-height:1.4em;
+  line-height:1.5;
+}
+.feedback.ok{color:#059669;}
+.feedback.ko{color:#dc2626;}
+.feedback.info{color:#64748b;font-weight:500;}
+
+.answer{
+  margin-top:20px;border-radius:14px;background:#f0fdfa;border:1px solid #99f6e4;
+  padding:16px 20px;animation:pop .3s ease;
+}
+.answer h3{margin:0 0 10px;font-size:.75rem;letter-spacing:1.1px;text-transform:uppercase;color:#0f766e;}
+.answer p{margin:.5em 0;line-height:1.7;}
+.answer > div{line-height:1.75;}
+.hidden{display:none;}
+
+/* ---------- BARRE INFÉRIEURE PLEIN ÉCRAN ---------- */
+.bottom-bar{
+  flex:0 0 auto;
+  display:flex;
+  width:100%;
+  height:88px;
+  background:#fff;
+  border-top:2px solid #e2e8f0;
+  box-shadow:0 -10px 30px rgba(15,23,42,.08);
+  z-index:10;
+}
+.bottom-bar button{
+  flex:1 1 50%;
+  width:50%;
+  border:none;
+  font:inherit;
+  font-size:1.2rem;
+  font-weight:800;
+  letter-spacing:.5px;
+  cursor:pointer;
+  transition:.18s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+#revealBtn{
+  background:linear-gradient(135deg,#f8fafc,#eef3fb);
+  color:var(--accent);
+  border-right:2px solid #e2e8f0;
+}
+#revealBtn:hover:not(:disabled){background:var(--accent-soft);}
+#revealBtn:disabled,
+#revealBtn.revealed{
+  background:#ecfdf5;color:#0f766e;cursor:default;
+}
+#nextBtn{
+  background:var(--accent);
+  color:#fff;
+}
+#nextBtn:hover:not(:disabled){filter:brightness(1.08);}
+#nextBtn.finish{background:linear-gradient(135deg,#0d9488,#059669);}
+#nextBtn:disabled{background:#cbd5e1;cursor:not-allowed;}
+
+@media (max-width:640px){
+  .brand{font-size:.78rem;}
+  .bottom-bar{height:72px;}
+  .bottom-bar button{font-size:1rem;}
+  .slide{padding:18px 18px 22px;}
+  h2{font-size:1.18rem;}
+  .question{font-size:1rem;}
+  .answer-input{font-size:1.05rem;padding:12px 14px;}
+  .input-row{flex-direction:column;}
+  #checkBtn{padding:12px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button id="prevBtn" title="Diapositive précédente" aria-label="Précédent">◀</button>
+  <div class="head-mid">
+    <div class="brand">Maîtrise des <span>puissances entières</span></div>
+    <div class="progress"><i id="progressBar"></i></div>
+  </div>
+  <span class="counter" id="counter">1 / 1</span>
+</header>
+
+<main><div id="stage" style="width:100%;display:flex;justify-content:center;"></div></main>
+
+<footer class="bottom-bar">
+  <button id="revealBtn">💡 Solution</button>
+  <button id="nextBtn">Suivant ▶</button>
+</footer>
+
+<script>
+/* =========================================================
+   0. OUTILS DE GÉNÉRATION ET MATHÉMATIQUES
+   ========================================================= */
+function randInt(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randChoice(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/* =========================================================
+   1. NORMALISATION DES RÉPONSES SAISIES
+   ========================================================= */
+const SUP = {'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9'};
+
+function norm(s){
+  return String(s)
+    .replace(/[\u00a0\u202f]/g, ' ')
+    .replace(/⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, m =>
+      '^' + (m[0] === '⁻' ? '-' : '') +
+      m.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, c => SUP[c]))
+    .replace(/√/g, 'sqrt')
+    .replace(/π/g, 'pi')
+    .replace(/×/g, '*')
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/,/g, '.');
+}
+
+function match(s, patterns){
+  const t = norm(s);
+  return patterns.some(p => p instanceof RegExp ? p.test(t) : p === t);
+}
+
+/* =========================================================
+   2. GÉNÉRATION DYNAMIQUE DES DIAPOSITIVES (40 EXERCICES SANS HINT)
+   ========================================================= */
+function buildSlides(){
+  const list = [];
+
+  /* --- PARTIE A : PUISSANCES DE 10 ET RÈGLES DE BASE --- */
+  
+  // Ex 1
+  {
+    const m = randInt(2, 9), n = randInt(2, 9), sum = m + n;
+    list.push({
+      part:'A', title:"1. Produit de deux puissances de 10",
+      question: String.raw`Écrire $10^{${m}}\times 10^{${n}}$ sous la forme d'une seule puissance de 10.`,
+      placeholder: `Ex : 10^${sum}`,
+      validate: s => match(s, [new RegExp(`^10\\^${sum}$`), String(Math.pow(10, sum))]),
+      success: "Exact !",
+      answer: String.raw`$10^{${m}}\times10^{${n}}=10^{${m}+${n}}=10^{${sum}}$.`,
+      explain: String.raw`<strong>Règle :</strong> $10^{m}\times10^{n}=10^{m+n}$.`
+    });
+  }
+
+  // Ex 2
+  {
+    const n = randInt(2, 8), diff = randInt(2, 8), m = n + diff;
+    list.push({
+      part:'A', title:"2. Quotient de deux puissances de 10",
+      question: String.raw`Écrire $\dfrac{10^{${m}}}{10^{${n}}}$ sous la forme d'une seule puissance de 10.`,
+      placeholder: `Ex : 10^${diff}`,
+      validate: s => match(s, [new RegExp(`^10\\^${diff}$`), String(Math.pow(10, diff))]),
+      success: "Bien joué !",
+      answer: String.raw`$\dfrac{10^{${m}}}{10^{${n}}}=10^{${m}-${n}}=10^{${diff}}$.`,
+      explain: String.raw`<strong>Règle :</strong> $\dfrac{10^{m}}{10^{n}}=10^{m-n}$.`
+    });
+  }
+
+  // Ex 3
+  {
+    const m = randInt(2, 6), n = randInt(2, 6), prod = m * n;
+    list.push({
+      part:'A', title:"3. Puissance d'une puissance de 10",
+      question: String.raw`Écrire $(10^{${m}})^{${n}}$ sous la forme d'une seule puissance de 10.`,
+      placeholder: `Ex : 10^${prod}`,
+      validate: s => match(s, [new RegExp(`^10\\^${prod}$`), String(Math.pow(10, prod))]),
+      success: "Parfait !",
+      answer: String.raw`$(10^{${m}})^{${n}}=10^{${m}\times ${n}}=10^{${prod}}$.`,
+      explain: String.raw`<strong>Règle :</strong> $(10^{m})^{n}=10^{m\times n}$.`
+    });
+  }
+
+  // Ex 4
+  {
+    const exp = randInt(2, 9);
+    list.push({
+      part:'A', title:"4. Inverse et exposant négatif",
+      question: String.raw`Écrire $\dfrac{1}{10^{${exp}}}$ sous la forme $10^{k}$. Quel est l'exposant $k$ ?`,
+      placeholder: `Ex : -${exp}`,
+      validate: s => match(s, [String(-exp)]),
+      success: "Bravo !",
+      answer: String.raw`$\dfrac{1}{10^{${exp}}} = 10^{-${exp}}$, donc $k = -${exp}$.`,
+      explain: String.raw`<strong>Règle :</strong> $\dfrac{1}{a^n} = a^{-n}$.`
+    });
+  }
+
+  // Ex 5
+  {
+    const m = randInt(-9, -2), n = randInt(3, 9), sum = m + n;
+    list.push({
+      part:'A', title:"5. Produit avec exposants relatifs",
+      question: String.raw`Écrire $10^{${m}} \times 10^{${n}}$ sous la forme $10^k$. Donner $k$.`,
+      placeholder: `Ex : ${sum}`,
+      validate: s => match(s, [String(sum)]),
+      success: "Exact !",
+      answer: String.raw`$10^{${m}} \times 10^{${n}} = 10^{${m} + ${n}} = 10^{${sum}}$, donc $k = ${sum}$.`,
+      explain: String.raw`L'addition s'applique aussi aux nombres négatifs.`
+    });
+  }
+
+  // Ex 6
+  {
+    const m = randInt(2, 9), n = randInt(-9, -2), diff = m - n;
+    list.push({
+      part:'A', title:"6. Quotient avec exposant négatif au dénominateur",
+      question: String.raw`Écrire $\dfrac{10^{${m}}}{10^{${n}}}$ sous la forme $10^k$. Quel est l'exposant $k$ ?`,
+      placeholder: `Ex : ${diff}`,
+      validate: s => match(s, [String(diff)]),
+      success: "Très bien !",
+      answer: String.raw`$\dfrac{10^{${m}}}{10^{${n}}} = 10^{${m} - (${n})} = 10^{${diff}}$, donc $k = ${diff}$.`,
+      explain: String.raw`Soustrayer un nombre négatif revient à l'ajouter.`
+    });
+  }
+
+  // Ex 7
+  {
+    const m = randInt(-6, -2), n = randInt(2, 6), prod = m * n;
+    list.push({
+      part:'A', title:"7. Puissance d'exposant négatif",
+      question: String.raw`Écrire $(10^{${m}})^{${n}}$ sous la forme $10^k$. Trouver $k$.`,
+      placeholder: `Ex : ${prod}`,
+      validate: s => match(s, [String(prod)]),
+      success: "Parfait !",
+      answer: String.raw`$(10^{${m}})^{${n}} = 10^{${m} \times ${n}} = 10^{${prod}}$, donc $k = ${prod}$.`,
+      explain: String.raw`Le produit d'un négatif par un positif est négatif.`
+    });
+  }
+
+  // Ex 8
+  {
+    const n = randInt(1, 6), val = Math.pow(10, n);
+    list.push({
+      part:'A', title:"8. Puissance de 10 d'exposant zéro",
+      question: String.raw`Calculer la valeur exacte de $10^0 \times 10^{${n}}$.`,
+      placeholder: `Ex : ${val}`,
+      validate: s => match(s, [new RegExp(`^10\\^${n}$`), String(val)]),
+      success: "Exact !",
+      answer: String.raw`$10^0 \times 10^{${n}} = 1 \times 10^{${n}} = 10^{${n}} = ${val}$.`,
+      explain: String.raw`Par définition, $10^0 = 1$.`
+    });
+  }
+
+  /* --- PARTIE B : ÉCRITURE SCIENTIFIQUE ET ORDRES DE GRANDEUR --- */
+
+  // Ex 9
+  {
+    const mant = randInt(11, 99) / 10, exp = randInt(3, 8);
+    const val = (mant * Math.pow(10, exp)).toFixed(0);
+    list.push({
+      part:'B', title:"9. Écriture scientifique d'un grand nombre",
+      question: String.raw`Donner l'exposant $n$ dans l'écriture scientifique $a \times 10^n$ du nombre $${val}$.`,
+      placeholder: `Ex : ${exp}`,
+      validate: s => match(s, [String(exp)]),
+      success: "Bravo !",
+      answer: String.raw`$${val} = ${mant} \times 10^{${exp}}$, donc $n = ${exp}$.`,
+      explain: String.raw`Le premier chiffre est suivi de ${exp} rangs.`
+    });
+  }
+
+  // Ex 10
+  {
+    const mant = randInt(11, 99) / 10, exp = randInt(2, 6);
+    const val = (mant * Math.pow(10, -exp)).toFixed(exp + 1);
+    list.push({
+      part:'B', title:"10. Écriture scientifique d'un petit nombre",
+      question: String.raw`Donner l'exposant $n$ dans l'écriture scientifique $a \times 10^n$ de $${val}$.`,
+      placeholder: `Ex : -${exp}`,
+      validate: s => match(s, [String(-exp)]),
+      success: "Exact !",
+      answer: String.raw`$${val} = ${mant} \times 10^{-${exp}}$, donc $n = -${exp}$.`,
+      explain: String.raw`Un nombre strictly compris entre 0 et 1 a un exposant négatif.`
+    });
+  }
+
+  // Ex 11
+  {
+    const mant = (randInt(10, 49) / 10), exp = randInt(3, 9);
+    const ord = exp;
+    list.push({
+      part:'B', title:"11. Ordre de grandeur (mantisse < 5)",
+      question: String.raw`Déterminer l'ordre de grandeur (sous la forme $10^k$) de $N = ${mant} \times 10^{${exp}}$. Trouver $k$.`,
+      placeholder: `Ex : ${ord}`,
+      validate: s => match(s, [String(ord)]),
+      success: "Parfait !",
+      answer: String.raw`La mantisse $${mant}$ est inférieure à $5$, l'ordre de grandeur est $10^{${exp}}$, donc $k = ${ord}$.`,
+      explain: String.raw`Si $a < 5$, l'ordre de grandeur est $10^n$.`
+    });
+  }
+
+  // Ex 12
+  {
+    const mant = (randInt(50, 99) / 10), exp = randInt(3, 9);
+    const ord = exp + 1;
+    list.push({
+      part:'B', title:"12. Ordre de grandeur (mantisse ≥ 5)",
+      question: String.raw`Déterminer l'ordre de grandeur (sous la forme $10^k$) de $N = ${mant} \times 10^{${exp}}$. Trouver $k$.`,
+      placeholder: `Ex : ${ord}`,
+      validate: s => match(s, [String(ord)]),
+      success: "Excellente analyse !",
+      answer: String.raw`Puisque $${mant} \ge 5$, l'ordre de grandeur est $10^{${exp}+1} = 10^{${ord}}$, donc $k = ${ord}$.`,
+      explain: String.raw`Si $a \ge 5$, l'ordre de grandeur est $10^{n+1}$.`
+    });
+  }
+
+  // Ex 13
+  {
+    const mant = (randInt(11, 48) / 10), exp = randInt(2, 8);
+    list.push({
+      part:'B', title:"13. Ordre de grandeur généralisé en puissance de a",
+      question: String.raw`Soit $a > 1$. Une grandeur vaut $A = ${mant} \cdot a^{${exp}}$. Si $${mant} < \dfrac{a}{2}$ (pour $a = 10$), quel est l'exposant $k$ de l'ordre de grandeur en puissance de $a$ ($a^k$) ?`,
+      placeholder: `Ex : ${exp}`,
+      validate: s => match(s, [String(exp)]),
+      success: "Très bien !",
+      answer: String.raw`L'ordre de grandeur en puissance de $a$ est $a^{${exp}}$, donc $k = ${exp}$.`,
+      explain: String.raw`En base $a$, si le coefficient est inférieur à $a/2$, la puissance $a^n$ est conservée.`
+    });
+  }
+
+  // Ex 14
+  {
+    const mant = (randInt(50, 99) / 10), exp = randInt(-8, -2);
+    const ord = exp + 1;
+    list.push({
+      part:'B', title:"14. Ordre de grandeur pour un exposant négatif",
+      question: String.raw`Quel est l'exposant $k$ de l'ordre de grandeur ($10^k$) de $M = ${mant} \times 10^{${exp}}$ ?`,
+      placeholder: `Ex : ${ord}`,
+      validate: s => match(s, [String(ord)]),
+      success: "Bravo !",
+      answer: String.raw`Comme $${mant} \ge 5$, l'ordre de grandeur est $10^{${exp} + 1} = 10^{${ord}}$, d'où $k = ${ord}$.`,
+      explain: String.raw`Attention à l'addition algébrique avec les nombres négatifs : $(${exp}) + 1 = ${ord}$.`
+    });
+  }
+
+  // Ex 15
+  {
+    const c1 = randInt(2, 4), e1 = randInt(2, 5);
+    const c2 = randInt(2, 2), e2 = randInt(2, 5);
+    const prodC = c1 * c2, prodE = e1 + e2;
+    list.push({
+      part:'B', title:"15. Produit en écriture scientifique",
+      question: String.raw`Calculer $( ${c1} \times 10^{${e1}} ) \times ( ${c2} \times 10^{${e2}} )$. Donner l'exposant de 10 de la forme scientifique finale.`,
+      placeholder: `Ex : ${prodE}`,
+      validate: s => match(s, [String(prodE)]),
+      success: "Parfait !",
+      answer: String.raw`Le produit vaut $${prodC} \times 10^{${prodE}}$. La mantisse $${prodC} < 10$, donc l'exposant est $${prodE}$.`,
+      explain: String.raw`On regroupe les facteurs numériques d'un côté et les puissances de 10 de l'autre.`
+    });
+  }
+
+  // Ex 16
+  {
+    const k = randInt(2, 4), c2 = randInt(2, 4), c1 = k * c2;
+    const e1 = randInt(4, 7), e2 = randInt(1, 3);
+    const resE = e1 - e2;
+    list.push({
+      part:'B', title:"16. Quotient en écriture scientifique",
+      question: String.raw`Simplifier $\dfrac{${c1} \times 10^{${e1}}}{${c2} \times 10^{${e2}}}$. Quel est l'exposant de 10 dans le résultat $${k} \times 10^k$ ?`,
+      placeholder: `Ex : ${resE}`,
+      validate: s => match(s, [String(resE)]),
+      success: "Exact !",
+      answer: String.raw`$\dfrac{${c1}}{${c2}} \times 10^{${e1} - ${e2}} = ${k} \times 10^{${resE}}$, donc $k = ${resE}$.`,
+      explain: String.raw`Division des coefficients et soustraction des exposants de 10.`
+    });
+  }
+
+  /* --- PARTIE C : PUISSANCES DE BASES RELATIVES ET FRACTIONNAIRES --- */
+
+  // Ex 17
+  {
+    const base = randInt(-6, -2), exp = randInt(2, 4), res = Math.pow(base, exp);
+    list.push({
+      part:'C', title:"17. Puissance d'un entier négatif",
+      question: String.raw`Calculer la valeur exacte de $(${base})^{${exp}}$.`,
+      placeholder: `Ex : ${res}`,
+      validate: s => match(s, [String(res)]),
+      success: "Exact !",
+      answer: String.raw`$(${base})^{${exp}} = ${res}$.`,
+      explain: String.raw`La base négative est entre parenthèses.`
+    });
+  }
+
+  // Ex 18
+  {
+    const a = randInt(2, 9), exp = randInt(2, 3), res = -Math.pow(a, exp);
+    list.push({
+      part:'C', title:"18. Distinction $-a^n$ et $(-a)^n$",
+      question: String.raw`Calculer la valeur exacte de $-${a}^{${exp}}$.`,
+      placeholder: `Ex : ${res}`,
+      validate: s => match(s, [String(res)]),
+      success: "Vigilance validée !",
+      answer: String.raw`$-${a}^{${exp}} = -(${a} \times \dots) = ${res}$.`,
+      explain: String.raw`Sans parenthèses, la puissance est prioritaire sur le signe moins.`
+    });
+  }
+
+  // Ex 19
+  {
+    const p = randChoice([2, 3, 4, 5]), q = randChoice([7, 8, 9, 11]), exp = randInt(2, 3);
+    const numRes = Math.pow(p, exp), denRes = Math.pow(q, exp);
+    list.push({
+      part:'C', title:"19. Puissance d'une fraction",
+      question: String.raw`Écrire $\left(\dfrac{${p}}{${q}}\right)^{${exp}}$ sous la forme d'une fraction irréductible $a/b$.`,
+      placeholder: `${numRes}/${denRes}`,
+      validate: s => match(s, [`${numRes}/${denRes}`]),
+      success: "Bravo !",
+      answer: String.raw`$\left(\dfrac{${p}}{${q}}\right)^{${exp}} = \dfrac{${p}^{${exp}}}{${q}^{${exp}}} = \dfrac{${numRes}}{${denRes}}$.`,
+      explain: String.raw`L'exposant s'lique au numérateur et au dénominateur.`
+    });
+  }
+
+  // Ex 20
+  {
+    const p = randChoice([2, 3, 4]), q = randChoice([5, 7, 9]);
+    const numRes = q * q, denRes = p * p;
+    list.push({
+      part:'C', title:"20. Fraction et exposant négatif",
+      question: String.raw`Calculer la valeur exacte de $\left(\dfrac{${p}}{${q}}\right)^{-2}$ sous forme $a/b$.`,
+      placeholder: `${numRes}/${denRes}`,
+      validate: s => match(s, [`${numRes}/${denRes}`]),
+      success: "Super !",
+      answer: String.raw`$\left(\dfrac{${p}}{${q}}\right)^{-2} = \left(\dfrac{${q}}{${p}}\right)^{2} = \dfrac{${numRes}}{${denRes}}$.`,
+      explain: String.raw`L'exposant négatif inverse la fraction.`
+    });
+  }
+
+  // Ex 21
+  {
+    const a = randInt(2, 6), b = randInt(2, 6), exp = randInt(2, 5);
+    const baseProd = a * b;
+    list.push({
+      part:'C', title:"21. Produit de bases différentes de même exposant",
+      question: String.raw`Écrire $${a}^{${exp}} \times ${b}^{${exp}}$ sous la forme $c^{${exp}}$. Donner $c$.`,
+      placeholder: `Ex : ${baseProd}`,
+      validate: s => match(s, [String(baseProd)]),
+      success: "Parfait !",
+      answer: String.raw`$${a}^{${exp}} \times ${b}^{${exp}} = (${a} \times ${b})^{${exp}} = ${baseProd}^{${exp}}$, donc $c = ${baseProd}$.`,
+      explain: String.raw`Même exposant $\to$ multiplication des bases.`
+    });
+  }
+
+  // Ex 22
+  {
+    const resBase = randInt(2, 6), den = randInt(2, 5);
+    const num = resBase * den;
+    const exp = randInt(2, 5);
+    list.push({
+      part:'C', title:"22. Quotient de même exposant",
+      question: String.raw`Écrire $\dfrac{${num}^{${exp}}}{${den}^{${exp}}}$ sous la forme $c^{${exp}}$. Donner la base $c$.`,
+      placeholder: `Ex : ${resBase}`,
+      validate: s => match(s, [String(resBase)]),
+      success: "Exact !",
+      answer: String.raw`$\dfrac{${num}^{${exp}}}{${den}^{${exp}}} = \left(\dfrac{${num}}{${den}}\right)^{${exp}} = ${resBase}^{${exp}}$, d'où $c = ${resBase}$.`,
+      explain: String.raw`On divise les bases entières.`
+    });
+  }
+
+  // Ex 23
+  {
+    const exp = randInt(-6, -1);
+    list.push({
+      part:'C', title:"23. Puissance d'un nombre réel quelconque $a > 0$",
+      question: String.raw`Soit $a > 0$. Écrire $\dfrac{1}{a^{${Math.abs(exp)}}}$ sous la forme $a^k$. Quel est l'exposant $k$ ?`,
+      placeholder: `Ex : ${exp}`,
+      validate: s => match(s, [String(exp)]),
+      success: "Très bien !",
+      answer: String.raw`$\dfrac{1}{a^{${Math.abs(exp)}}} = a^{${exp}}$, donc $k = ${exp}$.`,
+      explain: String.raw`La propriété reste valable pour toute base littérale $a > 0$.`
+    });
+  }
+
+  /* --- PARTIE D : STRUCTURES MULTIPLES $a_1^{n_1} \times a_2^{n_2} \times \dots \times a_p^{n_p}$ --- */
+
+  // Ex 24
+  {
+    const base = randChoice(['a', 'x', 'y', 'z', '3', '5']);
+    const n1 = randInt(-6, 6), n2 = randInt(-6, 6), n3 = randInt(-6, 6);
+    const sum = n1 + n2 + n3;
+    const expr = `${base}^{${n1}} \\times ${base}^{${n2}} \\times ${base}^{${n3}}`;
+    list.push({
+      part:'D', title:"24. Produit de 3 puissances de même base",
+      question: String.raw`Simplifier $${expr}$ sous la forme $${base}^{k}$. Donner $k$.`,
+      placeholder: `Ex : ${sum}`,
+      validate: s => match(s, [String(sum)]),
+      success: "Parfait !",
+      answer: String.raw`$${expr} = ${base}^{${n1} + (${n2}) + (${n3})} = ${base}^{${sum}}$, donc $k = ${sum}$.`,
+      explain: String.raw`Généralisation : $a^{n_1} \times a^{n_2} \times \dots \times a^{n_p} = a^{n_1+n_2+\dots+n_p}$.`
+    });
+  }
+
+  // Ex 25
+  {
+    const n1 = randInt(1, 6), n2 = randInt(1, 6), n3 = randInt(1, 6), n4 = randInt(1, 6);
+    const sumA = n1 + n2;
+    const expr = String.raw`a^{${n1}} \times b^{${n3}} \times a^{${n2}} \times b^{${n4}}`;
+    const sumB = n3 + n4;
+    list.push({
+      part:'D', title:"25. Produit multi-variables $a_1^{n_1} \times a_2^{n_2} \dots$",
+      question: String.raw`Réduire $A = ${expr}$ sous la forme $a^{x} \times b^{y}$. Quel est l'exposant $x$ ?`,
+      placeholder: `Ex : ${sumA}`,
+      validate: s => match(s, [String(sumA)]),
+      success: "Exact !",
+      answer: String.raw`$A = (a^{${n1}} \times a^{${n2}}) \times (b^{${n3}} \times b^{${n4}}) = a^{${sumA}} \times b^{${sumB}}$, donc $x = ${sumA}$.`,
+      explain: String.raw`On regroupe les facteurs de même base.`
+    });
+  }
+
+  // Ex 26
+  {
+    const n1 = randInt(2, 6), n2 = randInt(-8, -1);
+    const sum = n1 + n2;
+    list.push({
+      part:'D', title:"26. Produit littéral avec exposant négatif",
+      question: String.raw`Simplifier $x^{${n1}} \times x^{${n2}}$ sous la forme $x^{k}$. Trouver $k$.`,
+      placeholder: `Ex : ${sum}`,
+      validate: s => match(s, [String(sum)]),
+      success: "Très bien !",
+      answer: String.raw`$x^{${n1}} \times x^{${n2}} = x^{${n1} + (${n2})} = x^{${sum}}$, donc $k = ${sum}$.`,
+      explain: String.raw`L'addition algébrique préserve la loi des signes.`
+    });
+  }
+
+  // Ex 27
+  {
+    const n1 = randInt(2, 6), n2 = randInt(2, 6), n3 = randInt(-8, -2);
+    const sum = n1 + n2 + n3;
+    const expr = String.raw`a^{${n1}} \times a^{${n2}} \times a^{${n3}}`;
+    list.push({
+      part:'D', title:"27. Produit de 3 puissances avec exposant négatif",
+      question: String.raw`Simplifier $${expr}$ sous la forme $a^k$ ($a > 0$). Donner $k$.`,
+      placeholder: `Ex : ${sum}`,
+      validate: s => match(s, [String(sum)]),
+      success: "Bravo !",
+      answer: String.raw`$a^{${n1}} \times a^{${n2}} \times a^{${n3}} = a^{${sum}}$, donc $k = ${sum}$.`,
+      explain: String.raw`Fonctionne de la même manière avec n'importe quel nombre de facteurs.`
+    });
+  }
+
+  // Ex 28
+  {
+    const k1 = randInt(2, 5), k2 = randInt(2, 5);
+    const prod = k1 * k2;
+    list.push({
+      part:'D', title:"28. Puissance de produit $(a \times b)^n$",
+      question: String.raw`Développer $(a \times b^{${k2}})^{${k1}}$ sous la forme $a^x \times b^y$. Trouver $y$.`,
+      placeholder: `Ex : ${prod}`,
+      validate: s => match(s, [String(prod)]),
+      success: "Parfait !",
+      answer: String.raw`$(a \times b^{${k2}})^{${k1}} = a^{${k1}} \times b^{${k2} \times ${k1}} = a^{${k1}} \times b^{${prod}}$, d'où $y = ${prod}$.`,
+      explain: String.raw`L'exposant externe multiplie chaque exposant interne.`
+    });
+  }
+
+  /* --- PARTIE E : QUOTIENTS COMPLEXES $\dfrac{a_1^{n_1} \dots}{b_1^{m_1} \dots}$ --- */
+
+  // Ex 29
+  {
+    const n1 = randInt(3, 8), m1 = randInt(1, 4);
+    const n2 = randInt(3, 8), m2 = randInt(1, 4);
+    const expA = n1 - m1, expB = n2 - m2;
+    const expr = String.raw`\dfrac{a^{${n1}} \times b^{${n2}}}{a^{${m1}} \times b^{${m2}}}`;
+    list.push({
+      part:'E', title:"29. Quotient simple à deux variables",
+      question: String.raw`Simplifier $B = ${expr}$ sous la forme $a^{x} \cdot b^{y}$. Trouver $x$.`,
+      placeholder: `Ex : ${expA}`,
+      validate: s => match(s, [String(expA)]),
+      success: "Parfait !",
+      answer: String.raw`Pour $a$ : $x = ${n1} - ${m1} = ${expA}$. Pour $b$ : $y = ${n2} - ${m2} = ${expB}$.`,
+      explain: String.raw`On soustrait l'exposant du dénominateur de celui du numérateur.`
+    });
+  }
+
+  // Ex 30
+  {
+    const n1 = randInt(1, 3), m1 = randInt(4, 9);
+    const diff = n1 - m1;
+    const expr = String.raw`\dfrac{x^{${n1}}}{x^{${m1}}}`;
+    list.push({
+      part:'E', title:"30. Quotient donnant un exposant négatif",
+      question: String.raw`Écrire $C = ${expr}$ sous la forme $x^{k}$. Trouver $k$.`,
+      placeholder: `Ex : ${diff}`,
+      validate: s => match(s, [String(diff)]),
+      success: "Bravo !",
+      answer: String.raw`$C = x^{${n1} - ${m1}} = x^{${diff}}$, donc $k = ${diff}$.`,
+      explain: String.raw`Le résultat possède un exposant négatif car le dénominateur est supérieur.`
+    });
+  }
+
+  // Ex 31
+  {
+    const n1 = randInt(2, 5), n2 = randInt(1, 4), expB_num = randInt(2, 5);
+    const m1 = randInt(1, 3), m2 = randInt(2, 6);
+    const targetA = (n1 + n2) - m1;
+    const expr = String.raw`\dfrac{a^{${n1}} \times b^{${expB_num}} \times a^{${n2}}}{a^{${m1}} \times b^{${m2}}}`;
+    list.push({
+      part:'E', title:"31. Fraction complexe avec produits multiples",
+      question: String.raw`En réduisant $D = ${expr}$ sous la forme $a^{x} \times b^{y}$, trouver $x$.`,
+      placeholder: `Ex : ${targetA}`,
+      validate: s => match(s, [String(targetA)]),
+      success: "Excellent !",
+      answer: String.raw`$a^{${n1}+${n2}} / a^{${m1}} = a^{${targetA}}$, donc $x = ${targetA}$.`,
+      explain: String.raw`On simplifie d'abord chaque étage avant de diviser.`
+    });
+  }
+
+  // Ex 32
+  {
+    const n1 = randInt(2, 6), m1 = randInt(-6, -1);
+    const diff = n1 - m1;
+    const expr = String.raw`\dfrac{a^{${n1}}}{a^{${m1}}}`;
+    list.push({
+      part:'E', title:"32. Division par un exposant négatif au dénominateur",
+      question: String.raw`Réduire $${expr}$ sous la forme $a^k$. Calculer $k$.`,
+      placeholder: `Ex : ${diff}`,
+      validate: s => match(s, [String(diff)]),
+      success: "Très bien !",
+      answer: String.raw`$\dfrac{a^{${n1}}}{a^{${m1}}} = a^{${n1} - (${m1})} = a^{${diff}}$, donc $k = ${diff}$.`,
+      explain: String.raw`Diviser par $a^{-n}$ revient à multiplier par $a^n$.`
+    });
+  }
+
+  // Ex 33
+  {
+    const n1 = randInt(2, 5), n2 = randInt(2, 5);
+    const m1 = randInt(2, 5), m2 = randInt(2, 5);
+    const targetA = n1 - m1, targetB = n2 - m2;
+    const expr = String.raw`\dfrac{a^{${n1}} \times b^{${n2}}}{b^{${m2}} \times a^{${m1}}}`;
+    list.push({
+      part:'E', title:"33. Quotient avec bases inversées au dénominateur",
+      question: String.raw`Simplifier $${expr}$ sous la forme $a^x \times b^y$. Calculer $y$.`,
+      placeholder: `Ex : ${targetB}`,
+      validate: s => match(s, [String(targetB)]),
+      success: "Excellente attention !",
+      answer: String.raw`Pour $b$ : $y = ${n2} - ${m2} = ${targetB}$. (Pour $a$ : $x = ${targetA}$).`,
+      explain: String.raw`L'ordre des facteurs dans un produit au dénominateur ne change pas le résultat.`
+    });
+  }
+
+  /* --- PARTIE F : FORMES COMBINÉES COMPLÈTES $(c_1^{k_1}\dots)\times \dfrac{a_1^{n_1}\dots}{b_1^{m_1}\dots}$ --- */
+
+  // Ex 34
+  {
+    const k1 = randInt(2, 5);
+    const n1 = randInt(1, 5);
+    const m1 = randInt(2, 6);
+    const resExp = k1 + n1 - m1;
+    const expr = String.raw`x^{${k1}} \times \dfrac{x^{${n1}}}{x^{${m1}}}`;
+    list.push({
+      part:'F', title:"34. Produit externe par un quotient de même base",
+      question: String.raw`Réduire $E = ${expr}$ sous la forme $x^{k}$. Donner $k$.`,
+      placeholder: `Ex : ${resExp}`,
+      validate: s => match(s, [String(resExp)]),
+      success: "Impressionnant !",
+      answer: String.raw`$E = \dfrac{x^{${k1}} \times x^{${n1}}}{x^{${m1}}} = x^{${k1} + ${n1} - ${m1}} = x^{${resExp}}$, donc $k = ${resExp}$.`,
+      explain: String.raw`Combinaison directe du produit et du quotient.`
+    });
+  }
+
+  // Ex 35
+  {
+    const k1 = randInt(1, 4), k2 = randInt(1, 4);
+    const m1 = randInt(2, 5);
+    const expB = randInt(2, 5);
+    const targetA = k1 + k2 - m1;
+    const expr = String.raw`(a^{${k1}} \times b^{${expB}}) \times \dfrac{a^{${k2}}}{a^{${m1}} \times b^{${expB}}}`;
+    list.push({
+      part:'F', title:"35. Facteurs multiples et fraction de puissances",
+      question: String.raw`Simplifier $F = ${expr}$ sous la forme $a^{x} \times b^{y}$. Que vaut $x$ ?`,
+      placeholder: `Ex : ${targetA}`,
+      validate: s => match(s, [String(targetA)]),
+      success: "Très fort !",
+      answer: String.raw`Pour $a$ : $x = ${k1} + ${k2} - ${m1} = ${targetA}$. Pour $b$ : ${expB} - ${expB} = 0$ ($b^0 = 1$).`,
+      explain: String.raw`Le terme $b^{${expB}}$ s'annule complètement ($b^{${expB}} / b^{${expB}} = 1$).`
+    });
+  }
+
+  // Ex 36
+  {
+    const p1 = randInt(2, 4), p2 = randInt(2, 4);
+    const numExp = p1 * p2;
+    const denExp = randInt(2, 6);
+    const finalExp = numExp - denExp;
+    const expr = String.raw`\left(a^{${p1}}\right)^{${p2}} \times \dfrac{1}{a^{${denExp}}}`;
+    list.push({
+      part:'F', title:"36. Puissance de puissance et inverse",
+      question: String.raw`Simplifier $G = ${expr}$ sous la forme $a^{n}$. Quel est l'exposant $n$ ?`,
+      placeholder: `Ex : ${finalExp}`,
+      validate: s => match(s, [String(finalExp)]),
+      success: "Parfaitement maîtrisé !",
+      answer: String.raw`$G = a^{${p1} \times ${p2}} \times a^{-${denExp}} = a^{${numExp}} \times a^{-${denExp}} = a^{${finalExp}}$, donc $n = ${finalExp}$.`,
+      explain: String.raw`Calculer d'abord la puissance de puissance.`
+    });
+  }
+
+  // Ex 37
+  {
+    const c1 = randInt(2, 5);
+    const a1 = randInt(2, 6), b1 = randInt(1, 4);
+    const totalA = c1 + a1 - b1;
+    const expr = String.raw`a^{${c1}} \times \left( \dfrac{a^{${a1}}}{a^{${b1}}} \right)`;
+    list.push({
+      part:'F', title:"37. Produit avec quotient entre parenthèses",
+      question: String.raw`Réduire $H = ${expr}$ sous la forme $a^k$. Trouver $k$.`,
+      placeholder: `Ex : ${totalA}`,
+      validate: s => match(s, [String(totalA)]),
+      success: "Bravo !",
+      answer: String.raw`$H = a^{${c1}} \times a^{${a1}-${b1}} = a^{${c1} + (${a1}-${b1})} = a^{${totalA}}$, donc $k = ${totalA}$.`,
+      explain: String.raw`Les parenthèses priorisent la simplification interne.`
+    });
+  }
+
+  // Ex 38
+  {
+    const k1 = randInt(-5, -1);
+    const a1 = randInt(2, 6), b1 = randInt(1, 4);
+    const totalA = k1 + a1 - b1;
+    const expr = String.raw`a^{${k1}} \times \dfrac{a^{${a1}}}{a^{${b1}}}`;
+    list.push({
+      part:'F', title:"38. Produit par un terme à exposant négatif",
+      question: String.raw`Déterminer l'exposant $k$ de $a^k$ dans la simplification de $I = ${expr}$.`,
+      placeholder: `Ex : ${totalA}`,
+      validate: s => match(s, [String(totalA)]),
+      success: "Excellent !",
+      answer: String.raw`$I = a^{${k1} + ${a1} - ${b1}} = a^{${totalA}}$, d'où $k = ${totalA}$.`,
+      explain: String.raw`On additionne l'exposant négatif du facteur externe.`
+    });
+  }
+
+  // Ex 39
+  {
+    const p1 = randInt(2, 4), p2 = randInt(2, 4);
+    const m1 = randInt(1, 5);
+    const resExp = (p1 * p2) - m1;
+    const expr = String.raw`\dfrac{(x^{${p1}})^{${p2}}}{x^{${m1}}}`;
+    list.push({
+      part:'F', title:"39. Puissance de puissance au numérateur d'un quotient",
+      question: String.raw`Simplifier $J = ${expr}$ sous la forme $x^k$. Trouver $k$.`,
+      placeholder: `Ex : ${resExp}`,
+      validate: s => match(s, [String(resExp)]),
+      success: "Parfait !",
+      answer: String.raw`$J = \dfrac{x^{${p1*p2}}}{x^{${m1}}} = x^{${p1*p2} - ${m1}} = x^{${resExp}}$, donc $k = ${resExp}$.`,
+      explain: String.raw`Puissance de puissance en haut, puis loi du quotient.`
+    });
+  }
+
+  // Ex 40
+  {
+    const a1 = randInt(2, 4), extExp = randInt(2, 4), a2 = randInt(1, 4);
+    const b1 = randInt(2, 6);
+    const expNum = a1 * extExp;
+    const totalX = expNum + a2 - b1;
+    const expr = String.raw`\left(x^{${a1}}\right)^{${extExp}} \times \dfrac{x^{${a2}}}{x^{${b1}}}`;
+    list.push({
+      part:'F', title:"40. Grand exercice de synthèse globale",
+      question: String.raw`Réduire l'expression globale $K = ${expr}$ sous la forme $x^{k}$. Trouver $k$.`,
+      placeholder: `Ex : ${totalX}`,
+      validate: s => match(s, [String(totalX)]),
+      success: "Félicitations ! Les 40 exercices sont réussis !",
+      answer: String.raw`$K = x^{${a1} \times ${extExp}} \times x^{${a2} - ${b1}} = x^{${expNum}} \times x^{${a2 - b1}} = x^{${totalX}}$, donc $k = ${totalX}$.`,
+      explain: String.raw`Toutes les règles des puissances entières sont parfaitement combinées.`
+    });
+  }
+
+  return list;
+}
+
+const slides = buildSlides();
+
+/* =========================================================
+   3. MOTEUR DE PRÉSENTATION
+   ========================================================= */
+const stage       = document.getElementById('stage');
+const prevBtn     = document.getElementById('prevBtn');
+const revealBtn   = document.getElementById('revealBtn');
+const nextBtn     = document.getElementById('nextBtn');
+const progressBar = document.getElementById('progressBar');
+const counter     = document.getElementById('counter');
+const mainEl      = document.querySelector('main');
+
+const TOTAL = slides.length;
+const state = { i: 0, revealed: new Set(), solved: new Set(), answers: new Map() };
+
+function esc(t){
+  return String(t)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let mjTries = 0;
+function typeset(){
+  if (window.MathJax && typeof MathJax.typesetPromise === 'function'){
+    MathJax.typesetPromise([stage]).catch(() => {});
+  } else if (mjTries++ < 60){
+    setTimeout(typeset, 120);
+  }
+}
+
+function render(){
+  const s = slides[state.i];
+  const last = state.i === TOTAL - 1;
+
+  stage.innerHTML = `
+    <section class="slide" id="slide">
+      <span class="badge">Partie ${s.part} · Étape ${state.i + 1} / ${TOTAL}</span>
+      <h2>${s.title}</h2>
+      <p class="question">${s.question}</p>
+
+      <div class="answer-zone" id="zone">
+        <label class="answer-label" for="ans">Votre réponse</label>
+        <div class="input-row">
+          <input id="ans" class="answer-input" type="text" autocomplete="off"
+                 spellcheck="false" placeholder="${esc(s.placeholder || 'Votre réponse…')}">
+          <button id="checkBtn" type="button">Vérifier</button>
+        </div>
+        <div class="feedback info" id="fb">Saisis ta réponse puis clique sur « Vérifier ».</div>
+      </div>
+
+      <div class="answer hidden" id="sol">
+        <h3>Solution</h3>
+        <div>${s.answer}${s.explain ? `<p>${s.explain}</p>` : ''}</div>
+      </div>
+    </section>`;
+
+  if (state.solved.has(state.i)){
+    const inp = document.getElementById('ans');
+    inp.value = state.answers.get(state.i) || '';
+    inp.disabled = true;
+    inp.classList.add('correct');
+    document.getElementById('zone').classList.add('solved');
+    const fb = document.getElementById('fb');
+    fb.className = 'feedback ok';
+    fb.textContent = '✅ ' + (s.success || 'Bonne réponse !');
+  }
+
+  if (state.revealed.has(state.i)){
+    document.getElementById('sol').classList.remove('hidden');
+    revealBtn.disabled = true;
+    revealBtn.classList.add('revealed');
+    revealBtn.textContent = '💡 Solution affichée';
+  } else {
+    revealBtn.disabled = false;
+    revealBtn.classList.remove('revealed');
+    revealBtn.textContent = '💡 Solution';
+  }
+
+  counter.textContent = (state.i + 1) + ' / ' + TOTAL;
+  progressBar.style.width = ((state.i + 1) / TOTAL * 100) + '%';
+  prevBtn.disabled = state.i === 0;
+  nextBtn.disabled = false;
+  nextBtn.textContent = last ? 'Terminer ✓' : 'Suivant ▶';
+  nextBtn.classList.toggle('finish', last);
+
+  mainEl.scrollTop = 0;
+  typeset();
+}
+
+function check(){
+  const s   = slides[state.i];
+  const inp = document.getElementById('ans');
+  const zone= document.getElementById('zone');
+  const fb  = document.getElementById('fb');
+  const v   = inp.value.trim();
+
+  if (!v){
+    fb.className = 'feedback info';
+    fb.textContent = 'Saisis d’abord une réponse.';
+    inp.focus();
+    return;
+  }
+
+  let ok = false;
+  try { ok = !!s.validate(v); } catch (e){ ok = false; }
+
+  if (ok){
+    inp.classList.remove('incorrect');
+    inp.classList.add('correct');
+    inp.disabled = true;
+    zone.classList.remove('failed');
+    zone.classList.add('solved');
+    fb.className = 'feedback ok';
+    fb.textContent = '✅ ' + (s.success || 'Bonne réponse !');
+    state.solved.add(state.i);
+    state.answers.set(state.i, v);
+  } else {
+    inp.classList.add('incorrect');
+    zone.classList.add('failed');
+    fb.className = 'feedback ko';
+    fb.textContent = '❌ Ce n’est pas encore la bonne réponse. Réessaie.';
+    setTimeout(() => inp.classList.remove('incorrect'), 420);
+  }
+}
+
+function reveal(){
+  document.getElementById('sol').classList.remove('hidden');
+  state.revealed.add(state.i);
+  revealBtn.disabled = true;
+  revealBtn.classList.add('revealed');
+  revealBtn.textContent = '💡 Solution affichée';
+}
+
+function next(){
+  if (state.i < TOTAL - 1){
+    state.i++;
+    render();
+    return;
+  }
+  const slide = document.getElementById('slide');
+  if (slide.querySelector('#bilan')) return;
+
+  const b = document.createElement('div');
+  b.className = 'answer';
+  b.id = 'bilan';
+  b.innerHTML =
+    '<h3>Bilan</h3><div>' +
+    '<p>Félicitations ! Tu as complété les 40 exercices sur les puissances entières, écritures scientifiques et ordres de grandeur.</p>' +
+    '<p>Tu peux revenir en arrière avec ◀ pour revoir une étape ou une solution.</p>' +
+    '</div>';
+  slide.appendChild(b);
+
+  nextBtn.disabled = true;
+  nextBtn.textContent = '🎉 Parcours terminé';
+}
+
+function prev(){
+  if (state.i > 0){ state.i--; render(); }
+}
+
+stage.addEventListener('click', e => {
+  if (e.target && e.target.id === 'checkBtn') check();
+});
+stage.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target && e.target.id === 'ans'){
+    e.preventDefault();
+    check();
+  }
+});
+prevBtn.addEventListener('click', prev);
+nextBtn.addEventListener('click', next);
+revealBtn.addEventListener('click', reveal);
+
+document.addEventListener('keydown', e => {
+  const typing = e.target && e.target.tagName === 'INPUT';
+  if (typing) return;
+  if (e.key === 'ArrowRight') next();
+  if (e.key === 'ArrowLeft')  prev();
+});
+
+render();
+</script>
+</body>
+</html>

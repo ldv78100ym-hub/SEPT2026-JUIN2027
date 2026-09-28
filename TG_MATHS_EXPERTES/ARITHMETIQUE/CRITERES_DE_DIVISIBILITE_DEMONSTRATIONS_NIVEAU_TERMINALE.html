@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Règles de divisibilité — Cours interactif</title>
+
+<!-- ===================== Configuration MathJax 3 ===================== -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  svg: { fontCache: 'global' },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+/* ============================ Base ============================ */
+:root{
+  --bg:#eef2f8;
+  --panel:#ffffff;
+  --ink:#0f172a;
+  --muted:#64748b;
+  --accent:#2563eb;
+  --accent2:#4f46e5;
+  --accent-soft:#dbeafe;
+  --line:#e2e8f0;
+  --ok:#059669;
+  --no:#dc2626;
+  --warn:#f59e0b;
+  --radius:16px;
+}
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============================ Layout ============================ */
+.app{ display:flex; min-height:100vh; align-items:flex-start; }
+
+/* -------- Sidebar -------- */
+.sidebar{
+  width:300px; flex:0 0 300px;
+  background:linear-gradient(180deg,#0f172a 0%,#131c33 100%);
+  color:#e2e8f0;
+  padding:26px 18px 40px;
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+}
+.brand{ display:flex; gap:12px; align-items:center; margin-bottom:22px; padding:0 6px; }
+.brand-icon{
+  width:44px;height:44px;border-radius:13px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  font-size:24px;font-weight:800;color:#fff;
+  box-shadow:0 10px 24px -10px rgba(59,130,246,.95);
+}
+.brand h1{ font-size:17px; margin:0; letter-spacing:.01em; color:#fff; }
+.brand p{ margin:0; font-size:12.5px; color:#8fa1bd; }
+
+.nav-title{
+  font-size:11px; text-transform:uppercase; letter-spacing:.13em;
+  color:#7b8bab; margin:18px 8px 10px; font-weight:700;
+}
+.nav-btn{
+  display:flex; align-items:center; gap:12px;
+  width:100%; padding:10px 12px; margin-bottom:6px;
+  background:transparent; border:1px solid transparent; border-radius:12px;
+  color:#c7d2e3; font:inherit; font-size:14.5px; text-align:left;
+  cursor:pointer; transition:background .18s ease, color .18s ease, transform .18s ease;
+}
+.nav-btn:hover{ background:rgba(255,255,255,.07); color:#fff; }
+.nav-btn.active{
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
+  color:#fff;
+  box-shadow:0 12px 26px -12px rgba(59,130,246,1);
+}
+.nav-btn .num{
+  display:inline-grid; place-items:center;
+  min-width:34px; height:32px; padding:0 7px;
+  border-radius:9px; background:rgba(255,255,255,.12);
+  font-weight:800; font-size:14px; letter-spacing:-.02em;
+}
+.nav-btn.active .num{ background:rgba(255,255,255,.28); }
+
+.sidebar-foot{
+  margin-top:22px; padding:12px 14px; border-radius:12px;
+  background:rgba(255,255,255,.05); font-size:12.5px; color:#93a3bd;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+/* -------- Content -------- */
+.content{
+  flex:1; min-width:0;
+  padding:34px clamp(16px, 4vw, 58px) 90px;
+  max-width:1020px;
+}
+
+.rule{ display:none; }
+.rule.active{ display:block; animation:fade .28s ease; }
+@keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+.rule-head{ display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+.badge{
+  width:62px;height:62px;flex:0 0 62px;border-radius:18px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:#fff; font-size:26px; font-weight:800; letter-spacing:-.03em;
+  box-shadow:0 16px 34px -16px rgba(79,70,229,1);
+}
+.rule-head h2{ margin:0; font-size:26px; letter-spacing:-.02em; }
+.rule-head p{ margin:2px 0 0; color:var(--muted); font-size:14.5px; }
+
+.card{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); padding:20px 24px; margin-bottom:16px;
+  box-shadow:0 1px 2px rgba(15,23,42,.04);
+}
+.card h3{
+  margin:0 0 12px; font-size:15px; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--muted); font-weight:700;
+}
+.card.theo{
+  background:linear-gradient(180deg,#f8fbff,#eef4ff);
+  border-color:#c7ddff;
+}
+.card.theo h3{ color:var(--accent); }
+.card.theo p{ font-size:16.5px; margin:0; }
+
+.card canvas{ width:100%; height:275px; display:block; border-radius:12px; }
+
+.examples{ list-style:none; margin:0; padding:0; }
+.examples li{
+  padding:9px 0 9px 4px; border-bottom:1px dashed var(--line);
+  font-size:15.5px;
+}
+.examples li:last-child{ border-bottom:none; }
+.ok{ color:var(--ok); font-weight:800; margin-right:6px; }
+.no{ color:var(--no); font-weight:800; margin-right:6px; }
+
+/* -------- Bouton démonstration -------- */
+.demo-btn{
+  display:inline-flex; align-items:center; gap:11px;
+  margin:8px 0 0; padding:13px 24px;
+  border:none; border-radius:13px; cursor:pointer;
+  background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff;
+  font:inherit; font-weight:650; font-size:15px; letter-spacing:.01em;
+  box-shadow:0 14px 30px -14px rgba(37,99,235,1);
+  transition:transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+.demo-btn:hover{ transform:translateY(-2px); filter:brightness(1.06);
+  box-shadow:0 18px 36px -14px rgba(37,99,235,1); }
+.demo-btn:active{ transform:translateY(0); }
+.demo-btn .chev{ display:inline-block; transition:transform .28s ease; font-size:13px; }
+.demo-btn.open .chev{ transform:rotate(90deg); }
+
+/* -------- Démonstration -------- */
+.proof{
+  display:none;
+  margin-top:18px; padding:24px 28px 28px;
+  background:#fff; border:1px solid var(--line);
+  border-left:5px solid var(--accent);
+  border-radius:var(--radius);
+  box-shadow:0 12px 32px -22px rgba(15,23,42,.55);
+}
+.proof.open{ display:block; animation:slide .32s cubic-bezier(.2,.8,.3,1); }
+@keyframes slide{ from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:none;} }
+
+.proof > h3{
+  margin:0 0 6px; font-size:20px; letter-spacing:-.01em;
+  color:var(--ink);
+}
+.proof > h3::after{
+  content:""; display:block; width:56px; height:3px; margin-top:9px;
+  background:linear-gradient(90deg,#2563eb,#7c3aed); border-radius:3px;
+}
+.proof h4{
+  margin:24px 0 8px; font-size:13.5px; font-weight:800;
+  text-transform:uppercase; letter-spacing:.08em; color:var(--accent);
+}
+.proof p{ margin:9px 0; font-size:15.7px; }
+.proof ul{ margin:8px 0 8px 4px; padding-left:20px; font-size:15.6px; }
+.proof li{ margin:5px 0; }
+
+.keybox{
+  margin:14px 0; padding:13px 18px;
+  background:linear-gradient(180deg,#f0f7ff,#e6f0ff);
+  border:1px dashed #93c5fd; border-radius:12px;
+}
+.keybox p{ margin:4px 0; }
+
+.remark{
+  margin-top:22px; padding:14px 18px;
+  background:#fffbeb; border-left:4px solid var(--warn);
+  border-radius:10px; font-size:15px;
+}
+.remark strong{ color:#92400e; }
+
+.final{
+  margin-top:18px; padding:14px 18px;
+  background:#ecfdf5; border-left:4px solid var(--ok);
+  border-radius:10px;
+}
+.final::before{ content:"∎ "; color:var(--ok); font-weight:800; }
+
+/* ============================ Responsive ============================ */
+@media (max-width: 880px){
+  .app{ flex-direction:column; }
+  .sidebar{
+    width:auto; flex:none; height:auto; position:static;
+    padding:16px 14px 18px;
+  }
+  .brand{ margin-bottom:12px; }
+  #menu{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; }
+  #menu::-webkit-scrollbar{ height:6px; }
+  #menu::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.2); border-radius:6px; }
+  .nav-btn{ width:auto; flex:0 0 auto; margin-bottom:0; white-space:nowrap; }
+  .nav-title{ display:none; }
+  .sidebar-foot{ display:none; }
+  .content{ padding:22px 16px 70px; }
+  .rule-head h2{ font-size:21px; }
+  .badge{ width:52px;height:52px;flex-basis:52px;font-size:22px;border-radius:15px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ==================== MENU VERTICAL ==================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">÷</div>
+      <div>
+        <h1>Divisibilité</h1>
+        <p>Règles &amp; démonstrations</p>
+      </div>
+    </div>
+
+    <div class="nav-title">Choisir un diviseur</div>
+    <nav id="menu">
+      <button class="nav-btn active" data-rule="2"><span class="num">2</span> Divisibilité par 2</button>
+      <button class="nav-btn" data-rule="3"><span class="num">3</span> Divisibilité par 3</button>
+      <button class="nav-btn" data-rule="5"><span class="num">5</span> Divisibilité par 5</button>
+      <button class="nav-btn" data-rule="7"><span class="num">7</span> Divisibilité par 7</button>
+      <button class="nav-btn" data-rule="11"><span class="num">11</span> Divisibilité par 11</button>
+      <button class="nav-btn" data-rule="13"><span class="num">13</span> Divisibilité par 13</button>
+      <button class="nav-btn" data-rule="17"><span class="num">17</span> Divisibilité par 17</button>
+      <button class="nav-btn" data-rule="19"><span class="num">19</span> Divisibilité par 19</button>
+      <button class="nav-btn" data-rule="23"><span class="num">23</span> Divisibilité par 23</button>
+    </nav>
+
+    <div class="sidebar-foot">
+      9 règles · démonstrations rigoureuses<br>
+      Chaque preuve utilise les congruences&nbsp;: l'outil idéal.
+    </div>
+  </aside>
+
+  <!-- ==================== CONTENU ==================== -->
+  <main class="content">
+
+    <!-- ======================= RÈGLE 2 ======================= -->
+    <section class="rule active" id="rule-2">
+      <div class="rule-head">
+        <div class="badge">2</div>
+        <div>
+          <h2>Divisibilité par 2</h2>
+          <p>Le critère du chiffre des unités pair.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Un entier naturel $N$ est divisible par $2$ si et seulement si son chiffre des unités appartient à $\{0,\,2,\,4,\,6,\,8\}$.</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="2"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $4\,738$ : le chiffre des unités est $8$, qui est pair, donc $2 \mid 4738$. En effet $4738 = 2 \times 2369$.</li>
+          <li><span class="no">✗</span> $4\,735$ : le chiffre des unités est $5$, qui est impair, donc $2 \nmid 4735$.</li>
+          <li><span class="ok">✓</span> $1\,234\,560$ : le chiffre des unités est $0$, donc $2 \mid 1234560$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-2"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-2">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Soit $N$ un entier naturel. On note $r$ son <strong>chiffre des unités</strong> et $q$ l'entier formé par tous les autres chiffres. Par définition même de l'écriture décimale :</p>
+        <p>\[ N = 10q + r \qquad \text{avec } r \in \{0,1,2,\dots,9\}. \]</p>
+        <p><em>Exemple :</em> pour $N = 4738$, on a $q = 473$ et $r = 8$, et l'on vérifie bien $4738 = 10 \times 473 + 8$.</p>
+
+        <h4>Étape 2 — Réduction modulo 2</h4>
+        <p>Le nombre $10q$ s'écrit $10q = 2 \times 5q$ : c'est donc un multiple de $2$. Autrement dit,</p>
+        <p>\[ 10q \equiv 0 \pmod 2. \]</p>
+        <p>En reportant cette information dans l'égalité $N = 10q + r$, on obtient :</p>
+        <p>\[ N = 10q + r \equiv 0 + r \equiv r \pmod 2. \]</p>
+        <p>Ainsi $N$ et $r$ ont <strong>le même reste</strong> dans la division euclidienne par $2$.</p>
+
+        <h4>Étape 3 — Conclusion</h4>
+        <p>On en déduit l'équivalence :</p>
+        <div class="keybox">
+          <p>\[ 2 \mid N \iff 2 \mid r \iff r \in \{0,2,4,6,8\}. \]</p>
+        </div>
+        <p>Autrement dit : $N$ est pair si et seulement si son chiffre des unités est pair. <span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Remarque.</strong> Ce raisonnement fonctionne parce que $2 \mid 10$. C'est exactement la même idée qui donnera la règle de divisibilité par $5$ (puisque $5 \mid 10$) : seul le chiffre des unités peut influencer la divisibilité.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 3 ======================= -->
+    <section class="rule" id="rule-3">
+      <div class="rule-head">
+        <div class="badge">3</div>
+        <div>
+          <h2>Divisibilité par 3</h2>
+          <p>Le critère de la somme des chiffres.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Un entier naturel $N$ est divisible par $3$ si et seulement si la <strong>somme de ses chiffres</strong> est divisible par $3$.</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="3"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $5\,412$ : somme $= 5+4+1+2 = 12$, et $3 \mid 12$, donc $3 \mid 5412$ ($5412 = 3 \times 1804$).</li>
+          <li><span class="no">✗</span> $4\,738$ : somme $= 4+7+3+8 = 22$, et $3 \nmid 22$, donc $3 \nmid 4738$.</li>
+          <li><span class="ok">✓</span> $7\,302$ : somme $= 12$, donc $3 \mid 7302$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-3"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-3">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Écriture décimale</h4>
+        <p>Soit $N$ un entier naturel dont l'écriture décimale possède $n+1$ chiffres :</p>
+        <p>\[ N = d_n 10^n + d_{n-1}10^{n-1} + \cdots + d_1 \cdot 10 + d_0 = \sum_{k=0}^{n} d_k\,10^k, \]</p>
+        <p>où chaque $d_k$ est un chiffre compris entre $0$ et $9$. La <strong>somme des chiffres</strong> de $N$ est le nombre</p>
+        <p>\[ S = d_n + d_{n-1} + \cdots + d_1 + d_0 = \sum_{k=0}^{n} d_k. \]</p>
+
+        <h4>Étape 2 — La clé : $10 \equiv 1 \pmod 3$</h4>
+        <p>On a $10 = 3 \times 3 + 1$, donc $10 \equiv 1 \pmod 3$. En élevant cette congruence à la puissance $k$ (ce qui est légitime), on obtient :</p>
+        <p>\[ 10^k \equiv 1^k \equiv 1 \pmod 3 \qquad \text{pour tout entier } k \geqslant 0. \]</p>
+        <p>C'est le point crucial : <em>toutes les puissances de $10$ valent $1$ modulo $3$</em>.</p>
+
+        <h4>Étape 3 — Sommation</h4>
+        <p>En multipliant par $d_k$ puis en sommant sur $k$, on obtient :</p>
+        <p>\[ N = \sum_{k=0}^{n} d_k\,10^k \equiv \sum_{k=0}^{n} d_k \cdot 1 = \sum_{k=0}^{n} d_k = S \pmod 3. \]</p>
+        <p>Le nombre $N$ et la somme de ses chiffres ont donc <strong>le même reste modulo $3$</strong>.</p>
+
+        <h4>Étape 4 — Conclusion</h4>
+        <div class="keybox">
+          <p>\[ 3 \mid N \iff N \equiv 0 \pmod 3 \iff S \equiv 0 \pmod 3 \iff 3 \mid S. \]</p>
+        </div>
+        <p>La règle est démontrée. <span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Remarque (et bonus).</strong> Le même raisonnement vaut pour $9$, car $10 \equiv 1 \pmod 9$ également. On obtient ainsi la règle : <em>$9 \mid N$ si et seulement si $9$ divise la somme des chiffres de $N$</em>. Plus généralement, ce critère fonctionne pour tout diviseur de $9$, c'est-à-dire pour $3$ et $9$.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 5 ======================= -->
+    <section class="rule" id="rule-5">
+      <div class="rule-head">
+        <div class="badge">5</div>
+        <div>
+          <h2>Divisibilité par 5</h2>
+          <p>Le chiffre des unités vaut 0 ou 5.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Un entier naturel $N$ est divisible par $5$ si et seulement si son chiffre des unités est $0$ ou $5$.</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="5"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $4\,735$ : chiffre des unités $=5$, donc $5 \mid 4735$ ($4735 = 5 \times 947$).</li>
+          <li><span class="ok">✓</span> $2\,340$ : chiffre des unités $=0$, donc $5 \mid 2340$.</li>
+          <li><span class="no">✗</span> $4\,738$ : chiffre des unités $=8 \notin \{0,5\}$, donc $5 \nmid 4738$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-5"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-5">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Écrivons $N = 10q + r$, où $r \in \{0,1,\dots,9\}$ est le chiffre des unités de $N$ et $q$ l'entier formé des chiffres restants.</p>
+
+        <h4>Étape 2 — Réduction modulo 5</h4>
+        <p>Le nombre $10q$ est égal à $5 \times 2q$ : c'est un multiple de $5$. Donc</p>
+        <p>\[ 10q \equiv 0 \pmod 5. \]</p>
+        <p>Par suite :</p>
+        <p>\[ N = 10q + r \equiv 0 + r \equiv r \pmod 5. \]</p>
+        <p>Les entiers $N$ et $r$ ont le même reste modulo $5$ : la divisibilité de $N$ par $5$ ne dépend que de $r$.</p>
+
+        <h4>Étape 3 — Conclusion</h4>
+        <p>Parmi les chiffres $0,1,\dots,9$, seuls $0$ et $5$ sont divisibles par $5$. Donc :</p>
+        <div class="keybox">
+          <p>\[ 5 \mid N \iff 5 \mid r \iff r \in \{0,5\}. \]</p>
+        </div>
+        <p><span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Remarque.</strong> On peut regrouper les règles par $2$ et par $5$ dans un énoncé unique : comme $10 = 2 \times 5$, tout diviseur de $10$ (soit $1, 2, 5, 10$) donne un critère portant uniquement sur le chiffre des unités.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 7 ======================= -->
+    <section class="rule" id="rule-7">
+      <div class="rule-head">
+        <div class="badge">7</div>
+        <div>
+          <h2>Divisibilité par 7</h2>
+          <p>On retire le double du dernier chiffre.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Soit $N = 10a + b$ avec $b \in \{0,\dots,9\}$ son chiffre des unités. Alors</p>
+        <p>\[ 7 \mid N \iff 7 \mid (a - 2b). \]</p>
+        <p>Autrement dit : on sépare le dernier chiffre, on le double, et on le <strong>retranche</strong> du nombre restant.</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="7"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $4\,081$ : $a = 408$, $b = 1$, donc $a - 2b = 408 - 2 = 406$, et $406 = 7 \times 58$. Donc $7 \mid 4081$ (en effet $4081 = 7 \times 583$).</li>
+          <li><span class="no">✗</span> $1\,234$ : $a = 123$, $b = 4$, $a - 2b = 115$, et $7 \nmid 115$, donc $7 \nmid 1234$.</li>
+          <li><span class="ok">✓</span> On peut répéter : $406 \to 40 - 2\times 6 = 28 = 7\times 4$, donc $7 \mid 406$, donc $7 \mid 4081$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-7"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-7">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Soit $N$ un entier naturel. On l'écrit sous la forme</p>
+        <p>\[ N = 10a + b, \qquad b \in \{0,1,\dots,9\}, \qquad a = \left\lfloor \frac{N}{10} \right\rfloor. \]</p>
+        <p><em>Exemple :</em> pour $N = 4081$, on a $a = 408$ et $b = 1$.</p>
+
+        <h4>Étape 2 — L'identité clé</h4>
+        <p>L'idée est de fabriquer une expression qui contient $N$ à un multiple de $7$ près. Calculons $10(a - 2b)$ :</p>
+        <p>\[ 10(a - 2b) = 10a - 20b = \underbrace{(10a + b)}_{=\,N} - 21b = N - 21b. \]</p>
+        <p>Or $21 = 3 \times 7$, donc $21b$ est un multiple de $7$. On en déduit la congruence :</p>
+        <div class="keybox">
+          <p>\[ 10(a-2b) = N - 21b \equiv N \pmod 7. \]</p>
+        </div>
+
+        <h4>Étape 3 — Le lemme de Gauss</h4>
+        <p><strong>Lemme de Gauss.</strong> Si $d \mid mn$ et si $\gcd(d, m) = 1$, alors $d \mid n$.</p>
+        <p><em>Justification rapide :</em> comme $d$ et $m$ sont premiers entre eux, le théorème de Bézout fournit des entiers $u,v$ tels que $um + vd = 1$. En multipliant par $n$ : $umn + vdn = n$. Or $d$ divise $umn$ (par hypothèse) et $vdn$ (évidemment), donc $d \mid n$.</p>
+        <p>Ici, prenons $d = 7$ et $m = 10$. Comme $\gcd(7,10) = 1$, et comme $7 \mid 10(a-2b)$ dès que $7 \mid N$, le lemme donne :</p>
+        <p>\[ 7 \mid N \implies 7 \mid (a - 2b). \]</p>
+
+        <h4>Étape 4 — La réciproque</h4>
+        <p>Réciproquement, supposons $7 \mid (a - 2b)$. Alors $7 \mid 10(a-2b)$, donc $7 \mid \bigl(N - 21b\bigr)$. Comme $7 \mid 21b$, on conclut $7 \mid N$.</p>
+
+        <h4>Étape 5 — Conclusion</h4>
+        <div class="keybox">
+          <p>\[ \boxed{\;7 \mid N \iff 7 \mid (a - 2b)\;} \]</p>
+        </div>
+        <p>Cette transformation <em>réduit strictement la taille</em> du nombre (on passe de $N$ à un nombre environ $5$ fois plus petit), ce qui permet de répéter l'opération jusqu'à tomber sur un nombre dont on reconnaît la divisibilité par $7$. <span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Pourquoi le coefficient $2$ ?</strong> On cherche un entier $k$ tel que $10k \equiv \pm 1 \pmod 7$. Ici $10 \times 2 = 20 = 21 - 1 \equiv -1 \pmod 7$, d'où le signe « $-$ » et le coefficient $2$. On aurait aussi pu choisir $k = 5$ (car $10 \times 5 = 50 = 49 + 1 \equiv 1 \pmod 7$), ce qui donne la variante $7 \mid N \iff 7 \mid (a + 5b)$, équivalente puisque $5 \equiv -2 \pmod 7$.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 11 ======================= -->
+    <section class="rule" id="rule-11">
+      <div class="rule-head">
+        <div class="badge">11</div>
+        <div>
+          <h2>Divisibilité par 11</h2>
+          <p>La somme alternée des chiffres.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Un entier naturel $N$ est divisible par $11$ si et seulement si la <strong>somme alternée de ses chiffres</strong> (en partant de la droite, avec le signe $+$ pour le chiffre des unités) est divisible par $11$.</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="11"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $91\,839$ : $9 - 3 + 8 - 1 + 9 = 22 = 2 \times 11$, donc $11 \mid 91839$ ($91839 = 11 \times 8349$).</li>
+          <li><span class="no">✗</span> $4\,738$ : $8 - 3 + 7 - 4 = 8$, et $11 \nmid 8$, donc $11 \nmid 4738$.</li>
+          <li><span class="ok">✓</span> $2\,728$ : $8 - 2 + 7 - 2 = 11$, donc $11 \mid 2728$ ($2728 = 11 \times 248$).</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-11"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-11">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Écriture décimale</h4>
+        <p>Soit $N = \displaystyle\sum_{k=0}^{n} d_k\,10^k$ l'écriture décimale de $N$, où $d_0$ est le chiffre des unités, $d_1$ celui des dizaines, etc.</p>
+
+        <h4>Étape 2 — La clé : $10 \equiv -1 \pmod{11}$</h4>
+        <p>On a $10 = 11 - 1$, donc</p>
+        <p>\[ 10 \equiv -1 \pmod{11}. \]</p>
+        <p>En élevant à la puissance $k$ :</p>
+        <p>\[ 10^k \equiv (-1)^k \pmod{11} = \begin{cases} +1 & \text{si } k \text{ est pair},\\[2pt] -1 & \text{si } k \text{ est impair}.\end{cases} \]</p>
+
+        <h4>Étape 3 — Sommation</h4>
+        <p>En multipliant par $d_k$ et en sommant :</p>
+        <p>\[ N = \sum_{k=0}^{n} d_k\,10^k \equiv \sum_{k=0}^{n} (-1)^k d_k \pmod{11}. \]</p>
+        <p>Ce dernier nombre s'écrit explicitement :</p>
+        <div class="keybox">
+          <p>\[ A = d_0 - d_1 + d_2 - d_3 + d_4 - \cdots \]</p>
+        </div>
+        <p>C'est exactement la <strong>somme alternée des chiffres</strong>, en partant du chiffre des unités affecté du signe $+$.</p>
+
+        <h4>Étape 4 — Conclusion</h4>
+        <p>Puisque $N \equiv A \pmod{11}$, les deux nombres ont le même reste modulo $11$. Donc :</p>
+        <div class="keybox">
+          <p>\[ 11 \mid N \iff 11 \mid A. \]</p>
+        </div>
+        <p><span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Astuce de calcul.</strong> Comme $11 \mid 22$ et $11 \mid -11$, on peut remplacer $A$ par n'importe quel nombre congru à $A$ modulo $11$. Par exemple, si $A = 22$, on conclut immédiatement. Si $A = 8$, comme $8 \not\equiv 0 \pmod{11}$, la réponse est non.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 13 ======================= -->
+    <section class="rule" id="rule-13">
+      <div class="rule-head">
+        <div class="badge">13</div>
+        <div>
+          <h2>Divisibilité par 13</h2>
+          <p>On ajoute le quadruple du dernier chiffre.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Soit $N = 10a + b$ avec $b \in \{0,\dots,9\}$ son chiffre des unités. Alors</p>
+        <p>\[ 13 \mid N \iff 13 \mid (a + 4b). \]</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="13"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $2\,899$ : $a = 289$, $b = 9$, donc $a + 4b = 289 + 36 = 325 = 13 \times 25$. Donc $13 \mid 2899$ ($2899 = 13 \times 223$).</li>
+          <li><span class="no">✗</span> $4\,738$ : $a = 473$, $b = 8$, $a + 4b = 505$, et $13 \nmid 505$, donc $13 \nmid 4738$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-13"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-13">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Soit $N$ un entier naturel, écrit sous la forme</p>
+        <p>\[ N = 10a + b, \qquad b \in \{0,1,\dots,9\}, \qquad a = \left\lfloor \frac{N}{10} \right\rfloor. \]</p>
+        <p><em>Exemple :</em> pour $N = 2899$, on a $a = 289$ et $b = 9$.</p>
+
+        <h4>Étape 2 — L'identité clé</h4>
+        <p>On cherche un petit entier $k$ tel que $10k$ soit congru à $\pm 1$ modulo $13$. Or</p>
+        <p>\[ 10 \times 4 = 40 = 3 \times 13 + 1 \equiv 1 \pmod{13}. \]</p>
+        <p>Le bon coefficient est donc $k = 4$, avec un signe $+$. Calculons :</p>
+        <p>\[ 10(a + 4b) = 10a + 40b = \underbrace{(10a + b)}_{=\,N} + 39b = N + 39b. \]</p>
+        <p>Or $39 = 3 \times 13$, donc $39b$ est un multiple de $13$. D'où :</p>
+        <div class="keybox">
+          <p>\[ 10(a+4b) = N + 39b \equiv N \pmod{13}. \]</p>
+        </div>
+
+        <h4>Étape 3 — Lemme de Gauss</h4>
+        <p><strong>Lemme.</strong> Si $d \mid mn$ et $\gcd(d,m)=1$, alors $d \mid n$.</p>
+        <p>Ici $d = 13$ et $m = 10$, et $\gcd(13,10) = 1$. Si $13 \mid N$, alors $13 \mid 10(a+4b)$, donc par le lemme : $13 \mid (a + 4b)$.</p>
+
+        <h4>Étape 4 — Réciproque</h4>
+        <p>Si $13 \mid (a + 4b)$, alors $13 \mid 10(a+4b) = N + 39b$. Comme $13 \mid 39b$, on obtient $13 \mid N$.</p>
+
+        <h4>Étape 5 — Conclusion</h4>
+        <div class="keybox">
+          <p>\[ \boxed{\;13 \mid N \iff 13 \mid (a + 4b)\;} \]</p>
+        </div>
+        <p><span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Interprétation.</strong> Le nombre $k = 4$ est l'inverse de $10$ modulo $13$ : c'est l'unique entier de $\{1,\dots,12\}$ tel que $10k \equiv 1 \pmod{13}$. La méthode se généralise à tout diviseur $d$ premier avec $10$.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 17 ======================= -->
+    <section class="rule" id="rule-17">
+      <div class="rule-head">
+        <div class="badge">17</div>
+        <div>
+          <h2>Divisibilité par 17</h2>
+          <p>On retranche le quintuple du dernier chiffre.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Soit $N = 10a + b$ avec $b \in \{0,\dots,9\}$ son chiffre des unités. Alors</p>
+        <p>\[ 17 \mid N \iff 17 \mid (a - 5b). \]</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="17"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $2\,091$ : $a = 209$, $b = 1$, donc $a - 5b = 209 - 5 = 204 = 17 \times 12$. Donc $17 \mid 2091$ ($2091 = 17 \times 123$).</li>
+          <li><span class="no">✗</span> $4\,738$ : $a = 473$, $b = 8$, $a - 5b = 473 - 40 = 433$, et $17 \nmid 433$, donc $17 \nmid 4738$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-17"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-17">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Écrivons $N = 10a + b$ avec $b \in \{0,1,\dots,9\}$ le chiffre des unités et $a = \lfloor N/10 \rfloor$.</p>
+        <p><em>Exemple :</em> pour $N = 2091$, on a $a = 209$ et $b = 1$.</p>
+
+        <h4>Étape 2 — L'identité clé</h4>
+        <p>Cherchons $k$ tel que $10k \equiv \pm 1 \pmod{17}$. Or</p>
+        <p>\[ 10 \times 5 = 50 = 3 \times 17 - 1 \equiv -1 \pmod{17}. \]</p>
+        <p>Le coefficient est $k = 5$, avec un signe « $-$ ». Calculons :</p>
+        <p>\[ 10(a - 5b) = 10a - 50b = \underbrace{(10a + b)}_{=\,N} - 51b = N - 51b. \]</p>
+        <p>Or $51 = 3 \times 17$, donc $51b$ est un multiple de $17$. D'où :</p>
+        <div class="keybox">
+          <p>\[ 10(a-5b) = N - 51b \equiv N \pmod{17}. \]</p>
+        </div>
+
+        <h4>Étape 3 — Lemme de Gauss</h4>
+        <p><strong>Lemme.</strong> Si $d \mid mn$ et $\gcd(d,m)=1$, alors $d \mid n$.</p>
+        <p>Avec $d = 17$, $m = 10$ et $\gcd(17,10)=1$ : si $17 \mid N$ alors $17 \mid 10(a-5b)$, donc $17 \mid (a-5b)$.</p>
+
+        <h4>Étape 4 — Réciproque</h4>
+        <p>Si $17 \mid (a-5b)$, alors $17 \mid 10(a-5b) = N - 51b$. Comme $17 \mid 51b$, on conclut $17 \mid N$.</p>
+
+        <h4>Étape 5 — Conclusion</h4>
+        <div class="keybox">
+          <p>\[ \boxed{\;17 \mid N \iff 17 \mid (a - 5b)\;} \]</p>
+        </div>
+        <p><span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Vérification numérique.</strong> Pour $N = 2091$ : $a - 5b = 209 - 5 = 204$, et $204 = 17 \times 12$, donc $17 \mid 204$, donc $17 \mid 2091$. En effet $2091 \div 17 = 123$.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 19 ======================= -->
+    <section class="rule" id="rule-19">
+      <div class="rule-head">
+        <div class="badge">19</div>
+        <div>
+          <h2>Divisibilité par 19</h2>
+          <p>On ajoute le double du dernier chiffre.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Soit $N = 10a + b$ avec $b \in \{0,\dots,9\}$ son chiffre des unités. Alors</p>
+        <p>\[ 19 \mid N \iff 19 \mid (a + 2b). \]</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="19"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $4\,446$ : $a = 444$, $b = 6$, donc $a + 2b = 444 + 12 = 456 = 19 \times 24$. Donc $19 \mid 4446$ ($4446 = 19 \times 234$).</li>
+          <li><span class="no">✗</span> $4\,738$ : $a = 473$, $b = 8$, $a + 2b = 489$, et $19 \nmid 489$, donc $19 \nmid 4738$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-19"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-19">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Écrivons $N = 10a + b$ avec $b \in \{0,1,\dots,9\}$ le chiffre des unités et $a = \lfloor N/10 \rfloor$.</p>
+        <p><em>Exemple :</em> pour $N = 4446$, on a $a = 444$ et $b = 6$.</p>
+
+        <h4>Étape 2 — L'identité clé</h4>
+        <p>Cherchons $k$ tel que $10k \equiv \pm 1 \pmod{19}$. Or</p>
+        <p>\[ 10 \times 2 = 20 = 19 + 1 \equiv 1 \pmod{19}. \]</p>
+        <p>Le coefficient est $k = 2$, avec un signe $+$. Calculons :</p>
+        <p>\[ 10(a + 2b) = 10a + 20b = \underbrace{(10a + b)}_{=\,N} + 19b = N + 19b. \]</p>
+        <p>Or $19b$ est évidemment un multiple de $19$. D'où :</p>
+        <div class="keybox">
+          <p>\[ 10(a+2b) = N + 19b \equiv N \pmod{19}. \]</p>
+        </div>
+
+        <h4>Étape 3 — Lemme de Gauss</h4>
+        <p><strong>Lemme.</strong> Si $d \mid mn$ et $\gcd(d,m)=1$, alors $d \mid n$.</p>
+        <p>Avec $d = 19$, $m = 10$ et $\gcd(19,10)=1$ : si $19 \mid N$ alors $19 \mid 10(a+2b)$, donc $19 \mid (a+2b)$.</p>
+
+        <h4>Étape 4 — Réciproque</h4>
+        <p>Si $19 \mid (a+2b)$, alors $19 \mid 10(a+2b) = N + 19b$. Comme $19 \mid 19b$, on conclut $19 \mid N$.</p>
+
+        <h4>Étape 5 — Conclusion</h4>
+        <div class="keybox">
+          <p>\[ \boxed{\;19 \mid N \iff 19 \mid (a + 2b)\;} \]</p>
+        </div>
+        <p><span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Vérification numérique.</strong> Pour $N = 4446$ : $a + 2b = 444 + 12 = 456$, et $456 = 19 \times 24$, donc $19 \mid 456$, donc $19 \mid 4446$. En effet $4446 \div 19 = 234$.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= RÈGLE 23 ======================= -->
+    <section class="rule" id="rule-23">
+      <div class="rule-head">
+        <div class="badge">23</div>
+        <div>
+          <h2>Divisibilité par 23</h2>
+          <p>On ajoute le septuple du dernier chiffre.</p>
+        </div>
+      </div>
+
+      <div class="card theo">
+        <h3>Théorème</h3>
+        <p>Soit $N = 10a + b$ avec $b \in \{0,\dots,9\}$ son chiffre des unités. Alors</p>
+        <p>\[ 23 \mid N \iff 23 \mid (a + 7b). \]</p>
+      </div>
+
+      <div class="card">
+        <h3>Illustration</h3>
+        <canvas data-rule="23"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Exemples</h3>
+        <ul class="examples">
+          <li><span class="ok">✓</span> $7\,935$ : $a = 793$, $b = 5$, donc $a + 7b = 793 + 35 = 828 = 23 \times 36$. Donc $23 \mid 7935$ ($7935 = 23 \times 345$).</li>
+          <li><span class="no">✗</span> $4\,738$ : $a = 473$, $b = 8$, $a + 7b = 473 + 56 = 529$, et $23 \mid 529$ ($529 = 23 \times 23$) — donc $23 \mid 4738$ ! Vérification : $4738 = 23 \times 206$.</li>
+        </ul>
+      </div>
+
+      <button class="demo-btn" data-target="proof-23"><span class="chev">▶</span><span class="label">Démonstration</span></button>
+
+      <div class="proof" id="proof-23">
+        <h3>Démonstration complète</h3>
+
+        <h4>Étape 1 — Notations</h4>
+        <p>Écrivons $N = 10a + b$ avec $b \in \{0,1,\dots,9\}$ le chiffre des unités et $a = \lfloor N/10 \rfloor$.</p>
+        <p><em>Exemple :</em> pour $N = 7935$, on a $a = 793$ et $b = 5$.</p>
+
+        <h4>Étape 2 — L'identité clé</h4>
+        <p>Cherchons $k$ tel que $10k \equiv \pm 1 \pmod{23}$. Or</p>
+        <p>\[ 10 \times 7 = 70 = 3 \times 23 + 1 \equiv 1 \pmod{23}. \]</p>
+        <p>Le coefficient est $k = 7$, avec un signe $+$. Calculons :</p>
+        <p>\[ 10(a + 7b) = 10a + 70b = \underbrace{(10a + b)}_{=\,N} + 69b = N + 69b. \]</p>
+        <p>Or $69 = 3 \times 23$, donc $69b$ est un multiple de $23$. D'où :</p>
+        <div class="keybox">
+          <p>\[ 10(a+7b) = N + 69b \equiv N \pmod{23}. \]</p>
+        </div>
+
+        <h4>Étape 3 — Lemme de Gauss</h4>
+        <p><strong>Lemme.</strong> Si $d \mid mn$ et $\gcd(d,m)=1$, alors $d \mid n$.</p>
+        <p>Avec $d = 23$, $m = 10$ et $\gcd(23,10)=1$ : si $23 \mid N$ alors $23 \mid 10(a+7b)$, donc $23 \mid (a+7b)$.</p>
+
+        <h4>Étape 4 — Réciproque</h4>
+        <p>Si $23 \mid (a+7b)$, alors $23 \mid 10(a+7b) = N + 69b$. Comme $23 \mid 69b$, on conclut $23 \mid N$.</p>
+
+        <h4>Étape 5 — Conclusion</h4>
+        <div class="keybox">
+          <p>\[ \boxed{\;23 \mid N \iff 23 \mid (a + 7b)\;} \]</p>
+        </div>
+        <p><span class="final"></span></p>
+
+        <div class="remark">
+          <strong>Vérification numérique.</strong> Pour $N = 7935$ : $a + 7b = 793 + 35 = 828$, et $828 = 23 \times 36$, donc $23 \mid 828$, donc $23 \mid 7935$. En effet $7935 \div 23 = 345$.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT : navigation, démonstrations, dessins canvas
+     ============================================================ -->
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Palette pour le canvas ---------- */
+  const C = {
+    boxFill:   "#eef2f7",
+    boxStroke: "#cbd5e1",
+    lastFill:  "#ffe4c7",
+    lastStroke:"#f59e0b",
+    altFill:   "#e0e7ff",
+    altStroke: "#818cf8",
+    ink:       "#0f172a",
+    muted:     "#64748b",
+    accent:    "#2563eb",
+    ok:        "#059669",
+    warn:      "#b45309",
+    line:      "#cbd5e1"
+  };
+  const FONT = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const BW = 40, BH = 48, GAP = 7;   // dimensions d'une case-chiffre
+
+  /* ---------- Utilitaires de dessin ---------- */
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function arrowDown(ctx, x, y1, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(x, y1);
+    ctx.lineTo(x, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y2 + 7);
+    ctx.lineTo(x - 6, y2 - 1);
+    ctx.lineTo(x + 6, y2 - 1);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* Dessine une rangée de cases-chiffres.
+     styles[i] : "n" (normal) | "last" (mis en valeur) | "alt" (alterné) */
+  function digitRow(ctx, x, y, digits, styles) {
+    const centers = [];
+    let cx = x;
+    for (let i = 0; i < digits.length; i++) {
+      const st = styles[i] || "n";
+      roundRect(ctx, cx, y, BW, BH, 9);
+      if (st === "last")      { ctx.fillStyle = C.lastFill; ctx.strokeStyle = C.lastStroke; }
+      else if (st === "alt")  { ctx.fillStyle = C.altFill;  ctx.strokeStyle = C.altStroke; }
+      else                    { ctx.fillStyle = C.boxFill;  ctx.strokeStyle = C.boxStroke; }
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = C.ink;
+      ctx.font = "bold 24px " + FONT;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(digits[i], cx + BW / 2, y + BH / 2 + 1);
+
+      centers.push(cx + BW / 2);
+      cx += BW + GAP;
+    }
+    return { width: cx - GAP - x, centers: centers };
+  }
+
+  function centeredRow(ctx, w, y, digits, styles) {
+    const total = digits.length * BW + (digits.length - 1) * GAP;
+    return digitRow(ctx, (w - total) / 2, y, digits, styles);
+  }
+
+  /* Petit "peigne" qui relie les chiffres à une ligne horizontale */
+  function comb(ctx, centers, yFrom, yLine, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i = 0; i < centers.length; i++) {
+      ctx.moveTo(centers[i], yFrom);
+      ctx.lineTo(centers[i], yLine);
+    }
+    ctx.moveTo(centers[0], yLine);
+    ctx.lineTo(centers[centers.length - 1], yLine);
+    ctx.stroke();
+  }
+
+  function text(ctx, str, x, y, opts) {
+    opts = opts || {};
+    ctx.fillStyle = opts.color || C.ink;
+    ctx.font = (opts.bold ? "bold " : "") + (opts.size || 15) + "px " + FONT;
+    ctx.textAlign = opts.align || "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(str, x, y);
+  }
+
+  /* ---------- Préparation du canvas (HiDPI) ---------- */
+  function prepare(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth || 700;
+    const h = canvas.clientHeight || 275;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    return { ctx: ctx, w: w, h: h };
+  }
+
+  /* =========================================================
+     DESSIN 1 : règles 2 et 5 (critère sur le chiffre des unités)
+     ========================================================= */
+  function drawUnitDigit(canvas, key) {
+    const p = prepare(canvas), ctx = p.ctx, w = p.w;
+
+    const config = {
+      "2": { N: "4738", b: "8", set: "{0, 2, 4, 6, 8}", verdict: "4738 est divisible par 2" },
+      "5": { N: "4735", b: "5", set: "{0, 5}",         verdict: "4735 est divisible par 5" }
+    }[key];
+
+    const digits = config.N.split("");
+    const styles = digits.map(function (_, i) {
+      return i === digits.length - 1 ? "last" : "n";
+    });
+
+    const row = centeredRow(ctx, w, 24, digits, styles);
+    const lx = row.centers[row.centers.length - 1];
+
+    arrowDown(ctx, lx, 24 + BH + 6, 24 + BH + 34, C.lastStroke);
+
+    text(ctx, "Chiffre des unités : r = " + config.b, w / 2, 24 + BH + 52,
+         { bold: true, size: 16, color: C.warn });
+
+    text(ctx, "r = " + config.b + "  appartient à  " + config.set,
+         w / 2, 24 + BH + 88, { size: 16 });
+
+    // Bandeau de conclusion
+    const bw = Math.min(w - 40, 420);
+    const bx = (w - bw) / 2;
+    const by = 24 + BH + 112;
+    roundRect(ctx, bx, by, bw, 46, 12);
+    ctx.fillStyle = "#ecfdf5";
+    ctx.strokeStyle = "#6ee7b7";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+    text(ctx, config.verdict, w / 2, by + 23, { bold: true, size: 16.5, color: C.ok });
+  }
+
+  /* =========================================================
+     DESSIN 2 : règle 3 (somme des chiffres)
+     ========================================================= */
+  function drawRule3(canvas) {
+    const p = prepare(canvas), ctx = p.ctx, w = p.w;
+
+    const digits = "5412".split("");
+    const styles = digits.map(function () { return "n"; });
+    const row = centeredRow(ctx, w, 24, digits, styles);
+
+    const yLine = 24 + BH + 34;
+    comb(ctx, row.centers, 24 + BH + 4, yLine, C.line);
+
+    const cx = (row.centers[0] + row.centers[row.centers.length - 1]) / 2;
+    arrowDown(ctx, cx, yLine, yLine + 26, C.accent);
+
+    text(ctx, "5 + 4 + 1 + 2 = 12", w / 2, yLine + 48,
+         { bold: true, size: 17, color: C.accent });
+
+    text(ctx, "12 = 3 × 4   donc   3 divise 12", w / 2, yLine + 82, { size: 15.5 });
+
+    const bw = Math.min(w - 40, 420);
+    const bx = (w - bw) / 2;
+    const by = yLine + 104;
+    roundRect(ctx, bx, by, bw, 46, 12);
+    ctx.fillStyle = "#ecfdf5";
+    ctx.strokeStyle = "#6ee7b7";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+    text(ctx, "Donc 3 divise 5412", w / 2, by + 23, { bold: true, size: 16.5, color: C.ok });
+  }
+
+  /* =========================================================
+     DESSIN 3 : règle 11 (somme alternée)
+     ========================================================= */
+  function drawRule11(canvas) {
+    const p = prepare(canvas), ctx = p.ctx, w = p.w;
+
+    const digits = "91839".split("");
+    const signs = ["+", "−", "+", "−", "+"];
+    const styles = digits.map(function (_, i) {
+      return i % 2 === 0 ? "alt" : "n";
+    });
+
+    const row = centeredRow(ctx, w, 32, digits, styles);
+
+    // signes au-dessus des cases
+    for (let i = 0; i < row.centers.length; i++) {
+      text(ctx, signs[i], row.centers[i], 16,
+           { bold: true, size: 18, color: i % 2 === 0 ? C.accent : C.muted });
+    }
+
+    const yLine = 32 + BH + 32;
+    comb(ctx, row.centers, 32 + BH + 4, yLine, C.line);
+
+    const cx = (row.centers[0] + row.centers[row.centers.length - 1]) / 2;
+    arrowDown(ctx, cx, yLine, yLine + 24, C.accent);
+
+    text(ctx, "9 − 1 + 8 − 3 + 9 = 22", w / 2, yLine + 46,
+         { bold: true, size: 17, color: C.accent });
+
+    text(ctx, "22 = 11 × 2   donc   11 divise 22", w / 2, yLine + 80, { size: 15.5 });
+
+    const bw = Math.min(w - 40, 420);
+    const bx = (w - bw) / 2;
+    const by = yLine + 102;
+    roundRect(ctx, bx, by, bw, 46, 12);
+    ctx.fillStyle = "#ecfdf5";
+    ctx.strokeStyle = "#6ee7b7";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+    text(ctx, "Donc 11 divise 91839", w / 2, by + 23, { bold: true, size: 16.5, color: C.ok });
+  }
+
+  /* =========================================================
+     DESSIN 4 : règles 7, 13, 17, 19, 23 (dernier chiffre)
+     ========================================================= */
+  const LAST_DIGIT = {
+    "7":  { N: "4081", k: 2, op: "−" },
+    "13": { N: "2899", k: 4, op: "+" },
+    "17": { N: "2091", k: 5, op: "−" },
+    "19": { N: "4446", k: 2, op: "+" },
+    "23": { N: "7935", k: 7, op: "+" }
+  };
+
+  function drawLastDigit(canvas, key) {
+    const cfg = LAST_DIGIT[key];
+    const d = parseInt(key, 10);
+    const p = prepare(canvas), ctx = p.ctx, w = p.w;
+
+    const digits = cfg.N.split("");
+    const styles = digits.map(function (_, i) {
+      return i === digits.length - 1 ? "last" : "n";
+    });
+
+    const row = centeredRow(ctx, w, 22, digits, styles);
+    const n = digits.length;
+    const cA = (row.centers[0] + row.centers[n - 2]) / 2;
+    const cB = row.centers[n - 1];
+
+    // séparateur pointillé entre "a" et "b"
+    const sepX = (row.centers[n - 2] + row.centers[n - 1]) / 2;
+    ctx.save();
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(sepX, 16);
+    ctx.lineTo(sepX, 22 + BH + 6);
+    ctx.stroke();
+    ctx.restore();
+
+    // étiquettes a et b
+    text(ctx, "a = " + cfg.N.slice(0, -1), cA, 22 + BH + 22,
+         { bold: true, size: 15, color: C.accent });
+    text(ctx, "b = " + cfg.N.slice(-1), cB, 22 + BH + 22,
+         { bold: true, size: 15, color: C.warn });
+
+    const a = parseInt(cfg.N.slice(0, -1), 10);
+    const b = parseInt(cfg.N.slice(-1), 10);
+    const res = cfg.op === "+" ? a + cfg.k * b : a - cfg.k * b;
+
+    const opStr = cfg.op === "+" ? "+" : "−";
+    const line1 = "a " + opStr + " " + cfg.k + "·b  =  " + a + " " + opStr + " " +
+                  cfg.k + "×" + b + "  =  " + res;
+
+    text(ctx, line1, w / 2, 22 + BH + 64, { bold: true, size: 17, color: C.accent });
+
+    text(ctx, res + " = " + d + " × " + (res / d), w / 2, 22 + BH + 98, { size: 16 });
+
+    // bandeau de conclusion
+    const bw = Math.min(w - 40, 440);
+    const bx = (w - bw) / 2;
+    const by = 22 + BH + 122;
+    roundRect(ctx, bx, by, bw, 46, 12);
+    ctx.fillStyle = "#ecfdf5";
+    ctx.strokeStyle = "#6ee7b7";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+    text(ctx, "Donc " + d + " divise " + cfg.N, w / 2, by + 23,
+         { bold: true, size: 16.5, color: C.ok });
+  }
+
+  /* ---------- Aiguillage ---------- */
+  function drawCanvas(canvas, key) {
+    if (!canvas || !canvas.clientWidth) return;
+    if (key === "2" || key === "5")      drawUnitDigit(canvas, key);
+    else if (key === "3")                drawRule3(canvas);
+    else if (key === "11")               drawRule11(canvas);
+    else if (LAST_DIGIT[key])            drawLastDigit(canvas, key);
+  }
+
+  /* =========================================================
+     NAVIGATION + DÉMONSTRATIONS
+     ========================================================= */
+  const navButtons = Array.prototype.slice.call(document.querySelectorAll(".nav-btn"));
+  const sections   = Array.prototype.slice.call(document.querySelectorAll(".rule"));
+
+  function activate(key) {
+    sections.forEach(function (s) {
+      s.classList.toggle("active", s.id === "rule-" + key);
+    });
+    navButtons.forEach(function (b) {
+      b.classList.toggle("active", b.dataset.rule === key);
+    });
+    const canvas = document.querySelector("#rule-" + key + " canvas");
+    if (canvas) {
+      requestAnimationFrame(function () { drawCanvas(canvas, key); });
+    }
+  }
+
+  navButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      activate(btn.dataset.rule);
+    });
+  });
+
+  /* Boutons "Démonstration" */
+  document.querySelectorAll(".demo-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const proof = document.getElementById(btn.dataset.target);
+      if (!proof) return;
+
+      const isOpen = proof.classList.toggle("open");
+      btn.classList.toggle("open", isOpen);
+      btn.querySelector(".label").textContent = isOpen
+        ? "Masquer la démonstration"
+        : "Démonstration";
+
+      if (isOpen && window.MathJax && typeof window.MathJax.typesetPromise === "function") {
+        window.MathJax.typesetPromise([proof]).catch(function () { /* silencieux */ });
+      }
+    });
+  });
+
+  /* Redessin au redimensionnement */
+  let resizeTimer = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      const active = document.querySelector(".nav-btn.active");
+      if (!active) return;
+      const canvas = document.querySelector("#rule-" + active.dataset.rule + " canvas");
+      if (canvas) drawCanvas(canvas, active.dataset.rule);
+    }, 120);
+  });
+
+  /* Premier affichage */
+  function boot() {
+    activate("2");
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+  window.addEventListener("load", function () {
+    const active = document.querySelector(".nav-btn.active");
+    if (active) {
+      const canvas = document.querySelector("#rule-" + active.dataset.rule + " canvas");
+      if (canvas) drawCanvas(canvas, active.dataset.rule);
+    }
+  });
+})();
+</script>
+</body>
+</html>

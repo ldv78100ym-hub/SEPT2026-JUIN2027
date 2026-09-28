@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taux d'accroissement — Générateur d'exercices</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(','\\)']],
+      displayMath: [['\\[','\\]']]
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<style>
+  :root{
+    --bg:#eef2f9; --card:#ffffff; --ink:#16202f; --muted:#64748b;
+    --accent:#2f6df6; --accent2:#0ea36b; --border:#dbe3f0; --soft:#f4f7fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    background:linear-gradient(180deg,#eef2f9 0%,#e4ebf7 45%,#eef2f9 100%);
+    color:var(--ink); line-height:1.62; padding:26px 14px 70px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:1.45rem;text-align:center;margin:0 0 6px;font-weight:700;letter-spacing:.2px}
+  .subtitle{text-align:center;color:var(--muted);font-size:.92rem;margin:0 0 22px}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:20px 22px;margin-bottom:18px;
+    box-shadow:0 8px 26px rgba(30,50,90,.07);
+  }
+  .lead{font-size:1.06rem}
+  .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+  button{
+    font:inherit;font-weight:600;border-radius:11px;padding:10px 20px;cursor:pointer;
+    transition:transform .08s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+    border:none;
+  }
+  button:active{transform:translateY(1px)}
+  #btnNew{background:var(--accent);color:#fff;box-shadow:0 5px 14px rgba(47,109,246,.32)}
+  #btnNew:hover{background:#2359d6}
+  #btnSol{background:#fff;color:var(--accent);border:2px solid var(--accent)}
+  #btnSol:hover{background:#eef4ff}
+
+  #solution{padding:6px 22px 22px}
+  .step{
+    border-left:4px solid var(--accent);
+    background:var(--soft);
+    border-radius:0 12px 12px 0;
+    padding:14px 18px 6px;
+    margin:18px 0;
+  }
+  .step h3{
+    margin:0 0 8px;font-size:1rem;color:#1b3a80;font-weight:700;
+    letter-spacing:.2px;text-transform:none;
+  }
+  .step p{margin:.45em 0}
+  .step ol,.step ul{margin:.4em 0 .8em 1.1em;padding:0}
+  .step li{margin:.25em 0}
+  .rappel{
+    background:#fffbee;border:1px solid #f2e2b0;border-radius:10px;
+    padding:10px 14px;margin:.4em 0 .8em;
+  }
+  .meth{color:#7a4b00}
+  .final{
+    background:#eafaf2;border:1px solid #b7e8d0;border-radius:12px;
+    padding:12px 16px;margin-top:10px;
+  }
+  .final h3{color:#0b6b47}
+  code{background:#eef2fa;padding:1px 5px;border-radius:4px}
+
+  #graphCard{padding:10px}
+  canvas{display:block;width:100%;height:340px;border-radius:12px;background:#fdfefe}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);padding:6px 12px 2px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:22px;height:0;border-top-width:3px;border-top-style:solid;display:inline-block}
+  .sw.curve{border-color:#2f6df6}
+  .sw.sec{border-color:#e8890c;border-top-style:dashed}
+  .sw.tan{border-color:#0ea36b;border-top-style:dotted}
+
+  /* ---------- Pied de page ---------- */
+  .footer{text-align:center;margin-top:26px;padding:8px 0 4px;display:flex;justify-content:center}
+  #btnLicense{
+    background:#fff;color:#475569;border:1px solid var(--border);
+    font-size:.88rem;padding:9px 18px;
+  }
+  #btnLicense:hover{background:#f4f7fd;color:var(--accent);border-color:var(--accent)}
+
+  /* ---------- Modale ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,25,45,.55);
+    display:none;align-items:center;justify-content:center;
+    padding:18px;z-index:1000;
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+    animation:fadeIn .18s ease;
+  }
+  .overlay.open{display:flex}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:#fff;border-radius:16px;max-width:680px;width:100%;
+    max-height:calc(100vh - 36px);overflow:auto;
+    padding:26px 28px 24px;position:relative;
+    box-shadow:0 22px 60px rgba(15,25,45,.35);
+    animation:popIn .2s ease;
+  }
+  @keyframes popIn{from{transform:translateY(8px) scale(.98);opacity:.6}to{transform:none;opacity:1}}
+  .modal h2{margin:0 0 4px;font-size:1.12rem;color:#1b3a80;font-weight:700;padding-right:36px}
+  .modal .meta{color:var(--muted);font-size:.9rem;margin:0 0 16px}
+  .modal h3{margin:20px 0 8px;font-size:1rem;color:#1b3a80;font-weight:700}
+  .modal p{margin:.5em 0}
+  .modal ul{margin:.4em 0 .8em 1.15em;padding:0}
+  .modal li{margin:.35em 0}
+  .modal .box{
+    background:#fffbee;border:1px solid #f2e2b0;border-radius:10px;
+    padding:10px 14px;margin:.5em 0 1em;
+  }
+  #modalClose{
+    position:absolute;top:12px;right:12px;width:34px;height:34px;
+    border-radius:50%;background:#f1f5fb;color:#475569;font-size:1.1rem;
+    line-height:1;padding:0;display:flex;align-items:center;justify-content:center;
+  }
+  #modalClose:hover{background:#e2ebf7;color:#1b3a80}
+
+  @media (max-width:560px){
+    .card{padding:16px 15px}
+    #solution{padding:4px 15px 18px}
+    h1{font-size:1.2rem}
+    .modal{padding:22px 18px 20px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Taux d'accroissement &nbsp;\(T(h)=\dfrac{f(a+h)-f(a)}{h}\)</h1>
+  <p class="subtitle">Générateur d'exercices — polynômes, fractions rationnelles, racines carrées et mélanges</p>
+
+  <div class="card">
+    <div id="statement"></div>
+    <div class="btns">
+      <button id="btnNew" type="button">Nouvel exemple</button>
+      <button id="btnSol" type="button">Solution</button>
+    </div>
+  </div>
+
+  <div class="card" id="graphCard">
+    <canvas id="graph"></canvas>
+    <div class="legend">
+      <span><i class="sw curve"></i> courbe de \(f\)</span>
+      <span><i class="sw sec"></i> sécante (illustration avec \(h=1\))</span>
+      <span><i class="sw tan"></i> tangente (limite quand \(h\to 0\))</span>
+    </div>
+  </div>
+
+  <div class="card" id="solution" hidden></div>
+
+  <div class="footer">
+    <button id="btnLicense" type="button">⚖️ Droits d'auteur &amp; licence</button>
+  </div>
+</div>
+
+<div class="overlay" id="licenseOverlay" role="dialog" aria-modal="true" aria-labelledby="licenseTitle" hidden>
+  <div class="modal" role="document">
+    <button id="modalClose" type="button" aria-label="Fermer">✕</button>
+    <h2 id="licenseTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p class="meta" id="licenseMeta">Auteur : Yann Merdy (yann.merdy@gmail.com) — <span id="licenseDate">Juin 2026</span></p>
+
+    <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+    « <em>Générateur d'exercices — Taux d'accroissement</em> » sont la propriété
+    intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+
+    <h3>Conditions</h3>
+    <ul>
+      <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> vous êtes autorisé·e
+        à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins
+        personnelles, éducatives et non lucratives.</li>
+      <li><strong>Utilisation Commerciale (Interdite) :</strong> toute utilisation, distribution,
+        intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales,
+        lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et
+        explicite de l'auteur.</li>
+      <li><strong>Attribution :</strong> toute reproduction ou modification doit conserver la mention
+        de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+    </ul>
+
+    <div class="box">
+      <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter
+      l'auteur à l'adresse indiquée ci-dessus.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   R = String.raw : pour toute chaîne contenant du LaTeX.
+   ========================================================================= */
+const R = String.raw;
+
+/* =========================================================================
+   1. Arithmétique exacte sur les fractions
+   ========================================================================= */
+function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while(b){ const t = a % b; a = b; b = t; } return a || 1; }
+function fr(n, d = 1){
+  if(d === 0) throw new Error('division par zéro');
+  if(d < 0){ n = -n; d = -d; }
+  const g = gcd(n, d);
+  return { n: n / g, d: d / g };
+}
+const Fadd = (x,y) => fr(x.n*y.d + y.n*x.d, x.d*y.d);
+const Fsub = (x,y) => fr(x.n*y.d - y.n*x.d, x.d*y.d);
+const Fmul = (x,y) => fr(x.n*y.n, x.d*y.d);
+const Fval = x => x.n / x.d;
+const Fz   = x => x.n === 0;
+
+/* =========================================================================
+   2. Affichage exact d'une fraction : \dfrac{} ou décimale
+   ========================================================================= */
+function decStr(f){
+  if(f.d === 1) return String(f.n);
+  let d = f.d, a2 = 0, b5 = 0;
+  while(d % 2 === 0){ d /= 2; a2++; }
+  while(d % 5 === 0){ d /= 5; b5++; }
+  if(d !== 1) return ftex(f);
+  const k = Math.max(a2, b5);
+  const mult = Math.pow(2, k - a2) * Math.pow(5, k - b5);
+  const m = Math.abs(f.n) * mult;
+  const str = String(m).padStart(k + 1, '0');
+  const intPart  = str.slice(0, -k) || '0';
+  const fracPart = str.slice(-k).replace(/0+$/, '');
+  const sign = f.n < 0 ? '-' : '';
+  if(fracPart === '') return sign + intPart;
+  return sign + intPart + ',' + fracPart;
+}
+function fmtNum (x, dec){ return dec ? decStr(x) : ftex(x); }
+function fmtNumS(x, dec){ return dec ? decStr(x) : ftexS(x); }
+
+function ftex(x){
+  if(x.d === 1) return String(x.n);
+  return x.n < 0 ? `-\\dfrac{${-x.n}}{${x.d}}` : `\\dfrac{${x.n}}{${x.d}}`;
+}
+function ftexS(x){
+  if(x.d === 1) return String(x.n);
+  return x.n < 0 ? `-\\frac{${-x.n}}{${x.d}}` : `\\frac{${x.n}}{${x.d}}`;
+}
+
+function exprTex(terms, dec){
+  let s = '';
+  for(const t of terms){
+    if(Fz(t.c)) continue;
+    const neg = t.c.n < 0;
+    const a = fr(Math.abs(t.c.n), t.c.d);
+    let body;
+    if(t.v === '')                     body = fmtNum(a, dec);
+    else if(a.n === 1 && a.d === 1)    body = t.v;
+    else                               body = fmtNum(a, dec) + t.v;
+    if(s === '') s = (neg ? '-' : '') + body;
+    else         s += (neg ? ' - ' : ' + ') + body;
+  }
+  return s === '' ? '0' : s;
+}
+function joinTerms(arr){
+  let s = '';
+  for(const t of arr){
+    if(s === '') s = t;
+    else if(t.startsWith('-')) s += ' - ' + t.slice(1);
+    else s += ' + ' + t;
+  }
+  return s === '' ? '0' : s;
+}
+function mulTex(coef, inner){
+  if(coef === 1)  return inner;
+  if(coef === -1) return '-' + inner;
+  return coef + inner;
+}
+
+function polyTexX(c, v, wrap){
+  const vp = wrap ? `\\left(${v}\\right)` : v;
+  let s = '';
+  for(let k = c.length - 1; k >= 0; k--){
+    const co = c[k];
+    if(!co) continue;
+    const abs = Math.abs(co);
+    let body;
+    if(k === 0)      body = String(abs);
+    else if(k === 1) body = (abs === 1 ? '' : abs) + vp;
+    else             body = (abs === 1 ? '' : abs) + vp + `^{${k}}`;
+    if(s === '') s = (co < 0 ? '-' : '') + body;
+    else         s += (co < 0 ? ' - ' : ' + ') + body;
+  }
+  return s === '' ? '0' : s;
+}
+
+function bTerm(b){ return b === 0 ? '' : (b > 0 ? ` + ${b}` : ` - ${-b}`); }
+function sqrtTexX(b, v){ return `\\sqrt{${v}${bTerm(b)}}`; }
+
+function sqrtNumTex(s, dec){
+  const nd = s.n * s.d;
+  if(nd >= 0){
+    const rn = Math.round(Math.sqrt(nd));
+    if(rn * rn === nd){
+      const r = fr(rn, s.d);
+      return dec ? decStr(r) : ftexS(r);
+    }
+  }
+  if(dec) return `\\sqrt{${decStr(s)}}`;
+  return `\\sqrt{${ftexS(s)}}`;
+}
+
+function ratNumTex(b, v, wrap){
+  const { m, n } = b;
+  const vp = wrap ? `\\left(${v}\\right)` : v;
+  if(m === 0) return (n < 0 ? `-${-n}` : String(n));
+  let s = (m === 1 ? vp : (m === -1 ? '-' + vp : m + vp));
+  if(n > 0)      s += ` + ${n}`;
+  else if(n < 0) s += ` - ${-n}`;
+  return s;
+}
+function ratDenTex(b, v, wrap){
+  const { p } = b;
+  const vp = wrap ? `\\left(${v}\\right)` : v;
+  if(p === 0) return vp;
+  return `${vp} ${p > 0 ? '-' : '+'} ${Math.abs(p)}`;
+}
+function ratTexX(b, v, wrap){
+  return `\\dfrac{${ratNumTex(b, v, wrap)}}{${ratDenTex(b, v, wrap)}}`;
+}
+
+/* =========================================================================
+   3. Générateurs aléatoires
+   ========================================================================= */
+const rnd     = n => Math.floor(Math.random() * n);
+const pick    = arr => arr[rnd(arr.length)];
+const randInt = (a, b) => a + rnd(b - a + 1);
+
+function genA(){
+  const t = pick(['int','int','frac','frac','dec']);
+  if(t === 'int'){
+    let n = randInt(-15, 15);
+    if(n === 0) n = pick([-4,-3,-2,-1,1,2,3,4]);
+    return { a: fr(n), kind: 'int' };
+  }
+  if(t === 'frac'){
+    const d = pick([2,3,4,5]);
+    let a;
+    do { a = fr(randInt(-5*d, 5*d), d); } while(a.d === 1);
+    return { a, kind: 'frac' };
+  }
+  let v = randInt(-1900, 1900);
+  if(v % 100 === 0) v += pick([-1,1]) * pick([7,13,25,41]);
+  if(v === 0) v = 25;
+  return { a: fr(v, 100), kind: 'dec' };
+}
+
+function aLatex(a, kind){
+  if(kind === 'int')  return String(a.n);
+  if(kind === 'frac') return ftex(a);
+  return decStr(a);
+}
+
+function genSqrtBlock(a){
+  const av = Fval(a);
+  const b = Math.ceil(1 - av) + randInt(0, 3);
+  return { kind: 'sqrt', b };
+}
+function genRatBlock(a){
+  const av = Fval(a);
+  const m = pick([0,0,1,2,-1,-2]);
+  let n = randInt(-5, 5);
+  if(n === 0) n = pick([1,-1,2,-2]);
+  let p;
+  do {
+    p = randInt(-6, 6);
+  } while(Math.abs(p - av) < 1.0001 || (m * p + n) === 0);
+  return { kind: 'rat', m, n, p };
+}
+
+function genExercise(){
+  const { a, kind: aKind } = genA();
+  const type = pick(['poly','poly','poly','rat','rat','rat',
+                     'sqrt','sqrt','sqrtpoly','sqrtpoly','sqrtrat','sqrtrat']);
+
+  let blocks = [];
+  if(type === 'poly'){
+    const deg = pick([2,3,3]);
+    const c = [0,0,0,0];
+    c[deg] = pick([1,-1,2,-2,3]);
+    for(let k = 0; k < deg; k++) c[k] = pick([0,1,-1,2,-2,3,-3]);
+    blocks = [{ kind: 'poly', c }];
+  } else if(type === 'rat'){
+    blocks = [genRatBlock(a)];
+  } else if(type === 'sqrt'){
+    blocks = [genSqrtBlock(a)];
+  } else if(type === 'sqrtpoly'){
+    const c = [0,0,0,0];
+    c[2] = pick([1,-1,2]);
+    c[1] = pick([0,1,-1,2]);
+    c[0] = pick([0,0,1,-1]);
+    blocks = [{ kind: 'poly', c }, genSqrtBlock(a)];
+  } else {
+    blocks = [genRatBlock(a), genSqrtBlock(a)];
+  }
+
+  return { a, aKind, blocks, type, fn: makeFn(blocks) };
+}
+
+function makeFn(blocks){
+  return function(x){
+    let s = 0;
+    for(const b of blocks){
+      if(b.kind === 'poly'){
+        let v = 0;
+        for(let k = 0; k < b.c.length; k++) v += b.c[k] * Math.pow(x, k);
+        s += v;
+      } else if(b.kind === 'rat'){
+        const den = x - b.p;
+        if(Math.abs(den) < 1e-12) return NaN;
+        s += (b.m * x + b.n) / den;
+      } else {
+        const u = x + b.b;
+        if(u < 0) return NaN;
+        s += Math.sqrt(u);
+      }
+    }
+    return s;
+  };
+}
+
+/* =========================================================================
+   4. Calculs symboliques
+   ========================================================================= */
+function blockTex(b){
+  if(b.kind === 'poly') return polyTexX(b.c, 'x', false);
+  if(b.kind === 'sqrt') return sqrtTexX(b.b, 'x');
+  return ratTexX(b, 'x', false);
+}
+function blockTexAt(b, v, wrap){
+  if(b.kind === 'poly') return polyTexX(b.c, v, wrap);
+  if(b.kind === 'sqrt') return sqrtTexX(b.b, v);
+  return ratTexX(b, v, wrap);
+}
+
+function polyDelta(c, a){
+  const c1 = fr(c[1] || 0), c2 = fr(c[2] || 0), c3 = fr(c[3] || 0);
+  const a2 = Fmul(a, a);
+  const A1 = Fadd(Fadd(c1, Fmul(c2, Fmul(fr(2), a))), Fmul(c3, Fmul(fr(3), a2)));
+  const A2 = Fadd(c2, Fmul(c3, Fmul(fr(3), a)));
+  const A3 = c3;
+  return { A1, A2, A3 };
+}
+
+function blockQuotient(b, a, dec){
+  if(b.kind === 'poly'){
+    const d = polyDelta(b.c, a);
+    const terms = [{c: d.A1, v: ''}, {c: d.A2, v: 'h'}, {c: d.A3, v: 'h^{2}'}];
+    const nz = terms.filter(t => !Fz(t.c)).length;
+    return { tex: exprTex(terms, dec), multi: nz > 1 };
+  }
+  if(b.kind === 'rat'){
+    const { m, n, p } = b;
+    const K = -(m * p + n);
+    const u = Fsub(a, fr(p));
+    if(dec){
+      const u2 = Fmul(u, u);
+      const den = exprTex([{c: u2, v: ''}, {c: u, v: 'h'}], true);
+      return { tex: `\\dfrac{${K}}{${den}}`, multi: false };
+    }
+    const al = u.n, be = u.d;
+    const num = K * be * be;
+    const den = exprTex([{c: fr(al*al), v: ''}, {c: fr(al*be), v: 'h'}], false);
+    return { tex: `\\dfrac{${num}}{${den}}`, multi: false };
+  }
+  const s = Fadd(a, fr(b.b));
+  const sStr  = fmtNumS(s, dec);
+  const sRoot = sqrtNumTex(s, dec);
+  const hRoot = Fz(s) ? '\\sqrt{h}' : `\\sqrt{h + ${sStr}}`;
+  return { tex: `\\dfrac{1}{${hRoot} + ${sRoot}}`, multi: false };
+}
+
+/* =========================================================================
+   5. Construction de la solution
+   ========================================================================= */
+function stepHTML(title, body){
+  return `<div class="step"><h3>${title}</h3>${body}</div>`;
+}
+
+function polyDiffHTML(c, a, dec){
+  const a2 = Fmul(a, a);
+  const twoA = Fmul(fr(2), a);
+  const threeA = Fmul(fr(3), a);
+  const threeA2 = Fmul(fr(3), a2);
+  const d = polyDelta(c, a);
+  const P = polyTexX(c, 'x', false);
+
+  let out = '';
+  out += '<p><strong>Terme polynomial :</strong> \\(P(x) = ' + P + '\\).</p>';
+  out += R`<p>On développe grâce aux identités remarquables
+    \((a+h)^2=a^2+2ah+h^2\) et \((a+h)^3=a^3+3a^2h+3ah^2+h^3\).</p>`;
+
+  const terms = [];
+  if(c[1]) terms.push(mulTex(c[1], 'h'));
+  if(c[2]) terms.push(mulTex(c[2], '\\left(' + exprTex([{c: twoA, v: 'h'}, {c: fr(1), v: 'h^{2}'}], dec) + '\\right)'));
+  if(c[3]) terms.push(mulTex(c[3], '\\left(' + exprTex([{c: threeA2, v: 'h'}, {c: threeA, v: 'h^{2}'}, {c: fr(1), v: 'h^{3}'}], dec) + '\\right)'));
+
+  out += '\\[ P(a+h)-P(a) = ' + joinTerms(terms) + ' \\]';
+  out += '\\[ = ' + exprTex([{c: d.A1, v: 'h'}, {c: d.A2, v: 'h^{2}'}, {c: d.A3, v: 'h^{3}'}], dec)
+       + ' = h\\left(' + exprTex([{c: d.A1, v: ''}, {c: d.A2, v: 'h'}, {c: d.A3, v: 'h^{2}'}], dec) + '\\right) \\]';
+  out += R`<p>On divise alors par \(h\) (\(h\neq 0\)) :</p>`;
+  out += '\\[ \\dfrac{P(a+h)-P(a)}{h} = '
+       + exprTex([{c: d.A1, v: ''}, {c: d.A2, v: 'h'}, {c: d.A3, v: 'h^{2}'}], dec) + ' \\]';
+  return out;
+}
+
+/* -------------------------------------------------------------------------
+   Terme rationnel : aucune introduction de paramètre littéral.
+   On travaille directement avec les nombres de la fonction concrète.
+   ------------------------------------------------------------------------- */
+function ratDiffHTML(b, a, dec){
+  const { m, n, p } = b;
+  const K  = -(m * p + n);        // constante : coefficient de h au numérateur
+  const u  = Fsub(a, fr(p));      // u = a - p
+  const u2 = Fmul(u, u);          // u²
+
+  const numF = ratNumTex(b, 'a+h', true);
+  const denF = ratDenTex(b, 'a+h', true);
+  const numA = ratNumTex(b, 'a', false);
+  const denA = ratDenTex(b, 'a', false);
+
+  const Kabs = Math.abs(K);
+  const sign = K < 0 ? '-' : '';
+  const Kstr = (Kabs === 1) ? '' : String(Kabs);  // « h » si K = 1 ou -1
+  const uVal = fmtNum(u, dec);
+  const denExpanded = exprTex([{c: u2, v: ''}, {c: u, v: 'h'}], dec);
+
+  let out = '';
+  out += '<p><strong>Terme rationnel :</strong> \\(R(x) = ' + ratTexX(b, 'x', false) + '\\).</p>';
+  out += R`<p><strong>Rappel :</strong> pour soustraire deux fractions, on les met au même
+    dénominateur : \(\dfrac{A}{B}-\dfrac{C}{D}=\dfrac{AD-BC}{BD}\).</p>`;
+
+  out += '\\[ R(a+h)-R(a) = \\dfrac{' + numF + '}{' + denF + '} - \\dfrac{' + numA + '}{' + denA + '} \\]';
+  out += '\\[ = \\dfrac{\\left(' + numF + '\\right)\\left(' + denA + '\\right) - \\left('
+       + numA + '\\right)\\left(' + denF + '\\right)}{\\left(' + denF + '\\right)\\left(' + denA + '\\right)} \\]';
+
+  out += R`<p>En développant le numérateur, les termes en \(a^2\) et en \(a\) s'éliminent ;
+    il ne reste que le terme en \(h\) :</p>`;
+
+  out += '\\[ = \\dfrac{' + sign + Kstr + 'h}{\\left(' + denF + '\\right)\\left(' + denA + '\\right)} \\]';
+
+  out += '<p>Or \\(' + denA + ' = ' + uVal + '\\), d\'où :</p>';
+  out += '\\[ = \\dfrac{' + sign + Kstr + 'h}{' + denExpanded + '} \\]';
+
+  out += R`<p>On divise par \(h\) :</p>`;
+  out += '\\[ \\dfrac{R(a+h)-R(a)}{h} = \\dfrac{' + String(K) + '}{' + denExpanded + '} \\]';
+
+  return out;
+}
+
+function sqrtDiffHTML(b, a, dec){
+  const s    = Fadd(a, fr(b.b));
+  const sStr = fmtNumS(s, dec);
+  const sRoot= sqrtNumTex(s, dec);
+  const bt   = bTerm(b.b);
+
+  const A = 'a+h' + bt;
+  const B = 'a' + bt;
+
+  let out = '';
+  out += '<p><strong>Terme avec racine carrée :</strong> \\(S(x) = ' + sqrtTexX(b.b, 'x') + '\\).</p>';
+  out += R`<p><strong>Rappel — expression conjuguée :</strong>
+    \((\sqrt{u}-\sqrt{v})(\sqrt{u}+\sqrt{v})=u-v\). On multiplie donc numérateur et dénominateur
+    par la quantité conjuguée \(\sqrt{a+h` + bt + R`}+\sqrt{a` + bt + R`}\).</p>`;
+
+  out += '\\[ S(a+h)-S(a) = \\sqrt{' + A + '} - \\sqrt{' + B + '} \\]';
+  out += '\\[ = \\dfrac{\\left(\\sqrt{' + A + '} - \\sqrt{' + B + '}\\right)\\left(\\sqrt{'
+       + A + '} + \\sqrt{' + B + '}\\right)}{\\sqrt{' + A + '} + \\sqrt{' + B + '}} \\]';
+  out += '\\[ = \\dfrac{(' + A + ')-(' + B + ')}{\\sqrt{' + A + '} + \\sqrt{' + B + '}}'
+       + ' = \\dfrac{h}{\\sqrt{' + A + '} + \\sqrt{' + B + '}} \\]';
+  out += '<p>En posant \\(s = a' + bt + ' = ' + sStr + '\\) :</p>';
+  out += '\\[ = \\dfrac{h}{\\sqrt{h + ' + sStr + '} + ' + sRoot + '} \\]';
+  out += R`<p>On divise par \(h\) :</p>`;
+  out += '\\[ \\dfrac{S(a+h)-S(a)}{h} = \\dfrac{1}{\\sqrt{h + ' + sStr + '} + ' + sRoot + '} \\]';
+  return out;
+}
+
+function buildSolution(ex){
+  const a = ex.a;
+  const dec = (ex.aKind === 'dec');
+  const aStr = aLatex(a, ex.aKind);
+  let html = '';
+
+  html += stepHTML("Rappel — taux d'accroissement", R`
+    <div class="rappel">
+      <p>Soit \(f\) une fonction définie au voisinage de \(a\). Le
+      <strong>taux d'accroissement</strong> (ou taux de variation) de \(f\) entre \(a\) et \(a+h\),
+      avec \(h\neq 0\), est le nombre :</p>
+      \[ T(h)=\dfrac{f(a+h)-f(a)}{h} \]
+      <p>Interprétation géométrique : \(T(h)\) est le <strong>coefficient directeur de la sécante</strong>
+      \((AB)\) où \(A\big(a\,;f(a)\big)\) et \(B\big(a+h\,;f(a+h)\big)\).</p>
+      <p class="meth"><strong>Méthode en 4 temps :</strong></p>
+      <ol>
+        <li>calculer \(f(a+h)\) et \(f(a)\) ;</li>
+        <li>former la différence \(f(a+h)-f(a)\) ;</li>
+        <li><strong>factoriser par \(h\)</strong> ;</li>
+        <li>diviser par \(h\).</li>
+      </ol>
+    </div>
+  `);
+
+  const faH = joinTerms(ex.blocks.map(b => blockTexAt(b, 'a+h', true)));
+  const fa  = joinTerms(ex.blocks.map(b => blockTexAt(b, 'a', false)));
+
+  html += stepHTML('Étape 1 — Calculer \\(f(a+h)\\) et \\(f(a)\\)',
+    '<p>On remplace \\(x\\) par \\(a+h\\), puis par \\(a\\).</p>'
+    + '\\[ f(a+h) = ' + faH + ' \\]'
+    + '\\[ f(a) = ' + fa + ' \\]'
+  );
+
+  let details = '';
+  for(const b of ex.blocks){
+    if(b.kind === 'poly')      details += polyDiffHTML(b.c, a, dec);
+    else if(b.kind === 'rat')  details += ratDiffHTML(b, a, dec);
+    else                       details += sqrtDiffHTML(b, a, dec);
+  }
+  html += stepHTML('Étape 2 — Différence terme par terme', details);
+
+  const qs = ex.blocks.map(b => blockQuotient(b, a, dec));
+  const qTex = joinTerms(qs.map(q => q.multi ? `\\left(${q.tex}\\right)` : q.tex));
+
+  html += stepHTML('Étape 3 — Diviser par \\(h\\)', R`
+    <p>Chaque terme de la différence est factorisable par \(h\). On simplifie donc par \(h\)
+    (\(h\neq 0\)) :</p>
+    \[ T(h)=\dfrac{f(a+h)-f(a)}{h} = ` + qTex + R` \]
+  `);
+
+  html += R`<div class="step final"><h3>Conclusion</h3>
+    <p>Le taux d'accroissement de \(f\) entre \(a=` + aStr + R`\) et \(a+h\) vaut :</p>
+    \[ \boxed{\;T(h) = ` + qTex + R`\;} \]
+    <p style="font-size:.92rem;color:#43604f">Remarque : cette expression est valable pour \(h\neq 0\)
+    (et pour les valeurs de \(h\) telles que \(f(a+h)\) soit définie).</p>
+  </div>`;
+
+  return html;
+}
+
+/* =========================================================================
+   6. Affichage de l'énoncé
+   ========================================================================= */
+function renderStatement(){
+  const ex = current;
+  const fT = joinTerms(ex.blocks.map(blockTex));
+  const aStr = aLatex(ex.a, ex.aKind);
+  document.getElementById('statement').innerHTML =
+      '<p class="lead">Soit \\(f(x) = ' + fT + '\\) &nbsp;et&nbsp; \\(a = ' + aStr + '\\).</p>'
+    + '<p>Calculer et <strong>simplifier au maximum</strong> le taux d\'accroissement :</p>'
+    + '\\[ T(h) = \\dfrac{f(a+h)-f(a)}{h} \\qquad (h\\neq 0) \\]';
+}
+
+/* =========================================================================
+   7. Dessin (canvas)
+   ========================================================================= */
+function drawGraph(ex){
+  const cv = document.getElementById('graph');
+  if(!cv) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 640;
+  const H = cv.clientHeight || 340;
+  cv.width  = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fdfefe';
+  ctx.fillRect(0, 0, W, H);
+
+  const f = ex.fn;
+  const a = Fval(ex.a);
+  const xmin = a - 2.6, xmax = a + 2.6;
+
+  let lo = Infinity, hi = -Infinity;
+  const M = 400;
+  for(let i = 0; i <= M; i++){
+    const x = a - 1.2 + 2.4 * i / M;
+    const y = f(x);
+    if(!isFinite(y)) continue;
+    if(y < lo) lo = y;
+    if(y > hi) hi = y;
+  }
+  if(!isFinite(lo)){ lo = -5; hi = 5; }
+  if(hi - lo < 1e-9){ lo -= 2; hi += 2; }
+  let span = Math.min(hi - lo, 40);
+  const mid = (lo + hi) / 2;
+  lo = mid - span / 2; hi = mid + span / 2;
+  lo -= 0.12 * span; hi += 0.12 * span;
+  span = hi - lo;
+
+  const PX = x => (x - xmin) / (xmax - xmin) * W;
+  const PY = y => H - (y - lo) / span * H;
+
+  ctx.strokeStyle = '#eef2f9';
+  ctx.lineWidth = 1;
+  for(let x = Math.ceil(xmin); x <= xmax; x += 1){
+    ctx.beginPath(); ctx.moveTo(PX(x), 0); ctx.lineTo(PX(x), H); ctx.stroke();
+  }
+  for(let i = 0; i <= 8; i++){
+    const y = lo + span * i / 8;
+    ctx.beginPath(); ctx.moveTo(0, PY(y)); ctx.lineTo(W, PY(y)); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#c3cfe3';
+  ctx.lineWidth = 1.5;
+  if(lo < 0 && hi > 0){ ctx.beginPath(); ctx.moveTo(0, PY(0)); ctx.lineTo(W, PY(0)); ctx.stroke(); }
+  if(xmin < 0 && xmax > 0){ ctx.beginPath(); ctx.moveTo(PX(0), 0); ctx.lineTo(PX(0), H); ctx.stroke(); }
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+
+  ctx.strokeStyle = '#2f6df6';
+  ctx.lineWidth = 2.4;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  const N = 900;
+  let started = false, prevY = null;
+  for(let i = 0; i <= N; i++){
+    const x = xmin + (xmax - xmin) * i / N;
+    const y = f(x);
+    if(!isFinite(y)){ started = false; prevY = null; continue; }
+    const px = PX(x), py = PY(y);
+    if(py < -20000 || py > 20000){ started = false; prevY = null; continue; }
+    if(!started){ ctx.moveTo(px, py); started = true; }
+    else {
+      if(prevY !== null && Math.abs(py - prevY) > H * 1.8) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    prevY = py;
+  }
+  ctx.stroke();
+
+  const fa = f(a), fb = f(a + 1);
+  if(isFinite(fa) && isFinite(fb)){
+    const mSec = fb - fa;
+    ctx.save();
+    ctx.strokeStyle = '#e8890c';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.moveTo(PX(xmin), PY(fa + mSec * (xmin - a)));
+    ctx.lineTo(PX(xmax), PY(fa + mSec * (xmax - a)));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const eps = 1e-6;
+  let mTan = (f(a + eps) - f(a - eps)) / (2 * eps);
+  if(!isFinite(mTan)) mTan = (f(a + eps) - fa) / eps;
+  if(isFinite(mTan) && isFinite(fa)){
+    ctx.save();
+    ctx.strokeStyle = '#0ea36b';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([2, 5]);
+    ctx.beginPath();
+    ctx.moveTo(PX(xmin), PY(fa + mTan * (xmin - a)));
+    ctx.lineTo(PX(xmax), PY(fa + mTan * (xmax - a)));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if(isFinite(fa)){
+    ctx.fillStyle = '#d6336c';
+    ctx.beginPath();
+    ctx.arc(PX(a), PY(fa), 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#8a1c46';
+    ctx.font = '600 13px Segoe UI, sans-serif';
+    ctx.fillText('A', PX(a) + 10, PY(fa) - 9);
+  }
+  ctx.restore();
+
+  ctx.fillStyle = '#8b97ab';
+  ctx.font = '12px Segoe UI, sans-serif';
+  ctx.fillText('a = ' + decStr(fr(Math.round(a * 100), 100)), 10, H - 10);
+}
+
+/* =========================================================================
+   8. Orchestration du générateur
+   ========================================================================= */
+let current = null;
+
+function typeset(el){
+  if(window.MathJax && MathJax.typesetPromise){
+    return MathJax.typesetPromise(el ? [el] : undefined)
+      .catch(e => console.warn('MathJax :', e));
+  }
+  return Promise.resolve();
+}
+
+function newExercise(){
+  current = genExercise();
+  const sol = document.getElementById('solution');
+  sol.hidden = true;
+  sol.innerHTML = '';
+  document.getElementById('btnSol').textContent = 'Solution';
+  renderStatement();
+  typeset(document.getElementById('statement'));
+  drawGraph(current);
+}
+
+async function toggleSolution(){
+  const sol = document.getElementById('solution');
+  const btn = document.getElementById('btnSol');
+  if(sol.hidden){
+    sol.innerHTML = buildSolution(current);
+    sol.hidden = false;
+    btn.textContent = 'Masquer la solution';
+    await typeset(sol);
+  } else {
+    sol.hidden = true;
+    btn.textContent = 'Solution';
+  }
+}
+
+/* =========================================================================
+   9. Modale de licence
+   ========================================================================= */
+const overlay = document.getElementById('licenseOverlay');
+const btnLicense = document.getElementById('btnLicense');
+const btnClose = document.getElementById('modalClose');
+let lastFocus = null;
+
+(function setLicenseDate(){
+  const moisFr = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const d = new Date();
+  document.getElementById('licenseDate').textContent =
+      moisFr[d.getMonth()] + ' ' + d.getFullYear();
+})();
+
+function openModal(){
+  lastFocus = document.activeElement;
+  overlay.hidden = false;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  btnClose.focus();
+}
+function closeModal(){
+  overlay.classList.remove('open');
+  overlay.hidden = true;
+  document.body.style.overflow = '';
+  if(lastFocus && lastFocus.focus) lastFocus.focus();
+}
+
+btnLicense.addEventListener('click', openModal);
+btnClose.addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if(e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+});
+
+/* =========================================================================
+   10. Démarrage
+   ========================================================================= */
+function boot(){
+  if(!(window.MathJax && MathJax.startup && MathJax.startup.promise)){
+    setTimeout(boot, 40);
+    return;
+  }
+  MathJax.startup.promise.then(() => {
+    return MathJax.typesetPromise ? MathJax.typesetPromise() : null;
+  }).then(() => {
+    document.getElementById('btnNew').addEventListener('click', newExercise);
+    document.getElementById('btnSol').addEventListener('click', toggleSolution);
+    window.addEventListener('resize', () => { if(current) drawGraph(current); });
+    newExercise();
+  }).catch(e => console.warn('Boot MathJax :', e));
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>

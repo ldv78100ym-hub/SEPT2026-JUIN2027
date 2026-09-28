@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz dynamique – Nombre dérivé et dérivation</title>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\\[','\\]']],
+    processEscapes: true
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+    background: #eef2f7; color: #1e293b; line-height: 1.6;
+    padding: 1.2rem; max-width: 1100px; margin: 0 auto;
+  }
+  header { text-align: center; margin-bottom: 1.5rem; }
+  h1 { font-size: 1.9rem; color: #0f172a; margin-bottom: 0.4rem; }
+  .subtitle { color: #475569; font-size: 0.98rem; margin-bottom: 1rem; }
+  .controls {
+    display: flex; justify-content: center; align-items: center;
+    gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem;
+  }
+  .btn-new {
+    background: linear-gradient(135deg,#2563eb,#1d4ed8);
+    color: #fff; border: none; padding: 0.7rem 1.6rem;
+    border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-new:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(37,99,235,0.4); }
+  .btn-new:active { transform: translateY(0); }
+  .badge {
+    background: #fef3c7; color: #92400e; padding: 0.4rem 0.9rem;
+    border-radius: 8px; font-weight: 600; font-size: 0.92rem;
+    border: 1px solid #fcd34d;
+  }
+  .card {
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.08);
+    padding: 1.4rem 1.6rem; margin-bottom: 1.6rem;
+    border-left: 6px solid #3b82f6;
+  }
+  .q-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.7rem;
+  }
+  .q-title { font-size: 1.15rem; font-weight: 700; color: #1e40af; }
+  .q-tag {
+    font-size: 0.75rem; background: #dbeafe; color: #1e40af;
+    padding: 0.15rem 0.6rem; border-radius: 20px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .q-prompt { font-size: 1.02rem; margin-bottom: 0.9rem; }
+  .canvas-wrap {
+    display: flex; justify-content: center; margin: 0.8rem 0;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 0.6rem; overflow-x: auto;
+  }
+  canvas { display: block; background: #fff; border-radius: 6px; }
+  .sol-btn {
+    background: #10b981; color: #fff; border: none;
+    padding: 0.55rem 1.3rem; border-radius: 8px;
+    font-size: 0.93rem; font-weight: 700; cursor: pointer;
+    margin-top: 0.4rem;
+  }
+  .sol-btn:hover { background: #059669; }
+  .sol-box {
+    display: none; margin-top: 1rem; padding: 1.1rem 1.4rem;
+    background: #f1f5f9; border-radius: 10px;
+    border-left: 5px solid #10b981; animation: fadeIn 0.3s ease;
+  }
+  .sol-box.visible { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .sol-box p { margin-bottom: 0.6rem; }
+  .sol-box ul, .sol-box ol { margin-left: 1.4rem; margin-bottom: 0.6rem; }
+  .final-answer {
+    margin-top: 1rem; padding: 0.85rem 1.1rem;
+    background: #ecfdf5; border: 2px solid #10b981;
+    border-radius: 10px; font-weight: 700; color: #064e3b;
+    text-align: center; font-size: 1rem;
+  }
+  .final-answer::before { content: "✅ "; margin-right: 0.25rem; }
+  .latex-code {
+    background: #1e293b; color: #e2e8f0; padding: 0.7rem 0.9rem;
+    border-radius: 8px; font-family: 'Courier New', monospace;
+    font-size: 0.82rem; overflow-x: auto; white-space: pre; margin: 0.6rem 0;
+  }
+  .note { font-size: 0.88rem; color: #475569; font-style: italic; }
+
+  /* ---------- Barre de navigation entre questions ---------- */
+  .quiz-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 0.8rem; flex-wrap: wrap;
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.08);
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1.6rem;
+  }
+  .btn-nav {
+    border: none; padding: 0.65rem 1.4rem;
+    border-radius: 10px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .btn-nav-next {
+    background: linear-gradient(135deg,#2563eb,#1d4ed8); color: #fff;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+  }
+  .btn-nav-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37,99,235,0.4);
+  }
+  .btn-nav-prev {
+    background: #e2e8f0; color: #334155;
+  }
+  .btn-nav-prev:hover { background: #cbd5e1; transform: translateY(-2px); }
+  .btn-nav:disabled {
+    opacity: 0.4; cursor: not-allowed; transform: none !important;
+    box-shadow: none !important;
+  }
+  .nav-progress {
+    color: #475569; font-weight: 600; font-size: 0.92rem;
+    background: #f1f5f9; padding: 0.35rem 0.85rem; border-radius: 20px;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.4rem; }
+    .card { padding: 1rem; }
+    .quiz-nav { justify-content: center; }
+  }
+
+  /* ---------- Bouton licence + modale ---------- */
+  .license-footer {
+    display: flex; justify-content: center; margin: 2rem 0 1rem;
+  }
+  .btn-license {
+    background: linear-gradient(135deg,#475569,#334155);
+    color: #fff; border: none; padding: 0.65rem 1.5rem;
+    border-radius: 10px; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(51,65,85,0.28);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: inline-flex; align-items: center; gap: 0.45rem;
+  }
+  .btn-license:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(51,65,85,0.38);
+  }
+  .btn-license:active { transform: translateY(0); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,42,0.62);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+    padding: 1rem;
+    animation: overlayIn 0.2s ease;
+  }
+  .modal-overlay.visible { display: flex; }
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal-content {
+    background: #ffffff;
+    border-radius: 14px;
+    max-width: 720px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+    padding: 1.8rem 2rem 1.6rem;
+    box-shadow: 0 20px 55px rgba(15,23,42,0.4);
+    position: relative;
+    animation: modalIn 0.3s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(22px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+  }
+  .modal-content h2 {
+    font-size: 1.28rem; color: #0f172a;
+    margin-bottom: 0.9rem; padding-right: 2rem;
+    border-bottom: 2px solid #e2e8f0; padding-bottom: 0.6rem;
+  }
+  .modal-content h3 {
+    font-size: 1.02rem; color: #1e40af;
+    margin: 1.1rem 0 0.5rem;
+  }
+  .modal-content p { margin-bottom: 0.65rem; font-size: 0.96rem; }
+  .modal-content ul { margin-left: 1.4rem; margin-bottom: 0.7rem; }
+  .modal-content li { margin-bottom: 0.5rem; font-size: 0.95rem; }
+  .modal-author {
+    background: #eff6ff; padding: 0.7rem 1rem;
+    border-radius: 8px; font-size: 0.93rem;
+    margin-bottom: 1rem; border-left: 4px solid #3b82f6;
+  }
+  .modal-close {
+    position: absolute; top: 0.7rem; right: 0.9rem;
+    background: transparent; border: none;
+    font-size: 1.7rem; line-height: 1;
+    color: #64748b; cursor: pointer;
+    width: 36px; height: 36px; border-radius: 50%;
+    transition: background 0.15s, color 0.15s;
+  }
+  .modal-close:hover { background: #fee2e2; color: #dc2626; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📐 Quiz dynamique – Nombre dérivé &amp; Dérivation</h1>
+  <p class="subtitle">Tableaux de signes et de variations rendus sur canvas (style tkz-tab).</p>
+  <div class="controls">
+    <button class="btn-new" onclick="newQuiz()">🎲 Nouveau quiz</button>
+    <span class="badge" id="varBadge">Variable : —</span>
+  </div>
+</header>
+
+<main id="quiz"></main>
+
+<!-- ================= Bouton + Modale de licence ================= -->
+<div class="license-footer">
+  <button class="btn-license" onclick="openLicense()" aria-haspopup="dialog">
+    ⚖️ Droits d'auteur &amp; Licence
+  </button>
+</div>
+
+<div class="modal-overlay" id="licenseModal" role="dialog" aria-modal="true"
+     aria-labelledby="licenseTitle" onclick="closeLicenseOnOverlay(event)">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeLicense()" aria-label="Fermer">×</button>
+    <h2 id="licenseTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p class="modal-author">
+      <strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — Juin 2026
+    </p>
+
+    <h3>Licence d'Utilisation Non Commerciale</h3>
+    <p>
+      Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+      (« <em>Quiz dynamique – Nombre dérivé &amp; Dérivation</em> ») sont la propriété
+      intellectuelle exclusive de l'auteur, Yann Merdy.
+    </p>
+
+    <h3>Conditions :</h3>
+    <ul>
+      <li>
+        <strong>Utilisation Privée et Éducative (Autorisée) :</strong>
+        Vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son
+        contenu uniquement à des fins personnelles, éducatives et non lucratives.
+      </li>
+      <li>
+        <strong>Utilisation Commerciale (Interdite) :</strong>
+        Toute utilisation, distribution, intégration ou reproduction du code ou du
+        contenu (total ou partiel) à des fins commerciales, lucratives ou
+        professionnelles est strictement interdite sans un accord écrit préalable et
+        explicite de l'auteur.
+      </li>
+      <li>
+        <strong>Attribution :</strong>
+        Toute reproduction ou modification doit conserver la mention de l'auteur
+        originale (Yann Merdy) et la présente notice de droits d'auteur.
+      </li>
+    </ul>
+
+    <p>
+      Pour toute demande d'utilisation commerciale ou de licence spécifique,
+      veuillez contacter l'auteur à l'adresse indiquée ci-dessus.
+    </p>
+  </div>
+</div>
+<!-- ================= /Modale de licence ================= -->
+
+<script>
+/* ============================================================
+   1. OUTILS GÉNÉRAUX
+   ============================================================ */
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randNonZero = (min, max) => { let n; do { n = randInt(min, max); } while (n === 0); return n; };
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a; }
+
+function toFrac(x) {
+  if (Number.isInteger(x)) return `${x}`;
+  for (let d = 2; d <= 30; d++) {
+    const n = Math.round(x * d);
+    if (Math.abs(x - n / d) < 1e-9) {
+      const g = gcd(n, d);
+      const num = n / g, den = d / g;
+      if (den === 1) return `${num}`;
+      if (num === 1) return `\\dfrac{1}{${den}}`;
+      if (num === -1) return `-\\dfrac{1}{${den}}`;
+      return `\\dfrac{${num}}{${den}}`;
+    }
+  }
+  return x.toFixed(3);
+}
+
+function parenNeg(x) { return x < 0 ? `(${x})` : `${x}`; }
+
+function tPlus(c, rest) {
+  if (c === 0) return '';
+  if (rest === undefined || rest === '') {
+    return c > 0 ? ` + ${toFrac(c)}` : ` - ${toFrac(-c)}`;
+  }
+  if (c === 1) return ` + ${rest}`;
+  if (c === -1) return ` - ${rest}`;
+  return c > 0 ? ` + ${toFrac(c)}${rest}` : ` - ${toFrac(-c)}${rest}`;
+}
+
+function joinTerms(...terms) {
+  const f = terms.filter(t => t && t.trim() !== '');
+  if (f.length === 0) return '0';
+  let s = f.join(' ');
+  if (s.startsWith('+ ')) s = s.slice(2);
+  return s;
+}
+
+function xMinusA(v, aVal, aL) {
+  const aIsInt = /^-?\d+$/.test(aL);
+  if (aIsInt) {
+    if (aVal < 0) return `${v} + ${-aVal}`;
+    if (aVal > 0) return `${v} - ${aVal}`;
+    return v;
+  }
+  return `${v} - \\left(${aL}\\right)`;
+}
+
+function polyToLatex(coeffs, v) {
+  const n = coeffs.length - 1;
+  let start = 0;
+  while (start < coeffs.length && coeffs[start] === 0) start++;
+  if (start === coeffs.length) return '0';
+  const parts = [];
+  for (let i = start; i < coeffs.length; i++) {
+    const c = coeffs[i];
+    const power = n - i;
+    if (c === 0) continue;
+    const absC = Math.abs(c);
+    let term;
+    if (power === 0) term = `${absC}`;
+    else if (power === 1) term = absC === 1 ? v : `${absC}${v}`;
+    else term = absC === 1 ? `${v}^{${power}}` : `${absC}${v}^{${power}}`;
+    if (parts.length === 0) parts.push(c < 0 ? `-${term}` : term);
+    else parts.push(c < 0 ? `- ${term}` : `+ ${term}`);
+  }
+  return parts.join(' ');
+}
+
+function polyDeriv(coeffs) {
+  const n = coeffs.length - 1;
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(coeffs[i] * (n - i));
+  return out;
+}
+
+/* ============================================================
+   2. GÉNÉRATEURS DE FONCTIONS
+   ============================================================ */
+function genPoly2(v) {
+  const a = randNonZero(-2, 2);
+  const b = randNonZero(-4, 4);
+  const c = randInt(-4, 4);
+  const coeffs = [a, b, c];
+  const dcoeffs = polyDeriv(coeffs);
+  const evalPoints = [-3, -2, -1, 0, 1, 2, 3].map(k => ({ latex: `${k}`, value: k }));
+  return {
+    type: 'poly2', kind: 'Polynôme degré 2',
+    fLatex: polyToLatex(coeffs, v), dfLatex: polyToLatex(dcoeffs, v),
+    f: x => a * x * x + b * x + c,
+    df: x => 2 * a * x + b,
+    evalPoints, domain: '\\mathbb{R}',
+    isPoly: true, coeffs, dcoeffs,
+    criticalPoint: -b / (2 * a),
+    criticalValue: (a * (-b / (2 * a)) ** 2 + b * (-b / (2 * a)) + c),
+  };
+}
+
+function genPoly3(v) {
+  const a = randNonZero(-2, 2);
+  const b = randInt(-3, 3);
+  const c = randInt(-4, 4);
+  const d = randInt(-4, 4);
+  const coeffs = [a, b, c, d];
+  const dcoeffs = polyDeriv(coeffs);
+  const evalPoints = [-2, -1, 0, 1, 2].map(k => ({ latex: `${k}`, value: k }));
+  return {
+    type: 'poly3', kind: 'Polynôme degré 3',
+    fLatex: polyToLatex(coeffs, v), dfLatex: polyToLatex(dcoeffs, v),
+    f: x => a * x ** 3 + b * x ** 2 + c * x + d,
+    df: x => 3 * a * x * x + 2 * b * x + c,
+    evalPoints, domain: '\\mathbb{R}',
+    isPoly: true, coeffs, dcoeffs,
+  };
+}
+
+function genRat11(v) {
+  const a = randNonZero(-3, 3);
+  const b = randInt(-3, 3);
+  const c = randNonZero(-2, 2);
+  const d = randInt(-3, 3);
+  const pole = -d / c;
+  const evalPoints = [-3, -2, -1, 0, 1, 2, 3]
+    .filter(k => Math.abs(c * k + d) > 0.2 && Math.abs(k - pole) > 0.2)
+    .map(k => ({ latex: `${k}`, value: k }));
+  return {
+    type: 'rat11', kind: 'Fonction rationnelle 1/1',
+    fLatex: `\\dfrac{${polyToLatex([a, b], v)}}{${polyToLatex([c, d], v)}}`,
+    dfLatex: `\\dfrac{${a * d - b * c}}{\\left(${polyToLatex([c, d], v)}\\right)^2}`,
+    f: x => (a * x + b) / (c * x + d),
+    df: x => (a * d - b * c) / ((c * x + d) ** 2),
+    evalPoints,
+    domain: `\\mathbb{R}\\setminus\\left\\{${toFrac(pole)}\\right\\}`,
+    isRational: true, numA: a, numB: b, denC: c, denD: d, pole
+  };
+}
+
+function genSin(v) {
+  const a = randNonZero(-3, 3);
+  const evalPoints = [
+    { latex: '0', value: 0, k: '0' },
+    { latex: '\\dfrac{\\pi}{2}', value: Math.PI / 2, k: 'pi2' }
+  ];
+  return {
+    type: 'sin', kind: 'Trigonométrique sin',
+    fLatex: `${a === 1 ? '' : a === -1 ? '-' : a}\\sin(${v})`,
+    dfLatex: `${a === 1 ? '' : a === -1 ? '-' : a}\\cos(${v})`,
+    f: x => a * Math.sin(x), df: x => a * Math.cos(x),
+    evalPoints, domain: '\\mathbb{R}',
+    isTrig: true, trigKind: 'sin', trigCoef: a,
+  };
+}
+
+function genCos(v) {
+  const a = randNonZero(-3, 3);
+  const evalPoints = [
+    { latex: '0', value: 0, k: '0' },
+    { latex: '\\dfrac{\\pi}{2}', value: Math.PI / 2, k: 'pi2' }
+  ];
+  return {
+    type: 'cos', kind: 'Trigonométrique cos',
+    fLatex: `${a === 1 ? '' : a === -1 ? '-' : a}\\cos(${v})`,
+    dfLatex: `${-a === 1 ? '' : -a === -1 ? '-' : -a}\\sin(${v})`,
+    f: x => a * Math.cos(x), df: x => -a * Math.sin(x),
+    evalPoints, domain: '\\mathbb{R}',
+    isTrig: true, trigKind: 'cos', trigCoef: a,
+  };
+}
+
+function genSqrt(v) {
+  const b = randInt(1, 4);
+  const evalPoints = [1, 2, 3, 4].map(k => {
+    const x = k * k - b;
+    return { latex: `${x}`, value: x, k };
+  }).filter(p => p.value >= -b && p.value <= 12);
+  return {
+    type: 'sqrt', kind: 'Racine carrée',
+    fLatex: `\\sqrt{${v} + ${b}}`,
+    dfLatex: `\\dfrac{1}{2\\sqrt{${v} + ${b}}}`,
+    f: x => Math.sqrt(x + b),
+    df: x => 1 / (2 * Math.sqrt(x + b)),
+    evalPoints,
+    domain: `[-${b}; +\\infty[`,
+    isSqrt: true, sqrtB: b,
+  };
+}
+
+const GENERATORS = [genPoly2, genPoly3, genRat11, genSin, genCos, genSqrt];
+
+/* ============================================================
+   3. CONVERSION LaTeX → texte canvas
+   ============================================================ */
+function texToCanvas(tex) {
+  let s = String(tex);
+  s = s.replace(/\\\\/g, '\\');
+  s = s.replace(/\\infty/g, '∞');
+  s = s.replace(/\\pi/g, 'π');
+  s = s.replace(/\\dfrac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2');
+  s = s.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2');
+  s = s.replace(/\\left\(/g, '(');
+  s = s.replace(/\\right\)/g, ')');
+  s = s.replace(/\\left\[/g, '[');
+  s = s.replace(/\\right\]/g, ']');
+  s = s.replace(/\\left\\\{/g, '{');
+  s = s.replace(/\\right\\\}/g, '}');
+  s = s.replace(/\\cdot/g, '·');
+  s = s.replace(/\\times/g, '×');
+  s = s.replace(/\\sqrt\{([^{}]+)\}/g, '√($1)');
+  s = s.replace(/\\sin/g, 'sin');
+  s = s.replace(/\\cos/g, 'cos');
+  s = s.replace(/\\tan/g, 'tan');
+  s = s.replace(/\\,|\\;|\\!/g, '');
+  s = s.replace(/\^\{?2\}?/g, '²');
+  s = s.replace(/\^\{?3\}?/g, '³');
+  s = s.replace(/[{}$]/g, '');
+  s = s.replace(/-/g, '−');
+  s = s.trim();
+  return s;
+}
+
+/* ============================================================
+   4. DESSIN DES TABLEAUX SUR CANVAS
+   ============================================================ */
+
+function drawSignAt(ctx, sign, x, y) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (sign === '+' || sign === '+ ') {
+    ctx.fillStyle = '#16a34a';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText('+', x, y);
+  } else if (sign === '-' || sign === '−') {
+    ctx.fillStyle = '#dc2626';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText('−', x, y);
+  } else if (sign === '0' || sign === 'z') {
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('0', x, y);
+  } else if (sign === 'd') {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y - 14); ctx.lineTo(x - 7, y + 14);
+    ctx.moveTo(x + 7, y - 14); ctx.lineTo(x + 7, y + 14);
+    ctx.stroke();
+  } else if (sign === 'h') {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+  } else if (sign === '') {
+    // rien
+  } else {
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(sign, x, y);
+  }
+}
+
+function drawArrowLine(ctx, x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2.6;
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len, uy = dy / len;
+  const headLen = 13;
+  const lineEndX = x2 - ux * headLen * 0.7;
+  const lineEndY = y2 - uy * headLen * 0.7;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(lineEndX, lineEndY);
+  ctx.stroke();
+  const angle = Math.atan2(dy, dx);
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 7),
+             y2 - headLen * Math.sin(angle - Math.PI / 7));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 7),
+             y2 - headLen * Math.sin(angle + Math.PI / 7));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCanvasSignTable(canvas, spec) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const n = spec.boundaries.length;
+  const numIntervals = n - 1;
+
+  const labelW = 95;
+  const colW = 150;
+  const headerH = 62;
+  const rowH = 68;
+  const padX = 25;
+  const padY = 25;
+
+  const totalW = labelW + numIntervals * colW + 2 * padX;
+  const totalH = headerH + spec.rows.length * rowH + 2 * padY;
+
+  canvas.width = totalW * dpr;
+  canvas.height = totalH * dpr;
+  canvas.style.width = totalW + 'px';
+  canvas.style.height = totalH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  const x0 = padX, y0 = padY;
+  const xLabelEnd = x0 + labelW;
+  const xDataStart = xLabelEnd;
+  const xDataEnd = xDataStart + numIntervals * colW;
+  const yBottom = y0 + headerH + spec.rows.length * rowH;
+
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1.6;
+  ctx.strokeRect(x0, y0, labelW + numIntervals * colW, headerH + spec.rows.length * rowH);
+
+  ctx.beginPath();
+  ctx.moveTo(x0, y0 + headerH); ctx.lineTo(xDataEnd, y0 + headerH); ctx.stroke();
+
+  for (let i = 1; i < spec.rows.length; i++) {
+    const y = y0 + headerH + i * rowH;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(xDataEnd, y); ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(xLabelEnd, y0); ctx.lineTo(xLabelEnd, yBottom); ctx.stroke();
+
+  for (let i = 1; i < n - 1; i++) {
+    const x = xDataStart + i * colW;
+    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, yBottom); ctx.stroke();
+  }
+
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spec.varName, x0 + labelW / 2, y0 + headerH / 2);
+  for (let i = 0; i < n; i++) {
+    const x = xDataStart + i * colW;
+    ctx.fillText(texToCanvas(spec.boundaries[i]), x, y0 + headerH / 2);
+  }
+
+  for (let r = 0; r < spec.rows.length; r++) {
+    const row = spec.rows[r];
+    const yRowTop = y0 + headerH + r * rowH;
+    const yCenter = yRowTop + rowH / 2;
+
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(row.label, x0 + labelW / 2, yCenter);
+
+    const numItems = 2 * n - 3;
+    for (let i = 0; i < numItems; i++) {
+      let posInColW, isBoundary;
+      if (i % 2 === 0) {
+        posInColW = i / 2 + 0.5;
+        isBoundary = false;
+      } else {
+        posInColW = (i + 1) / 2;
+        isBoundary = true;
+      }
+      const x = xDataStart + posInColW * colW;
+      const sign = row.signs[i];
+
+      if (isBoundary && sign !== '') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 18, yRowTop + 4, 36, rowH - 8);
+      }
+      drawSignAt(ctx, sign, x, yCenter);
+    }
+  }
+}
+
+function drawCanvasVariationTable(canvas, spec) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const n = spec.boundaries.length;
+  const numIntervals = n - 1;
+  const hasSignRow = !!spec.signRow;
+
+  const labelW = 95;
+  const colW = 155;
+  const headerH = 62;
+  const signRowH = 60;
+  const varRowH = 100;
+  const padX = 25;
+  const padY = 25;
+
+  const totalW = labelW + numIntervals * colW + 2 * padX;
+  const totalH = headerH + (hasSignRow ? signRowH : 0) + varRowH + 2 * padY;
+
+  canvas.width = totalW * dpr;
+  canvas.height = totalH * dpr;
+  canvas.style.width = totalW + 'px';
+  canvas.style.height = totalH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  const x0 = padX, y0 = padY;
+  const xLabelEnd = x0 + labelW;
+  const xDataStart = xLabelEnd;
+  const xDataEnd = xDataStart + numIntervals * colW;
+  const yBottom = y0 + headerH + (hasSignRow ? signRowH : 0) + varRowH;
+
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1.6;
+  ctx.strokeRect(x0, y0, labelW + numIntervals * colW,
+                 headerH + (hasSignRow ? signRowH : 0) + varRowH);
+
+  ctx.beginPath();
+  ctx.moveTo(x0, y0 + headerH); ctx.lineTo(xDataEnd, y0 + headerH); ctx.stroke();
+
+  if (hasSignRow) {
+    const y = y0 + headerH + signRowH;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(xDataEnd, y); ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(xLabelEnd, y0); ctx.lineTo(xLabelEnd, yBottom); ctx.stroke();
+
+  for (let i = 1; i < n - 1; i++) {
+    const x = xDataStart + i * colW;
+    ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, yBottom); ctx.stroke();
+  }
+
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spec.varName, x0 + labelW / 2, y0 + headerH / 2);
+  for (let i = 0; i < n; i++) {
+    const x = xDataStart + i * colW;
+    ctx.fillText(texToCanvas(spec.boundaries[i]), x, y0 + headerH / 2);
+  }
+
+  let currentRowTop = y0 + headerH;
+
+  if (hasSignRow) {
+    const yRowTop = currentRowTop;
+    const yCenter = yRowTop + signRowH / 2;
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(spec.signRow.label, x0 + labelW / 2, yCenter);
+
+    const numItems = 2 * n - 3;
+    for (let i = 0; i < numItems; i++) {
+      let posInColW, isBoundary;
+      if (i % 2 === 0) { posInColW = i / 2 + 0.5; isBoundary = false; }
+      else { posInColW = (i + 1) / 2; isBoundary = true; }
+      const x = xDataStart + posInColW * colW;
+      const sign = spec.signRow.signs[i];
+      if (isBoundary && sign !== '') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 18, yRowTop + 4, 36, signRowH - 8);
+      }
+      drawSignAt(ctx, sign, x, yCenter);
+    }
+    currentRowTop += signRowH;
+  }
+
+  {
+    const yRowTop = currentRowTop;
+    const yCenter = yRowTop + varRowH / 2;
+    const pad = 22;
+    const cellTop = yRowTop + pad;
+    const cellBottom = yRowTop + varRowH - pad;
+
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(spec.varRow.label, x0 + labelW / 2, yCenter);
+
+    const arrows = spec.varRow.arrows;
+    for (let i = 0; i < numIntervals; i++) {
+      const xStart = xDataStart + i * colW + 30;
+      const xEnd = xDataStart + (i + 1) * colW - 30;
+      const dir = arrows[i];
+      if (dir === 'up') {
+        drawArrowLine(ctx, xStart, cellBottom, xEnd, cellTop, '#16a34a');
+      } else if (dir === 'down') {
+        drawArrowLine(ctx, xStart, cellTop, xEnd, cellBottom, '#dc2626');
+      }
+    }
+
+    ctx.font = 'bold 17px sans-serif';
+    const values = spec.varRow.values;
+    for (let i = 0; i < n; i++) {
+      const x = xDataStart + i * colW;
+      const v = values[i];
+      if (!v || v.text === '') continue;
+      let yText;
+      if (v.pos === 'top') yText = cellTop + 8;
+      else if (v.pos === 'bottom') yText = cellBottom - 8;
+      else yText = yCenter;
+
+      const txt = texToCanvas(v.text);
+      const metrics = ctx.measureText(txt);
+      const tw = metrics.width;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - tw / 2 - 4, yText - 12, tw + 8, 24);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(txt, x, yText);
+    }
+  }
+}
+
+/* ============================================================
+   5. CONSTRUCTION DES SPÉCIFICATIONS DE TABLEAUX
+   ============================================================ */
+function buildSignSpecForPoly2(func, v) {
+  const [a, b, c] = func.coeffs;
+  const x0 = func.criticalPoint;
+  const x0L = toFrac(x0);
+  const signBefore = a > 0 ? '-' : '+';
+  const signAfter = a > 0 ? '+' : '-';
+  return {
+    type: 'sign',
+    varName: v,
+    boundaries: ['-\\infty', x0L, '+\\infty'],
+    rows: [
+      { label: `f'(${v})`, signs: [signBefore, '0', signAfter] }
+    ]
+  };
+}
+
+function buildVariationSpecForPoly2(func, v) {
+  const [a, b, c] = func.coeffs;
+  const x0 = func.criticalPoint;
+  const y0 = func.criticalValue;
+  const x0L = toFrac(x0);
+  const y0L = toFrac(y0);
+  const signBefore = a > 0 ? '-' : '+';
+  const signAfter = a > 0 ? '+' : '-';
+  const arrow1 = a > 0 ? 'down' : 'up';
+  const arrow2 = a > 0 ? 'up' : 'down';
+  const leftValue = a > 0 ? '+\\infty' : '-\\infty';
+  const rightValue = a > 0 ? '+\\infty' : '-\\infty';
+  const leftPos = a > 0 ? 'top' : 'bottom';
+  const rightPos = a > 0 ? 'top' : 'bottom';
+  const midPos = a > 0 ? 'bottom' : 'top';
+  return {
+    type: 'variation',
+    varName: v,
+    boundaries: ['-\\infty', x0L, '+\\infty'],
+    signRow: { label: `f'(${v})`, signs: [signBefore, '0', signAfter] },
+    varRow: {
+      label: `f(${v})`,
+      arrows: [arrow1, arrow2],
+      values: [
+        { text: leftValue, pos: leftPos },
+        { text: y0L, pos: midPos },
+        { text: rightValue, pos: rightPos }
+      ]
+    }
+  };
+}
+
+function buildPoly3Specs(func, v) {
+  const [a, b, c, d] = func.coeffs;
+  const A = 3 * a, B = 2 * b, C = c;
+  const disc = B * B - 4 * A * C;
+  const signA = A > 0 ? '+' : '-';
+  const oppositeSign = A > 0 ? '-' : '+';
+
+  if (disc <= 0) {
+    const arrow = A > 0 ? 'up' : 'down';
+    const startVal = A > 0 ? '-\\infty' : '+\\infty';
+    const endVal = A > 0 ? '+\\infty' : '-\\infty';
+    const startPos = A > 0 ? 'bottom' : 'top';
+    const endPos = A > 0 ? 'top' : 'bottom';
+    return {
+      sign: {
+        type: 'sign', varName: v,
+        boundaries: ['-\\infty', '+\\infty'],
+        rows: [{ label: `f'(${v})`, signs: [signA] }]
+      },
+      variation: {
+        type: 'variation', varName: v,
+        boundaries: ['-\\infty', '+\\infty'],
+        signRow: { label: `f'(${v})`, signs: [signA] },
+        varRow: {
+          label: `f(${v})`,
+          arrows: [arrow],
+          values: [
+            { text: startVal, pos: startPos },
+            { text: endVal, pos: endPos }
+          ]
+        }
+      },
+      twoRoots: false
+    };
+  } else {
+    const sqrtDisc = Math.sqrt(disc);
+    const r1 = (-B - sqrtDisc) / (2 * A);
+    const r2 = (-B + sqrtDisc) / (2 * A);
+    const r1L = toFrac(r1), r2L = toFrac(r2);
+    const fr1L = toFrac(func.f(r1));
+    const fr2L = toFrac(func.f(r2));
+    const signOut = signA;
+    const signIn = oppositeSign;
+    const arrows = A > 0 ? ['up', 'down', 'up'] : ['down', 'up', 'down'];
+    const startVal = A > 0 ? '-\\infty' : '+\\infty';
+    const endVal = A > 0 ? '+\\infty' : '-\\infty';
+    const startPos = A > 0 ? 'bottom' : 'top';
+    const endPos = A > 0 ? 'top' : 'bottom';
+    const r1Pos = A > 0 ? 'top' : 'bottom';
+    const r2Pos = A > 0 ? 'bottom' : 'top';
+
+    return {
+      sign: {
+        type: 'sign', varName: v,
+        boundaries: ['-\\infty', r1L, r2L, '+\\infty'],
+        rows: [{ label: `f'(${v})`, signs: [signOut, '0', signIn, '0', signOut] }]
+      },
+      variation: {
+        type: 'variation', varName: v,
+        boundaries: ['-\\infty', r1L, r2L, '+\\infty'],
+        signRow: { label: `f'(${v})`, signs: [signOut, '0', signIn, '0', signOut] },
+        varRow: {
+          label: `f(${v})`,
+          arrows: arrows,
+          values: [
+            { text: startVal, pos: startPos },
+            { text: fr1L, pos: r1Pos },
+            { text: fr2L, pos: r2Pos },
+            { text: endVal, pos: endPos }
+          ]
+        }
+      },
+      twoRoots: true,
+      r1, r2
+    };
+  }
+}
+
+/* ============================================================
+   6. GÉNÉRATION DES CODES tkz-tab
+   ============================================================ */
+function tikzSignTable(spec) {
+  const n = spec.boundaries.length;
+  let s = '\\begin{tikzpicture}\n';
+  const initParts = [`$${spec.varName}$ / 1`];
+  for (const row of spec.rows) initParts.push(`$${row.label}$ / 1`);
+  s += `   \\tkzTabInit{${initParts.join(' , ')}}{${spec.boundaries.join(', ')}}\n`;
+  for (const row of spec.rows) {
+    const items = [''];
+    for (let i = 0; i < 2 * n - 3; i++) {
+      const sign = row.signs[i];
+      if (sign === '0') items.push('z');
+      else if (sign === 'd') items.push('d');
+      else if (sign === 'h') items.push('h');
+      else if (sign === '+' || sign === '-') items.push(sign);
+      else items.push('');
+    }
+    items.push('');
+    s += `   \\tkzTabLine{${items.join(', ')}}\n`;
+  }
+  s += '\\end{tikzpicture}';
+  return s;
+}
+
+function tikzVariationTable(spec) {
+  const n = spec.boundaries.length;
+  let s = '\\begin{tikzpicture}\n';
+  const initParts = [`$${spec.varName}$ / 1`];
+  if (spec.signRow) initParts.push(`$${spec.signRow.label}$ / 1`);
+  initParts.push(`$${spec.varRow.label}$ / 2`);
+  s += `   \\tkzTabInit{${initParts.join(' , ')}}{${spec.boundaries.join(', ')}}\n`;
+  if (spec.signRow) {
+    const items = [''];
+    for (let i = 0; i < 2 * n - 3; i++) {
+      const sign = spec.signRow.signs[i];
+      if (sign === '0') items.push('z');
+      else if (sign === 'd') items.push('d');
+      else if (sign === 'h') items.push('h');
+      else if (sign === '+' || sign === '-') items.push(sign);
+      else items.push('');
+    }
+    items.push('');
+    s += `   \\tkzTabLine{${items.join(', ')}}\n`;
+  }
+  const items = [];
+  const arrows = spec.varRow.arrows;
+  const values = spec.varRow.values;
+  if (arrows[0] === 'down') items.push(`-/ $${values[0].text}$`);
+  else items.push(`+/ $${values[0].text}$`);
+  for (let i = 1; i < n - 1; i++) {
+    const aL = arrows[i - 1], aR = arrows[i];
+    const txt = `$${values[i].text}$`;
+    if (aL === 'down' && aR === 'up') items.push(`-V-/ ${txt}`);
+    else if (aL === 'up' && aR === 'down') items.push(`+D+/ ${txt}`);
+    else items.push(`-/ ${txt}`);
+  }
+  if (arrows[n - 2] === 'up') items.push(`+/ $${values[n - 1].text}$`);
+  else items.push(`-/ $${values[n - 1].text}$`);
+  s += `   \\tkzTabVar{${items.join(', ')}}\n`;
+  s += '\\end{tikzpicture}';
+  return s;
+}
+
+/* ============================================================
+   7. SOLUTIONS DES QUESTIONS STANDARD
+   ============================================================ */
+function formatValue(func, aPoint, which) {
+  if (func.isSqrt) {
+    const k = aPoint.k;
+    if (which === 'f') return `${k}`;
+    return toFrac(1 / (2 * k));
+  }
+  if (func.isTrig) {
+    const a = func.trigCoef;
+    const kk = aPoint.k;
+    if (func.trigKind === 'sin') {
+      if (kk === '0') return which === 'f' ? '0' : `${a}`;
+      if (kk === 'pi2') return which === 'f' ? `${a}` : '0';
+    } else {
+      if (kk === '0') return which === 'f' ? `${a}` : '0';
+      if (kk === 'pi2') return which === 'f' ? '0' : `${-a}`;
+    }
+  }
+  const val = which === 'f' ? func.f(aPoint.value) : func.df(aPoint.value);
+  return toFrac(val);
+}
+
+function buildLimitSolution(func, v, aPoint, dfaL) {
+  const aL = aPoint.latex;
+  const av = aPoint.value;
+
+  const intro = `
+    <p><strong>Définition du nombre dérivé en $a$ :</strong></p>
+    <p>$$ f'(a) = \\lim\\limits_{h \\to 0} \\dfrac{f(a+h) - f(a)}{h} $$</p>
+    <p>On applique cette définition avec $a = ${aL}$.</p>
+  `;
+  let derivation = '';
+
+  if (func.type === 'poly2') {
+    const [c2, c1, c0] = func.coeffs;
+    const av2 = av * av;
+    const faval = c2 * av2 + c1 * av + c0;
+    const twoC2Av = 2 * c2 * av;
+    const limitVal = twoC2Av + c1;
+    const c2L = c2 === 1 ? '' : c2 === -1 ? '-' : `${c2}`;
+    const sqExp = joinTerms(`${av2}`, tPlus(2 * av, 'h'), tPlus(1, 'h^2'));
+    const fah = joinTerms(tPlus(c2, 'h^2'), tPlus(twoC2Av + c1, 'h'), tPlus(faval, ''));
+    const diff = joinTerms(tPlus(c2, 'h^2'), tPlus(twoC2Av + c1, 'h'));
+    const ratioH = joinTerms(tPlus(c2, 'h'), tPlus(twoC2Av + c1, ''));
+
+    derivation = `
+      <p><strong>Étape 1 — Calcul de $f(${aL}+h)$.</strong></p>
+      <p>$$ f(${aL}+h) = ${c2L}(${aL}+h)^2 ${tPlus(c1, `(${aL}+h)`)} ${tPlus(c0, '')} $$</p>
+      <p>Or $(${aL}+h)^2 = ${sqExp}$, donc :</p>
+      <p>$$ f(${aL}+h) = ${fah} $$</p>
+      <p><strong>Étape 2 — Différence $f(${aL}+h) - f(${aL})$.</strong></p>
+      <p>$$ f(${aL}) = ${faval} $$</p>
+      <p>$$ f(${aL}+h) - f(${aL}) = ${diff} = h\\left(${ratioH}\\right) $$</p>
+      <p><strong>Étape 3 — Taux de variation et limite.</strong></p>
+      <p>Pour $h \\neq 0$ : $\\dfrac{f(${aL}+h)-f(${aL})}{h} = ${ratioH}$.</p>
+      <p>En passant à la limite $h \\to 0$ : $f'(${aL}) = ${toFrac(limitVal)}$.</p>`;
+  } else if (func.type === 'poly3') {
+    const [c3, c2, c1, c0] = func.coeffs;
+    const av2 = av * av, av3 = av * av * av;
+    const faval = c3 * av3 + c2 * av2 + c1 * av + c0;
+    const coeffH2 = 3 * c3 * av + c2;
+    const coeffH1 = 3 * c3 * av2 + 2 * c2 * av + c1;
+    const limitVal = coeffH1;
+    const c3L = c3 === 1 ? '' : c3 === -1 ? '-' : `${c3}`;
+    const cubeExp = joinTerms(`${av3}`, tPlus(3 * av2, 'h'), tPlus(3 * av, 'h^2'), tPlus(1, 'h^3'));
+    const sqExp = joinTerms(`${av2}`, tPlus(2 * av, 'h'), tPlus(1, 'h^2'));
+    const fah = joinTerms(tPlus(c3, 'h^3'), tPlus(coeffH2, 'h^2'), tPlus(coeffH1, 'h'), tPlus(faval, ''));
+    const diff = joinTerms(tPlus(c3, 'h^3'), tPlus(coeffH2, 'h^2'), tPlus(coeffH1, 'h'));
+    const inner = joinTerms(tPlus(c3, 'h^2'), tPlus(coeffH2, 'h'), tPlus(coeffH1, ''));
+
+    derivation = `
+      <p><strong>Étape 1 — Calcul de $f(${aL}+h)$.</strong></p>
+      <p>$$ f(${aL}+h) = ${c3L}(${aL}+h)^3 ${tPlus(c2, `(${aL}+h)^2`)} ${tPlus(c1, `(${aL}+h)`)} ${tPlus(c0, '')} $$</p>
+      <p>$$ (${aL}+h)^3 = ${cubeExp}, \\quad (${aL}+h)^2 = ${sqExp} $$</p>
+      <p>Donc : $f(${aL}+h) = ${fah}$.</p>
+      <p><strong>Étape 2 — Différence.</strong></p>
+      <p>$$ f(${aL}) = ${faval} $$</p>
+      <p>$$ f(${aL}+h) - f(${aL}) = ${diff} = h\\left(${inner}\\right) $$</p>
+      <p><strong>Étape 3 — Limite.</strong></p>
+      <p>Pour $h \\neq 0$ : le taux vaut $${inner}$. En $h \\to 0$ : $f'(${aL}) = ${toFrac(limitVal)}$.</p>`;
+  } else if (func.type === 'rat11') {
+    const a1 = func.numA, b1 = func.numB, c1 = func.denC, d1 = func.denD;
+    const w = c1 * av + d1;
+    const u = a1 * av + b1;
+    const numerator = a1 * d1 - b1 * c1;
+    const limitVal = numerator / (w * w);
+
+    derivation = `
+      <p><strong>Étape 1 — Expression de $f(${aL}+h)$.</strong></p>
+      <p>$$ f(${aL}+h) = \\dfrac{${u} ${tPlus(a1, 'h')}}{${w} ${tPlus(c1, 'h')}}, \\quad f(${aL}) = \\dfrac{${u}}{${w}} $$</p>
+      <p><strong>Étape 2 — Différence au même dénominateur.</strong></p>
+      <p>$$ f(${aL}+h) - f(${aL}) = \\dfrac{h\\left(${a1}\\cdot ${parenNeg(w)} - ${c1}\\cdot ${parenNeg(u)}\\right)}{\\left(${w} ${tPlus(c1, 'h')}\\right)\\cdot ${w}} = \\dfrac{${numerator}\\,h}{\\left(${w} ${tPlus(c1, 'h')}\\right)\\cdot ${w}} $$</p>
+      <p><strong>Étape 3 — Taux et limite.</strong></p>
+      <p>En divisant par $h$ puis en faisant $h \\to 0$ : $f'(${aL}) = \\dfrac{${numerator}}{${w}\\cdot ${w}} = ${toFrac(limitVal)}$.</p>`;
+  } else if (func.isTrig) {
+    const A = func.trigCoef;
+    const isSin = func.trigKind === 'sin';
+    const ALbare = `${A}`;
+    const trigName = isSin ? 'sin' : 'cos';
+    const identity = isSin
+      ? '\\sin p - \\sin q = 2\\cos\\!\\left(\\dfrac{p+q}{2}\\right)\\sin\\!\\left(\\dfrac{p-q}{2}\\right)'
+      : '\\cos p - \\cos q = -2\\sin\\!\\left(\\dfrac{p+q}{2}\\right)\\sin\\!\\left(\\dfrac{p-q}{2}\\right)';
+    derivation = `
+      <p><strong>Étape 1 — Différence.</strong></p>
+      <p>$$ f(${aL}+h) - f(${aL}) = ${ALbare}\\left(\\${trigName}(${aL}+h) - \\${trigName}(${aL})\\right) $$</p>
+      <p>Identité : $${identity}$.</p>
+      <p>Avec $p = ${aL}+h$, $q = ${aL}$ :</p>
+      <p>$$ = ${ALbare}\\cdot ${isSin ? '2' : '-2'}\\,${isSin ? '\\cos' : '\\sin'}\\!\\left(${aL}+\\dfrac{h}{2}\\right)\\sin\\!\\left(\\dfrac{h}{2}\\right) $$</p>
+      <p><strong>Étape 2 — Taux et limite.</strong></p>
+      <p>En divisant par $h$ et en utilisant $\\lim\\limits_{h\\to 0}\\dfrac{\\sin(h/2)}{h/2} = 1$ et la continuité, on obtient $f'(${aL}) = ${dfaL}$.</p>`;
+  } else if (func.isSqrt) {
+    const B = func.sqrtB;
+    const k = aPoint.k;
+    const aPlusB = av + B;
+    derivation = `
+      <p><strong>Étape 1 — Différence.</strong></p>
+      <p>$$ f(${aL}+h) - f(${aL}) = \\sqrt{${aPlusB}+h} - \\sqrt{${aPlusB}} $$</p>
+      <p><strong>Étape 2 — Quantité conjuguée.</strong></p>
+      <p>$$ = \\dfrac{h}{\\sqrt{${aPlusB}+h} + \\sqrt{${aPlusB}}} $$</p>
+      <p><strong>Étape 3 — Limite.</strong></p>
+      <p>En divisant par $h$ puis $h \\to 0$ : $f'(${aL}) = \\dfrac{1}{2\\sqrt{${aPlusB}}} = \\dfrac{1}{2\\cdot ${k}} = ${toFrac(1 / (2 * k))}$.</p>`;
+  }
+
+  return intro + derivation + `<div class="final-answer">Finalement, $f'(${aL}) = ${dfaL}$.</div>`;
+}
+
+function buildDerivativeSolution(func, v) {
+  let body = '';
+  if (func.type === 'poly2') {
+    const [a, b, c] = func.coeffs;
+    body = `
+      <p><strong>Rappel :</strong> la dérivée de $${v} \\mapsto ${v}^n$ est $${v} \\mapsto n${v}^{n-1}$ ; la dérivée d'une constante est $0$.</p>
+      <ul>
+        <li>$\\left(${polyToLatex([a], v)}^2\\right)' = ${2 * a}${v}$ ;</li>
+        <li>$\\left(${polyToLatex([b], v)}\\right)' = ${b}$ ;</li>
+        <li>$\\left(${c}\\right)' = 0$.</li>
+      </ul>
+      <p>Donc $f'(${v}) = ${func.dfLatex}$.</p>`;
+  } else if (func.type === 'poly3') {
+    const [a, b, c, d] = func.coeffs;
+    body = `
+      <p><strong>Rappel :</strong> $(u+v)' = u' + v'$ et $(k\\,u)' = k\\,u'$.</p>
+      <ul>
+        <li>$\\left(${a}${v}^3\\right)' = ${3 * a}${v}^2$ ;</li>
+        <li>$\\left(${b}${v}^2\\right)' = ${2 * b}${v}$ ;</li>
+        <li>$\\left(${c}${v}\\right)' = ${c}$ ;</li>
+        <li>$\\left(${d}\\right)' = 0$.</li>
+      </ul>
+      <p>Donc $f'(${v}) = ${func.dfLatex}$.</p>`;
+  } else if (func.type === 'rat11') {
+    const a = func.numA, b = func.numB, c = func.denC, d = func.denD;
+    const leftProd = `${a}\\cdot\\left(${polyToLatex([c, d], v)}\\right)`;
+    const rightProd = `\\left(${polyToLatex([a, b], v)}\\right)\\cdot ${parenNeg(c)}`;
+    const numResult = a * d - b * c;
+    body = `
+      <p><strong>Rappel (dérivée d'un quotient) :</strong> $\\left(\\dfrac{u}{w}\\right)' = \\dfrac{u'w - u\\,w'}{w^2}$.</p>
+      <p>$$ f'(${v}) = \\dfrac{${leftProd} - ${rightProd}}{\\left(${polyToLatex([c, d], v)}\\right)^2} = \\dfrac{${numResult}}{\\left(${polyToLatex([c, d], v)}\\right)^2} $$</p>`;
+  } else if (func.isTrig) {
+    const a = func.trigCoef;
+    if (func.trigKind === 'sin') {
+      body = `<p><strong>Rappel :</strong> $(\\sin ${v})' = \\cos ${v}$, $(k\\,u)' = k\\,u'$.</p><p>Donc $f'(${v}) = ${a === 1 ? '' : a === -1 ? '-' : a}\\cos(${v})$.</p>`;
+    } else {
+      body = `<p><strong>Rappel :</strong> $(\\cos ${v})' = -\\sin ${v}$, $(k\\,u)' = k\\,u'$.</p><p>Donc $f'(${v}) = ${-a === 1 ? '' : -a === -1 ? '-' : -a}\\sin(${v})$.</p>`;
+    }
+  } else if (func.isSqrt) {
+    const b = func.sqrtB;
+    body = `
+      <p><strong>Rappel :</strong> $(\\sqrt{u})' = \\dfrac{u'}{2\\sqrt{u}}$.</p>
+      <p>Ici $u(${v}) = ${v} + ${b}$, donc $u'(${v}) = 1$.</p>
+      <p>Donc $f'(${v}) = \\dfrac{1}{2\\sqrt{${v} + ${b}}}$.</p>`;
+  }
+  return body + `<div class="final-answer">Finalement, $f'(${v}) = ${func.dfLatex}$.</div>`;
+}
+
+function buildImageSolution(func, v, aPoint, which, resultL) {
+  const aL = aPoint.latex;
+  const isDF = (which === 'df');
+  const expr = isDF ? func.dfLatex : func.fLatex;
+  const symbol = isDF ? "f'" : "f";
+  let body = `<p>On remplace $${v}$ par $${aL}$ dans $${symbol}(${v}) = ${expr}$.</p>`;
+  if (func.isTrig) {
+    if (func.trigKind === 'sin') {
+      if (aPoint.k === '0') body += `<p>$\\sin(0) = 0$ ${isDF ? 'et $\\cos(0) = 1$' : ''}.</p>`;
+      else body += `<p>$\\sin(\\pi/2) = 1$ ${isDF ? 'et $\\cos(\\pi/2) = 0$' : ''}.</p>`;
+    } else {
+      if (aPoint.k === '0') body += `<p>$\\cos(0) = 1$ ${isDF ? 'et $\\sin(0) = 0$' : ''}.</p>`;
+      else body += `<p>$\\cos(\\pi/2) = 0$ ${isDF ? 'et $\\sin(\\pi/2) = 1$' : ''}.</p>`;
+    }
+  } else if (func.isSqrt) {
+    body += `<p>$${aL} + ${func.sqrtB} = ${aPoint.value + func.sqrtB} = ${aPoint.k}^2$, donc $\\sqrt{${aL}+${func.sqrtB}} = ${aPoint.k}$.</p>`;
+    if (isDF) body += `<p>Puis $f'(${aL}) = \\dfrac{1}{2 \\cdot ${aPoint.k}} = ${resultL}$.</p>`;
+  } else {
+    body += `<p>Le calcul donne $${symbol}(${aL}) = ${resultL}$.</p>`;
+  }
+  return body + `<div class="final-answer">Finalement, $${symbol}(${aL}) = ${resultL}$.</div>`;
+}
+
+function buildTangentSolution(func, v, aPoint, faL, dfaL) {
+  const aL = aPoint.latex;
+  const aVal = aPoint.value;
+  const fa = func.f(aVal);
+  const dfa = func.df(aVal);
+  const bVal = fa - dfa * aVal;
+  const xMinusAstr = xMinusA(v, aVal, aL);
+  const plusFaStr = tPlus(fa, '');
+  let substLine;
+  if (Math.abs(dfa) < 1e-9) substLine = `y = ${faL}`;
+  else substLine = `y = ${dfaL}\\left(${xMinusAstr}\\right)${plusFaStr}`;
+  let eqL;
+  if (Math.abs(dfa) < 1e-9) eqL = `y = ${toFrac(fa)}`;
+  else {
+    let mPart;
+    if (Math.abs(dfa - 1) < 1e-9) mPart = v;
+    else if (Math.abs(dfa + 1) < 1e-9) mPart = `-${v}`;
+    else mPart = `${toFrac(dfa)}${v}`;
+    const pPart = tPlus(bVal, '');
+    eqL = `y = ${mPart}${pPart}`;
+  }
+  return `
+    <p><strong>Rappel :</strong> $y = f'(a)(x - a) + f(a)$.</p>
+    <p>Ici $a = ${aL}$, $f(${aL}) = ${faL}$, $f'(${aL}) = ${dfaL}$.</p>
+    <p>On applique les règles de signe : $${v} - \\left(${aL}\\right)$ s'écrit $${xMinusAstr}$, et le terme constant est $${plusFaStr || '+ 0'}$.</p>
+    <p>$$ ${substLine} $$</p>
+    <p>En développant : $${eqL}$.</p>
+    <div class="final-answer">Finalement, la tangente a pour équation $${eqL}$.</div>`;
+}
+
+function buildGraphReadSolution(func, v, aPoint, faL, dfaL) {
+  const aL = aPoint.latex;
+  return `
+    <p>Sur le graphique, on lit $f(${aL}) = ${faL}$ et $f'(${aL}) = ${dfaL}$ (coefficient directeur de la tangente).</p>
+    <div class="final-answer">Finalement, $f(${aL}) = ${faL}$ et $f'(${aL}) = ${dfaL}$.</div>`;
+}
+
+function buildSolutionsCountSolution(func, v) {
+  return `
+    <p>On trace $y = k$ et on compte les points d'intersection avec la courbe.</p>
+    <ul>
+      <li>$k$ très grand ou très petit : <strong>1 point</strong> ;</li>
+      <li>valeurs seuils : tangence (1 solution double) ;</li>
+      <li>entre les extremums locaux : <strong>2 ou 3 points</strong>.</li>
+    </ul>
+    <div class="final-answer">Finalement, le nombre de solutions de $f(${v}) = k$ se lit comme le nombre d'intersections avec $y = k$.</div>`;
+}
+
+function buildExtremumSolution(func, v) {
+  return `
+    <p>Sur $${func.domain}$, $f'(${v}) = ${func.dfLatex}$ s'annule en changeant de signe : $f$ admet un extremum.</p>
+    <div class="final-answer">Finalement, $f$ admet un extremum en $${v} = a$, où $f'(a) = 0$ change de signe.</div>`;
+}
+
+/* ============================================================
+   7b. REGISTRE DES CANVAS À DESSINER (solutions)
+   ============================================================ */
+const __canvasSpecs = {};
+function registerCanvasSpec(id, type, spec) {
+  __canvasSpecs[id] = { type, spec };
+}
+
+/* ============================================================
+   8. SOLUTIONS AVEC TABLEAUX CANVAS
+   ============================================================ */
+function buildSignTableSolutionCanvas(func, v) {
+  let spec, extra = '';
+  if (func.type === 'poly2') spec = buildSignSpecForPoly2(func, v);
+  else if (func.type === 'poly3') spec = buildPoly3Specs(func, v).sign;
+  else return `<p>Tableau non applicable à ce type de fonction.</p>`;
+
+  const canvasId = 'cv_sign_' + Math.random().toString(36).slice(2, 8);
+  const tikz = tikzSignTable(spec);
+  registerCanvasSpec(canvasId, 'sign', spec);
+
+  if (func.type === 'poly2') {
+    const [a, b, c] = func.coeffs;
+    const x0L = toFrac(func.criticalPoint);
+    extra = `
+      <p>$f'(${v}) = ${func.dfLatex}$ est une fonction affine de coefficient directeur $${2 * a}$ (${a > 0 ? 'positif' : 'négatif'}).</p>
+      <p>Elle s'annule en $${v} = ${x0L}$ et change de signe en ce point.</p>`;
+  } else if (func.type === 'poly3') {
+    const [a, b, c, d] = func.coeffs;
+    const A = 3 * a, B = 2 * b, C = c;
+    const disc = B * B - 4 * A * C;
+    if (disc <= 0) {
+      extra = `
+        <p>$f'(${v}) = ${func.dfLatex}$ est un trinôme de discriminant $\\Delta = ${disc}$ ($\\leq 0$).</p>
+        <p>Elle garde donc un signe constant sur $\\mathbb{R}$, celui de $${A}$ (${A > 0 ? 'positif' : 'négatif'}).</p>`;
+    } else {
+      const sqrtDisc = Math.sqrt(disc);
+      const r1 = (-B - sqrtDisc) / (2 * A);
+      const r2 = (-B + sqrtDisc) / (2 * A);
+      const r1L = toFrac(r1), r2L = toFrac(r2);
+      extra = `
+        <p>$f'(${v}) = ${func.dfLatex}$ est un trinôme de discriminant $\\Delta = ${disc} > 0$.</p>
+        <p>Ses racines sont $${v} = ${r1L}$ et $${v} = ${r2L}$.</p>
+        <p>Le coefficient dominant de $f'$ étant $${A}$ (${A > 0 ? 'positif' : 'négatif'}), $f'$ est du signe de $${A}$ à l'extérieur des racines et du signe opposé à l'intérieur.</p>`;
+    }
+  }
+
+  return `
+    ${extra}
+    <p><strong>Tableau de signes :</strong></p>
+    <div class="canvas-wrap"><canvas id="${canvasId}"></canvas></div>
+    <p class="note">Code tkz-tab équivalent :</p>
+    <div class="latex-code">${tikz}</div>
+    <div class="final-answer">Finalement, le signe de $f'(${v})$ est donné par le tableau ci-dessus.</div>`;
+}
+
+function buildVariationTableSolutionCanvas(func, v) {
+  let spec, extra = '';
+  if (func.type === 'poly2') {
+    spec = buildVariationSpecForPoly2(func, v);
+    const [a, b, c] = func.coeffs;
+    const x0L = toFrac(func.criticalPoint);
+    const y0L = toFrac(func.criticalValue);
+    const extremeType = a > 0 ? 'minimum' : 'maximum';
+    extra = `
+      <p>Le signe de $f'(${v})$ (question précédente) indique les variations :</p>
+      <ul>
+        <li>${a > 0 ? '$f\' < 0$ avant, $f\' > 0$ après' : '$f\' > 0$ avant, $f\' < 0$ après'}, donc $f$ est ${a > 0 ? 'décroissante puis croissante' : 'croissante puis décroissante'} ;</li>
+        <li>$$f(${x0L}) = ${y0L}$ : c'est un <strong>${extremeType}</strong>.</li>
+      </ul>`;
+  } else if (func.type === 'poly3') {
+    const specs = buildPoly3Specs(func, v);
+    spec = specs.variation;
+    if (!specs.twoRoots) {
+      extra = `
+        <p>$f'(${v})$ garde un signe constant (discriminant $\\leq 0$). Donc $f$ est strictement monotone sur $\\mathbb{R}$.</p>`;
+    } else {
+      const [a, b, c, d] = func.coeffs;
+      const A = 3 * a, B = 2 * b, C = c;
+      const disc = B * B - 4 * A * C;
+      const sqrtDisc = Math.sqrt(disc);
+      const r1 = (-B - sqrtDisc) / (2 * A);
+      const r2 = (-B + sqrtDisc) / (2 * A);
+      const r1L = toFrac(r1), r2L = toFrac(r2);
+      const fr1L = toFrac(func.f(r1));
+      const fr2L = toFrac(func.f(r2));
+      const extType1 = A > 0 ? 'maximum' : 'minimum';
+      const extType2 = A > 0 ? 'minimum' : 'maximum';
+      extra = `
+        <p>$f'$ change de signe en $${r1L}$ et $${r2L}$.</p>
+        <p>$f$ admet donc un <strong>${extType1}</strong> local en $${v} = ${r1L}$ (valant $${fr1L}$) et un <strong>${extType2}</strong> local en $${v} = ${r2L}$ (valant $${fr2L}$).</p>`;
+    }
+  } else {
+    return `<p>Tableau non applicable à ce type de fonction.</p>`;
+  }
+
+  const canvasId = 'cv_var_' + Math.random().toString(36).slice(2, 8);
+  const tikz = tikzVariationTable(spec);
+  registerCanvasSpec(canvasId, 'variation', spec);
+
+  return `
+    ${extra}
+    <p><strong>Tableau de variations :</strong></p>
+    <div class="canvas-wrap"><canvas id="${canvasId}"></canvas></div>
+    <p class="note">Code tkz-tab équivalent :</p>
+    <div class="latex-code">${tikz}</div>
+    <div class="final-answer">Finalement, les variations de $f$ sont données par le tableau ci-dessus.</div>`;
+}
+
+/* ============================================================
+   9. CONSTRUCTION DES QUESTIONS
+   ============================================================ */
+function buildQuestions(func, v) {
+  const questions = [];
+  const aPoint = pick(func.evalPoints);
+  const aL = aPoint.latex;
+  const faL = formatValue(func, aPoint, 'f');
+  const dfaL = formatValue(func, aPoint, 'df');
+
+  questions.push({
+    tag: 'Application directe',
+    title: `Calcul de l'image $f(${aL})$`,
+    prompt: `Calculer $f(${aL})$ où $f(${v}) = ${func.fLatex}$.`,
+    canvas: false,
+    solution: buildImageSolution(func, v, aPoint, 'f', faL)
+  });
+
+  questions.push({
+    tag: 'Définition / Limite',
+    title: `Nombre dérivé $f'(${aL})$ via la définition`,
+    prompt: `En utilisant la <strong>définition</strong> $f'(a) = \\lim\\limits_{h \\to 0} \\dfrac{f(a+h)-f(a)}{h}$, calculer $f'(${aL})$ pour $f(${v}) = ${func.fLatex}$.`,
+    canvas: false,
+    solution: buildLimitSolution(func, v, aPoint, dfaL)
+  });
+
+  questions.push({
+    tag: 'Cours / Calcul',
+    title: `Calcul de l'expression $f'(${v})$`,
+    prompt: `Calculer l'expression de la dérivée $f'(${v})$ pour $f(${v}) = ${func.fLatex}$. On comparera avec $f'(${aL})$ trouvée précédemment.`,
+    canvas: false,
+    solution: buildDerivativeSolution(func, v)
+  });
+
+  questions.push({
+    tag: 'Exercice',
+    title: `Équation de la tangente en $${v} = ${aL}$`,
+    prompt: `Déterminer l'équation réduite de la tangente $T$ à la courbe de $f$ au point d'abscisse $${aL}$.`,
+    canvas: true,
+    canvasId: 'cv_' + Math.random().toString(36).slice(2, 8),
+    solution: buildTangentSolution(func, v, aPoint, faL, dfaL)
+  });
+
+  questions.push({
+    tag: 'Interprétation graphique',
+    title: `Lecture graphique du nombre dérivé`,
+    prompt: `Ci-dessous, la courbe de $f$ et sa tangente au point d'abscisse $${aL}$ (en rouge).<br>Lire $f(${aL})$ et $f'(${aL})$, puis vérifier la cohérence avec les calculs.`,
+    canvas: true,
+    canvasId: 'cv_' + Math.random().toString(36).slice(2, 8),
+    solution: buildGraphReadSolution(func, v, aPoint, faL, dfaL)
+  });
+
+  if (func.type === 'poly2' || func.type === 'poly3') {
+    questions.push({
+      tag: 'Tableau de signes',
+      title: `Tableau de signes de $f'(${v})$`,
+      prompt: `Dresser le tableau de signes de $f'(${v})$ pour $f(${v}) = ${func.fLatex}$.`,
+      canvas: false,
+      solution: buildSignTableSolutionCanvas(func, v)
+    });
+    questions.push({
+      tag: 'Tableau de variations',
+      title: `Tableau de variations de $f$`,
+      prompt: `En déduire le tableau de variations de $f$ sur $${func.domain}$.`,
+      canvas: false,
+      solution: buildVariationTableSolutionCanvas(func, v)
+    });
+  } else if (func.isRational || func.isTrig) {
+    questions.push({
+      tag: 'Existence de solutions',
+      title: `Nombre de solutions de $f(${v}) = k$`,
+      prompt: `À l'aide de l'allure de la courbe, discuter selon $k$ le nombre de solutions de $f(${v}) = k$.`,
+      canvas: true,
+      canvasId: 'cv_' + Math.random().toString(36).slice(2, 8),
+      solution: buildSolutionsCountSolution(func, v)
+    });
+  } else {
+    questions.push({
+      tag: 'Extremum',
+      title: `Recherche d'un extremum`,
+      prompt: `Justifier que $f$ admet un minimum sur $${func.domain}$ et donner sa valeur.`,
+      canvas: true,
+      canvasId: 'cv_' + Math.random().toString(36).slice(2, 8),
+      solution: buildExtremumSolution(func, v)
+    });
+  }
+
+  return { questions, aPoint };
+}
+
+/* ============================================================
+   10. ÉTAT DU QUIZ & RENDU D'UNE QUESTION UNIQUE
+   ============================================================ */
+const quizState = { data: null, currentIndex: 0 };
+
+function renderQuiz(data) {
+  quizState.data = data;
+  quizState.currentIndex = 0;
+  renderCurrentQuestion();
+}
+
+function renderCurrentQuestion() {
+  const data = quizState.data;
+  if (!data) return;
+  const { v, func, questions } = data;
+  const idx = quizState.currentIndex;
+  const q = questions[idx];
+
+  document.getElementById('varBadge').textContent = `Variable : ${v}  •  Type : ${func.kind}`;
+
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+
+  /* ---- Carte « Énoncé général » : toujours affichée ---- */
+  const intro = document.createElement('div');
+  intro.className = 'card';
+  intro.innerHTML = `
+    <div class="q-header">
+      <span class="q-title">📘 Énoncé général</span>
+      <span class="q-tag">Contexte</span>
+    </div>
+    <p>On considère la fonction $f$ définie sur $${func.domain}$ par :</p>
+    <p style="text-align:center; font-size:1.2rem;">$$ f(${v}) = ${func.fLatex} $$</p>
+    <p>On note $f'$ sa fonction dérivée. Toutes les questions portent sur cette même fonction $f$.</p>
+  `;
+  container.appendChild(intro);
+
+  /* ---- Carte de la question courante ---- */
+  const card = document.createElement('div');
+  card.className = 'card';
+  const solId = 'sol_' + Math.random().toString(36).slice(2, 8);
+
+  let canvasHTML = '';
+  if (q.canvas && q.canvasId) {
+    canvasHTML = `<div class="canvas-wrap"><canvas id="${q.canvasId}" width="560" height="360"></canvas></div>`;
+  }
+
+  card.innerHTML = `
+    <div class="q-header">
+      <span class="q-title">Question ${idx + 1} / ${questions.length} – ${q.title}</span>
+      <span class="q-tag">${q.tag}</span>
+    </div>
+    <div class="q-prompt">${q.prompt}</div>
+    ${canvasHTML}
+    <button class="sol-btn" onclick="toggleSolution('${solId}', this)">🔍 Voir la solution</button>
+    <div id="${solId}" class="sol-box">${q.solution}</div>
+  `;
+  container.appendChild(card);
+
+  /* ---- Barre de navigation ---- */
+  const isFirst = idx === 0;
+  const isLast = idx === questions.length - 1;
+
+  const nav = document.createElement('div');
+  nav.className = 'quiz-nav';
+
+  const prevBtn = isFirst
+    ? `<span style="min-width:0"></span>`
+    : `<button class="btn-nav btn-nav-prev" onclick="prevQuestion()">◀ Précédente</button>`;
+
+  const nextBtn = isLast
+    ? `<button class="btn-nav btn-nav-next" onclick="newQuiz()">🎲 Nouveau quiz</button>`
+    : `<button class="btn-nav btn-nav-next" onclick="nextQuestion()">Question suivante ▶</button>`;
+
+  nav.innerHTML = `
+    ${prevBtn}
+    <span class="nav-progress">Question ${idx + 1} / ${questions.length}</span>
+    ${nextBtn}
+  `;
+  container.appendChild(nav);
+
+  /* ---- Dessin du graphique éventuel ---- */
+  if (q.canvas && q.canvasId) {
+    setTimeout(() => { drawGraph(q.canvasId, func, data.aPoint); }, 30);
+  }
+
+  /* ---- Typeset MathJax sur le nouveau contenu ---- */
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([container]).catch(err => console.warn('MathJax:', err));
+  }
+
+  /* ---- Remonter en haut de page pour la nouvelle question ---- */
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextQuestion() {
+  if (!quizState.data) return;
+  if (quizState.currentIndex < quizState.data.questions.length - 1) {
+    quizState.currentIndex++;
+    renderCurrentQuestion();
+  } else {
+    newQuiz();
+  }
+}
+
+function prevQuestion() {
+  if (!quizState.data) return;
+  if (quizState.currentIndex > 0) {
+    quizState.currentIndex--;
+    renderCurrentQuestion();
+  }
+}
+
+/* ============================================================
+   11. INTERACTIONS (solutions)
+   ============================================================ */
+function toggleSolution(id, btn) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.classList.toggle('visible');
+  if (box.classList.contains('visible')) {
+    btn.innerHTML = '🙈 Masquer la solution';
+
+    // Dessiner les canvas référencés non encore dessinés
+    box.querySelectorAll('canvas').forEach(c => {
+      if (c.dataset.drawn) return;
+      const entry = __canvasSpecs[c.id];
+      if (!entry) return;
+      if (entry.type === 'sign') drawCanvasSignTable(c, entry.spec);
+      else if (entry.type === 'variation') drawCanvasVariationTable(c, entry.spec);
+      c.dataset.drawn = '1';
+    });
+
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([box]).catch(err => console.warn('MathJax:', err));
+    }
+  } else {
+    btn.innerHTML = '🔍 Voir la solution';
+  }
+}
+
+/* ============================================================
+   12. DESSIN DU GRAPHIQUE GÉNÉRAL
+   ============================================================ */
+function drawGraph(canvasId, func, aPoint) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  let xMin = -4, xMax = 4;
+  if (func.isTrig) { xMin = -2 * Math.PI - 0.5; xMax = 2 * Math.PI + 0.5; }
+  let yMin = -6, yMax = 6;
+  if (func.isSqrt) { yMin = -1; yMax = 4; }
+  if (func.isTrig) { yMin = -4; yMax = 4; }
+
+  const pad = 30;
+  const sx = (W - 2 * pad) / (xMax - xMin);
+  const sy = (H - 2 * pad) / (yMax - yMin);
+  const toPx = (x) => pad + (x - xMin) * sx;
+  const toPy = (y) => H - pad - (y - yMin) * sy;
+
+  ctx.strokeStyle = '#f1f5f9';
+  ctx.lineWidth = 1;
+  for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+    ctx.beginPath(); ctx.moveTo(toPx(x), pad); ctx.lineTo(toPx(x), H - pad); ctx.stroke();
+  }
+  for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+    ctx.beginPath(); ctx.moveTo(pad, toPy(y)); ctx.lineTo(W - pad, toPy(y)); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.4;
+  if (yMin <= 0 && 0 <= yMax) {
+    ctx.beginPath(); ctx.moveTo(pad, toPy(0)); ctx.lineTo(W - pad, toPy(0)); ctx.stroke();
+  }
+  if (xMin <= 0 && 0 <= xMax) {
+    ctx.beginPath(); ctx.moveTo(toPx(0), pad); ctx.lineTo(toPx(0), H - pad); ctx.stroke();
+  }
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+    if (x === 0 || Math.abs(x) > 10) continue;
+    ctx.fillText(x, toPx(x), toPy(0) + 14);
+  }
+  ctx.textAlign = 'right';
+  for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+    if (y === 0) continue;
+    ctx.fillText(y, toPx(0) - 6, toPy(y) + 4);
+  }
+
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  let first = true;
+  const steps = 800;
+  for (let i = 0; i <= steps; i++) {
+    const x = xMin + (xMax - xMin) * i / steps;
+    let y;
+    try { y = func.f(x); } catch (e) { y = NaN; }
+    if (!isFinite(y) || isNaN(y)) { first = true; continue; }
+    const px = toPx(x), py = toPy(y);
+    if (py < -1000 || py > H + 1000) { first = true; continue; }
+    if (first) { ctx.moveTo(px, py); first = false; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  const a = aPoint.value;
+  const fa = func.f(a);
+  const dfa = func.df(a);
+  if (isFinite(fa) && isFinite(dfa)) {
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    let first2 = true;
+    for (let i = 0; i <= steps; i++) {
+      const x = xMin + (xMax - xMin) * i / steps;
+      const y = dfa * (x - a) + fa;
+      const px = toPx(x), py = toPy(y);
+      if (py < pad - 20 || py > H - pad + 20) { first2 = true; continue; }
+      if (first2) { ctx.moveTo(px, py); first2 = false; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    const pxA = toPx(a), pyA = toPy(fa);
+    if (pxA > pad - 5 && pxA < W - pad + 5 && pyA > pad - 5 && pyA < H - pad + 5) {
+      ctx.beginPath();
+      ctx.arc(pxA, pyA, 5.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#dc2626';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = '#2563eb';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Courbe de f', pad + 4, pad + 14);
+  ctx.fillStyle = '#dc2626';
+  ctx.fillText('Tangente T', pad + 4, pad + 30);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px sans-serif';
+  ctx.fillText(`a = ${aPoint.latex.replace(/\\/g, '')}`, pad + 4, pad + 46);
+}
+
+/* ============================================================
+   13. LANCEMENT
+   ============================================================ */
+function newQuiz() {
+  const v = Math.random() < 0.5 ? 'x' : 't';
+  const gen = pick(GENERATORS);
+  const func = gen(v);
+  const data = buildQuestions(func, v);
+  data.v = v;
+  data.func = func;
+  renderQuiz(data);
+}
+
+window.addEventListener('load', () => { newQuiz(); });
+
+/* ============================================================
+   14. MODALE DE LICENCE
+   ============================================================ */
+function openLicense() {
+  const modal = document.getElementById('licenseModal');
+  if (!modal) return;
+  modal.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeLicense() {
+  const modal = document.getElementById('licenseModal');
+  if (!modal) return;
+  modal.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+function closeLicenseOnOverlay(event) {
+  if (event.target.id === 'licenseModal') closeLicense();
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLicense();
+});
+</script>
+</body>
+</html>

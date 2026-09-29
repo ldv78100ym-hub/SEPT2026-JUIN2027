@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Des suites géométriques aux fonctions exponentielles de base a</title>
+
+<!-- ================= MathJax 3 ================= -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']],
+      processEscapes: true
+    },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    padding: 30px 16px 70px;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.65;
+    background-color: #eef2f7;
+    background-image:
+      radial-gradient(circle at 12% 0%, #dbeafe 0%, transparent 45%),
+      radial-gradient(circle at 92% 6%, #fef3c7 0%, transparent 42%);
+    background-attachment: fixed;
+  }
+
+  .wrap { max-width: 1140px; margin: 0 auto; }
+
+  h1 {
+    font-size: clamp(1.45rem, 2.7vw, 2.15rem);
+    text-align: center;
+    margin: 0 0 .5rem;
+    color: #0f172a;
+    letter-spacing: -.02em;
+    line-height: 1.25;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #475569;
+    max-width: 820px;
+    margin: 0 auto 2rem;
+    font-size: 1.02rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 28px 28px;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, .08), 0 1px 3px rgba(15, 23, 42, .06);
+    margin-bottom: 28px;
+  }
+
+  h2 {
+    font-size: 1.22rem;
+    margin: 0 0 1.1rem;
+    color: #0f172a;
+    border-left: 5px solid #2563eb;
+    padding-left: .75rem;
+    line-height: 1.3;
+  }
+
+  h3 { font-size: 1.02rem; margin: 0 0 .55rem; }
+
+  p { margin: .6rem 0; }
+
+  /* ================= Visualisation ================= */
+  .viz {
+    display: flex;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .slider-col {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 16px 4px 2px;
+    border-right: 2px dashed #dbe3ee;
+  }
+
+  .a-badge {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #e0ecff;
+    border: 1px solid #bfd7ff;
+    border-radius: 10px;
+    padding: 5px 12px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .slider-wrap {
+    position: relative;
+    width: 40px;
+    height: 300px;
+  }
+
+  .slider-wrap input[type="range"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 300px;
+    height: 40px;
+    margin: 0;
+    transform: translate(-130px, 130px) rotate(-90deg);
+    transform-origin: 150px 20px;
+    accent-color: #2563eb;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    width: 84px;
+  }
+
+  .presets button {
+    font: inherit;
+    font-size: .78rem;
+    padding: 4px 0;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    cursor: pointer;
+    transition: .15s;
+  }
+
+  .presets button:hover { background: #e2e8f0; border-color: #94a3b8; }
+  .presets button:active { transform: scale(.95); }
+
+  .state {
+    font-size: .8rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .state.up { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .state.down { background: #ffe4e6; color: #be123c; border: 1px solid #fda4af; }
+  .state.flat { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+
+  .canvas-col { flex: 1 1 auto; min-width: 0; }
+
+  #cv {
+    display: block;
+    width: 100%;
+    height: 452px;
+    border-radius: 12px;
+    background: #fbfdff;
+    border: 1px solid #e2e8f0;
+  }
+
+  .legend {
+    font-size: .88rem;
+    color: #475569;
+    margin: .7rem 0 0;
+  }
+
+  .keydot {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    vertical-align: -1px;
+    margin: 0 3px 0 10px;
+  }
+  .keydot.curve { background: #2563eb; }
+  .keydot.pts { background: #ea580c; }
+  .keydot.neg { background: #94a3b8; }
+
+  /* ================= Tableau comparatif ================= */
+  .table-scroll { overflow-x: auto; }
+
+  table.compare {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .96rem;
+    min-width: 640px;
+  }
+
+  table.compare thead th {
+    text-align: left;
+    padding: 14px 18px;
+    font-size: 1rem;
+    color: #fff;
+    line-height: 1.45;
+  }
+  table.compare thead th:first-child {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    border-radius: 12px 0 0 0;
+  }
+  table.compare thead th:last-child {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-radius: 0 12px 0 0;
+  }
+
+  table.compare tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid #eef2f7;
+    vertical-align: top;
+    width: 50%;
+  }
+  table.compare tbody tr:nth-child(even) td { background: #f8fafc; }
+  table.compare tbody tr:hover td { background: #eef6ff; }
+
+  table.compare tbody td:first-child { border-right: 2px solid #e2e8f0; }
+
+  table.compare tbody tr.hl td {
+    background: #fffbeb !important;
+    border-top: 2px solid #fcd34d;
+    border-bottom: 2px solid #fcd34d;
+    font-weight: 600;
+  }
+
+  /* ================= Cas de a ================= */
+  .cases {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  .case {
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px 18px 18px;
+    background: #fbfdff;
+    transition: .22s;
+  }
+
+  .case.active {
+    border-color: #2563eb;
+    background: #f0f7ff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+  }
+
+  .case h3 {
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+    color: #0f172a;
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #cbd5e1;
+  }
+
+  .case .blk { margin-bottom: 12px; }
+  .case .blk:last-child { margin-bottom: 0; }
+
+  .case .blk-title {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .case .blk.seq .blk-title { color: #c2410c; }
+  .case .blk.fun .blk-title { color: #1d4ed8; }
+
+  /* ---- Neutralise la mise en majuscules pour les expressions LaTeX ---- */
+  .blk-title .latex-lower,
+  .blk-title .latex-lower mjx-container,
+  .blk-title .latex-lower mjx-container * {
+    text-transform: none !important;
+    letter-spacing: normal;
+  }
+
+  .case ul {
+    margin: 0;
+    padding-left: 1.15rem;
+    font-size: .92rem;
+    line-height: 1.6;
+  }
+  .case ul li { margin-bottom: 3px; }
+
+  /* ================= Conclusion (fond clair) ================= */
+  .conclusion {
+    background: #f0f7ff;
+    border: 2px solid #bfd7ff;
+    border-radius: 16px;
+    padding: 24px 28px;
+    color: #1e293b;
+  }
+  .conclusion h2 {
+    color: #0f172a;
+    border-left-color: #2563eb;
+  }
+  .conclusion p { color: #334155; }
+  .conclusion strong { color: #1d4ed8; }
+
+  /* ================= Bouton licence ================= */
+  .license-bar {
+    text-align: center;
+    margin-top: 34px;
+  }
+
+  #openLicense {
+    font: inherit;
+    font-size: .98rem;
+    font-weight: 700;
+    padding: 12px 26px;
+    border-radius: 12px;
+    border: 2px solid #2563eb;
+    background: #fff;
+    color: #1d4ed8;
+    cursor: pointer;
+    transition: .18s;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, .12);
+  }
+  #openLicense:hover {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, .32);
+    transform: translateY(-1px);
+  }
+  #openLicense:active { transform: translateY(0); }
+
+  /* ================= Modale ================= */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .55);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity .22s ease;
+  }
+  .modal-overlay.open {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal {
+    background: #fff;
+    border-radius: 18px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .35);
+    transform: translateY(14px) scale(.98);
+    transition: transform .22s ease;
+    overflow: hidden;
+  }
+  .modal-overlay.open .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #fff;
+  }
+  .modal-head h2 {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: 1.15rem;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .modal-close {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover { background: rgba(255, 255, 255, .34); }
+
+  .modal-body {
+    padding: 22px 26px 26px;
+    overflow-y: auto;
+    font-size: .95rem;
+    color: #334155;
+    line-height: 1.7;
+  }
+  .modal-body h3 {
+    font-size: 1rem;
+    color: #0f172a;
+    margin: 20px 0 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #cbd5e1;
+  }
+  .modal-body h3:first-of-type { margin-top: 6px; }
+  .modal-body ul {
+    margin: 8px 0;
+    padding-left: 1.25rem;
+  }
+  .modal-body ul li { margin-bottom: 8px; }
+  .modal-body strong { color: #0f172a; }
+  .modal-body a {
+    color: #1d4ed8;
+    text-decoration: none;
+    border-bottom: 1px dotted #1d4ed8;
+    word-break: break-word;
+  }
+  .modal-body a:hover { color: #be123c; border-bottom-color: #be123c; }
+
+  .modal-body .meta {
+    background: #f1f5f9;
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+  }
+  .modal-body .meta p { margin: 2px 0; }
+
+  .modal-body .warn {
+    background: #fff7ed;
+    border-left: 4px solid #ea580c;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+
+  body.modal-open { overflow: hidden; }
+
+  @media (max-width: 760px) {
+    .viz { flex-direction: column; }
+    .slider-col {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      border-right: none;
+      border-bottom: 2px dashed #dbe3ee;
+      padding: 4px 0 16px;
+    }
+    .slider-wrap { height: 240px; }
+    .slider-wrap input[type="range"] {
+      width: 240px;
+      transform: translate(-100px, 100px) rotate(-90deg);
+      transform-origin: 120px 20px;
+    }
+    .presets { width: 130px; grid-template-columns: repeat(3, 1fr); }
+    #cv { height: 340px; }
+    .card { padding: 18px 16px 20px; }
+    .modal-body { padding: 18px 18px 22px; }
+    .modal-head { padding: 15px 18px; }
+    .modal-head h2 { font-size: 1.02rem; }
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <h1>Des suites géométriques aux fonctions exponentielles de base \(a\)</h1>
+  <p class="subtitle">
+    Comment le nuage de points isolés \((n,\,a^n)\), \(n\in\mathbb N\), devient une courbe continue
+    lorsque l'exposant cesse d'être entier. On se limite aux bases \(a>0\) et on n'utilise
+    que les propriétés algébriques des puissances.
+  </p>
+
+  <!-- ===================== 1. VISUALISATION ===================== -->
+  <div class="card">
+    <h2>1. Visualisation : la suite et son prolongement continu</h2>
+
+    <div class="viz">
+      <div class="slider-col">
+        <div class="a-badge">\(a\) = <span id="aval">2,00</span></div>
+
+        <div class="slider-wrap">
+          <input type="range" id="sliderA" min="0.10" max="3" step="0.01" value="2"
+                 aria-label="Choix de la base a">
+        </div>
+
+        <div class="presets">
+          <button data-a="0.2">0,2</button>
+          <button data-a="0.5">0,5</button>
+          <button data-a="0.8">0,8</button>
+          <button data-a="1">1</button>
+          <button data-a="1.5">1,5</button>
+          <button data-a="2">2</button>
+          <button data-a="2.5">2,5</button>
+          <button data-a="3">3</button>
+        </div>
+
+        <div class="state up" id="stateBadge">strictement croissante</div>
+      </div>
+
+      <div class="canvas-col">
+        <canvas id="cv"></canvas>
+        <p class="legend">
+          <span class="keydot pts"></span> termes \(u_n=a^n\) de la suite (points isolés, \(n\in\mathbb N\))
+          <span class="keydot neg"></span> points entiers négatifs
+          <span class="keydot curve"></span> courbe \(y=a^x\)
+          <br>
+          Les points de la suite sont <strong>exactement</strong> les points de la courbe d'abscisses entières :
+          \(u_n=f(n)\). Entre deux entiers, la courbe « interpole » de façon continue et régulière.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 2. TABLEAU ===================== -->
+  <div class="card">
+    <h2>2. Tableau comparatif : suite géométrique \(\leftrightarrow\) fonction exponentielle</h2>
+
+    <div class="table-scroll">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>Suite géométrique de raison \(a\) &nbsp;—&nbsp; \(u_n=a^n\), \(n\in\mathbb N\)</th>
+            <th>Fonction exponentielle de base \(a\) &nbsp;—&nbsp; \(f(x)=a^x\), \(x\in\mathbb R\)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Définie sur \(\mathbb N\) : les exposants sont des <strong>entiers</strong> (valeurs discrètes, on saute de \(n\) à \(n+1\)).</td>
+            <td>Définie sur \(\mathbb R\) : les exposants sont des <strong>réels</strong> (valeurs continues, on peut faire varier \(x\) sans saut).</td>
+          </tr>
+          <tr>
+            <td>Relation de récurrence : \(u_{n+1}=a\,u_n\), avec \(u_0=1\).</td>
+            <td>Relation fonctionnelle : \(f(x+1)=a\,f(x)\), avec \(f(0)=1\).</td>
+          </tr>
+          <tr>
+            <td>Terme général : \(u_n=\underbrace{a\times a\times\cdots\times a}_{n\text{ facteurs}}\), \(u_0=1\), \(u_1=a\).</td>
+            <td>Prolongement : \(f(x)=a^x\), avec \(f(0)=1\), \(f(1)=a\), et \(f(n)=a^n\) pour tout \(n\in\mathbb N\).</td>
+          </tr>
+          <tr>
+            <td>Additivité des exposants : \(a^{\,n+m}=a^n\times a^m\).</td>
+            <td>Additivité des exposants : \(a^{\,x+y}=a^x\times a^y\).</td>
+          </tr>
+          <tr>
+            <td>Puissance d'une puissance : \(\left(a^n\right)^m=a^{\,nm}\).</td>
+            <td>Puissance d'une puissance : \(\left(a^x\right)^y=a^{\,xy}\).</td>
+          </tr>
+          <tr>
+            <td>Tous les termes sont strictement positifs : \(u_n>0\) pour tout \(n\in\mathbb N\).</td>
+            <td>La fonction est strictement positive : \(f(x)>0\) pour tout \(x\in\mathbb R\).</td>
+          </tr>
+          <tr>
+            <td>Raison \(a\) : \(\dfrac{u_{n+1}}{u_n}=a\) — on multiplie toujours par le même nombre.</td>
+            <td>Base \(a\) : \(\dfrac{f(x+h)}{f(x)}=a^{h}\) — le rapport ne dépend que de l'écart \(h\).</td>
+          </tr>
+          <tr>
+            <td>Sens de variation :<br>
+              \(a>1\Rightarrow\) croissante ;<br>
+              \(a=1\Rightarrow\) constante ;<br>
+              \(0&lt;a&lt;1\Rightarrow\) décroissante.
+            </td>
+            <td>Sens de variation (pour \(h>0\)) :<br>
+              \(a>1\Rightarrow a^h>1\Rightarrow\) croissante ;<br>
+              \(a=1\Rightarrow\) constante ;<br>
+              \(0&lt;a&lt;1\Rightarrow a^h&lt;1\Rightarrow\) décroissante.
+            </td>
+          </tr>
+          <tr>
+            <td>Limite en \(+\infty\) :<br>
+              \(\lim\limits_{n\to+\infty}a^n=+\infty\) si \(a>1\) ;<br>
+              \(=1\) si \(a=1\) ; \(=0\) si \(0&lt;a&lt;1\).
+            </td>
+            <td>Comportement à l'infini :<br>
+              \(\lim\limits_{x\to+\infty}a^x=+\infty\) si \(a>1\), \(0\) si \(0&lt;a&lt;1\) ;<br>
+              \(\lim\limits_{x\to-\infty}a^x=0\) si \(a>1\), \(+\infty\) si \(0&lt;a&lt;1\).
+            </td>
+          </tr>
+          <tr>
+            <td>Représentation graphique : un <strong>nuage de points isolés</strong> \((n\,;\,a^n)\) sur la droite des abscisses entières.</td>
+            <td>Représentation graphique : une <strong>courbe continue</strong> qui traverse tous ces points.</td>
+          </tr>
+          <tr class="hl">
+            <td>La suite est la <strong>restriction</strong> de la fonction à \(\mathbb N\) : \(u_n=f(n)\).</td>
+            <td>La fonction est le <strong>prolongement par continuité</strong> de la suite à \(\mathbb R\) tout entier.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===================== 3. VARIATIONS ===================== -->
+  <div class="card">
+    <h2>3. Étude des variations selon les valeurs de \(a\) (\(a>0\))</h2>
+
+    <div class="cases">
+
+      <!-- Cas 0 < a < 1 -->
+      <div class="case" id="case1">
+        <h3>Cas \(0&lt;a&lt;1\)</h3>
+
+        <div class="blk seq">
+          <div class="blk-title">Suite <span class="latex-lower">\(u_n=a^n\)</span></div>
+          <ul>
+            <li>Raison \(a\in\,]0\,;1[\)</li>
+            <li>\(u_{n+1}-u_n=a^n(a-1)&lt;0\) : suite <strong>strictement décroissante</strong></li>
+            <li>\(u_0=1\) et \(u_n\searrow\) vers \(0\) : \(\lim\limits_{n\to+\infty}a^n=0\)</li>
+            <li>Tous les termes restent dans \(]0\,;1]\)</li>
+          </ul>
+        </div>
+
+        <div class="blk fun">
+          <div class="blk-title">Fonction <span class="latex-lower">\(f(x)=a^x\)</span></div>
+          <ul>
+            <li>Pour \(h>0\) : \(\dfrac{f(x+h)}{f(x)}=a^{h}&lt;1\), donc \(f(x+h)&lt;f(x)\) : <strong>strictement décroissante</strong> sur \(\mathbb R\)</li>
+            <li>\(\lim\limits_{x\to+\infty}a^x=0\) : la droite \(y=0\) est asymptote horizontale en \(+\infty\)</li>
+            <li>\(\lim\limits_{x\to-\infty}a^x=+\infty\)</li>
+            <li>\(f(x)>0\) pour tout réel \(x\)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Cas a = 1 -->
+      <div class="case" id="case2">
+        <h3>Cas \(a=1\)</h3>
+
+        <div class="blk seq">
+          <div class="blk-title">Suite <span class="latex-lower">\(u_n=1^n\)</span></div>
+          <ul>
+            <li>Raison \(a=1\)</li>
+            <li>\(u_{n+1}=u_n\) : suite <strong>constante</strong></li>
+            <li>\(u_n=1\) pour tout \(n\in\mathbb N\)</li>
+            <li>La suite converge vers \(1\)</li>
+          </ul>
+        </div>
+
+        <div class="blk fun">
+          <div class="blk-title">Fonction <span class="latex-lower">\(f(x)=1^x\)</span></div>
+          <ul>
+            <li>Pour tout \(h\) : \(\dfrac{f(x+h)}{f(x)}=1^{h}=1\)</li>
+            <li>\(f(x)=1\) pour tout \(x\in\mathbb R\) : fonction <strong>constante</strong></li>
+            <li>La courbe est la droite horizontale \(y=1\)</li>
+            <li>Cas frontière entre décroissance et croissance</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Cas a > 1 -->
+      <div class="case" id="case3">
+        <h3>Cas \(a>1\)</h3>
+
+        <div class="blk seq">
+          <div class="blk-title">Suite <span class="latex-lower">\(u_n=a^n\)</span></div>
+          <ul>
+            <li>Raison \(a>1\)</li>
+            <li>\(u_{n+1}-u_n=a^n(a-1)>0\) : suite <strong>strictement croissante</strong></li>
+            <li>\(\lim\limits_{n\to+\infty}a^n=+\infty\)</li>
+            <li>Croissance de plus en plus rapide (les termes « explosent »)</li>
+          </ul>
+        </div>
+
+        <div class="blk fun">
+          <div class="blk-title">Fonction <span class="latex-lower">\(f(x)=a^x\)</span></div>
+          <ul>
+            <li>Pour \(h>0\) : \(\dfrac{f(x+h)}{f(x)}=a^{h}>1\), donc \(f(x+h)>f(x)\) : <strong>strictement croissante</strong> sur \(\mathbb R\)</li>
+            <li>\(\lim\limits_{x\to+\infty}a^x=+\infty\)</li>
+            <li>\(\lim\limits_{x\to-\infty}a^x=0\) : la droite \(y=0\) est asymptote horizontale en \(-\infty\)</li>
+            <li>\(f(x)>0\) pour tout réel \(x\)</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== 4. CONCLUSION (fond clair) ===================== -->
+  <div class="conclusion">
+    <h2>Ce qu'il faut retenir</h2>
+    <p>
+      La suite géométrique \((a^n)\) ne vit que sur les entiers : on passe d'un terme au suivant
+      en multipliant par \(a\), ce qui laisse des « trous » entre \(u_0\), \(u_1\), \(u_2\), …
+    </p>
+    <p>
+      En exigeant que la même règle \(x\mapsto a^x\) respecte
+      \(a^{\,x+y}=a^x\,a^y\) pour <strong>tous</strong> les réels \(x,y\), on comble ces trous
+      d'une seule manière : le nuage de points devient une <strong>courbe continue</strong> qui
+      passe par tous les points \((n\,;\,a^n)\).
+    </p>
+    <p>
+      Le sens de variation ne dépend que de la position de \(a\) par rapport à \(1\) :
+      <strong>croissance si \(a>1\)</strong>, <strong>constance si \(a=1\)</strong>,
+      <strong>décroissance si \(0&lt;a&lt;1\)</strong> — et ce, de façon identique pour la suite
+      et pour la fonction.
+    </p>
+  </div>
+
+  <!-- ===================== BOUTON LICENCE ===================== -->
+  <div class="license-bar">
+    <button id="openLicense" type="button">⚖️ Droits d'auteur et licence d'utilisation</button>
+  </div>
+
+</div>
+
+<!-- ===================== MODALE LICENCE ===================== -->
+<div class="modal-overlay" id="licenseModal" role="dialog" aria-modal="true" aria-labelledby="licenseTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="licenseTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+      <button class="modal-close" id="closeLicense" type="button" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="meta">
+        <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com)</p>
+        <p><strong>Date :</strong> Septembre 2026</p>
+        <p><strong>Œuvre :</strong> « Des suites géométriques aux fonctions exponentielles de base \(a\) » — document HTML/CSS/JavaScript interactif (curseur de base \(a\), tracé canvas, tableau comparatif et étude des variations).</p>
+      </div>
+
+      <h3>Licence d'Utilisation Non Commerciale</h3>
+
+      <p>
+        Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+        (« Des suites géométriques aux fonctions exponentielles de base \(a\) ») sont la
+        propriété intellectuelle exclusive de l'auteur, <strong>Yann Merdy</strong>.
+      </p>
+
+      <h3>Conditions</h3>
+
+      <ul>
+        <li>
+          <strong>Utilisation Privée et Éducative (Autorisée) :</strong>
+          Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu
+          uniquement à des fins personnelles, éducatives et non lucratives.
+        </li>
+        <li>
+          <strong>Utilisation Commerciale (Interdite) :</strong>
+          Toute utilisation, distribution, intégration ou reproduction du code ou du contenu
+          (total ou partiel) à des fins commerciales, lucratives ou professionnelles est
+          strictement interdite sans un accord écrit préalable et explicite de l'auteur.
+        </li>
+        <li>
+          <strong>Attribution :</strong>
+          Toute reproduction ou modification doit conserver la mention de l'auteur originale
+          (<strong>Yann Merdy</strong>) et la présente notice de droits d'auteur.
+        </li>
+      </ul>
+
+      <div class="warn">
+        <p>
+          Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez
+          contacter l'auteur à l'adresse indiquée ci-dessus :
+          <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SCRIPT ===================== -->
+<script>
+(function () {
+  "use strict";
+
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var slider = document.getElementById('sliderA');
+  var aVal = document.getElementById('aval');
+  var stateBadge = document.getElementById('stateBadge');
+
+  var a = 2;
+
+  /* ---------- utilitaires numériques ---------- */
+
+  function niceStep(v) {
+    if (!(v > 0)) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(v)));
+    var n = v / p, s;
+    if (n < 1.5) s = 1;
+    else if (n < 3) s = 2;
+    else if (n < 7) s = 5;
+    else s = 10;
+    return s * p;
+  }
+
+  function niceCeil(v) {
+    if (!(v > 0)) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(v)));
+    var n = v / p, m;
+    if (n <= 1) m = 1;
+    else if (n <= 1.5) m = 1.5;
+    else if (n <= 2) m = 2;
+    else if (n <= 2.5) m = 2.5;
+    else if (n <= 3) m = 3;
+    else if (n <= 4) m = 4;
+    else if (n <= 5) m = 5;
+    else if (n <= 6) m = 6;
+    else if (n <= 8) m = 8;
+    else m = 10;
+    return m * p;
+  }
+
+  function yMaxFor(base) {
+    var need = Math.max(Math.pow(base, 3), Math.pow(base, -3));
+    return Math.min(40, Math.max(3, niceCeil(need * 1.08)));
+  }
+
+  function fmtNum(v) {
+    if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+    var s = v.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+    return s.replace('.', ',');
+  }
+
+  function fmtA(v) {
+    return v.toFixed(2).replace('.', ',');
+  }
+
+  /* ---------- dessin ---------- */
+
+  function drawArrow(x, y, dx, dy) {
+    var s = 9;
+    ctx.beginPath();
+    if (dx > 0) { ctx.moveTo(x, y); ctx.lineTo(x - s, y - s * 0.45); ctx.lineTo(x - s, y + s * 0.45); }
+    else if (dx < 0) { ctx.moveTo(x, y); ctx.lineTo(x + s, y - s * 0.45); ctx.lineTo(x + s, y + s * 0.45); }
+    else if (dy < 0) { ctx.moveTo(x, y); ctx.lineTo(x - s * 0.45, y + s); ctx.lineTo(x + s * 0.45, y + s); }
+    else { ctx.moveTo(x, y); ctx.lineTo(x - s * 0.45, y - s); ctx.lineTo(x + s * 0.45, y - s); }
+    ctx.closePath();
+    ctx.fillStyle = '#1e293b';
+    ctx.fill();
+  }
+
+  function haloText(txt, x, y, align, baseline, color, font) {
+    ctx.font = font;
+    ctx.textAlign = align;
+    ctx.textBaseline = baseline;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+    ctx.strokeText(txt, x, y);
+    ctx.fillStyle = color;
+    ctx.fillText(txt, x, y);
+  }
+
+  function draw() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = cv.getBoundingClientRect();
+    var W = Math.max(320, rect.width);
+    var H = Math.max(260, rect.height);
+
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    var mL = 56, mR = 28, mT = 26, mB = 48;
+    var pw = W - mL - mR;
+    var ph = H - mT - mB;
+
+    var xmin = -3, xmax = 3;
+    var ymax = yMaxFor(a);
+
+    function X(x) { return mL + (x - xmin) / (xmax - xmin) * pw; }
+    function Y(y) { return mT + (ymax - y) / ymax * ph; }
+
+    /* --- fond --- */
+    ctx.fillStyle = '#fbfdff';
+    ctx.fillRect(mL, mT, pw, ph);
+
+    /* --- grille --- */
+    var ys = niceStep(ymax);
+    ctx.strokeStyle = '#e8eef7';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var gy = ys; gy <= ymax + 1e-9; gy += ys) {
+      var pyg = Y(gy);
+      ctx.moveTo(mL, pyg); ctx.lineTo(mL + pw, pyg);
+    }
+    for (var gx = Math.ceil(xmin); gx <= xmax; gx++) {
+      var pxg = X(gx);
+      ctx.moveTo(pxg, mT); ctx.lineTo(pxg, mT + ph);
+    }
+    ctx.stroke();
+
+    /* --- axes --- */
+    var yAxisX = X(0);
+    var xAxisY = Y(0);
+
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(mL - 16, xAxisY);
+    ctx.lineTo(mL + pw + 18, xAxisY);
+    ctx.moveTo(yAxisX, mT + ph + 16);
+    ctx.lineTo(yAxisX, mT - 18);
+    ctx.stroke();
+
+    drawArrow(mL + pw + 22, xAxisY, 1, 0);
+    drawArrow(yAxisX, mT - 22, 0, -1);
+
+    /* --- graduations x --- */
+    ctx.font = '600 12px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var tx = Math.ceil(xmin); tx <= xmax; tx++) {
+      if (tx === 0) continue;
+      var ptx = X(tx);
+      ctx.beginPath();
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.4;
+      ctx.moveTo(ptx, xAxisY);
+      ctx.lineTo(ptx, xAxisY + 6);
+      ctx.stroke();
+      ctx.fillText(String(tx), ptx, xAxisY + 9);
+    }
+    haloText('O', yAxisX - 6, xAxisY + 10, 'right', 'top', '#475569', '600 12px "Segoe UI", sans-serif');
+
+    /* --- graduations y --- */
+    for (var ly = ys; ly <= ymax + 1e-9; ly += ys) {
+      var ply = Y(ly);
+      if (ply < mT + 4 || ply > mT + ph - 2) continue;
+      ctx.beginPath();
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.4;
+      ctx.moveTo(yAxisX - 6, ply);
+      ctx.lineTo(yAxisX, ply);
+      ctx.stroke();
+      haloText(fmtNum(ly), yAxisX - 9, ply, 'right', 'middle', '#475569', '600 12px "Segoe UI", sans-serif');
+    }
+
+    /* --- courbe (clippée) --- */
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(mL, mT, pw, ph);
+    ctx.clip();
+
+    ctx.beginPath();
+    var started = false;
+    var N = 1200;
+    for (var i = 0; i <= N; i++) {
+      var x = xmin + (xmax - xmin) * i / N;
+      var y = Math.pow(a, x);
+      var py = Y(y);
+      var px = X(x);
+      if (!isFinite(py)) { started = false; continue; }
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else { ctx.lineTo(px, py); }
+    }
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 3.2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    /* --- points entiers négatifs (prolongement) --- */
+    for (var n = -3; n <= -1; n++) {
+      var yn = Math.pow(a, n);
+      if (yn > ymax * 1.02) continue;
+      ctx.beginPath();
+      ctx.arc(X(n), Y(yn), 3.6, 0, Math.PI * 2);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fill();
+    }
+
+    /* --- termes de la suite --- */
+    for (var k = 0; k <= 3; k++) {
+      var yk = Math.pow(a, k);
+      if (yk > ymax * 1.02) continue;
+      var pkx = X(k), pky = Y(yk);
+
+      /* pointillés verticaux */
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(234,88,12,0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(pkx, pky);
+      ctx.lineTo(pkx, xAxisY);
+      ctx.stroke();
+      ctx.restore();
+
+      /* disque */
+      ctx.beginPath();
+      ctx.arc(pkx, pky, 6.2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ea580c';
+      ctx.fill();
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      /* étiquette */
+      haloText('u' + k, pkx + 10, pky - 8, 'left', 'bottom', '#9a3412', '700 13px "Segoe UI", sans-serif');
+    }
+
+    ctx.restore();
+
+    /* --- étiquettes hors clip --- */
+    haloText('y = a^x', mL + pw - 12, mT + 16, 'right', 'top', '#1d4ed8', 'italic 700 15px "Segoe UI", sans-serif');
+    haloText('a = ' + fmtA(a), mL + 12, mT + 16, 'left', 'top', '#0f172a', '700 15px "Segoe UI", sans-serif');
+
+    /* --- indication du sens --- */
+    var txt, col;
+    if (a > 1.0001) { txt = 'a > 1  :  croissance'; col = '#15803d'; }
+    else if (a < 0.9999) { txt = '0 < a < 1  :  décroissance'; col = '#be123c'; }
+    else { txt = 'a = 1  :  constance'; col = '#475569'; }
+    haloText(txt, mL + pw / 2, mT + ph - 14, 'center', 'bottom', col, '700 13.5px "Segoe UI", sans-serif');
+  }
+
+  /* ---------- mise à jour de l'interface ---------- */
+
+  function updateState() {
+    aVal.textContent = fmtA(a);
+
+    stateBadge.classList.remove('up', 'down', 'flat');
+    var idx;
+    if (a > 1.0001) {
+      stateBadge.classList.add('up');
+      stateBadge.textContent = 'strictement croissante';
+      idx = 2;
+    } else if (a < 0.9999) {
+      stateBadge.classList.add('down');
+      stateBadge.textContent = 'strictement décroissante';
+      idx = 0;
+    } else {
+      stateBadge.classList.add('flat');
+      stateBadge.textContent = 'constante';
+      idx = 1;
+    }
+
+    var cases = [document.getElementById('case1'),
+                 document.getElementById('case2'),
+                 document.getElementById('case3')];
+    for (var i = 0; i < cases.length; i++) {
+      if (cases[i]) cases[i].classList.toggle('active', i === idx);
+    }
+  }
+
+  function refresh() {
+    updateState();
+    draw();
+  }
+
+  /* ---------- événements slider ---------- */
+
+  slider.addEventListener('input', function () {
+    a = parseFloat(slider.value);
+    refresh();
+  });
+
+  var btns = document.querySelectorAll('.presets button');
+  for (var b = 0; b < btns.length; b++) {
+    btns[b].addEventListener('click', function () {
+      a = parseFloat(this.getAttribute('data-a'));
+      slider.value = a;
+      refresh();
+    });
+  }
+
+  /* ---------- modale licence ---------- */
+
+  var modal = document.getElementById('licenseModal');
+  var openBtn = document.getElementById('openLicense');
+  var closeBtn = document.getElementById('closeLicense');
+
+  function openModal() {
+    modal.classList.add('open');
+    document.body.classList.add('modal-open');
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+    openBtn.focus();
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+
+  /* clic sur le fond sombre */
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) closeModal();
+  });
+
+  /* touche Échap */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
+  /* ---------- rendu initial & responsive ---------- */
+
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () { draw(); });
+    ro.observe(cv);
+  }
+  window.addEventListener('resize', draw);
+
+  a = parseFloat(slider.value);
+  refresh();
+
+  if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+    window.MathJax.startup.promise.then(function () { draw(); });
+  } else {
+    window.addEventListener('load', function () { setTimeout(draw, 300); });
+  }
+})();
+</script>
+</body>
+</html>

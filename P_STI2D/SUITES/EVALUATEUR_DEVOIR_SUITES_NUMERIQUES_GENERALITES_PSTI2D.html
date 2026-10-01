@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analyseur de copies — Suites numériques — 1ère STI2D</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(','\\)'], ['$','$']],
+    displayMath: [['\\[','\\]'], ['$$','$$']]
+  },
+  options: {
+    skipHtmlTags: ['script','noscript','style','textarea','pre','code','input','select']
+  }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+:root{
+  --bleu:#2563eb; --bleu-fonce:#1e3a8a;
+  --ardoise:#1e293b; --gris:#64748b; --gris-clair:#e2e8f0;
+  --fond:#eef2f7; --or:#b45309; --or-clair:#fffbeb;
+  --vert:#15803d; --vert-clair:#dcfce7;
+  --rouge:#b91c1c; --rouge-clair:#fee2e2;
+  --jaune:#ca8a04; --jaune-clair:#fef9c3;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--fond); color:var(--ardoise);
+  line-height:1.55; font-size:15.5px;
+}
+header{
+  background:linear-gradient(90deg,#1e293b,#0f172a); color:#fff;
+  padding:18px 26px; box-shadow:0 2px 14px rgba(0,0,0,.25);
+}
+header h1{margin:0;font-size:1.35rem;letter-spacing:.3px}
+header p{margin:4px 0 0;font-size:.85rem;color:#94a3b8}
+
+main{max-width:1100px;margin:0 auto;padding:22px 16px 80px}
+
+/* ---------- DROPZONE ---------- */
+#dropzone{
+  background:#fff;border:2.5px dashed #94a3b8;border-radius:16px;
+  padding:52px 24px;text-align:center;transition:.2s;cursor:pointer;
+  margin-bottom:26px;
+}
+#dropzone:hover,#dropzone.hover{border-color:var(--bleu);background:#eff6ff}
+#dropzone .dz-icone{font-size:3.4rem;line-height:1;margin-bottom:12px}
+#dropzone h2{margin:0 0 6px;font-size:1.15rem;color:var(--bleu-fonce)}
+#dropzone p{margin:0;color:var(--gris);font-size:.9rem}
+#dropzone input[type=file]{display:none}
+#erreurCharge{
+  display:none;background:var(--rouge-clair);border:1px solid #fecaca;
+  color:#991b1b;padding:14px 18px;border-radius:10px;
+  margin-bottom:20px;font-size:.9rem;
+}
+
+/* ---------- RAPPORT ---------- */
+#rapport{display:none}
+.rubrique{
+  background:#fff;border-radius:14px;padding:24px 26px;margin-bottom:24px;
+  box-shadow:0 3px 18px rgba(15,23,42,.08); border:1px solid #e2e8f0;
+}
+.rubrique > h2{
+  margin:0 0 16px;font-size:1.2rem;color:var(--bleu-fonce);
+  border-bottom:3px solid var(--bleu);display:inline-block;padding-bottom:4px;
+}
+
+/* Carte d'identité */
+.id-card{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:12px 20px;
+}
+.id-row{display:flex;flex-direction:column;gap:2px;padding:10px 14px;
+  background:#f8fafc;border-radius:9px;border-left:4px solid var(--bleu)}
+.id-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--gris);font-weight:700}
+.id-value{font-size:1.05rem;font-weight:600;color:var(--ardoise)}
+
+/* Bilan de session */
+.bilan-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:14px;
+}
+.bilan-item{
+  background:#f8fafc;border-radius:10px;padding:14px 16px;text-align:center;
+  border:1px solid #e2e8f0;
+}
+.bilan-item .bi-val{font-size:1.55rem;font-weight:700;color:var(--bleu-fonce)}
+.bilan-item .bi-lab{font-size:.78rem;color:var(--gris);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+
+/* Fraude */
+.fraude-entete{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.jauge{
+  width:130px;height:130px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  position:relative;flex:0 0 130px;
+  background:conic-gradient(var(--couleur-jauge) var(--degr), #e2e8f0 0deg);
+}
+.jauge::after{
+  content:'';position:absolute;inset:12px;border-radius:50%;background:#fff;
+}
+.jauge-valeur,.jauge-label{position:relative;z-index:1}
+.jauge-valeur{font-size:1.6rem;font-weight:800;color:var(--couleur-jauge)}
+.jauge-label{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:.6px}
+.fraude-qualif{flex:1;min-width:200px}
+.fraude-qualif .fq-titre{font-size:1.1rem;font-weight:700;margin:0 0 6px}
+.fraude-qualif .fq-desc{color:var(--gris);font-size:.9rem;margin:0}
+table.detail-fraude{
+  width:100%;border-collapse:collapse;margin-top:14px;font-size:.88rem;
+}
+table.detail-fraude th,table.detail-fraude td{
+  padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:left;
+}
+table.detail-fraude th{background:#f1f5f9;font-size:.76rem;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--gris)}
+table.detail-fraude td.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* Timeline */
+.timeline{position:relative;padding-left:26px;margin-top:10px}
+.timeline::before{
+  content:'';position:absolute;left:9px;top:6px;bottom:6px;
+  width:2px;background:#e2e8f0;
+}
+.tl-item{position:relative;padding:6px 0 6px 16px;font-size:.88rem}
+.tl-item::before{
+  content:'';position:absolute;left:-22px;top:12px;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--bleu);border:2px solid #fff;box-shadow:0 0 0 2px var(--bleu);
+}
+.tl-item.sortie::before{background:var(--jaune);box-shadow:0 0 0 2px var(--jaune)}
+.tl-item.inactivite::before{background:var(--or);box-shadow:0 0 0 2px var(--or)}
+.tl-item.collage::before{background:var(--rouge);box-shadow:0 0 0 2px var(--rouge)}
+.tl-item.fin::before{background:var(--vert);box-shadow:0 0 0 2px var(--vert)}
+.tl-time{font-variant-numeric:tabular-nums;color:var(--gris);font-size:.78rem;
+  font-weight:600;margin-right:8px}
+.tl-type{font-weight:700;color:var(--ardoise)}
+.tl-detail{color:var(--gris);font-size:.82rem}
+
+/* Exercice */
+.exo{margin-bottom:34px}
+.exo > h3{
+  margin:0 0 12px;font-size:1.08rem;color:var(--bleu-fonce);
+  background:#eff6ff;padding:10px 16px;border-radius:9px;
+  border-left:5px solid var(--bleu);
+}
+.enonce-rappel{
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+  padding:14px 18px;margin-bottom:18px;font-size:.92rem;color:#334155;
+}
+.enonce-rappel .er-titre{font-size:.72rem;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--gris);font-weight:700;margin-bottom:6px}
+
+.q-analyse{
+  border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;
+  margin-bottom:18px;background:#fff;
+}
+.q-analyse .q-tete{
+  display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;
+}
+.q-analyse .q-badge{
+  flex:0 0 auto;background:var(--bleu);color:#fff;font-size:.75rem;
+  font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;
+}
+.q-analyse .q-intitule{flex:1;font-size:.94rem;color:#334155}
+.q-analyse .q-intitule p{margin:.2em 0}
+
+/* Réponse élève */
+.rep-eleve{
+  background:#f8fafc;border-radius:9px;padding:12px 14px;margin-bottom:14px;
+}
+.rep-eleve .re-titre{
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--gris);font-weight:700;margin-bottom:8px;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.rep-eleve .re-titre .re-temps{color:var(--bleu);font-weight:600}
+.lignes-affichees{display:flex;flex-direction:column;gap:6px}
+.ligne-affichee{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:7px 10px;border-radius:7px;background:#fff;border:1px solid #e2e8f0;
+}
+.ligne-affichee.is-final{
+  background:var(--or-clair);border:2px solid var(--or);font-weight:600;color:#78350f;
+}
+.ligne-affichee .la-conj{
+  flex:0 0 auto;font-size:.78rem;font-weight:700;color:var(--bleu);
+  text-transform:lowercase;padding:1px 8px;background:#eff6ff;
+  border-radius:10px;white-space:nowrap;
+}
+.ligne-affichee.is-final .la-conj{background:var(--or);color:#fff}
+.ligne-affichee .la-texte{flex:1;font-size:.92rem;word-break:break-word}
+.ligne-affichee .la-badge{
+  font-size:.68rem;font-weight:700;color:var(--or);text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.rep-vide{color:var(--gris);font-style:italic;font-size:.88rem;text-align:center;padding:10px}
+
+/* Correction */
+.corr{
+  background:#ecfdf5;border-radius:9px;padding:14px 16px;
+  border-left:4px solid var(--vert);margin-bottom:14px;
+}
+.corr .cor-titre{
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--vert);font-weight:700;margin-bottom:8px;
+}
+.corr .cor-methode{font-size:.9rem;color:#334155;margin:0 0 10px}
+.corr .cor-methode strong{color:#065f46}
+.corr .valeurs-liste{list-style:none;padding:0;margin:0 0 10px}
+.corr .valeurs-liste li{
+  padding:6px 10px;background:#fff;border-radius:7px;margin-bottom:5px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.9rem;
+  border:1px solid #d1fae5;
+}
+.corr .vl-label{font-weight:600;color:#065f46;min-width:100px}
+.corr .vl-valeur{font-family:'Cambria Math',Georgia,serif;font-size:1.02rem;
+  color:#064e3b;background:#f0fdf4;padding:1px 8px;border-radius:5px}
+.corr .vl-statut{
+  margin-left:auto;font-size:.75rem;font-weight:700;padding:2px 9px;
+  border-radius:10px;letter-spacing:.3px;
+}
+.corr .vl-statut.ok{background:var(--vert-clair);color:var(--vert)}
+.corr .vl-statut.ko{background:var(--rouge-clair);color:var(--rouge)}
+.corr .cor-conclusion{
+  margin:10px 0 0;padding:10px 12px;background:#fff;border-radius:7px;
+  border-left:3px solid var(--vert);font-size:.9rem;color:#065f46;
+}
+.corr .cor-conclusion strong{color:#064e3b}
+
+/* Analyse auto */
+.auto-analyse{
+  background:#fffbeb;border-radius:9px;padding:12px 14px;
+  border-left:4px solid var(--jaune);
+}
+.auto-analyse .aa-titre{
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--jaune);font-weight:700;margin-bottom:8px;
+}
+.auto-analyse .aa-resume{
+  display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem;margin-bottom:8px;
+}
+.auto-analyse .aa-item{display:flex;align-items:center;gap:6px}
+.auto-analyse .aa-item .dot{
+  width:9px;height:9px;border-radius:50%;background:var(--vert);
+}
+.auto-analyse .aa-item .dot.ko{background:var(--rouge)}
+.auto-analyse .aa-item .dot.warn{background:var(--jaune)}
+.auto-analyse .aa-commentaire{font-size:.86rem;color:#78350f;margin:0}
+
+/* Synthèse */
+.synthese-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;margin-top:10px;
+}
+.syn-card{
+  background:#f8fafc;border-radius:10px;padding:14px 16px;
+  border:1px solid #e2e8f0;
+}
+.syn-card .sc-titre{font-size:.72rem;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--gris);font-weight:700;margin-bottom:6px}
+.syn-card .sc-valeur{font-size:1.7rem;font-weight:800;color:var(--bleu-fonce)}
+.syn-card .sc-detail{font-size:.82rem;color:var(--gris);margin-top:4px}
+
+.observations{margin-top:18px}
+.observations ul{padding-left:22px;margin:8px 0}
+.observations li{margin:6px 0;font-size:.9rem}
+
+/* Footer */
+footer{text-align:center;padding:24px;color:var(--gris);font-size:.8rem}
+
+/* Boutons */
+.btn{
+  font-family:inherit;font-size:.92rem;font-weight:600;cursor:pointer;
+  border:none;border-radius:9px;padding:10px 22px;transition:.15s;
+}
+.btn-primaire{background:var(--bleu);color:#fff}
+.btn-primaire:hover{background:#1d4ed8}
+.btn-ghost{background:#fff;color:#334155;border:1px solid #cbd5e1}
+.btn-ghost:hover{background:#f1f5f9}
+
+/* Barre de progression / qualité */
+.qualite-bar{
+  height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;
+  margin-top:8px;
+}
+.qualite-bar > span{
+  display:block;height:100%;background:linear-gradient(90deg,#22c55e,#84cc16);
+  transition:width .4s;
+}
+
+@media print{
+  body{background:#fff}
+  .rubrique{box-shadow:none;page-break-inside:avoid}
+  header{background:#1e293b !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Analyseur de copies &mdash; Évaluation &laquo;&nbsp;Suites numériques&nbsp;&raquo;</h1>
+  <p>1<sup>re</sup> STI2D &mdash; Généralités sur les suites &mdash; Outil de correction et d'analyse</p>
+</header>
+
+<main>
+
+  <div id="erreurCharge"></div>
+
+  <div id="dropzone">
+    <div class="dz-icone">&#128202;</div>
+    <h2>Déposez ici le fichier .json d'une copie élève</h2>
+    <p>ou cliquez pour parcourir vos fichiers</p>
+    <input type="file" id="fichierInput" accept=".json,application/json">
+  </div>
+
+  <div id="rapport"></div>
+
+</main>
+
+<footer>
+  Analyseur PSTI2DA &mdash; Licence non commerciale &mdash; Auteur&nbsp;: Yann Merdy
+</footer>
+
+<script>
+/* =====================================================================
+   ANALYSEUR DE COPIES — ÉVALUATION SUITES NUMÉRIQUES — 1ère STI2D
+   Auteur : Yann Merdy — Licence non commerciale
+   Lecture d'un fichier .json chiffré (XOR + Base64), analyse détaillée :
+   contenu mathématique, raisonnement, justesse des calculs, fraude.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. DÉCHIFFREMENT
+--------------------------------------------------------------------- */
+const XORKEY = 'PSTI2DA-2026-YannMerdy';
+
+function xorStr(s, k){
+  let o = '';
+  for (let i = 0; i < s.length; i++){
+    o += String.fromCharCode(s.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+  }
+  return o;
+}
+
+function dechiffrer(b64){
+  const ascii = xorStr(atob(b64), XORKEY);
+  return JSON.parse(decodeURIComponent(ascii));
+}
+
+/* ---------------------------------------------------------------------
+   2. UTILITAIRES GÉNÉRAUX
+--------------------------------------------------------------------- */
+function h(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '—';
+  const j = String(d.getDate()).padStart(2,'0');
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const a = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mn = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  return j + '/' + m + '/' + a + ' à ' + hh + ':' + mn + ':' + ss;
+}
+
+function fmtDuree(ms){
+  if(ms == null) return '—';
+  const totalSec = Math.round(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if(m === 0) return s + ' s';
+  return m + ' min ' + String(s).padStart(2,'0') + ' s';
+}
+
+function fmtDureeSec(sec){
+  sec = Math.round(sec);
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m + ' min ' + String(s).padStart(2,'0') + ' s';
+}
+
+/* ---------------------------------------------------------------------
+   3. UTILITAIRES MATHÉMATIQUES (fractions)
+--------------------------------------------------------------------- */
+function gcd(a,b){ a = Math.abs(a); b = Math.abs(b);
+  while(b){ const t = a % b; a = b; b = t; } return a || 1; }
+
+function frac(n, d){
+  d = d || 1;
+  if(d < 0){ n = -n; d = -d; }
+  const g = gcd(n, d);
+  return { n: n / g, d: d / g };
+}
+
+function fTex(f){
+  if(f.d === 1) return String(f.n);
+  return (f.n < 0 ? '-' : '') + '\\dfrac{' + Math.abs(f.n) + '}{' + f.d + '}';
+}
+
+function fDec(f){ return f.n / f.d; }
+
+/* ---------------------------------------------------------------------
+   4. NORMALISATION DU TEXTE ÉLÈVE
+--------------------------------------------------------------------- */
+function normaliserTexte(s){
+  if(s == null) return '';
+  s = String(s);
+  /* Convertir \dfrac{a}{b} et \frac{a}{b} en a/b */
+  s = s.replace(/\\dfrac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, '($1)/($2)');
+  s = s.replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, '($1)/($2)');
+  s = s.toLowerCase();
+  s = s.replace(/\\left|\\right/g, '');
+  s = s.replace(/\\times|\\cdot|\\ast/g, '*');
+  s = s.replace(/\\div/g, '/');
+  s = s.replace(/\\sqrt\s*\{([^{}]+)\}/g, 'sqrt($1)');
+  s = s.replace(/[{}\\]/g, '');
+  s = s.replace(/\s+/g, '');
+  s = s.replace(/[,]/g, '.');
+  s = s.replace(/[()]/g, '');
+  return s;
+}
+
+/* ---------------------------------------------------------------------
+   5. FORMES TEXTUELLES D'UNE VALEUR (pour la détection)
+--------------------------------------------------------------------- */
+function formesDepuisFrac(f){
+  const formes = [];
+  if(f.d === 1){
+    formes.push(String(f.n));
+  } else {
+    const signe = f.n < 0 ? '-' : '';
+    const absN = Math.abs(f.n);
+    /* Formes fractionnaires */
+    formes.push(signe + absN + '/' + f.d);
+    /* Formes décimales */
+    const v = f.n / f.d;
+    for(const dec of [2, 3, 4]){
+      formes.push(v.toFixed(dec));
+    }
+    /* Si le dénominateur divise le numérateur, on aura déjà n */
+  }
+  return formes;
+}
+
+function formesDepuisNombre(v){
+  const formes = [];
+  if(Number.isInteger(v)){
+    formes.push(String(v));
+  } else {
+    for(const dec of [2, 3, 4]){
+      formes.push(v.toFixed(dec));
+    }
+  }
+  return formes;
+}
+
+function contientForme(texteNorm, formes){
+  for(const f of formes){
+    if(f === '') continue;
+    if(texteNorm.indexOf(f) !== -1) return true;
+  }
+  return false;
+}
+
+/* ---------------------------------------------------------------------
+   6. PARSING DES EXPRESSIONS f(x) POUR L'EXERCICE 3
+--------------------------------------------------------------------- */
+function extraireFx(introHtml){
+  if(!introHtml) return null;
+  const idx = introHtml.indexOf('f(x) = ');
+  if(idx === -1) return null;
+  const start = idx + 'f(x) = '.length;
+  const end = introHtml.indexOf('\\)', start);
+  if(end === -1) return null;
+  return introHtml.slice(start, end).trim();
+}
+
+function parsePoly(s){
+  /* Retourne { type: 'poly'|'quotient'|'sqrt'|'unknown', ... } */
+  if(s.includes('\\dfrac')){
+    const m = s.match(/\\dfrac\{([^{}]+)\}\{([^{}]+)\}/);
+    if(m) return { type:'quotient', num: parsePoly(m[1]), den: parsePoly(m[2]) };
+  }
+  if(s.includes('\\sqrt')){
+    const m = s.match(/\\sqrt\{([^{}]+)\}/);
+    if(m) return { type:'sqrt', inner: parsePoly(m[1]) };
+  }
+  /* Polynôme : extraire les termes */
+  s = s.replace(/\s+/g,'');
+  const termes = [];
+  let courant = '';
+  for(let i = 0; i < s.length; i++){
+    const c = s[i];
+    if((c === '+' || c === '-') && courant !== ''){
+      termes.push(courant);
+      courant = c;
+    } else if((c === '+' || c === '-') && courant === ''){
+      courant = c;
+    } else {
+      courant += c;
+    }
+  }
+  if(courant) termes.push(courant);
+
+  const coefs = {};
+  for(const t of termes){
+    let signe = 1, corps = t;
+    if(t[0] === '+') corps = t.slice(1);
+    else if(t[0] === '-'){ signe = -1; corps = t.slice(1); }
+    let m;
+    if((m = corps.match(/^(\d*)x\^(\d+)$/))){
+      const c = m[1] === '' ? 1 : parseInt(m[1], 10);
+      coefs[parseInt(m[2], 10)] = signe * c;
+    } else if((m = corps.match(/^(\d*)x$/))){
+      const c = m[1] === '' ? 1 : parseInt(m[1], 10);
+      coefs[1] = signe * c;
+    } else if((m = corps.match(/^(\d+)$/))){
+      coefs[0] = signe * parseInt(m[1], 10);
+    } else {
+      return { type:'unknown', raw: s };
+    }
+  }
+  return { type:'poly', coefs };
+}
+
+function valPoly(coefs, n){
+  let v = 0;
+  for(const deg in coefs){
+    v += coefs[deg] * Math.pow(n, parseInt(deg, 10));
+  }
+  return v;
+}
+
+function degMaxPoly(coefs){
+  let d = 0;
+  for(const k in coefs) d = Math.max(d, parseInt(k, 10));
+  return d;
+}
+
+/* ---------------------------------------------------------------------
+   7. GÉNÉRATION DES CORRECTIONS PAR EXERCICE
+--------------------------------------------------------------------- */
+
+/* ---- CORRECTION EXERCICE 1 ---- */
+function corrEx1(part){
+  const meta = part.meta || {};
+  const u0 = meta.u0, r = meta.r, terms = meta.terms;
+  if(!u0 || !r || !terms) return null;
+
+  /* Différences */
+  const d01 = frac(terms[1].n * terms[0].d - terms[0].n * terms[1].d, terms[1].d * terms[0].d);
+  /* Simplifier en appelant frac() sur le résultat : on refait proprement */
+  function fSub(a,b){
+    return frac(a.n*b.d - b.n*a.d, a.d*b.d);
+  }
+  function fAdd(a,b){
+    return frac(a.n*b.d + b.n*a.d, a.d*b.d);
+  }
+  function fMul(a,b){
+    return frac(a.n*b.n, a.d*b.d);
+  }
+  const diff01 = fSub(terms[1], terms[0]);
+  const diff12 = fSub(terms[2], terms[1]);
+  const diff23 = fSub(terms[3], terms[2]);
+  const u12 = fAdd(u0, fMul(frac(12,1), r));
+
+  /* Expression de u_n */
+  let expr = 'u_n = ';
+  if(u0.n === 0){
+    if(r.n === 0) expr += '0';
+    else if(r.d === 1 && r.n === 1) expr += 'n';
+    else if(r.d === 1 && r.n === -1) expr += '-n';
+    else expr += fTex(r) + 'n';
+  } else {
+    expr += fTex(u0);
+    if(r.n > 0){
+      if(r.d === 1 && r.n === 1) expr += ' + n';
+      else expr += ' + ' + fTex(r) + 'n';
+    } else if(r.n < 0){
+      const rAbs = frac(-r.n, r.d);
+      if(rAbs.d === 1 && rAbs.n === 1) expr += ' - n';
+      else expr += ' - ' + fTex(rAbs) + 'n';
+    }
+  }
+
+  const sens = r.n > 0 ? 'croissante' : (r.n < 0 ? 'décroissante' : 'constante');
+  const sensTex = r.n > 0 ? 'strictement croissante'
+                : (r.n < 0 ? 'strictement décroissante' : 'constante');
+
+  return {
+    questions: [
+      {
+        intitule: 'Calculer les différences \\(u_1-u_0\\), \\(u_2-u_1\\), \\(u_3-u_2\\) et observer.',
+        methode: 'On effectue terme à terme la soustraction des valeurs données dans la liste.',
+        valeurs: [
+          { label:'\\(u_1-u_0\\)', tex: fTex(diff01), frac: diff01 },
+          { label:'\\(u_2-u_1\\)', tex: fTex(diff12), frac: diff12 },
+          { label:'\\(u_3-u_2\\)', tex: fTex(diff23), frac: diff23 }
+        ],
+        conclusion: 'Les trois différences sont égales à \\(' + fTex(r) + '\\). Chaque terme s\'obtient donc à partir du précédent en ajoutant toujours \\(' + fTex(r) + '\\).',
+        keywords: ['égale','constante','régulier','même','identique']
+      },
+      {
+        intitule: 'En déduire une expression de \\(u_n\\) en fonction de \\(n\\), puis vérifier avec \\(u_4\\).',
+        methode: 'On utilise la relation \\(' + expr.replace('u_n = ','u_n = ') + '\\).',
+        valeurs: [
+          { label:'Expression', tex: expr, isExpr: true },
+          { label:'Vérification \\(u_4\\)', tex: fTex(terms[4]), frac: terms[4] }
+        ],
+        conclusion: 'Pour \\(n=4\\), l\'expression donne bien \\(' + fTex(terms[4]) + '\\), ce qui confirme la formule.',
+        keywords: ['vérifie','confirm','retrouve','bon','cohérent']
+      },
+      {
+        intitule: 'Calculer \\(u_{12}\\), puis étudier le signe de \\(u_{n+1}-u_n\\) et conclure sur le sens de variation.',
+        methode: 'On remplace \\(n\\) par 12 dans l\'expression de \\(u_n\\). On calcule ensuite \\(u_{n+1}-u_n\\), qui est constant, et on étudie son signe.',
+        valeurs: [
+          { label:'\\(u_{12}\\)', tex: fTex(u12), frac: u12 },
+          { label:'\\(u_{n+1}-u_n\\)', tex: fTex(r), frac: r }
+        ],
+        conclusion: r.n > 0
+          ? 'Comme \\(u_{n+1}-u_n = ' + fTex(r) + ' > 0\\) pour tout entier \\(n\\), la suite \\((u_n)\\) est <strong>strictement croissante</strong>.'
+          : (r.n < 0
+            ? 'Comme \\(u_{n+1}-u_n = ' + fTex(r) + ' < 0\\) pour tout entier \\(n\\), la suite \\((u_n)\\) est <strong>strictement décroissante</strong>.'
+            : 'Comme \\(u_{n+1}-u_n = 0\\) pour tout entier \\(n\\), la suite \\((u_n)\\) est <strong>constante</strong>.'),
+        keywords: [sens]
+      }
+    ]
+  };
+}
+
+/* ---- CORRECTION EXERCICE 2 ---- */
+function corrEx2(part){
+  const meta = part.meta || {};
+  const q = meta.q, u0 = meta.u0, vals = meta.vals;
+  if(!q || !vals || !vals.length) return null;
+
+  const d01 = vals[1] - vals[0];
+  const d12 = vals[2] - vals[1];
+  const d23 = vals[3] - vals[2];
+  const u7 = u0 * Math.pow(q, 7);
+
+  return {
+    questions: [
+      {
+        intitule: 'Lire graphiquement \\(u_0\\), \\(u_2\\) et \\(u_4\\).',
+        methode: 'On repère sur le graphique l\'ordonnée du point d\'abscisse \\(n\\).',
+        valeurs: [
+          { label:'\\(u_0\\)', tex: String(vals[0]), frac: frac(vals[0],1) },
+          { label:'\\(u_2\\)', tex: String(vals[2]), frac: frac(vals[2],1) },
+          { label:'\\(u_4\\)', tex: String(vals[4]), frac: frac(vals[4],1) }
+        ],
+        conclusion: 'Les valeurs lues sont \\(u_0 = ' + vals[0] + '\\), \\(u_2 = ' + vals[2] + '\\) et \\(u_4 = ' + vals[4] + '\\).',
+        keywords: []
+      },
+      {
+        intitule: 'Calculer les différences, puis les quotients. Que remarque-t-on ?',
+        methode: 'On calcule \\(u_{n+1}-u_n\\) : ces différences ne sont pas constantes. On calcule alors \\(\\dfrac{u_{n+1}}{u_n}\\) : ces quotients sont tous égaux à \\(' + q + '\\).',
+        valeurs: [
+          { label:'\\(u_1-u_0\\)', tex: String(d01), frac: frac(d01,1) },
+          { label:'\\(u_2-u_1\\)', tex: String(d12), frac: frac(d12,1) },
+          { label:'\\(u_3-u_2\\)', tex: String(d23), frac: frac(d23,1) },
+          { label:'\\(\\dfrac{u_1}{u_0}\\)', tex: String(q), frac: frac(q,1) },
+          { label:'\\(\\dfrac{u_2}{u_1}\\)', tex: String(q), frac: frac(q,1) },
+          { label:'\\(\\dfrac{u_3}{u_2}\\)', tex: String(q), frac: frac(q,1) }
+        ],
+        conclusion: 'Les différences ne sont pas constantes, mais les quotients sont tous égaux à \\(' + q + '\\). Chaque terme s\'obtient à partir du précédent en multipliant par \\(' + q + '\\).',
+        keywords: ['quotient','multiplie','égaux','même']
+      },
+      {
+        intitule: 'En déduire une expression de \\(u_n\\) en fonction de \\(n\\), puis calculer \\(u_7\\).',
+        methode: 'On utilise le fait que chaque terme est obtenu en multipliant le précédent par \\(' + q + '\\). On en déduit \\(u_n = ' + u0 + ' \\times ' + q + '^n\\).',
+        valeurs: [
+          { label:'Expression', tex: 'u_n = ' + u0 + ' \\times ' + q + '^{\\,n}', isExpr: true },
+          { label:'\\(u_7\\)', tex: String(u7), frac: frac(u7,1) }
+        ],
+        conclusion: 'En remplaçant \\(n\\) par 7 : \\(u_7 = ' + u7 + '\\).',
+        keywords: []
+      },
+      {
+        intitule: 'Comparer \\(u_{n+1}\\) et \\(u_n\\) et conclure sur le sens de variation.',
+        methode: 'On peut calculer \\(u_{n+1}-u_n\\) ou comparer le quotient \\(\\dfrac{u_{n+1}}{u_n}\\) à 1.',
+        valeurs: [],
+        conclusion: 'Comme \\(' + q + ' > 1\\) et \\(u_n > 0\\), on a \\(u_{n+1} > u_n\\) pour tout entier \\(n\\). La suite \\((u_n)\\) est <strong>strictement croissante</strong>.',
+        keywords: ['croissante']
+      }
+    ]
+  };
+}
+
+/* ---- CORRECTION EXERCICE 3 ---- */
+function corrEx3(part){
+  const meta = part.meta || {};
+  const type = meta.type;
+  const fx = extraireFx(part.introHtml);
+  if(!fx) return null;
+  const parsed = parsePoly(fx);
+  if(!parsed || parsed.type === 'unknown') return null;
+
+  let u0, u1, u2, diffExpr, diffComment, conclusion, keywords;
+  let coefsDisplay = fx;
+
+  if(type === 'lin' && parsed.type === 'poly'){
+    const a = parsed.coefs[1] || 0;
+    const b = parsed.coefs[0] || 0;
+    u0 = b; u1 = a + b; u2 = 2*a + b;
+    diffExpr = String(a);
+    diffComment = 'La différence est constante et vaut \\(' + a + '\\).';
+    if(a > 0){
+      conclusion = 'Comme \\(u_{n+1}-u_n = ' + a + ' > 0\\) pour tout \\(n\\), la suite est <strong>strictement croissante</strong>.';
+      keywords = ['croissante'];
+    } else if(a < 0){
+      conclusion = 'Comme \\(u_{n+1}-u_n = ' + a + ' < 0\\) pour tout \\(n\\), la suite est <strong>strictement décroissante</strong>.';
+      keywords = ['décroissante'];
+    } else {
+      conclusion = 'Comme \\(u_{n+1}-u_n = 0\\), la suite est <strong>constante</strong>.';
+      keywords = ['constante'];
+    }
+  }
+  else if(type === 'quad' && parsed.type === 'poly'){
+    const a = parsed.coefs[2] || 0;
+    const b = parsed.coefs[1] || 0;
+    const c = parsed.coefs[0] || 0;
+    u0 = c; u1 = a + b + c; u2 = 4*a + 2*b + c;
+    /* u_{n+1}-u_n = 2a n + (a+b) */
+    const c1 = 2*a, c0 = a + b;
+    let exprTex = '';
+    if(c1 !== 0){
+      if(c1 === 1) exprTex = 'n';
+      else if(c1 === -1) exprTex = '-n';
+      else exprTex = c1 + 'n';
+    }
+    if(c0 !== 0 || c1 === 0){
+      if(exprTex === '') exprTex = String(c0);
+      else exprTex += (c0 > 0 ? ' + ' : ' - ') + Math.abs(c0);
+    }
+    diffExpr = exprTex;
+    diffComment = 'La différence vaut \\(2 \\times ' + a + '\\,n + ' + (a+b) + '\\).';
+    /* Signe : on regarde c1 et c0 */
+    if(c1 > 0 && c0 >= 0){
+      conclusion = 'Pour \\(n \\geq 0\\), la différence \\(u_{n+1}-u_n = ' + exprTex + '\\) est positive, donc la suite est <strong>strictement croissante</strong>.';
+      keywords = ['croissante'];
+    } else if(c1 < 0 && c0 <= 0){
+      conclusion = 'Pour \\(n \\geq 0\\), la différence \\(u_{n+1}-u_n = ' + exprTex + '\\) est négative, donc la suite est <strong>strictement décroissante</strong>.';
+      keywords = ['décroissante'];
+    } else {
+      conclusion = 'Le signe de \\(u_{n+1}-u_n = ' + exprTex + '\\) n\'est pas constant : la suite n\'est ni croissante ni décroissante sur \\(\\mathbb{N}\\).';
+      keywords = [];
+    }
+  }
+  else if(type === 'cub' && parsed.type === 'poly'){
+    const a = parsed.coefs[3] || 0;
+    const b = parsed.coefs[1] || 0;
+    const c = parsed.coefs[0] || 0;
+    u0 = c; u1 = a + b + c; u2 = 8*a + 2*b + c;
+    /* u_{n+1}-u_n = a(3n^2+3n+1) + b = 3a n^2 + 3a n + (a+b) */
+    const c2 = 3*a, c1b = 3*a, c0 = a + b;
+    diffExpr = (c2 === 1 ? '' : c2) + 'n^{2} + ' + (c1b === 1 ? '' : c1b) + 'n + ' + c0;
+    diffComment = 'La différence vaut \\(3 \\times ' + a + '\\,n^{2} + 3 \\times ' + a + '\\,n + ' + (a+b) + '\\).';
+    if(a > 0 && c0 > 0){
+      conclusion = 'Pour tout \\(n \\geq 0\\), \\(u_{n+1}-u_n > 0\\), donc la suite est <strong>strictement croissante</strong>.';
+      keywords = ['croissante'];
+    } else if(a < 0 && c0 < 0){
+      conclusion = 'Pour tout \\(n \\geq 0\\), \\(u_{n+1}-u_n < 0\\), donc la suite est <strong>strictement décroissante</strong>.';
+      keywords = ['décroissante'];
+    } else {
+      conclusion = 'Le signe de \\(u_{n+1}-u_n\\) n\'est pas constant sur \\(\\mathbb{N}\\).';
+      keywords = [];
+    }
+  }
+  else if(type === 'quo' && parsed.type === 'quotient'){
+    const a = (parsed.num.coefs && parsed.num.coefs[1]) || 0;
+    const b = (parsed.num.coefs && parsed.num.coefs[0]) || 0;
+    const c = (parsed.den.coefs && parsed.den.coefs[1]) || 0;
+    const d = (parsed.den.coefs && parsed.den.coefs[0]) || 0;
+    u0 = d !== 0 ? b/d : NaN;
+    u1 = (c + d) !== 0 ? (a + b)/(c + d) : NaN;
+    u2 = (2*c + d) !== 0 ? (2*a + b)/(2*c + d) : NaN;
+    const K = a * d - b * c;
+    diffExpr = '\\dfrac{' + K + '}{(' + c + 'n + ' + (c+d) + ')(' + c + 'n + ' + d + ')}';
+    diffComment = 'Le numérateur vaut \\(ad - bc = ' + K + '\\), constant. Le dénominateur est positif pour \\(n \\geq 0\\).';
+    if(K > 0){
+      conclusion = 'Comme \\(u_{n+1}-u_n > 0\\) pour tout \\(n \\geq 0\\), la suite est <strong>strictement croissante</strong>.';
+      keywords = ['croissante'];
+    } else if(K < 0){
+      conclusion = 'Comme \\(u_{n+1}-u_n < 0\\) pour tout \\(n \\geq 0\\), la suite est <strong>strictement décroissante</strong>.';
+      keywords = ['décroissante'];
+    } else {
+      conclusion = 'Comme \\(u_{n+1}-u_n = 0\\), la suite est <strong>constante</strong>.';
+      keywords = ['constante'];
+    }
+  }
+  else if(type === 'sqrt' && parsed.type === 'sqrt'){
+    const inner = parsed.inner;
+    const a = (inner.coefs && inner.coefs[1]) || 0;
+    const b = (inner.coefs && inner.coefs[0]) || 0;
+    u0 = Math.sqrt(b);
+    u1 = Math.sqrt(a + b);
+    u2 = Math.sqrt(2*a + b);
+    diffExpr = '\\dfrac{' + a + '}{\\sqrt{' + a + 'n + ' + (a+b) + '} + \\sqrt{' + a + 'n + ' + b + '}}';
+    diffComment = 'On utilise la forme conjuguée.';
+    if(a > 0){
+      conclusion = 'Le numérateur \\(' + a + '\\) est positif et le dénominateur est positif, donc \\(u_{n+1}-u_n > 0\\). La suite est <strong>strictement croissante</strong>.';
+      keywords = ['croissante'];
+    } else if(a < 0){
+      conclusion = 'Le numérateur \\(' + a + '\\) est négatif, donc \\(u_{n+1}-u_n < 0\\). La suite est <strong>strictement décroissante</strong>.';
+      keywords = ['décroissante'];
+    } else {
+      conclusion = 'Comme \\(u_{n+1}-u_n = 0\\), la suite est <strong>constante</strong>.';
+      keywords = ['constante'];
+    }
+  }
+  else {
+    return null;
+  }
+
+  /* Formes pour u0, u1, u2 */
+  function formesNombre(v){
+    if(v == null || isNaN(v)) return [];
+    const formes = [];
+    /* Essayer d'extraire une fraction exacte si possible (pour racines) */
+    if(Number.isInteger(v)){
+      formes.push(String(v));
+    }
+    for(const dec of [2, 3, 4]){
+      formes.push(Number(v).toFixed(dec));
+    }
+    return formes;
+  }
+  function fFromNum(v){
+    if(Number.isInteger(v)) return frac(v, 1);
+    /* Sinon, approximation rationnelle simple */
+    return null;
+  }
+
+  return {
+    questions: [
+      {
+        intitule: 'Calculer les valeurs exactes de \\(u_0\\), \\(u_1\\) et \\(u_2\\).',
+        methode: 'On calcule \\(f(0)\\), \\(f(1)\\) et \\(f(2)\\).',
+        valeurs: [
+          { label:'\\(u_0 = f(0)\\)', tex: (Number.isInteger(u0) ? String(u0) : u0.toFixed(4)), formes: formesNombre(u0) },
+          { label:'\\(u_1 = f(1)\\)', tex: (Number.isInteger(u1) ? String(u1) : u1.toFixed(4)), formes: formesNombre(u1) },
+          { label:'\\(u_2 = f(2)\\)', tex: (Number.isInteger(u2) ? String(u2) : u2.toFixed(4)), formes: formesNombre(u2) }
+        ],
+        conclusion: 'Les trois premières valeurs de la suite sont obtenues en évaluant la fonction \\(f\\) en 0, 1 et 2.',
+        keywords: []
+      },
+      {
+        intitule: 'Montrer que, pour tout entier naturel \\(n\\), on a \\(u_{n+1}-u_n = ' + diffExpr + '\\).',
+        methode: 'On calcule \\(f(n+1) - f(n)\\) en développant puis en simplifiant.',
+        valeurs: [
+          { label:'Différence', tex: 'u_{n+1}-u_n = ' + diffExpr, isExpr: true }
+        ],
+        conclusion: diffComment,
+        keywords: []
+      },
+      {
+        intitule: 'Étudier le signe de \\(u_{n+1}-u_n\\), puis en déduire le sens de variation de la suite.',
+        methode: 'On étudie le signe de l\'expression trouvée pour \\(n \\geq 0\\).',
+        valeurs: [],
+        conclusion: conclusion,
+        keywords: keywords
+      }
+    ]
+  };
+}
+
+/* ---- CORRECTION GROS PROBLÈME ---- */
+function corrPB(part){
+  const meta = part.meta || {};
+  const ordre = meta.ordre;
+
+  if(ordre === 1){
+    const E = meta.E, u0 = meta.u0;
+    /* u_{n+1} = (u_n + E)/2 */
+    const u1 = (u0 + E) / 2;
+    const u2 = (u1 + E) / 2;
+    const u3 = (u2 + E) / 2;
+    function fracDepuisDec(v){
+      /* Essaie d'écrire v comme fraction de dénominateur puissance de 2 */
+      for(let d = 1; d <= 64; d *= 2){
+        const n = v * d;
+        if(Math.abs(n - Math.round(n)) < 1e-9) return frac(Math.round(n), d);
+      }
+      return frac(Math.round(v * 1000), 1000);
+    }
+    const f1 = fracDepuisDec(u1), f2 = fracDepuisDec(u2), f3 = fracDepuisDec(u3);
+
+    return {
+      questions: [
+        {
+          intitule: 'Calculer \\(u_1\\), \\(u_2\\) et \\(u_3\\).',
+          methode: 'On applique la relation de récurrence \\(u_{n+1} = \\dfrac{u_n + ' + E + '}{2}\\).',
+          valeurs: [
+            { label:'\\(u_1\\)', tex: fTex(f1), frac: f1, dec: u1 },
+            { label:'\\(u_2\\)', tex: fTex(f2), frac: f2, dec: u2 },
+            { label:'\\(u_3\\)', tex: fTex(f3), frac: f3, dec: u3 }
+          ],
+          conclusion: 'Les valeurs \\(u_1, u_2, u_3\\) augmentent progressivement : \\(u_1 \\approx ' + u1.toFixed(2) + '\\), \\(u_2 \\approx ' + u2.toFixed(2) + '\\), \\(u_3 \\approx ' + u3.toFixed(2) + '\\).',
+          keywords: []
+        },
+        {
+          intitule: 'Conjecturer le sens de variation de la suite.',
+          methode: 'On observe l\'évolution des trois premiers termes.',
+          valeurs: [],
+          conclusion: 'Les termes semblent augmenter : on conjecture que la suite est <strong>croissante</strong>.',
+          keywords: ['croissante','augmente']
+        },
+        {
+          intitule: 'Montrer que \\(u_{n+1}-u_n = \\dfrac{' + E + ' - u_n}{2}\\).',
+          methode: 'On part de \\(u_{n+1} = \\dfrac{u_n + ' + E + '}{2}\\) et on soustrait \\(u_n\\).',
+          valeurs: [
+            { label:'Différence', tex:'u_{n+1}-u_n = \\dfrac{' + E + ' - u_n}{2}', isExpr: true }
+          ],
+          conclusion: 'En réduisant au même dénominateur : \\(u_{n+1}-u_n = \\dfrac{u_n + ' + E + ' - 2u_n}{2} = \\dfrac{' + E + ' - u_n}{2}\\).',
+          keywords: []
+        },
+        {
+          intitule: 'Déterminer le signe de \\(u_{n+1}-u_n\\) et conclure.',
+          methode: 'On utilise le fait que \\(u_n < ' + E + '\\) pour tout \\(n\\).',
+          valeurs: [],
+          conclusion: 'Comme \\(u_n < ' + E + '\\), on a \\(' + E + ' - u_n > 0\\), donc \\(u_{n+1}-u_n > 0\\). La suite \\((u_n)\\) est <strong>strictement croissante</strong>.',
+          keywords: ['croissante','positive','positif']
+        }
+      ]
+    };
+  }
+  else {
+    const p = meta.p, d0 = meta.d0, c = meta.c;
+    const u0 = p, u1 = p + d0;
+    const u2 = 2*u1 - u0 + 2*c;
+    const u3 = 2*u2 - u1 + 2*c;
+    const u4 = 2*u3 - u2 + 2*c;
+    const diff1 = u1 - u0;
+    const diff2 = u2 - u1;
+    const diff3 = u3 - u2;
+
+    return {
+      questions: [
+        {
+          intitule: 'Calculer \\(u_2\\), \\(u_3\\) et \\(u_4\\).',
+          methode: 'On applique \\(u_{n+2} = 2u_{n+1} - u_n + ' + (2*c) + '\\) en partant de \\(u_0 = ' + u0 + '\\) et \\(u_1 = ' + u1 + '\\).',
+          valeurs: [
+            { label:'\\(u_2\\)', tex:String(u2), frac:frac(u2,1) },
+            { label:'\\(u_3\\)', tex:String(u3), frac:frac(u3,1) },
+            { label:'\\(u_4\\)', tex:String(u4), frac:frac(u4,1) }
+          ],
+          conclusion: 'On obtient \\(u_2 = ' + u2 + '\\), \\(u_3 = ' + u3 + '\\) et \\(u_4 = ' + u4 + '\\).',
+          keywords: []
+        },
+        {
+          intitule: 'Calculer \\(u_1-u_0\\), \\(u_2-u_1\\) et \\(u_3-u_2\\). Que remarque-t-on ?',
+          methode: 'On effectue les soustractions terme à terme.',
+          valeurs: [
+            { label:'\\(u_1-u_0\\)', tex:String(diff1), frac:frac(diff1,1) },
+            { label:'\\(u_2-u_1\\)', tex:String(diff2), frac:frac(diff2,1) },
+            { label:'\\(u_3-u_2\\)', tex:String(diff3), frac:frac(diff3,1) }
+          ],
+          conclusion: 'Les différences ne sont pas égales, mais elles augmentent régulièrement : \\(u_2-u_1 = (u_1-u_0) + ' + (2*c) + '\\) et \\(u_3-u_2 = (u_2-u_1) + ' + (2*c) + '\\).',
+          keywords: ['augmente','régulier','différence','constante']
+        },
+        {
+          intitule: 'Montrer que \\(u_{n+2}-u_{n+1} = (u_{n+1}-u_n) + ' + (2*c) + '\\).',
+          methode: 'On part de la relation de récurrence et on regroupe les termes.',
+          valeurs: [
+            { label:'Relation', tex:'u_{n+2}-u_{n+1} = (u_{n+1}-u_n) + ' + (2*c), isExpr: true }
+          ],
+          conclusion: 'En effet : \\(u_{n+2}-u_{n+1} = (2u_{n+1} - u_n + ' + (2*c) + ') - u_{n+1} = u_{n+1} - u_n + ' + (2*c) + '\\).',
+          keywords: []
+        },
+        {
+          intitule: 'En déduire que \\(u_{n+1}-u_n > 0\\) pour tout \\(n\\), puis conclure.',
+          methode: 'On remarque que \\(u_1-u_0 = ' + diff1 + ' > 0\\). Chaque différence s\'obtient à partir de la précédente en ajoutant \\(2c = ' + (2*c) + ' > 0\\).',
+          valeurs: [],
+          conclusion: 'Par récurrence, toutes les différences sont strictement positives. La suite \\((u_n)\\) est donc <strong>strictement croissante</strong>.',
+          keywords: ['croissante','positive','positif']
+        }
+      ]
+    };
+  }
+}
+
+/* ---------------------------------------------------------------------
+   8. DISPATCHER DE CORRECTION
+--------------------------------------------------------------------- */
+function obtenirCorrection(part){
+  if(!part) return null;
+  switch(part.id){
+    case 'ex1': return corrEx1(part);
+    case 'ex2': return corrEx2(part);
+    case 'ex3': return corrEx3(part);
+    case 'pb':  return corrPB(part);
+    default:    return null;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   9. ANALYSE D'UNE RÉPONSE ÉLÈVE
+--------------------------------------------------------------------- */
+function analyserReponse(qid, rep, correction){
+  const lignes = rep && rep.lignes ? rep.lignes : [];
+  const nbLignes = lignes.length;
+  const ligneFinale = lignes.find(l => l.estReponse) || null;
+  const aReponse = !!ligneFinale && (ligneFinale.texte || '').trim() !== '';
+
+  /* Texte complet normalisé (toutes les lignes) */
+  const texteComplet = normaliserTexte(lignes.map(l => l.texte).join(' | '));
+
+  /* Détection des valeurs attendues */
+  const valeursDetectees = [];
+  if(correction && correction.valeurs){
+    for(const v of correction.valeurs){
+      let formes = [];
+      if(v.frac) formes = formesDepuisFrac(v.frac);
+      else if(v.formes) formes = v.formes;
+      else if(v.tex && !v.isExpr){
+        /* Utiliser le tex comme source (pour nombres entiers) */
+        formes = [String(v.tex)];
+      }
+      /* Les expressions (\isExpr) ne sont pas détectées automatiquement */
+      if(v.isExpr){
+        valeursDetectees.push({ label: v.label, detecte: null });
+        continue;
+      }
+      const detecte = contientForme(texteComplet, formes);
+      valeursDetectees.push({ label: v.label, detecte: detecte });
+    }
+  }
+
+  /* Détection des mots-clés */
+  const keywordsDetectes = [];
+  if(correction && correction.keywords){
+    for(const kw of correction.keywords){
+      const kwNorm = normaliserTexte(kw);
+      if(!kwNorm) continue;
+      const detecte = texteComplet.indexOf(kwNorm) !== -1;
+      keywordsDetectes.push({ mot: kw, detecte: detecte });
+    }
+  }
+
+  /* Structure du raisonnement */
+  const conjonctions = lignes.filter(l => l.conjonction).map(l => l.conjonction);
+  const conjonctionsUniques = Array.from(new Set(conjonctions));
+  const aStructure = nbLignes >= 2 && conjonctions.length >= 1;
+
+  /* Qualité globale du raisonnement pour cette question */
+  let scoreStructure = 0;
+  if(nbLignes >= 1) scoreStructure += 2;
+  if(nbLignes >= 2) scoreStructure += 2;
+  if(nbLignes >= 3) scoreStructure += 1;
+  if(aReponse) scoreStructure += 3;
+  if(conjonctionsUniques.length >= 2) scoreStructure += 2;
+  /* Score max = 10 */
+
+  return {
+    nbLignes: nbLignes,
+    aReponse: aReponse,
+    ligneFinale: ligneFinale,
+    valeursDetectees: valeursDetectees,
+    keywordsDetectes: keywordsDetectes,
+    conjonctions: conjonctions,
+    conjonctionsUniques: conjonctionsUniques,
+    scoreStructure: scoreStructure,
+    texteNormalise: texteComplet
+  };
+}
+
+/* ---------------------------------------------------------------------
+   10. RENDU DU RAPPORT
+--------------------------------------------------------------------- */
+function genererRapport(payload){
+  const rapp = document.getElementById('rapport');
+  const exos = payload.enonce && payload.enonce.parts ? payload.enonce.parts : [];
+  const reponses = payload.reponses || {};
+
+  /* Pour chaque exercice, préparer la correction et l'analyse */
+  const analyses = exos.map(part => {
+    const corr = obtenirCorrection(part);
+    const qs = (part.questions || []).map((q, i) => {
+      const rep = reponses[q.id] || { lignes: [], temps_travail_ms: 0 };
+      const c = corr ? corr.questions[i] : null;
+      const ana = analyserReponse(q.id, rep, c);
+      return { q: q, rep: rep, correction: c, analyse: ana };
+    });
+    return { part: part, correction: corr, questions: qs };
+  });
+
+  /* Calculs globaux */
+  let totalQuestions = 0, questionsRepondues = 0;
+  let totalLignes = 0;
+  let totalValeursAttendues = 0, totalValeursDetectees = 0;
+  let totalTempsActif = 0;
+  const toutesConjonctions = {};
+
+  for(const a of analyses){
+    for(const qa of a.questions){
+      totalQuestions++;
+      if(qa.analyse.aReponse) questionsRepondues++;
+      totalLignes += qa.analyse.nbLignes;
+      for(const v of qa.analyse.valeursDetectees){
+        if(v.detecte !== null){
+          totalValeursAttendues++;
+          if(v.detecte) totalValeursDetectees++;
+        }
+      }
+      totalTempsActif += (qa.rep.temps_travail_ms || 0) / 1000;
+      for(const c of qa.analyse.conjonctions){
+        toutesConjonctions[c] = (toutesConjonctions[c] || 0) + 1;
+      }
+    }
+  }
+
+  const tauxDetection = totalValeursAttendues > 0
+    ? Math.round((totalValeursDetectees / totalValeursAttendues) * 100) : 0;
+  const tauxCompletion = totalQuestions > 0
+    ? Math.round((questionsRepondues / totalQuestions) * 100) : 0;
+
+  /* ---------- HTML ---------- */
+  let html = '';
+
+  /* --- 1. Carte d'identité --- */
+  const e = payload.eleve || {};
+  html += '<section class="rubrique">';
+  html += '<h2>1. Carte d\'identité de la copie</h2>';
+  html += '<div class="id-card">';
+  html += idRow('Élève', (e.nom || '—') + ' ' + (e.prenom || ''));
+  html += idRow('NOM (majuscules)', e.nom || '—');
+  html += idRow('Prénom', e.prenom || '—');
+  html += idRow('PAP', e.pap ? 'Oui (temps + 1/3)' : 'Non');
+  html += idRow('Phase de test', e.phase_de_test ? 'Oui (copie de test)' : 'Non');
+  html += idRow('Application', payload.application || '—');
+  html += '</div>';
+  html += '</section>';
+
+  /* --- 2. Bilan de session --- */
+  const s = payload.session || {};
+  html += '<section class="rubrique">';
+  html += '<h2>2. Bilan de session</h2>';
+  html += '<div class="bilan-grid">';
+  html += bilanItem(fmtDate(s.debut), 'Début de l\'épreuve');
+  html += bilanItem(fmtDate(s.fin), 'Fin de l\'épreuve');
+  html += bilanItem(fmtDureeSec(s.duree_impartie_secondes || 0), 'Durée impartie');
+  html += bilanItem(fmtDureeSec(s.duree_reelle_secondes || 0), 'Durée réelle');
+  html += bilanItem(s.fin_automatique ? 'Oui (temps écoulé)' : 'Non (remise manuelle)', 'Fin automatique');
+  html += bilanItem(tauxCompletion + ' %', 'Questions avec réponse');
+  html += bilanItem(tauxDetection + ' %', 'Valeurs attendues détectées');
+  html += bilanItem(totalLignes, 'Total de lignes rédigées');
+  html += bilanItem(fmtDureeSec(totalTempsActif), 'Temps de rédaction actif');
+  html += '</div>';
+  html += '</section>';
+
+  /* --- 3. Analyse du risque de fraude --- */
+  const f = payload.evaluation_fraude || {};
+  const score = f.score_estime_pourcent || 0;
+  let couleur, qualif, desc;
+  if(score < 15){ couleur = '#15803d'; qualif = 'Risque faible'; desc = 'Aucun signal particulier. Le comportement observé est compatible avec un travail individuel en autonomie.'; }
+  else if(score < 35){ couleur = '#65a30d'; qualif = 'Risque modéré'; desc = 'Quelques signaux mineurs. Ils peuvent s\'expliquer par des interruptions légitimes (recherche documentaire, connexion instable).'; }
+  else if(score < 60){ couleur = '#ca8a04'; qualif = 'Risque élevé'; desc = 'Plusieurs indicateurs convergent. Une vérification orale ou un contrôle complémentaire est recommandé.'; }
+  else { couleur = '#b91c1c'; qualif = 'Risque très élevé'; desc = 'Les indicateurs suggèrent fortement une utilisation de ressources externes ou un comportement anormal. Une vérification approfondie est nécessaire.'; }
+
+  html += '<section class="rubrique">';
+  html += '<h2>3. Analyse du risque de fraude</h2>';
+  html += '<div class="fraude-entete">';
+  html += '<div class="jauge" style="--couleur-jauge:' + couleur + ';--degr:' + Math.round(score * 3.6) + 'deg;">';
+  html += '<span class="jauge-valeur" style="color:' + couleur + '">' + score + ' %</span>';
+  html += '<span class="jauge-label">Indice</span>';
+  html += '</div>';
+  html += '<div class="fraude-qualif">';
+  html += '<p class="fq-titre" style="color:' + couleur + '">' + qualif + '</p>';
+  html += '<p class="fq-desc">' + desc + '</p>';
+  html += '</div>';
+  html += '</div>';
+
+  if(f.details && f.details.length){
+    html += '<table class="detail-fraude">';
+    html += '<thead><tr><th>Facteur détecté</th><th>Occurrences</th><th style="text-align:right">Points</th></tr></thead><tbody>';
+    for(const d of f.details){
+      html += '<tr>';
+      html += '<td>' + h(d.facteur) + '</td>';
+      html += '<td>' + h(d.occurrences != null ? d.occurrences : (d.minutes_hors_page != null ? d.minutes_hors_page + ' min' : '—')) + '</td>';
+      html += '<td class="num">+' + h(d.points) + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+  } else {
+    html += '<p style="color:var(--vert);font-size:.9rem">Aucun facteur de risque détecté.</p>';
+  }
+
+  const ind = f.indicateurs_bruts || {};
+  html += '<p style="margin-top:14px;font-size:.82rem;color:var(--gris)">';
+  html += 'Détail brut : ' + (ind.nb_sorties_page || 0) + ' sortie(s) de page, ';
+  html += (ind.minutes_hors_page || 0) + ' min hors page, ';
+  html += (ind.nb_inactivites_longues || 0) + ' inactivité(s) longue(s), ';
+  html += (ind.nb_collages || 0) + ' collage(s), ';
+  html += (ind.nb_modifications || 0) + ' modification(s).';
+  html += '</p>';
+  html += '</section>';
+
+  /* --- 4. Chronologie --- */
+  const journal = (payload.suivi && payload.suivi.journal_evenements) || [];
+  html += '<section class="rubrique">';
+  html += '<h2>4. Chronologie des événements</h2>';
+  if(journal.length){
+    html += '<div class="timeline">';
+    for(const ev of journal){
+      const cls = ev.type === 'sortie_page' ? 'sortie'
+                : ev.type === 'inactivite_longue' ? 'inactivite'
+                : ev.type === 'collage' ? 'collage'
+                : (ev.type === 'fin_temps_imparti' || ev.type === 'remise_copie') ? 'fin'
+                : '';
+      let typeLabel = ev.type;
+      if(ev.type === 'debut_devoir') typeLabel = 'Début du devoir';
+      if(ev.type === 'fin_temps_imparti') typeLabel = 'Fin (temps écoulé)';
+      if(ev.type === 'remise_copie') typeLabel = 'Remise de la copie';
+      if(ev.type === 'sortie_page') typeLabel = 'Sortie de la page';
+      if(ev.type === 'retour_page') typeLabel = 'Retour sur la page';
+      if(ev.type === 'inactivite_longue') typeLabel = 'Inactivité prolongée';
+      if(ev.type === 'collage') typeLabel = 'Collage détecté';
+      if(ev.type === 'ajout_ligne') typeLabel = 'Ajout d\'une ligne';
+      if(ev.type === 'suppression_ligne') typeLabel = 'Suppression d\'une ligne';
+      if(ev.type === 'conjonction') typeLabel = 'Conjonction choisie';
+
+      let detail = '';
+      if(ev.detail){
+        if(ev.detail.duree_ms) detail = fmtDuree(ev.detail.duree_ms);
+        else if(ev.detail.valeur) detail = '« ' + ev.detail.valeur + ' »';
+        else if(ev.detail.question) detail = 'Question ' + ev.detail.question;
+        else if(ev.detail.numero) detail = 'N°' + ev.detail.numero;
+        else if(ev.detail.duree_secondes) detail = fmtDureeSec(ev.detail.duree_secondes);
+        else detail = JSON.stringify(ev.detail);
+      }
+      html += '<div class="tl-item ' + cls + '">';
+      html += '<span class="tl-time">' + h(fmtDate(ev.t)) + '</span>';
+      html += '<span class="tl-type">' + h(typeLabel) + '</span>';
+      if(detail) html += ' <span class="tl-detail">&mdash; ' + h(detail) + '</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<p style="color:var(--gris)">Aucun événement enregistré.</p>';
+  }
+  html += '</section>';
+
+  /* --- 5. Analyse par exercice --- */
+  html += '<section class="rubrique">';
+  html += '<h2>5. Analyse mathématique par exercice</h2>';
+
+  for(let i = 0; i < analyses.length; i++){
+    const A = analyses[i];
+    const part = A.part;
+    html += '<div class="exo">';
+    html += '<h3>' + h(part.title || ('Exercice ' + (i+1))) + '</h3>';
+
+    /* Énoncé rappelé */
+    html += '<div class="enonce-rappel">';
+    html += '<div class="er-titre">Énoncé rappelé</div>';
+    html += part.introHtml || '';
+    html += '</div>';
+
+    /* Questions */
+    for(let j = 0; j < A.questions.length; j++){
+      const qa = A.questions[j];
+      html += renduQuestion(qa, j+1);
+    }
+
+    html += '</div>';
+  }
+
+  html += '</section>';
+
+  /* --- 6. Synthèse --- */
+  html += '<section class="rubrique">';
+  html += '<h2>6. Synthèse pédagogique</h2>';
+  html += '<div class="synthese-grid">';
+  html += synCard('Questions traitées', questionsRepondues + ' / ' + totalQuestions,
+    tauxCompletion + ' % avec ligne « Finalement » remplie');
+  html += synCard('Détection des valeurs', tauxDetection + ' %',
+    totalValeursDetectees + ' / ' + totalValeursAttendues + ' valeurs attendues détectées');
+  html += synCard('Volume rédigé', totalLignes + ' ligne' + (totalLignes > 1 ? 's' : ''),
+    'Moyenne ' + (totalQuestions > 0 ? (totalLignes / totalQuestions).toFixed(1) : '0') + ' par question');
+  html += synCard('Temps de rédaction', fmtDureeSec(totalTempsActif),
+    'Temps actif cumulé (hors lecture)');
+  html += '</div>';
+
+  /* Observations qualitatives */
+  const obs = [];
+  if(tauxCompletion === 100){
+    obs.push('<strong>Toutes les questions ont une réponse « Finalement ».</strong> La copie est complète sur le plan formel.');
+  } else if(tauxCompletion >= 70){
+    obs.push('<strong>' + questionsRepondues + ' questions sur ' + totalQuestions + ' comportent une conclusion « Finalement ».</strong> Il reste ' + (totalQuestions - questionsRepondues) + ' question(s) sans conclusion explicite.');
+  } else {
+    obs.push('<strong>Copie partielle :</strong> seulement ' + questionsRepondues + ' question(s) sur ' + totalQuestions + ' se terminent par une ligne « Finalement » remplie.');
+  }
+  if(tauxDetection >= 80){
+    obs.push('Bonne détection des valeurs attendues (' + tauxDetection + ' %) : les calculs clés sont présents dans la copie.');
+  } else if(tauxDetection >= 50){
+    obs.push('Détection partielle des valeurs attendues (' + tauxDetection + ' %) : certains résultats chiffrés manquent ou sont présentés sous une forme non reconnue par l\'analyse automatique (vérification humaine conseillée).');
+  } else if(totalValeursAttendues > 0){
+    obs.push('Faible détection des valeurs attendues (' + tauxDetection + ' %) : la plupart des résultats chiffrés sont absents ou exprimés sous une forme très éloignée de la forme canonique.');
+  }
+  if(score >= 35){
+    obs.push('Indice de risque de fraude élevé (' + score + ' %) : une vérification orale est conseillée.');
+  }
+
+  /* Conjonctions utilisées */
+  const conjUtilisees = Object.keys(toutesConjonctions).sort();
+  if(conjUtilisees.length){
+    const parts = conjUtilisees.map(c => '« ' + c + ' » (' + toutesConjonctions[c] + ')');
+    obs.push('Conjonctions utilisées : ' + parts.join(', ') + '.');
+  }
+
+  html += '<div class="observations">';
+  html += '<h3 style="font-size:1rem;color:var(--bleu-fonce);margin-bottom:6px">Observations</h3>';
+  html += '<ul>';
+  for(const o of obs) html += '<li>' + o + '</li>';
+  html += '</ul>';
+  html += '</div>';
+
+  html += '</section>';
+
+  rapp.innerHTML = html;
+  rapp.style.display = 'block';
+
+  /* Rendu MathJax */
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([rapp]).catch(err => console.warn('MathJax :', err));
+  }
+
+  /* Scroll vers le rapport */
+  rapp.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ---------------------------------------------------------------------
+   11. HELPERS DE RENDU
+--------------------------------------------------------------------- */
+function idRow(label, value){
+  return '<div class="id-row"><span class="id-label">' + h(label) +
+    '</span><span class="id-value">' + h(value) + '</span></div>';
+}
+
+function bilanItem(valeur, label){
+  return '<div class="bilan-item"><div class="bi-val">' + valeur +
+    '</div><div class="bi-lab">' + h(label) + '</div></div>';
+}
+
+function synCard(titre, valeur, detail){
+  return '<div class="syn-card"><div class="sc-titre">' + h(titre) +
+    '</div><div class="sc-valeur">' + valeur +
+    '</div><div class="sc-detail">' + detail + '</div></div>';
+}
+
+function renduQuestion(qa, numero){
+  const q = qa.q;
+  const rep = qa.rep;
+  const corr = qa.correction;
+  const ana = qa.analyse;
+
+  let html = '<div class="q-analyse">';
+
+  /* En-tête de la question */
+  html += '<div class="q-tete">';
+  html += '<span class="q-badge">Q' + numero + '</span>';
+  html += '<div class="q-intitule">' + (q.text || '') + '</div>';
+  html += '</div>';
+
+  /* Réponse de l'élève */
+  html += '<div class="rep-eleve">';
+  html += '<div class="re-titre">';
+  html += '<span>Réponse de l\'élève</span>';
+  html += '<span class="re-temps">' + fmtDuree(rep.temps_travail_ms || 0) + '</span>';
+  html += '</div>';
+
+  if(ana.nbLignes === 0){
+    html += '<div class="rep-vide">Aucune ligne rédigée pour cette question.</div>';
+  } else {
+    html += '<div class="lignes-affichees">';
+    for(const l of rep.lignes){
+      const isFinal = l.estReponse;
+      html += '<div class="ligne-affichee' + (isFinal ? ' is-final' : '') + '">';
+      html += '<span class="la-conj">' + h(l.conjonction || '—') + '</span>';
+      html += '<span class="la-texte">' + h(l.texte || '') + '</span>';
+      if(isFinal) html += '<span class="la-badge">Réponse</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  /* Correction */
+  if(corr){
+    html += '<div class="corr">';
+    html += '<div class="cor-titre">Éléments de correction</div>';
+    if(corr.methode){
+      html += '<p class="cor-methode"><strong>Méthode :</strong> ' + corr.methode + '</p>';
+    }
+    if(corr.valeurs && corr.valeurs.length){
+      html += '<ul class="valeurs-liste">';
+      for(let k = 0; k < corr.valeurs.length; k++){
+        const v = corr.valeurs[k];
+        const det = ana.valeursDetectees[k];
+        let statut = '';
+        if(det && det.detecte === true) statut = '<span class="vl-statut ok">détecté</span>';
+        else if(det && det.detecte === false) statut = '<span class="vl-statut ko">non détecté</span>';
+        else statut = '<span class="vl-statut" style="background:#e2e8f0;color:#475569">à vérifier</span>';
+        html += '<li>';
+        html += '<span class="vl-label">' + (v.label || '') + '</span>';
+        html += '<span class="vl-valeur">\\(' + (v.tex || '') + '\\)</span>';
+        html += statut;
+        html += '</li>';
+      }
+      html += '</ul>';
+    }
+    if(corr.conclusion){
+      html += '<p class="cor-conclusion"><strong>Conclusion attendue :</strong> ' + corr.conclusion + '</p>';
+    }
+    html += '</div>';
+  }
+
+  /* Analyse automatique */
+  html += '<div class="auto-analyse">';
+  html += '<div class="aa-titre">Analyse automatique du raisonnement</div>';
+
+  const valeursTot = ana.valeursDetectees.filter(v => v.detecte !== null).length;
+  const valeursOk = ana.valeursDetectees.filter(v => v.detecte === true).length;
+  const motsTot = ana.keywordsDetectes.length;
+  const motsOk = ana.keywordsDetectes.filter(k => k.detecte).length;
+
+  html += '<div class="aa-resume">';
+  html += '<span class="aa-item"><span class="dot ' + (ana.aReponse ? '' : 'ko') + '"></span>Ligne « Finalement » : ' + (ana.aReponse ? 'présente et remplie' : 'absente ou vide') + '</span>';
+  html += '<span class="aa-item"><span class="dot"></span>' + ana.nbLignes + ' ligne(s)</span>';
+  if(valeursTot > 0){
+    html += '<span class="aa-item"><span class="dot ' + (valeursOk === valeursTot ? '' : (valeursOk === 0 ? 'ko' : 'warn')) + '"></span>Valeurs détectées : ' + valeursOk + '/' + valeursTot + '</span>';
+  }
+  if(motsTot > 0){
+    html += '<span class="aa-item"><span class="dot ' + (motsOk === motsTot ? '' : (motsOk === 0 ? 'ko' : 'warn')) + '"></span>Mots-clés : ' + motsOk + '/' + motsTot + '</span>';
+  }
+  html += '</div>';
+
+  /* Commentaire synthétique */
+  let comm = '';
+  if(ana.nbLignes === 0){
+    comm = 'Aucune production écrite : la question n\'a pas été traitée.';
+  } else if(!ana.aReponse){
+    comm = 'La question comporte des lignes de raisonnement mais pas de conclusion « Finalement » remplie. La réponse ne peut pas être identifiée automatiquement.';
+  } else if(valeursTot > 0 && valeursOk === valeursTot && (motsTot === 0 || motsOk === motsTot)){
+    comm = 'Raisonnement cohérent : tous les résultats numériques attendus sont détectés et la conclusion est conforme.';
+  } else if(valeursTot > 0 && valeursOk === 0){
+    comm = 'Aucune des valeurs attendues n\'a été détectée dans les lignes rédigées. Vérifier que les calculs ont bien été faits et écrits sous une forme numérique.';
+  } else if(valeursTot > 0 && valeursOk < valeursTot){
+    comm = 'Certaines valeurs attendues sont absentes (' + (valeursTot - valeursOk) + ' sur ' + valeursTot + '). Vérifier les calculs intermédiaires.';
+  } else if(motsTot > 0 && motsOk < motsTot){
+    comm = 'La conclusion ne contient pas le vocabulaire attendu (par exemple « croissante », « décroissante » ou « constante »).';
+  } else {
+    comm = 'Structure de raisonnement correcte.';
+  }
+  html += '<p class="aa-commentaire">' + comm + '</p>';
+
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+/* ---------------------------------------------------------------------
+   12. CHARGEMENT DU FICHIER
+--------------------------------------------------------------------- */
+function chargerFichier(file){
+  const erreurBox = document.getElementById('erreurCharge');
+  erreurBox.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      const texte = ev.target.result;
+      let enveloppe;
+      try {
+        enveloppe = JSON.parse(texte);
+      } catch(e){
+        throw new Error('Le fichier n\'est pas un JSON valide.');
+      }
+      if(!enveloppe || !enveloppe.donnees_chiffrees){
+        throw new Error('Le fichier ne contient pas le champ « donnees_chiffrees ». Vérifiez qu\'il s\'agit bien d\'une copie générée par l\'application PSTI2DA.');
+      }
+      const payload = dechiffrer(enveloppe.donnees_chiffrees);
+      if(!payload || !payload.enonce){
+        throw new Error('Le contenu déchiffré ne contient pas d\'énoncé.');
+      }
+      /* Masquer la dropzone et afficher le rapport */
+      document.getElementById('dropzone').style.display = 'none';
+      genererRapport(payload);
+    } catch(err){
+      console.error(err);
+      erreurBox.style.display = 'block';
+      erreurBox.innerHTML =
+        '<strong>Erreur de lecture :</strong> ' + h(err.message) +
+        '<br><br><button class="btn btn-ghost" onclick="location.reload()">Réessayer</button>';
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+  };
+  reader.onerror = function(){
+    erreurBox.style.display = 'block';
+    erreurBox.innerHTML = '<strong>Erreur :</strong> impossible de lire le fichier.';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+/* ---------------------------------------------------------------------
+   13. INITIALISATION
+--------------------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const dropzone = document.getElementById('dropzone');
+  const input = document.getElementById('fichierInput');
+
+  dropzone.addEventListener('click', () => input.click());
+
+  input.addEventListener('change', () => {
+    if(input.files && input.files[0]) chargerFichier(input.files[0]);
+  });
+
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropzone.classList.add('hover');
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('hover');
+  });
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('hover');
+    if(e.dataTransfer.files && e.dataTransfer.files[0]){
+      chargerFichier(e.dataTransfer.files[0]);
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Équations complexes du premier degré</title>
+
+<style>
+  *{box-sizing:border-box;}
+  body{
+    margin:0;padding:24px 14px 70px;
+    font-family:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',sans-serif;
+    background:linear-gradient(160deg,#eef2ff 0%,#f8fafc 45%,#ecfeff 100%);
+    color:#1e293b;min-height:100vh;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+  h1{font-size:1.55rem;text-align:center;color:#312e81;margin:0 0 6px;}
+  .sub{text-align:center;color:#64748b;font-size:.92rem;margin-bottom:22px;}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;
+        box-shadow:0 10px 30px rgba(30,41,59,.07);margin-bottom:16px;}
+  .statement{font-size:1.05rem;line-height:1.75;}
+  .statement p{margin:.45em 0;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+  .btn{border:none;border-radius:11px;padding:11px 18px;font-size:.95rem;font-weight:600;
+       cursor:pointer;transition:transform .12s,box-shadow .12s,background .15s;
+       font-family:inherit;}
+  .btn:active{transform:translateY(1px);}
+  .btn.primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+       box-shadow:0 6px 16px rgba(99,102,241,.35);}
+  .btn.primary:hover{box-shadow:0 8px 22px rgba(99,102,241,.5);}
+  .btn.ghost{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;}
+  .btn.ghost:hover{background:#e2e8f0;}
+  .btn.warm{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;}
+  .btn.warm:hover{background:#ffedd5;}
+  .hidden{display:none;}
+  h3{margin:0 0 12px;font-size:1.05rem;color:#3730a3;}
+  .muted{color:#64748b;font-size:.88rem;margin:0 0 14px;}
+  .step{margin-bottom:16px;padding-bottom:14px;border-bottom:1px dashed #e2e8f0;}
+  .step:last-child{border-bottom:none;padding-bottom:0;}
+  .q{font-weight:600;margin-bottom:10px;line-height:1.65;}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+       border-radius:50%;background:#6366f1;color:#fff;font-size:.78rem;margin-right:7px;
+       vertical-align:middle;}
+  .opt{display:block;width:100%;text-align:left;margin:7px 0;padding:11px 14px;border-radius:10px;
+       border:1.5px solid #cbd5e1;background:#f8fafc;cursor:pointer;font-size:.95rem;
+       font-family:inherit;color:#1e293b;transition:.15s;}
+  .opt:hover:not(:disabled){border-color:#818cf8;background:#eef2ff;}
+  .opt.correct{background:#dcfce7;border-color:#22c55e;color:#166534;font-weight:600;}
+  .opt.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;text-decoration:line-through;opacity:.85;}
+  .opt:disabled{cursor:default;opacity:.6;}
+  .opt.correct:disabled{opacity:1;}
+  .fb{margin-top:10px;padding:11px 14px;border-radius:10px;font-size:.93rem;line-height:1.65;}
+  .fb.ok{background:#ecfdf5;border-left:4px solid #10b981;color:#065f46;}
+  .fb.ko{background:#fef2f2;border-left:4px solid #ef4444;color:#991b1b;}
+  #sol-panel p{line-height:1.75;}
+
+  /* ---------- Structure de la solution ---------- */
+  .step-block{
+    margin-bottom:24px;padding-bottom:18px;
+    border-bottom:1px dashed #e2e8f0;
+  }
+  .step-block:last-of-type{border-bottom:none;padding-bottom:0;}
+  .step-title{
+    font-size:1rem;font-weight:700;color:#1e293b;
+    margin:0 0 10px;line-height:1.5;
+  }
+  .step-title .num-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+    font-size:.82rem;font-weight:700;margin-right:9px;vertical-align:middle;
+  }
+
+  /* Encadré de formule / propriété littérale — hors calcul numérique */
+  .formula-box{
+    margin:16px 0;padding:18px 20px 14px;
+    background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);
+    border:2px solid #c7d2fe;
+    border-radius:12px;
+    position:relative;
+  }
+  .formula-box .tag{
+    position:absolute;top:-11px;left:18px;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff;font-size:.7rem;font-weight:700;
+    padding:3px 12px;border-radius:999px;letter-spacing:1px;
+  }
+  .formula-box .label{
+    font-weight:600;color:#4338ca;margin-bottom:8px;
+    font-size:.93rem;line-height:1.55;
+  }
+  .formula-box .formula{
+    text-align:center;
+  }
+  .formula-box .formula p{margin:.4em 0;}
+  .formula-box .comment{
+    margin-top:8px;font-size:.86rem;color:#4f46e5;
+    line-height:1.6;font-style:italic;
+  }
+
+  /* Encadré de calcul numérique — clairement séparé */
+  .calc{
+    margin:14px 0;padding:12px 16px;
+    background:#f8fafc;
+    border-left:3px solid #6366f1;
+    border-radius:6px;
+  }
+  .calc .calc-label{
+    font-size:.72rem;text-transform:uppercase;letter-spacing:1px;
+    color:#6366f1;font-weight:700;margin-bottom:8px;
+  }
+  .calc p{margin:.35em 0;}
+
+  canvas{width:100%;height:320px;display:block;border-radius:12px;background:#fbfdff;}
+  .canvas-note{font-size:.85rem;color:#64748b;margin-top:10px;text-align:center;}
+
+  /* ---------- Barre légale & modale ---------- */
+  .legal-bar{text-align:center;margin:28px 0 8px;}
+  .btn.legal{background:#f8fafc;color:#475569;border:1px solid #cbd5e1;
+             font-size:.85rem;font-weight:600;padding:9px 18px;border-radius:999px;}
+  .btn.legal:hover{background:#eef2ff;border-color:#818cf8;color:#3730a3;}
+
+  .modal-overlay{
+    position:fixed;inset:0;z-index:1000;
+    display:flex;align-items:center;justify-content:center;padding:18px;
+    background:rgba(15,23,42,.55);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+    opacity:0;visibility:hidden;
+    transition:opacity .22s ease,visibility .22s ease;
+  }
+  .modal-overlay.open{opacity:1;visibility:visible;}
+  .modal{
+    background:#fff;border-radius:16px;width:100%;max-width:660px;max-height:86vh;
+    overflow-y:auto;padding:26px 26px 20px;
+    box-shadow:0 24px 60px rgba(15,23,42,.4);
+    transform:translateY(16px) scale(.97);
+    transition:transform .22s ease;
+  }
+  .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+  .modal h2{
+    margin:0 0 4px;font-size:1.15rem;color:#312e81;line-height:1.4;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .modal .meta{font-size:.86rem;color:#64748b;margin:0 0 18px;line-height:1.6;}
+  .modal h4{margin:18px 0 8px;font-size:.95rem;color:#3730a3;}
+  .modal p{margin:0 0 12px;font-size:.92rem;line-height:1.75;color:#334155;}
+  .modal ul{margin:0 0 12px;padding-left:20px;}
+  .modal ul li{font-size:.92rem;line-height:1.75;color:#334155;margin-bottom:9px;}
+  .modal ul li b{color:#1e293b;}
+  .modal .close-row{display:flex;justify-content:flex-end;margin-top:20px;
+    padding-top:16px;border-top:1px solid #e2e8f0;}
+  .modal-x{
+    position:absolute;top:12px;right:12px;border:none;background:#f1f5f9;color:#475569;
+    width:34px;height:34px;border-radius:50%;font-size:1.15rem;line-height:1;cursor:pointer;
+    font-family:inherit;transition:.15s;
+  }
+  .modal-x:hover{background:#e2e8f0;color:#0f172a;}
+  .modal-shell{position:relative;}
+  body.modal-open{overflow:hidden;}
+
+  @media (max-width:520px){
+    .modal{padding:22px 18px 16px;}
+    .modal h2{font-size:1.05rem;}
+  }
+</style>
+
+<script>
+window.MathJax = {
+  tex: {inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']]},
+  svg: {fontCache: 'global'},
+  options: {skipHtmlTags: ['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>Équations du premier degré dans ℂ</h1>
+  <div class="sub">Coefficients complexes aléatoires — un exercice à la fois</div>
+
+  <div class="card">
+    <div id="statement" class="statement"></div>
+    <div class="toolbar">
+      <button id="btn-new"  class="btn primary">Nouvel exercice</button>
+      <button id="btn-hint" class="btn warm">Coup de pouce</button>
+      <button id="btn-sol"  class="btn ghost">Solution</button>
+    </div>
+  </div>
+
+  <div id="hint-panel" class="card hidden"></div>
+  <div id="sol-panel"  class="card hidden"></div>
+
+  <div class="card">
+    <canvas id="plane"></canvas>
+    <div class="canvas-note">Plan complexe — le point solution apparaîtra ici après affichage de la solution.</div>
+  </div>
+
+  <!-- ===== Bouton légal ===== -->
+  <div class="legal-bar">
+    <button id="btn-legal" class="btn legal" type="button">⚖️ Droits d'auteur &amp; licence</button>
+  </div>
+</div>
+
+<!-- ===== Modale légale ===== -->
+<div id="legal-overlay" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="legal-title" aria-hidden="true">
+  <div class="modal-shell">
+    <div class="modal" id="legal-modal">
+      <button class="modal-x" id="legal-x" type="button" aria-label="Fermer">✕</button>
+
+      <h2 id="legal-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+      <p class="meta">
+        Auteur : <b>Yann Merdy</b> (yann.merdy@gmail.com) — <b>Octobre 2026</b>
+      </p>
+
+      <h4>Licence d'Utilisation Non Commerciale</h4>
+      <p>
+        Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+        («&nbsp;<b>Générateur d'Exercices — Équations Complexes du Premier Degré</b>&nbsp;»)
+        sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.
+      </p>
+
+      <h4>Conditions</h4>
+      <ul>
+        <li>
+          <b>Utilisation Privée et Éducative (Autorisée)&nbsp;:</b> vous êtes autorisé.e à utiliser,
+          copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles,
+          éducatives et non lucratives.
+        </li>
+        <li>
+          <b>Utilisation Commerciale (Interdite)&nbsp;:</b> toute utilisation, distribution,
+          intégration ou reproduction du code ou du contenu (total ou partiel) à des fins
+          commerciales, lucratives ou professionnelles est strictement interdite sans un accord
+          écrit préalable et explicite de l'auteur.
+        </li>
+        <li>
+          <b>Attribution&nbsp;:</b> toute reproduction ou modification doit conserver la mention de
+          l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.
+        </li>
+      </ul>
+
+      <p>
+        Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter
+        l'auteur à l'adresse indiquée ci-dessus.
+      </p>
+
+      <div class="close-row">
+        <button class="btn ghost" id="legal-close" type="button">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   1. UTILITAIRES
+   ============================================================ */
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+
+function rc(){
+  if (Math.random() < 0.18) return 0;
+  const arr = [-3,-2,-1,1,2,3];
+  return arr[ri(0,arr.length-1)];
+}
+function shuffle(arr){
+  for (let i=arr.length-1;i>0;i--){ const j=ri(0,i); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+
+/* --- arithmétique complexe sur entiers --- */
+const cAdd  = (u,v)=>({re:u.re+v.re, im:u.im+v.im});
+const cSub  = (u,v)=>({re:u.re-v.re, im:u.im-v.im});
+const cMul  = (u,v)=>({re:u.re*v.re-u.im*v.im, im:u.re*v.im+u.im*v.re});
+const cConj = (u)=>({re:u.re, im:-u.im});
+
+/* --- fractions --- */
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a||1; }
+function frac(p,q){ if(q<0){p=-p;q=-q;} if(p===0) return {p:0,q:1}; const g=gcd(p,q); return {p:p/g, q:q/g}; }
+function fAdd(a,b){ return frac(a.p*b.q + b.p*a.q, a.q*b.q); }
+function fSub(a,b){ return frac(a.p*b.q - b.p*a.q, a.q*b.q); }
+function fMul(a,b){ return frac(a.p*b.p, a.q*b.q); }
+
+function latexFrac(f){
+  if (f.q===1) return String(f.p);
+  return (f.p<0?'-':'') + '\\frac{' + Math.abs(f.p) + '}{' + f.q + '}';
+}
+function cplxL(fr, fi){
+  const reZero = fr.p===0, imZero = fi.p===0;
+  if (reZero && imZero) return '0';
+  if (imZero) return latexFrac(fr);
+  const imAbs = {p: Math.abs(fi.p), q: fi.q};
+  let imStr;
+  if (imAbs.p===1 && imAbs.q===1) imStr = 'i';
+  else imStr = latexFrac(imAbs) + 'i';
+  if (reZero) return (fi.p<0?'-':'') + imStr;
+  return latexFrac(fr) + (fi.p<0 ? ' - ' : ' + ') + imStr;
+}
+function ciL(z){ return cplxL({p:z.re,q:1},{p:z.im,q:1}); }
+
+/* --- calcul exact sur complexes fractionnaires --- */
+function cMulF(u,v){
+  return {
+    re: fSub(fMul(u.re, v.re), fMul(u.im, v.im)),
+    im: fAdd(fMul(u.re, v.im), fMul(u.im, v.re))
+  };
+}
+function cAddF(u,v){
+  return { re: fAdd(u.re, v.re), im: fAdd(u.im, v.im) };
+}
+
+/* --- écriture d'un membre de la forme coef·z + konst --- */
+function coefZ(coef){
+  if (coef.im===0){
+    if (coef.re===1)  return 'z';
+    if (coef.re===-1) return '-z';
+    return coef.re + 'z';
+  }
+  return '(' + ciL(coef) + ')z';
+}
+function affineExpr(coef, konst){
+  let s = coefZ(coef);
+  if (konst.re===0 && konst.im===0) return s;
+  if (konst.im===0) return s + (konst.re<0 ? ' - ' + Math.abs(konst.re) : ' + ' + konst.re);
+  return s + ' + (' + ciL(konst) + ')';
+}
+
+/* --- MathJax --- */
+function whenMathJax(){
+  return new Promise(res => {
+    (function check(){
+      if (window.MathJax && MathJax.startup && MathJax.startup.promise){
+        MathJax.startup.promise.then(res);
+      } else setTimeout(check, 60);
+    })();
+  });
+}
+function typeset(el){
+  return whenMathJax()
+    .then(()=> MathJax.typesetPromise(el ? [el] : undefined))
+    .catch(()=>{});
+}
+
+/* ============================================================
+   2. ÉTAT GLOBAL
+   ============================================================ */
+let EX = null;
+let hintSteps = [], hintState = [], hintIndex = 0;
+let hintVisible = false, solVisible = false;
+let pointProgress = 0, animId = null;
+
+/* ============================================================
+   3. GÉNÉRATION DE L'EXERCICE
+   ============================================================ */
+function generateExercise(){
+  let a, c;
+  do {
+    a = {re: rc(), im: rc()};
+    c = {re: rc(), im: rc()};
+  } while (
+    (a.re===c.re && a.im===c.im) ||
+    (a.re===0 && a.im===0) ||
+    (c.re===0 && c.im===0)
+  );
+
+  let b, d;
+  do {
+    b = {re: ri(-4,4), im: ri(-4,4)};
+    d = {re: ri(-4,4), im: ri(-4,4)};
+  } while (a.im===0 && b.im===0 && c.im===0 && d.im===0);
+
+  const u  = cSub(d, b);
+  const v  = cSub(a, c);
+  const vc = cConj(v);
+  const num = cMul(u, vc);
+  const den = v.re*v.re + v.im*v.im;
+
+  const zr = frac(num.re, den);
+  const zi = frac(num.im, den);
+
+  /* --- calcul exact des deux membres en z = zr + i·zi --- */
+  const zF = { re: zr, im: zi };
+  const aF = { re: {p:a.re,q:1}, im: {p:a.im,q:1} };
+  const bF = { re: {p:b.re,q:1}, im: {p:b.im,q:1} };
+  const cF = { re: {p:c.re,q:1}, im: {p:c.im,q:1} };
+  const dF = { re: {p:d.re,q:1}, im: {p:d.im,q:1} };
+
+  const fz = cAddF(cMulF(aF, zF), bF);
+  const gz = cAddF(cMulF(cF, zF), dF);
+
+  EX = { a, b, c, d, u, v, vc, num, den, zr, zi, fz, gz };
+}
+
+/* ============================================================
+   4. AFFICHAGE DE L'ÉNONCÉ
+   ============================================================ */
+function renderStatement(){
+  const {a,b,c,d} = EX;
+  const lhs = affineExpr(a, b);
+  const rhs = affineExpr(c, d);
+
+  let html = '';
+  html += '<p>Résoudre dans $\\mathbb{C}$ l\'équation :</p>';
+  html += '<p>$$' + lhs + ' \\;=\\; ' + rhs + '$$</p>';
+
+  const el = document.getElementById('statement');
+  el.innerHTML = html;
+  typeset(el);
+}
+
+/* ============================================================
+   5. COUP DE POUCE
+   ============================================================ */
+function mcqComplex(label, correct, distractors, fbCorrect){
+  const list = [{v: correct, ok:true, fb: fbCorrect}];
+  const seen = new Set([ciL(correct)]);
+  for (const d of distractors){
+    const k = ciL(d.v);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    list.push(d);
+  }
+  let extra = 1;
+  while (list.length < 3){
+    const cand = {re: correct.re + extra, im: correct.im - extra};
+    const k = ciL(cand);
+    if (!seen.has(k)){
+      seen.add(k);
+      list.push({v: cand, ok:false,
+        fb: "Ce n'est pas le bon calcul. Reprends : on soustrait les parties réelles entre elles et les parties imaginaires entre elles."});
+    }
+    extra++;
+  }
+  shuffle(list);
+  return list.map(o => ({t: '$' + label + ' = ' + ciL(o.v) + '$', ok: o.ok, fb: o.fb}));
+}
+
+function buildHintSteps(){
+  const {a,b,c,d,u,v} = EX;
+  const steps = [];
+
+  steps.push({
+    q: "Quelle est la <b>première étape</b> pour résoudre cette équation ?",
+    opts: [
+      {t: "Regrouper les termes en $z$ dans un membre et les constantes dans l'autre.",
+       ok: true,
+       fb: "Oui ! On fait passer tous les termes contenant $z$ d'un côté et les constantes de l'autre, pour obtenir une équation du type $(a-c)z = d-b$."},
+      {t: "Remplacer $z$ par $0$ dans l'équation.",
+       ok: false,
+       fb: "Non : $z$ est l'<b>inconnue</b>. On ne la fixe pas arbitrairement, on cherche justement la valeur qui rend l'égalité vraie."},
+      {t: "Diviser les deux membres par $z$.",
+       ok: false,
+       fb: "Attention ! On ne divise jamais par l'inconnue : $z$ pourrait être nulle, et on ne connaît pas encore sa valeur. On divise seulement par un nombre <b>connu et non nul</b>."}
+    ]
+  });
+
+  steps.push({
+    q: "Après regroupement, quelle équation obtient-on ?",
+    opts: [
+      {t: "$(a-c)\\,z = d-b$", ok: true,
+       fb: "Exact ! En écrivant l'équation sous la forme $az+b = cz+d$, on retranche $cz$ et $b$ aux deux membres : $az-cz = d-b$, soit $(a-c)z = d-b$."},
+      {t: "$(a+c)\\,z = b+d$", ok: false,
+       fb: "Non : quand un terme change de membre, il <b>change de signe</b>. On obtient $az-cz = d-b$, donc une soustraction, pas une somme."},
+      {t: "$(a-c)\\,z = b-d$", ok: false,
+       fb: "Presque ! Mais attention aux signes : $az+b=cz+d \\Rightarrow az-cz = d-b$ (et non $b-d$)."}
+    ]
+  });
+
+  steps.push({
+    q: "Calcule maintenant $a-c$ (avec $a=" + ciL(a) + "$ et $c=" + ciL(c) + "$).",
+    opts: mcqComplex('a-c', v,
+      [
+        {v: cAdd(a,c), fb: "Non : tu as calculé $a+c$. Ici il faut <b>soustraire</b> : $a-c$."},
+        {v: cSub(c,a), fb: "C'est l'<b>opposé</b> ! Tu as calculé $c-a$. Attention à l'ordre de la soustraction."}
+      ],
+      "Bravo ! $a-c = " + ciL(v) + "$ : on soustrait les parties réelles entre elles et les parties imaginaires entre elles.")
+  });
+
+  steps.push({
+    q: "Calcule de même $d-b$ (avec $d=" + ciL(d) + "$ et $b=" + ciL(b) + "$).",
+    opts: mcqComplex('d-b', u,
+      [
+        {v: cAdd(d,b), fb: "Non : tu as calculé $d+b$. Ici il faut <b>soustraire</b> : $d-b$."},
+        {v: cSub(b,d), fb: "C'est l'<b>opposé</b> ! Tu as calculé $b-d$. Attention à l'ordre."}
+      ],
+      "Parfait ! $d-b = " + ciL(u) + "$.")
+  });
+
+  steps.push({
+    q: "Comment obtient-on $z$, et comment calcule-t-on ce quotient ?",
+    opts: [
+      {t: "$z = \\dfrac{d-b}{a-c}$, puis on multiplie numérateur et dénominateur par le <b>conjugué</b> de $a-c$.",
+       ok: true,
+       fb: "Parfait ! C'est la méthode : diviser par un complexe non nul revient à multiplier par son conjugué, ce qui rend le dénominateur réel."},
+      {t: "$z = \\dfrac{a-c}{d-b}$",
+       ok: false,
+       fb: "Non, c'est l'inverse. De $(a-c)z = d-b$ on tire $z = \\dfrac{d-b}{a-c}$."},
+      {t: "$z = (d-b)\\times(a-c)$",
+       ok: false,
+       fb: "Non : $(a-c)$ est un <b>facteur</b> de $z$, il faut donc <b>diviser</b> par $(a-c)$, pas multiplier."}
+    ]
+  });
+
+  return steps;
+}
+
+function renderHint(){
+  const panel = document.getElementById('hint-panel');
+  let html = '<h3>💡 Coup de pouce</h3>';
+  html += '<p class="muted">Réponds aux questions : l\'aide s\'adapte à tes réponses.</p>';
+
+  for (let i = 0; i <= hintIndex && i < hintSteps.length; i++){
+    const st = hintSteps[i];
+    const stt = hintState[i] || {solved:false, wrongs:[], chosen:null, fb:null, ok:false};
+
+    html += '<div class="step">';
+    html += '<div class="q"><span class="num">' + (i+1) + '</span>' + st.q + '</div>';
+    html += '<div class="opts">';
+    st.opts.forEach((o, j) => {
+      let cls = 'opt';
+      let dis = '';
+      if (stt.solved){
+        if (j === stt.chosen) cls += ' correct';
+        dis = ' disabled';
+      } else if (stt.wrongs.indexOf(j) !== -1){
+        cls += ' wrong';
+        dis = ' disabled';
+      }
+      html += '<button class="' + cls + '" data-step="' + i + '" data-opt="' + j + '"' + dis + '>' + o.t + '</button>';
+    });
+    html += '</div>';
+    if (stt.fb) html += '<div class="fb ' + (stt.ok ? 'ok' : 'ko') + '">' + stt.fb + '</div>';
+    html += '</div>';
+  }
+
+  if (hintIndex >= hintSteps.length && EX){
+    html += '<div class="fb ok"><b>Bien joué, tu as tous les éléments !</b><br>';
+    html += 'Il reste à terminer le calcul : $z = \\dfrac{' + ciL(EX.u) + '}{' + ciL(EX.v) + '} = \\dfrac{(' + ciL(EX.u) + ')(' + ciL(EX.vc) + ')}{' + EX.den + '}$. ';
+    html += 'Développe le numérateur, puis sépare partie réelle et partie imaginaire. ';
+    html += 'Clique sur « Solution » pour vérifier ton résultat.</div>';
+  }
+
+  panel.innerHTML = html;
+  typeset(panel);
+}
+
+/* ============================================================
+   6. SOLUTION DÉTAILLÉE
+   -----------------------------------------------------------
+   • Toutes les formules littérales sont dans des encadrés
+     identifiés (F1, F2, …, P1, P2, …), EN DEHORS des calculs
+     numériques (encadrés « Application numérique »).
+   • Aucune valeur approchée : uniquement des valeurs exactes.
+   • Aucune séquence \( ou \) dans les chaînes LaTeX : elles
+     seraient interprétées par MathJax comme des délimiteurs
+     de mode math en ligne et casseraient le rendu en mode
+     display ($$...$$).
+   ============================================================ */
+function formulaBox(tag, label, formulaTex, comment){
+  let s = '<div class="formula-box">';
+  s += '<span class="tag">' + tag + '</span>';
+  s += '<div class="label">' + label + '</div>';
+  s += '<div class="formula">$$' + formulaTex + '$$</div>';
+  if (comment) s += '<div class="comment">' + comment + '</div>';
+  s += '</div>';
+  return s;
+}
+function calcBox(stepsTex, label){
+  let s = '<div class="calc">';
+  s += '<div class="calc-label">' + (label || 'Application numérique (exacte)') + '</div>';
+  for (const t of stepsTex) s += '<p>$$' + t + '$$</p>';
+  s += '</div>';
+  return s;
+}
+
+function buildSolutionHTML(){
+  const {a,b,c,d,u,v,vc,num,den,zr,zi,fz,gz} = EX;
+  const zTex   = cplxL(zr, zi);
+  const lhs    = affineExpr(a, b);
+  const rhs    = affineExpr(c, d);
+  const fzTex  = cplxL(fz.re, fz.im);
+  const gzTex  = cplxL(gz.re, gz.im);
+  const azTex  = cplxL(fSub(fMul({p:a.re,q:1}, zr), fMul({p:a.im,q:1}, zi)),
+                       fAdd(fMul({p:a.re,q:1}, zi), fMul({p:a.im,q:1}, zr)));
+  const czTex  = cplxL(fSub(fMul({p:c.re,q:1}, zr), fMul({p:c.im,q:1}, zi)),
+                       fAdd(fMul({p:c.re,q:1}, zi), fMul({p:c.im,q:1}, zr)));
+
+  let H = '';
+  H += '<h3>✏️ Solution détaillée</h3>';
+
+  /* ============================================================
+     ÉTAPE 1
+     ============================================================ */
+  H += '<div class="step-block">';
+  H += '<p class="step-title"><span class="num-badge">1</span>Reconnaître la forme générale de l\'équation.</p>';
+  H += '<p>On part de l\'équation :</p>';
+  H += '$$' + lhs + ' = ' + rhs + '$$';
+  H += formulaBox(
+    'F1',
+    'Forme générale d\'une équation du premier degré dans $\\mathbb{C}$',
+    'a\\,z + b \\;=\\; c\\,z + d \\qquad (a,b,c,d \\in \\mathbb{C})',
+    'Les nombres $a$ et $c$ sont les coefficients de $z$ ; $b$ et $d$ sont les termes constants.'
+  );
+  H += '<p>En identifiant chaque coefficient dans l\'équation proposée :</p>';
+  H += calcBox([
+    'a = ' + ciL(a) + ',\\quad b = ' + ciL(b),
+    'c = ' + ciL(c) + ',\\quad d = ' + ciL(d)
+  ], 'Identification des coefficients');
+  H += '</div>';
+
+  /* ============================================================
+     ÉTAPE 2
+     ============================================================ */
+  H += '<div class="step-block">';
+  H += '<p class="step-title"><span class="num-badge">2</span>Regrouper les termes en $z$ dans un membre.</p>';
+  H += formulaBox(
+    'P1',
+    'Règle d\'équivalence sur une équation',
+    'A = B \\;\\Longleftrightarrow\\; A + w = B + w \\quad (w \\in \\mathbb{C})',
+    'On peut ajouter ou retrancher le même nombre complexe aux deux membres sans changer l\'ensemble des solutions. Un terme « qui change de membre » change donc de signe.'
+  );
+  H += '<p>On retranche $cz$ aux deux membres, puis on retranche $b$ aux deux membres :</p>';
+  H += '$$az + b - cz - b \\;=\\; cz + d - cz - b$$';
+  H += '$$(a-c)\\,z \\;=\\; d - b$$';
+  H += '<p>Application aux coefficients de l\'exercice :</p>';
+  H += calcBox([
+    '(' + ciL(a) + ')\\,z - (' + ciL(c) + ')\\,z \\;=\\; (' + ciL(d) + ') - (' + ciL(b) + ')',
+    '\\big(' + ciL(a) + ' - (' + ciL(c) + ')\\big)\\,z \\;=\\; ' + ciL(u),
+    '(' + ciL(v) + ')\\,z \\;=\\; ' + ciL(u)
+  ]);
+  H += '</div>';
+
+  /* ============================================================
+     ÉTAPE 3
+     ============================================================ */
+  H += '<div class="step-block">';
+  H += '<p class="step-title"><span class="num-badge">3</span>Vérifier que la division par $a-c$ est légitime.</p>';
+  H += formulaBox(
+    'P2',
+    'Propriété fondamentale du corps $\\mathbb{C}$',
+    'w \\cdot z = 0 \\;\\Longleftrightarrow\\; w = 0 \\;\\text{ ou }\\; z = 0',
+    'Conséquence : on ne peut diviser par $a-c$ que si $a-c \\neq 0$. Si $a-c = 0$, l\'équation devient $0\\cdot z = d-b$ : aucune solution si $d-b \\neq 0$, une infinité sinon.'
+  );
+  H += '<p>Ici, $a \\neq c$, donc :</p>';
+  H += calcBox([
+    'a - c \\;=\\; ' + ciL(v) + ' \\;\\neq\\; 0'
+  ], 'Condition de divisibilité');
+  H += '<p>La division est donc <b>légitime</b> et la solution sera <b>unique</b>.</p>';
+  H += '</div>';
+
+  /* ============================================================
+     ÉTAPE 4
+     ============================================================ */
+  H += '<div class="step-block">';
+  H += '<p class="step-title"><span class="num-badge">4</span>Isoler $z$.</p>';
+  H += formulaBox(
+    'F2',
+    'Formule de résolution de $a\\,z + b = c\\,z + d$',
+    'z \\;=\\; \\dfrac{d-b}{a-c} \\qquad (a \\neq c)'
+  );
+  H += '<p>On divise les deux membres de $(a-c)\\,z = d-b$ par le coefficient $a-c$, non nul :</p>';
+  H += calcBox([
+    'z \\;=\\; \\dfrac{' + ciL(u) + '}{' + ciL(v) + '}'
+  ], 'Application de (F2)');
+  H += '</div>';
+
+  /* ============================================================
+     ÉTAPE 5
+     ------------------------------------------------------------
+     CORRECTION : les séquences \( et \) qui apparaissaient dans
+     les parenthèses ont été remplacées par de simples parenthèses
+     ( et ), afin d'éviter toute interprétation comme délimiteurs
+     de math en ligne par MathJax.
+     ============================================================ */
+  H += '<div class="step-block">';
+  H += '<p class="step-title"><span class="num-badge">5</span>Écrire le quotient sous forme algébrique $x + iy$.</p>';
+  H += formulaBox(
+    'F3',
+    'Inverse d\'un complexe non nul et module au carré',
+    '\\dfrac{u}{w} \\;=\\; \\dfrac{u\\,\\overline{w}}{|w|^{2}}, \\qquad |w|^{2} \\;=\\; w\\,\\overline{w} \\;\\in\\; \\mathbb{R}_{+}',
+    'Multiplier numérateur et dénominateur par le conjugué du dénominateur rend ce dernier <b>réel positif</b>.'
+  );
+  H += '<p>On multiplie numérateur et dénominateur par le conjugué $\\overline{' + ciL(v) + '} = ' + ciL(vc) + '$ :</p>';
+  H += calcBox([
+    'z \\;=\\; \\dfrac{(' + ciL(u) + ')(' + ciL(vc) + ')}{(' + ciL(v) + ')(' + ciL(vc) + ')}',
+    '\\phantom{z} \\;=\\; \\dfrac{' + ciL(num) + '}{' + den + '}'
+  ], 'Application de (F3)');
+
+  H += '<p>Forme algébrique finale :</p>';
+  if (den === 1){
+    H += '$$z \\;=\\; ' + ciL(num) + '$$';
+  } else {
+    H += '$$z \\;=\\; \\dfrac{' + ciL(num) + '}{' + den + '} \\;=\\; ' + zTex + '$$';
+  }
+  H += '</div>';
+
+  /* ============================================================
+     ÉTAPE 6 — Vérification EXACTE
+     ============================================================ */
+  H += '<div class="step-block">';
+  H += '<p class="step-title"><span class="num-badge">6</span>Vérification (calcul exact).</p>';
+  H += formulaBox(
+    'P3',
+    'Égalité dans $\\mathbb{C}$',
+    'x + iy = x\' + iy\' \\;\\Longleftrightarrow\\; x = x\' \\;\\text{ et }\\; y = y\'',
+    'Deux nombres complexes sont égaux si et seulement si leurs parties réelles et imaginaires sont égales. La vérification se fait donc <b>sans aucune approximation</b>.'
+  );
+  H += '<p>On remplace $z$ par sa valeur exacte $' + zTex + '$ dans chaque membre :</p>';
+
+  H += '<p><b>Membre de gauche :</b></p>';
+  H += calcBox([
+    '(' + ciL(a) + ')\\,z + (' + ciL(b) + ')',
+    '\\phantom{} = (' + ciL(a) + ')\\left(' + zTex + '\\right) + (' + ciL(b) + ')',
+    '\\phantom{} = ' + azTex + ' + (' + ciL(b) + ')',
+    '\\phantom{} = ' + fzTex
+  ], 'Calcul exact du membre de gauche');
+
+  H += '<p><b>Membre de droite :</b></p>';
+  H += calcBox([
+    '(' + ciL(c) + ')\\,z + (' + ciL(d) + ')',
+    '\\phantom{} = (' + ciL(c) + ')\\left(' + zTex + '\\right) + (' + ciL(d) + ')',
+    '\\phantom{} = ' + czTex + ' + (' + ciL(d) + ')',
+    '\\phantom{} = ' + gzTex
+  ], 'Calcul exact du membre de droite');
+
+  H += '<p>Les deux membres sont <b>exactement égaux</b> (mêmes parties réelle et imaginaire) : la solution est confirmée.</p>';
+  H += '</div>';
+
+  /* ============================================================
+     CONCLUSION
+     ============================================================ */
+  H += '<h3>📌 Conclusion</h3>';
+  H += "<p>L'équation admet une unique solution dans $\\mathbb{C}$ :</p>";
+  H += '$$\\boxed{\\; S = \\left\\{' + zTex + '\\right\\} \\;}$$';
+
+  return H;
+}
+
+/* ============================================================
+   7. CANVAS — PLAN COMPLEXE
+   ============================================================ */
+function drawPlane(showPoint, progress){
+  const cv = document.getElementById('plane');
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 600;
+  const H = cv.clientHeight || 320;
+  cv.width  = Math.round(W*dpr);
+  cv.height = Math.round(H*dpr);
+
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  let maxAbs = 3;
+  if (showPoint && EX){
+    maxAbs = Math.max(maxAbs,
+      Math.abs(EX.zr.p/EX.zr.q) + 1,
+      Math.abs(EX.zi.p/EX.zi.q) + 1);
+  }
+  const R = Math.ceil(maxAbs);
+  const unit = Math.min(W, H) / (2*R);
+  const cx = W/2, cy = H/2;
+  const PX = x => cx + x*unit;
+  const PY = y => cy - y*unit;
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#e8eef7';
+  for (let k=-R;k<=R;k++){
+    ctx.beginPath(); ctx.moveTo(PX(k),0); ctx.lineTo(PX(k),H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,PY(k)); ctx.lineTo(W,PY(k)); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke();
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '12px system-ui,sans-serif';
+  for (let k=-R;k<=R;k++){
+    if (k===0) continue;
+    if (unit < 26 && k%2 !== 0) continue;
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(k, PX(k), cy+5);
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(k, cx-6, PY(k));
+  }
+  ctx.textAlign='right'; ctx.textBaseline='top';
+  ctx.fillText('0', cx-5, cy+5);
+
+  ctx.fillStyle='#475569';
+  ctx.font='italic 13px system-ui,sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText('Re', W-28, cy-12);
+  ctx.fillText('Im', cx+10, 14);
+
+  if (showPoint && EX && progress > 0){
+    const zx = EX.zr.p/EX.zr.q;
+    const zy = EX.zi.p/EX.zi.q;
+    const X = PX(zx), Y = PY(zy);
+
+    ctx.save();
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle = '#f9a8d4';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(X,Y); ctx.lineTo(X,cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X,Y); ctx.lineTo(cx,Y); ctx.stroke();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(X, Y, 7*progress, 0, Math.PI*2);
+    ctx.fillStyle = '#db2777';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
+    ctx.fillStyle = '#9d174d';
+    ctx.font = 'bold 14px system-ui,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('z', X+11, Y-7);
+  }
+}
+
+function animatePoint(){
+  if (animId) cancelAnimationFrame(animId);
+  const t0 = performance.now();
+  const dur = 450;
+  function frame(t){
+    const p = Math.min(1, (t-t0)/dur);
+    const e = 1 - Math.pow(1-p, 3);
+    pointProgress = e;
+    drawPlane(true, e);
+    if (p < 1) animId = requestAnimationFrame(frame);
+  }
+  animId = requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   8. FLUX PRINCIPAL
+   ============================================================ */
+function newExercise(){
+  generateExercise();
+
+  hintSteps = buildHintSteps();
+  hintState = [];
+  hintIndex = 0;
+  hintVisible = false;
+  solVisible  = false;
+  pointProgress = 0;
+
+  document.getElementById('hint-panel').classList.add('hidden');
+  document.getElementById('sol-panel').classList.add('hidden');
+  document.getElementById('btn-hint').textContent = 'Coup de pouce';
+  document.getElementById('btn-sol').textContent  = 'Solution';
+
+  renderStatement();
+  drawPlane(false, 0);
+}
+
+document.getElementById('btn-new').addEventListener('click', newExercise);
+
+document.getElementById('btn-hint').addEventListener('click', function(){
+  hintVisible = !hintVisible;
+  const panel = document.getElementById('hint-panel');
+  if (hintVisible){
+    renderHint();
+    panel.classList.remove('hidden');
+    this.textContent = 'Masquer le coup de pouce';
+  } else {
+    panel.classList.add('hidden');
+    this.textContent = 'Coup de pouce';
+  }
+});
+
+document.getElementById('btn-sol').addEventListener('click', function(){
+  solVisible = !solVisible;
+  const panel = document.getElementById('sol-panel');
+  if (solVisible){
+    panel.innerHTML = buildSolutionHTML();
+    panel.classList.remove('hidden');
+    typeset(panel);
+    this.textContent = 'Masquer la solution';
+    animatePoint();
+  } else {
+    panel.classList.add('hidden');
+    this.textContent = 'Solution';
+    pointProgress = 0;
+    if (animId) cancelAnimationFrame(animId);
+    drawPlane(false, 0);
+  }
+});
+
+document.getElementById('hint-panel').addEventListener('click', function(e){
+  const btn = e.target.closest('button.opt');
+  if (!btn || btn.disabled) return;
+
+  const i = parseInt(btn.dataset.step, 10);
+  const j = parseInt(btn.dataset.opt, 10);
+  if (i !== hintIndex) return;
+
+  const st  = hintSteps[i];
+  const opt = st.opts[j];
+  const stt = hintState[i] || (hintState[i] = {solved:false, wrongs:[], chosen:null, fb:null, ok:false});
+
+  if (opt.ok){
+    stt.solved = true;
+    stt.chosen = j;
+    stt.fb = opt.fb;
+    stt.ok = true;
+    hintIndex++;
+  } else {
+    if (stt.wrongs.indexOf(j) === -1) stt.wrongs.push(j);
+    stt.fb = opt.fb;
+    stt.ok = false;
+  }
+  renderHint();
+});
+
+window.addEventListener('resize', function(){
+  drawPlane(solVisible && pointProgress > 0, pointProgress);
+});
+
+/* ============================================================
+   9. MODALE LÉGALE
+   ============================================================ */
+(function(){
+  const overlay = document.getElementById('legal-overlay');
+  const modal   = document.getElementById('legal-modal');
+  const btnOpen = document.getElementById('btn-legal');
+  const btnX    = document.getElementById('legal-x');
+  const btnClose= document.getElementById('legal-close');
+  let lastFocus = null;
+
+  function openModal(){
+    lastFocus = document.activeElement;
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden','false');
+    document.body.classList.add('modal-open');
+    setTimeout(()=> btnX.focus(), 60);
+  }
+  function closeModal(){
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden','true');
+    document.body.classList.remove('modal-open');
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+  }
+
+  btnOpen.addEventListener('click', openModal);
+  btnX.addEventListener('click', closeModal);
+  btnClose.addEventListener('click', closeModal);
+
+  overlay.addEventListener('mousedown', function(e){
+    if (!modal.contains(e.target)) closeModal();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (!overlay.classList.contains('open')) return;
+    if (e.key === 'Escape'){ closeModal(); return; }
+    if (e.key === 'Tab'){
+      const focusables = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last  = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first){
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last){
+        e.preventDefault(); first.focus();
+      }
+    }
+  });
+})();
+
+newExercise();
+</script>
+</body>
+</html>

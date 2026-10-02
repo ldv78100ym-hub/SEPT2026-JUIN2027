@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analyse de copies — Suites et limites (traitement par lot)</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\\[','\\]']]
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  chtml: { scale: 1.0 }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+  --accent:#1d4ed8; --accent2:#0ea5e9; --ok:#15803d; --warn:#b45309;
+  --bad:#b91c1c; --line:#dbe3ee; --soft:#f8fafc;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); font-size:15px; line-height:1.5;
+}
+.hidden{display:none !important}
+button{font-family:inherit;cursor:pointer}
+
+/* ----- Écran d'accueil ----- */
+#welcome{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px}
+.wcard{
+  background:var(--card); border-radius:16px; padding:32px 38px;
+  box-shadow:0 12px 40px rgba(15,23,42,.13); max-width:780px; width:100%;
+}
+h1{font-size:24px; margin:0 0 6px; color:#0c4a6e}
+.sub{color:var(--muted); font-size:14px; margin:0 0 24px}
+#dropZone{
+  border:2px dashed #cbd5e1; border-radius:12px;
+  padding:36px 22px; text-align:center; background:#f8fafc;
+  transition:all .15s ease; cursor:pointer;
+}
+#dropZone:hover, #dropZone.dragover{
+  border-color:var(--accent); background:#eff6ff;
+}
+#dropZone .big{font-size:38px; margin-bottom:10px}
+#dropZone .lab{font-weight:600; font-size:15px; color:#1e293b}
+#dropZone .hint{font-size:13px; color:var(--muted); margin-top:6px}
+#fileInput{display:none}
+#fileList{
+  margin-top:18px; max-height:260px; overflow-y:auto;
+  border:1px solid var(--line); border-radius:10px; background:#fff;
+}
+#fileList:empty{display:none}
+.fileItem{
+  display:flex; align-items:center; gap:10px; padding:8px 14px;
+  border-bottom:1px solid var(--line); font-size:13.5px;
+}
+.fileItem:last-child{border-bottom:none}
+.fileItem .fname{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#334155}
+.fileItem .fstatus{font-weight:700; font-size:12.5px; padding:2px 8px; border-radius:10px; white-space:nowrap}
+.fileItem .fstatus.ok{background:#dcfce7; color:var(--ok)}
+.fileItem .fstatus.err{background:#fee2e2; color:var(--bad)}
+.fileItem .fstatus.wait{background:#f1f5f9; color:var(--muted)}
+#loadMsg{margin-top:14px; font-size:14px; min-height:22px; color:var(--bad); font-weight:600}
+
+/* ----- En-tête ----- */
+#topBar{
+  position:sticky; top:0; z-index:50; background:#0f172a; color:#fff;
+  display:flex; align-items:center; gap:14px; padding:10px 22px;
+  box-shadow:0 3px 12px rgba(0,0,0,.25); flex-wrap:wrap;
+}
+#topBar .title{font-weight:700; letter-spacing:.3px; font-size:14.5px}
+#topBar .spacer{flex:1}
+#topBar button{
+  background:#334155; color:#e2e8f0; border:none; border-radius:7px;
+  padding:6px 13px; font-size:13px; font-weight:600;
+}
+#topBar button:hover{background:#475569}
+#topBar button.primary{background:#16a34a}
+#topBar button.primary:hover{background:#15803d}
+
+/* ----- Contenu ----- */
+main{max-width:1100px; margin:0 auto; padding:22px 18px 80px}
+section.card{
+  background:var(--card); border-radius:14px; padding:20px 24px;
+  margin-bottom:22px; box-shadow:0 4px 16px rgba(15,23,42,.07);
+}
+section.card h2{
+  font-size:17px; margin:0 0 16px; padding-bottom:9px;
+  border-bottom:2px solid var(--accent2); color:#0c4a6e
+}
+section.card h3{font-size:15px; margin:18px 0 8px; color:#1e293b}
+section.card h3:first-of-type{margin-top:0}
+
+/* ----- Navigation ----- */
+.navGrid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:10px;
+}
+.navItem{
+  border:1px solid var(--line); border-radius:10px; padding:10px 14px;
+  background:#fff; text-decoration:none; color:var(--ink);
+  display:flex; align-items:center; gap:10px; transition:all .12s ease;
+}
+.navItem:hover{border-color:var(--accent); background:#f0f9ff}
+.navItem .rank{
+  width:30px; height:30px; border-radius:50%; background:#e0e7ff;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; color:var(--accent); font-size:13px; flex-shrink:0;
+}
+.navItem .nm{flex:1; min-width:0; font-weight:600; font-size:13.5px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.navItem .sc{font-weight:800; font-size:14px; font-variant-numeric:tabular-nums}
+.navItem .sc.good{color:var(--ok)}
+.navItem .sc.mid{color:var(--warn)}
+.navItem .sc.bad{color:var(--bad)}
+
+/* ----- Bandeau identité ----- */
+.identity{display:flex; gap:22px; align-items:center; flex-wrap:wrap}
+.identity .info{flex:1; min-width:220px}
+.identity .info .row{margin:4px 0; font-size:14px}
+.identity .info .row b{color:#0c4a6e}
+.identity .info .row .pap{color:var(--warn); font-weight:700}
+
+/* ----- Note /20 ----- */
+.scoreWrap{display:flex; align-items:center; gap:26px; flex-wrap:wrap}
+.scoreCircle{
+  width:150px; height:150px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:#fff; font-weight:800; flex-shrink:0;
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+.scoreCircle .val{font-size:44px; line-height:1}
+.scoreCircle .lab{font-size:13px; opacity:.85; margin-top:4px; letter-spacing:1px}
+.scoreCircle.excellent{background:linear-gradient(135deg,#16a34a,#15803d)}
+.scoreCircle.bien     {background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.scoreCircle.moyen    {background:linear-gradient(135deg,#f59e0b,#d97706)}
+.scoreCircle.faible   {background:linear-gradient(135deg,#dc2626,#b91c1c)}
+.scoreDetail{flex:1; min-width:260px}
+.scoreDetail .bar{display:flex; align-items:center; gap:10px; margin:10px 0; font-size:13.5px}
+.scoreDetail .bar .name{width:180px; font-weight:600; color:#334155}
+.scoreDetail .bar .track{flex:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden}
+.scoreDetail .bar .track > div{height:100%; border-radius:6px; transition:width .6s ease}
+.scoreDetail .bar .num{width:78px; text-align:right; font-variant-numeric:tabular-nums; font-weight:700; color:#0f172a}
+
+/* ----- Tableaux ----- */
+table{width:100%; border-collapse:collapse; margin-top:8px; background:#fff; font-size:13.5px}
+th, td{border:1px solid var(--line); padding:7px 10px; text-align:left; vertical-align:top}
+th{background:#f1f5f9; font-weight:700; color:#334155}
+tr:nth-child(even) td{background:#fbfcfe}
+td.mid{text-align:center; white-space:nowrap}
+td.num{text-align:right; font-variant-numeric:tabular-nums}
+.ok{color:var(--ok); font-weight:700}
+.bad{color:var(--bad); font-weight:700}
+.warn{color:var(--warn); font-weight:700}
+
+/* ----- Lignes de raisonnement ----- */
+.qBox{border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:14px; background:#fff}
+.qBox .qHead{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px}
+.qBox .qHead .qid{font-weight:700; color:#0c4a6e; font-size:14.5px}
+.qBox .qHead .qmeta{font-size:12.5px; color:var(--muted)}
+.qBox .enonce{background:var(--soft); padding:9px 12px; border-radius:7px; border-left:3px solid var(--accent); margin-bottom:10px; font-size:13.5px}
+.lineItem{display:flex; gap:10px; padding:6px 0; border-bottom:1px dashed #e2e8f0; font-size:13.5px; align-items:flex-start}
+.lineItem:last-child{border-bottom:none}
+.lineItem .lno{flex-shrink:0; width:56px; font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; padding-top:2px}
+.lineItem .lconj{flex-shrink:0; width:92px; font-weight:700; color:#1e293b}
+.lineItem .lconj.fin{color:var(--warn)}
+.lineItem .ltext{flex:1; min-width:0; word-break:break-word}
+.lineItem .lstatus{flex-shrink:0; font-size:11.5px; padding:1px 8px; border-radius:10px; font-weight:700}
+.lstatus.v{background:#dcfce7; color:var(--ok)}
+.lstatus.nv{background:#fee2e2; color:var(--bad)}
+.lstatus.e{background:#f1f5f9; color:var(--muted)}
+.answerBlock{background:#fffbeb; border:1.5px solid var(--warn); border-radius:8px; padding:8px 12px; margin-top:10px; font-size:13.5px}
+.answerBlock .lab{font-size:11.5px; text-transform:uppercase; letter-spacing:.7px; color:var(--warn); font-weight:800; margin-bottom:2px}
+
+/* ----- Fraude / indicateurs ----- */
+.gauge{height:22px; background:#e2e8f0; border-radius:11px; overflow:hidden; margin:8px 0 6px; position:relative}
+.gauge > div{height:100%; transition:width .6s ease; background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:12px}
+.kpi{background:var(--soft); border-radius:10px; padding:12px 14px; border-left:3px solid var(--accent)}
+.kpi .v{font-size:20px; font-weight:800; color:#0f172a}
+.kpi .k{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-top:2px}
+
+/* ----- Chronologie ----- */
+.timeline{position:relative; padding-left:26px; margin-top:12px}
+.timeline::before{content:""; position:absolute; left:9px; top:4px; bottom:4px; width:2px; background:#e2e8f0}
+.ev{position:relative; padding:6px 0 6px 10px; font-size:13px}
+.ev::before{content:""; position:absolute; left:-21px; top:11px; width:10px; height:10px; border-radius:50%; background:var(--accent2); border:2px solid #fff; box-shadow:0 0 0 1px var(--accent2)}
+.ev.start::before{background:#22c55e; box-shadow:0 0 0 1px #22c55e}
+.ev.fin::before{background:#0f172a; box-shadow:0 0 0 1px #0f172a}
+.ev.paste::before{background:#a855f7; box-shadow:0 0 0 1px #a855f7}
+.ev.hidden::before{background:#ef4444; box-shadow:0 0 0 1px #ef4444}
+.ev.inact::before{background:#f59e0b; box-shadow:0 0 0 1px #f59e0b}
+.ev .t{display:inline-block; min-width:60px; font-variant-numeric:tabular-nums; color:var(--muted); font-weight:700; font-size:12px}
+.ev .ty{font-weight:700; color:#0c4a6e}
+.ev .dt{color:var(--muted); margin-left:6px; font-size:12.5px}
+
+/* ----- Recommandations ----- */
+ul.reco{margin:6px 0 0 18px; padding:0}
+ul.reco li{margin:5px 0; font-size:13.5px}
+
+/* ----- Ancre élève ----- */
+.studentCard{
+  scroll-margin-top: 80px;
+}
+.studentCard .studentHeader{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:14px; flex-wrap:wrap; margin-bottom:6px;
+}
+.studentCard .studentHeader h2{margin:0; border:none; padding:0}
+
+@media (max-width:640px){
+  main{padding:14px 10px 60px}
+  section.card{padding:16px 14px}
+  .scoreCircle{width:120px;height:120px}
+  .scoreCircle .val{font-size:34px}
+  .scoreDetail .bar .name{width:130px; font-size:12.5px}
+  th,td{padding:6px 7px; font-size:12.5px}
+}
+@media print{
+  #topBar, #welcome{display:none !important}
+  section.card{box-shadow:none; border:1px solid var(--line); break-inside:avoid}
+  .studentCard{break-before:page}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= ÉCRAN D'ACCUEIL ================= -->
+<div id="welcome">
+  <div class="wcard">
+    <h1>Analyse de copies — Suites et limites</h1>
+    <p class="sub">
+      Chargez <b>un ou plusieurs</b> fichiers <code>.json</code> chiffrés produits par l'application d'évaluation.
+      Chaque copie sera déchiffrée, analysée, notée sur 20, et le tout peut être exporté en <b>rapport LaTeX</b>
+      (chaque bilan commence sur une page impaire).
+    </p>
+
+    <div id="dropZone">
+      <div class="big">📄📄</div>
+      <div class="lab">Cliquez pour choisir un ou plusieurs fichiers</div>
+      <div class="hint">ou glissez-déposez un lot de fichiers .json ici</div>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" multiple>
+
+    <div id="fileList"></div>
+    <div id="loadMsg"></div>
+  </div>
+</div>
+
+<!-- ================= RÉSULTAT ================= -->
+<div id="result" class="hidden">
+  <div id="topBar">
+    <div class="title" id="titleBar">📊 Analyse de copies — Suites et limites</div>
+    <div class="spacer"></div>
+    <button id="btnLatex" class="primary">⬇ Télécharger le rapport LaTeX</button>
+    <button id="btnPrint">Imprimer / PDF</button>
+    <button id="btnReload">Charger d'autres fichiers</button>
+  </div>
+
+  <main id="content"></main>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+const PASSPHRASE = 'TG-MATH-COMPLEMENTAIRES-2024::evaluation::suites-et-limites';
+
+/* =====================================================================
+   1. LECTURE ET DÉCHIFFREMENT D'UN FICHIER
+   ===================================================================== */
+function b64ToBytes(b64){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function decryptAES(payload){
+  const salt = b64ToBytes(payload.salt);
+  const iv   = b64ToBytes(payload.iv);
+  const ct   = b64ToBytes(payload.donnees);
+  const enc  = new TextEncoder();
+
+  const km = await crypto.subtle.importKey(
+    'raw', enc.encode(PASSPHRASE), 'PBKDF2', false, ['deriveKey']
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations:150000, hash:'SHA-256' },
+    km, { name:'AES-GCM', length:256 }, false, ['decrypt']
+  );
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function decryptXOR(payload){
+  const data = b64ToBytes(payload.donnees);
+  const k = new TextEncoder().encode(PASSPHRASE);
+  const out = new Uint8Array(data.length);
+  for(let i = 0; i < data.length; i++) out[i] = data[i] ^ k[i % k.length];
+  return JSON.parse(new TextDecoder().decode(out));
+}
+
+async function parseJsonFile(file){
+  const text = await file.text();
+  let parsed;
+  try { parsed = JSON.parse(text); }
+  catch(e){ throw new Error("JSON invalide."); }
+
+  if(parsed && parsed.format === 'TG-MATH-COMPLEMENTAIRES' && parsed.donnees){
+    const algo = (parsed.cryptographie && parsed.cryptographie.algorithme) || '';
+    if(/AES/i.test(algo) && window.crypto && crypto.subtle){
+      try { return await decryptAES(parsed); } catch(e){ /* repli */ }
+    }
+    return decryptXOR(parsed);
+  }
+  return parsed;
+}
+
+/* =====================================================================
+   2. FORMATAGE
+   ===================================================================== */
+function fmtDate(iso){
+  if(!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('fr-FR', {
+      day:'2-digit', month:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+  } catch(e){ return iso; }
+}
+function fmtDuration(ms){
+  if(ms == null || isNaN(ms)) return '—';
+  const s = Math.round(ms/1000);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(h > 0) return h + ' h ' + String(m).padStart(2,'0') + ' min ' + String(sec).padStart(2,'0') + ' s';
+  if(m > 0) return m + ' min ' + String(sec).padStart(2,'0') + ' s';
+  return s + ' s';
+}
+function fmtShortDuration(ms){
+  if(ms == null || isNaN(ms)) return '—';
+  const s = Math.round(ms/1000), m = Math.floor(s/60), sec = s%60;
+  return m + ' min ' + String(sec).padStart(2,'0') + ' s';
+}
+function escapeHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* =====================================================================
+   3. CALCUL DE LA NOTE SUR 20 (identique à la version précédente)
+   ===================================================================== */
+function getWeightForQuestion(qid){
+  if(!qid) return 1.0;
+  if(qid.indexOf('E1') === 0) return 1.00;
+  if(qid.indexOf('E2') === 0) return 1.50;
+  if(qid.indexOf('E3') === 0) return 1.50;
+  if(qid.indexOf('PB') === 0) return 1.75;
+  return 1.0;
+}
+
+function computeScore(data){
+  const travail = (data.travail || []);
+  const fraude  = data.fraude || { tauxEstime: 0, details: [] };
+
+  let totalWeight = 0, earnedWeight = 0;
+  travail.forEach(q => {
+    const w = getWeightForQuestion(q.id);
+    totalWeight += w;
+    if(q.correcte) earnedWeight += w;
+  });
+  const scoreA = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 16 * 100) / 100 : 0;
+
+  let allFinalement = travail.length > 0;
+  let allValidated  = true;
+  let allConjOK     = true;
+  let noEmptyFirst  = true;
+
+  travail.forEach(q => {
+    const lignes = q.lignes || [];
+    let hasFinalement = false, firstNonEmptySeen = false;
+    lignes.forEach((l, i) => {
+      const hasText = (l.texte || '').trim().length > 0;
+      if(l.conjonction === 'Finalement' && hasText) hasFinalement = true;
+      if(hasText && !l.validee) allValidated = false;
+      if(i > 0 && hasText && !l.conjonction) allConjOK = false;
+      if(i === 0 && !hasText && !firstNonEmptySeen) noEmptyFirst = false;
+      if(hasText) firstNonEmptySeen = true;
+    });
+    if(!hasFinalement) allFinalement = false;
+  });
+
+  const detailsB = { allFinalement, allValidated, allConjOK, noEmptyFirst };
+  const scoreB = Math.round(
+    ((detailsB.allFinalement ? 0.5 : 0) +
+     (detailsB.allValidated  ? 0.5 : 0) +
+     (detailsB.allConjOK     ? 0.5 : 0) +
+     (detailsB.noEmptyFirst  ? 0.5 : 0)) * 100
+  ) / 100;
+
+  const taux = Number(fraude.tauxEstime) || 0;
+  let scoreC, niveauC;
+  if(taux < 10)      { scoreC = 2.00; niveauC = 'excellent'; }
+  else if(taux < 25) { scoreC = 1.50; niveauC = 'bien'; }
+  else if(taux < 40) { scoreC = 1.00; niveauC = 'moyen'; }
+  else if(taux < 60) { scoreC = 0.50; niveauC = 'faible'; }
+  else               { scoreC = 0.00; niveauC = 'critique'; }
+
+  const total = Math.round((scoreA + scoreB + scoreC) * 100) / 100;
+
+  let appreciation, cls;
+  if(total >= 16)     { appreciation = 'Excellent'; cls = 'excellent'; }
+  else if(total >= 12){ appreciation = 'Bien';      cls = 'bien'; }
+  else if(total >= 8) { appreciation = 'Moyen';     cls = 'moyen'; }
+  else                { appreciation = 'Insuffisant'; cls = 'faible'; }
+
+  const nbCorrectes = travail.filter(q => q.correcte).length;
+  const nbQuestions = travail.length;
+
+  return { A:scoreA, B:scoreB, C:scoreC, total, appreciation, cls,
+           nbCorrectes, nbQuestions, taux, niveauC, detailsB,
+           totalWeight, earnedWeight };
+}
+
+/* =====================================================================
+   4. RENDU HTML — ANALYSE D'UN ÉLÈVE
+   ===================================================================== */
+function renderStudentAnalysis(data, score, idx){
+  const m = data.meta || {};
+  const pap = !!m.pap;
+
+  let html = '<section class="card studentCard" id="student-' + idx + '">';
+
+  /* En-tête avec nom + note */
+  html += '<div class="studentHeader">' +
+            '<h2>Copie n° ' + (idx+1) + ' — ' + escapeHtml(m.nom || '—') + ' ' + escapeHtml(m.prenom || '') + '</h2>' +
+            '<div style="font-size:22px; font-weight:800; color:' +
+              (score.cls === 'excellent' ? 'var(--ok)' :
+               score.cls === 'moyen' ? 'var(--warn)' :
+               score.cls === 'faible' ? 'var(--bad)' : 'var(--accent)') +
+            '">' + score.total.toFixed(2) + ' / 20</div>' +
+          '</div>';
+
+  /* Identité */
+  html += '<div class="identity" style="margin-bottom:18px">' +
+            '<div class="scoreCircle ' + score.cls + '">' +
+              '<div class="val">' + score.total.toFixed(2) + '</div>' +
+              '<div class="lab">/ 20</div>' +
+            '</div>' +
+            '<div class="info">' +
+              '<div class="row"><b>Élève :</b> ' + escapeHtml(m.nom || '—') + ' ' + escapeHtml(m.prenom || '') + '</div>' +
+              '<div class="row"><b>PAP :</b> ' + (pap ? '<span class="pap">Oui — tiers-temps accordé</span>' : 'Non') + '</div>' +
+              '<div class="row"><b>Début :</b> ' + fmtDate(m.dateDebut) + '</div>' +
+              '<div class="row"><b>Fin :</b> ' + fmtDate(m.dateFin) + '</div>' +
+              '<div class="row"><b>Durée réelle :</b> ' + fmtDuration(m.dureeReelleMs) +
+                (m.dureeAccordeeMs ? ' / ' + fmtDuration(m.dureeAccordeeMs) + ' accordées' : '') + '</div>' +
+              '<div class="row"><b>Motif de fin :</b> ' +
+                (m.motifFin === 'temps_ecoule' ? 'Temps écoulé' :
+                 m.motifFin === 'clic_eleve' ? 'Remise volontaire' :
+                 escapeHtml(m.motifFin || '—')) + '</div>' +
+              '<div class="row"><b>Appréciation :</b> <span style="color:' +
+                (score.cls === 'faible' ? 'var(--bad)' :
+                 score.cls === 'moyen' ? 'var(--warn)' : 'var(--ok)') +
+              '; font-weight:700">' + score.appreciation + '</span></div>' +
+            '</div>' +
+          '</div>';
+
+  /* Barème */
+  html += '<h3>Barème détaillé</h3>' +
+    '<div class="scoreDetail">' +
+      '<div class="bar"><div class="name">A. Réponses exactes</div>' +
+        '<div class="track"><div style="width:' + (score.A/16*100).toFixed(1) + '%; background:linear-gradient(90deg,#22c55e,#16a34a)"></div></div>' +
+        '<div class="num">' + score.A.toFixed(2) + ' / 16</div></div>' +
+      '<div class="bar"><div class="name">B. Qualité rédactionnelle</div>' +
+        '<div class="track"><div style="width:' + (score.B/2*100).toFixed(1) + '%; background:linear-gradient(90deg,#3b82f6,#1d4ed8)"></div></div>' +
+        '<div class="num">' + score.B.toFixed(2) + ' / 2</div></div>' +
+      '<div class="bar"><div class="name">C. Intégrité</div>' +
+        '<div class="track"><div style="width:' + (score.C/2*100).toFixed(1) + '%; background:linear-gradient(90deg,#f59e0b,#d97706)"></div></div>' +
+        '<div class="num">' + score.C.toFixed(2) + ' / 2</div></div>' +
+    '</div>';
+
+  /* Résultats par exercice */
+  html += renderResultsByExercise(data);
+
+  /* Raisonnement détaillé */
+  html += renderReasoning(data);
+
+  /* Fraude */
+  html += renderFraud(data, score);
+
+  /* Timeline */
+  html += renderTimeline(data);
+
+  /* Recommandations */
+  html += renderRecommendations(data, score);
+
+  html += '</section>';
+  return html;
+}
+
+function renderResultsByExercise(data){
+  const travail = data.travail || [];
+  const groups = { E1:[], E2:[], E3:[], PB:[] };
+  travail.forEach(q => {
+    let key = 'E1';
+    if(q.id.indexOf('E2') === 0) key = 'E2';
+    else if(q.id.indexOf('E3') === 0) key = 'E3';
+    else if(q.id.indexOf('PB') === 0) key = 'PB';
+    groups[key].push(q);
+  });
+
+  const titles = {
+    E1: 'Exercice 1 — Formes indéterminées « classiques »',
+    E2: 'Exercice 2 — Suites et fonctions trigonométriques',
+    E3: 'Exercice 3 — Suites définies avec des racines',
+    PB: 'GROS PROBLÈME — Étude complète d\'une suite rationnelle'
+  };
+
+  let html = '<h3>Résultats par exercice</h3>';
+  Object.keys(groups).forEach(function(key){
+    const qs = groups[key];
+    if(!qs.length) return;
+    html += '<h4 style="font-size:14px; margin:14px 0 4px; color:#334155">' + titles[key] + '</h4>';
+    html += '<table><thead><tr><th style="width:80px">Question</th><th>Réponse attendue</th>' +
+            '<th>Réponse donnée</th><th style="width:70px" class="mid">Statut</th>' +
+            '<th style="width:100px" class="num">Temps</th></tr></thead><tbody>';
+    qs.forEach(function(q){
+      const num = q.id.replace(/^[A-Z]+Q/, '');
+      const repAtt = escapeHtml(q.reponseAttendue || '—');
+      const repEleve = q.reponseNormalisee != null
+        ? escapeHtml(String(q.reponseNormalisee))
+        : (q.reponseEleve ? '<i>' + escapeHtml(q.reponseEleve) + '</i>' : '<i>—</i>');
+      const statut = q.correcte ? '<span class="ok">✓</span>' : '<span class="bad">✗</span>';
+      const t = q.tempsMs != null ? fmtShortDuration(q.tempsMs) : '—';
+      html += '<tr><td class="mid"><b>' + escapeHtml(num) + '</b></td>' +
+              '<td><code>' + repAtt + '</code></td>' +
+              '<td>' + repEleve + '</td>' +
+              '<td class="mid">' + statut + '</td>' +
+              '<td class="num">' + t + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  });
+  return html;
+}
+
+function renderReasoning(data){
+  const travail = data.travail || [];
+  let html = '<h3>Raisonnement détaillé</h3>';
+  travail.forEach(function(q){
+    const num = q.id.replace(/^([A-Z]+)Q/, '$1 Q');
+    const lignes = q.lignes || [];
+    html += '<div class="qBox">';
+    html += '<div class="qHead"><div class="qid">' + escapeHtml(num) + '</div>' +
+            '<div class="qmeta">' +
+              (q.correcte ? '<span class="ok">✓ Correct</span>' : '<span class="bad">✗ Incorrect</span>') +
+              ' · Réponse attendue : <code>' + escapeHtml(q.reponseAttendue || '—') + '</code>' +
+              ' · Temps : ' + fmtShortDuration(q.tempsMs) + '</div></div>';
+    if(q.enonce) html += '<div class="enonce">' + escapeHtml(q.enonce) + '</div>';
+    if(lignes.length === 0){
+      html += '<p style="color:var(--muted); font-size:13px"><i>Aucune ligne enregistrée.</i></p>';
+    } else {
+      lignes.forEach(function(l){
+        const conj = l.conjonction || (l.n === 1 ? '(début)' : '—');
+        const conjCls = l.conjonction === 'Finalement' ? 'lconj fin' : 'lconj';
+        const hasText = (l.texte || '').trim().length > 0;
+        let status, statutCls;
+        if(!hasText){ status = 'vide'; statutCls = 'e'; }
+        else if(l.validee){ status = 'validée'; statutCls = 'v'; }
+        else { status = 'non validée'; statutCls = 'nv'; }
+        const raw = (l.texteLatex || l.texte || '').trim();
+        html += '<div class="lineItem">' +
+                  '<div class="lno">Ligne ' + l.n + '</div>' +
+                  '<div class="' + conjCls + '">' + escapeHtml(conj) + '</div>' +
+                  '<div class="ltext">' + (raw ? escapeHtml(raw) : '<i>— vide —</i>') + '</div>' +
+                  '<div class="lstatus ' + statutCls + '">' + status + '</div>' +
+                '</div>';
+      });
+    }
+    if(q.reponseEleve){
+      html += '<div class="answerBlock"><div class="lab">Ligne « Finalement » — réponse de l\'élève</div>' +
+              '<div>' + escapeHtml(q.reponseEleve) + '</div></div>';
+    }
+    html += '</div>';
+  });
+  return html;
+}
+
+function renderFraud(data, score){
+  const f = data.fraude || {};
+  const inter = data.interactions || {};
+  const taux = Number(f.tauxEstime) || 0;
+
+  let html = '<h3>Indicateurs de passation et intégrité</h3>';
+  html += '<div class="gauge"><div style="width:' + taux + '%; background:' +
+          (taux < 25 ? 'linear-gradient(90deg,#22c55e,#16a34a)' :
+           taux < 50 ? 'linear-gradient(90deg,#f59e0b,#eab308)' :
+                       'linear-gradient(90deg,#dc2626,#b91c1c)') + '"></div></div>';
+  html += '<div style="font-size:14px"><b>Taux de fraude estimé :</b> ' + taux + ' % — niveau ' +
+          '<span style="font-weight:700; color:' +
+          (taux < 15 ? 'var(--ok)' : taux < 40 ? 'var(--warn)' : 'var(--bad)') + '">' +
+          escapeHtml(f.niveau || '—') + '</span></div>';
+
+  const hidden = inter.tempsHorsPageMs || 0;
+  const inact  = (inter.periodesInactivite || []).reduce((a, b) => a + (b.end - b.start), 0);
+  const pastes = inter.collages || 0;
+  const pasteChars = inter.caracteresColles || 0;
+  const blurCount = inter.pertesDeFocus || 0;
+  const devtools = !!inter.outilsDeveloppementSuspectes;
+
+  html += '<div class="kpis">' +
+    '<div class="kpi"><div class="v">' + fmtShortDuration(hidden) + '</div><div class="k">Hors page</div></div>' +
+    '<div class="kpi"><div class="v">' + fmtShortDuration(inact) + '</div><div class="k">Inactivité</div></div>' +
+    '<div class="kpi"><div class="v">' + pastes + '</div><div class="k">Collages (' + pasteChars + ' car.)</div></div>' +
+    '<div class="kpi"><div class="v">' + blurCount + '</div><div class="k">Pertes de focus</div></div>' +
+    '<div class="kpi"><div class="v" style="color:' + (devtools ? 'var(--bad)' : 'var(--ok)') + '">' +
+      (devtools ? 'Suspectée' : 'Non détectée') + '</div><div class="k">Outils de dév.</div></div>' +
+  '</div>';
+
+  if(f.details && f.details.length){
+    html += '<table style="margin-top:14px"><thead><tr><th>Facteur</th><th>Observation</th>' +
+            '<th class="num" style="width:90px">Points</th></tr></thead><tbody>';
+    f.details.forEach(function(d){
+      html += '<tr><td>' + escapeHtml(d.facteur) + '</td>' +
+              '<td>' + escapeHtml(d.valeur) + '</td>' +
+              '<td class="num warn">' + (d.points || 0) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    html += '<p style="margin-top:14px; color:var(--ok); font-weight:600">✓ Aucun facteur de risque significatif.</p>';
+  }
+  return html;
+}
+
+function renderTimeline(data){
+  const events = ((data.interactions || {}).evenements) || [];
+  if(!events.length) return '';
+  const sorted = events.slice().sort((a, b) => (a.tRel || 0) - (b.tRel || 0));
+
+  const labels = {
+    start: 'Début du devoir', fin: 'Fin du devoir',
+    page_quittee: 'Sortie de la page', page_revenue: 'Retour sur la page',
+    paste: 'Collage', copy: 'Copie', blur: 'Perte de focus', focus: 'Reprise de focus',
+    ligne_ajoutee: 'Ligne ajoutée', ligne_validee: 'Ligne validée',
+    ligne_supprimee: 'Ligne supprimée', ligne_deplacee: 'Ligne déplacée',
+    ligne_modification: 'Ligne déverrouillée', conjonction: 'Conjonction modifiée',
+    licence_ouverte: 'Notice de droits ouverte', devtools: 'Fenêtre d\'outils suspectée',
+    beforeunload: 'Tentative de fermeture', contextmenu: 'Menu contextuel',
+    inactivite_debut: 'Début d\'inactivité', inactivite_fin: 'Reprise d\'activité'
+  };
+  function cssClass(type){
+    if(type === 'start') return 'ev start';
+    if(type === 'fin') return 'ev fin';
+    if(type === 'paste') return 'ev paste';
+    if(type === 'page_quittee' || type === 'beforeunload') return 'ev hidden';
+    if(type === 'inactivite_debut') return 'ev inact';
+    return 'ev';
+  }
+
+  let html = '<h3>Chronologie des événements (' + sorted.length + ')</h3>';
+  html += '<div class="timeline">';
+  sorted.forEach(function(e){
+    const t = fmtShortDuration(e.tRel || 0);
+    const lab = labels[e.type] || e.type;
+    const detail = e.detail ? '<span class="dt">— ' + escapeHtml(e.detail) + '</span>' : '';
+    html += '<div class="' + cssClass(e.type) + '">' +
+              '<span class="t">' + t + '</span> ' +
+              '<span class="ty">' + escapeHtml(lab) + '</span>' + detail +
+            '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderRecommendations(data, score){
+  const travail = data.travail || [];
+  const strengths = [], weaknesses = [];
+
+  if(score.nbCorrectes === score.nbQuestions && score.nbQuestions > 0){
+    strengths.push('Toutes les réponses fournies sont exactes.');
+  } else if(score.nbCorrectes / score.nbQuestions >= 0.75){
+    strengths.push('Bon taux de réussite global (' + score.nbCorrectes + ' / ' + score.nbQuestions + ').');
+  }
+
+  const byEx = { E1:[], E2:[], E3:[], PB:[] };
+  travail.forEach(q => {
+    if(q.id.indexOf('E1') === 0) byEx.E1.push(q);
+    else if(q.id.indexOf('E2') === 0) byEx.E2.push(q);
+    else if(q.id.indexOf('E3') === 0) byEx.E3.push(q);
+    else if(q.id.indexOf('PB') === 0) byEx.PB.push(q);
+  });
+  const exNames = { E1:'Exercice 1 (polynômes)', E2:'Exercice 2 (trigonométrie)',
+                    E3:'Exercice 3 (racines)', PB:'Gros problème' };
+  Object.keys(byEx).forEach(k => {
+    const qs = byEx[k]; if(!qs.length) return;
+    const ok = qs.filter(q => q.correcte).length;
+    if(ok === qs.length) strengths.push(exNames[k] + ' : toutes les questions réussies.');
+    else if(ok === 0) weaknesses.push(exNames[k] + ' : aucune question réussie (' + qs.length + ' à revoir).');
+    else if(ok / qs.length < 0.5) weaknesses.push(exNames[k] + ' : ' + (qs.length - ok) + ' erreur(s) sur ' + qs.length + '.');
+  });
+
+  const dB = score.detailsB || {};
+  if(dB.allFinalement) strengths.push('Toutes les questions comportent une ligne « Finalement » remplie.');
+  else weaknesses.push('Certaines questions n\'ont pas de ligne « Finalement » : réponse formelle manquante.');
+  if(dB.allValidated) strengths.push('Toutes les lignes rédigées ont été validées.');
+  else weaknesses.push('Certaines lignes ont été rédigées sans être validées.');
+  if(dB.allConjOK) strengths.push('Les conjonctions ont été utilisées de manière cohérente.');
+  else weaknesses.push('Au moins une ligne n\'a pas de conjonction alors qu\'elle le devrait.');
+  if(!dB.noEmptyFirst) weaknesses.push('La première ligne d\'au moins une question est vide.');
+  if(score.taux >= 40) weaknesses.push('Taux de fraude élevé (' + score.taux + ' %) : à vérifier.');
+  else if(score.taux < 15) strengths.push('Aucun indice comportemental de fraude significatif.');
+
+  let html = '<h3>Synthèse pédagogique</h3>';
+  html += '<h4 style="color:var(--ok); font-size:14px; margin:12px 0 4px">Points forts</h4>';
+  if(strengths.length){
+    html += '<ul class="reco">';
+    strengths.forEach(s => html += '<li>' + escapeHtml(s) + '</li>');
+    html += '</ul>';
+  } else {
+    html += '<p style="color:var(--muted); font-size:13px">Aucun point fort détecté automatiquement.</p>';
+  }
+  html += '<h4 style="color:var(--bad); font-size:14px; margin:14px 0 4px">Axes d\'amélioration</h4>';
+  if(weaknesses.length){
+    html += '<ul class="reco">';
+    weaknesses.forEach(s => html += '<li>' + escapeHtml(s) + '</li>');
+    html += '</ul>';
+  } else {
+    html += '<p style="color:var(--ok); font-size:13px">Aucun axe d\'amélioration détecté. Bravo !</p>';
+  }
+  return html;
+}
+
+/* =====================================================================
+   5. RENDU HTML — SYNTHÈSE DE LA CLASSE
+   ===================================================================== */
+function renderClassSummary(allData){
+  const stats = computeClassStats(allData);
+  let html = '<section class="card"><h2>Synthèse de la classe</h2>';
+
+  html += '<div class="kpis">' +
+    '<div class="kpi"><div class="v">' + allData.length + '</div><div class="k">Copies analysées</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.moyenne.toFixed(2) + '</div><div class="k">Moyenne /20</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.mediane.toFixed(2) + '</div><div class="k">Médiane /20</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.min.toFixed(2) + ' – ' + stats.max.toFixed(2) + '</div><div class="k">Amplitude</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.tauxMoyenFraude.toFixed(1) + ' %</div><div class="k">Fraude moyenne</div></div>' +
+  '</div>';
+
+  /* Tableau récapitulatif */
+  html += '<h3>Tableau récapitulatif</h3>';
+  html += '<table><thead><tr>' +
+          '<th style="width:40px">#</th>' +
+          '<th>Nom</th><th>Prénom</th>' +
+          '<th class="num" style="width:70px">Note /20</th>' +
+          '<th class="num" style="width:70px">A /16</th>' +
+          '<th class="num" style="width:60px">B /2</th>' +
+          '<th class="num" style="width:60px">C /2</th>' +
+          '<th class="num" style="width:70px">Fraude</th>' +
+          '<th style="width:90px">Motif fin</th>' +
+          '<th class="num" style="width:80px">Durée</th>' +
+          '</tr></thead><tbody>';
+
+  allData.slice().sort((a,b) => b.score.total - a.score.total).forEach(function(d, i){
+    const m = d.meta;
+    html += '<tr>' +
+      '<td class="mid">' + (i+1) + '</td>' +
+      '<td>' + escapeHtml(m.nom || '—') + '</td>' +
+      '<td>' + escapeHtml(m.prenom || '') + '</td>' +
+      '<td class="num"><b>' + d.score.total.toFixed(2) + '</b></td>' +
+      '<td class="num">' + d.score.A.toFixed(2) + '</td>' +
+      '<td class="num">' + d.score.B.toFixed(2) + '</td>' +
+      '<td class="num">' + d.score.C.toFixed(2) + '</td>' +
+      '<td class="num ' + (d.score.taux >= 40 ? 'bad' : d.score.taux >= 20 ? 'warn' : '') + '">' +
+        d.score.taux + ' %</td>' +
+      '<td>' + (m.motifFin === 'temps_ecoule' ? 'Temps' : m.motifFin === 'clic_eleve' ? 'Volontaire' : '—') + '</td>' +
+      '<td class="num">' + fmtShortDuration(m.dureeReelleMs) + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+
+  /* Liens vers les fiches */
+  html += '<h3>Accès direct aux fiches</h3>';
+  html += '<div class="navGrid">';
+  const sorted = allData.slice().sort((a,b) => (a.meta.nom || '').localeCompare(b.meta.nom || ''));
+  sorted.forEach(function(d){
+    const idx = allData.indexOf(d);
+    const cls = d.score.total >= 12 ? 'good' : d.score.total >= 8 ? 'mid' : 'bad';
+    html += '<a class="navItem" href="#student-' + idx + '">' +
+              '<div class="rank">' + (idx+1) + '</div>' +
+              '<div class="nm">' + escapeHtml(d.meta.nom || '—') + ' ' + escapeHtml(d.meta.prenom || '') + '</div>' +
+              '<div class="sc ' + cls + '">' + d.score.total.toFixed(2) + '</div>' +
+            '</a>';
+  });
+  html += '</div>';
+
+  /* Répartition */
+  html += '<h3>Répartition des notes</h3>';
+  html += renderDistribution(stats);
+
+  html += '</section>';
+  return html;
+}
+
+function computeClassStats(allData){
+  const notes = allData.map(d => d.score.total).sort((a,b) => a-b);
+  const n = notes.length;
+  const sum = notes.reduce((a,b) => a+b, 0);
+  const moyenne = n > 0 ? sum / n : 0;
+  const mediane = n === 0 ? 0 :
+    n % 2 === 1 ? notes[Math.floor(n/2)] :
+    (notes[n/2 - 1] + notes[n/2]) / 2;
+  const min = n > 0 ? notes[0] : 0;
+  const max = n > 0 ? notes[n-1] : 0;
+  const tauxMoyenFraude = n > 0
+    ? allData.reduce((a,d) => a + d.score.taux, 0) / n
+    : 0;
+  return { moyenne, mediane, min, max, tauxMoyenFraude };
+}
+
+function renderDistribution(stats){
+  const buckets = [
+    { label:'0 – 4', min:0,  max:4,  color:'#dc2626' },
+    { label:'4 – 8', min:4,  max:8,  color:'#ea580c' },
+    { label:'8 – 12', min:8, max:12, color:'#eab308' },
+    { label:'12 – 16', min:12, max:16, color:'#3b82f6' },
+    { label:'16 – 20', min:16, max:20.01, color:'#16a34a' }
+  ];
+  /* Placeholder — la répartition est calculée dans renderClassSummary après avoir
+     accès aux notes. On stocke en cache le tableau trié dans stats. */
+  const notes = stats.notes || [];
+  const counts = buckets.map(() => 0);
+  notes.forEach(n => {
+    for(let i = 0; i < buckets.length; i++){
+      if(n >= buckets[i].min && n < buckets[i].max){ counts[i]++; break; }
+    }
+  });
+  const maxCount = Math.max(1, ...counts);
+  let html = '<div style="margin-top:10px">';
+  buckets.forEach((b, i) => {
+    const w = (counts[i] / maxCount * 100).toFixed(1);
+    html += '<div style="display:flex; align-items:center; gap:10px; margin:6px 0; font-size:13px">' +
+              '<div style="width:60px; font-weight:600">' + b.label + '</div>' +
+              '<div style="flex:1; height:14px; background:#e2e8f0; border-radius:7px; overflow:hidden">' +
+                '<div style="height:100%; width:' + w + '%; background:' + b.color + '"></div>' +
+              '</div>' +
+              '<div style="width:50px; text-align:right; font-weight:700">' + counts[i] + '</div>' +
+            '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* =====================================================================
+   6. GÉNÉRATION LATEX (sans Unicode)
+   ===================================================================== */
+/* Convertit un texte en LaTeX sans Unicode :
+   - accents -> commandes (\'e, \`a, ...)
+   - symboles -> commandes mathématiques ($\infty$, ...)
+   - caractères LaTeX spéciaux -> échappés
+*/
+function latexEscape(s){
+  if(s == null) return '';
+  let out = String(s);
+
+  /* Étape 1 : échapper les caractères LaTeX spéciaux. */
+  out = out.replace(/\\/g, '\u0001BS\u0001');
+  out = out.replace(/([&%$#_{}])/g, '\\$1');
+  out = out.replace(/~/g, '\u0001TILDE\u0001');
+  out = out.replace(/\^/g, '\u0001CIRC\u0001');
+
+  /* Étape 2 : accents -> commandes LaTeX. */
+  const ACC = {
+    'à':"\\`a",'â':"\\^a",'ä':'\\"a','á':"\\'a",
+    'é':"\\'e",'è':"\\`e",'ê':"\\^e",'ë':'\\"e',
+    'î':"\\^i",'ï':'\\"i','í':"\\'i",
+    'ô':"\\^o",'ö':'\\"o','ó':"\\'o",
+    'ù':"\\`u",'û':"\\^u",'ü':'\\"u','ú':"\\'u",
+    'ç':'\\c{c}','ñ':'\\~n',
+    'À':"\\`A",'Â':"\\^A",'Ä':'\\"A',
+    'É':"\\'E",'È':"\\`E",'Ê':"\\^E",'Ë':'\\"E',
+    'Î':"\\^I",'Ï':'\\"I',
+    'Ô':"\\^O",'Ö':'\\"O',
+    'Ù':"\\`U",'Û':"\\^U",'Ü':'\\"U',
+    'Ç':'\\c{C}','Ñ':'\\~N',
+    'œ':'\\oe{}','Œ':'\\OE{}',
+    'æ':'\\ae{}','Æ':'\\AE{}',
+    'ß':'\\ss{}'
+  };
+  out = out.replace(/[àâäáéèêëíîïóôöúùûüçñÀÂÄÉÈÊËÍÎÏÓÔÖÚÙÛÜÇÑœŒæÆß]/g,
+                    ch => ACC[ch] || ch);
+
+  /* Étape 3 : typographie Unicode -> commandes LaTeX. */
+  const TYPO = {
+    '«':'\\guillemotleft{}','»':'\\guillemotright{}',
+    '–':'--','—':'---','…':'\\ldots{}',
+    '\u2018':"'", '\u2019':"'",   /* ‘ ’ */
+    '\u201C':'``','\u201D':"''",  /* “ ” */
+    '·':'$\\cdot$','€':'\\texteuro{}','°':'$^\\circ$'
+  };
+  out = out.replace(/[«»–—…\u2018\u2019\u201C\u201D·€°]/g, ch => TYPO[ch] || ch);
+
+  /* Étape 4 : symboles mathématiques Unicode -> commandes LaTeX. */
+  const SYM = [
+    [/∞/g, '$\\infty$'],
+    [/≤/g, '$\\leq$'],
+    [/≥/g, '$\\geq$'],
+    [/≠/g, '$\\neq$'],
+    [/[✓✔]/g, '$\\checkmark$'],
+    [/[✗✘✕✖]/g, '$\\times$'],
+    [/×/g, '$\\times$'],
+    [/÷/g, '$\\div$'],
+    [/±/g, '$\\pm$'],
+    [/→/g, '$\\to$'],
+    [/←/g, '$\\leftarrow$'],
+    [/↔/g, '$\\leftrightarrow$'],
+    [/↦/g, '$\\mapsto$'],
+    [/▲/g, '$\\blacktriangle$'],
+    [/▼/g, '$\\blacktriangledown$'],
+    [/►/g, '$\\blacktriangleright$'],
+    [/◄/g, '$\\blacktriangleleft$'],
+    [/✎/g, '$\\star$'],
+    [/⌘/g, 'Cmd'],
+    [/⏱/g, ''],
+    [/📄/g, ''],
+    [/📊/g, ''],
+    [/✅/g, '$\\checkmark$'],
+    [/⚠️?/g, '!']
+  ];
+  SYM.forEach(([re, rep]) => { out = out.replace(re, rep); });
+
+  /* Étape 5 : restaurer les caractères échappés au début. */
+  out = out.replace(/\u0001BS\u0001/g, '\\textbackslash{}');
+  out = out.replace(/\u0001TILDE\u0001/g, '\\textasciitilde{}');
+  out = out.replace(/\u0001CIRC\u0001/g, '\\textasciicircum{}');
+
+  return out;
+}
+
+/* Version qui préserve les $...$ déjà présents (pour le champ texteLatex). */
+function latexEscapeButKeepMath(s){
+  if(s == null) return '';
+  const parts = String(s).split(/(\$[^$]*\$)/g);
+  return parts.map(p => {
+    if(p.length > 1 && p.startsWith('$') && p.endsWith('$')){
+      /* Segment math : on conserve tel quel (mais on normalise les Unicode
+         mathématiques à l'intérieur — ils devraient déjà être en LaTeX). */
+      return p;
+    }
+    return latexEscape(p);
+  }).join('');
+}
+
+/* Convertit les ms en durée lisible pour LaTeX. */
+function latexDuration(ms){
+  if(ms == null || isNaN(ms)) return '---';
+  const s = Math.round(ms/1000);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(h > 0) return h + '~h~' + String(m).padStart(2,'0') + '~min~' + String(sec).padStart(2,'0') + '~s';
+  if(m > 0) return m + '~min~' + String(sec).padStart(2,'0') + '~s';
+  return s + '~s';
+}
+
+/* Convertit une date ISO en texte LaTeX. */
+function latexDate(iso){
+  if(!iso) return '---';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('fr-FR', {
+      day:'2-digit', month:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+  } catch(e){ return iso; }
+}
+
+/* ---------------------------------------------------------------------
+   Génération d'un fichier .tex pour un lot d'élèves.
+   --------------------------------------------------------------------- */
+function generateLatexReport(allData){
+  const L = [];
+  const P = (s) => L.push(s);
+  const NL = () => L.push('');
+
+  /* --- Préambule --- */
+  P('\\documentclass[11pt,a4paper,twoside]{article}');
+  P('\\usepackage[utf8]{inputenc}');
+  P('\\usepackage[T1]{fontenc}');
+  P('\\usepackage[french]{babel}');
+  P('\\usepackage{lmodern}');
+  P('\\usepackage{microtype}');
+  P('\\usepackage{amsmath,amssymb}');
+  P('\\usepackage{booktabs}');
+  P('\\usepackage{longtable}');
+  P('\\usepackage{array}');
+  P('\\usepackage{geometry}');
+  P('\\geometry{margin=2.2cm, top=2.4cm, bottom=2.4cm}');
+  P('\\usepackage{fancyhdr}');
+  P('\\setlength{\\headheight}{15pt}');
+  P('\\usepackage{xcolor}');
+  P('\\definecolor{bleufonce}{HTML}{1E3A8A}');
+  P('\\definecolor{rougefonce}{HTML}{B91C1C}');
+  P('\\definecolor{vertfonce}{HTML}{15803D}');
+  P('\\usepackage{titlesec}');
+  P('\\titleformat{\\section}{\\Large\\bfseries\\color{bleufonce}}{\\thesection.}{0.6em}{}');
+  P('\\titleformat{\\subsection}{\\large\\bfseries\\color{bleufonce}}{\\thesubsection}{0.5em}{}');
+  P('\\titleformat{\\subsubsection}{\\normalsize\\bfseries}{\\thesubsubsection}{0.5em}{}');
+  P('\\usepackage{hyperref}');
+  P('\\hypersetup{colorlinks=true, linkcolor=bleufonce, urlcolor=bleufonce}');
+  P('\\pagestyle{fancy}');
+  P('\\fancyhf{}');
+  P('\\fancyhead[L]{\\small\\color{bleufonce}Analyse de copies --- Suites et limites}');
+  P('\\fancyhead[R]{\\small\\color{bleufonce}\\thepage}');
+  P('\\fancyfoot[C]{}');
+  P('\\renewcommand{\\headrulewidth}{0.4pt}');
+  NL();
+  P('\\title{\\textbf{Analyse de copies}\\\\[2pt]');
+  P('       \\large Évaluation --- \\emph{Suites et limites}\\\\');
+  P('       \\normalsize Terminale générale --- option Mathématiques complémentaires}');
+  P('\\author{Rapport généré automatiquement}');
+  P('\\date{\\today}');
+  NL();
+  P('\\begin{document}');
+  P('\\maketitle');
+  P('\\thispagestyle{fancy}');
+  NL();
+
+  /* --- Synthèse de la classe --- */
+  P('\\section*{Synthèse de la classe}');
+  P('\\addcontentsline{toc}{section}{Synthèse de la classe}');
+  NL();
+  const stats = computeClassStats(allData);
+  P('\\noindent\\textbf{Nombre de copies analysées :} ' + allData.length + '.\\\\');
+  P('\\textbf{Moyenne :} ' + stats.moyenne.toFixed(2) + ' / 20. \\quad');
+  P('\\textbf{Médiane :} ' + stats.mediane.toFixed(2) + ' / 20. \\quad');
+  P('\\textbf{Amplitude :} ' + stats.min.toFixed(2) + ' à ' + stats.max.toFixed(2) + '.\\\\');
+  P('\\textbf{Taux de fraude moyen :} ' + stats.tauxMoyenFraude.toFixed(1) + ' \\%.');
+  NL();
+  P('\\subsection*{Tableau récapitulatif}');
+  NL();
+  P('\\begin{longtable}{@{}p{0.8cm}p{3.6cm}p{2.8cm}rrrrp{1.8cm}@{}}');
+  P('\\toprule');
+  P('\\textbf{\\#} & \\textbf{Nom} & \\textbf{Prénom} & \\textbf{Note /20} & \\textbf{A /16} & \\textbf{B /2} & \\textbf{C /2} & \\textbf{Motif} \\\\');
+  P('\\midrule');
+  P('\\endhead');
+  allData.slice().sort((a,b) => b.score.total - a.score.total).forEach(function(d, i){
+    const m = d.meta || {};
+    const motif = m.motifFin === 'temps_ecoule' ? 'Temps écoulé'
+                : m.motifFin === 'clic_eleve' ? 'Volontaire'
+                : '---';
+    P((i+1) + ' & ' + latexEscape(m.nom || '---') + ' & ' + latexEscape(m.prenom || '')
+      + ' & ' + d.score.total.toFixed(2)
+      + ' & ' + d.score.A.toFixed(2)
+      + ' & ' + d.score.B.toFixed(2)
+      + ' & ' + d.score.C.toFixed(2)
+      + ' & ' + latexEscape(motif) + ' \\\\');
+  });
+  P('\\bottomrule');
+  P('\\end{longtable}');
+  NL();
+
+  /* --- Chaque élève --- */
+  allData.forEach(function(d, idx){
+    const m = d.meta || {};
+    const score = d.score;
+
+    /* Page impaire garantie */
+    P('\\cleardoublepage');
+    NL();
+    P('\\section*{Copie ' + (idx+1) + ' --- ' + latexEscape(m.nom || '---') + ' ' + latexEscape(m.prenom || '') + '}');
+    P('\\addcontentsline{toc}{section}{Copie ' + (idx+1) + ' : ' + latexEscape(m.nom || '') + ' ' + latexEscape(m.prenom || '') + '}');
+    NL();
+
+    /* Identité et horaires */
+    P('\\subsection*{Identité et horaires}');
+    P('\\begin{tabular}{@{}p{4cm}p{10cm}@{}}');
+    P('\\textbf{Nom} & ' + latexEscape(m.nom || '---') + ' \\\\');
+    P('\\textbf{Prénom} & ' + latexEscape(m.prenom || '---') + ' \\\\');
+    P('\\textbf{PAP} & ' + (m.pap ? 'Oui --- tiers-temps accordé' : 'Non') + ' \\\\');
+    P('\\textbf{Début} & ' + latexDate(m.dateDebut) + ' \\\\');
+    P('\\textbf{Fin} & ' + latexDate(m.dateFin) + ' \\\\');
+    P('\\textbf{Durée réelle} & ' + latexDuration(m.dureeReelleMs)
+      + (m.dureeAccordeeMs ? ' (sur ' + latexDuration(m.dureeAccordeeMs) + ' accordées)' : '') + ' \\\\');
+    P('\\textbf{Motif de fin} & ' +
+      (m.motifFin === 'temps_ecoule' ? 'Temps écoulé'
+      : m.motifFin === 'clic_eleve' ? 'Remise volontaire'
+      : latexEscape(m.motifFin || '---')) + ' \\\\');
+    P('\\end{tabular}');
+    NL();
+
+    /* Note */
+    P('\\subsection*{Note : ' + score.total.toFixed(2) + ' / 20 --- ' + latexEscape(score.appreciation) + '}');
+    P('\\begin{tabular}{@{}lrr@{}}');
+    P('\\toprule');
+    P('\\textbf{Bloc} & \\textbf{Points} & \\textbf{Barème} \\\\');
+    P('\\midrule');
+    P('A. Réponses exactes & ' + score.A.toFixed(2) + ' & / 16 \\\\');
+    P('B. Qualité rédactionnelle & ' + score.B.toFixed(2) + ' & / 2 \\\\');
+    P('C. Intégrité de la passation & ' + score.C.toFixed(2) + ' & / 2 \\\\');
+    P('\\midrule');
+    P('\\textbf{TOTAL} & \\textbf{' + score.total.toFixed(2) + '} & \\textbf{/ 20} \\\\');
+    P('\\bottomrule');
+    P('\\end{tabular}');
+    NL();
+
+    /* Résultats par exercice */
+    P('\\subsection*{Résultats par exercice}');
+    NL();
+    const byEx = { E1:[], E2:[], E3:[], PB:[] };
+    (d.travail || []).forEach(q => {
+      if(q.id.indexOf('E1') === 0) byEx.E1.push(q);
+      else if(q.id.indexOf('E2') === 0) byEx.E2.push(q);
+      else if(q.id.indexOf('E3') === 0) byEx.E3.push(q);
+      else if(q.id.indexOf('PB') === 0) byEx.PB.push(q);
+    });
+    const exTitles = {
+      E1: 'Exercice 1 --- Formes indéterminées classiques',
+      E2: 'Exercice 2 --- Suites et fonctions trigonométriques',
+      E3: 'Exercice 3 --- Suites définies avec des racines',
+      PB: 'Gros problème --- Étude d\'une suite rationnelle'
+    };
+    Object.keys(byEx).forEach(function(key){
+      const qs = byEx[key];
+      if(!qs.length) return;
+      P('\\paragraph{' + latexEscape(exTitles[key]) + '}');
+      P('\\begin{longtable}{@{}p{1.4cm}p{3.4cm}p{4.2cm}p{1.4cm}p{1.8cm}@{}}');
+      P('\\toprule');
+      P('\\textbf{Q} & \\textbf{Réponse attendue} & \\textbf{Réponse donnée} & \\textbf{Statut} & \\textbf{Temps} \\\\');
+      P('\\midrule');
+      P('\\endhead');
+      qs.forEach(function(q){
+        const num = q.id.replace(/^[A-Z]+Q/, '');
+        const att = q.reponseAttendue ? latexEscape(String(q.reponseAttendue)) : '---';
+        const rep = q.reponseNormalisee != null
+          ? latexEscape(String(q.reponseNormalisee))
+          : (q.reponseEleve ? '\\textit{' + latexEscapeButKeepMath(q.reponseEleve) + '}' : '---');
+        const statut = q.correcte ? '$\\checkmark$' : '$\\times$';
+        const t = q.tempsMs != null ? latexDuration(q.tempsMs) : '---';
+        P(num + ' & \\texttt{' + att + '} & ' + rep + ' & ' + statut + ' & ' + t + ' \\\\');
+      });
+      P('\\bottomrule');
+      P('\\end{longtable}');
+      NL();
+    });
+
+    /* Raisonnement détaillé */
+    P('\\subsection*{Raisonnement détaillé}');
+    NL();
+    (d.travail || []).forEach(function(q){
+      const num = q.id.replace(/^([A-Z]+)Q/, '$1 Q');
+      P('\\paragraph{Question ' + latexEscape(num) + '}');
+      if(q.enonce){
+        P('\\noindent\\textit{' + latexEscape(q.enonce) + '}');
+        NL();
+      }
+      const lignes = q.lignes || [];
+      if(!lignes.length){
+        P('\\noindent\\textit{Aucune ligne enregistrée.}');
+        NL();
+      } else {
+        P('\\begin{itemize}[leftmargin=1.2em,itemsep=2pt]');
+        lignes.forEach(function(l){
+          const conj = l.conjonction ? latexEscape(l.conjonction) + ' ' : '';
+          const txt = l.texteLatex ? latexEscapeButKeepMath(l.texteLatex) : '';
+          let status = '';
+          if(!(l.texte || '').trim()) status = ' \\textit{(vide)}';
+          else if(!l.validee) status = ' \\textit{(non validée)}';
+          P('\\item ' + conj + txt + status);
+        });
+        P('\\end{itemize}');
+        NL();
+      }
+      if(q.reponseEleve){
+        P('\\noindent\\textbf{Réponse de l\\\'élève (ligne « Finalement ») :} '
+          + latexEscapeButKeepMath(q.reponseEleve));
+        NL();
+      }
+    });
+
+    /* Indicateurs de passation */
+    P('\\subsection*{Indicateurs de passation et intégrité}');
+    const f = d.fraude || {};
+    const inter = d.interactions || {};
+    const hidden = inter.tempsHorsPageMs || 0;
+    const inact = (inter.periodesInactivite || []).reduce((a,b) => a + (b.end - b.start), 0);
+    P('\\begin{tabular}{@{}p{7cm}r@{}}');
+    P('\\toprule');
+    P('\\textbf{Indicateur} & \\textbf{Valeur} \\\\');
+    P('\\midrule');
+    P('Taux estimé de fraude & ' + (Number(f.tauxEstime) || 0) + ' \\% \\\\');
+    P('Niveau & ' + latexEscape(f.niveau || '---') + ' \\\\');
+    P('Temps hors page & ' + latexDuration(hidden) + ' \\\\');
+    P('Inactivité cumulée & ' + latexDuration(inact) + ' \\\\');
+    P('Collages & ' + (inter.collages || 0) + ' (' + (inter.caracteresColles || 0) + ' caractères) \\\\');
+    P('Copies (Ctrl+C) & ' + (inter.copies || 0) + ' \\\\');
+    P('Pertes de focus & ' + (inter.pertesDeFocus || 0) + ' \\\\');
+    P('Outils de développement & ' + (inter.outilsDeveloppementSuspectes ? 'Suspectés' : 'Non détectés') + ' \\\\');
+    P('\\bottomrule');
+    P('\\end{tabular}');
+    NL();
+    if(f.details && f.details.length){
+      P('\\paragraph{Détail des facteurs de risque}');
+      P('\\begin{tabular}{@{}p{5cm}p{7cm}r@{}}');
+      P('\\toprule');
+      P('\\textbf{Facteur} & \\textbf{Observation} & \\textbf{Points} \\\\');
+      P('\\midrule');
+      f.details.forEach(function(dd){
+        P(latexEscape(dd.facteur) + ' & ' + latexEscape(dd.valeur) + ' & ' + (dd.points || 0) + ' \\\\');
+      });
+      P('\\bottomrule');
+      P('\\end{tabular}');
+      NL();
+    } else {
+      P('\\noindent\\textit{Aucun facteur de risque significatif.}');
+      NL();
+    }
+
+    /* Chronologie */
+    const events = inter.evenements || [];
+    if(events.length){
+      P('\\subsection*{Chronologie des événements}');
+      P('\\begin{longtable}{@{}p{1.8cm}p{5cm}p{8cm}@{}}');
+      P('\\toprule');
+      P('\\textbf{Temps} & \\textbf{Événement} & \\textbf{Détail} \\\\');
+      P('\\midrule');
+      P('\\endhead');
+      const labels = {
+        start:'Début du devoir', fin:'Fin du devoir',
+        page_quittee:'Sortie de la page', page_revenue:'Retour sur la page',
+        paste:'Collage', copy:'Copie', blur:'Perte de focus', focus:'Reprise de focus',
+        ligne_ajoutee:'Ligne ajoutée', ligne_validee:'Ligne validée',
+        ligne_supprimee:'Ligne supprimée', ligne_deplacee:'Ligne déplacée',
+        ligne_modification:'Ligne déverrouillée', conjonction:'Conjonction modifiée',
+        licence_ouverte:'Notice de droits ouverte', devtools:'Fenêtre d\'outils suspectée',
+        beforeunload:'Tentative de fermeture', contextmenu:'Menu contextuel',
+        inactivite_debut:'Début d\'inactivité', inactivite_fin:'Reprise d\'activité'
+      };
+      events.slice().sort((a,b) => (a.tRel || 0) - (b.tRel || 0)).forEach(function(e){
+        const t = latexDuration(e.tRel || 0);
+        const lab = latexEscape(labels[e.type] || e.type);
+        const det = e.detail ? latexEscape(e.detail) : '';
+        P(t + ' & ' + lab + ' & ' + det + ' \\\\');
+      });
+      P('\\bottomrule');
+      P('\\end{longtable}');
+      NL();
+    }
+
+    /* Synthèse pédagogique */
+    P('\\subsection*{Synthèse pédagogique}');
+    NL();
+    /* Points forts et axes — même logique que le HTML */
+    const travail = d.travail || [];
+    const strengths = [], weaknesses = [];
+    if(score.nbCorrectes === score.nbQuestions && score.nbQuestions > 0){
+      strengths.push('Toutes les réponses fournies sont exactes.');
+    } else if(score.nbCorrectes / Math.max(1, score.nbQuestions) >= 0.75){
+      strengths.push('Bon taux de réussite global (' + score.nbCorrectes + ' / ' + score.nbQuestions + ').');
+    }
+    Object.keys(byEx).forEach(k => {
+      const qs = byEx[k]; if(!qs.length) return;
+      const ok = qs.filter(q => q.correcte).length;
+      if(ok === qs.length) strengths.push(exTitles[k] + ' : toutes les questions réussies.');
+      else if(ok === 0) weaknesses.push(exTitles[k] + ' : aucune question réussie (' + qs.length + ' à revoir).');
+      else if(ok / qs.length < 0.5) weaknesses.push(exTitles[k] + ' : ' + (qs.length - ok) + ' erreur(s) sur ' + qs.length + '.');
+    });
+    const dB = score.detailsB || {};
+    if(dB.allFinalement) strengths.push('Toutes les questions comportent une ligne « Finalement » remplie.');
+    else weaknesses.push('Certaines questions n\'ont pas de ligne « Finalement » : réponse formelle manquante.');
+    if(dB.allValidated) strengths.push('Toutes les lignes rédigées ont été validées.');
+    else weaknesses.push('Certaines lignes ont été rédigées sans être validées.');
+    if(dB.allConjOK) strengths.push('Les conjonctions ont été utilisées de manière cohérente.');
+    else weaknesses.push('Au moins une ligne n\'a pas de conjonction alors qu\'elle le devrait.');
+    if(!dB.noEmptyFirst) weaknesses.push('La première ligne d\'au moins une question est vide.');
+    if(score.taux >= 40) weaknesses.push('Taux de fraude élevé (' + score.taux + ' \\%) : à vérifier.');
+    else if(score.taux < 15) strengths.push('Aucun indice comportemental de fraude significatif.');
+
+    P('\\paragraph{Points forts}');
+    if(strengths.length){
+      P('\\begin{itemize}[leftmargin=1.2em,itemsep=2pt]');
+      strengths.forEach(s => P('\\item ' + latexEscape(s)));
+      P('\\end{itemize}');
+    } else {
+      P('\\noindent\\textit{Aucun point fort détecté automatiquement.}');
+    }
+    NL();
+    P('\\paragraph{Axes d\'amélioration}');
+    if(weaknesses.length){
+      P('\\begin{itemize}[leftmargin=1.2em,itemsep=2pt]');
+      weaknesses.forEach(s => P('\\item ' + latexEscape(s)));
+      P('\\end{itemize}');
+    } else {
+      P('\\noindent\\textit{Aucun axe d\'amélioration détecté. Bravo !}');
+    }
+    NL();
+  });
+
+  P('\\end{document}');
+  return L.join('\n');
+}
+
+/* =====================================================================
+   7. TÉLÉCHARGEMENT DE FICHIERS
+   ===================================================================== */
+function downloadFile(content, filename, mime){
+  const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function latexFilename(){
+  const d = new Date();
+  const jj = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const aa = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mn = String(d.getMinutes()).padStart(2,'0');
+  return 'Analyse_Copies_Suites_Limites_' + jj + mm + aa + '_' + hh + mn + '.tex';
+}
+
+/* =====================================================================
+   8. ÉTAT ET TRAITEMENT PAR LOT
+   ===================================================================== */
+const allData = [];   /* Un élément par copie : { meta, travail, fraude, interactions, score } */
+
+function setMsg(txt, isError){
+  const el = $('#loadMsg');
+  el.textContent = txt || '';
+  el.style.color = isError ? 'var(--bad)' : 'var(--ok)';
+}
+
+function addFileItem(file, status){
+  const list = $('#fileList');
+  const div = document.createElement('div');
+  div.className = 'fileItem';
+  const span = document.createElement('span');
+  span.className = 'fname';
+  span.textContent = file.name;
+  div.appendChild(span);
+  const st = document.createElement('span');
+  st.className = 'fstatus wait';
+  st.textContent = status || 'en attente';
+  div.appendChild(st);
+  list.appendChild(div);
+  return st;
+}
+
+async function handleFiles(fileList){
+  const files = Array.from(fileList || []);
+  if(!files.length) return;
+
+  setMsg('Traitement de ' + files.length + ' fichier(s)…', false);
+  const items = [];
+  files.forEach(f => items.push(addFileItem(f, 'traitement…')));
+
+  let ok = 0, err = 0;
+
+  for(let i = 0; i < files.length; i++){
+    const f = files[i];
+    const item = items[i];
+    try {
+      const data = await parseJsonFile(f);
+      const score = computeScore(data);
+      const entry = {
+        meta: data.meta || {},
+        travail: data.travail || [],
+        fraude: data.fraude || {},
+        interactions: data.interactions || {},
+        score,
+        sourceFile: f.name
+      };
+      allData.push(entry);
+      item.className = 'fstatus ok';
+      item.textContent = score.total.toFixed(2) + ' / 20';
+      ok++;
+    } catch(e){
+      console.error(f.name, e);
+      item.className = 'fstatus err';
+      item.textContent = 'erreur';
+      err++;
+    }
+  }
+
+  if(ok === 0){
+    setMsg('Aucune copie valide n\'a pu être chargée.', true);
+    return;
+  }
+
+  setMsg(ok + ' copie(s) chargée(s)' + (err ? ', ' + err + ' en échec' : '') + '.', false);
+  await renderAll();
+}
+
+/* =====================================================================
+   9. RENDU GLOBAL (SYNTHÈSE + FICHES ÉLÈVES)
+   ===================================================================== */
+async function renderAll(){
+  if(allData.length === 0) return;
+
+  /* Statistiques nécessaires à la distribution */
+  const notes = allData.map(d => d.score.total).sort((a,b) => a-b);
+  const stats = computeClassStats(allData);
+  stats.notes = notes;
+
+  let html = '';
+  html += renderClassSummaryWithStats(allData, stats);
+
+  allData.forEach((d, i) => {
+    html += renderStudentAnalysis(d, d.score, i);
+  });
+
+  $('#content').innerHTML = html;
+
+  /* Titre de la barre */
+  $('#titleBar').textContent = '📊 Analyse — ' + allData.length + ' copie(s)';
+
+  /* Rendu MathJax */
+  if(window.MathJax && MathJax.typesetPromise){
+    try { await MathJax.typesetPromise([$('#content')]); } catch(e){}
+  }
+
+  $('#welcome').classList.add('hidden');
+  $('#result').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+function renderClassSummaryWithStats(allData, stats){
+  let html = '<section class="card"><h2>Synthèse de la classe</h2>';
+
+  html += '<div class="kpis">' +
+    '<div class="kpi"><div class="v">' + allData.length + '</div><div class="k">Copies analysées</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.moyenne.toFixed(2) + '</div><div class="k">Moyenne /20</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.mediane.toFixed(2) + '</div><div class="k">Médiane /20</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.min.toFixed(2) + ' – ' + stats.max.toFixed(2) + '</div><div class="k">Amplitude</div></div>' +
+    '<div class="kpi"><div class="v">' + stats.tauxMoyenFraude.toFixed(1) + ' %</div><div class="k">Fraude moyenne</div></div>' +
+  '</div>';
+
+  html += '<h3>Tableau récapitulatif (trié par note décroissante)</h3>';
+  html += '<table><thead><tr>' +
+          '<th style="width:40px">#</th><th>Nom</th><th>Prénom</th>' +
+          '<th class="num" style="width:70px">Note /20</th>' +
+          '<th class="num" style="width:70px">A /16</th>' +
+          '<th class="num" style="width:60px">B /2</th>' +
+          '<th class="num" style="width:60px">C /2</th>' +
+          '<th class="num" style="width:70px">Fraude</th>' +
+          '<th style="width:90px">Motif</th>' +
+          '<th class="num" style="width:80px">Durée</th>' +
+          '</tr></thead><tbody>';
+  allData.slice().sort((a,b) => b.score.total - a.score.total).forEach((d, i) => {
+    const m = d.meta;
+    html += '<tr>' +
+      '<td class="mid">' + (i+1) + '</td>' +
+      '<td>' + escapeHtml(m.nom || '—') + '</td>' +
+      '<td>' + escapeHtml(m.prenom || '') + '</td>' +
+      '<td class="num"><b>' + d.score.total.toFixed(2) + '</b></td>' +
+      '<td class="num">' + d.score.A.toFixed(2) + '</td>' +
+      '<td class="num">' + d.score.B.toFixed(2) + '</td>' +
+      '<td class="num">' + d.score.C.toFixed(2) + '</td>' +
+      '<td class="num ' + (d.score.taux >= 40 ? 'bad' : d.score.taux >= 20 ? 'warn' : '') + '">' + d.score.taux + ' %</td>' +
+      '<td>' + (m.motifFin === 'temps_ecoule' ? 'Temps' : m.motifFin === 'clic_eleve' ? 'Volontaire' : '—') + '</td>' +
+      '<td class="num">' + fmtShortDuration(m.dureeReelleMs) + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+
+  html += '<h3>Accès direct aux fiches</h3><div class="navGrid">';
+  allData.slice().sort((a,b) => (a.meta.nom || '').localeCompare(b.meta.nom || '')).forEach(d => {
+    const idx = allData.indexOf(d);
+    const cls = d.score.total >= 12 ? 'good' : d.score.total >= 8 ? 'mid' : 'bad';
+    html += '<a class="navItem" href="#student-' + idx + '">' +
+              '<div class="rank">' + (idx+1) + '</div>' +
+              '<div class="nm">' + escapeHtml(d.meta.nom || '—') + ' ' + escapeHtml(d.meta.prenom || '') + '</div>' +
+              '<div class="sc ' + cls + '">' + d.score.total.toFixed(2) + '</div>' +
+            '</a>';
+  });
+  html += '</div>';
+
+  html += '<h3>Répartition des notes</h3>';
+  html += renderDistributionWithStats(stats);
+
+  html += '</section>';
+  return html;
+}
+
+function renderDistributionWithStats(stats){
+  const buckets = [
+    { label:'0 – 4',  min:0,  max:4,       color:'#dc2626' },
+    { label:'4 – 8',  min:4,  max:8,       color:'#ea580c' },
+    { label:'8 – 12', min:8,  max:12,      color:'#eab308' },
+    { label:'12 – 16',min:12, max:16,      color:'#3b82f6' },
+    { label:'16 – 20',min:16, max:20.01,   color:'#16a34a' }
+  ];
+  const notes = stats.notes || [];
+  const counts = buckets.map(() => 0);
+  notes.forEach(n => {
+    for(let i = 0; i < buckets.length; i++){
+      if(n >= buckets[i].min && n < buckets[i].max){ counts[i]++; break; }
+    }
+  });
+  const maxCount = Math.max(1, ...counts);
+  let html = '<div style="margin-top:10px">';
+  buckets.forEach((b, i) => {
+    const w = (counts[i] / maxCount * 100).toFixed(1);
+    html += '<div style="display:flex; align-items:center; gap:10px; margin:6px 0; font-size:13px">' +
+              '<div style="width:60px; font-weight:600">' + b.label + '</div>' +
+              '<div style="flex:1; height:14px; background:#e2e8f0; border-radius:7px; overflow:hidden">' +
+                '<div style="height:100%; width:' + w + '%; background:' + b.color + '"></div>' +
+              '</div>' +
+              '<div style="width:50px; text-align:right; font-weight:700">' + counts[i] + '</div>' +
+            '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* =====================================================================
+   10. ÉCOUTEURS
+   ===================================================================== */
+const dropZone = $('#dropZone');
+const fileInput = $('#fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+['dragenter','dragover'].forEach(ev => {
+  dropZone.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.add('dragover');
+  });
+});
+['dragleave','drop'].forEach(ev => {
+  dropZone.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.remove('dragover');
+  });
+});
+dropZone.addEventListener('drop', e => {
+  const files = e.dataTransfer.files;
+  if(files && files.length) handleFiles(files);
+});
+
+fileInput.addEventListener('change', e => {
+  const files = e.target.files;
+  if(files && files.length) handleFiles(files);
+});
+
+/* Boutons barre supérieure */
+document.addEventListener('click', function(e){
+  if(e.target.id === 'btnLatex'){
+    if(allData.length === 0){
+      alert("Aucune copie chargée.");
+      return;
+    }
+    try {
+      const tex = generateLatexReport(allData);
+      downloadFile(tex, latexFilename(), 'application/x-tex;charset=utf-8');
+      setMsg('Rapport LaTeX généré (' + allData.length + ' copie(s)).', false);
+    } catch(err){
+      console.error(err);
+      alert("Erreur lors de la génération LaTeX : " + err.message);
+    }
+  }
+  if(e.target.id === 'btnPrint') window.print();
+  if(e.target.id === 'btnReload') location.reload();
+});
+
+})();
+</script>
+</body>
+</html>

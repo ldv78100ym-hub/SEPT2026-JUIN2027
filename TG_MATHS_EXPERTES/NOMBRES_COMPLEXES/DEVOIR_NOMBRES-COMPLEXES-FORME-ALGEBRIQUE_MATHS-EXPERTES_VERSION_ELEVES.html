@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Évaluation – Nombres complexes (forme algébrique) – TG Maths Expertes</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\\[','\\]']],
+    macros: { i: '\\mathrm{i}' }
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+<style>
+:root{
+  --bg:#eef2f8;
+  --card:#ffffff;
+  --ink:#1e2a3a;
+  --muted:#5a6b82;
+  --line:#d3dcea;
+  --accent:#2b5fd9;
+  --accent-soft:#e5edff;
+  --good:#1e9e6a;
+  --warn:#c0392b;
+  --final:#0f7a4d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.45;
+  padding-bottom:80px;
+}
+h1{font-size:1.5rem;margin:0 0 .25rem}
+h2{font-size:1.15rem;margin:0 0 .4rem}
+.sub{color:var(--muted);margin:0 0 1rem;font-size:.95rem}
+
+/* ---------- SETUP ---------- */
+#setup{
+  max-width:760px;margin:3rem auto;padding:0 1rem;
+}
+#setup .card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:1.4rem 1.6rem;box-shadow:0 6px 24px rgba(30,42,58,.08);
+}
+#setup label{display:block;margin:.9rem 0 .3rem;font-weight:600;font-size:.95rem}
+#setup input[type=text]{
+  width:100%;padding:.6rem .7rem;border:1px solid var(--line);
+  border-radius:8px;font-size:1rem;background:#fbfcff;
+}
+#setup input[type=text]:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.chk{display:flex !important;align-items:center;gap:.6rem;font-weight:500 !important;margin-top:1rem !important}
+.chk input{width:18px;height:18px}
+button.primary{
+  margin-top:1.2rem;width:100%;padding:.85rem;border:none;border-radius:10px;
+  background:var(--accent);color:#fff;font-size:1.05rem;font-weight:600;cursor:pointer;
+}
+button.primary:hover{background:#1e4bb8}
+button.primary:disabled{background:#9aa9c0;cursor:not-allowed}
+.msg{margin-top:.8rem;font-size:.92rem;min-height:1.2em}
+.msg.err{color:var(--warn)}
+.msg.ok{color:var(--good)}
+.rules{background:#f7f9ff;border-left:4px solid var(--accent);padding:.8rem 1rem;border-radius:8px;font-size:.9rem;color:var(--muted);margin-top:1rem}
+
+/* ---------- EXAM ---------- */
+#exam{display:none;max-width:1000px;margin:0 auto;padding:0 1rem}
+header.topbar{
+  position:sticky;top:0;z-index:50;background:rgba(238,242,248,.96);
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
+  padding:.6rem 1rem;margin:0 -1rem 1rem;display:flex;flex-wrap:wrap;
+  gap:.8rem;align-items:center;justify-content:space-between;
+}
+.studentInfo{font-weight:600;font-size:.95rem}
+.timerBox{display:flex;align-items:center;gap:.7rem}
+#timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.15rem;color:var(--accent)}
+#timer.low{color:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.progress{width:180px;height:8px;background:#d9e1ee;border-radius:5px;overflow:hidden}
+.progress > div{height:100%;background:var(--accent);width:100%;transition:width .5s linear}
+.btnSmall{
+  border:1px solid var(--line);background:#fff;border-radius:8px;
+  padding:.4rem .75rem;cursor:pointer;font-size:.85rem;color:var(--ink);
+}
+.btnSmall:hover{background:var(--accent-soft);border-color:var(--accent)}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:1.1rem 1.3rem;margin-bottom:1.1rem;box-shadow:0 3px 12px rgba(30,42,58,.05);
+}
+.card > h2{color:var(--accent);border-bottom:2px solid var(--accent-soft);padding-bottom:.4rem}
+.statement{font-size:1rem}
+.part{margin:.5rem 0 .5rem 1rem}
+.part .label{font-weight:700;margin-right:.4rem}
+
+/* reasoning */
+.task{border:1px dashed var(--line);border-radius:10px;padding:.7rem .8rem;margin-top:.8rem;background:#fcfdff}
+.task-head{font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem}
+.line{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.45rem}
+.line select{
+  flex:0 0 118px;padding:.4rem;border:1px solid var(--line);border-radius:7px;
+  background:#fff;font-size:.88rem;color:var(--ink);
+}
+.line select.empty{border-color:#e0a800;background:#fffbe6}
+.line textarea{
+  flex:1;min-height:38px;resize:vertical;padding:.45rem .6rem;border:1px solid var(--line);
+  border-radius:7px;font-family:inherit;font-size:.95rem;background:#fff;
+}
+.line textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.line .del{
+  flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:7px;
+  width:32px;height:32px;cursor:pointer;color:var(--muted);font-size:.9rem;
+}
+.line .del:hover{background:#ffe9e6;border-color:var(--warn);color:var(--warn)}
+.line.final{
+  border:2px solid var(--final);border-radius:9px;background:#eafaf2;
+  padding:.35rem .45rem;
+}
+.line.final textarea{background:#ffffff;font-weight:600}
+button.addLine{
+  border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);
+  border-radius:8px;padding:.4rem .8rem;font-size:.85rem;cursor:pointer;font-weight:600;
+}
+button.addLine:hover{background:#d6e3ff}
+
+/* canvas */
+.canvasWrap{display:flex;flex-direction:column;align-items:center;gap:.6rem;margin-top:.8rem}
+canvas#cprog{
+  border:1px solid var(--line);border-radius:12px;background:#fff;cursor:crosshair;
+  touch-action:none;max-width:100%;
+}
+.hint{font-size:.85rem;color:var(--muted);text-align:center}
+
+/* answer inputs */
+.ansRow{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:.6rem}
+.ansRow label{font-size:.9rem;display:flex;flex-direction:column;gap:.25rem;font-weight:600;color:var(--muted)}
+.ansRow input{
+  padding:.45rem .6rem;border:1px solid var(--line);border-radius:8px;font-size:.95rem;
+  font-family:inherit;min-width:130px;background:#fff;
+}
+.ansRow input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+
+/* overlay */
+.overlay{
+  position:fixed;inset:0;background:rgba(20,28,42,.86);color:#fff;
+  display:none;align-items:center;justify-content:center;z-index:500;padding:1rem;
+}
+.overlay .box{
+  background:#fff;color:var(--ink);border-radius:16px;padding:2rem;max-width:640px;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.overlay h2{color:var(--accent)}
+
+/* footer & modal */
+footer.siteFooter{
+  position:fixed;bottom:0;left:0;right:0;background:rgba(238,242,248,.97);
+  border-top:1px solid var(--line);padding:.5rem 1rem;text-align:center;z-index:60;
+}
+#licenceBtn{
+  border:1px solid var(--line);background:#fff;border-radius:9px;padding:.45rem .9rem;
+  cursor:pointer;font-size:.85rem;color:var(--ink);font-weight:600;
+}
+#licenceBtn:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+.modalBack{
+  position:fixed;inset:0;background:rgba(20,28,42,.6);display:none;
+  align-items:center;justify-content:center;z-index:800;padding:1rem;
+}
+.modalBack.open{display:flex}
+.modal{
+  background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:85vh;
+  overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.4);
+}
+.modal header{
+  padding:1.1rem 1.4rem;border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0;
+}
+.modal header h2{margin:0;font-size:1.05rem;color:var(--accent)}
+.modal .closeX{
+  border:none;background:transparent;font-size:1.4rem;cursor:pointer;color:var(--muted);
+  line-height:1;padding:.2rem .4rem;border-radius:6px;
+}
+.modal .closeX:hover{background:#f0f3f9;color:var(--warn)}
+.modal .body{padding:1.2rem 1.5rem 1.6rem;font-size:.93rem}
+.modal .body h3{font-size:.98rem;margin:1.1rem 0 .4rem;color:var(--ink)}
+.modal .body ul{margin:.3rem 0 .6rem 1.1rem;padding:0}
+.modal .body li{margin:.3rem 0}
+.modal .body .auth{font-weight:700;color:var(--accent)}
+.modal .body code{background:#f2f5fb;padding:.1rem .35rem;border-radius:5px;font-size:.9em}
+</style>
+</head>
+<body>
+
+<!-- ======================= SETUP ======================= -->
+<div id="setup">
+  <h1>Évaluation — Nombres complexes : forme algébrique</h1>
+  <p class="sub">Terminale générale — Option Mathématiques expertes</p>
+
+  <div class="card">
+    <label for="inNom">Nom (sera enregistré en MAJUSCULES)</label>
+    <input id="inNom" type="text" placeholder="DUPONT" autocomplete="off">
+
+    <label for="inPrenom">Prénom (initiale(s) en majuscule)</label>
+    <input id="inPrenom" type="text" placeholder="Jean" autocomplete="off">
+
+    <label class="chk" for="inPap">
+      <input id="inPap" type="checkbox">
+      Je bénéficie d'un PAP (tiers-temps : +1/3 de la durée)
+    </label>
+
+    <div class="rules">
+      <strong>Consignes :</strong><br>
+      • Durée : <strong>50 min</strong> (ou <strong>66 min 40 s</strong> avec PAP), chronométrée.<br>
+      • Vous rédigez votre raisonnement ligne par ligne (une idée = une ligne).<br>
+      • À partir de la 2<sup>e</sup> ligne, vous devez choisir une conjonction :
+      <em>mais, ou, et, donc, or, ni, car</em> ou le mot <em>Finalement</em>.<br>
+      • La réponse à une question est la ligne commençant par <strong>« Finalement »</strong> ; elle sera encadrée.<br>
+      • Toute sortie de la page, toute interruption et toute longue inactivité sont enregistrées.<br>
+      • Un nouveau devoir ne peut être commencé que <strong>110 minutes</strong> après le début du précédent.
+    </div>
+
+    <button id="startBtn" class="primary">Commencer le devoir</button>
+    <p id="setupMsg" class="msg"></p>
+  </div>
+</div>
+
+<!-- ======================= EXAM ======================= -->
+<div id="exam">
+  <header class="topbar">
+    <div class="studentInfo" id="studentInfo">—</div>
+    <div class="timerBox">
+      <div class="progress"><div id="progBar"></div></div>
+      <span id="timer">50:00</span>
+      <button class="btnSmall" id="finishBtn">Terminer &amp; enregistrer</button>
+    </div>
+  </header>
+
+  <div id="content"></div>
+</div>
+
+<!-- ======================= OVERLAY FIN ======================= -->
+<div class="overlay" id="endOverlay">
+  <div class="box">
+    <h2 id="endTitle">Devoir terminé</h2>
+    <p id="endText"></p>
+    <p style="font-size:.85rem;color:#5a6b82">
+      Le fichier chiffré a été téléchargé automatiquement. La page va se fermer.
+    </p>
+  </div>
+</div>
+
+<!-- ======================= FOOTER + MODALE LICENCE ======================= -->
+<footer class="siteFooter">
+  <button id="licenceBtn">⚖️ Droits d'auteur &amp; licence d'utilisation</button>
+</footer>
+
+<div class="modalBack" id="licenceModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="licTitle">
+    <header>
+      <h2 id="licTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+      <button class="closeX" id="closeLicence" aria-label="Fermer">✕</button>
+    </header>
+    <div class="body" id="licenceBody">
+      <!-- contenu injecté par JS (date du jour) -->
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   ÉVALUATION — NOMBRES COMPLEXES (FORME ALGÉBRIQUE)
+   Auteur : Yann Merdy — yann.merdy@gmail.com
+   ========================================================================= */
+
+/* ------------------------------------------------------------------ */
+/* 0. OUTILS GÉNÉRAUX                                                  */
+/* ------------------------------------------------------------------ */
+const R = {
+  int(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; },
+  nz(a, b) { let x = 0; while (x === 0) x = this.int(a, b); return x; },
+  pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; },
+  shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+};
+
+const cx = (re, im) => ({ re, im });
+const cAdd = (a, b) => cx(a.re + b.re, a.im + b.im);
+const cSub = (a, b) => cx(a.re - b.re, a.im - b.im);
+const cMul = (a, b) => cx(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const cDiv = (a, b) => {
+  const d = b.re * b.re + b.im * b.im;
+  return cx((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d);
+};
+const cNeg = a => cx(-a.re, -a.im);
+const cConj = a => cx(a.re, -a.im);
+const cMod2 = a => a.re * a.re + a.im * a.im;
+const cEq = (a, b) => Math.abs(a.re - b.re) < 1e-9 && Math.abs(a.im - b.im) < 1e-9;
+
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a || 1; }
+
+/* --- formatage « texte brut » --- */
+function fnum(x) {
+  if (Math.abs(x - Math.round(x)) < 1e-9) return String(Math.round(x));
+  for (let den = 2; den <= 400; den++) {
+    const num = x * den;
+    if (Math.abs(num - Math.round(num)) < 1e-9) {
+      let n = Math.round(num), d = den, g = gcd(n, d);
+      n /= g; d /= g;
+      return d === 1 ? String(n) : n + "/" + d;
+    }
+  }
+  return x.toFixed(3);
+}
+/* --- formatage LaTeX --- */
+function fnumT(x) {
+  const s = fnum(x);
+  if (s.indexOf('/') >= 0) { const p = s.split('/'); return `\\frac{${p[0]}}{${p[1]}}`; }
+  return s;
+}
+function fz(z) {
+  const a = z.re, b = z.im;
+  if (Math.abs(b) < 1e-9) return fnum(a);
+  if (Math.abs(a) < 1e-9) {
+    if (Math.abs(b - 1) < 1e-9) return "i";
+    if (Math.abs(b + 1) < 1e-9) return "-i";
+    return fnum(b) + "i";
+  }
+  let bs;
+  if (Math.abs(b - 1) < 1e-9) bs = "+i";
+  else if (Math.abs(b + 1) < 1e-9) bs = "-i";
+  else bs = (b > 0 ? "+" : "") + fnum(b) + "i";
+  return fnum(a) + bs;
+}
+function fzT(z) {
+  const a = z.re, b = z.im;
+  if (Math.abs(b) < 1e-9) return fnumT(a);
+  if (Math.abs(a) < 1e-9) {
+    if (Math.abs(b - 1) < 1e-9) return "i";
+    if (Math.abs(b + 1) < 1e-9) return "-i";
+    return fnumT(b) + "i";
+  }
+  let bs;
+  if (Math.abs(b - 1) < 1e-9) bs = "+i";
+  else if (Math.abs(b + 1) < 1e-9) bs = "-i";
+  else bs = (b > 0 ? "+" : "") + fnumT(b) + "i";
+  return fnumT(a) + bs;
+}
+/* coefficient devant une variable */
+function coefVar(z, v) {
+  if (z.im === 0) {
+    if (z.re === 1) return v;
+    if (z.re === -1) return "-" + v;
+    return fnumT(z.re) + v;
+  }
+  return `\\left(${fzT(z)}\\right)${v}`;
+}
+/* terme ajouté avec signe propre */
+function addTerm(z, v) {
+  const neg = (z.re < 0) || (z.re === 0 && z.im < 0);
+  const zz = neg ? cNeg(z) : z;
+  return (neg ? " - " : " + ") + coefVar(zz, v);
+}
+/* signe d'un terme isolé */
+function signedTerm(z, v) {
+  const neg = (z.re < 0) || (z.re === 0 && z.im < 0);
+  const zz = neg ? cNeg(z) : z;
+  return (neg ? "-" : "") + coefVar(zz, v);
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. GÉNÉRATEURS D'EXERCICES ALÉATOIRES                               */
+/* ------------------------------------------------------------------ */
+
+/* ---- Exercice 1 : calculs dans ℂ ---- */
+function genEx1() {
+  const a = R.nz(-5, 5), b = R.nz(-5, 5), c = R.nz(-5, 5), d = R.nz(-5, 5);
+  const z1 = cx(a, b), z2 = cx(c, d);
+  const sum = cAdd(z1, z2);
+  const prod = cMul(z1, z2);
+  const quot = cDiv(z1, z2);
+  const qconj = cDiv(z1, cConj(z1));
+  return {
+    id: "ex1",
+    title: "Exercice 1 — Calculs dans ℂ",
+    statement: `On pose $z_1 = ${fzT(z1)}$ et $z_2 = ${fzT(z2)}$.<br>
+      Donner la <strong>forme algébrique</strong> des nombres complexes suivants.`,
+    parts: [
+      { label: "a)", q: "$z_1 + z_2$", ans: [fz(sum)] },
+      { label: "b)", q: "$z_1 \\times z_2$", ans: [fz(prod)] },
+      { label: "c)", q: "$\\dfrac{z_1}{z_2}$", ans: [fz(quot)] },
+      { label: "d)", q: "$\\dfrac{z_1}{\\overline{z_1}}$", ans: [fz(qconj)] }
+    ]
+  };
+}
+
+/* ---- Exercice 2 : équation du 1er degré à coefficients complexes ---- */
+function genEx2() {
+  const A = cx(R.nz(-4, 4), R.nz(-4, 4));
+  const C = cx(R.int(-6, 6), R.int(-6, 6));
+  const E = cx(R.int(-6, 6), R.int(-6, 6));
+  const z = cDiv(cSub(E, C), A);
+  const eq = `${coefVar(A, "z")}${addTerm(C, "")} = ${fzT(E)}`.replace("+ \\left", "+ \\left");
+  return {
+    id: "ex2",
+    title: "Exercice 2 — Équation du premier degré",
+    statement: `Résoudre dans $\\mathbb{C}$ l'équation d'inconnue $z$ :<br>
+      <div style="text-align:center;font-size:1.15rem;margin:.6rem 0">
+      $$\\left(${fzT(A)}\\right)z ${addTerm(C, "")} = ${fzT(E)}$$
+      </div>`,
+    parts: [{ label: "", q: "Donner la solution sous forme algébrique.", ans: [fz(z)] }]
+  };
+}
+
+/* ---- Exercice 3 : équation avec z et z̄ ---- */
+function genEx3() {
+  let al, be;
+  do {
+    al = cx(R.int(-3, 3), R.int(-3, 3));
+    be = cx(R.int(-3, 3), R.int(-3, 3));
+  } while (
+    (al.re === 0 && al.im === 0) || (be.re === 0 && be.im === 0) ||
+    Math.abs(cMod2(al) - cMod2(be)) < 1e-9
+  );
+  const z0 = cx(R.nz(-4, 4), R.nz(-4, 4));
+  const gamma = cAdd(cMul(al, z0), cMul(be, cConj(z0)));
+
+  const eqStr = `$${signedTerm(al, "z")}${addTerm(be, "\\overline{z}")} = ${fzT(gamma)}$$`;
+  return {
+    id: "ex3",
+    title: "Exercice 3 — Équation mêlant $z$ et $\\overline{z}$",
+    statement: `On écrit $z = x + \\mathrm{i}y$ avec $x$ et $y$ réels.<br>
+      Résoudre dans $\\mathbb{C}$ l'équation :
+      <div style="text-align:center;font-size:1.15rem;margin:.6rem 0">${eqStr}</div>
+      On déterminera la partie réelle et la partie imaginaire de $z$.`,
+    parts: [{ label: "", q: "Donner la solution $z$ sous forme algébrique.", ans: [fz(z0)] }]
+  };
+}
+
+/* ---- Exercice 4a : z² = a+ib ---- */
+function genEx4a() {
+  const p = R.nz(-5, 5), q = R.nz(-5, 5);
+  const z0 = cx(p, q);
+  const w = cMul(z0, z0);
+  return {
+    id: "ex4a",
+    title: "Exercice 4.a — Équation $z^2 = a + \\mathrm{i}b$",
+    statement: `Résoudre dans $\\mathbb{C}$ l'équation :
+      <div style="text-align:center;font-size:1.15rem;margin:.6rem 0">$$z^2 = ${fzT(w)}$$</div>
+      <em>(On cherchera $z$ sous la forme $x + \\mathrm{i}y$.)</em>`,
+    parts: [{ label: "", q: "Donner les solutions sous forme algébrique (séparées par « ou »).", ans: [fz(z0), fz(cNeg(z0))] }]
+  };
+}
+
+/* ---- Exercice 4b : z² + (a+ib)z = 0 ---- */
+function genEx4b() {
+  const A = cx(R.nz(-5, 5), R.nz(-5, 5));
+  return {
+    id: "ex4b",
+    title: "Exercice 4.b — Équation $z^2 + (a+\\mathrm{i}b)z = 0$",
+    statement: `Résoudre dans $\\mathbb{C}$ l'équation :
+      <div style="text-align:center;font-size:1.15rem;margin:.6rem 0">
+      $$z^2 ${addTerm(A, "z")} = 0$$</div>`,
+    parts: [{ label: "", q: "Donner les solutions sous forme algébrique.", ans: ["0", fz(cNeg(A))] }]
+  };
+}
+
+/* ---- Exercice 4c : az² + bz + c = 0, a,b,c réels, Δ<0 ---- */
+function genEx4c() {
+  let a, b, c, delta;
+  do {
+    a = R.pick([1, 1, 2, 3]);
+    b = R.int(-8, 8);
+    c = R.int(2, 12);
+    delta = b * b - 4 * a * c;
+  } while (delta >= 0);
+
+  const rac = Math.sqrt(-delta);
+  const s1 = cx(-b / (2 * a), rac / (2 * a));
+  const s2 = cConj(s1);
+
+  // coefficient b peut être nul : on l'affiche proprement
+  const bTxt = (b === 0) ? "" : (b > 0 ? " + " + fnumT(b) + "z" : " - " + fnumT(-b) + "z");
+  const aTxt = (a === 1) ? "z^2" : fnumT(a) + "z^2";
+  return {
+    id: "ex4c",
+    title: "Exercice 4.c — Équation du second degré à coefficients réels",
+    statement: `Résoudre dans $\\mathbb{C}$ l'équation :
+      <div style="text-align:center;font-size:1.15rem;margin:.6rem 0">
+      $${aTxt}${bTxt} + ${fnumT(c)} = 0$$</div>`,
+    parts: [{ label: "", q: "Donner les deux solutions sous forme algébrique.", ans: [fz(s1), fz(s2)] }]
+  };
+}
+
+/* ---- Exercice 4d : z² + bz + c = 0 avec b, c complexes ---- */
+function genEx4d() {
+  let z1, z2, b, c;
+  do {
+    z1 = cx(R.int(-5, 5), R.nz(-5, 5));
+    z2 = cx(R.int(-5, 5), R.nz(-5, 5));
+    b = cNeg(cAdd(z1, z2));
+    c = cMul(z1, z2);
+  } while (cEq(z1, z2) || (b.im === 0 && c.im === 0));
+
+  const bTxt = (b.re === 0 && b.im === 0) ? "" : addTerm(b, "z");
+  const cTxt = addTerm(c, "");
+  return {
+    id: "ex4d",
+    title: "Exercice 4.d — Équation du second degré à coefficients complexes",
+    statement: `Résoudre dans $\\mathbb{C}$ l'équation :
+      <div style="text-align:center;font-size:1.15rem;margin:.6rem 0">
+      $$z^2${bTxt}${cTxt} = 0$$</div>
+      <em>(On calculera le discriminant $\\Delta$ et on cherchera une racine carrée de $\\Delta$ sous forme algébrique.)</em>`,
+    parts: [{ label: "", q: "Donner les deux solutions sous forme algébrique.", ans: [fz(z1), fz(z2)] }]
+  };
+}
+
+/* ---- GROS PROBLÈME : lecture graphique + construction ---- */
+function genProblem() {
+  let A, B;
+  do {
+    A = cx(R.int(-6, 5), R.int(-6, 5));
+    B = cx(R.int(-6, 5), R.int(-6, 5));
+  } while (cEq(A, B) || (A.re === 0 && A.im === 0) || (B.re === 0 && B.im === 0));
+
+  const C = cAdd(A, B);
+  return {
+    id: "pb",
+    title: "GROS PROBLÈME — Lecture graphique et construction",
+    statement: `Dans le plan complexe muni d'un repère orthonormé
+      $(O\\,;\\vec{u},\\vec{v})$, on a placé les points $A$ et $B$ ci-dessous
+      (unité graphique : 1 carreau).`,
+    parts: [],
+    A, B, C
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. NORMALISATION POUR L'AUTO-ÉVALUATION                             */
+/* ------------------------------------------------------------------ */
+function norm(s) {
+  return String(s)
+    .toLowerCase()
+    .replace(/\\left|\\right|\\dfrac|\\frac|\\,|\\;|\\!/g, "")
+    .replace(/[{}\s]/g, "")
+    .replace(/−/g, "-")
+    .replace(/²/g, "^2")
+    .replace(/i/g, "i")
+    .replace(/,/g, ".");
+}
+function containsAnswer(studentText, expected) {
+  const s = norm(studentText), e = norm(expected);
+  if (!e) return false;
+  return s.indexOf(e) >= 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. ÉTAT GLOBAL                                                      */
+/* ------------------------------------------------------------------ */
+const state = {
+  nom: "", prenom: "", pap: false,
+  startTime: 0, durationMs: 0, endTime: 0,
+  events: [],           // chronologie
+  interruptions: [],    // {debut, fin, duree, type}
+  awayMs: 0,
+  tabSwitches: 0,
+  blurEvents: 0,
+  pasteCount: 0,
+  copyCount: 0,
+  idleEvents: 0,
+  hiddenSince: null,
+  blurSince: null,
+  tasks: {},            // id -> {firstTouch, lastTouch, focusMs, focusStart}
+  exam: null,
+  finished: false
+};
+
+function logEvent(type, detail) {
+  state.events.push({ t: Date.now(), iso: new Date().toISOString(), type, detail: detail || "" });
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. ÉCRAN DE DÉMARRAGE                                               */
+/* ------------------------------------------------------------------ */
+const LS_KEY = "tgmath_expertes_last_start";
+
+function fmtDateFR(d) {
+  const j = String(d.getDate()).padStart(2, "0");
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return j + m + d.getFullYear();
+}
+function fmtDateLong(d) {
+  const mois = ["janvier","février","mars","avril","mai","juin",
+                "juillet","août","septembre","octobre","novembre","décembre"];
+  return d.getDate() + " " + mois[d.getMonth()] + " " + d.getFullYear();
+}
+function fmtPrenom(s) {
+  return s.trim().toLowerCase()
+    .split(/([\s\-'])/)
+    .map(tok => (/^[a-zà-ÿ]/.test(tok) ? tok.charAt(0).toUpperCase() + tok.slice(1) : tok))
+    .join("");
+}
+
+const startBtn = document.getElementById("startBtn");
+const setupMsg = document.getElementById("setupMsg");
+
+function refreshStartAvailability() {
+  const last = Number(localStorage.getItem(LS_KEY) || 0);
+  const wait = 110 * 60 * 1000;
+  if (last && Date.now() - last < wait) {
+    const reste = wait - (Date.now() - last);
+    const mn = Math.floor(reste / 60000), sc = Math.floor((reste % 60000) / 1000);
+    startBtn.disabled = true;
+    setupMsg.className = "msg err";
+    setupMsg.textContent = `Un devoir a déjà été commencé il y a moins de 110 minutes. `
+      + `Prochain démarrage possible dans ${mn} min ${sc} s.`;
+    return false;
+  }
+  startBtn.disabled = false;
+  setupMsg.className = "msg";
+  setupMsg.textContent = "";
+  return true;
+}
+refreshStartAvailability();
+setInterval(refreshStartAvailability, 1000);
+
+startBtn.addEventListener("click", () => {
+  if (!refreshStartAvailability()) return;
+  const nomRaw = document.getElementById("inNom").value.trim();
+  const prenomRaw = document.getElementById("inPrenom").value.trim();
+  if (nomRaw.length < 2 || prenomRaw.length < 2) {
+    setupMsg.className = "msg err";
+    setupMsg.textContent = "Merci de saisir un nom et un prénom valides (2 caractères minimum).";
+    return;
+  }
+  state.nom = nomRaw.toUpperCase();
+  state.prenom = fmtPrenom(prenomRaw);
+  state.pap = document.getElementById("inPap").checked;
+  state.startTime = Date.now();
+  state.durationMs = (state.pap ? 50 * 60 * 1000 * (4 / 3) : 50 * 60 * 1000);
+  localStorage.setItem(LS_KEY, String(state.startTime));
+
+  logEvent("demarrage", `NOM=${state.nom}; PRENOM=${state.prenom}; PAP=${state.pap}`);
+  buildExam();
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("exam").style.display = "block";
+  document.getElementById("studentInfo").textContent =
+    `${state.nom} ${state.prenom}` + (state.pap ? " — PAP (tiers-temps)" : "");
+  startTimer();
+  startActivityWatch();
+});
+
+/* ------------------------------------------------------------------ */
+/* 5. CONSTRUCTION DE L'EXAMEN                                         */
+/* ------------------------------------------------------------------ */
+function buildExam() {
+  const ex1 = genEx1();
+  const ex2 = genEx2();
+  const ex3 = genEx3();
+  const ex4a = genEx4a();
+  const ex4b = genEx4b();
+  const ex4c = genEx4c();
+  const ex4d = genEx4d();
+  const pb = genProblem();
+
+  state.exam = { ex1, ex2, ex3, ex4a, ex4b, ex4c, ex4d, pb };
+
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+
+  const intro = document.createElement("div");
+  intro.className = "card";
+  intro.innerHTML = `
+    <h2>Consignes de rédaction</h2>
+    <p style="margin:.3rem 0">
+      Pour chaque question, rédigez votre raisonnement <strong>ligne par ligne</strong>
+      (une idée = une ligne). Vous choisissez vous-même le nombre de lignes.
+    </p>
+    <p style="margin:.3rem 0">
+      À partir de la <strong>deuxième ligne</strong>, chaque nouvelle ligne doit commencer par
+      une conjonction de coordination : <em>mais, ou, et, donc, or, ni, car</em> —
+      ou par le mot <em>Finalement</em>.
+    </p>
+    <p style="margin:.3rem 0">
+      La ligne commençant par <strong>« Finalement »</strong> constitue votre
+      <strong>réponse</strong> : elle sera automatiquement encadrée.
+    </p>
+  `;
+  content.appendChild(intro);
+
+  // Exercices 1 à 3
+  content.appendChild(buildExerciseCard(ex1, "T1"));
+  content.appendChild(buildExerciseCard(ex2, "T2"));
+  content.appendChild(buildExerciseCard(ex3, "T3"));
+
+  // Exercice 4 groupé
+  const ex4card = document.createElement("div");
+  ex4card.className = "card";
+  ex4card.innerHTML = `<h2>Exercice 4 — Équations du second degré dans ℂ</h2>
+    <p class="statement">Résoudre dans $\\mathbb{C}$ chacune des équations suivantes.
+    On donnera à chaque fois les solutions sous forme algébrique.</p>`;
+  content.appendChild(ex4card);
+  content.appendChild(buildExerciseCard(ex4a, "T4", true));
+  content.appendChild(buildExerciseCard(ex4b, "T5", true));
+  content.appendChild(buildExerciseCard(ex4c, "T6", true));
+  content.appendChild(buildExerciseCard(ex4d, "T7", true));
+
+  // Problème
+  content.appendChild(buildProblemCard(pb, "T8"));
+
+  // Initialisation des tâches
+  ["T1","T2","T3","T4","T5","T6","T7","T8"].forEach(id => {
+    if (!state.tasks[id]) {
+      state.tasks[id] = { firstTouch: null, lastTouch: null, focusMs: 0, focusStart: null };
+    }
+  });
+
+  // Première ligne par défaut sur chaque tâche
+  document.querySelectorAll(".task").forEach(taskEl => {
+    addLine(taskEl, true);
+  });
+
+  typeset(content);
+}
+
+function typeset(el) {
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([el]).catch(e => console.warn("MathJax:", e));
+  } else {
+    setTimeout(() => typeset(el), 250);
+  }
+}
+
+/* Carte d'un exercice */
+function buildExerciseCard(ex, taskId, compact) {
+  const card = document.createElement("div");
+  card.className = "card";
+  if (compact) card.style.marginLeft = "0";
+
+  let partsHtml = "";
+  ex.parts.forEach((p, idx) => {
+    partsHtml += `<div class="part">
+        ${p.label ? `<span class="label">${p.label}</span>` : ""}
+        <span class="qtext">${p.q}</span>
+      </div>`;
+  });
+
+  card.innerHTML = `
+    <h2>${ex.title}</h2>
+    <div class="statement">${ex.statement}</div>
+    ${partsHtml}
+    <div class="task" data-task="${taskId}">
+      <div class="task-head">Raisonnement — ${ex.title.replace(/<[^>]+>/g, "")}</div>
+    </div>
+  `;
+  attachTaskEvents(card.querySelector(".task"), taskId);
+  return card;
+}
+
+/* Carte du problème */
+function buildProblemCard(pb, taskId) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <h2>${pb.title}</h2>
+    <div class="statement">${pb.statement}</div>
+    <div class="canvasWrap">
+      <canvas id="cprog"></canvas>
+      <p class="hint">
+        Lecture : repérez les points $A$ et $B$ puis lisez leurs affixes.<br>
+        Construction : cliquez sur le graphique pour placer le point $C$ (le point est aimanté aux nœuds du quadrillage).
+      </p>
+    </div>
+    <div class="ansRow">
+      <label>Affixe de $A$ : $z_A = $
+        <input type="text" id="ansZA" placeholder="ex : 2+3i">
+      </label>
+      <label>Affixe de $B$ : $z_B = $
+        <input type="text" id="ansZB" placeholder="ex : -1+2i">
+      </label>
+      <label>Affixe de $C$ calculée : $z_C = $
+        <input type="text" id="ansZC" placeholder="ex : 1+5i">
+      </label>
+    </div>
+    <p style="margin-top:.8rem">
+      <strong>Q1.</strong> Lire graphiquement les affixes $z_A$ et $z_B$ des points $A$ et $B$.<br>
+      <strong>Q2.</strong> Calculer $z_C = z_A + z_B$ et donner sa forme algébrique.<br>
+      <strong>Q3.</strong> Construire sur le graphique le point $C$ d'affixe $z_C$.<br>
+      <strong>Q4.</strong> Quelle est la nature du quadrilatère $OACB$ ? Justifier.
+    </p>
+    <div class="task" data-task="${taskId}">
+      <div class="task-head">Raisonnement — Problème</div>
+    </div>
+  `;
+
+  // Canvas après insertion dans le DOM
+  setTimeout(() => {
+    const cv = card.querySelector("#cprog");
+    CanvasProblem.init(cv, pb.A, pb.B, () => {
+      touchTask(taskId);
+      logEvent("construction", "Point C placé sur le graphique");
+    });
+  }, 30);
+
+  attachTaskEvents(card.querySelector(".task"), taskId);
+  return card;
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. GESTION DES LIGNES DE RAISONNEMENT                               */
+/* ------------------------------------------------------------------ */
+const CONJONCTIONS = ["mais", "ou", "et", "donc", "or", "ni", "car", "Finalement"];
+
+function attachTaskEvents(taskEl, taskId) {
+  // bouton "ajouter une ligne"
+  const btn = document.createElement("button");
+  btn.className = "addLine";
+  btn.type = "button";
+  btn.textContent = "+ Ajouter une ligne de raisonnement";
+  btn.addEventListener("click", () => { addLine(taskEl, false); touchTask(taskId); });
+  taskEl.appendChild(btn);
+
+  // suivi du focus
+  taskEl.addEventListener("focusin", () => {
+    const t = state.tasks[taskId];
+    if (!t) return;
+    if (!t.firstTouch) { t.firstTouch = Date.now(); logEvent("debut_tache", taskId); }
+    t.lastTouch = Date.now();
+    if (!t.focusStart) t.focusStart = Date.now();
+  });
+  taskEl.addEventListener("focusout", () => {
+    const t = state.tasks[taskId];
+    if (!t) return;
+    t.lastTouch = Date.now();
+    if (t.focusStart) { t.focusMs += Date.now() - t.focusStart; t.focusStart = null; }
+  });
+  // collages / copies (indicateurs de fraude)
+  taskEl.addEventListener("paste", () => { state.pasteCount++; logEvent("collage", taskId); });
+  taskEl.addEventListener("copy", () => { state.copyCount++; logEvent("copie", taskId); });
+}
+
+function touchTask(taskId) {
+  const t = state.tasks[taskId];
+  if (!t) return;
+  if (!t.firstTouch) { t.firstTouch = Date.now(); logEvent("debut_tache", taskId); }
+  t.lastTouch = Date.now();
+}
+
+function addLine(taskEl, isFirst) {
+  const linesBox = taskEl.querySelector(".linesBox");
+  let box = linesBox;
+  if (!box) {
+    box = document.createElement("div");
+    box.className = "linesBox";
+    taskEl.insertBefore(box, taskEl.querySelector(".addLine"));
+  }
+
+  const idx = box.children.length;
+  const line = document.createElement("div");
+  line.className = "line";
+
+  if (!isFirst) {
+    const sel = document.createElement("select");
+    sel.className = "conj empty";
+    const opt0 = document.createElement("option");
+    opt0.value = ""; opt0.textContent = "— choisir —";
+    sel.appendChild(opt0);
+    CONJONCTIONS.forEach(c => {
+      const o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", () => {
+      sel.classList.toggle("empty", sel.value === "");
+      line.classList.toggle("final", sel.value === "Finalement");
+      const t = taskEl.dataset.task;
+      touchTask(t);
+      logEvent("ligne_conjonction", `${t} | ligne ${idx + 1} | ${sel.value || "(vide)"}`);
+    });
+    line.appendChild(sel);
+  } else {
+    const ph = document.createElement("span");
+    ph.style.flex = "0 0 118px";
+    ph.style.fontSize = ".85rem";
+    ph.style.color = "#8b98ab";
+    ph.style.paddingTop = ".5rem";
+    ph.textContent = "(1ʳᵉ ligne)";
+    line.appendChild(ph);
+  }
+
+  const ta = document.createElement("textarea");
+  ta.rows = 1;
+  ta.placeholder = isFirst
+    ? "Première ligne du raisonnement…"
+    : "Suite du raisonnement… (la réponse commence par « Finalement »)";
+  ta.addEventListener("input", () => {
+    ta.style.height = "auto";
+    ta.style.height = Math.max(38, ta.scrollHeight) + "px";
+  });
+  line.appendChild(ta);
+
+  const del = document.createElement("button");
+  del.className = "del";
+  del.type = "button";
+  del.textContent = "✕";
+  del.title = "Supprimer cette ligne";
+  del.addEventListener("click", () => {
+    if (box.children.length <= 1) return;
+    line.remove();
+    logEvent("suppression_ligne", taskEl.dataset.task);
+  });
+  line.appendChild(del);
+
+  box.appendChild(line);
+  ta.focus();
+}
+
+/* Récupération des lignes d'une tâche */
+function collectTask(taskId) {
+  const taskEl = document.querySelector(`.task[data-task="${taskId}"]`);
+  if (!taskEl) return [];
+  const lines = [];
+  taskEl.querySelectorAll(".line").forEach((line, idx) => {
+    const sel = line.querySelector("select");
+    const ta = line.querySelector("textarea");
+    lines.push({
+      index: idx + 1,
+      conjonction: sel ? (sel.value || null) : null,
+      texte: ta ? ta.value.trim() : ""
+    });
+  });
+  return lines;
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. CANVAS — PROBLÈME GRAPHIQUE                                      */
+/* ------------------------------------------------------------------ */
+const CanvasProblem = {
+  size: 520, unit: 26, ox: 260, oy: 260,
+  canvas: null, ctx: null, A: null, B: null, C: null, onPlace: null,
+
+  init(canvas, A, B, onPlace) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.A = A; this.B = B; this.C = null;
+    this.onPlace = onPlace;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = this.size * dpr;
+    canvas.height = this.size * dpr;
+    canvas.style.width = this.size + "px";
+    canvas.style.height = this.size + "px";
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    canvas.addEventListener("click", e => {
+      const r = canvas.getBoundingClientRect();
+      const px = (e.clientX - r.left) * (this.size / r.width);
+      const py = (e.clientY - r.top) * (this.size / r.height);
+      const re = Math.round((px - this.ox) / this.unit);
+      const im = Math.round((this.oy - py) / this.unit);
+      if (Math.abs(re) > 9 || Math.abs(im) > 9) return;
+      this.C = cx(re, im);
+      this.draw();
+      if (this.onPlace) this.onPlace(this.C);
+    });
+
+    this.draw();
+  },
+
+  toPx(z) { return [this.ox + z.re * this.unit, this.oy - z.im * this.unit]; },
+
+  drawPoint(z, label, color, filled) {
+    const ctx = this.ctx;
+    const [x, y] = this.toPx(z);
+    ctx.beginPath();
+    ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = filled ? color : "#ffffff";
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = color;
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.font = "bold 15px 'Segoe UI', sans-serif";
+    ctx.fillText(label, x + 9, y - 9);
+  },
+
+  draw() {
+    const ctx = this.ctx, S = this.size, u = this.unit, ox = this.ox, oy = this.oy;
+    ctx.clearRect(0, 0, S, S);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, S, S);
+
+    // quadrillage fin
+    ctx.strokeStyle = "#e6ecf5";
+    ctx.lineWidth = 1;
+    for (let k = -10; k <= 10; k++) {
+      const x = ox + k * u, y = oy - k * u;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, S); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(S, y); ctx.stroke();
+    }
+    // quadrillage principal (tous les 5)
+    ctx.strokeStyle = "#cfd9e8";
+    ctx.lineWidth = 1.4;
+    for (let k = -10; k <= 10; k += 5) {
+      const x = ox + k * u, y = oy - k * u;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, S); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(S, y); ctx.stroke();
+    }
+
+    // axes
+    ctx.strokeStyle = "#2b3a55";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(S, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, S); ctx.lineTo(ox, 0); ctx.stroke();
+
+    // flèches
+    ctx.fillStyle = "#2b3a55";
+    ctx.beginPath(); ctx.moveTo(S - 2, oy); ctx.lineTo(S - 14, oy - 6); ctx.lineTo(S - 14, oy + 6); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ox, 2); ctx.lineTo(ox - 6, 14); ctx.lineTo(ox + 6, 14); ctx.closePath(); ctx.fill();
+
+    // graduations
+    ctx.font = "12px 'Segoe UI', sans-serif";
+    ctx.fillStyle = "#5a6b82";
+    ctx.textAlign = "center";
+    for (let k = -8; k <= 8; k++) {
+      if (k === 0) continue;
+      const x = ox + k * u;
+      ctx.beginPath(); ctx.moveTo(x, oy - 4); ctx.lineTo(x, oy + 4);
+      ctx.strokeStyle = "#2b3a55"; ctx.lineWidth = 1.4; ctx.stroke();
+      if (k % 2 === 0) ctx.fillText(String(k), x, oy + 18);
+    }
+    ctx.textAlign = "right";
+    for (let k = -8; k <= 8; k++) {
+      if (k === 0) continue;
+      const y = oy - k * u;
+      ctx.beginPath(); ctx.moveTo(ox - 4, y); ctx.lineTo(ox + 4, y);
+      ctx.strokeStyle = "#2b3a55"; ctx.lineWidth = 1.4; ctx.stroke();
+      if (k % 2 === 0) ctx.fillText(String(k), ox - 9, y + 4);
+    }
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#5a6b82";
+    ctx.fillText("O", ox + 6, oy + 17);
+    ctx.fillStyle = "#2b3a55";
+    ctx.font = "italic 14px 'Segoe UI', sans-serif";
+    ctx.fillText("Re(z)", S - 52, oy - 10);
+    ctx.fillText("Im(z)", ox + 10, 18);
+
+    // points A et B
+    this.drawPoint(this.A, "A", "#c0392b", true);
+    this.drawPoint(this.B, "B", "#2980b9", true);
+    // point C construit par l'élève
+    if (this.C) this.drawPoint(this.C, "C", "#1e9e6a", true);
+
+    // cadre
+    ctx.strokeStyle = "#d3dcea";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, S - 1, S - 1);
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* 8. CHRONOMÉTRE                                                      */
+/* ------------------------------------------------------------------ */
+let timerHandle = null;
+
+function startTimer() {
+  const timerEl = document.getElementById("timer");
+  const barEl = document.getElementById("progBar");
+
+  const tick = () => {
+    if (state.finished) return;
+    const elapsed = Date.now() - state.startTime;
+    const remain = Math.max(0, state.durationMs - elapsed);
+    const totalSec = Math.floor(remain / 1000);
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    timerEl.textContent = `${mm}:${ss}`;
+    timerEl.classList.toggle("low", remain < 5 * 60 * 1000);
+    barEl.style.width = (100 * remain / state.durationMs) + "%";
+    if (remain <= 0) {
+      endExam("temps_ecoule");
+    }
+  };
+  tick();
+  timerHandle = setInterval(tick, 500);
+}
+
+/* ------------------------------------------------------------------ */
+/* 9. SURVEILLANCE : INTERRUPTIONS, INACTIVITÉ, SORTIES DE PAGE        */
+/* ------------------------------------------------------------------ */
+let lastActivity = Date.now();
+let idleTimer = null;
+let idleFlagged = false;
+
+function startActivityWatch() {
+  const markActivity = () => {
+    lastActivity = Date.now();
+    idleFlagged = false;
+  };
+  ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "input"].forEach(ev => {
+    document.addEventListener(ev, markActivity, { passive: true });
+  });
+
+  idleTimer = setInterval(() => {
+    const idle = Date.now() - lastActivity;
+    if (idle > 60000 && !idleFlagged) {
+      idleFlagged = true;
+      state.idleEvents++;
+      logEvent("inactivite_longue", `Inactivité de ${Math.round(idle / 1000)} s`);
+    }
+  }, 5000);
+
+  // Sortie d'onglet / minimisation
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      state.hiddenSince = Date.now();
+      state.tabSwitches++;
+      logEvent("sortie_onglet", "Onglet masqué / changement d'application");
+    } else if (state.hiddenSince) {
+      const d = Date.now() - state.hiddenSince;
+      state.awayMs += d;
+      state.interruptions.push({
+        type: "onglet_masque",
+        debut: new Date(state.hiddenSince).toISOString(),
+        fin: new Date().toISOString(),
+        dureeMs: d
+      });
+      logEvent("retour_onglet", `Absence de ${Math.round(d / 1000)} s`);
+      state.hiddenSince = null;
+    }
+  });
+
+  // Perte de focus de la fenêtre
+  window.addEventListener("blur", () => {
+    state.blurEvents++;
+    state.blurSince = Date.now();
+    logEvent("perte_focus", "La fenêtre a perdu le focus");
+  });
+  window.addEventListener("focus", () => {
+    if (state.blurSince) {
+      const d = Date.now() - state.blurSince;
+      state.interruptions.push({
+        type: "perte_focus",
+        debut: new Date(state.blurSince).toISOString(),
+        fin: new Date().toISOString(),
+        dureeMs: d
+      });
+      logEvent("retour_focus", `Retour après ${Math.round(d / 1000)} s`);
+      state.blurSince = null;
+    }
+  });
+
+  // Fermeture / rechargement de la page
+  window.addEventListener("beforeunload", e => {
+    if (state.finished) return;
+    logEvent("tentative_fermeture", "L'élève a tenté de quitter la page");
+    e.preventDefault();
+    e.returnValue = "";
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* 10. ESTIMATION DU TAUX DE FRAUDE                                    */
+/* ------------------------------------------------------------------ */
+function computeFraudRate() {
+  let score = 0;
+  score += state.tabSwitches * 6;
+  score += Math.min(30, (state.awayMs / 60000) * 3);
+  score += state.pasteCount * 5;
+  score += state.copyCount * 2;
+  score += state.blurEvents * 1.5;
+  score += state.idleEvents * 2;
+
+  // Un temps total anormalement court par rapport à la durée attendue
+  const used = (state.endTime || Date.now()) - state.startTime;
+  const ratio = used / state.durationMs;
+  if (ratio < 0.25) score += 15;
+  else if (ratio < 0.45) score += 7;
+
+  return Math.max(0, Math.min(95, Math.round(score * 10) / 10));
+}
+
+/* ------------------------------------------------------------------ */
+/* 11. FIN D'EXAMEN + EXPORT CHIFFRÉ                                   */
+/* ------------------------------------------------------------------ */
+async function endExam(reason) {
+  if (state.finished) return;
+  state.finished = true;
+  clearInterval(timerHandle);
+  clearInterval(idleTimer);
+  state.endTime = Date.now();
+
+  logEvent("fin_devoir", reason);
+
+  // Fermer les focus en cours
+  Object.values(state.tasks).forEach(t => {
+    if (t.focusStart) { t.focusMs += Date.now() - t.focusStart; t.focusStart = null; }
+  });
+
+  const payload = buildPayload(reason);
+  const jsonStr = JSON.stringify(payload);
+
+  let encryptedB64 = "";
+  try {
+    encryptedB64 = await encryptJSON(jsonStr, "TG-MATH-EXPERTES-YannMerdy-2026");
+  } catch (e) {
+    console.error(e);
+    encryptedB64 = btoa(unescape(encodeURIComponent(jsonStr)));
+  }
+
+  const d = new Date();
+  const fileName = `TG-MATH-EXPERTES_${state.nom}-${state.prenom}_${fmtDateFR(d)}.json`;
+
+  const fileContent = JSON.stringify({
+    format: "TG-MATH-EXPERTES",
+    version: 1,
+    algorithme: "AES-GCM-256 / PBKDF2-SHA256 (100000 itérations)",
+    fichier: fileName,
+    horodatage: new Date().toISOString(),
+    donnees_chiffrees_base64: encryptedB64
+  }, null, 2);
+
+  const blob = new Blob([fileContent], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+
+  // Overlay final
+  const ov = document.getElementById("endOverlay");
+  document.getElementById("endTitle").textContent =
+    reason === "temps_ecoule" ? "⏱ Temps écoulé" : "Devoir terminé";
+  document.getElementById("endText").innerHTML =
+    `Le fichier <strong>${fileName}</strong> a été généré et téléchargé.<br>
+     Taux de fraude estimé : <strong>${payload.taux_fraude_estime}%</strong>.`;
+
+  ov.style.display = "flex";
+
+  setTimeout(() => {
+    try { window.close(); } catch (e) {}
+  }, 6000);
+}
+
+/* Chiffrement AES-GCM */
+async function encryptJSON(plainText, password) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt"]
+  );
+  const ctBuf = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv }, key, enc.encode(plainText)
+  );
+
+  const ct = new Uint8Array(ctBuf);
+  const out = new Uint8Array(salt.length + iv.length + ct.length);
+  out.set(salt, 0);
+  out.set(iv, salt.length);
+  out.set(ct, salt.length + iv.length);
+
+  let bin = "";
+  const CH = 0x8000;
+  for (let i = 0; i < out.length; i += CH) {
+    bin += String.fromCharCode.apply(null, out.subarray(i, i + CH));
+  }
+  return btoa(bin);
+}
+
+/* ------------------------------------------------------------------ */
+/* 12. CONSTRUCTION DU RAPPORT JSON                                    */
+/* ------------------------------------------------------------------ */
+function buildPayload(reason) {
+  const ex = state.exam;
+
+  const tasksDef = [
+    { id: "T1", exo: ex.ex1, label: "Exercice 1 — Calculs dans ℂ" },
+    { id: "T2", exo: ex.ex2, label: "Exercice 2 — Équation du 1er degré" },
+    { id: "T3", exo: ex.ex3, label: "Exercice 3 — Équation avec z et z̄" },
+    { id: "T4", exo: ex.ex4a, label: "Exercice 4.a — z² = a+ib" },
+    { id: "T5", exo: ex.ex4b, label: "Exercice 4.b — z² + (a+ib)z = 0" },
+    { id: "T6", exo: ex.ex4c, label: "Exercice 4.c — az²+bz+c = 0 (réels)" },
+    { id: "T7", exo: ex.ex4d, label: "Exercice 4.d — az²+bz+c = 0 (complexes)" },
+    { id: "T8", exo: ex.pb, label: "GROS PROBLÈME — Lecture et construction graphiques" }
+  ];
+
+  const exercices = tasksDef.map(def => {
+    const t = state.tasks[def.id] || { firstTouch: null, lastTouch: null, focusMs: 0 };
+    const lignes = collectTask(def.id);
+
+    // Ligne réponse = celle qui commence par "Finalement"
+    const finalLine = lignes.find(l => l.conjonction === "Finalement" && l.texte);
+    const reponse = finalLine ? finalLine.texte : null;
+
+    // Auto-évaluation (indicative, pour le rapport)
+    let autoScore = null, autoDetail = null;
+    if (def.exo.parts && def.exo.parts.length && def.exo.parts[0].ans) {
+      const attendus = def.exo.parts[0].ans;
+      if (reponse) {
+        const trouves = attendus.map(a => containsAnswer(reponse, a));
+        autoScore = trouves.every(Boolean) ? 1 : 0;
+        autoDetail = attendus.map((a, i) =>
+          `${a} : ${trouves[i] ? "trouvé" : "NON trouvé"}`).join(" | ");
+      } else {
+        autoScore = 0;
+        autoDetail = "Aucune ligne « Finalement » détectée.";
+      }
+    }
+
+    const detail = {
+      id: def.id,
+      intitule: def.label,
+      enonce: (def.exo.statement || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
+      solutions_attendues: (def.exo.parts || []).map(p => ({ question: p.q.replace(/\\[a-zA-Z]+/g, " "), reponses: p.ans })),
+      temps_travail_ms: t.focusMs + (t.focusStart ? Date.now() - t.focusStart : 0),
+      premiere_interaction: t.firstTouch ? new Date(t.firstTouch).toISOString() : null,
+      derniere_interaction: t.lastTouch ? new Date(t.lastTouch).toISOString() : null,
+      lignes_de_raisonnement: lignes,
+      reponse_finale: reponse,
+      auto_evaluation: autoScore,
+      auto_evaluation_detail: autoDetail
+    };
+
+    // Spécifique au problème
+    if (def.id === "T8") {
+      const za = document.getElementById("ansZA") ? document.getElementById("ansZA").value.trim() : "";
+      const zb = document.getElementById("ansZB") ? document.getElementById("ansZB").value.trim() : "";
+      const zc = document.getElementById("ansZC") ? document.getElementById("ansZC").value.trim() : "";
+      detail.probleme_graphique = {
+        affixe_A_attendue: fz(ex.pb.A),
+        affixe_B_attendue: fz(ex.pb.B),
+        affixe_C_attendue: fz(ex.pb.C),
+        saisie_eleve_za: za,
+        saisie_eleve_zb: zb,
+        saisie_eleve_zc: zc,
+        za_correct: containsAnswer(za, fz(ex.pb.A)),
+        zb_correct: containsAnswer(zb, fz(ex.pb.B)),
+        zc_correct: containsAnswer(zc, fz(ex.pb.C)),
+        point_C_place: CanvasProblem.C ? { re: CanvasProblem.C.re, im: CanvasProblem.C.im } : null,
+        point_C_construction_correcte: CanvasProblem.C ? cEq(CanvasProblem.C, ex.pb.C) : false,
+        nature_quadrilatere_attendue: "OACB est un parallélogramme (z_A + z_B = z_C)"
+      };
+    }
+    return detail;
+  });
+
+  const dureeEffective = state.endTime - state.startTime;
+  const fraud = computeFraudRate();
+
+  return {
+    epreuve: "Terminale générale — Option Mathématiques expertes",
+    sujet: "Nombres complexes — Forme algébrique z = a + ib",
+    auteur_application: "Yann Merdy (yann.merdy@gmail.com)",
+    date_generation: new Date().toISOString(),
+    fin_motif: reason,
+
+    eleve: {
+      nom: state.nom,
+      prenom: state.prenom,
+      nom_affichage: `${state.nom} ${state.prenom}`,
+      pap: state.pap,
+      tiers_temps_applique: state.pap
+    },
+
+    chronometrage: {
+      debut: new Date(state.startTime).toISOString(),
+      fin: new Date(state.endTime).toISOString(),
+      duree_prevue_ms: state.durationMs,
+      duree_prevue_min: Math.round(state.durationMs / 60000 * 100) / 100,
+      duree_effective_ms: dureeEffective,
+      duree_effective_min: Math.round(dureeEffective / 60000 * 100) / 100,
+      temps_restant_ms: Math.max(0, state.durationMs - dureeEffective)
+    },
+
+    surveillance: {
+      nombre_sorties_onglet: state.tabSwitches,
+      nombre_pertes_focus: state.blurEvents,
+      temps_total_hors_page_ms: state.awayMs,
+      temps_total_hors_page_s: Math.round(state.awayMs / 1000),
+      nombre_inactivites_longues: state.idleEvents,
+      nombre_collages: state.pasteCount,
+      nombre_copies: state.copyCount,
+      interruptions_detail: state.interruptions,
+      chronologie_evenements: state.events
+    },
+
+    taux_fraude_estime: fraud,
+    taux_fraude_methode: "Pondération : sorties d'onglet (6%/unité), temps hors page (3%/min, plafond 30%), collages (5%), copies (2%), pertes de focus (1,5%), inactivités longues (2%), durée anormalement courte (jusqu'à 15%). Plafonné à 95%.",
+
+    exercices: exercices,
+
+    synthese_auto: {
+      score_brut: exercices.reduce((s, e) => s + (e.auto_evaluation || 0), 0),
+      score_max: exercices.filter(e => e.auto_evaluation !== null).length,
+      remarque: "Score indicatif calculé par correspondance de chaînes sur la ligne « Finalement ». Il ne remplace pas une correction humaine."
+    }
+  };
+}
+
+/* Bouton "Terminer" */
+document.getElementById("finishBtn").addEventListener("click", () => {
+  if (confirm("Terminer le devoir maintenant et générer le fichier de résultats ?")) {
+    endExam("termine_par_eleve");
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* 13. MODALE DROITS D'AUTEUR                                          */
+/* ------------------------------------------------------------------ */
+(function initLicenceModal() {
+  const btn = document.getElementById("licenceBtn");
+  const back = document.getElementById("licenceModal");
+  const closeBtn = document.getElementById("closeLicence");
+  const body = document.getElementById("licenceBody");
+
+  const today = new Date();
+  const dateLongue = fmtDateLong(today);
+
+  body.innerHTML = `
+    <p class="auth">Auteur : Yann Merdy (yann.merdy@gmail.com) — ${dateLongue}</p>
+
+    <h3>Licence d'Utilisation Non Commerciale</h3>
+    <p>
+      Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+      «&nbsp;<strong>Évaluation — Nombres complexes (forme algébrique) — Terminale générale,
+      option Mathématiques expertes</strong>&nbsp;» (exercices, énoncés, corrigés automatiques,
+      graphiques du plan complexe, rapports JSON chiffrés) sont la propriété intellectuelle
+      exclusive de l'auteur, <strong>Yann Merdy</strong>.
+    </p>
+
+    <h3>Conditions</h3>
+    <ul>
+      <li>
+        <strong>Utilisation Privée et Éducative (Autorisée) :</strong>
+        vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu
+        uniquement à des fins personnelles, éducatives et non lucratives — notamment en classe,
+        en soutien scolaire ou en autonomie à domicile, dans le cadre de l'enseignement des
+        nombres complexes en Terminale générale, option Mathématiques expertes.
+      </li>
+      <li>
+        <strong>Utilisation Commerciale (Interdite) :</strong>
+        toute utilisation, distribution, intégration ou reproduction du code ou du contenu
+        (total ou partiel) à des fins commerciales, lucratives ou professionnelles
+        (plateformes payantes, manuels commerciaux, formations rémunérées, services d'évaluation
+        en ligne, etc.) est strictement interdite sans un accord écrit préalable et explicite
+        de l'auteur.
+      </li>
+      <li>
+        <strong>Attribution :</strong>
+        toute reproduction ou modification doit conserver la mention de l'auteur originale
+        (Yann Merdy) et la présente notice de droits d'auteur.
+      </li>
+    </ul>
+
+    <h3>Données et vie privée</h3>
+    <p>
+      Les données saisies par l'élève (nom, prénom, PAP, temps de travail par question,
+      interruptions, lignes de raisonnement, réponses, taux estimé de fraude) sont enregistrées
+      <strong>localement</strong>, dans un fichier <code>.json</code> chiffré
+      (AES-GCM 256 bits, dérivation PBKDF2-SHA256, 100 000 itérations), nommé
+      <code>TG-MATH-EXPERTES_&lt;NOM&gt;-&lt;Prenom&gt;_&lt;jjmmaaaa&gt;.json</code>.
+      Aucune donnée n'est transmise à un serveur tiers par cette application.
+    </p>
+
+    <h3>Limitation de responsabilité</h3>
+    <p>
+      Le code est fourni «&nbsp;en l'état&nbsp;», sans garantie d'aucune sorte. L'auteur ne saurait
+      être tenu responsable de tout dommage, perte de données ou usage détourné résultant de
+      l'utilisation de ce document. L'auto-évaluation produite est indicative et ne remplace en
+      aucun cas une correction humaine.
+    </p>
+
+    <p>
+      Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter
+      l'auteur à l'adresse indiquée ci-dessus.
+    </p>
+  `;
+
+  btn.addEventListener("click", () => back.classList.add("open"));
+  closeBtn.addEventListener("click", () => back.classList.remove("open"));
+  back.addEventListener("click", e => { if (e.target === back) back.classList.remove("open"); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") back.classList.remove("open");
+  });
+})();
+
+</script>
+</body>
+</html>

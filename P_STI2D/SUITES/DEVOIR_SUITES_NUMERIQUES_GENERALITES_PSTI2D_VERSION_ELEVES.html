@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Évaluation — Suites numériques — 1ère STI2D</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(','\\)'], ['$','$']],
+    displayMath: [['\\[','\\]'], ['$$','$$']]
+  },
+  options: {
+    skipHtmlTags: ['script','noscript','style','textarea','pre','code','input','select']
+  }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+:root{
+  --bleu:#2563eb;
+  --bleu-fonce:#1e3a8a;
+  --ardoise:#1e293b;
+  --gris:#64748b;
+  --gris-clair:#e2e8f0;
+  --fond:#eef2f7;
+  --or:#b45309;
+  --or-clair:#fffbeb;
+  --vert:#15803d;
+  --rouge:#b91c1c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--fond);
+  color:var(--ardoise);
+  line-height:1.55;
+  font-size:16px;
+}
+
+/* ---------- HEADER ---------- */
+header{
+  position:sticky;top:0;z-index:60;
+  background:linear-gradient(90deg,#1e293b,#0f172a);
+  color:#fff;
+  padding:10px 18px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(0,0,0,.25);
+}
+header .titre{font-weight:700;font-size:1.05rem;letter-spacing:.3px}
+header .titre small{display:block;font-weight:400;font-size:.75rem;color:#94a3b8}
+header .eleve{font-size:.85rem;color:#cbd5e1;margin-left:auto}
+header .chrono{
+  font-variant-numeric:tabular-nums;
+  font-weight:700;font-size:1.25rem;
+  background:#0f172a;border:2px solid #334155;border-radius:8px;
+  padding:4px 14px;letter-spacing:1px;
+}
+header .chrono.alerte{border-color:#dc2626;color:#fca5a5;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.barre-progres{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);width:0;z-index:100;transition:width .5s linear}
+
+/* ---------- LAYOUT ---------- */
+main{max-width:980px;margin:0 auto;padding:22px 16px 90px}
+.part{
+  background:#fff;border-radius:14px;padding:22px 24px;margin-bottom:26px;
+  box-shadow:0 3px 18px rgba(15,23,42,.08);
+  border:1px solid #e2e8f0;
+}
+.part > h2{
+  margin:0 0 6px;font-size:1.25rem;color:var(--bleu-fonce);
+  border-bottom:3px solid var(--bleu);display:inline-block;padding-bottom:3px;
+}
+.part .intro{margin:14px 0 8px;color:#334155}
+
+.question{
+  margin:20px 0 26px;padding:16px 18px;border-radius:10px;
+  background:#f8fafc;border-left:5px solid var(--bleu);
+}
+.qhead{display:flex;gap:12px;align-items:flex-start}
+.qnum{
+  flex:0 0 30px;height:30px;line-height:30px;text-align:center;
+  background:var(--bleu);color:#fff;border-radius:50%;font-weight:700;font-size:.9rem;
+}
+.qtext{flex:1}
+.qtext p{margin:.3em 0}
+
+/* ---------- LIGNES DE RAISONNEMENT ---------- */
+.lines{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.line{display:flex;gap:8px;align-items:stretch;position:relative}
+.line select.conj{
+  flex:0 0 118px;padding:7px 6px;border:1px solid #cbd5e1;border-radius:7px;
+  background:#fff;font-size:.85rem;font-family:inherit;color:#334155;font-weight:600;
+}
+.line select.conj:disabled{background:#eef2f7;color:#94a3b8;font-weight:400}
+.line input.lineInput{
+  flex:1;padding:9px 12px;border:1px solid #cbd5e1;border-radius:7px;
+  font-size:.95rem;font-family:inherit;background:#fff;color:#0f172a;
+}
+.line input.lineInput:focus{outline:none;border-color:var(--bleu);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.line.is-final input.lineInput{
+  border:3px solid var(--or);
+  background:var(--or-clair);
+  font-weight:700;color:#78350f;
+  box-shadow:0 0 0 4px rgba(180,83,9,.12);
+}
+.line .badge{
+  display:none;position:absolute;top:-11px;left:130px;
+  background:var(--or);color:#fff;font-size:.66rem;font-weight:700;
+  padding:1px 8px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase;
+}
+.line.is-final .badge{display:inline-block}
+.line .delLine{
+  flex:0 0 34px;border:1px solid #e2e8f0;background:#fff;border-radius:7px;
+  color:#94a3b8;cursor:pointer;font-size:.85rem;
+}
+.line .delLine:hover{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+button.addLine{
+  margin-top:12px;padding:8px 16px;border-radius:8px;border:1.5px dashed #94a3b8;
+  background:#fff;color:#475569;font-size:.85rem;cursor:pointer;font-family:inherit;
+  transition:.15s;
+}
+button.addLine:hover{background:#eff6ff;border-color:var(--bleu);color:var(--bleu)}
+
+/* ---------- LISTE DE TERMES ---------- */
+.termlist{
+  display:flex;flex-wrap:wrap;gap:10px 18px;margin:12px 0 4px;
+  padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;
+}
+.termlist .term{font-size:1.02rem}
+
+/* ---------- CANVAS ---------- */
+.canvasWrap{text-align:center;margin:16px 0}
+canvas{max-width:100%;border-radius:10px;background:#fff;border:1px solid #e2e8f0}
+
+/* ---------- BOUTONS ---------- */
+.btn{
+  font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;
+  border:none;border-radius:10px;padding:12px 26px;transition:.15s;
+}
+.btn-primaire{background:var(--bleu);color:#fff}
+.btn-primaire:hover{background:#1d4ed8}
+.btn-primaire:disabled{background:#94a3b8;cursor:not-allowed}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-ghost{background:#fff;color:#334155;border:1px solid #cbd5e1}
+.btn-ghost:hover{background:#f1f5f9}
+
+/* ---------- ECRAN ACCUEIL ---------- */
+#loginScreen{
+  max-width:760px;margin:40px auto;background:#fff;border-radius:16px;
+  padding:34px 38px;box-shadow:0 10px 40px rgba(15,23,42,.12);
+}
+#loginScreen h1{margin:0 0 4px;font-size:1.6rem;color:var(--bleu-fonce)}
+#loginScreen .sous{color:var(--gris);margin-bottom:24px}
+.champ{margin-bottom:18px}
+.champ label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px;color:#334155}
+.champ input[type=text]{
+  width:100%;padding:11px 14px;border:1.5px solid #cbd5e1;border-radius:9px;
+  font-size:1rem;font-family:inherit;
+}
+.champ input[type=text]:focus{outline:none;border-color:var(--bleu);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.consignes{
+  background:#f1f5f9;border-radius:10px;padding:16px 20px;margin:22px 0;
+  font-size:.9rem;color:#334155;border-left:5px solid var(--bleu);
+}
+.consignes ul{margin:8px 0 0;padding-left:20px}
+.consignes li{margin:5px 0}
+.consignes code{background:#fff;padding:1px 6px;border-radius:4px;border:1px solid #cbd5e1}
+.pap-zone{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:.92rem}
+.pap-zone input{width:18px;height:18px}
+#msgBloque{
+  display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;
+  padding:14px 18px;border-radius:10px;margin-top:16px;font-size:.9rem;
+}
+
+/* ---------- FOOTER / LICENCE ---------- */
+footer{
+  text-align:center;padding:26px 16px 34px;color:var(--gris);font-size:.85rem;
+}
+#licenceBtn{
+  background:#fff;border:1px solid #cbd5e1;border-radius:10px;
+  padding:10px 22px;font-family:inherit;font-size:.88rem;color:#334155;
+  cursor:pointer;transition:.15s;
+}
+#licenceBtn:hover{background:#1e293b;color:#fff;border-color:#1e293b}
+
+.modale{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(15,23,42,.6);backdrop-filter:blur(3px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.modale.ouverte{display:flex}
+.modale-boite{
+  background:#fff;border-radius:16px;max-width:720px;width:100%;
+  max-height:86vh;overflow-y:auto;padding:30px 34px;
+  box-shadow:0 24px 70px rgba(0,0,0,.35);
+  animation:apparait .2s ease-out;
+}
+@keyframes apparait{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.modale-boite h2{margin:0 0 6px;font-size:1.25rem;color:var(--bleu-fonce)}
+.modale-boite h3{margin:20px 0 8px;font-size:1rem;color:#0f172a}
+.modale-boite p{margin:.55em 0;font-size:.92rem;color:#334155}
+.modale-boite ol{padding-left:22px;font-size:.92rem;color:#334155}
+.modale-boite li{margin:8px 0}
+.modale-boite .auteur{
+  background:#eff6ff;border-left:4px solid var(--bleu);padding:10px 14px;
+  border-radius:8px;font-size:.9rem;margin:10px 0 18px;
+}
+.modale-fermer{
+  display:block;margin:24px auto 0;
+}
+
+#finModale .modale-boite{max-width:560px;text-align:center}
+
+@media (max-width:640px){
+  header .eleve{display:none}
+  .line{flex-wrap:wrap}
+  .line select.conj{flex:0 0 100px}
+  .line .badge{left:110px}
+  #loginScreen{padding:24px 20px;margin:16px}
+  .part{padding:18px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="barre-progres" id="barreProgres"></div>
+
+<header>
+  <div class="titre">
+    Évaluation — Suites numériques
+    <small>1ère STI2D &nbsp;•&nbsp; Généralités sur les suites</small>
+  </div>
+  <div class="eleve" id="headerEleve"></div>
+  <div class="chrono" id="chrono">--:--</div>
+</header>
+
+<main>
+
+  <!-- ============ ÉCRAN D'ACCUEIL ============ -->
+  <section id="loginScreen">
+    <h1>Devoir surveillé — Suites numériques</h1>
+    <p class="sous">1ère STI2D — Durée : 100 minutes (133 min en cas de PAP)</p>
+
+    <div class="champ">
+      <label for="inpNom">NOM (en majuscules)</label>
+      <input type="text" id="inpNom" placeholder="DUPONT" autocomplete="off">
+    </div>
+    <div class="champ">
+      <label for="inpPrenom">Prénom (initiale(s) en majuscule)</label>
+      <input type="text" id="inpPrenom" placeholder="Jean-Pierre" autocomplete="off">
+    </div>
+
+    <div class="pap-zone">
+      <input type="checkbox" id="inpPap">
+      <label for="inpPap" style="margin:0;font-weight:500">
+        Je dispose d'un PAP (Projet d'Accueil Personnalisé) → + 1/3 de temps
+      </label>
+    </div>
+
+    <div class="consignes">
+      <strong>Consignes de rédaction du raisonnement</strong>
+      <ul>
+        <li>Chaque question se rédige en <strong>lignes de raisonnement</strong> : <em>une idée = une ligne</em>.</li>
+        <li>La <strong>première ligne</strong> ne commence par aucun mot particulier.</li>
+        <li>Chaque ligne suivante doit commencer par une conjonction de coordination
+            (<code>mais</code>, <code>ou</code>, <code>et</code>, <code>donc</code>,
+             <code>or</code>, <code>ni</code>, <code>car</code>) ou par le mot
+             <code>Finalement</code>.</li>
+        <li>La <strong>réponse</strong> à une question est la ligne commençant par
+            <code>Finalement</code> : elle sera automatiquement encadrée.</li>
+        <li>Vous pouvez ajouter autant de lignes que nécessaire (bouton
+            « + Ajouter une ligne de raisonnement »).</li>
+        <li>Tout est enregistré automatiquement (nom, prénom, durées, interruptions,
+            lignes de raisonnement) dans un fichier <code>.json</code> chiffré.</li>
+      </ul>
+    </div>
+
+    <div id="msgBloque"></div>
+
+    <div style="text-align:center;margin-top:26px">
+      <button class="btn btn-primaire" id="btnDemarrer">Démarrer l'évaluation</button>
+    </div>
+  </section>
+
+  <!-- ============ ÉCRAN D'EXAMEN ============ -->
+  <section id="examScreen" style="display:none">
+    <div id="examContent"></div>
+    <div style="text-align:center;margin:40px 0 10px">
+      <button class="btn btn-danger" id="btnRendre">Rendre ma copie</button>
+      <p style="color:var(--gris);font-size:.82rem;margin-top:12px">
+        Une copie est également remise automatiquement à la fin du temps imparti.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <button id="licenceBtn">⚖️ Droits d'auteur &amp; Licence d'utilisation</button>
+  <p style="margin-top:14px">Évaluation — Suites numériques — 1ère STI2D</p>
+</footer>
+
+<!-- ============ MODALE LICENCE ============ -->
+<div class="modale" id="licenceModale">
+  <div class="modale-boite">
+    <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <div class="auteur">
+      <strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — <span id="dateLicence"></span>
+    </div>
+
+    <h3>Licence d'Utilisation Non Commerciale</h3>
+    <p>
+      Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+      («&nbsp;<em>Évaluation — Suites numériques, 1ère STI2D</em>&nbsp;») sont la propriété
+      intellectuelle exclusive de l'auteur, <strong>Yann Merdy</strong>.
+    </p>
+
+    <h3>Conditions</h3>
+    <ol>
+      <li>
+        <strong>Utilisation Privée et Éducative (Autorisée) :</strong>
+        Vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son
+        contenu uniquement à des fins personnelles, éducatives et non lucratives.
+      </li>
+      <li>
+        <strong>Utilisation Commerciale (Interdite) :</strong>
+        Toute utilisation, distribution, intégration ou reproduction du code ou du
+        contenu (total ou partiel) à des fins commerciales, lucratives ou
+        professionnelles est strictement interdite sans un accord écrit préalable et
+        explicite de l'auteur.
+      </li>
+      <li>
+        <strong>Attribution :</strong>
+        Toute reproduction ou modification doit conserver la mention de l'auteur
+        originale (Yann Merdy) et la présente notice de droits d'auteur.
+      </li>
+    </ol>
+
+    <p style="margin-top:18px">
+      Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez
+      contacter l'auteur à l'adresse indiquée ci-dessus.
+    </p>
+
+    <button class="btn btn-ghost modale-fermer" id="licenceFermer">Fermer</button>
+  </div>
+</div>
+
+<!-- ============ MODALE FIN ============ -->
+<div class="modale" id="finModale">
+  <div class="modale-boite">
+    <h2 id="finTitre">Copie enregistrée</h2>
+    <p id="finTexte"></p>
+    <button class="btn btn-primaire modale-fermer" id="finFermer">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   ÉVALUATION — SUITES NUMÉRIQUES (GÉNÉRALITÉS) — 1ère STI2D
+   Auteur : Yann Merdy — Licence non commerciale (voir modale en bas de page)
+   Vocabulaire volontairement limité aux GÉNÉRALITÉS :
+   terme, indice, u_{n+1}-u_n, sens de variation, expression de u_n.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. UTILITAIRES
+--------------------------------------------------------------------- */
+const rnd  = (a,b) => Math.floor(Math.random()*(b-a+1)) + a;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a||1; }
+function frac(n,d=1){ if(d<0){ n=-n; d=-d; } const g=gcd(n,d); return {n:n/g, d:d/g}; }
+const fAdd = (a,b) => frac(a.n*b.d + b.n*a.d, a.d*b.d);
+const fSub = (a,b) => frac(a.n*b.d - b.n*a.d, a.d*b.d);
+const fMul = (a,b) => frac(a.n*b.n, a.d*b.d);
+const fEq  = (a,b) => a.n===b.n && a.d===b.d;
+
+function fTex(f){
+  if(f.d===1) return String(f.n);
+  return (f.n<0?'-':'') + '\\dfrac{' + Math.abs(f.n) + '}{' + f.d + '}';
+}
+function fTexDec(f){
+  if(f.d===1) return String(f.n);
+  const v = f.n/f.d;
+  const s = (Math.round(v*10000)/10000).toString();
+  return s.replace('.', '{,}');
+}
+
+function polyTex(coefs){
+  const parts = [];
+  for(let i=0;i<coefs.length;i++){
+    const deg = coefs.length-1-i;
+    const c = coefs[i];
+    if(c===0) continue;
+    let term;
+    if(deg===0) term = String(Math.abs(c));
+    else if(deg===1) term = (Math.abs(c)===1?'':Math.abs(c)) + 'n';
+    else term = (Math.abs(c)===1?'':Math.abs(c)) + 'n^{' + deg + '}';
+    parts.push( (parts.length===0 ? (c<0?'-':'') : (c<0?'-':'+')) + term );
+  }
+  return parts.length ? parts.join('') : '0';
+}
+
+function affineTex(a,b,v='x'){
+  let s='';
+  if(a!==0){
+    if(a===1) s=v; else if(a===-1) s='-'+v; else s=a+v;
+  }
+  if(b!==0 || a===0){
+    if(s==='') s=String(b);
+    else s += (b>0?'+':'-') + Math.abs(b);
+  }
+  return s;
+}
+
+function parenLin(c,k){
+  let inner;
+  if(c===1) inner = 'n' + (k>0?'+'+k : (k<0?String(k):''));
+  else      inner = c+'n' + (k>0?'+'+k : (k<0?String(k):''));
+  return '(' + inner + ')';
+}
+
+function niceCeil(v){
+  if(v<=0) return 5;
+  const paliers=[5,10,15,20,25,30,40,50,60,80,100,120,150,200,300];
+  for(const p of paliers) if(v<=p) return p;
+  return Math.ceil(v/100)*100;
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------------------------------------------------------------
+   2. GÉNÉRATEURS D'EXERCICES
+--------------------------------------------------------------------- */
+
+/* ---- EXERCICE 1 : suite définie par une liste indexée ---- */
+function genEx1(){
+  const N = 6;
+  const flavour = pick(['int','int','frac','frac','dec','dec']);
+  let u0, r;
+
+  if(flavour === 'int'){
+    u0 = frac(rnd(-3,5),1);
+    r  = frac(pick([-4,-3,-2,-1,1,2,3,4]),1);
+  } else if(flavour === 'frac'){
+    u0 = frac(rnd(-3,4), pick([2,3,4]));
+    r  = frac(pick([-3,-2,-1,1,2,3]), pick([2,3,4]));
+  } else {
+    u0 = frac(rnd(-20,30),10);
+    r  = frac(pick([-15,-10,-5,5,10,15,25]),10);
+  }
+
+  const terms = [];
+  for(let n=0;n<N;n++) terms.push(fAdd(u0, fMul(frac(n,1), r)));
+
+  const fmt = (flavour === 'dec') ? fTexDec : fTex;
+
+  const listHtml = '<div class="termlist">' +
+    terms.map((t,i) => '<span class="term">\\(' + 'u_{' + i + '} = ' + fmt(t) + '\\)</span>').join('') +
+    '</div>';
+
+  const introHtml =
+    '<p class="intro">On considère la suite \\((u_n)\\) dont on connaît les premiers termes :</p>' +
+    listHtml +
+    '<p class="intro">On rappelle que le terme \\(u_n\\) est le terme de rang \\(n\\).</p>';
+
+  const questions = [
+    { id:'ex1q1',
+      text:'<p>Calculer les différences \\(u_1-u_0\\), \\(u_2-u_1\\) et \\(u_3-u_2\\) ' +
+           '(valeurs exactes sous forme fractionnaire ou décimale). Que remarque-t-on ?</p>' },
+    { id:'ex1q2',
+      text:'<p>En déduire l\'expression de \\(u_n\\) en fonction de l\'entier naturel \\(n\\), ' +
+           'puis vérifier que cette expression redonne bien la valeur de \\(u_4\\) lue dans la liste.</p>' },
+    { id:'ex1q3',
+      text:'<p>Calculer \\(u_{12}\\) à l\'aide de l\'expression trouvée. ' +
+           'Puis calculer \\(u_{n+1}-u_n\\) pour tout entier naturel \\(n\\) et en déduire le ' +
+           '<strong>sens de variation</strong> de la suite \\((u_n)\\) (croissante, décroissante ou constante).</p>' }
+  ];
+
+  return {
+    id:'ex1',
+    title:'Exercice 1 — Suite définie par une liste indexée',
+    introHtml, questions, canvas:false,
+    meta:{ u0, r, terms, flavour }
+  };
+}
+
+/* ---- EXERCICE 2 : suite définie par un nuage de points ---- */
+function genEx2(){
+  const q = pick([2,2,2,3]);
+  let u0, N;
+  if(q === 3){ u0 = 1; N = 5; }
+  else       { u0 = pick([1,2,3]); N = 6; }
+
+  const vals = [];
+  for(let n=0;n<N;n++) vals.push(u0 * Math.pow(q,n));
+
+  const introHtml =
+    '<p class="intro">Le nuage de points ci-dessous représente les premiers termes d\'une suite ' +
+    '\\((u_n)\\) : chaque point a pour coordonnées \\((\\,n\\,;\\,u_n\\,)\\).</p>';
+
+  const questions = [
+    { id:'ex2q1',
+      text:'<p>Lire graphiquement les valeurs de \\(u_0\\), \\(u_2\\) et \\(u_4\\).</p>' },
+    { id:'ex2q2',
+      text:'<p>Calculer les différences \\(u_1-u_0\\), \\(u_2-u_1\\) et \\(u_3-u_2\\). ' +
+           'Ces différences sont-elles constantes ?<br>' +
+           'Calculer alors les quotients \\(\\dfrac{u_1}{u_0}\\), \\(\\dfrac{u_2}{u_1}\\) et ' +
+           '\\(\\dfrac{u_3}{u_2}\\). Que remarque-t-on ?</p>' },
+    { id:'ex2q3',
+      text:'<p>En utilisant la régularité observée, proposer une expression de \\(u_n\\) ' +
+           'en fonction de l\'entier naturel \\(n\\). En déduire la valeur exacte de \\(u_7\\).</p>' },
+    { id:'ex2q4',
+      text:'<p>À l\'aide de l\'expression trouvée, comparer \\(u_{n+1}\\) et \\(u_n\\) pour tout ' +
+           'entier naturel \\(n\\) (on pourra calculer leur différence ou leur quotient). ' +
+           'En déduire le <strong>sens de variation</strong> de la suite \\((u_n)\\).</p>' }
+  ];
+
+  return {
+    id:'ex2',
+    title:'Exercice 2 — Suite définie par un nuage de points',
+    introHtml, questions, canvas:true, canvasVals: vals,
+    meta:{ q, u0, vals }
+  };
+}
+
+/* ---- EXERCICE 3 : suite définie par une fonction f ---- */
+function genEx3(){
+  const type = pick(['lin','quad','quad','cub','quo','sqrt']);
+  let introHtml = '', diffTex = '';
+  const dom = '[0\\,;\\,+\\infty[';
+
+  if(type === 'lin'){
+    const a = pick([-3,-2,-1,1,2,3]);
+    const b = rnd(-5,5);
+    introHtml = '<p class="intro">Soit \\(f\\) la fonction définie sur ' + dom +
+      ' par \\(f(x) = ' + affineTex(a,b) + '\\).<br>' +
+      'On considère la suite \\((u_n)\\) définie, pour tout entier naturel \\(n\\), par \\(u_n = f(n)\\).</p>';
+    diffTex = String(a);
+  }
+  else if(type === 'quad'){
+    const a = pick([1,1,2,-1]);
+    let b;
+    if(a > 0) b = rnd(-a+1, 5);
+    else      b = rnd(-5, a-1);
+    const c = rnd(-5,5);
+    introHtml = '<p class="intro">Soit \\(f\\) la fonction définie sur ' + dom +
+      ' par \\(f(x) = ' + polyTex([a,b,c]) + '\\).<br>' +
+      'On considère la suite \\((u_n)\\) définie, pour tout entier naturel \\(n\\), par \\(u_n = f(n)\\).</p>';
+    diffTex = polyTex([2*a, a+b]);
+  }
+  else if(type === 'cub'){
+    const a = pick([1,-1]);
+    const b = (a === 1) ? rnd(0,3) : rnd(-3,0);
+    const c = rnd(-4,4);
+    introHtml = '<p class="intro">Soit \\(f\\) la fonction définie sur ' + dom +
+      ' par \\(f(x) = ' + polyTex([a,0,b,c]) + '\\).<br>' +
+      'On considère la suite \\((u_n)\\) définie, pour tout entier naturel \\(n\\), par \\(u_n = f(n)\\).</p>';
+    diffTex = polyTex([3*a, 3*a, a+b]);
+  }
+  else if(type === 'quo'){
+    let a,b,c,d,K;
+    do{
+      c = rnd(1,3);
+      d = rnd(1,4);
+      a = rnd(-3,3);
+      b = rnd(-3,3);
+      K = a*d - b*c;
+    } while(K === 0);
+    introHtml = '<p class="intro">Soit \\(f\\) la fonction définie sur ' + dom +
+      ' par \\(f(x) = \\dfrac{' + affineTex(a,b) + '}{' + affineTex(c,d) + '}\\).<br>' +
+      'On considère la suite \\((u_n)\\) définie, pour tout entier naturel \\(n\\), par \\(u_n = f(n)\\).</p>';
+    diffTex = '\\dfrac{' + K + '}{' + parenLin(c, c+d) + parenLin(c, d) + '}';
+  }
+  else {
+    const a = pick([1,1,2,3]);
+    const b = pick([0,1,4,9]);
+    introHtml = '<p class="intro">Soit \\(f\\) la fonction définie sur ' + dom +
+      ' par \\(f(x) = \\sqrt{' + affineTex(a,b) + '}\\).<br>' +
+      'On considère la suite \\((u_n)\\) définie, pour tout entier naturel \\(n\\), par \\(u_n = f(n)\\).</p>';
+    diffTex = '\\dfrac{' + a + '}{\\sqrt{' + affineTex(a, a+b, 'n') + '}+\\sqrt{' + affineTex(a, b, 'n') + '}}';
+  }
+
+  const questions = [
+    { id:'ex3q1',
+      text:'<p>Calculer les valeurs exactes de \\(u_0\\), \\(u_1\\) et \\(u_2\\).</p>' },
+    { id:'ex3q2',
+      text:'<p>Montrer que, pour tout entier naturel \\(n\\), on a : \\[u_{n+1}-u_n = ' + diffTex + '\\]</p>' },
+    { id:'ex3q3',
+      text:'<p>Étudier le signe de \\(u_{n+1}-u_n\\) pour tout entier naturel \\(n\\), ' +
+           'puis en déduire le <strong>sens de variation</strong> de la suite \\((u_n)\\).</p>' }
+  ];
+
+  return {
+    id:'ex3',
+    title:'Exercice 3 — Suite définie par une fonction',
+    introHtml, questions, canvas:false,
+    meta:{ type }
+  };
+}
+
+/* ---- GROS PROBLÈME : suite définie par une récurrence ---- */
+function genPB(){
+  const ordre = pick([1,1,2]);
+
+  if(ordre === 1){
+    const E  = pick([4,6,6,8,10,12]);
+    const u0 = pick([0,0,1,2]);
+
+    const introHtml =
+      '<p class="intro">Un condensateur se charge à travers un circuit. La tension (en volts) ' +
+      'aux bornes du condensateur, relevée à intervalles de temps réguliers, est modélisée par la suite ' +
+      '\\((u_n)\\) définie par :</p>' +
+      '\\[u_0 = ' + u0 + ' \\quad \\text{et, pour tout entier naturel } n, \\quad u_{n+1} = \\dfrac{u_n + ' + E + '}{2}\\]' +
+      '<p class="intro">La tension d\'alimentation du générateur vaut \\(E = ' + E + '\\) volts. ' +
+      'On rappelle que \\(u_n\\) désigne la tension aux bornes du condensateur après \\(n\\) intervalles de temps.</p>';
+
+    const questions = [
+      { id:'pbq1',
+        text:'<p>Calculer les valeurs exactes de \\(u_1\\), \\(u_2\\) et \\(u_3\\). ' +
+             'On donnera les résultats sous forme fractionnaire (ou décimale au centième).</p>' },
+      { id:'pbq2',
+        text:'<p>À l\'aide des valeurs calculées à la question 1, que peut-on conjecturer sur le ' +
+             '<strong>sens de variation</strong> de la suite \\((u_n)\\) ?</p>' },
+      { id:'pbq3',
+        text:'<p>Montrer que, pour tout entier naturel \\(n\\), on a : \\[u_{n+1}-u_n = \\dfrac{' + E + ' - u_n}{2}\\]</p>' },
+      { id:'pbq4',
+        text:'<p>On admet que \\(u_n < ' + E + '\\) pour tout entier naturel \\(n\\) (propriété vérifiée ' +
+             'sur les premiers termes et que l\'on peut démontrer par un raisonnement pas à pas).<br>' +
+             'En utilisant la relation établie à la question 3, déterminer le <strong>signe</strong> de ' +
+             '\\(u_{n+1}-u_n\\) pour tout entier naturel \\(n\\), puis conclure sur le ' +
+             '<strong>sens de variation</strong> de la suite \\((u_n)\\).</p>' }
+    ];
+
+    return {
+      id:'pb',
+      title:'GROS PROBLÈME — Charge d\'un condensateur',
+      introHtml, questions, canvas:false,
+      meta:{ ordre, E, u0 }
+    };
+  }
+  else {
+    const p  = rnd(0,3);
+    const d0 = rnd(1,3);
+    const c  = rnd(1,3);
+    const u0v = p;
+    const u1v = p + d0;
+
+    const introHtml =
+      '<p class="intro">On considère la suite \\((u_n)\\) définie par :</p>' +
+      '\\[u_0 = ' + u0v + ', \\quad u_1 = ' + u1v +
+      ' \\quad \\text{et, pour tout entier naturel } n, \\quad u_{n+2} = 2\\,u_{n+1} - u_n + ' + (2*c) + '\\]';
+
+    const questions = [
+      { id:'pbq1',
+        text:'<p>Calculer \\(u_2\\), \\(u_3\\) et \\(u_4\\).</p>' },
+      { id:'pbq2',
+        text:'<p>Calculer les différences \\(u_1-u_0\\), \\(u_2-u_1\\) et \\(u_3-u_2\\). Que remarque-t-on ?</p>' },
+      { id:'pbq3',
+        text:'<p>Montrer que, pour tout entier naturel \\(n\\), on a : ' +
+             '\\[u_{n+2}-u_{n+1} = \\bigl(u_{n+1}-u_n\\bigr) + ' + (2*c) + '\\]</p>' },
+      { id:'pbq4',
+        text:'<p>À l\'aide de la relation précédente et de la valeur de \\(u_1-u_0\\), ' +
+             'justifier que \\(u_{n+1}-u_n > 0\\) pour tout entier naturel \\(n\\).<br>' +
+             'En déduire le <strong>sens de variation</strong> de la suite \\((u_n)\\).</p>' }
+    ];
+
+    return {
+      id:'pb',
+      title:'GROS PROBLÈME — Suite définie par une récurrence d\'ordre 2',
+      introHtml, questions, canvas:false,
+      meta:{ ordre, p, d0, c }
+    };
+  }
+}
+
+/* ---------------------------------------------------------------------
+   3. CONSTRUCTION DE L'EXAMEN
+--------------------------------------------------------------------- */
+function buildExam(){
+  return {
+    genere: new Date().toISOString(),
+    matiere: 'Mathématiques — Suites numériques (généralités)',
+    niveau: '1ère STI2D',
+    parts: [ genEx1(), genEx2(), genEx3(), genPB() ]
+  };
+}
+
+/* ---------------------------------------------------------------------
+   4. ÉTAT GLOBAL / MONITORING
+--------------------------------------------------------------------- */
+const CONJ = ['mais','ou','et','donc','or','ni','car','Finalement'];
+const XORKEY = 'PSTI2DA-2026-YannMerdy';
+const CLE_LAST_START = 'psti2da_last_start';
+const CLE_AUTOSAVE   = 'psti2da_autosave';
+
+let examData = null;
+let examStarted = false;
+let finished = false;
+
+let startTime = 0, endAt = 0, examDuration = 6000;
+let tickHandle = null;
+
+let journal = [];
+let lastInteraction = Date.now();
+let hiddenSince = null;
+let totalHidden = 0;
+let nbHidden = 0;
+let nbPaste = 0;
+let inactivityCount = 0;
+let inInactivity = false;
+let qTimes = {};
+let nbEdits = 0;
+
+let eleveNom = '', elevePrenom = '', elevePap = false, finAuto = false;
+
+function logEvent(type, detail){
+  journal.push({ t: new Date().toISOString(), type, detail: detail || null });
+}
+
+/* ---------------------------------------------------------------------
+   5. RENDU DE L'EXAMEN
+--------------------------------------------------------------------- */
+function typeset(el){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([el]).catch(()=>{});
+  }
+}
+
+function addLine(qEl, conj){
+  const box = qEl.querySelector('.lines');
+  const isFirst = box.children.length === 0;
+
+  const line = document.createElement('div');
+  line.className = 'line';
+
+  const sel = document.createElement('select');
+  sel.className = 'conj';
+  sel.innerHTML = '<option value="">—</option>' +
+    CONJ.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  if(isFirst){
+    sel.disabled = true;
+    sel.value = '';
+    line.classList.add('first');
+  } else {
+    sel.value = conj || '';
+  }
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'lineInput';
+  inp.autocomplete = 'off';
+  inp.placeholder = isFirst
+    ? 'Première ligne du raisonnement (aucune conjonction)…'
+    : 'Nouvelle idée (une idée = une ligne)…';
+
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = 'Réponse';
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'delLine';
+  del.textContent = '✕';
+  del.title = 'Supprimer cette ligne';
+
+  line.append(sel, inp, badge, del);
+  box.appendChild(line);
+
+  sel.addEventListener('change', () => {
+    lastInteraction = Date.now();
+    if(sel.value === 'Finalement'){
+      qEl.querySelectorAll('.line.is-final').forEach(l => {
+        if(l !== line){
+          l.classList.remove('is-final');
+          const s = l.querySelector('select');
+          if(!s.disabled) s.value = 'donc';
+        }
+      });
+      line.classList.add('is-final');
+      inp.focus();
+    } else {
+      line.classList.remove('is-final');
+    }
+    logEvent('conjonction', { question: qEl.dataset.qid, valeur: sel.value });
+  });
+
+  inp.addEventListener('input', () => {
+    lastInteraction = Date.now();
+    nbEdits++;
+    const qid = qEl.dataset.qid;
+    if(!qTimes[qid]) qTimes[qid] = { debut: Date.now(), fin: Date.now(), lignes: 0 };
+    qTimes[qid].fin = Date.now();
+    qTimes[qid].lignes = qEl.querySelectorAll('.line').length;
+  });
+
+  inp.addEventListener('paste', () => {
+    nbPaste++;
+    logEvent('collage', { question: qEl.dataset.qid });
+  });
+
+  del.addEventListener('click', () => {
+    lastInteraction = Date.now();
+    if(box.children.length <= 1) return;
+    line.remove();
+    refreshLines(qEl);
+    logEvent('suppression_ligne', { question: qEl.dataset.qid });
+  });
+
+  inp.focus();
+}
+
+function refreshLines(qEl){
+  const lines = Array.from(qEl.querySelectorAll('.line'));
+  lines.forEach((l,i) => {
+    const sel = l.querySelector('select');
+    if(i === 0){
+      sel.value = '';
+      sel.disabled = true;
+      l.classList.add('first');
+      l.classList.remove('is-final');
+    } else {
+      sel.disabled = false;
+      l.classList.remove('first');
+    }
+  });
+}
+
+function renderExam(){
+  const container = document.getElementById('examContent');
+  container.innerHTML = '';
+
+  examData.parts.forEach(part => {
+    const sec = document.createElement('section');
+    sec.className = 'part';
+    sec.dataset.partId = part.id;
+
+    let html = '<h2>' + part.title + '</h2>' + part.introHtml;
+    sec.innerHTML = html;
+
+    if(part.canvas){
+      const wrap = document.createElement('div');
+      wrap.className = 'canvasWrap';
+      wrap.innerHTML = '<canvas id="cloudCanvas"></canvas>';
+      sec.appendChild(wrap);
+    }
+
+    part.questions.forEach((q, qi) => {
+      const qEl = document.createElement('div');
+      qEl.className = 'question';
+      qEl.dataset.qid = q.id;
+      qEl.innerHTML =
+        '<div class="qhead"><span class="qnum">' + (qi+1) + '</span>' +
+        '<div class="qtext">' + q.text + '</div></div>' +
+        '<div class="lines"></div>' +
+        '<button type="button" class="addLine">+ Ajouter une ligne de raisonnement</button>';
+      sec.appendChild(qEl);
+
+      addLine(qEl, '');
+
+      qEl.querySelector('.addLine').addEventListener('click', () => {
+        lastInteraction = Date.now();
+        addLine(qEl, '');
+        logEvent('ajout_ligne', { question: q.id });
+      });
+    });
+
+    container.appendChild(sec);
+  });
+
+  if(examData.parts[1] && examData.parts[1].canvasVals){
+    drawCloud(document.getElementById('cloudCanvas'), examData.parts[1].canvasVals);
+  }
+
+  typeset(container);
+}
+
+/* ---------------------------------------------------------------------
+   6. DESSIN DU NUAGE DE POINTS
+--------------------------------------------------------------------- */
+function drawCloud(canvas, vals){
+  if(!canvas) return;
+
+  const parentW = (canvas.parentElement && canvas.parentElement.clientWidth) || 720;
+  const cssW = Math.min(760, Math.max(320, parentW - 20));
+  const cssH = Math.round(cssW * 0.55);
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width  = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const padL = 62, padR = 34, padT = 30, padB = 52;
+  const plotW = cssW - padL - padR;
+  const plotH = cssH - padT - padB;
+
+  const nMax = vals.length - 1;
+  const vMax = Math.max.apply(null, vals);
+  const yMax = niceCeil(vMax);
+
+  const X = n => padL + (nMax === 0 ? 0 : (n / nMax) * plotW);
+  const Y = v => padT + plotH - (v / yMax) * plotH;
+
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1;
+  for(let n=0;n<=nMax;n++){
+    ctx.beginPath(); ctx.moveTo(X(n), padT); ctx.lineTo(X(n), padT + plotH); ctx.stroke();
+  }
+  const ySteps = 5;
+  for(let i=0;i<=ySteps;i++){
+    const v = yMax * i / ySteps;
+    ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(padL + plotW, Y(v)); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(padL, padT - 6); ctx.lineTo(padL, padT + plotH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, padT + plotH); ctx.lineTo(padL + plotW + 14, padT + plotH); ctx.stroke();
+
+  ctx.fillStyle = '#475569';
+  ctx.font = '13px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  for(let n=0;n<=nMax;n++) ctx.fillText(String(n), X(n), padT + plotH + 9);
+
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for(let i=0;i<=ySteps;i++){
+    const v = yMax * i / ySteps;
+    const lbl = (v % 1 === 0) ? String(v) : v.toFixed(1).replace('.',',');
+    ctx.fillText(lbl, padL - 10, Y(v));
+  }
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'italic 14px system-ui, sans-serif';
+  ctx.fillText('n', padL + plotW + 18, padT + plotH + 4);
+  ctx.fillText('u', padL - 46, padT - 12);
+
+  ctx.save();
+  ctx.setLineDash([4,4]);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
+  vals.forEach((v,n) => {
+    ctx.beginPath(); ctx.moveTo(X(n), Y(v)); ctx.lineTo(X(n), padT + plotH); ctx.stroke();
+  });
+  ctx.restore();
+
+  vals.forEach((v,n) => {
+    const px = X(n), py = Y(v);
+    ctx.beginPath(); ctx.arc(px, py, 6.5, 0, Math.PI*2);
+    ctx.fillStyle = '#2563eb'; ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+  });
+}
+
+/* ---------------------------------------------------------------------
+   7. TIMER & SURVEILLANCE
+--------------------------------------------------------------------- */
+function fmtTime(sec){
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function demarrerTimer(){
+  const chrono = document.getElementById('chrono');
+  const barre  = document.getElementById('barreProgres');
+
+  const tick = () => {
+    const now = Date.now();
+    const restant = Math.max(0, Math.round((endAt - now) / 1000));
+    chrono.textContent = fmtTime(restant);
+
+    if(restant <= 300) chrono.classList.add('alerte');
+    else chrono.classList.remove('alerte');
+
+    const ecoule = examDuration - restant;
+    barre.style.width = Math.min(100, (ecoule / examDuration) * 100) + '%';
+
+    if(restant <= 0){
+      clearInterval(tickHandle);
+      tickHandle = null;
+      terminerExamen(true);
+    }
+  };
+
+  tick();
+  tickHandle = setInterval(tick, 1000);
+}
+
+function surveiller(){
+  ['click','keydown','input','scroll','mousemove','touchstart'].forEach(ev => {
+    document.addEventListener(ev, () => { lastInteraction = Date.now(); }, { passive:true });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){
+      hiddenSince = Date.now();
+      nbHidden++;
+      logEvent('sortie_page', { numero: nbHidden });
+    } else if(hiddenSince){
+      const duree = Date.now() - hiddenSince;
+      totalHidden += duree;
+      logEvent('retour_page', { duree_ms: duree });
+      hiddenSince = null;
+      lastInteraction = Date.now();
+    }
+  });
+
+  setInterval(() => {
+    if(!examStarted || finished) return;
+    const d = Date.now() - lastInteraction;
+    if(d > 120000 && !inInactivity){
+      inInactivity = true;
+      inactivityCount++;
+      logEvent('inactivite_longue', { duree_ms: d });
+    } else if(d <= 120000){
+      inInactivity = false;
+    }
+  }, 5000);
+
+  setInterval(() => {
+    if(!examStarted || finished) return;
+    try{
+      localStorage.setItem(CLE_AUTOSAVE, JSON.stringify({
+        t: new Date().toISOString(),
+        reponses: collecterReponses(),
+        journal: journal
+      }));
+    }catch(e){}
+  }, 15000);
+
+  window.addEventListener('beforeunload', () => {
+    if(examStarted && !finished){
+      logEvent('fermeture_onglet', {});
+      try{
+        localStorage.setItem(CLE_AUTOSAVE, JSON.stringify({
+          t: new Date().toISOString(),
+          reponses: collecterReponses(),
+          journal: journal
+        }));
+      }catch(e){}
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   8. COLLECTE DES RÉPONSES
+--------------------------------------------------------------------- */
+function collecterReponses(){
+  const reponses = {};
+  document.querySelectorAll('.question').forEach(qEl => {
+    const qid = qEl.dataset.qid;
+    const lignes = [];
+    qEl.querySelectorAll('.line').forEach((l,i) => {
+      const sel = l.querySelector('select');
+      const inp = l.querySelector('input');
+      const txt = (inp.value || '').trim();
+      const conj = sel.disabled ? null : (sel.value || null);
+      if(txt === '' && conj === null) return;
+      lignes.push({
+        ordre: i + 1,
+        conjonction: conj,
+        texte: txt,
+        estReponse: conj === 'Finalement'
+      });
+    });
+    reponses[qid] = {
+      lignes,
+      temps_travail_ms: qTimes[qid] ? (qTimes[qid].fin - qTimes[qid].debut) : 0
+    };
+  });
+  return reponses;
+}
+
+/* ---------------------------------------------------------------------
+   9. ÉVALUATION DU RISQUE DE FRAUDE
+--------------------------------------------------------------------- */
+function evaluerFraude(){
+  const details = [];
+  let score = 0;
+
+  const minutesHorsPage = totalHidden / 60000;
+  if(nbHidden > 0){
+    const p = Math.min(30, nbHidden * 4 + minutesHorsPage * 3);
+    score += p;
+    details.push({
+      facteur: 'Sorties de la page',
+      occurrences: nbHidden,
+      minutes_hors_page: Number(minutesHorsPage.toFixed(1)),
+      points: Math.round(p)
+    });
+  }
+
+  if(inactivityCount > 0){
+    const p = Math.min(20, inactivityCount * 5);
+    score += p;
+    details.push({
+      facteur: "Périodes d'inactivité supérieures à 2 minutes",
+      occurrences: inactivityCount,
+      points: Math.round(p)
+    });
+  }
+
+  if(nbPaste > 0){
+    const p = Math.min(20, nbPaste * 5);
+    score += p;
+    details.push({
+      facteur: 'Collages détectés dans les zones de réponse',
+      occurrences: nbPaste,
+      points: Math.round(p)
+    });
+  }
+
+  const dureeSec = (Date.now() - startTime) / 1000;
+  const ratio = dureeSec / examDuration;
+  const reponses = collecterReponses();
+  const nbFinal = Object.values(reponses).filter(r => r.lignes.some(l => l.estReponse)).length;
+  const nbQuestions = document.querySelectorAll('.question').length;
+
+  if(nbQuestions > 0 && ratio < 0.25 && nbFinal >= nbQuestions * 0.8){
+    score += 20;
+    details.push({
+      facteur: 'Copie complète rendue en moins de 25 % du temps imparti',
+      points: 20
+    });
+  }
+
+  if(nbEdits < nbQuestions * 2 && nbFinal >= nbQuestions * 0.8){
+    score += 10;
+    details.push({
+      facteur: 'Très peu de modifications de texte pour une copie complète',
+      points: 10
+    });
+  }
+
+  return {
+    score_estime_pourcent: Math.min(100, Math.round(score)),
+    details,
+    indicateurs_bruts: {
+      nb_sorties_page: nbHidden,
+      minutes_hors_page: Number(minutesHorsPage.toFixed(2)),
+      nb_inactivites_longues: inactivityCount,
+      nb_collages: nbPaste,
+      nb_modifications: nbEdits,
+      duree_totale_secondes: Math.round(dureeSec)
+    }
+  };
+}
+
+/* ---------------------------------------------------------------------
+   10. CHIFFREMENT / EXPORT
+--------------------------------------------------------------------- */
+function xorStr(s, k){
+  let o = '';
+  for(let i=0;i<s.length;i++){
+    o += String.fromCharCode(s.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+  }
+  return o;
+}
+function chiffrer(obj){
+  const ascii = encodeURIComponent(JSON.stringify(obj));
+  return btoa(xorStr(ascii, XORKEY));
+}
+
+function telecharger(nomFichier, contenu){
+  const blob = new Blob([contenu], { type:'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nomFichier;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1200);
+}
+
+function sansAccents(s){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function construirePayload(){
+  const fraude = evaluerFraude();
+  return {
+    version: 1,
+    application: 'PSTI2DA — Suites numériques (généralités)',
+    auteur: 'Yann Merdy',
+    eleve: {
+      nom: eleveNom,
+      prenom: elevePrenom,
+      pap: elevePap,
+      temps_supplementaire_accordé: elevePap ? '1/3' : 'aucun'
+    },
+    session: {
+      debut: new Date(startTime).toISOString(),
+      fin: new Date().toISOString(),
+      duree_impartie_secondes: examDuration,
+      duree_reelle_secondes: Math.round((Date.now() - startTime) / 1000),
+      fin_automatique: !!finAuto
+    },
+    suivi: {
+      journal_evenements: journal,
+      nombre_evenements: journal.length,
+      temps_travail_par_question_ms: Object.fromEntries(
+        Object.entries(collecterReponses()).map(([k,v]) => [k, v.temps_travail_ms])
+      )
+    },
+    evaluation_fraude: fraude,
+    enonce: examData,
+    reponses: collecterReponses()
+  };
+}
+
+function nomFichier(){
+  const d = new Date();
+  const jj = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const aaaa = d.getFullYear();
+  const nom = sansAccents(eleveNom.replace(/\s+/g,'')) || 'NOM';
+  const prenom = sansAccents(elevePrenom.replace(/\s+/g,'')) || 'Prenom';
+  return 'PSTI2DA_' + nom + '-' + prenom + '_' + jj + mm + aaaa + '.json';
+}
+
+/* ---------------------------------------------------------------------
+   11. FIN D'EXAMEN
+--------------------------------------------------------------------- */
+function terminerExamen(auto){
+  if(finished) return;
+  finished = true;
+  finAuto = !!auto;
+
+  if(tickHandle){ clearInterval(tickHandle); tickHandle = null; }
+
+  logEvent(auto ? 'fin_temps_imparti' : 'remise_copie', {});
+
+  const payload = construirePayload();
+  const enveloppe = {
+    format: 'PSTI2DA',
+    version: 1,
+    algorithme: 'XOR + Base64 (chiffrement léger)',
+    cle: XORKEY,
+    genere_le: new Date().toISOString(),
+    donnees_chiffrees: chiffrer(payload)
+  };
+
+  telecharger(nomFichier(), JSON.stringify(enveloppe));
+
+  document.querySelectorAll('#examContent input, #examContent select, #examContent button')
+    .forEach(el => { el.disabled = true; });
+
+  const modale = document.getElementById('finModale');
+  document.getElementById('finTitre').textContent = auto
+    ? '⏱️ Temps imparti écoulé'
+    : '✅ Copie enregistrée';
+  document.getElementById('finTexte').innerHTML = auto
+    ? 'Le temps réglementaire est écoulé. Votre copie a été enregistrée automatiquement dans le fichier <strong>' +
+      esc(nomFichier()) + '</strong>.<br><br>Indice de vigilance estimé : <strong>' +
+      payload.evaluation_fraude.score_estime_pourcent + ' %</strong>.'
+    : 'Votre copie a été enregistrée dans le fichier <strong>' + esc(nomFichier()) +
+      '</strong>.<br><br>Indice de vigilance estimé : <strong>' +
+      payload.evaluation_fraude.score_estime_pourcent + ' %</strong>.';
+  modale.classList.add('ouverte');
+
+  document.getElementById('finFermer').onclick = () => {
+    modale.classList.remove('ouverte');
+    if(auto){ try{ window.close(); }catch(e){} }
+  };
+
+  if(auto){
+    setTimeout(() => { try{ window.close(); }catch(e){} }, 1200);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   12. VÉRIFICATION AVANT REMISE
+--------------------------------------------------------------------- */
+function verifierCopie(){
+  const manquantes = [];
+  document.querySelectorAll('.question').forEach(qEl => {
+    const qid = qEl.dataset.qid;
+    const hasFinal = Array.from(qEl.querySelectorAll('.line')).some(l =>
+      l.classList.contains('is-final') && l.querySelector('input').value.trim() !== ''
+    );
+    if(!hasFinal) manquantes.push(qid);
+  });
+  return manquantes;
+}
+
+/* ---------------------------------------------------------------------
+   13. DÉMARRAGE
+--------------------------------------------------------------------- */
+function formaterPrenom(s){
+  return s.trim().toLowerCase().replace(/(^|[\s\-'])(\p{L})/gu, (m,a,b) => a + b.toUpperCase());
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  const d = new Date();
+  const mois = ['janvier','février','mars','avril','mai','juin','juillet','août',
+                'septembre','octobre','novembre','décembre'];
+  document.getElementById('dateLicence').textContent =
+    mois[d.getMonth()] + ' ' + d.getFullYear();
+
+  /* ---------- Modale licence ---------- */
+  const modaleLicence = document.getElementById('licenceModale');
+  document.getElementById('licenceBtn').addEventListener('click', () => {
+    modaleLicence.classList.add('ouverte');
+  });
+  document.getElementById('licenceFermer').addEventListener('click', () => {
+    modaleLicence.classList.remove('ouverte');
+  });
+  modaleLicence.addEventListener('click', e => {
+    if(e.target === modaleLicence) modaleLicence.classList.remove('ouverte');
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      modaleLicence.classList.remove('ouverte');
+      document.getElementById('finModale').classList.remove('ouverte');
+    }
+  });
+
+  /* ---------- Contrôle du délai de 110 minutes ---------- */
+  const btnDemarrer = document.getElementById('btnDemarrer');
+  const msgBloque = document.getElementById('msgBloque');
+  const inpTest = document.getElementById('inpTest');
+  const DELAI = 110 * 60 * 1000;
+
+  function actualiserBlocage(){
+    const dernier = parseInt(localStorage.getItem(CLE_LAST_START) || '0', 10);
+    const reste = DELAI - (Date.now() - dernier);
+    const enTest = inpTest && inpTest.checked;
+
+    if(!enTest && dernier && reste > 0){
+      btnDemarrer.disabled = true;
+      const min = Math.ceil(reste / 60000);
+      msgBloque.style.display = 'block';
+      msgBloque.innerHTML =
+        '⛔ <strong>Un devoir a déjà été commencé récemment.</strong><br>' +
+        'Conformément aux règles, vous devez attendre au minimum 110 minutes entre le début ' +
+        'de deux devoirs. Temps restant avant de pouvoir recommencer : <strong>' +
+        min + ' minute(s)</strong>.<br><br>' +
+        '👨‍🏫 <em>Enseignant ou auteur du devoir ? Cochez «&nbsp;Phase de test&nbsp;» ci-dessus ' +
+        'pour être libéré de cette contrainte.</em>';
+    } else {
+      btnDemarrer.disabled = false;
+      msgBloque.style.display = 'none';
+      msgBloque.innerHTML = '';
+    }
+  }
+
+  actualiserBlocage();
+  if(inpTest) inpTest.addEventListener('change', actualiserBlocage);
+
+  /* ---------- Démarrage de l'épreuve ---------- */
+  btnDemarrer.addEventListener('click', () => {
+    const nom = document.getElementById('inpNom').value.trim();
+    const prenom = document.getElementById('inpPrenom').value.trim();
+
+    if(nom.length < 2){
+      alert('Veuillez saisir votre NOM.');
+      document.getElementById('inpNom').focus();
+      return;
+    }
+    if(prenom.length < 2){
+      alert('Veuillez saisir votre prénom.');
+      document.getElementById('inpPrenom').focus();
+      return;
+    }
+
+    eleveNom = nom.toUpperCase();
+    elevePrenom = formaterPrenom(prenom);
+    elevePap = document.getElementById('inpPap').checked;
+
+    const enPhaseDeTest = !!(inpTest && inpTest.checked);
+
+    const base = 100 * 60;
+    examDuration = elevePap ? Math.round(base * 4 / 3) : base;
+
+    startTime = Date.now();
+    if(!enPhaseDeTest){
+      localStorage.setItem(CLE_LAST_START, String(startTime));
+    }
+    endAt = startTime + examDuration * 1000;
+
+    logEvent('debut_devoir', {
+      nom: eleveNom,
+      prenom: elevePrenom,
+      pap: elevePap,
+      phase_de_test: enPhaseDeTest,
+      duree_secondes: examDuration
+    });
+
+    examData = buildExam();
+
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('examScreen').style.display = 'block';
+    document.getElementById('headerEleve').textContent =
+      eleveNom + ' ' + elevePrenom + (elevePap ? ' (PAP)' : '') +
+      (enPhaseDeTest ? ' — MODE TEST' : '');
+
+    renderExam();
+
+    examStarted = true;
+    lastInteraction = Date.now();
+
+    demarrerTimer();
+    surveiller();
+
+    document.getElementById('btnRendre').addEventListener('click', () => {
+      const manquantes = verifierCopie();
+      if(manquantes.length > 0){
+        const ok = confirm(
+          'Attention : ' + manquantes.length +
+          ' question(s) ne comportent pas de ligne « Finalement » remplie.\n\n' +
+          'La réponse d\'une question doit être la ligne commençant par « Finalement ».\n\n' +
+          'Voulez-vous vraiment rendre votre copie maintenant ?'
+        );
+        if(!ok) return;
+      } else {
+        if(!confirm('Confirmez-vous la remise définitive de votre copie ?')) return;
+      }
+      terminerExamen(false);
+    });
+
+    window.scrollTo({ top:0, behavior:'smooth' });
+  });
+
+  /* ---------- Redessiner le canvas au redimensionnement ---------- */
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if(examData && examData.parts[1] && examData.parts[1].canvasVals){
+        const c = document.getElementById('cloudCanvas');
+        if(c) drawCloud(c, examData.parts[1].canvasVals);
+      }
+    }, 220);
+  });
+});
+</script>
+</body>
+</html>

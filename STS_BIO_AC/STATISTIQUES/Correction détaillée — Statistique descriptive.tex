@@ -1,0 +1,745 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{float}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{fancyhdr}
+
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes.geometric, positioning, calc, patterns, arrows.meta}
+
+\geometry{margin=2cm, headheight=14pt}
+\sisetup{output-decimal-marker={,},group-separator={\,}}
+
+% ------- Couleurs ---------------------------------------------
+\definecolor{calchead}{RGB}{230,230,230}
+\definecolor{calcline}{RGB}{150,150,150}
+\definecolor{calcform}{RGB}{0,102,204}
+\definecolor{calcval}{RGB}{0,0,0}
+\definecolor{boitecol}{RGB}{173,216,230}
+\definecolor{medcol}{RGB}{200,60,60}
+\definecolor{encadre}{RGB}{255,248,220}
+
+% ------- Environnement Calc ------------------------------------
+\newenvironment{calcsheet}[1][\footnotesize]
+  {\begin{center}#1
+   \begin{tabular}{|>{\columncolor{calchead}}c|l|l|l|l|}
+   \hline
+   \rowcolor{calchead}
+   & \textbf{A} & \textbf{B} & \textbf{C} & \textbf{D} \\ \hline}
+  {\end{tabular}\end{center}}
+
+\newcommand{\fc}[1]{\textcolor{calcform}{\texttt{#1}}}
+
+% ------- Encadré énoncé (version corrigée) --------------------
+\newsavebox{\enoncebox}
+\newenvironment{enonce}
+  {\par\medskip\begin{center}%
+   \begin{lrbox}{\enoncebox}%
+   \begin{minipage}{0.9\textwidth}%
+   \textbf{Énoncé.}\ \itshape\par\smallskip}
+  {\end{minipage}%
+   \end{lrbox}%
+   \setlength{\fboxsep}{10pt}%
+   \colorbox{encadre}{\usebox{\enoncebox}}%
+   \end{center}\par\medskip}
+
+% ------- Pagination -------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Statistique descriptive}
+\lhead{\small STS BIOAL}
+\cfoot{\thepage}
+
+\title{\textbf{Correction détaillée — Statistique descriptive}\\[0.3em]
+\large Calculs manuels, formules tableurs \& simulations Calc}
+\author{STS BIOAL — Module 5}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Rappel de l'énoncé}
+
+\subsection*{Contexte général}
+
+Dans le cadre du module de statistique descriptive (STS Bioanalyse),
+un laboratoire d'analyses médicales contrôle la concentration en
+glucose d'un lot de sérums. La valeur cible du fabricant est fixée
+à \( 15{,}5 \)~g/L. Le technicien doit vérifier la conformité du lot
+et diagnostiquer d'éventuelles anomalies.
+
+\subsection*{Énoncé de la partie « Bonus »}
+
+\begin{enonce}
+On dispose de \( n = 40 \) mesures de concentration en glucose
+(en g/L) réalisées sur un même lot :
+
+\smallskip
+\noindent
+12,1 \quad 12,6 \quad 13,0 \quad 13,3 \quad 13,6 \quad 13,9 \quad 14,0 \quad 14,2 \quad 14,4 \quad 14,5 \\
+14,7 \quad 14,9 \quad 15,0 \quad 15,1 \quad 15,2 \quad 15,3 \quad 15,4 \quad 15,5 \quad 15,6 \quad 15,8 \\
+15,9 \quad 16,0 \quad 16,1 \quad 16,3 \quad 16,4 \quad 16,5 \quad 16,6 \quad 16,8 \quad 16,9 \quad 17,0 \\
+17,2 \quad 17,4 \quad 17,5 \quad 17,7 \quad 17,9 \quad 18,1 \quad 18,4 \quad 18,6 \quad 18,9 \quad 19,1
+
+\smallskip
+\noindent\textbf{Questions bonus :}
+\begin{enumerate}[label=\textbf{C.\arabic*.}, leftmargin=*]
+  \item Calculer la moyenne exacte et l'écart-type exact à partir
+        des valeurs brutes, puis comparer avec la méthode des classes.
+  \item Démontrer que la somme des écarts à la moyenne est nulle,
+        et vérifier numériquement.
+  \item Démontrer l'identité de König
+        \( \sum (x_i-\bar{x})^2 = \sum x_i^2 - n\bar{x}^2 \)
+        et en déduire la variance exacte.
+  \item Quelle proportion des échantillons dépasse
+        \( \bar{x} + \sigma \) ?
+  \item La valeur \( 19{,}1 \) est-elle aberrante selon la règle de Tukey ?
+  \item Que deviennent moyenne, variance, écart-type et coefficient
+        de variation si l'on convertit les concentrations en mg/dL
+        (multiplication par 100) ?
+  \item Établir la relation entre les coefficients de la régression
+        de \( y \) en \( x \) et ceux de la régression inverse de
+        \( x \) en \( y \).
+  \item Rédiger une conclusion biologique argumentée sur la conformité
+        du lot.
+\end{enumerate}
+\end{enonce}
+
+% ============================================================
+\section{Notation \(\sum\) : signification et règles de calcul}
+
+\subsection{Que signifie le symbole \(\sum\) ?}
+
+Le symbole \(\sum\) (lettre grecque majuscule \emph{sigma}) est
+l'opérateur de \textbf{sommation}. Il indique que l'on doit
+\emph{additionner} une quantité pour toutes les valeurs d'un
+indice variant entre deux bornes.
+
+\medskip
+\noindent Formellement :
+\[
+\sum_{i=1}^{n} x_i
+\;=\;
+x_1 + x_2 + x_3 + \cdots + x_{n-1} + x_n.
+\]
+
+\noindent Décomposition des éléments :
+\begin{center}
+\begin{tabular}{|c|l|}
+\hline
+\rowcolor{calchead}
+\textbf{Élément} & \textbf{Rôle} \\ \hline
+\( \sum \)        & « somme de \dots » \\ \hline
+\( i = 1 \)       & \emph{indice de départ} (on commence à \( i = 1 \)) \\ \hline
+\( n \)           & \emph{indice d'arrivée} (on s'arrête à \( i = n \)) \\ \hline
+\( x_i \)         & \emph{terme général} à additionner \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Exemple concret sur nos données}
+
+Pour la série des 40 concentrations, l'écriture
+\[
+\sum_{i=1}^{40} x_i
+\]
+signifie littéralement :
+\[
+x_1 + x_2 + x_3 + \cdots + x_{39} + x_{40}
+\]
+\[
+= 12{,}1 + 12{,}6 + 13{,}0 + \cdots + 18{,}9 + 19{,}1 = 633{,}4.
+\]
+
+De même,
+\[
+\sum_{i=1}^{40} x_i^2 = x_1^2 + x_2^2 + \cdots + x_{40}^2
+= 12{,}1^2 + 12{,}6^2 + \cdots + 19{,}1^2 = 10\,151{,}16.
+\]
+
+\subsection{Règles de calcul à connaître}
+
+\begin{enumerate}[label=\textbf{R\arabic*.}, leftmargin=*]
+  \item \textbf{Somme d'une constante.} Si \( c \) est une constante
+        (indépendante de \( i \)), alors :
+        \[
+        \sum_{i=1}^{n} c = n \times c.
+        \]
+        \emph{Exemple :} \( \sum_{i=1}^{40} 3 = 40 \times 3 = 120 \).
+
+  \item \textbf{Linéarité.} Pour deux suites \( (x_i) \) et \( (y_i) \)
+        et deux constantes \( a, b \) :
+        \[
+        \sum_{i=1}^{n} (a\,x_i + b\,y_i) = a \sum_{i=1}^{n} x_i
+        + b \sum_{i=1}^{n} y_i.
+        \]
+
+  \item \textbf{Factorisation d'une constante.}
+        \[
+        \sum_{i=1}^{n} (c \cdot x_i) = c \sum_{i=1}^{n} x_i.
+        \]
+
+  \item \textbf{Attention !} En général :
+        \[
+        \sum_{i=1}^{n} x_i^2 \neq \left(\sum_{i=1}^{n} x_i\right)^{2}.
+        \]
+        Dans notre cas : \( \sum x_i^2 = 10\,151{,}16 \)
+        tandis que \( \left(\sum x_i\right)^2 = 633{,}4^2 \approx 401\,195 \).
+        Ces deux quantités sont totalement différentes !
+\end{enumerate}
+
+\subsection{Notations abrégées utilisées dans la suite}
+
+Par souci de lisibilité, on notera souvent :
+\[
+\sum x_i \quad\text{pour}\quad \sum_{i=1}^{n} x_i,
+\qquad
+\sum x_i^2 \quad\text{pour}\quad \sum_{i=1}^{n} x_i^2.
+\]
+
+\noindent De même, pour la somme des carrés des écarts :
+\[
+\sum (x_i - \bar{x})^2
+\quad\text{signifie}\quad
+\sum_{i=1}^{n} (x_i - \bar{x})^2
+= (x_1-\bar{x})^2 + (x_2-\bar{x})^2 + \cdots + (x_n-\bar{x})^2.
+\]
+
+\subsection{Traduction dans le tableur}
+
+Dans LibreOffice Calc ou Excel, la somme \( \sum x_i \) se traduit
+directement par la fonction :
+
+\begin{center}
+\fc{=SOMME(A2:A41)} \quad (français) \qquad
+\fc{=SUM(A2:A41)} \quad (anglais)
+\end{center}
+
+\noindent Pour la somme des carrés \( \sum x_i^2 \) :
+\begin{center}
+\fc{=SOMME.SQ(A2:A41)} \quad (français) \qquad
+\fc{=SUMSQ(A2:A41)} \quad (anglais)
+\end{center}
+
+\noindent Ces fonctions réalisent \emph{automatiquement} la
+sommation décrite par le symbole \( \sum \) : elles parcourent
+toutes les cellules de la plage \( A2:A41 \) et additionnent
+leurs valeurs.
+
+% ============================================================
+\section{Mise en place des données}
+
+\subsection{Série brute}
+
+Un laboratoire de bioanalyse contrôle la concentration en glucose
+(\si{g/L}) d'un lot de \( n = 40 \) échantillons sériques :
+
+\begin{center}
+\footnotesize
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+\hline
+\rowcolor{calchead}
+12,1 & 12,6 & 13,0 & 13,3 & 13,6 & 13,9 & 14,0 & 14,2 & 14,4 & 14,5 \\
+14,7 & 14,9 & 15,0 & 15,1 & 15,2 & 15,3 & 15,4 & 15,5 & 15,6 & 15,8 \\
+15,9 & 16,0 & 16,1 & 16,3 & 16,4 & 16,5 & 16,6 & 16,8 & 16,9 & 17,0 \\
+17,2 & 17,4 & 17,5 & 17,7 & 17,9 & 18,1 & 18,4 & 18,6 & 18,9 & 19,1 \\
+\hline
+\end{tabular}
+\end{center}
+
+\medskip
+\noindent Sommes fondamentales (calculs vérifiés) :
+\[
+\sum_{i=1}^{40} x_i = 633{,}4
+\qquad
+\sum_{i=1}^{40} x_i^{2} = 10\,151{,}16
+\]
+
+\subsection{Simulation de la feuille Calc}
+
+On saisit les valeurs dans la colonne \( A \) :
+
+\begin{calcsheet}
+1 & Concentration (g/L) & & & \\ \hline
+2 & 12,1 & & & \\ \hline
+3 & 12,6 & & & \\ \hline
+4 & 13,0 & & & \\ \hline
+\(\vdots\) & \(\vdots\) & & & \\ \hline
+41 & 19,1 & & & \\ \hline
+42 & & & & \\ \hline
+43 & \( n \)  & \fc{=NB(A2:A41)} & 40 & \\ \hline
+44 & \( \bar{x} \) & \fc{=MOYENNE(A2:A41)} & 15,835 & \\ \hline
+45 & \( \sum x_i \) & \fc{=SOMME(A2:A41)} & 633,4 & \\ \hline
+46 & \( \sum x_i^2 \) & \fc{=SOMME.SQ(A2:A41)} & 10151,16 & \\ \hline
+\end{calcsheet}
+
+\noindent\textbf{Équivalents anglais (Excel) :}
+\fc{COUNT}, \fc{AVERAGE}, \fc{SUM}, \fc{SUMSQ}.
+
+% ============================================================
+\section{Indicateurs de position}
+
+\subsection{Moyenne arithmétique}
+
+\[
+\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i
+= \frac{633{,}4}{40}
+= \boxed{15{,}835\ \si{g/L}}.
+\]
+
+\noindent La formule \( \bar{x} = \tfrac{1}{n}\sum x_i \) se lit
+« \emph{la moyenne est égale à la somme de toutes les valeurs,
+divisée par leur nombre} ».
+
+\subsection{Médiane}
+
+Série déjà triée, \( n = 40 \) (pair) : \( Me = \frac{x_{20}+x_{21}}{2} \).
+\[
+x_{20} = 15{,}8,\quad x_{21} = 15{,}9
+\quad\Longrightarrow\quad
+Me = \boxed{15{,}85\ \si{g/L}}.
+\]
+
+\subsection{Quartiles}
+
+Position : \( p_k = \frac{k(n+1)}{4} \).
+
+\medskip
+\noindent Pour \( Q_1 \) : \( p_1 = 10{,}25 \), donc
+\[
+Q_1 = x_{10} + 0{,}25\,(x_{11}-x_{10}) = 14{,}5 + 0{,}25 \times 0{,}2
+= \boxed{14{,}55}.
+\]
+
+\noindent Pour \( Q_3 \) : \( p_3 = 30{,}75 \), donc
+\[
+Q_3 = x_{30} + 0{,}75\,(x_{31}-x_{30}) = 17{,}0 + 0{,}75 \times 0{,}2
+= \boxed{17{,}15}.
+\]
+
+\[
+IQR = Q_3 - Q_1 = 17{,}15 - 14{,}55 = \boxed{2{,}60\ \si{g/L}}.
+\]
+
+\begin{calcsheet}
+48 & Médiane \( Me \) & \fc{=MEDIANE(A2:A41)} & 15,85 & \\ \hline
+49 & \( Q_1 \) & \fc{=QUARTILE.INC(A2:A41;1)} & 14,55 & \\ \hline
+50 & \( Q_3 \) & \fc{=QUARTILE.INC(A2:A41;3)} & 17,15 & \\ \hline
+51 & \( IQR \) & \fc{=D50-D49} & 2,60 & \\ \hline
+\end{calcsheet}
+
+\noindent\textbf{En anglais} : \fc{=MEDIAN(...)}, \fc{=QUARTILE.INC(...,k)}.
+
+% ============================================================
+\section{Indicateurs de dispersion}
+
+\subsection{Variance et écart-type (formule de König)}
+
+La formule de König permet de calculer la somme des carrés des
+écarts (SCE) sans avoir à calculer chaque écart individuellement :
+\[
+\sum_{i=1}^{n}(x_i-\bar{x})^2 = \sum_{i=1}^{n} x_i^2 - n\bar{x}^2.
+\]
+
+\noindent\textbf{Signification terme à terme :}
+\begin{itemize}
+  \item \( \sum x_i^2 \) : somme des carrés de toutes les valeurs
+        (calculée directement sur les données brutes) ;
+  \item \( n\bar{x}^2 \) : produit de l'effectif \( n \) par le carré
+        de la moyenne.
+\end{itemize}
+
+\[
+V = \frac{1}{n}\left[\sum x_i^2 - n\bar{x}^2\right]
+= \frac{10\,151{,}16 - 40\times 15{,}835^2}{40}
+\]
+
+\[
+n\bar{x}^2 = 40 \times 250{,}747225 = 10\,029{,}889
+\]
+\[
+SCE = 10\,151{,}16 - 10\,029{,}889 = 121{,}271
+\]
+\[
+V = \frac{121{,}271}{40} = \boxed{3{,}0318}
+\qquad
+\sigma = \sqrt{3{,}0318} \approx \boxed{1{,}7412\ \si{g/L}}
+\]
+
+\noindent Écart-type échantillonnal :
+\[
+s^2 = \frac{SCE}{n-1} = \frac{121{,}271}{39} \approx 3{,}1095
+\qquad
+s \approx \boxed{1{,}7634\ \si{g/L}}
+\]
+
+\begin{calcsheet}
+53 & SCE & \fc{=SOMME.SQ(A2:A41)-A43*A44\^{}2} & 121,271 & \\ \hline
+54 & \( V \) (pop.) & \fc{=VAR.P(A2:A41)} & 3,0318 & \\ \hline
+55 & \( \sigma \) (pop.) & \fc{=ECARTYPE.P(A2:A41)} & 1,7412 & \\ \hline
+56 & \( s^2 \) (éch.) & \fc{=VAR.S(A2:A41)} & 3,1095 & \\ \hline
+57 & \( s \) (éch.) & \fc{=ECARTYPE.S(A2:A41)} & 1,7634 & \\ \hline
+58 & Étendue & \fc{=MAX(A2:A41)-MIN(A2:A41)} & 7,0 & \\ \hline
+59 & \( CV \) & \fc{=ECARTYPE.P(A2:A41)/MOYENNE(A2:A41)} & 0,1100 & \\ \hline
+\end{calcsheet}
+
+% ============================================================
+\section{Histogramme des effectifs par classes}
+
+\subsection{Construction du tableau de classes}
+
+\begin{center}
+\small
+\begin{tabular}{|c|c|c|c|}
+\hline
+\rowcolor{calchead}
+\textbf{Classe} & \textbf{Centre \( c_i \)} & \textbf{Effectif \( n_i \)} & \textbf{Fréquence} \\ \hline
+\( [12\,;14[ \) & 13 & 4  & 0,100 \\ \hline
+\( [14\,;16[ \) & 15 & 17 & 0,425 \\ \hline
+\( [16\,;18[ \) & 17 & 14 & 0,350 \\ \hline
+\( [18\,;20[ \) & 19 & 5  & 0,125 \\ \hline
+\textbf{Total} & --- & \textbf{40} & \textbf{1,000} \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Histogramme}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=12cm, height=7cm,
+  ybar interval,
+  xlabel={Concentration (\si{g/L})},
+  ylabel={Effectif \( n_i \)},
+  xmin=11, xmax=21,
+  ymin=0, ymax=20,
+  xtick={12,14,16,18,20},
+  ytick={0,5,10,15,20},
+  grid=major,
+  grid style={dashed,gray!40},
+  bar width=2cm,
+  area style,
+  fill=boitecol!80,
+  draw=blue!60!black,
+  every axis plot/.append style={line width=1pt},
+]
+\addplot coordinates {(12,4) (14,17) (16,14) (18,5) (20,0)};
+\end{axis}
+\end{tikzpicture}
+\caption{Histogramme des effectifs par classes de largeur \SI{2}{g/L}.}
+\end{figure}
+
+\subsection{Moyenne et variance par classes}
+
+\[
+\bar{x}_{\text{cl}} = \frac{\sum n_i c_i}{\sum n_i}
+= \frac{4\times 13 + 17\times 15 + 14\times 17 + 5\times 19}{40}
+= \frac{640}{40} = \boxed{16{,}0}
+\]
+
+\[
+V_{\text{cl}} = \frac{4\cdot 9 + 17\cdot 1 + 14\cdot 1 + 5\cdot 9}{40}
+= \frac{112}{40} = \boxed{2{,}8}
+\qquad
+\sigma_{\text{cl}} \approx \boxed{1{,}6733}.
+\]
+
+\begin{calcsheet}
+61 & Centre \( c_i \) & Effectif \( n_i \) & & \\ \hline
+62 & 13 & 4  & & \\ \hline
+63 & 15 & 17 & & \\ \hline
+64 & 17 & 14 & & \\ \hline
+65 & 19 & 5  & & \\ \hline
+66 & \( \bar{x}_{\text{cl}} \) & \fc{=SOMMEPROD(A62:A65;B62:B65)/SOMME(B62:B65)} & 16,0 & \\ \hline
+67 & \( V_{\text{cl}} \) & \fc{=SOMMEPROD(B62:B65;(A62:A65-A66)\^{}2)/SOMME(B62:B65)} & 2,8 & \\ \hline
+\end{calcsheet}
+
+\noindent\textbf{Remarque :} la méthode des classes sous-estime la variance
+(\( V_{\text{cl}} = 2{,}8 < V_{\text{exact}} = 3{,}03 \)),
+car la dispersion interne aux classes est « perdue ».
+
+% ============================================================
+\section{Boîte à moustaches}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=13cm, height=5cm,
+  xmin=10, xmax=22,
+  ymin=-1.2, ymax=1.2,
+  xtick={11,12,13,14,15,16,17,18,19,20,21},
+  ytick=\empty,
+  axis y line=none,
+  axis x line=bottom,
+  xlabel={Concentration (\si{g/L})},
+  clip=false,
+]
+
+% --- Bornes de Tukey (pointillés) -----------------------------
+\draw[dashed,gray]
+  (axis cs:10.65,-1.1) -- (axis cs:10.65,1.0)
+  node[above,black,font=\scriptsize]{10,65};
+\draw[dashed,gray]
+  (axis cs:21.05,-1.1) -- (axis cs:21.05,1.0)
+  node[above,black,font=\scriptsize]{21,05};
+
+% --- Boîte Q1 .. Q3 -------------------------------------------
+\fill[boitecol!80]
+  (axis cs:14.55,-0.4) rectangle (axis cs:17.15,0.4);
+\draw[thick]
+  (axis cs:14.55,-0.4) rectangle (axis cs:17.15,0.4);
+
+% --- Médiane --------------------------------------------------
+\draw[medcol, line width=2pt]
+  (axis cs:15.85,-0.4) -- (axis cs:15.85,0.4);
+
+% --- Moustaches -----------------------------------------------
+\draw[thick] (axis cs:12.1,0) -- (axis cs:14.55,0);
+\draw[thick] (axis cs:12.1,-0.25) -- (axis cs:12.1,0.25);
+\draw[thick] (axis cs:17.15,0) -- (axis cs:19.1,0);
+\draw[thick] (axis cs:19.1,-0.25) -- (axis cs:19.1,0.25);
+
+% --- Étiquettes -----------------------------------------------
+\node[below,font=\small] at (axis cs:15.85,-0.5)
+  {\(Me=15{,}85\)};
+\node[above,font=\small] at (axis cs:14.55,0.5) {\(Q_1\)};
+\node[above,font=\small] at (axis cs:17.15,0.5) {\(Q_3\)};
+\node[above,font=\small] at (axis cs:12.1,0.35) {min};
+\node[above,font=\small] at (axis cs:19.1,0.35) {max};
+
+% --- Titre ----------------------------------------------------
+\node[font=\bfseries] at (axis cs:16,1.1)
+  {Boîte à moustaches (règle de Tukey)};
+
+\end{axis}
+\end{tikzpicture}
+\caption{Boîte à moustaches. La valeur maximale \( 19{,}1 \) reste
+  en deçà de la borne supérieure \( 21{,}05 \) : aucune valeur n'est
+  aberrante.}
+\end{figure}
+
+% ============================================================
+\section{Détection d'une valeur aberrante}
+
+Règle de Tukey : une valeur est aberrante si
+\[
+x < Q_1 - 1{,}5\,IQR \quad\text{ou}\quad x > Q_3 + 1{,}5\,IQR.
+\]
+
+\[
+Q_1 - 1{,}5\,IQR = 14{,}55 - 3{,}90 = 10{,}65,
+\qquad
+Q_3 + 1{,}5\,IQR = 17{,}15 + 3{,}90 = 21{,}05.
+\]
+
+Intervalle admissible : \( [10{,}65\,;\,21{,}05] \).
+
+\medskip
+La valeur maximale \( 19{,}1 \) est \emph{strictement à l'intérieur} :
+\( \boxed{\text{pas d'aberration}} \).
+
+\begin{calcsheet}
+69 & Borne inf. & \fc{=D49-1,5*D51} & 10,65 & \\ \hline
+70 & Borne sup. & \fc{=D50+1,5*D51} & 21,05 & \\ \hline
+71 & Aberrant ? & \fc{=SI(OU(A2<D69;A2>D70);"OUI";"NON")} & NON & \\ \hline
+\end{calcsheet}
+
+% ============================================================
+\section{Régression linéaire — illustration}
+
+On considère ici un exemple de droite \( y = ax + b \) avec les
+indicateurs de qualité associés. La droite de régression de \( y \)
+en \( x \) a pour équation :
+\[
+a = \frac{\mathrm{Cov}(x,y)}{V(x)},
+\qquad
+b = \bar{y} - a\bar{x},
+\qquad
+r = \frac{\mathrm{Cov}(x,y)}{\sigma_x \sigma_y}.
+\]
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=11cm, height=7cm,
+  xlabel={\( x \)},
+  ylabel={\( y \)},
+  grid=major,
+  grid style={dashed,gray!40},
+  xmin=0, xmax=10,
+  ymin=0, ymax=20,
+  legend pos=north west,
+  legend style={font=\footnotesize},
+]
+\addplot[only marks, mark=*, mark size=2pt, blue]
+  coordinates {
+   (1,3.2) (2,5.1) (3,6.8) (4,9.4) (5,10.1)
+   (6,12.9) (7,13.8) (8,16.2) (9,17.1) (10,18.9)
+  };
+\addplot[red, thick, domain=0:10, samples=2] {1.78*x + 1.28};
+\legend{Points, Droite \( y = 1{,}78x + 1{,}28 \)}
+\end{axis}
+\end{tikzpicture}
+\caption{Exemple de nuage de points et droite de régression linéaire.}
+\end{figure}
+
+\begin{calcsheet}
+73 & Pente \( a \) & \fc{=PENTE(B2:B11;A2:A11)} & 1,78 & \\ \hline
+74 & Ordonnée \( b \) & \fc{=ORDONNEE.ORIGINE(B2:B11;A2:A11)} & 1,28 & \\ \hline
+75 & \( r \) & \fc{=COEFFICIENT.CORRELATION(A2:A11;B2:B11)} & 0,998 & \\ \hline
+76 & \( r^2 \) & \fc{=COEFFICIENT.DETERMINATION(B2:B11;A2:A11)} & 0,996 & \\ \hline
+77 & \( a' = 1/a \) & \fc{=1/D73} & 0,562 & \\ \hline
+78 & \( b' = -b/a \) & \fc{=-D74/D73} & -0,719 & \\ \hline
+\end{calcsheet}
+
+% ============================================================
+\section{Comparaison visuelle : exact vs.\ classes}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=12cm, height=6.5cm,
+  ybar,
+  bar width=1.2cm,
+  xlabel={Indicateur},
+  ylabel={Valeur},
+  symbolic x coords={Moyenne, Variance, Ecart-type},
+  xtick=data,
+  ymin=0, ymax=17,
+  legend pos=north east,
+  legend style={font=\footnotesize},
+  nodes near coords,
+  nodes near coords style={font=\scriptsize},
+]
+\addplot coordinates {(Moyenne,15.835) (Variance,3.032) (Ecart-type,1.741)};
+\addplot coordinates {(Moyenne,16.0) (Variance,2.8) (Ecart-type,1.673)};
+\legend{Exact, Classes}
+\end{axis}
+\end{tikzpicture}
+\caption{Comparaison des indicateurs par calcul exact et par classes.}
+\end{figure}
+
+% ============================================================
+\section{Modus operandi — Générer les graphiques avec LibreOffice Calc}
+
+\subsection{Préparation de la feuille}
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item Ouvrir LibreOffice Calc.
+  \item Saisir les 40 valeurs dans \( A2:A41 \).
+  \item Ajouter les formules auxiliaires (moyenne, médiane, quartiles,
+        écarts-types) comme indiqué dans les simulations précédentes.
+\end{enumerate}
+
+\subsection{Histogramme des effectifs}
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item Construire le tableau des classes dans deux colonnes :
+        \( B2:B5 \) = centres (ou bornes), \( C2:C5 \) = effectifs.
+  \item Sélectionner \( B2:C5 \).
+  \item Menu \textsf{Insertion \(\to\) Graphique}.
+  \item Type : \textsf{Colonnes} (ou \textsf{Barres}).
+  \item Cliquer \textsf{Suivant}, puis \textsf{Terminer}.
+  \item Pour transformer en histogramme : clic droit sur une barre
+        \(\to\) \textsf{Écart} \(\to\) mettre \SI{0}{\percent}
+        (barres jointives).
+  \item Double-clic sur l'axe X \(\to\) \textsf{Étiquettes} \(\to\)
+        choisir les bornes de classes.
+\end{enumerate}
+
+\subsection{Boîte à moustaches (à partir de LibreOffice 7.1)}
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item Sélectionner la plage \( A2:A41 \) (données brutes).
+  \item \textsf{Insertion \(\to\) Graphique}.
+  \item Type : \textsf{Boîte à moustaches}.
+  \item Suivant / Terminer.
+  \item Pour afficher les valeurs : double-clic sur la boîte
+        \(\to\) onglet \textsf{Étiquettes de données} \(\to\) cocher
+        \textsf{Afficher les valeurs}.
+  \item Le seuil de Tukey est calculé automatiquement ;
+        pour le modifier : clic droit \(\to\) \textsf{Format de la série}
+        \(\to\) \textsf{Options de la boîte} \(\to\) coefficient
+        d'écart interquartile (défaut : 1,5).
+\end{enumerate}
+
+\subsection{Nuage de points et droite de régression}
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item Saisir \( x \) dans \( A2:A11 \) et \( y \) dans \( B2:B11 \).
+  \item Sélectionner \( A2:B11 \).
+  \item \textsf{Insertion \(\to\) Graphique} \(\to\) type
+        \textsf{XY (dispersion)}.
+  \item Choisir \textsf{Points seuls} puis \textsf{Terminer}.
+  \item Clic droit sur un point \(\to\) \textsf{Insérer une courbe de tendance}.
+  \item Choisir \textsf{Linéaire}, cocher
+        \textsf{Afficher l'équation} et \textsf{Afficher \( R^2 \)}.
+  \item Pour la droite inverse : échanger les colonnes en abscisse
+        et en ordonnée, puis répéter.
+\end{enumerate}
+
+\subsection{Coefficient de variation et tableau récapitulatif}
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item Ajouter une cellule \( D60 \) : \fc{=ECARTYPE.P(A2:A41)/MOYENNE(A2:A41)}.
+  \item Format \(\to\) \textsf{Nombre} \(\to\) \textsf{Pourcentage}.
+  \item Pour un récapitulatif graphique : sélectionner les
+        cellules d'indicateurs et \textsf{Insertion \(\to\) Graphique
+        \(\to\) Colonnes}.
+\end{enumerate}
+
+% ============================================================
+\section{Récapitulatif général}
+
+\begin{center}
+\small
+\begin{tabular}{|l|c|c|}
+\hline
+\rowcolor{calchead}
+\textbf{Indicateur} & \textbf{Valeur exacte} & \textbf{Valeur par classes} \\ \hline
+Effectif \( n \)            & 40      & 40 \\ \hline
+\( \sum x_i \)              & 633,4   & --- \\ \hline
+\( \sum x_i^2 \)            & 10\,151,16 & --- \\ \hline
+Moyenne \( \bar{x} \)       & 15,835  & 16,0 \\ \hline
+Médiane \( Me \)            & 15,85   & --- \\ \hline
+\( Q_1 \)                   & 14,55   & --- \\ \hline
+\( Q_3 \)                   & 17,15   & --- \\ \hline
+\( IQR \)                   & 2,60    & --- \\ \hline
+Étendue                     & 7,0     & --- \\ \hline
+Variance \( V \) (pop.)     & 3,032   & 2,8 \\ \hline
+Écart-type \( \sigma \)     & 1,741   & 1,673 \\ \hline
+Écart-type \( s \) (éch.)   & 1,763   & --- \\ \hline
+\( CV \)                    & 11,0\,\% & 10,5\,\% \\ \hline
+\end{tabular}
+\end{center}
+
+\section*{Conclusion biologique}
+
+Le lot présente une concentration moyenne de
+\( 15{,}835\ \si{g/L} \), très proche de la cible \( 15{,}5\ \si{g/L} \),
+avec un \( CV \) d'environ \( 11\ \% \) indiquant une bonne homogénéité.
+Aucune valeur aberrante n'est détectée selon la règle de Tukey
+(borne supérieure : \( 21{,}05\ \si{g/L} \) ; max observé :
+\( 19{,}1\ \si{g/L} \)). Le lot peut être déclaré
+\textbf{conforme}.
+
+\end{document}

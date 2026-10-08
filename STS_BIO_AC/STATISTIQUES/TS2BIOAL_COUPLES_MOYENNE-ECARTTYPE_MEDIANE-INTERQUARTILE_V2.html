@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exercices dynamiques — Statistiques descriptives (BTS BioALC)</title>
+
+<!-- ============================================================
+     MathJax 3 — rendu LaTeX
+     ============================================================ -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<style>
+/* ============================================================
+   Variables et reset
+   ============================================================ */
+:root {
+  --primary: #1F4E79;
+  --primary-light: #E6EFF7;
+  --primary-dark: #153A5C;
+  --accent: #C8503C;
+  --accent-light: #FDEBEB;
+  --success: #2E7D32;
+  --success-light: #E9F6EA;
+  --warning: #F0C070;
+  --warning-light: #FFF4E0;
+  --purple: #7A5CA8;
+  --purple-light: #F0EBFA;
+  --gray: #6B7280;
+  --gray-light: #F3F4F6;
+  --border: #D1D5DB;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: #F9FAFB;
+  color: #1F2937;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* ============================================================
+   En-tête
+   ============================================================ */
+header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 1.8rem 1rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+header h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+header p {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* ============================================================
+   Layout principal
+   ============================================================ */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: box-shadow 0.2s;
+}
+.card:hover { box-shadow: var(--shadow-hover); }
+
+.card h2 {
+  color: var(--primary);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-light);
+}
+
+.card h3 {
+  color: var(--primary);
+  font-size: 1.05rem;
+  margin: 1.2rem 0 0.6rem;
+}
+
+/* ============================================================
+   Contrôles
+   ============================================================ */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  background: white;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+}
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--gray);
+  font-weight: 500;
+}
+.controls select {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+button:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+
+.btn-accent {
+  background: var(--accent);
+  color: white;
+}
+.btn-accent:hover { background: #A83E2C; }
+
+.btn-ghost {
+  background: var(--gray-light);
+  color: var(--gray);
+}
+.btn-ghost:hover { background: #E5E7EB; }
+
+/* ============================================================
+   Énoncé
+   ============================================================ */
+.contexte {
+  background: var(--warning-light);
+  border-left: 4px solid var(--warning);
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.data-display {
+  background: var(--gray-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.data-value {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ============================================================
+   Questions
+   ============================================================ */
+.questions { margin-top: 1.2rem; }
+
+.question {
+  padding: 0.9rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+.question:last-child { border-bottom: none; }
+
+.question-label {
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+input[type="text"] {
+  padding: 0.5rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  width: 140px;
+  transition: border-color 0.15s;
+}
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+input[type="text"].correct {
+  border-color: var(--success);
+  background: var(--success-light);
+}
+input[type="text"].incorrect {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.9rem;
+}
+.radio-group label:hover { border-color: var(--primary); }
+.radio-group input[type="radio"] { accent-color: var(--primary); }
+.radio-group label.correct {
+  border-color: var(--success);
+  background: var(--success-light);
+}
+.radio-group label.incorrect {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.feedback {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-left: 0.3rem;
+}
+.feedback.ok { color: var(--success); }
+.feedback.ko { color: var(--accent); }
+
+.action-buttons {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* ============================================================
+   Correction
+   ============================================================ */
+.correction-card {
+  border: 2px solid var(--primary);
+}
+.correction-card h2 {
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem 1rem;
+  margin: -1.5rem -1.5rem 1rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  border-bottom: none;
+}
+
+.step {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.step:last-child { border-bottom: none; }
+
+.rappel {
+  background: var(--success-light);
+  border-left: 4px solid var(--success);
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin: 0.6rem 0;
+  font-size: 0.93rem;
+}
+.rappel strong { color: var(--success); }
+
+.enclair {
+  background: var(--purple-light);
+  border-left: 4px solid var(--purple);
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin: 0.6rem 0;
+  font-size: 0.93rem;
+}
+.enclair strong { color: var(--purple); }
+
+.answer {
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin: 0.6rem 0;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.warn {
+  background: var(--accent-light);
+  border-left: 4px solid var(--accent);
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin: 0.6rem 0;
+  font-size: 0.93rem;
+}
+.warn strong { color: var(--accent); }
+
+/* ============================================================
+   Tableaux
+   ============================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8rem 0;
+  font-size: 0.92rem;
+}
+th, td {
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+th {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+tr:nth-child(even) td { background: var(--gray-light); }
+
+/* ============================================================
+   Canvas
+   ============================================================ */
+.canvas-wrapper {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+canvas {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   Récapitulatif
+   ============================================================ */
+.recap {
+  background: var(--primary-light);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin-top: 1rem;
+}
+.recap ol { padding-left: 1.4rem; }
+.recap li { margin-bottom: 0.35rem; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 600px) {
+  header h1 { font-size: 1.25rem; }
+  .card { padding: 1rem; }
+  .correction-card h2 { margin: -1rem -1rem 1rem; }
+  input[type="text"] { width: 110px; }
+}
+
+/* ============================================================
+   Impression
+   ============================================================ */
+@media print {
+  header { background: var(--primary) !important; -webkit-print-color-adjust: exact; }
+  .controls, .action-buttons, button { display: none !important; }
+  .card { box-shadow: none; border: 1px solid var(--border); }
+}
+
+/* ============================================================
+   Pied de page + Modale « Droits d'auteur »
+   ============================================================ */
+footer.doc-footer {
+  text-align: center;
+  padding: 1rem 1rem 3rem;
+}
+
+.btn-copyright {
+  background: transparent;
+  color: var(--gray);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 1.15rem;
+  border-radius: 999px;
+  transition: all 0.15s;
+}
+.btn-copyright:hover {
+  background: var(--gray-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: translateY(14px) scale(0.98);
+  transition: transform 0.22s ease;
+}
+.modal-overlay.open .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 1rem 1.3rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.modal-header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: white;
+}
+.modal-close {
+  background: transparent;
+  color: white;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  font-weight: 400;
+}
+.modal-close:hover { background: rgba(255, 255, 255, 0.18); }
+
+.modal-body {
+  padding: 1.3rem 1.5rem 1.4rem;
+  font-size: 0.92rem;
+  color: #374151;
+}
+.modal-body h3 {
+  color: var(--primary);
+  font-size: 0.98rem;
+  margin: 1.2rem 0 0.45rem;
+}
+.modal-body h3:first-of-type { margin-top: 0.9rem; }
+.modal-body p { margin-bottom: 0.7rem; }
+.modal-body ul { padding-left: 1.25rem; margin-bottom: 0.7rem; }
+.modal-body li { margin-bottom: 0.3rem; }
+
+.copyright-meta {
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.copyright-meta strong { color: var(--primary); }
+
+.copyright-signature {
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--gray);
+  font-style: italic;
+}
+
+.modal-footer {
+  padding: 0 1.5rem 1.5rem;
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .modal-body { padding: 1rem 1.1rem; }
+  .modal-footer { padding: 0 1.1rem 1.2rem; }
+}
+
+@media print {
+  footer.doc-footer,
+  .modal-overlay { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Exercices dynamiques — Statistiques descriptives</h1>
+  <p>BTS BioALC — 2<sup>ème</sup> année · Moyenne &amp; écart type · Médiane &amp; écart interquartile</p>
+</header>
+
+<main>
+
+  <!-- ============================================================
+       Contrôles
+       ============================================================ -->
+  <div class="controls">
+    <button class="btn-primary" id="newExBtn">🎲 Nouvel exercice</button>
+    <label>
+      Type de série :
+      <select id="exType">
+        <option value="random">Aléatoire</option>
+        <option value="regular">Série régulière</option>
+        <option value="outlier">Série avec valeur aberrante</option>
+      </select>
+    </label>
+    <label>
+      Nombre de valeurs :
+      <select id="exSize">
+        <option value="auto">Auto</option>
+        <option value="7">7 (impair)</option>
+        <option value="8">8 (pair)</option>
+        <option value="9">9 (impair)</option>
+        <option value="10">10 (pair)</option>
+        <option value="11">11 (impair)</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- ============================================================
+       Énoncé
+       ============================================================ -->
+  <div class="card">
+    <h2>📋 Énoncé</h2>
+    <div class="contexte" id="contexte"></div>
+    <p id="consigne"></p>
+    <div class="data-display" id="dataDisplay"></div>
+
+    <div class="questions" id="questions"></div>
+
+    <div class="action-buttons">
+      <button class="btn-primary" id="checkBtn">✔️ Vérifier mes réponses</button>
+      <button class="btn-accent" id="corrBtn">📖 Voir la correction détaillée</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Correction
+       ============================================================ -->
+  <div class="card correction-card" id="correctionCard" hidden>
+    <h2>📖 Correction détaillée</h2>
+    <div id="correctionContent"></div>
+  </div>
+
+  <!-- ============================================================
+       Boîte à moustaches
+       ============================================================ -->
+  <div class="card" id="canvasCard" hidden>
+    <h2>📊 Boîte à moustaches</h2>
+    <p style="font-size:0.9rem;color:var(--gray);margin-bottom:0.6rem;">
+      La boîte représente les 50&nbsp;% centraux. Le trait rouge est la médiane. Les points à l'extérieur des moustaches sont des <strong>valeurs aberrantes</strong>.
+    </p>
+    <div class="canvas-wrapper">
+      <canvas id="boxplot" width="880" height="300"></canvas>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============================================================
+     Pied de page + Modale « Droits d'auteur »
+     ============================================================ -->
+<footer class="doc-footer">
+  <button class="btn-copyright" id="copyrightBtn" type="button">
+    © Droits d'auteur
+  </button>
+</footer>
+
+<div class="modal-overlay" id="copyrightModal"
+     role="dialog" aria-modal="true"
+     aria-labelledby="copyrightTitle" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="copyrightTitle">© Droits d'auteur</h2>
+      <button class="modal-close" id="copyrightClose"
+              type="button" aria-label="Fermer la fenêtre">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="copyright-meta">
+        <strong>Œuvre :</strong> « Exercices dynamiques — Statistiques descriptives »<br>
+        <strong>Niveau :</strong> BTS BioALC — 2<sup>e</sup> année<br>
+        <strong>Notions :</strong> Moyenne &amp; écart type · Médiane &amp; écart interquartile<br>
+        <strong>Nature :</strong> ressource pédagogique interactive (HTML / CSS / JavaScript)<br>
+        <strong>Année :</strong> <span id="copyrightYear">2025</span>
+      </div>
+
+      <p>
+        Le présent document, ses textes, sa mise en page, ses scripts et ses illustrations
+        sont protégés par le <strong>droit d'auteur</strong>. Toute utilisation en dehors
+        du cadre défini ci-dessous nécessite une autorisation écrite préalable.
+      </p>
+
+      <h3>✅ Utilisations autorisées</h3>
+      <ul>
+        <li>Usage pédagogique en classe, dans le cadre de la formation <strong>BTS BioALC</strong>.</li>
+        <li>Consultation, impression et projection à des fins d'enseignement.</li>
+        <li>Utilisation personnelle par les élèves et étudiants pour s'entraîner ou réviser.</li>
+        <li>Partage du <em>lien</em> vers le document, sans modification ni réappropriation.</li>
+      </ul>
+
+      <h3>🚫 Utilisations interdites sans autorisation écrite</h3>
+      <ul>
+        <li>Reproduction, diffusion ou publication, totale ou partielle, sur tout support.</li>
+        <li>Modification, adaptation, traduction ou revente de tout ou partie du document.</li>
+        <li>Intégration dans un autre site, une plateforme payante ou un manuel commercial.</li>
+        <li>Suppression ou altération des mentions d'auteur et de la présente notice.</li>
+      </ul>
+
+      <h3>🧩 Composants tiers</h3>
+      <ul>
+        <li><strong>MathJax 3</strong> — rendu des formules LaTeX — distribué sous licence <em>Apache 2.0</em>.</li>
+        <li><strong>Boîte à moustaches</strong> — tracée dynamiquement en JavaScript via l'API <em>Canvas</em>.</li>
+      </ul>
+
+      <h3>⚠️ Avertissement</h3>
+      <p>
+        Les valeurs numériques et les situations proposées sont <strong>générées aléatoirement</strong>
+        à des fins d'entraînement. Elles ne correspondent à aucune donnée réelle de laboratoire,
+        ni à aucun patient.
+      </p>
+
+      <div class="copyright-signature">
+        © <span class="copyright-year">2025</span> — Tous droits réservés.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" id="copyrightOk" type="button">J'ai compris</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Utilitaires
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Formate un nombre à la française : 12.5 -> "12,5" ; 12 -> "12" */
+function fmt(x, dec = 2) {
+  if (Number.isInteger(x)) return String(x);
+  return x.toFixed(dec).replace('.', ',');
+}
+
+/** Formate pour input de comparaison : 12,5 -> 12.5 */
+function parseNum(str) {
+  if (typeof str !== 'string') return NaN;
+  return parseFloat(str.trim().replace(',', '.').replace(/\s/g, ''));
+}
+
+async function typeset() {
+  if (window.MathJax && MathJax.typesetPromise) {
+    try { await MathJax.typesetPromise(); } catch (e) { /* ignore */ }
+  }
+}
+
+/* ============================================================
+   Génération des séries
+   ============================================================ */
+function generateRegular(n) {
+  const center = randInt(20, 60);
+  const values = [];
+  for (let i = 0; i < n; i++) {
+    values.push(center + randInt(-2, 2));
+  }
+  return values;
+}
+
+function generateWithOutlier(n) {
+  const center = randInt(20, 60);
+  const values = [];
+  for (let i = 0; i < n - 1; i++) {
+    values.push(center + randInt(-2, 2));
+  }
+  // Valeur aberrante clairement séparée
+  const direction = Math.random() < 0.5 ? -1 : 1;
+  const outlier = center + direction * randInt(15, 25);
+  values.push(outlier);
+  return shuffle(values);
+}
+
+/* ============================================================
+   Calculs statistiques
+   ============================================================ */
+function computeStats(values) {
+  const n = values.length;
+  const sorted = [...values].sort((a, b) => a - b);
+  const sum = values.reduce((a, b) => a + b, 0);
+  const mean = sum / n;
+
+  let median;
+  if (n % 2 === 1) {
+    median = sorted[(n - 1) / 2];
+  } else {
+    median = (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+  }
+
+  // Quartiles (méthode "rang entier")
+  const q1Rank = Math.max(1, Math.ceil(0.25 * n));
+  const q3Rank = Math.min(n, Math.ceil(0.75 * n));
+  const q1 = sorted[q1Rank - 1];
+  const q3 = sorted[q3Rank - 1];
+  const iqr = q3 - q1;
+
+  // Écart type corrigé (échantillon)
+  const variance = values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / (n - 1);
+  const std = Math.sqrt(variance);
+
+  // Détection des valeurs aberrantes (méthode 1,5 × IQR)
+  const lowerFence = q1 - 1.5 * iqr;
+  const upperFence = q3 + 1.5 * iqr;
+  const outliers = values.filter(v => v < lowerFence || v > upperFence);
+
+  return {
+    n, sorted, sum, mean, median, q1, q3, iqr, std,
+    q1Rank, q3Rank, lowerFence, upperFence, outliers
+  };
+}
+
+/* ============================================================
+   État global
+   ============================================================ */
+let state = null;
+
+/* ============================================================
+   Génération d'un nouvel exercice
+   ============================================================ */
+function newExercise() {
+  const typeSel = $('exType').value;
+  const sizeSel = $('exSize').value;
+
+  let type = typeSel;
+  if (type === 'random') type = Math.random() < 0.5 ? 'regular' : 'outlier';
+
+  let n;
+  if (sizeSel === 'auto') {
+    const options = [7, 8, 9, 10, 11];
+    n = options[randInt(0, options.length - 1)];
+  } else {
+    n = parseInt(sizeSel, 10);
+  }
+
+  const values = type === 'outlier' ? generateWithOutlier(n) : generateRegular(n);
+  const stats = computeStats(values);
+
+  state = {
+    type,
+    values,
+    stats,
+    expected: {
+      mean: stats.mean,
+      median: stats.median,
+      hasOutlier: stats.outliers.length > 0,
+      group: stats.outliers.length > 0 ? 'groupe2' : 'groupe1'
+    }
+  };
+
+  renderExercise();
+  $('correctionCard').hidden = true;
+  $('canvasCard').hidden = true;
+  $('correctionContent').innerHTML = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   Rendu de l'énoncé
+   ============================================================ */
+function renderExercise() {
+  const { values, stats, type } = state;
+
+  // Contexte
+  const contextes = type === 'outlier'
+    ? [
+        "Vous êtes technicien(ne) dans un laboratoire d'analyses médicales. Une série de mesures a été réalisée, mais <strong>une valeur semble très éloignée</strong> des autres.",
+        "Dans le cadre d'un contrôle qualité, vous analysez une série de mesures. <strong>Une valeur paraît anormale</strong> : il faudra la repérer.",
+        "Un patient présente des résultats très différents des autres. Vous devez <strong>identifier la valeur aberrante</strong>."
+      ]
+    : [
+        "Vous êtes technicien(ne) dans un laboratoire d'analyses médicales. Une série de mesures a été réalisée sur le même échantillon de contrôle.",
+        "Dans le cadre d'un contrôle qualité, vous analysez une série de mesures <strong>régulières</strong> réalisées sur un même échantillon.",
+        "Vous vérifiez la <strong>fidélité</strong> d'un analyseur : plusieurs mesures du même échantillon ont été réalisées."
+      ];
+  $('contexte').innerHTML = contextes[randInt(0, contextes.length - 1)];
+
+  // Consigne
+  const n = state.values.length;
+  $('consigne').innerHTML = `Voici <strong>${n} valeurs</strong> mesurées (unités arbitraires) :`;
+
+  // Affichage des données
+  const dataHtml = values.map(v => `<span class="data-value">${fmt(v)}</span>`).join('');
+  $('dataDisplay').innerHTML = dataHtml;
+
+  // Questions
+  const qHtml = `
+    <div class="question">
+      <label class="question-label">1. Calculez la <strong>moyenne</strong> de la série (arrondie au centième).</label>
+      <div class="input-row">
+        <input type="text" id="ansMean" placeholder="ex : 12,23" autocomplete="off">
+        <span class="feedback" id="fbMean"></span>
+      </div>
+    </div>
+
+    <div class="question">
+      <label class="question-label">2. Calculez la <strong>médiane</strong> de la série.</label>
+      <div class="input-row">
+        <input type="text" id="ansMedian" placeholder="ex : 12,2" autocomplete="off">
+        <span class="feedback" id="fbMedian"></span>
+      </div>
+    </div>
+
+    <div class="question">
+      <label class="question-label">3. Y a-t-il une <strong>valeur aberrante</strong> (très éloignée des autres) dans cette série ?</label>
+      <div class="radio-group" id="outlierGroup">
+        <label><input type="radio" name="outlier" value="oui"> Oui</label>
+        <label><input type="radio" name="outlier" value="non"> Non</label>
+      </div>
+      <span class="feedback" id="fbOutlier"></span>
+    </div>
+
+    <div class="question">
+      <label class="question-label">4. Quel <strong>couple d'indicateurs</strong> utiliseriez-vous pour décrire cette série ?</label>
+      <div class="radio-group" id="groupGroup">
+        <label><input type="radio" name="group" value="groupe1"> Moyenne + écart type</label>
+        <label><input type="radio" name="group" value="groupe2"> Médiane + écart interquartile</label>
+      </div>
+      <span class="feedback" id="fbGroup"></span>
+    </div>
+  `;
+  $('questions').innerHTML = qHtml;
+
+  typeset();
+}
+
+/* ============================================================
+   Vérification des réponses
+   ============================================================ */
+function checkAnswers() {
+  if (!state) return;
+  const { expected } = state;
+
+  // --- Moyenne ---
+  const meanInput = $('ansMean');
+  const meanVal = parseNum(meanInput.value);
+  const meanOk = !isNaN(meanVal) && Math.abs(meanVal - expected.mean) < 0.05;
+  setFieldFeedback(meanInput, $('fbMean'), meanOk);
+
+  // --- Médiane ---
+  const medInput = $('ansMedian');
+  const medVal = parseNum(medInput.value);
+  const medOk = !isNaN(medVal) && Math.abs(medVal - expected.median) < 0.05;
+  setFieldFeedback(medInput, $('fbMedian'), medOk);
+
+  // --- Valeur aberrante ? ---
+  const outlierRadios = document.querySelectorAll('input[name="outlier"]');
+  const outlierSel = [...outlierRadios].find(r => r.checked);
+  const outlierUser = outlierSel ? outlierSel.value === 'oui' : null;
+  const outlierOk = outlierUser === expected.hasOutlier;
+  document.querySelectorAll('#outlierGroup label').forEach(lbl => {
+    const val = lbl.querySelector('input').value === 'oui';
+    lbl.classList.remove('correct', 'incorrect');
+    if (val === expected.hasOutlier) lbl.classList.add('correct');
+    else if (outlierSel && (lbl.querySelector('input').checked)) lbl.classList.add('incorrect');
+  });
+  $('fbOutlier').textContent = outlierSel ? (outlierOk ? '✔' : '✘') : '';
+  $('fbOutlier').className = 'feedback ' + (outlierOk ? 'ok' : 'ko');
+
+  // --- Groupe choisi ---
+  const groupRadios = document.querySelectorAll('input[name="group"]');
+  const groupSel = [...groupRadios].find(r => r.checked);
+  const groupUser = groupSel ? groupSel.value : null;
+  const groupOk = groupUser === expected.group;
+  document.querySelectorAll('#groupGroup label').forEach(lbl => {
+    const val = lbl.querySelector('input').value;
+    lbl.classList.remove('correct', 'incorrect');
+    if (val === expected.group) lbl.classList.add('correct');
+    else if (groupSel && (lbl.querySelector('input').checked)) lbl.classList.add('incorrect');
+  });
+  $('fbGroup').textContent = groupSel ? (groupOk ? '✔' : '✘') : '';
+  $('fbGroup').className = 'feedback ' + (groupOk ? 'ok' : 'ko');
+}
+
+function setFieldFeedback(input, fb, ok) {
+  input.classList.remove('correct', 'incorrect');
+  if (input.value.trim() === '') {
+    fb.textContent = '';
+    return;
+  }
+  input.classList.add(ok ? 'correct' : 'incorrect');
+  fb.textContent = ok ? '✔' : '✘';
+  fb.className = 'feedback ' + (ok ? 'ok' : 'ko');
+}
+
+/* ============================================================
+   Construction de la correction détaillée
+   ============================================================ */
+function buildCorrection() {
+  const { values, stats } = state;
+  const { n, sorted, sum, mean, median, q1, q3, iqr, std, q1Rank, q3Rank, outliers } = stats;
+
+  const hasOutlier = outliers.length > 0;
+
+  // ---------- Bloc 1 : Moyenne ----------
+  const sumTerms = values.map(v => fmt(v)).join(' + ');
+  const sumRounded = Math.round(sum * 100) / 100;
+  const meanRounded = Math.round(mean * 100) / 100;
+
+  const stepMean = `
+    <div class="step">
+      <h3>Question 1 — Calcul de la moyenne</h3>
+      <div class="rappel">
+        <strong>Rappel express — la moyenne.</strong><br>
+        Pour calculer la moyenne : on additionne <em>toutes</em> les valeurs, puis on divise par le <em>nombre</em> de valeurs.
+        $$\\text{moyenne} = \\frac{\\text{somme des valeurs}}{\\text{nombre de valeurs}}$$
+      </div>
+
+      <p><strong>Étape 1 — On compte les valeurs.</strong> Il y a <strong>${n}</strong> valeurs.</p>
+
+      <p><strong>Étape 2 — On additionne toutes les valeurs.</strong></p>
+      <p>$$${sumTerms.replace(/,/g, '{,}')} = ${fmt(sumRounded)}$$</p>
+
+      <p><strong>Étape 3 — On divise par le nombre de valeurs.</strong></p>
+      <p>$$\\text{moyenne} = \\frac{${fmt(sumRounded)}}{${n}} \\approx ${fmt(meanRounded)}$$</p>
+
+      <div class="answer">Réponse : la moyenne est $\\boxed{${fmt(meanRounded)}}$.</div>
+
+      <div class="enclair">
+        <strong>En clair.</strong> La moyenne est le « centre calculé » de la série.
+        ${hasOutlier
+          ? "Attention : comme il y a une valeur aberrante, cette moyenne est <strong>tirée vers le haut (ou le bas)</strong> par cette valeur extrême."
+          : "Comme les valeurs sont régulières, la moyenne représente bien le centre de la série."}
+      </div>
+    </div>
+  `;
+
+  // ---------- Bloc 2 : Médiane ----------
+  const sortedStr = sorted.map(v => fmt(v)).join(' \\ ; \\ ');
+  let medianExplanation = '';
+  if (n % 2 === 1) {
+    const midPos = (n + 1) / 2;
+    medianExplanation = `
+      <p>Le nombre de valeurs est <strong>impair</strong> (${n}). La médiane est donc la <strong>${midPos}<sup>e</sup> valeur</strong> de la liste rangée.</p>
+      <p>En regardant la liste rangée : la ${midPos}<sup>e</sup> valeur est <strong>${fmt(median)}</strong>.</p>
+    `;
+  } else {
+    const p1 = n / 2, p2 = n / 2 + 1;
+    const v1 = sorted[p1 - 1], v2 = sorted[p2 - 1];
+    medianExplanation = `
+      <p>Le nombre de valeurs est <strong>pair</strong> (${n}). Il y a donc <strong>deux</strong> valeurs au milieu : la ${p1}<sup>e</sup> et la ${p2}<sup>e</sup>.</p>
+      <p>Ces deux valeurs sont <strong>${fmt(v1)}</strong> et <strong>${fmt(v2)}</strong>.</p>
+      <p>On fait leur moyenne :
+        $$\\text{médiane} = \\frac{${fmt(v1)} + ${fmt(v2)}}{2} = ${fmt(median)}$$
+      </p>
+    `;
+  }
+
+  const stepMedian = `
+    <div class="step">
+      <h3>Question 2 — Calcul de la médiane</h3>
+      <div class="rappel">
+        <strong>Rappel express — la médiane.</strong><br>
+        Pour calculer la médiane : on <em>range</em> les valeurs dans l'ordre croissant, puis on prend la valeur du <em>milieu</em>.
+        <ul style="margin-top:0.4rem;padding-left:1.2rem;">
+          <li>Nombre <strong>impair</strong> de valeurs → une seule valeur du milieu.</li>
+          <li>Nombre <strong>pair</strong> de valeurs → moyenne des <strong>deux</strong> valeurs du milieu.</li>
+        </ul>
+      </div>
+
+      <p><strong>Étape 1 — On range les valeurs dans l'ordre croissant.</strong></p>
+      <p>$$${sortedStr}$$</p>
+
+      <p><strong>Étape 2 — On cherche la position du milieu.</strong></p>
+      ${medianExplanation}
+
+      <div class="answer">Réponse : la médiane est $\\boxed{${fmt(median)}}$.</div>
+
+      <div class="enclair">
+        <strong>En clair.</strong> La médiane coupe la liste en deux : il y a autant de valeurs en dessous qu'au-dessus.
+        ${hasOutlier
+          ? "Contrairement à la moyenne, la médiane <strong>n'a pas été perturbée</strong> par la valeur aberrante."
+          : "Elle est ici très proche de la moyenne, ce qui confirme que la série est régulière."}
+      </div>
+    </div>
+  `;
+
+  // ---------- Bloc 3 : Valeur aberrante ----------
+  const outlierList = outliers.map(v => fmt(v)).join(', ');
+  const stepOutlier = `
+    <div class="step">
+      <h3>Question 3 — Y a-t-il une valeur aberrante ?</h3>
+      <div class="rappel">
+        <strong>Rappel express — valeur aberrante.</strong><br>
+        Une valeur est dite <em>aberrante</em> si elle est <strong>très éloignée</strong> des autres.
+        On la repère avec la règle du <strong>1,5 × IQR</strong> :
+        $$\\text{valeur aberrante si} \\quad x < Q_1 - 1{,}5 \\times \\text{IQR} \\quad \\text{ou} \\quad x > Q_3 + 1{,}5 \\times \\text{IQR}$$
+      </div>
+
+      <p><strong>Étape 1 — On calcule les quartiles.</strong></p>
+      <ul style="padding-left:1.2rem;">
+        <li>Position de $Q_1$ : rang $\\lceil 0{,}25 \\times ${n} \\rceil = ${q1Rank}$ → $Q_1 = ${fmt(q1)}$</li>
+        <li>Position de $Q_3$ : rang $\\lceil 0{,}75 \\times ${n} \\rceil = ${q3Rank}$ → $Q_3 = ${fmt(q3)}$</li>
+        <li>Écart interquartile : $\\text{IQR} = Q_3 - Q_1 = ${fmt(q3)} - ${fmt(q1)} = ${fmt(iqr)}$</li>
+      </ul>
+
+      <p><strong>Étape 2 — On calcule les bornes.</strong></p>
+      <ul style="padding-left:1.2rem;">
+        <li>Borne basse : $Q_1 - 1{,}5 \\times \\text{IQR} = ${fmt(Math.round((q1 - 1.5*iqr)*100)/100)}$</li>
+        <li>Borne haute : $Q_3 + 1{,}5 \\times \\text{IQR} = ${fmt(Math.round((q3 + 1.5*iqr)*100)/100)}$</li>
+      </ul>
+
+      <p><strong>Étape 3 — On compare chaque valeur aux bornes.</strong></p>
+      ${hasOutlier
+        ? `<p>La (ou les) valeur(s) en dehors des bornes : <strong>${outlierList}</strong>.</p>
+           <div class="answer">Réponse : <strong>OUI</strong>, il y a ${outliers.length === 1 ? 'une valeur aberrante' : 'des valeurs aberrantes'} : ${outlierList}.</div>`
+        : `<p>Toutes les valeurs sont à l'intérieur des bornes.</p>
+           <div class="answer">Réponse : <strong>NON</strong>, il n'y a pas de valeur aberrante. La série est régulière.</div>`}
+
+      <div class="enclair">
+        <strong>En clair.</strong> Une valeur aberrante peut correspondre à une erreur de mesure, un incident technique, ou un cas particulier (patient hors norme). Il faut la <strong>repérer</strong> et la <strong>signaler</strong>, car elle fausse la moyenne.
+      </div>
+    </div>
+  `;
+
+  // ---------- Bloc 4 : Choix du groupe ----------
+  const groupName = hasOutlier
+    ? "Groupe 2 : médiane + écart interquartile"
+    : "Groupe 1 : moyenne + écart type";
+
+  const stepGroup = `
+    <div class="step">
+      <h3>Question 4 — Quel couple d'indicateurs choisir ?</h3>
+      <div class="rappel">
+        <strong>Rappel express — les deux groupes.</strong>
+        <ul style="margin-top:0.4rem;padding-left:1.2rem;">
+          <li><strong>Groupe 1</strong> (moyenne + écart type) : quand les valeurs sont <em>régulières</em>, sans valeur aberrante.</li>
+          <li><strong>Groupe 2</strong> (médiane + IQR) : quand il y a <em>une ou plusieurs valeurs aberrantes</em>.</li>
+        </ul>
+      </div>
+
+      <p><strong>Étape 1 — On compare la moyenne et la médiane.</strong></p>
+      <table>
+        <tr><th>Indicateur</th><th>Valeur</th></tr>
+        <tr><td>Moyenne</td><td>${fmt(meanRounded)}</td></tr>
+        <tr><td>Médiane</td><td>${fmt(median)}</td></tr>
+        <tr><td>Écart type $s$</td><td>${fmt(Math.round(std*100)/100)}</td></tr>
+        <tr><td>Écart interquartile IQR</td><td>${fmt(iqr)}</td></tr>
+      </table>
+
+      <p><strong>Étape 2 — On conclut.</strong></p>
+      ${hasOutlier
+        ? `<p>Il y a une (des) valeur(s) aberrante(s), donc la moyenne et l'écart type sont <strong>faussés</strong> par ces valeurs extrêmes. On utilise le <strong>Groupe 2</strong>.</p>`
+        : `<p>Il n'y a pas de valeur aberrante, et la moyenne (${fmt(meanRounded)}) est proche de la médiane (${fmt(median)}). On utilise le <strong>Groupe 1</strong>.</p>`}
+
+      <div class="answer">Réponse : <strong>${groupName}</strong>.</div>
+
+      <div class="enclair">
+        <strong>En clair.</strong>
+        ${hasOutlier
+          ? "La médiane et l'écart interquartile <strong>ne sont pas perturbés</strong> par les valeurs aberrantes. Ils décrivent donc mieux le cœur de la série."
+          : "La moyenne et l'écart type sont les indicateurs les plus adaptés pour évaluer la <strong>fidélité</strong> d'une méthode de mesure."}
+      </div>
+    </div>
+  `;
+
+  // ---------- Récapitulatif ----------
+  const recap = `
+    <div class="recap">
+      <h3 style="margin-top:0;color:var(--primary);">🧠 À retenir</h3>
+      <ol>
+        <li>La <strong>moyenne</strong> = somme ÷ nombre. Elle est sensible aux valeurs aberrantes.</li>
+        <li>La <strong>médiane</strong> = valeur du milieu (après rangement). Elle est robuste.</li>
+        <li>Une <strong>valeur aberrante</strong> se repère avec la règle $1{,}5 \\times \\text{IQR}$.</li>
+        <li>Pas de valeur aberrante → <strong>Groupe 1</strong> (moyenne + écart type).</li>
+        <li>Valeur(s) aberrante(s) → <strong>Groupe 2</strong> (médiane + IQR).</li>
+      </ol>
+    </div>
+  `;
+
+  return stepMean + stepMedian + stepOutlier + stepGroup + recap;
+}
+
+/* ============================================================
+   Affichage de la correction
+   ============================================================ */
+async function showCorrection() {
+  if (!state) return;
+  $('correctionContent').innerHTML = buildCorrection();
+  $('correctionCard').hidden = false;
+  await typeset();
+  drawBoxplot();
+  $('canvasCard').hidden = false;
+  $('correctionCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ============================================================
+   Boîte à moustaches (Canvas) — zone de tracé optimisée
+   ============================================================ */
+function drawBoxplot() {
+  const canvas = $('boxplot');
+  const dpr = window.devicePixelRatio || 1;
+
+  // Largeur responsive : on prend toute la place disponible (max 900 px)
+  const containerWidth = canvas.parentElement.clientWidth - 16;
+  const cssWidth = Math.max(420, Math.min(containerWidth, 900));
+  const cssHeight = 300;
+
+  canvas.style.width = cssWidth + 'px';
+  canvas.style.height = cssHeight + 'px';
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const { sorted, q1, q3, median, iqr, outliers } = state.stats;
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+
+  // ------------------------------------------------------------
+  // Échelle horizontale
+  // ------------------------------------------------------------
+  const dataRange = max - min;
+  const visualPad = dataRange === 0 ? 1 : Math.max(dataRange * 0.08, 0.5);
+  const lo = min - visualPad;
+  const hi = max + visualPad;
+
+  const labelMargin = 32;
+  const paddingLeft = labelMargin;
+  const paddingRight = labelMargin;
+  const plotW = cssWidth - paddingLeft - paddingRight;
+
+  const xScale = (v) => paddingLeft + ((v - lo) / (hi - lo)) * plotW;
+
+  // ------------------------------------------------------------
+  // Plan vertical
+  // ------------------------------------------------------------
+  const yTitle       = 20;
+  const yIQRLine     = 52;
+  const yIQRText     = 44;
+  const yQText       = 78;
+  const yPointsC     = 108;
+  const yBoxTop      = 140;
+  const yBoxBot      = 205;
+  const yBoxMid      = (yBoxTop + yBoxBot) / 2;
+  const yMeText      = 226;
+  const yAxis        = 246;
+  const yTick        = 262;
+
+  // ------------------------------------------------------------
+  // 1) Axe horizontal + graduations
+  // ------------------------------------------------------------
+  ctx.strokeStyle = '#9CA3AF';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(paddingLeft, yAxis);
+  ctx.lineTo(paddingLeft + plotW, yAxis);
+  ctx.stroke();
+
+  const ticks = cssWidth > 700 ? 10 : 6;
+  ctx.fillStyle = '#6B7280';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  for (let i = 0; i <= ticks; i++) {
+    const v = lo + (hi - lo) * (i / ticks);
+    const x = xScale(v);
+    ctx.beginPath();
+    ctx.moveTo(x, yAxis);
+    ctx.lineTo(x, yAxis + 4);
+    ctx.stroke();
+    ctx.fillText(fmt(Math.round(v * 10) / 10, 1), x, yTick);
+  }
+
+  // ------------------------------------------------------------
+  // 2) Bande de points (strip plot) avec décalage anti-chevauchement
+  // ------------------------------------------------------------
+  const groups = new Map();
+  sorted.forEach(v => {
+    const key = v.toFixed(4);
+    if (!groups.has(key)) groups.set(key, { value: v, count: 0 });
+    groups.get(key).count++;
+  });
+
+  groups.forEach(g => {
+    const x = xScale(g.value);
+    const isOutlier = outliers.some(o => Math.abs(o - g.value) < 1e-9);
+    const color = isOutlier ? '#C8503C' : '#1F4E79';
+
+    const levels = Math.min(g.count, 3);
+    for (let k = 0; k < levels; k++) {
+      const offset = (k - (levels - 1) / 2) * 7;
+      ctx.beginPath();
+      ctx.arc(x, yPointsC + offset, 3.8, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  });
+
+  // ------------------------------------------------------------
+  // 3) Moustaches
+  // ------------------------------------------------------------
+  const nonOutliers = sorted.filter(v => !outliers.some(o => Math.abs(o - v) < 1e-9));
+  const wMin = nonOutliers.length ? nonOutliers[0] : min;
+  const wMax = nonOutliers.length ? nonOutliers[nonOutliers.length - 1] : max;
+
+  ctx.strokeStyle = '#1F4E79';
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(xScale(wMin), yBoxMid);
+  ctx.lineTo(xScale(q1), yBoxMid);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(xScale(q3), yBoxMid);
+  ctx.lineTo(xScale(wMax), yBoxMid);
+  ctx.stroke();
+
+  const capH = 13;
+  ctx.beginPath();
+  ctx.moveTo(xScale(wMin), yBoxMid - capH);
+  ctx.lineTo(xScale(wMin), yBoxMid + capH);
+  ctx.moveTo(xScale(wMax), yBoxMid - capH);
+  ctx.lineTo(xScale(wMax), yBoxMid + capH);
+  ctx.stroke();
+
+  // ------------------------------------------------------------
+  // 4) Boîte
+  // ------------------------------------------------------------
+  const boxX1 = xScale(q1);
+  const boxX2 = xScale(q3);
+  const boxW = Math.max(boxX2 - boxX1, 2);
+  const boxH = yBoxBot - yBoxTop;
+
+  ctx.fillStyle = 'rgba(31, 78, 121, 0.16)';
+  ctx.fillRect(boxX1, yBoxTop, boxW, boxH);
+
+  ctx.strokeStyle = '#1F4E79';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(boxX1, yBoxTop, boxW, boxH);
+
+  // ------------------------------------------------------------
+  // 5) Médiane
+  // ------------------------------------------------------------
+  const medX = xScale(median);
+  ctx.strokeStyle = '#C8503C';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(medX, yBoxTop);
+  ctx.lineTo(medX, yBoxBot);
+  ctx.stroke();
+
+  // ------------------------------------------------------------
+  // 6) Annotation IQR
+  // ------------------------------------------------------------
+  ctx.strokeStyle = '#C8503C';
+  ctx.fillStyle = '#C8503C';
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(boxX1, yIQRLine);
+  ctx.lineTo(boxX2, yIQRLine);
+  ctx.stroke();
+
+  const arrowSize = 5;
+  ctx.beginPath();
+  ctx.moveTo(boxX1 + arrowSize * 1.5, yIQRLine - arrowSize);
+  ctx.lineTo(boxX1, yIQRLine);
+  ctx.lineTo(boxX1 + arrowSize * 1.5, yIQRLine + arrowSize);
+  ctx.moveTo(boxX2 - arrowSize * 1.5, yIQRLine - arrowSize);
+  ctx.lineTo(boxX2, yIQRLine);
+  ctx.lineTo(boxX2 - arrowSize * 1.5, yIQRLine + arrowSize);
+  ctx.stroke();
+
+  ctx.setLineDash([3, 3]);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(boxX1, yIQRLine + arrowSize);
+  ctx.lineTo(boxX1, yBoxTop);
+  ctx.moveTo(boxX2, yIQRLine + arrowSize);
+  ctx.lineTo(boxX2, yBoxTop);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('IQR = ' + fmt(iqr), (boxX1 + boxX2) / 2, yIQRText);
+
+  // ------------------------------------------------------------
+  // 7) Étiquettes Q1 / Q3
+  // ------------------------------------------------------------
+  ctx.fillStyle = '#1F4E79';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textBaseline = 'bottom';
+
+  if (boxW < 60) {
+    ctx.textAlign = 'right';
+    ctx.fillText('Q₁ = ' + fmt(q1), boxX1 - 4, yQText);
+    ctx.textAlign = 'left';
+    ctx.fillText('Q₃ = ' + fmt(q3), boxX2 + 4, yQText);
+  } else {
+    ctx.textAlign = 'center';
+    ctx.fillText('Q₁ = ' + fmt(q1), boxX1, yQText);
+    ctx.fillText('Q₃ = ' + fmt(q3), boxX2, yQText);
+  }
+
+  // ------------------------------------------------------------
+  // 8) Étiquette médiane
+  // ------------------------------------------------------------
+  ctx.fillStyle = '#C8503C';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('Me = ' + fmt(median), medX, yMeText);
+
+  // ------------------------------------------------------------
+  // 9) Mise en évidence des valeurs aberrantes
+  // ------------------------------------------------------------
+  outliers.forEach(v => {
+    const x = xScale(v);
+    ctx.fillStyle = 'rgba(200, 80, 60, 0.08)';
+    ctx.fillRect(x - 8, yPointsC - 20, 16, (yBoxBot - yPointsC) + 30);
+
+    ctx.strokeStyle = 'rgba(200, 80, 60, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, yPointsC + 8);
+    ctx.lineTo(x, yBoxBot + 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // ------------------------------------------------------------
+  // 10) Titre + légende
+  // ------------------------------------------------------------
+  ctx.fillStyle = '#1F4E79';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Boîte à moustaches — n = ' + sorted.length, paddingLeft, yTitle);
+
+  ctx.font = '11px sans-serif';
+  const legendY = yTitle;
+  const legendRight = cssWidth - paddingRight;
+
+  if (outliers.length > 0) {
+    ctx.fillStyle = '#1F4E79';
+    ctx.textAlign = 'left';
+    ctx.beginPath();
+    ctx.arc(legendRight - 175, legendY, 3.8, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('mesure', legendRight - 165, legendY);
+
+    ctx.fillStyle = '#C8503C';
+    ctx.beginPath();
+    ctx.arc(legendRight - 85, legendY, 3.8, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('aberrante', legendRight - 75, legendY);
+  } else {
+    ctx.fillStyle = '#1F4E79';
+    ctx.textAlign = 'right';
+    ctx.beginPath();
+    ctx.arc(legendRight - 78, legendY, 3.8, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.textAlign = 'left';
+    ctx.fillText('mesure', legendRight - 70, legendY);
+  }
+
+  // ------------------------------------------------------------
+  // 11) Encadré gris très léger autour de la zone de tracé
+  // ------------------------------------------------------------
+  ctx.strokeStyle = 'rgba(156, 163, 175, 0.25)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(paddingLeft - 8, yPointsC - 25, plotW + 16, (yBoxBot - yPointsC) + 70);
+}
+
+/* ============================================================
+   Modale « Droits d'auteur »
+   ============================================================ */
+const copyrightModal = $('copyrightModal');
+
+function openCopyright() {
+  copyrightModal.classList.add('open');
+  copyrightModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  $('copyrightClose').focus();
+}
+
+function closeCopyright() {
+  copyrightModal.classList.remove('open');
+  copyrightModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  $('copyrightBtn').focus();
+}
+
+/* ============================================================
+   Écouteurs d'événements
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  $('newExBtn').addEventListener('click', newExercise);
+  $('checkBtn').addEventListener('click', checkAnswers);
+  $('corrBtn').addEventListener('click', showCorrection);
+
+  window.addEventListener('resize', () => {
+    if (!$('canvasCard').hidden && state) drawBoxplot();
+  });
+
+  /* --- Année dynamique dans la modale --- */
+  const currentYear = new Date().getFullYear();
+  $('copyrightYear').textContent = currentYear;
+  document.querySelectorAll('.copyright-year')
+    .forEach(el => el.textContent = currentYear);
+
+  /* --- Ouverture / fermeture de la modale --- */
+  $('copyrightBtn').addEventListener('click', openCopyright);
+  $('copyrightClose').addEventListener('click', closeCopyright);
+  $('copyrightOk').addEventListener('click', closeCopyright);
+
+  // Clic sur le fond sombre (hors de la modale) → fermeture
+  copyrightModal.addEventListener('click', (e) => {
+    if (e.target === copyrightModal) closeCopyright();
+  });
+
+  // Touche Échap → fermeture
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && copyrightModal.classList.contains('open')) {
+      closeCopyright();
+    }
+  });
+
+  newExercise();
+});
+</script>
+
+</body>
+</html>

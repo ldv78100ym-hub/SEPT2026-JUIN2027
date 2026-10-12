@@ -12,7 +12,7 @@
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
-  :root{ --bleu:#1e3a8a; --bleu2:#2563eb; --bleuclair:#dbeafe; --bord:#cbd5e1; --vert:#15803d; --rouge:#b91c1c; --or:#b45309; --violet:#7c3aed; }
+  :root{ --bleu:#1e3a8a; --bleu2:#2563eb; --bleuclair:#dbeafe; --bord:#cbd5e1; --vert:#15803d; --rouge:#b91c1c; --or:#b45309; --violet:#7c3aed; --cyan:#0e7490; --rose:#be185d; }
   *{box-sizing:border-box;}
   body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:#eef2f7; color:#1f2937; line-height:1.55; }
   .wrap{max-width:1080px; margin:0 auto; padding:24px 16px 90px;}
@@ -24,49 +24,81 @@
   .consigne{font-style:italic; color:#475569; margin:0 0 12px;}
   .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
   button{ font-family:inherit; font-size:.92rem; border-radius:9px; cursor:pointer; border:1px solid transparent; padding:8px 16px; transition:.15s; }
-  .btn{background:var(--bleu); color:#fff;}
-  .btn:hover{background:#16307a;}
-  .btn-new{background:#0f766e; color:#fff;}
-  .btn-new:hover{background:#0d5f59;}
-  .btn-licence{background:#334155; color:#fff;}
-  .btn-licence:hover{background:#1e293b;}
-  .btn.check-btn{background:#15803d;}
-  .btn.check-btn:hover{background:#166534;}
-  .btn.reset-btn{background:#475569;}
-  .btn.reset-btn:hover{background:#334155;}
+  .btn{background:var(--bleu); color:#fff;} .btn:hover{background:#16307a;}
+  .btn-new{background:#0f766e; color:#fff;} .btn-new:hover{background:#0d5f59;}
+  .btn-licence{background:#334155; color:#fff;} .btn-licence:hover{background:#1e293b;}
+  .btn.check-btn{background:#15803d;} .btn.check-btn:hover{background:#166534;}
+  .btn.reset-btn{background:#475569;} .btn.reset-btn:hover{background:#334155;}
 
   .zones{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:14px 0;}
   @media (max-width:760px){ .zones{grid-template-columns:1fr;} }
   .zone{ background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; padding:10px 12px; min-height:120px; transition:.15s; }
   .zone.drag-over{border-color:var(--bleu2); background:#eff6ff;}
-  .zone-title{ font-weight:700; font-size:.88rem; color:#475569; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .zone-title{ font-weight:700; font-size:.88rem; color:#475569; margin-bottom:8px; }
   .zone-title small{font-weight:400; color:#94a3b8; font-size:.78rem;}
   .drop-list{ list-style:none; padding:0; margin:0; min-height:60px; display:flex; flex-direction:column; gap:6px; }
-  .drag-item{ display:flex; align-items:flex-start; gap:6px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px; cursor:grab; transition:transform .12s, box-shadow .12s, border-color .12s, outline-color .12s; user-select:none; }
+  .drag-item{ display:flex; align-items:flex-start; gap:6px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px; cursor:grab; user-select:none; }
   .drag-item:hover{border-color:var(--bleu2); box-shadow:0 2px 6px rgba(37,99,235,.15);}
-  .drag-item:active{cursor:grabbing;}
   .drag-item.dragging{opacity:.35;}
-  .drag-item .handle{color:#94a3b8; font-size:1rem; flex-shrink:0; line-height:1.3;}
+  .drag-item .handle{color:#94a3b8; font-size:1rem; flex-shrink:0;}
   .drag-item .badge{ display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; border-radius:50%; background:#e2e8f0; color:#475569; font-weight:700; font-size:.76rem; flex-shrink:0; margin-top:1px; }
   .reasoning-list .drag-item .badge{background:var(--bleu); color:#fff;}
   .drag-item .txt{flex:1; font-size:.94rem; min-width:0;}
   .drag-item .finalement-prefix{ font-weight:700; color:var(--or); }
   .drag-item .item-tools{ display:flex; gap:3px; align-items:center; flex-shrink:0; align-self:center; }
-  .toggle-btn, .move-btn{ font-family:inherit; border:none; border-radius:6px; padding:2px 7px; font-size:.8rem; cursor:pointer; line-height:1.2; }
+  .toggle-btn, .move-btn{ border:none; border-radius:6px; padding:2px 7px; font-size:.8rem; cursor:pointer; }
   .toggle-btn{background:#e2e8f0; color:#334155;}
-  .toggle-btn:hover{background:#cbd5e1;}
   .move-btn{background:#e2e8f0; color:#334155;}
-  .move-btn:hover{background:var(--bleuclair); color:var(--bleu);}
   .f-btn.active{background:var(--or); color:#fff;}
-  .f-btn.active:hover{background:#92400e;}
   .box-btn.active{background:var(--violet); color:#fff;}
-  .box-btn.active:hover{background:#6d28d9;}
   .drag-item.boxed{ outline:3px solid var(--violet); outline-offset:2px; background:#faf5ff; }
   .pool-list .f-btn, .pool-list .box-btn{display:none;}
   .pool-list .finalement-prefix{display:none !important;}
   .pool-list .drag-item.boxed{outline:none; background:#fff;}
   .drag-item.correct{border-color:var(--vert); background:#f0fdf4;}
   .drag-item.wrong{border-color:var(--rouge); background:#fef2f2;}
+
+  /* ===== Constructeurs de tableau (signe + variation) ===== */
+  .table-builder{ margin-top:20px; padding:16px 18px; border-radius:14px; box-shadow:0 4px 14px rgba(6,182,212,.18); }
+  .table-builder.sign{ background:linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%); border:3px solid #06b6d4; }
+  .table-builder.variation{ background:linear-gradient(180deg,#fdf2f8 0%,#fce7f3 100%); border:3px solid #ec4899; box-shadow:0 4px 14px rgba(236,72,153,.18); }
+  .tb-heading{ font-weight:800; font-size:1rem; margin:0 0 8px; display:flex; align-items:center; gap:8px; }
+  .sign .tb-heading{ color:#0e7490; }
+  .variation .tb-heading{ color:#9d174d; }
+  .tb-heading .badge-new{ color:#fff; font-size:.68rem; padding:3px 9px; border-radius:10px; font-weight:700; letter-spacing:.5px; }
+  .sign .tb-heading .badge-new{ background:#06b6d4; }
+  .variation .tb-heading .badge-new{ background:#ec4899; }
+  .tb-hint{ font-size:.86rem; color:#334155; margin:4px 0 12px; background:#fff; padding:8px 12px; border-radius:6px; }
+  .sign .tb-hint{ border-left:4px solid #06b6d4; }
+  .variation .tb-hint{ border-left:4px solid #ec4899; }
+  .tb-hint code{ padding:1px 6px; border-radius:4px; font-size:.83rem; }
+  .sign .tb-hint code{ background:#cffafe; }
+  .variation .tb-hint code{ background:#fce7f3; }
+  .tb-controls{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .tb-controls button{ background:#fff; padding:6px 12px; font-size:.85rem; border-radius:8px; font-weight:600; }
+  .sign .tb-controls button{ border:2px solid #0891b2; color:#0e7490; }
+  .sign .tb-controls button:hover{ background:#cffafe; }
+  .variation .tb-controls button{ border:2px solid #db2777; color:#9d174d; }
+  .variation .tb-controls button:hover{ background:#fce7f3; }
+  .tb-controls button.tb-reset{ background:#fff7ed; border-color:#f97316; color:#c2410c; }
+  .tb-controls button.tb-reset:hover{ background:#ffedd5; }
+  .tb-table-wrap{ overflow-x:auto; padding:4px; }
+  table.tb-table{ border-collapse:collapse; margin:0 auto; background:#fff; box-shadow:0 2px 8px rgba(15,23,42,.08); }
+  table.tb-table td{ padding:0; text-align:center; vertical-align:middle; min-width:60px; height:42px; }
+  .sign table.tb-table td{ border:2px solid #0891b2; }
+  .variation table.tb-table td{ border:2px solid #db2777; }
+  table.tb-table td.tb-text{ background:#f1f5f9; }
+  table.tb-table td.tb-text input.tb-input{ width:100%; height:40px; border:none; background:transparent; text-align:center; font-family:inherit; font-size:.92rem; padding:0 6px; outline:none; }
+  .sign table.tb-table td.tb-text input.tb-input:focus{ background:#cffafe; }
+  .variation table.tb-table td.tb-text input.tb-input:focus{ background:#fce7f3; }
+  table.tb-table td.tb-cell{ background:#fff; }
+  table.tb-table button.tb-sign{ width:100%; height:40px; border:none; background:transparent; font-size:1.2rem; font-weight:800; color:#cbd5e1; cursor:pointer; }
+  table.tb-table button.tb-sign:hover{ background:#f8fafc; }
+  table.tb-table button.tb-sign.pos{ color:var(--vert); }
+  table.tb-table button.tb-sign.neg{ color:var(--rouge); }
+  table.tb-table button.tb-sign.zero{ color:var(--bleu2); font-size:1rem; }
+  table.tb-table button.tb-sign.up{ color:#0d9488; font-size:1.35rem; }
+  table.tb-table button.tb-sign.down{ color:#be185d; font-size:1.35rem; }
 
   .feedback{ margin-top:10px; padding:10px 14px; border-radius:9px; font-weight:600; font-size:.92rem; display:none; }
   .feedback.show{display:block;}
@@ -94,22 +126,20 @@
   table.tab th{background:#e2e8f0; font-weight:600;}
   table.tab td.itv{font-weight:700; font-size:1.15rem;}
   table.tab td.arr{font-size:1.35rem; color:var(--bleu2); font-weight:700;}
-  .pos{color:var(--vert);}
-  .neg{color:var(--rouge);}
+  .pos{color:var(--vert);} .neg{color:var(--rouge);}
   footer{margin-top:28px; text-align:center;}
   .overlay{ display:none; position:fixed; inset:0; background:rgba(15,23,42,.6); z-index:1000; padding:20px; overflow:auto; }
   .overlay.show{display:flex; align-items:flex-start; justify-content:center;}
   .modal{ background:#fff; border-radius:14px; max-width:760px; width:100%; padding:24px 28px; box-shadow:0 20px 50px rgba(0,0,0,.35); margin-top:40px; }
   .modal h2{margin-top:0; color:var(--bleu); font-size:1.15rem;}
   .modal p, .modal li{font-size:.93rem;}
-  .modal ul{margin:8px 0 8px 20px;}
   .modal .close{background:var(--bleu); color:#fff; margin-top:12px;}
-  .modal .close:hover{background:#16307a;}
   @media (max-width:600px){
     .wrap{padding:14px 8px 70px;}
     .card{padding:14px 14px;}
-    table.tab th, table.tab td{padding:4px 6px; min-width:34px; font-size:.9rem;}
     .drag-item{flex-wrap:wrap;}
+    table.tb-table td{min-width:44px; height:36px;}
+    table.tb-table button.tb-sign{font-size:1rem; height:34px;}
   }
 </style>
 </head>
@@ -118,13 +148,11 @@
   <header>
     <h1>Dérivées, signes, variations et tangentes</h1>
     <p class="sub">
-      <span>Exercice généré aléatoirement — glissez-déposez les phrases, puis marquez la conclusion.</span>
+      <span>Exercice généré aléatoirement.</span>
       <button id="newBtn" class="btn-new">🔄 Nouvel exercice</button>
     </p>
   </header>
-
   <div id="app"></div>
-
   <footer>
     <button id="licenceBtn" class="btn-licence">⚖️ Droits d'auteur et licence</button>
   </footer>
@@ -135,14 +163,12 @@
     <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
     <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — <span id="dateToday"></span></p>
     <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
-    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« Générateur d'exercices – Dérivées, signes, variations et tangentes ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
-    <p><strong>Conditions :</strong></p>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré (« Générateur d'exercices – Dérivées, signes, variations et tangentes ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
     <ul>
-      <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
-      <li><strong>Utilisation Commerciale (Interdite) :</strong> toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
-      <li><strong>Attribution :</strong> toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+      <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> usage personnel, éducatif, non lucratif.</li>
+      <li><strong>Utilisation Commerciale (Interdite) :</strong> interdite sans accord écrit préalable.</li>
+      <li><strong>Attribution :</strong> conserver la mention de l'auteur originale (Yann Merdy) et la présente notice.</li>
     </ul>
-    <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
     <button id="closeModal" class="close">Fermer</button>
   </div>
 </div>
@@ -159,47 +185,35 @@ const par = n => (n<0 ? '('+n+')' : ''+n);
 function polyLatex(coeffs){
   let out='';
   for(let i=coeffs.length-1;i>=0;i--){
-    const c=coeffs[i];
-    if(c===0) continue;
+    const c=coeffs[i]; if(c===0) continue;
     const ab=Math.abs(c);
-    let t;
-    if(i===0)      t=String(ab);
-    else if(i===1) t=(ab===1?'':ab)+'x';
-    else           t=(ab===1?'':ab)+'x^{'+i+'}';
+    let t = i===0 ? String(ab) : (i===1 ? (ab===1?'':ab)+'x' : (ab===1?'':ab)+'x^{'+i+'}');
     if(out==='') out=(c<0?'-':'')+t;
-    else         out+=(c<0?' - ':' + ')+t;
+    else out+=(c<0?' - ':' + ')+t;
   }
   return out===''?'0':out;
 }
 function evalPoly(coeffs,x){ let s=0,p=1; for(let i=0;i<coeffs.length;i++){ s+=coeffs[i]*p; p*=x; } return s; }
-function factorX(r){ if(r===0) return 'x'; if(r>0) return '(x - '+r+')'; return '(x + '+(-r)+')'; }
-function sumStr(arr){ return arr.map((v,i)=> i===0 ? String(v) : (v<0 ? ' - '+(-v) : ' + '+v)).join(''); }
+function factorX(r){ return r===0 ? 'x' : (r>0 ? '(x - '+r+')' : '(x + '+(-r)+')'); }
 const sg  = v => v>0 ? '+' : (v<0 ? '−' : '0');
 const cls = v => v>0 ? 'pos' : (v<0 ? 'neg' : '');
 
 const RAPPEL_DERIVEES =
   '<div class="rappel"><strong>📘 Rappel de cours — Formules de dérivation</strong><ul>' +
-  '<li><strong>Linéarité :</strong> la dérivée d\'une somme est la somme des dérivées : $(u+v)\' = u\'+v\'$. De plus, $(k\\,u)\' = k\\,u\'$ pour toute constante $k$.</li>' +
-  '<li><strong>Formules :</strong><ul>' +
-  '<li>$x \\mapsto ax+b$ a pour dérivée $x \\mapsto a$.</li>' +
-  '<li>$x \\mapsto ax^{2}+bx+c$ a pour dérivée $x \\mapsto 2ax+b$.</li>' +
-  '<li>$x \\mapsto ax^{3}+bx^{2}+cx+d$ a pour dérivée $x \\mapsto 3ax^{2}+2bx+c$.</li>' +
-  '</ul></li></ul></div>';
+  '<li><strong>Linéarité :</strong> $(u+v)\' = u\'+v\'$ ; $(k\\,u)\' = k\\,u\'$.</li>' +
+  '<li><strong>Formules :</strong> $(ax+b)\' = a$ ; $(ax^{2}+bx+c)\' = 2ax+b$ ; $(ax^{3}+bx^{2}+cx+d)\' = 3ax^{2}+2bx+c$.</li>' +
+  '</ul></div>';
 
-/* Génère le tableau de signes de f' sur I sous forme HTML */
 function makeSignTableHTML(points, signs, zeros){
   const n = points.length;
-  let html = '<table class="tab">';
-  html += '<tr><th>$x$</th>';
+  let html = '<table class="tab"><tr><th>$x$</th>';
   for(let i = 0; i < n; i++){
     html += '<td>$' + points[i] + '$</td>';
     if(i < n - 1) html += '<td class="itv"></td>';
   }
-  html += '</tr>';
-  html += '<tr><th>$f\'(x)$</th>';
+  html += '</tr><tr><th>$f\'(x)$</th>';
   for(let i = 0; i < n; i++){
-    if(zeros.includes(points[i])) html += '<td>$0$</td>';
-    else                          html += '<td></td>';
+    html += zeros.indexOf(points[i]) !== -1 ? '<td>$0$</td>' : '<td></td>';
     if(i < n - 1){
       const c = cls(signs[i] === '+' ? 1 : signs[i] === '−' ? -1 : 0);
       html += '<td class="itv ' + c + '">' + signs[i] + '</td>';
@@ -226,9 +240,7 @@ function buildExercise(){
       if(Math.abs(m)%2===1 && (p+q)%2!==0) continue;
       break;
     }
-    const a0 = rnd(-6,6);
-    const a2 = -3*m*(p+q)/2;
-    const a1 = 3*m*p*q;
+    const a0 = rnd(-6,6), a2 = -3*m*(p+q)/2, a1 = 3*m*p*q;
     ex.m=m; ex.p=p; ex.q=q;
     ex.coeffs  = [a0,a1,a2,m];
     ex.fpCoeffs= [a1, 2*a2, 3*m];
@@ -236,33 +248,25 @@ function buildExercise(){
     ex.k       = 3*m;
     ex.kStr    = (ex.k===1?'':ex.k===-1?'-':String(ex.k));
     ex.fpFact  = ex.kStr + factorX(p) + factorX(q);
-
-    const rawCase = pick(['both','both','onlyP','onlyQ','none']);
-    let caseType = rawCase;
+    let caseType = pick(['both','both','onlyP','onlyQ','none']);
     const span = q - p;
     let A, B;
-    if(caseType === 'both'){
-      A = p - rnd(1,3); B = q + rnd(1,3);
-    } else if(caseType === 'onlyP' && span >= 2){
-      A = p - rnd(1,3); B = p + rnd(1, span - 1);
-    } else if(caseType === 'onlyQ' && span >= 2){
-      B = q + rnd(1,3); A = q - rnd(1, span - 1);
-    } else if(caseType === 'none'){
+    if(caseType === 'both'){ A = p - rnd(1,3); B = q + rnd(1,3); }
+    else if(caseType === 'onlyP' && span >= 2){ A = p - rnd(1,3); B = p + rnd(1, span - 1); }
+    else if(caseType === 'onlyQ' && span >= 2){ B = q + rnd(1,3); A = q - rnd(1, span - 1); }
+    else if(caseType === 'none'){
       const sub = pick(['left','right']);
       if(sub === 'left'){ B = p - rnd(1,3); A = B - rnd(2,4); }
       else             { A = q + rnd(1,3); B = A + rnd(2,4); }
-    } else {
-      caseType = 'both';
-      A = p - rnd(1,3); B = q + rnd(1,3);
     }
+    else { caseType = 'both'; A = p - rnd(1,3); B = q + rnd(1,3); }
     ex.caseType = caseType;
     ex.I = [A,B];
   }
   else if(deg===2){
     const a = pick([-3,-2,-1,1,2,3]);
     const r = rnd(-4,4);
-    const b = -2*a*r;
-    const c = rnd(-6,6);
+    const b = -2*a*r, c = rnd(-6,6);
     ex.a=a; ex.r=r;
     ex.coeffs  = [c,b,a];
     ex.fpCoeffs= [b, 2*a];
@@ -270,7 +274,6 @@ function buildExercise(){
     ex.k       = 2*a;
     ex.kStr    = String(2*a);
     ex.fpFact  = ex.kStr + factorX(r);
-
     const caseType = pick(['in','in','in','out-left','out-right']);
     ex.caseType = caseType;
     let A, B;
@@ -295,14 +298,11 @@ function buildExercise(){
 
   ex.fLatex  = polyLatex(ex.coeffs);
   ex.fpLatex = polyLatex(ex.fpCoeffs);
-
   const [A,B] = ex.I;
   ex.rootsInI = ex.roots.filter(r => r >= A && r <= B);
-
   let x0;
   if(ex.rootsInI.length > 0 && Math.random() < 0.45) x0 = pick(ex.rootsInI);
   else x0 = rnd(A, B);
-
   ex.x0 = x0;
   ex.fx0 = evalPoly(ex.coeffs, x0);
   ex.fpx0 = evalPoly(ex.fpCoeffs, x0);
@@ -322,48 +322,38 @@ function makeQuestions(ex){
   const k = ex.k;
   const caseType = ex.caseType;
 
-  /* =========================================================
-     Q1 — Dérivée
-     ========================================================= */
+  /* Q1 */
   if(deg===3){
     const m=ex.m, a2=ex.coeffs[2], a1=ex.coeffs[1];
-    const wrong = polyLatex([0, a1, 2*a2, 3*m]);
     Q.push({
       title:"Question 1 — Déterminer la dérivée $f'(x)$",
-      consigne:"Reconstituez un raisonnement correct en glissant les bonnes phrases dans la zone de droite, dans le bon ordre. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      consigne:"Reconstituez un raisonnement correct. La phrase finale devra être placée en dernier, marquée F et encadrée.",
       correct:[
         "$f$ est une fonction polynôme, donc elle est dérivable sur $\\mathbb{R}$.",
         "La dérivée d'une somme est la somme des dérivées : je peux donc dériver chaque terme séparément.",
-        "On retient que la dérivée de $x \\mapsto ax^{3}+bx^{2}+cx+d$ est $x \\mapsto 3ax^{2}+2bx+c$ (conséquence de $\\left(x^{n}\\right)' = n\\,x^{n-1}$).",
+        "On retient que la dérivée de $x \\mapsto ax^{3}+bx^{2}+cx+d$ est $x \\mapsto 3ax^{2}+2bx+c$.",
         "Pour tout réel $x$, $f'(x) = " + fpL + "$."
       ],
       distractors:[
-        "$f'(x) = " + wrong + "$",
+        "$f'(x) = " + polyLatex([0, a1, 2*a2, 3*m]) + "$",
         "La dérivée d'une fonction constante est égale à cette constante.",
         "Il faut d'abord factoriser $f(x)$ avant de pouvoir la dériver.",
         "La dérivée d'une somme est le produit des dérivées."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Étape 1 — Dérivabilité</h3>' +
-        '<p>$f(x) = ' + fL + '$ est une fonction polynôme, donc elle est dérivable sur $\\mathbb{R}$.</p>' +
-        '<h3>Étape 2 — Dérivation terme à terme (linéarité)</h3>' +
-        '<p>La dérivée d\'une somme étant la somme des dérivées, on dérive chaque monôme séparément. ' +
-        'On applique la formule de la dérivée de $x \\mapsto ax^{3}+bx^{2}+cx+d$, qui est $x \\mapsto 3ax^{2}+2bx+c$ :</p>' +
-        '\\[ f\'(x) = 3\\times(' + m + ')\\,x^{2} + 2\\times(' + a2 + ')\\,x + (' + a1 + ') \\]' +
-        '<h3>Étape 3 — Conclusion (encadrée)</h3>' +
+      solution: RAPPEL_DERIVEES +
+        '<p>On a $f\'(x) = 3\\times(' + m + ')\\,x^{2} + 2\\times(' + a2 + ')\\,x + (' + a1 + ')$.</p>' +
+        '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } f\'(x) = ' + fpL + '\\,} \\]'
     });
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const a=ex.a, b=ex.coeffs[1];
     Q.push({
       title:"Question 1 — Déterminer la dérivée $f'(x)$",
-      consigne:"Reconstituez un raisonnement correct en glissant les bonnes phrases dans la zone de droite, dans le bon ordre. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      consigne:"Reconstituez un raisonnement correct. La phrase finale devra être placée en dernier, marquée F et encadrée.",
       correct:[
         "$f$ est une fonction polynôme, donc elle est dérivable sur $\\mathbb{R}$.",
         "La dérivée d'une somme est la somme des dérivées : je peux donc dériver chaque terme séparément.",
-        "On retient que la dérivée de $x \\mapsto ax^{2}+bx+c$ est $x \\mapsto 2ax+b$ (conséquence de $\\left(x^{n}\\right)' = n\\,x^{n-1}$).",
+        "On retient que la dérivée de $x \\mapsto ax^{2}+bx+c$ est $x \\mapsto 2ax+b$.",
         "Pour tout réel $x$, $f'(x) = " + fpL + "$."
       ],
       distractors:[
@@ -372,25 +362,19 @@ function makeQuestions(ex){
         "$f$ n'est pas dérivable en $0$.",
         "La dérivée d'une somme est le produit des dérivées."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Étape 1 — Dérivabilité</h3>' +
-        '<p>$f(x) = ' + fL + '$ est une fonction polynôme, donc dérivable sur $\\mathbb{R}$.</p>' +
-        '<h3>Étape 2 — Dérivation (linéarité)</h3>' +
-        '<p>On utilise la formule de la dérivée de $x \\mapsto ax^{2}+bx+c$, qui est $x \\mapsto 2ax+b$ :</p>' +
-        '\\[ f\'(x) = 2\\times(' + a + ')\\,x + (' + b + ') \\]' +
-        '<h3>Étape 3 — Conclusion (encadrée)</h3>' +
+      solution: RAPPEL_DERIVEES +
+        '<p>$f\'(x) = 2\\times(' + a + ')\\,x + (' + b + ')$.</p>' +
+        '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } f\'(x) = ' + fpL + '\\,} \\]'
     });
-  }
-  else{
+  } else{
     const a=ex.a;
     Q.push({
       title:"Question 1 — Déterminer la dérivée $f'(x)$",
-      consigne:"Reconstituez un raisonnement correct en glissant les bonnes phrases dans la zone de droite, dans le bon ordre. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      consigne:"Reconstituez un raisonnement correct. La phrase finale devra être placée en dernier, marquée F et encadrée.",
       correct:[
         "$f$ est une fonction affine, donc elle est dérivable sur $\\mathbb{R}$.",
-        "La dérivée d'une somme est la somme des dérivées : je peux donc dériver chaque terme séparément.",
+        "La dérivée d'une somme est la somme des dérivées.",
         "On retient que la dérivée de $x \\mapsto ax+b$ est $x \\mapsto a$.",
         "Pour tout réel $x$, $f'(x) = " + fpL + "$."
       ],
@@ -400,58 +384,47 @@ function makeQuestions(ex){
         "$f'(x) = 0$ car $f$ est une droite.",
         "La dérivée d'une somme est le produit des dérivées."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Rédaction</h3>' +
-        '<p>$f(x) = ' + fL + '$ est une fonction affine, donc dérivable sur $\\mathbb{R}$.</p>' +
-        '<p>La dérivée de $x \\mapsto ax+b$ étant $x \\mapsto a$, on obtient :</p>' +
+      solution: RAPPEL_DERIVEES +
         '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } f\'(x) = ' + fpL + '\\,} \\]'
     });
   }
 
-  /* =========================================================
-     Q2 — Forme factorisée
-     ========================================================= */
+  /* Q2 */
   if(deg===3){
-    const m=ex.m, p=ex.p, q=ex.q, kk=ex.k;
+    const p=ex.p, q=ex.q, kk=ex.k;
     const inner = polyLatex([p*q, -(p+q), 1]);
     Q.push({
       title:"Question 2 — Égalité avec la forme factorisée proposée",
-      consigne:"L'énoncé propose la forme factorisée $f'(x) = " + ex.fpFact + "$. Reconstituer la preuve qu'elle est bien égale à la dérivée trouvée à la question 1. La phrase de conclusion devra être marquée F et encadrée.",
+      consigne:"Montrer que $f'(x) = " + ex.fpFact + "$. Conclusion marquée F et encadrée.",
       correct:[
-        "Rappel : la dérivée de $x \\mapsto ax^{3}+bx^{2}+cx+d$ est $x \\mapsto 3ax^{2}+2bx+c$, ce qui donne $f'(x) = " + fpL + "$.",
+        "Rappel : $(ax^{3}+bx^{2}+cx+d)\' = 3ax^{2}+2bx+c$, donc $f'(x) = " + fpL + "$.",
         "On développe le produit $k(x-p)(x-q)$ à l'aide de la double distributivité.",
         "$" + ex.fpFact + " = " + kk + "\\left(" + inner + "\\right)$",
         "$= " + fpL + "$",
-        "Les deux expressions sont égales pour tout réel $x$ : la forme factorisée proposée est correcte."
+        "Les deux expressions sont égales pour tout réel $x$."
       ],
       distractors:[
-        "Il suffit de vérifier l'égalité pour $x = 0$ et $x = 1$ pour conclure qu'elle est vraie pour tout $x$.",
+        "Il suffit de vérifier l'égalité pour $x = 0$ et $x = 1$.",
         "$k(x-p)(x-q) = kx^{2} + k(p+q)x + kpq$",
-        "La forme factorisée proposée est fausse car $f'$ n'est pas un produit.",
-        "Deux expressions sont égales si et seulement si elles prennent la même valeur en $x = 0$."
+        "La forme factorisée proposée est fausse.",
+        "Deux expressions sont égales si elles prennent la même valeur en $x = 0$."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Développement de la forme proposée</h3>' +
+      solution: RAPPEL_DERIVEES +
         '\\[ ' + ex.fpFact + ' = ' + kk + '\\left(' + inner + '\\right) = ' + fpL + ' \\]' +
-        '<h3>Comparaison</h3>' +
-        '<p>D\'après la question 1 : $f\'(x) = ' + fpL + '$. Donc :</p>' +
         '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } f\'(x) = ' + ex.fpFact + '\\,} \\]'
     });
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const a=ex.a, r=ex.r, kk=2*a;
     Q.push({
       title:"Question 2 — Égalité avec la forme factorisée proposée",
-      consigne:"L'énoncé propose la forme factorisée $f'(x) = " + ex.fpFact + "$. Reconstituer la preuve qu'elle est bien égale à la dérivée trouvée à la question 1. La phrase de conclusion devra être marquée F et encadrée.",
+      consigne:"Montrer que $f'(x) = " + ex.fpFact + "$. Conclusion marquée F et encadrée.",
       correct:[
-        "Rappel : la dérivée de $x \\mapsto ax^{2}+bx+c$ est $x \\mapsto 2ax+b$, ce qui donne $f'(x) = " + fpL + "$.",
-        "On factorise cette expression par le coefficient de $x$, qui vaut $" + kk + "$.",
+        "Rappel : $(ax^{2}+bx+c)\' = 2ax+b$, donc $f'(x) = " + fpL + "$.",
+        "On factorise par le coefficient de $x$, qui vaut $" + kk + "$.",
         "$f'(x) = " + ex.fpFact + "$",
-        "Les deux écritures sont égales pour tout réel $x$ : la forme factorisée proposée est correcte."
+        "Les deux écritures sont égales pour tout réel $x$."
       ],
       distractors:[
         "Il suffit de vérifier l'égalité pour $x = 0$.",
@@ -459,24 +432,20 @@ function makeQuestions(ex){
         "$f'(x) = " + kk + "(x + " + r + ")$",
         "Une expression du premier degré possède toujours deux racines."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Factorisation</h3>' +
-        '<p>On met $' + kk + '$ en facteur dans $f\'(x) = ' + fpL + '$ :</p>' +
+      solution: RAPPEL_DERIVEES +
         '\\[ f\'(x) = ' + kk + '\\left(x - ' + r + '\\right) \\]' +
         '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } f\'(x) = ' + ex.fpFact + '\\,} \\]'
     });
-  }
-  else{
+  } else{
     const a=ex.a;
     Q.push({
       title:"Question 2 — Existe-t-il une forme factorisée ?",
-      consigne:"L'énoncé propose la forme $f'(x) = " + a + "$. Peut-on écrire $f'(x)$ sous la forme $k(x-r)$ avec $k \\neq 0$ ? Reconstituer le raisonnement correct. La phrase de conclusion devra être marquée F et encadrée.",
+      consigne:"La forme $f'(x) = " + a + "$ peut-elle s'écrire $k(x-r)$ avec $k \\neq 0$ ? Conclusion marquée F et encadrée.",
       correct:[
-        "Rappel : la dérivée de $x \\mapsto ax+b$ est $x \\mapsto a$, donc $f'(x) = " + a + "$ est une fonction constante (non nulle).",
-        "La dérivée est constante, donc l'étude du signe et des variations sera immédiate.",
-        "Aucune forme factorisée du type $k(x-r)$ n'existe ici : la question ne s'applique pas."
+        "Rappel : $(ax+b)\' = a$, donc $f'(x) = " + a + "$ est une fonction constante.",
+        "La dérivée est constante, donc l'étude du signe sera immédiate.",
+        "Aucune forme factorisée du type $k(x-r)$ n'existe ici."
       ],
       distractors:[
         "$f'(x) = " + a + "(x - 0)$",
@@ -484,155 +453,118 @@ function makeQuestions(ex){
         "Toute fonction dérivable admet une forme factorisée.",
         "La forme factorisée est $f'(x) = 0$."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<p>On a $f\'(x) = ' + a + '$, constante non nulle. Aucune forme $k(x-r)$ avec $k\\neq 0$ n\'est possible.</p>' +
+      solution: RAPPEL_DERIVEES +
         '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, aucune forme factorisée } k(x-r) \\text{ n\'existe pour } f\'\\,} \\]'
     });
   }
 
-  /* =========================================================
-     Q3 — Résolution de f'(x)=0 sur I
-     ========================================================= */
+  /* Q3 — Résoudre f'(x)=0 sur I */
   if(deg===3){
     const p=ex.p, q=ex.q;
     if(caseType === 'both'){
       Q.push({
         title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-        consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+        consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
         correct:[
-          "On résout l'équation $f'(x) = 0$ en utilisant la forme factorisée : $f'(x) = " + ex.fpFact + " = 0$.",
-          "Un produit de facteurs est nul si et seulement si l'un au moins de ses facteurs est nul, donc $x = " + p + "$ ou $x = " + q + "$.",
-          "On vérifie que ces deux valeurs appartiennent à $I = [" + A + "\\,;\\," + B + "]$ : on a $" + A + " \\leq " + p + " < " + q + " \\leq " + B + "$.",
-          "Les solutions de $f'(x) = 0$ sur $I$ sont $x = " + p + "$ et $x = " + q + "$."
+          "On résout $f'(x) = 0$ via $f'(x) = " + ex.fpFact + " = 0$.",
+          "Un produit est nul si et seulement si l'un au moins des facteurs est nul : $x = " + p + "$ ou $x = " + q + "$.",
+          "On vérifie que ces deux valeurs sont dans $I$ : $" + A + " \\leq " + p + " < " + q + " \\leq " + B + "$.",
+          "Les solutions sur $I$ sont $x = " + p + "$ et $x = " + q + "$."
         ],
         distractors:[
-          "Un produit de facteurs est nul si et seulement si tous ses facteurs sont nuls.",
-          "Il faut calculer le discriminant $\\Delta$ de $f'$ pour trouver ses racines.",
+          "Un produit est nul si et seulement si tous ses facteurs sont nuls.",
+          "Il faut calculer le discriminant $\\Delta$.",
           "$f'(x) = 0$ n'admet jamais de solution sur un intervalle borné.",
-          "Les solutions de $f'(x) = 0$ sont nécessairement les bornes de $I$."
+          "Les solutions sont nécessairement les bornes de $I$."
         ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Étape 1 — Équation $f\'(x)=0$</h3>' +
-          '<p>$f\'(x) = ' + ex.fpFact + ' = 0 \\iff x = ' + p + ' \\text{ ou } x = ' + q + '$.</p>' +
-          '<h3>Étape 2 — Vérification dans $I$</h3>' +
-          '<p>On a $' + A + ' \\leq ' + p + ' < ' + q + ' \\leq ' + B + '$, donc $' + p + ' \\in I$ et $' + q + ' \\in I$.</p>' +
+        solution: RAPPEL_DERIVEES +
           '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } S = \\{' + p + '\\,;\\,' + q + '\\}\\,} \\]'
       });
     } else if(caseType === 'onlyP'){
       Q.push({
         title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-        consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+        consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
         correct:[
-          "On résout $f'(x) = 0$ via la forme factorisée : $f'(x) = " + ex.fpFact + " = 0$.",
-          "Un produit est nul si et seulement si l'un au moins de ses facteurs est nul, donc $x = " + p + "$ ou $x = " + q + "$.",
-          "On vérifie la position de chaque valeur par rapport à $I = [" + A + "\\,;\\," + B + "]$ : on a $" + A + " \\leq " + p + " \\leq " + B + "$, donc $" + p + " \\in I$.",
-          "En revanche, $" + q + " > " + B + "$, donc $" + q + " \\notin I$.",
-          "La seule solution de $f'(x) = 0$ sur $I$ est $x = " + p + "$."
+          "On résout $f'(x) = 0$ via $f'(x) = " + ex.fpFact + " = 0$.",
+          "Un produit est nul ssi l'un au moins des facteurs est nul : $x = " + p + "$ ou $x = " + q + "$.",
+          "On vérifie la position : $" + p + " \\in I$ mais $" + q + " > " + B + "$ donc $" + q + " \\notin I$.",
+          "La seule solution sur $I$ est $x = " + p + "$."
         ],
         distractors:[
-          "$f'(x) = 0$ admet exactement deux solutions sur $I$, comme sur $\\mathbb{R}$.",
-          "Aucune des racines de $f'$ n'appartient à $I$.",
-          "Il faut vérifier si les bornes de $I$ sont racines de $f'$.",
-          "Un produit est nul si et seulement si tous ses facteurs sont nuls."
+          "$f'(x) = 0$ admet deux solutions sur $I$.",
+          "Aucune racine n'appartient à $I$.",
+          "Il faut vérifier si les bornes sont racines.",
+          "Un produit est nul ssi tous ses facteurs sont nuls."
         ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Étape 1 — Équation $f\'(x)=0$</h3>' +
-          '<p>$f\'(x) = ' + ex.fpFact + ' = 0 \\iff x = ' + p + ' \\text{ ou } x = ' + q + '$.</p>' +
-          '<h3>Étape 2 — Vérification dans $I$</h3>' +
-          '<p>$' + A + ' \\leq ' + p + ' \\leq ' + B + '$, donc $' + p + ' \\in I$.<br>' +
-          'Mais $' + q + ' > ' + B + '$, donc $' + q + ' \\notin I$.</p>' +
+        solution: RAPPEL_DERIVEES +
           '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } S = \\{' + p + '\\}\\,} \\]'
       });
     } else if(caseType === 'onlyQ'){
       Q.push({
         title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-        consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+        consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
         correct:[
-          "On résout $f'(x) = 0$ via la forme factorisée : $f'(x) = " + ex.fpFact + " = 0$.",
-          "Un produit est nul si et seulement si l'un au moins de ses facteurs est nul, donc $x = " + p + "$ ou $x = " + q + "$.",
-          "On vérifie la position de chaque valeur par rapport à $I = [" + A + "\\,;\\," + B + "]$ : on a $" + A + " \\leq " + q + " \\leq " + B + "$, donc $" + q + " \\in I$.",
-          "En revanche, $" + p + " < " + A + "$, donc $" + p + " \\notin I$.",
-          "La seule solution de $f'(x) = 0$ sur $I$ est $x = " + q + "$."
+          "On résout $f'(x) = 0$ via $f'(x) = " + ex.fpFact + " = 0$.",
+          "Un produit est nul ssi l'un au moins des facteurs est nul : $x = " + p + "$ ou $x = " + q + "$.",
+          "On vérifie la position : $" + q + " \\in I$ mais $" + p + " < " + A + "$ donc $" + p + " \\notin I$.",
+          "La seule solution sur $I$ est $x = " + q + "$."
         ],
         distractors:[
-          "$f'(x) = 0$ admet exactement deux solutions sur $I$, comme sur $\\mathbb{R}$.",
-          "Aucune des racines de $f'$ n'appartient à $I$.",
-          "Il faut vérifier si les bornes de $I$ sont racines de $f'$.",
-          "Un produit est nul si et seulement si tous ses facteurs sont nuls."
+          "$f'(x) = 0$ admet deux solutions sur $I$.",
+          "Aucune racine n'appartient à $I$.",
+          "Il faut vérifier si les bornes sont racines.",
+          "Un produit est nul ssi tous ses facteurs sont nuls."
         ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Étape 1 — Équation $f\'(x)=0$</h3>' +
-          '<p>$f\'(x) = ' + ex.fpFact + ' = 0 \\iff x = ' + p + ' \\text{ ou } x = ' + q + '$.</p>' +
-          '<h3>Étape 2 — Vérification dans $I$</h3>' +
-          '<p>$' + A + ' \\leq ' + q + ' \\leq ' + B + '$, donc $' + q + ' \\in I$.<br>' +
-          'Mais $' + p + ' < ' + A + '$, donc $' + p + ' \\notin I$.</p>' +
+        solution: RAPPEL_DERIVEES +
           '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } S = \\{' + q + '\\}\\,} \\]'
       });
     } else {
-      // none
       const leftSide = (B < p);
-      const ineq = leftSide
-        ? '$' + B + ' < ' + p + ' < ' + q + '$'
-        : '$' + p + ' < ' + q + ' < ' + A + '$';
+      const ineq = leftSide ? '$' + B + ' < ' + p + ' < ' + q + '$' : '$' + p + ' < ' + q + ' < ' + A + '$';
       Q.push({
         title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-        consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+        consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
         correct:[
-          "On résout $f'(x) = 0$ via la forme factorisée : $f'(x) = " + ex.fpFact + " = 0$.",
-          "Un produit est nul si et seulement si l'un au moins de ses facteurs est nul, donc $x = " + p + "$ ou $x = " + q + "$.",
-          "On compare ces racines aux bornes de $I = [" + A + "\\,;\\," + B + "]$ : on a " + ineq + ".",
-          "Donc ni $" + p + "$ ni $" + q + "$ n'appartient à $I$.",
+          "On résout $f'(x) = 0$ via $f'(x) = " + ex.fpFact + " = 0$.",
+          "Un produit est nul ssi l'un au moins des facteurs est nul : $x = " + p + "$ ou $x = " + q + "$.",
+          "On compare aux bornes de $I$ : " + ineq + ".",
+          "Ni $" + p + "$ ni $" + q + "$ n'appartient à $I$.",
           "L'équation $f'(x) = 0$ n'a pas de solution sur $I$."
         ],
         distractors:[
-          "Au moins une des racines de $f'$ appartient à $I$.",
-          "Les bornes de $I$ sont nécessairement racines de $f'$.",
-          "L'équation $f'(x) = 0$ admet toujours une solution dans tout intervalle.",
-          "Un produit est nul si et seulement si tous ses facteurs sont nuls."
+          "Au moins une racine appartient à $I$.",
+          "Les bornes de $I$ sont nécessairement racines.",
+          "L'équation a toujours une solution dans tout intervalle.",
+          "Un produit est nul ssi tous ses facteurs sont nuls."
         ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Étape 1 — Équation $f\'(x)=0$</h3>' +
-          '<p>$f\'(x) = ' + ex.fpFact + ' = 0 \\iff x = ' + p + ' \\text{ ou } x = ' + q + '$.</p>' +
-          '<h3>Étape 2 — Comparaison avec $I$</h3>' +
-          '<p>Sur $I$, on a ' + ineq + ' : les deux racines sont hors de $I$.</p>' +
+        solution: RAPPEL_DERIVEES +
           '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } S = \\emptyset\\,} \\]'
       });
     }
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const r=ex.r;
     if(caseType === 'in'){
       Q.push({
         title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-        consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+        consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
         correct:[
-          "On résout $f'(x) = 0$ via la forme factorisée : $f'(x) = " + ex.fpFact + " = 0$.",
+          "On résout $f'(x) = 0$ via $f'(x) = " + ex.fpFact + " = 0$.",
           "On obtient l'unique solution $x = " + r + "$.",
           "Cette valeur appartient à $I$ car $" + A + " \\leq " + r + " \\leq " + B + "$.",
-          "L'unique solution de $f'(x) = 0$ sur $I$ est $x = " + r + "$."
+          "L'unique solution sur $I$ est $x = " + r + "$."
         ],
         distractors:[
           "$f'(x) = 0$ admet deux solutions sur $I$.",
-          "Aucune racine de $f'$ n'est dans $I$.",
-          "Il faut calculer $\\Delta$ pour résoudre $f'(x) = 0$.",
-          "Les bornes de $I$ sont solutions de $f'(x) = 0$."
+          "Aucune racine n'est dans $I$.",
+          "Il faut calculer $\\Delta$.",
+          "Les bornes de $I$ sont solutions."
         ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Étape 1 — Équation $f\'(x)=0$</h3>' +
-          '<p>$f\'(x) = ' + ex.fpFact + ' = 0 \\iff x = ' + r + '$.</p>' +
-          '<h3>Étape 2 — Vérification dans $I$</h3>' +
-          '<p>$' + A + ' \\leq ' + r + ' \\leq ' + B + '$, donc $' + r + ' \\in I$.</p>' +
+        solution: RAPPEL_DERIVEES +
           '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } S = \\{' + r + '\\}\\,} \\]'
       });
@@ -641,536 +573,318 @@ function makeQuestions(ex){
       const ineq = outLeft ? '$' + B + ' < ' + r + '$' : '$' + A + ' > ' + r + '$';
       Q.push({
         title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-        consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+        consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
         correct:[
-          "On résout $f'(x) = 0$ via la forme factorisée : $f'(x) = " + ex.fpFact + " = 0$.",
+          "On résout $f'(x) = 0$ via $f'(x) = " + ex.fpFact + " = 0$.",
           "On obtient l'unique solution $x = " + r + "$.",
           "Cette valeur n'appartient pas à $I$ car " + ineq + ".",
           "L'équation $f'(x) = 0$ n'a pas de solution sur $I$."
         ],
         distractors:[
           "La solution $x = " + r + "$ appartient à $I$.",
-          "L'équation $f'(x) = 0$ admet deux solutions sur $I$.",
-          "Les bornes de $I$ sont solutions de $f'(x) = 0$.",
-          "Il faut calculer $\\Delta$ pour conclure."
+          "L'équation admet deux solutions sur $I$.",
+          "Les bornes de $I$ sont solutions.",
+          "Il faut calculer $\\Delta$."
         ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Étape 1 — Équation $f\'(x)=0$</h3>' +
-          '<p>$f\'(x) = ' + ex.fpFact + ' = 0 \\iff x = ' + r + '$.</p>' +
-          '<h3>Étape 2 — Comparaison avec $I$</h3>' +
-          '<p>Sur $I$, on a ' + ineq + ' : la racine est hors de $I$.</p>' +
+        solution: RAPPEL_DERIVEES +
           '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } S = \\emptyset\\,} \\]'
       });
     }
-  }
-  else{
+  } else{
     const a=ex.a;
     Q.push({
       title:"Question 3 — Résoudre $f'(x) = 0$ sur $I = [" + A + "\\,;\\," + B + "]$",
-      consigne:"Déterminer l'ensemble des solutions de $f'(x)=0$ appartenant à $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      consigne:"Déterminer les solutions de $f'(x)=0$ dans $I$. Conclusion marquée F et encadrée.",
       correct:[
-        "Rappel : la dérivée de $x \\mapsto ax+b$ est $x \\mapsto a$, donc $f'(x) = " + a + "$ est une fonction constante non nulle.",
+        "Rappel : $(ax+b)\' = a$, donc $f'(x) = " + a + "$ est constante non nulle.",
         "L'équation $f'(x) = 0$ n'a pas de solution sur $\\mathbb{R}$.",
         "A fortiori, elle n'a pas de solution sur $I$."
       ],
       distractors:[
         "$f'(x) = 0$ a pour solution $x = 0$.",
-        "L'équation $f'(x) = 0$ a une infinité de solutions.",
-        "Il faut factoriser $f'(x)$ pour trouver ses racines.",
-        "Les bornes de $I$ sont solutions de $f'(x) = 0$."
+        "L'équation a une infinité de solutions.",
+        "Il faut factoriser $f'(x)$.",
+        "Les bornes de $I$ sont solutions."
       ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<p>$f\'(x) = ' + a + '$ est une constante non nulle, donc $f\'(x) = 0$ n\'a pas de solution sur $\\mathbb{R}$, ni donc sur $I$.</p>' +
+      solution: RAPPEL_DERIVEES +
         '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } S = \\emptyset\\,} \\]'
     });
   }
 
-  /* =========================================================
-     Q4 — Tableau de signe de f' sur I
-     ========================================================= */
+  /* Q4 — Tableau de signe (avec constructeur) */
   if(deg===3){
     const p=ex.p, q=ex.q, kk=ex.k;
     let points, signs, zeros, correctPhrases, distractors;
     if(caseType === 'both'){
-      points = [A,p,q,B];
-      signs  = [sg(kk), sg(-kk), sg(kk)];
-      zeros  = [p,q];
+      points = [A,p,q,B]; signs = [sg(kk), sg(-kk), sg(kk)]; zeros = [p,q];
       correctPhrases = [
-        "On résout $f'(x) = 0$ : les valeurs qui annulent $f'$ sont $" + p + "$ et $" + q + "$, et elles appartiennent toutes deux à $I$.",
-        "Le coefficient dominant de $f'$ est $" + kk + "$ : il est " + (kk>0?'positif':'négatif') + ".",
-        "Un trinôme du second degré est du signe de son coefficient dominant à l'extérieur des racines et du signe opposé entre les racines.",
-        "Sur $I$, $f'$ change donc deux fois de signe : en $" + p + "$ et en $" + q + "$.",
-        "On obtient ainsi le tableau de signe de $f'$ sur $I$."
+        "On résout $f'(x) = 0$ : $" + p + "$ et $" + q + "$ sont dans $I$.",
+        "Le coefficient dominant de $f'$ est $" + kk + "$.",
+        "Un trinôme est du signe de son coefficient dominant à l'extérieur des racines et du signe opposé entre.",
+        "Sur $I$, $f'$ change deux fois de signe : en $" + p + "$ et en $" + q + "$."
       ];
-      distractors = [
-        "Un produit est nul si et seulement si tous ses facteurs sont nuls.",
-        "Le signe de $f'$ est toujours le même que celui de $f$.",
-        "Le trinôme est du signe de son coefficient dominant entre les racines.",
-        "Il faut calculer $f(0)$ pour connaître le signe de $f'$."
-      ];
+      distractors = ["Un produit est nul si tous ses facteurs sont nuls.", "Le signe de $f'$ est celui de $f$.", "Le trinôme est du signe de $a$ entre les racines.", "Il faut calculer $f(0)$."];
     } else if(caseType === 'onlyP'){
-      points = [A,p,B];
-      signs  = [sg(kk), sg(-kk)];
-      zeros  = [p];
+      points = [A,p,B]; signs = [sg(kk), sg(-kk)]; zeros = [p];
       correctPhrases = [
-        "On résout $f'(x) = 0$ : les valeurs candidates sont $" + p + "$ et $" + q + "$, mais seule $" + p + "$ appartient à $I$ (car $" + q + " > " + B + "$).",
-        "Sur $I$, $f'$ est un produit $k(x-p)(x-q)$ avec $x-q < 0$ (car $x \\leq B < q$).",
-        "Le signe de $f'$ sur $I$ est donc l'opposé du signe de $k(x-p)$, soit : signe de $" + kk + "$ avant $" + p + "$, puis signe opposé après.",
+        "On résout $f'(x) = 0$ : seule $" + p + "$ est dans $I$.",
+        "Sur $I$, $f'$ est un produit $k(x-p)(x-q)$ avec $x-q < 0$.",
+        "Le signe de $f'$ sur $I$ est l'opposé du signe de $k(x-p)$.",
         "Sur $I$, $f'$ change de signe une seule fois, en $" + p + "$."
       ];
-      distractors = [
-        "$f'$ change deux fois de signe sur $I$ comme sur $\\mathbb{R}$.",
-        "$f'$ garde un signe constant sur $I$ car $q \\notin I$.",
-        "Le signe de $f'$ sur $I$ est du signe de $k$ partout.",
-        "Il faut calculer $\\Delta$ pour étudier le signe de $f'$ sur $I$."
-      ];
+      distractors = ["$f'$ change deux fois de signe.", "$f'$ garde un signe constant.", "Le signe est du signe de $k$ partout.", "Il faut calculer $\\Delta$."];
     } else if(caseType === 'onlyQ'){
-      points = [A,q,B];
-      signs  = [sg(-kk), sg(kk)];
-      zeros  = [q];
+      points = [A,q,B]; signs = [sg(-kk), sg(kk)]; zeros = [q];
       correctPhrases = [
-        "On résout $f'(x) = 0$ : les valeurs candidates sont $" + p + "$ et $" + q + "$, mais seule $" + q + "$ appartient à $I$ (car $" + p + " < " + A + "$).",
-        "Sur $I$, $f'$ est un produit $k(x-p)(x-q)$ avec $x-p > 0$ (car $x \\geq A > p$).",
-        "Le signe de $f'$ sur $I$ est donc celui de $k(x-q)$, soit : signe opposé à $k$ avant $" + q + "$, puis signe de $" + kk + "$ après.",
+        "On résout $f'(x) = 0$ : seule $" + q + "$ est dans $I$.",
+        "Sur $I$, $f'$ est un produit $k(x-p)(x-q)$ avec $x-p > 0$.",
+        "Le signe de $f'$ sur $I$ est celui de $k(x-q)$.",
         "Sur $I$, $f'$ change de signe une seule fois, en $" + q + "$."
       ];
-      distractors = [
-        "$f'$ change deux fois de signe sur $I$ comme sur $\\mathbb{R}$.",
-        "$f'$ garde un signe constant sur $I$ car $p \\notin I$.",
-        "Le signe de $f'$ sur $I$ est du signe de $k$ partout.",
-        "Il faut calculer $\\Delta$ pour étudier le signe de $f'$ sur $I$."
-      ];
+      distractors = ["$f'$ change deux fois de signe.", "$f'$ garde un signe constant.", "Le signe est du signe de $k$ partout.", "Il faut calculer $\\Delta$."];
     } else {
-      points = [A,B];
-      signs  = [sg(kk)];
-      zeros  = [];
+      points = [A,B]; signs = [sg(kk)]; zeros = [];
       const leftSide = (B < p);
       correctPhrases = [
-        "Sur $I$, on vérifie d'abord si $f'(x) = 0$ a des solutions : les racines candidates sont $" + p + "$ et $" + q + "$.",
-        "Or " + (leftSide ? "$B < " + p + " < " + q + "$" : "$p < " + q + " < " + A + "$") + " : aucune des deux racines n'appartient à $I$.",
-        "Donc $f'(x) \\neq 0$ sur $I$, et $f'$ garde un signe constant sur $I$.",
-        "Sur $I$, $f'$ est du signe de son coefficient dominant $" + kk + "$, c'est-à-dire " + (kk>0?'positif':'négatif') + " sur tout $I$."
+        "Les racines candidates de $f'$ sont $" + p + "$ et $" + q + "$.",
+        "Or " + (leftSide ? "$B < " + p + " < " + q + "$" : "$p < " + q + " < " + A + "$") + " : aucune n'est dans $I$.",
+        "Donc $f'(x) \\neq 0$ sur $I$, $f'$ garde un signe constant.",
+        "Sur $I$, $f'$ est du signe de son coefficient dominant $" + kk + "$."
       ];
-      distractors = [
-        "$f'$ change de signe au milieu de $I$.",
-        "Il faut calculer $f(0)$ pour connaître le signe de $f'$.",
-        "$f'$ est du signe opposé à son coefficient dominant sur $I$.",
-        "Il y a nécessairement un changement de signe en $x = 0$."
-      ];
+      distractors = ["$f'$ change de signe au milieu de $I$.", "Il faut calculer $f(0)$.", "$f'$ est du signe opposé à son coefficient dominant.", "Il y a un changement de signe en $x=0$."];
     }
     Q.push({
       title:"Question 4 — Tableau de signe de $f'$ sur $I = [" + A + "\\,;\\," + B + "]$",
-      consigne:"Dresser le tableau de signe de $f'(x)$ sur $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct: correctPhrases,
-      distractors: distractors,
-      solution:
-        RAPPEL_DERIVEES +
-        '<div class="rappel"><strong>📘 Rappel — Signe d\'un produit et d\'un trinôme</strong><ul>' +
-        '<li>Un produit est nul ssi l\'un au moins des facteurs est nul.</li>' +
-        '<li>Un trinôme $ax^2+bx+c$ est du signe de $a$ à l\'extérieur de ses racines.</li>' +
-        '</ul></div>' +
-        '<h3>Tableau de signes</h3>' +
-        makeSignTableHTML(points, signs, zeros) +
+      consigne:"Dresser le tableau de signe de $f'(x)$ sur $I$. <strong>Utilisez le constructeur interactif ci-dessous</strong> pour bâtir directement le tableau, et/ou reconstituez le raisonnement par phrases. Conclusion marquée F et encadrée.",
+      correct: correctPhrases, distractors: distractors, tableBuilder: true,
+      solution: RAPPEL_DERIVEES +
+        '<h3>Tableau de signes attendu</h3>' + makeSignTableHTML(points, signs, zeros) +
         '<h3>Conclusion (encadrée)</h3>' +
         '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de signe de } f\' \\text{ sur } I \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
     });
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const r=ex.r, kk=ex.k;
     let points, signs, zeros, correctPhrases, distractors;
     if(caseType === 'in'){
-      points = [A,r,B];
-      signs  = [sg(-kk), sg(kk)];
-      zeros  = [r];
+      points = [A,r,B]; signs = [sg(-kk), sg(kk)]; zeros = [r];
       correctPhrases = [
-        "On résout $f'(x) = 0$ : l'unique solution $x = " + r + "$ appartient à $I$.",
-        "$f'(x) = " + kk + "(x - " + r + ")$ : le signe de $f'$ est celui de $-k$ avant $" + r + "$ et celui de $k$ après.",
-        "Avec $k = " + kk + "$, on en déduit les signes sur les deux sous-intervalles de $I$.",
-        "On obtient ainsi le tableau de signe de $f'$ sur $I$."
+        "On résout $f'(x) = 0$ : l'unique solution $x = " + r + "$ est dans $I$.",
+        "$f'(x) = " + kk + "(x - " + r + ")$ : signe de $-k$ avant $" + r + "$, signe de $k$ après.",
+        "Avec $k = " + kk + "$, on en déduit les signes sur les deux sous-intervalles."
       ];
-      distractors = [
-        "$f'$ garde un signe constant sur $I$.",
-        "$f'$ change de signe deux fois sur $I$.",
-        "Il faut calculer $\\Delta$ pour étudier le signe de $f'$.",
-        "Le signe de $f'$ est toujours positif."
-      ];
+      distractors = ["$f'$ garde un signe constant.", "$f'$ change deux fois de signe.", "Il faut calculer $\\Delta$.", "Le signe de $f'$ est toujours positif."];
     } else {
       points = [A,B];
       const outLeft = (caseType === 'out-left');
-      signs  = [outLeft ? sg(-kk) : sg(kk)];
-      zeros  = [];
+      signs = [outLeft ? sg(-kk) : sg(kk)]; zeros = [];
       correctPhrases = [
-        "On résout $f'(x) = 0$ : l'unique solution $x = " + r + "$ n'appartient pas à $I$.",
-        "$f'(x) = " + kk + "(x - " + r + ")$ : sur $I$, le facteur $(x-" + r + ")$ garde un signe constant.",
-        "Le signe de $f'$ est donc constant sur $I$, égal à " + signs[0] + ".",
-        "On obtient ainsi le tableau de signe de $f'$ sur $I$."
+        "On résout $f'(x) = 0$ : l'unique solution $x = " + r + "$ n'est pas dans $I$.",
+        "$f'(x) = " + kk + "(x - " + r + ")$ : sur $I$, $(x-" + r + ")$ garde un signe constant.",
+        "Le signe de $f'$ est constant sur $I$, égal à " + signs[0] + "."
       ];
-      distractors = [
-        "$f'$ change de signe en $x = " + r + "$ sur $I$.",
-        "$f'$ change de signe au milieu de $I$.",
-        "$f'$ s'annule sur $I$.",
-        "Le signe de $f'$ dépend du signe de $x$."
-      ];
+      distractors = ["$f'$ change de signe en $x = " + r + "$ sur $I$.", "$f'$ change de signe au milieu de $I$.", "$f'$ s'annule sur $I$.", "Le signe de $f'$ dépend du signe de $x$."];
     }
     Q.push({
       title:"Question 4 — Tableau de signe de $f'$ sur $I = [" + A + "\\,;\\," + B + "]$",
-      consigne:"Dresser le tableau de signe de $f'(x)$ sur $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct: correctPhrases,
-      distractors: distractors,
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Tableau de signes</h3>' +
-        makeSignTableHTML(points, signs, zeros) +
+      consigne:"Dresser le tableau de signe de $f'(x)$ sur $I$. <strong>Utilisez le constructeur interactif ci-dessous</strong> et/ou reconstituez le raisonnement. Conclusion marquée F et encadrée.",
+      correct: correctPhrases, distractors: distractors, tableBuilder: true,
+      solution: RAPPEL_DERIVEES +
+        '<h3>Tableau de signes attendu</h3>' + makeSignTableHTML(points, signs, zeros) +
         '<h3>Conclusion (encadrée)</h3>' +
         '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de signe de } f\' \\text{ sur } I \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
     });
-  }
-  else{
+  } else{
     const a=ex.a;
     Q.push({
       title:"Question 4 — Tableau de signe de $f'$ sur $I = [" + A + "\\,;\\," + B + "]$",
-      consigne:"Dresser le tableau de signe de $f'(x)$ sur $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      consigne:"Dresser le tableau de signe de $f'(x)$ sur $I$. <strong>Utilisez le constructeur interactif ci-dessous</strong> et/ou reconstituez le raisonnement. Conclusion marquée F et encadrée.",
       correct:[
-        "$f'(x) = " + a + "$ est une fonction constante.",
-        "Son signe ne dépend pas de $x$ : il est le même sur tout $I$.",
-        "Sur $I$, $f'$ est donc du signe de $" + a + "$, c'est-à-dire " + (a>0?'positif':'négatif') + ".",
-        "On obtient ainsi le tableau de signe de $f'$ sur $I$."
+        "$f'(x) = " + a + "$ est constant.",
+        "Son signe ne dépend pas de $x$, il est le même sur $I$.",
+        "Sur $I$, $f'$ est du signe de $" + a + "$."
       ],
-      distractors:[
-        "$f'$ change de signe au milieu de $I$.",
-        "Il faut résoudre $f'(x) = 0$ : on trouve $x = 0$.",
-        "Le signe de $f'$ dépend du signe de $x$."
-      ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Tableau de signes</h3>' +
-        makeSignTableHTML([A,B], [sg(a)], []) +
+      distractors:["$f'$ change de signe au milieu de $I$.", "Il faut résoudre $f'(x) = 0$ : $x = 0$.", "Le signe de $f'$ dépend du signe de $x$."],
+      tableBuilder: true,
+      solution: RAPPEL_DERIVEES +
+        '<h3>Tableau de signes attendu</h3>' + makeSignTableHTML([A,B], [sg(a)], []) +
         '<h3>Conclusion (encadrée)</h3>' +
         '<p>\\[ \\boxed{\\,\\text{Finalement, } f\'(x) ' + (a>0?'>':'<') + ' 0 \\text{ sur tout } I\\,} \\]</p>'
     });
   }
 
-  /* =========================================================
-     Q5 — Images
-     ========================================================= */
+  /* Q5 — Images */
   if(deg===3){
     const p=ex.p, q=ex.q;
-    const vp = ex.fpCoeffs && null; // placeholder
-    const fpp = evalPoly(ex.coeffs, p);
-    const fqq = evalPoly(ex.coeffs, q);
+    const fpp = evalPoly(ex.coeffs, p), fqq = evalPoly(ex.coeffs, q);
     if(caseType === 'both'){
       Q.push({
-        title:"Question 5 — Calcul des images des valeurs remarquables",
-        consigne:"Calculer les images par $f$ des valeurs qui annulent $f'(x)$ sur $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-        correct:[
-          "On remplace $x$ par $" + p + "$ dans l'expression de $f$.",
-          "$f(" + p + ") = " + fpp + "$",
-          "On remplace $x$ par $" + q + "$ dans l'expression de $f$.",
-          "$f(" + q + ") = " + fqq + "$"
-        ],
-        distractors:[
-          "$f(" + p + ") = 0$ car $f'(" + p + ") = 0$",
-          "$f(" + q + ") = 0$ car $f'(" + q + ") = 0$",
-          "Les images de $" + p + "$ et $" + q + "$ sont toujours égales.",
-          "Il faut calculer $f'(0)$ avant de calculer $f(" + p + ")$."
-        ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<p>$f(' + p + ') = ' + fpp + '$ et $f(' + q + ') = ' + fqq + '$.</p>' +
-          '<h3>Conclusion (encadrée)</h3>' +
+        title:"Question 5 — Images des valeurs remarquables",
+        consigne:"Calculer $f(" + p + ")$ et $f(" + q + ")$. Conclusion marquée F et encadrée.",
+        correct:["On remplace $x$ par $" + p + "$ dans $f(x)$.", "$f(" + p + ") = " + fpp + "$", "On remplace $x$ par $" + q + "$ dans $f(x)$.", "$f(" + q + ") = " + fqq + "$"],
+        distractors:["$f(" + p + ") = 0$.", "$f(" + q + ") = 0$.", "Les images sont égales.", "Il faut calculer $f'(0)$ d'abord."],
+        solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } f(' + p + ') = ' + fpp + ' \\text{ et } f(' + q + ') = ' + fqq + '\\,} \\]'
       });
     } else if(caseType === 'onlyP'){
       Q.push({
-        title:"Question 5 — Calcul de l'image de la valeur remarquable dans $I$",
-        consigne:"Calculer l'image par $f$ de la valeur qui annule $f'(x)$ sur $I$ (c'est-à-dire appartenant à $I$). La phrase finale devra être placée en dernier, marquée F et encadrée.",
-        correct:[
-          "La seule valeur qui annule $f'$ sur $I$ est $" + p + "$.",
-          "On remplace $x$ par $" + p + "$ dans l'expression de $f$.",
-          "$f(" + p + ") = " + fpp + "$"
-        ],
-        distractors:[
-          "Il faut calculer $f(" + q + ")$ car $" + q + "$ annule $f'$ sur $I$.",
-          "$f(" + p + ") = 0$ car $f'(" + p + ") = 0$.",
-          "Les images de $" + p + "$ et $" + q + "$ sont toujours égales.",
-          "Il faut calculer $f(A)$ en priorité."
-        ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<p>Seule $' + p + '$ annule $f\'$ sur $I$ (car $' + q + ' > ' + B + '$). Donc $f(' + p + ') = ' + fpp + '$.</p>' +
-          '<h3>Conclusion (encadrée)</h3>' +
+        title:"Question 5 — Image de la valeur remarquable dans $I$",
+        consigne:"Calculer $f(" + p + ")$. Conclusion marquée F et encadrée.",
+        correct:["La seule valeur qui annule $f'$ sur $I$ est $" + p + "$.", "On remplace $x$ par $" + p + "$ dans $f(x)$.", "$f(" + p + ") = " + fpp + "$"],
+        distractors:["Il faut calculer $f(" + q + ")$.", "$f(" + p + ") = 0$.", "Les images sont égales.", "Il faut calculer $f(A)$."],
+        solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } f(' + p + ') = ' + fpp + '\\,} \\]'
       });
     } else if(caseType === 'onlyQ'){
       Q.push({
-        title:"Question 5 — Calcul de l'image de la valeur remarquable dans $I$",
-        consigne:"Calculer l'image par $f$ de la valeur qui annule $f'(x)$ sur $I$ (c'est-à-dire appartenant à $I$). La phrase finale devra être placée en dernier, marquée F et encadrée.",
-        correct:[
-          "La seule valeur qui annule $f'$ sur $I$ est $" + q + "$.",
-          "On remplace $x$ par $" + q + "$ dans l'expression de $f$.",
-          "$f(" + q + ") = " + fqq + "$"
-        ],
-        distractors:[
-          "Il faut calculer $f(" + p + ")$ car $" + p + "$ annule $f'$ sur $I$.",
-          "$f(" + q + ") = 0$ car $f'(" + q + ") = 0$.",
-          "Les images de $" + p + "$ et $" + q + "$ sont toujours égales.",
-          "Il faut calculer $f(B)$ en priorité."
-        ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<p>Seule $' + q + '$ annule $f\'$ sur $I$ (car $' + p + ' < ' + A + '$). Donc $f(' + q + ') = ' + fqq + '$.</p>' +
-          '<h3>Conclusion (encadrée)</h3>' +
+        title:"Question 5 — Image de la valeur remarquable dans $I$",
+        consigne:"Calculer $f(" + q + ")$. Conclusion marquée F et encadrée.",
+        correct:["La seule valeur qui annule $f'$ sur $I$ est $" + q + "$.", "On remplace $x$ par $" + q + "$ dans $f(x)$.", "$f(" + q + ") = " + fqq + "$"],
+        distractors:["Il faut calculer $f(" + p + ")$.", "$f(" + q + ") = 0$.", "Les images sont égales.", "Il faut calculer $f(B)$."],
+        solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } f(' + q + ') = ' + fqq + '\\,} \\]'
       });
     } else {
       Q.push({
-        title:"Question 5 — Calcul des images aux bornes de $I$",
-        consigne:"Aucune valeur n'annule $f'$ dans $I$. Calculer alors les images des bornes de $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-        correct:[
-          "Aucune valeur n'annule $f'$ sur $I$ : on calcule les images des bornes.",
-          "On remplace $x$ par la borne $" + A + "$.",
-          "$f(" + A + ") = " + ex.fA + "$",
-          "On remplace $x$ par la borne $" + B + "$.",
-          "$f(" + B + ") = " + ex.fB + "$"
-        ],
-        distractors:[
-          "$f(" + A + ") = 0$ car $" + A + "$ est une borne de $I$.",
-          "$f(" + B + ") = " + ex.a + "$.",
-          "Les images des bornes sont toujours égales.",
-          "Il faut calculer $f'(0)$ pour trouver $f(" + A + ")$."
-        ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<p>Aucune racine de $f\'$ dans $I$. On calcule $f(A) = ' + ex.fA + '$ et $f(B) = ' + ex.fB + '$.</p>' +
-          '<h3>Conclusion (encadrée)</h3>' +
+        title:"Question 5 — Images des bornes de $I$",
+        consigne:"Aucune valeur n'annule $f'$ dans $I$. Calculer $f(" + A + ")$ et $f(" + B + ")$. Conclusion marquée F et encadrée.",
+        correct:["Aucune valeur n'annule $f'$ dans $I$ : on calcule les images des bornes.", "On remplace $x$ par la borne $" + A + "$.", "$f(" + A + ") = " + ex.fA + "$", "On remplace $x$ par la borne $" + B + "$.", "$f(" + B + ") = " + ex.fB + "$"],
+        distractors:["$f(" + A + ") = 0$.", "$f(" + B + ") = " + ex.a + "$.", "Les images sont égales.", "Il faut calculer $f'(0)$."],
+        solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } f(' + A + ') = ' + ex.fA + ' \\text{ et } f(' + B + ') = ' + ex.fB + '\\,} \\]'
       });
     }
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const r=ex.r;
     const vr = evalPoly(ex.coeffs, r);
     if(caseType === 'in'){
       Q.push({
-        title:"Question 5 — Calcul de l'image de la valeur remarquable",
-        consigne:"Calculer l'image par $f$ de la valeur qui annule $f'(x)$ sur $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-        correct:[
-          "La valeur qui annule $f'$ sur $I$ est $" + r + "$.",
-          "On remplace $x$ par $" + r + "$ dans l'expression de $f$.",
-          "$f(" + r + ") = " + vr + "$"
-        ],
-        distractors:[
-          "$f(" + r + ") = 0$ car $f'(" + r + ") = 0$.",
-          "Il faut d'abord calculer $f(A)$.",
-          "L'image de $" + r + "$ est toujours le discriminant du trinôme.",
-          "Les images des bornes de $I$ sont égales."
-        ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<p>$f(' + r + ') = ' + vr + '$.</p>' +
-          '<h3>Conclusion (encadrée)</h3>' +
+        title:"Question 5 — Image de la valeur remarquable",
+        consigne:"Calculer $f(" + r + ")$. Conclusion marquée F et encadrée.",
+        correct:["La valeur qui annule $f'$ sur $I$ est $" + r + "$.", "On remplace $x$ par $" + r + "$ dans $f(x)$.", "$f(" + r + ") = " + vr + "$"],
+        distractors:["$f(" + r + ") = 0$.", "Il faut calculer $f(A)$.", "L'image est le discriminant.", "Les images des bornes sont égales."],
+        solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } f(' + r + ') = ' + vr + '\\,} \\]'
       });
     } else {
       Q.push({
-        title:"Question 5 — Calcul des images aux bornes de $I$",
-        consigne:"Aucune valeur n'annule $f'$ dans $I$. Calculer les images des bornes de $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-        correct:[
-          "Aucune valeur n'annule $f'$ sur $I$ : on calcule les images des bornes.",
-          "On remplace $x$ par la borne $" + A + "$.",
-          "$f(" + A + ") = " + ex.fA + "$",
-          "On remplace $x$ par la borne $" + B + "$.",
-          "$f(" + B + ") = " + ex.fB + "$"
-        ],
-        distractors:[
-          "$f(" + A + ") = 0$ car $" + A + "$ est une borne de $I$.",
-          "$f(" + B + ") = " + ex.a + "$.",
-          "Les images des bornes sont toujours égales.",
-          "Il faut calculer $f'(0)$ pour trouver $f(" + A + ")$."
-        ],
-        solution:
-          RAPPEL_DERIVEES +
-          '<h3>Conclusion (encadrée)</h3>' +
+        title:"Question 5 — Images des bornes de $I$",
+        consigne:"Calculer $f(" + A + ")$ et $f(" + B + ")$. Conclusion marquée F et encadrée.",
+        correct:["On remplace $x$ par la borne $" + A + "$.", "$f(" + A + ") = " + ex.fA + "$", "On remplace $x$ par la borne $" + B + "$.", "$f(" + B + ") = " + ex.fB + "$"],
+        distractors:["$f(" + A + ") = 0$.", "$f(" + B + ") = " + ex.a + "$.", "Les images sont égales.", "Il faut calculer $f'(0)$."],
+        solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
           '\\[ \\boxed{\\,\\text{Finalement, } f(' + A + ') = ' + ex.fA + ' \\text{ et } f(' + B + ') = ' + ex.fB + '\\,} \\]'
       });
     }
-  }
-  else{
+  } else{
     Q.push({
-      title:"Question 5 — Calcul des images des bornes de $I$",
-      consigne:"Calculer les images par $f$ des bornes de $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct:[
-        "On remplace $x$ par la borne $" + A + "$.",
-        "$f(" + A + ") = " + ex.fA + "$",
-        "On remplace $x$ par la borne $" + B + "$.",
-        "$f(" + B + ") = " + ex.fB + "$"
-      ],
-      distractors:[
-        "$f(" + A + ") = 0$ car $" + A + "$ est une borne de $I$.",
-        "$f(" + B + ") = " + ex.a + "$.",
-        "Les images des bornes sont toujours égales."
-      ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Conclusion (encadrée)</h3>' +
+      title:"Question 5 — Images des bornes de $I$",
+      consigne:"Calculer $f(" + A + ")$ et $f(" + B + ")$. Conclusion marquée F et encadrée.",
+      correct:["On remplace $x$ par la borne $" + A + "$.", "$f(" + A + ") = " + ex.fA + "$", "On remplace $x$ par la borne $" + B + "$.", "$f(" + B + ") = " + ex.fB + "$"],
+      distractors:["$f(" + A + ") = 0$.", "$f(" + B + ") = " + ex.a + "$.", "Les images sont égales."],
+      solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } f(' + A + ') = ' + ex.fA + ' \\text{ et } f(' + B + ') = ' + ex.fB + '\\,} \\]'
     });
   }
 
-  /* =========================================================
-     Q6 — Variations en phrases
-     ========================================================= */
+  /* Q6 — Variations */
   if(deg===3){
     const p=ex.p, q=ex.q;
     const sExt = k>0 ? 1 : -1;
     let correctPhrases, distractors;
     if(caseType === 'both'){
       correctPhrases = [
-        "Sur $[" + A + "\\,;\\," + p + "]$, on a $f'(x) " + (sExt>0?'>':'<') + " 0$, donc $f$ est " + (sExt>0?'strictement croissante':'strictement décroissante') + " sur $[" + A + "\\,;\\," + p + "]$.",
-        "Sur $[" + p + "\\,;\\," + q + "]$, on a $f'(x) " + (sExt>0?'<':'>') + " 0$, donc $f$ est " + (sExt>0?'strictement décroissante':'strictement croissante') + " sur $[" + p + "\\,;\\," + q + "]$.",
-        "Sur $[" + q + "\\,;\\," + B + "]$, on a $f'(x) " + (sExt>0?'>':'<') + " 0$, donc $f$ est " + (sExt>0?'strictement croissante':'strictement décroissante') + " sur $[" + q + "\\,;\\," + B + "]$.",
-        "$f$ admet un " + (sExt>0?'maximum':'minimum') + " local en $x = " + p + "$ et un " + (sExt>0?'minimum':'maximum') + " local en $x = " + q + "$ sur $I$."
+        "Sur $[" + A + "\\,;\\," + p + "]$, $f'(x) " + (sExt>0?'>':'<') + " 0$, $f$ " + (sExt>0?'croissante':'décroissante') + ".",
+        "Sur $[" + p + "\\,;\\," + q + "]$, $f'(x) " + (sExt>0?'<':'>') + " 0$, $f$ " + (sExt>0?'décroissante':'croissante') + ".",
+        "Sur $[" + q + "\\,;\\," + B + "]$, $f'(x) " + (sExt>0?'>':'<') + " 0$, $f$ " + (sExt>0?'croissante':'décroissante') + ".",
+        "$f$ admet un " + (sExt>0?'maximum':'minimum') + " local en $" + p + "$ et un " + (sExt>0?'minimum':'maximum') + " local en $" + q + "$."
       ];
-      distractors = [
-        "Sur $[" + p + "\\,;\\," + q + "]$, $f'(x) " + (sExt>0?'>':'<') + " 0$, donc $f$ est croissante.",
-        "$f$ est croissante sur tout $I$.",
-        "La fonction $f$ est décroissante là où $f'$ est positive.",
-        "$f$ admet un extremum en $x = " + A + "$ et en $x = " + B + "$."
-      ];
+      distractors = ["$f$ croissante sur tout $I$.", "$f$ décroissante là où $f'$ est positive.", "Extremum en $A$ et $B$.", "$f'(x) > 0$ entre $p$ et $q$."];
     } else if(caseType === 'onlyP'){
       correctPhrases = [
-        "Sur $[" + A + "\\,;\\," + p + "]$, on a $f'(x) " + (sExt>0?'>':'<') + " 0$, donc $f$ est " + (sExt>0?'strictement croissante':'strictement décroissante') + " sur $[" + A + "\\,;\\," + p + "]$.",
-        "Sur $[" + p + "\\,;\\," + B + "]$, on a $f'(x) " + (sExt>0?'<':'>') + " 0$, donc $f$ est " + (sExt>0?'strictement décroissante':'strictement croissante') + " sur $[" + p + "\\,;\\," + B + "]$.",
-        "$f$ admet un " + (sExt>0?'maximum':'minimum') + " local en $x = " + p + "$ sur $I$."
+        "Sur $[" + A + "\\,;\\," + p + "]$, $f'(x) " + (sExt>0?'>':'<') + " 0$, $f$ " + (sExt>0?'croissante':'décroissante') + ".",
+        "Sur $[" + p + "\\,;\\," + B + "]$, $f'(x) " + (sExt>0?'<':'>') + " 0$, $f$ " + (sExt>0?'décroissante':'croissante') + ".",
+        "$f$ admet un " + (sExt>0?'maximum':'minimum') + " local en $" + p + "$."
       ];
-      distractors = [
-        "$f$ est croissante sur tout $I$.",
-        "$f$ admet un maximum en $x = " + A + "$.",
-        "Le signe de $f'$ est constant sur $I$.",
-        "$f$ admet aussi un extremum en $x = " + q + "$ sur $I$."
-      ];
+      distractors = ["$f$ croissante sur tout $I$.", "Maximum en $A$.", "Signe de $f'$ constant.", "Extremum en $q$."];
     } else if(caseType === 'onlyQ'){
       correctPhrases = [
-        "Sur $[" + A + "\\,;\\," + q + "]$, on a $f'(x) " + (sExt>0?'<':'>') + " 0$, donc $f$ est " + (sExt>0?'strictement décroissante':'strictement croissante') + " sur $[" + A + "\\,;\\," + q + "]$.",
-        "Sur $[" + q + "\\,;\\," + B + "]$, on a $f'(x) " + (sExt>0?'>':'<') + " 0$, donc $f$ est " + (sExt>0?'strictement croissante':'strictement décroissante') + " sur $[" + q + "\\,;\\," + B + "]$.",
-        "$f$ admet un " + (sExt>0?'minimum':'maximum') + " local en $x = " + q + "$ sur $I$."
+        "Sur $[" + A + "\\,;\\," + q + "]$, $f'(x) " + (sExt>0?'<':'>') + " 0$, $f$ " + (sExt>0?'décroissante':'croissante') + ".",
+        "Sur $[" + q + "\\,;\\," + B + "]$, $f'(x) " + (sExt>0?'>':'<') + " 0$, $f$ " + (sExt>0?'croissante':'décroissante') + ".",
+        "$f$ admet un " + (sExt>0?'minimum':'maximum') + " local en $" + q + "$."
       ];
-      distractors = [
-        "$f$ est décroissante sur tout $I$.",
-        "$f$ admet un maximum en $x = " + B + "$.",
-        "Le signe de $f'$ est constant sur $I$.",
-        "$f$ admet aussi un extremum en $x = " + p + "$ sur $I$."
-      ];
+      distractors = ["$f$ décroissante sur tout $I$.", "Maximum en $B$.", "Signe de $f'$ constant.", "Extremum en $p$."];
     } else {
-      const sign = sExt > 0 ? 'strictement croissante' : 'strictement décroissante';
+      const sign = sExt > 0 ? 'croissante' : 'décroissante';
       correctPhrases = [
-        "Aucune valeur n'annule $f'$ sur $I$, donc $f'$ garde un signe constant sur $I$.",
-        "Sur $I$, $f'(x) " + (sExt>0?'>':'<') + " 0$ pour tout $x$.",
+        "Aucune valeur n'annule $f'$ sur $I$, donc $f'$ garde un signe constant.",
+        "Sur $I$, $f'(x) " + (sExt>0?'>':'<') + " 0$.",
         "Donc $f$ est " + sign + " sur tout $I$.",
-        "$f$ est monotone sur $I$ : elle n'admet ni maximum ni minimum à l'intérieur de $I$."
+        "$f$ est monotone sur $I$ : ni maximum ni minimum à l'intérieur."
       ];
-      distractors = [
-        "$f$ est croissante puis décroissante sur $I$.",
-        "$f$ admet un extremum sur $I$.",
-        "Le signe de $f'$ change au milieu de $I$.",
-        "$f$ est constante sur $I$."
-      ];
+      distractors = ["$f$ croissante puis décroissante.", "$f$ admet un extremum.", "Signe change au milieu de $I$.", "$f$ constante."];
     }
     Q.push({
-      title:"Question 6 — Variations de $f$ sur $I$ (avec des phrases)",
-      consigne:"Décrire les variations de $f$ sur $I$ à l'aide du signe de $f'$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct: correctPhrases,
-      distractors: distractors,
-      solution:
-        RAPPEL_DERIVEES +
-        '<div class="rappel"><strong>📘 Rappel — Lien dérivée / variations</strong><ul>' +
-        '<li>$f\' \\geq 0 \\Rightarrow f$ croissante ; $f\' \\leq 0 \\Rightarrow f$ décroissante.</li>' +
-        '<li>Extremum local là où $f\'$ s\'annule en changeant de signe.</li>' +
-        '</ul></div>' +
-        '<h3>Conclusion (encadrée)</h3>' +
+      title:"Question 6 — Variations de $f$ sur $I$",
+      consigne:"Décrire les variations de $f$ sur $I$. Conclusion marquée F et encadrée.",
+      correct: correctPhrases, distractors: distractors,
+      solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
         (caseType === 'both'
-          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (sExt>0?'maximum':'minimum') + ' \\text{ local en } ' + p + ' \\text{ et un } ' + (sExt>0?'minimum':'maximum') + ' \\text{ local en } ' + q + ' \\text{ sur } I\\,} \\]</p>'
+          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (sExt>0?'maximum':'minimum') + ' \\text{ local en } ' + p + ' \\text{ et un } ' + (sExt>0?'minimum':'maximum') + ' \\text{ local en } ' + q + '\\,} \\]</p>'
           : caseType === 'onlyP'
-          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (sExt>0?'maximum':'minimum') + ' \\text{ local en } ' + p + ' \\text{ sur } I\\,} \\]</p>'
+          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (sExt>0?'maximum':'minimum') + ' \\text{ local en } ' + p + '\\,} \\]</p>'
           : caseType === 'onlyQ'
-          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (sExt>0?'minimum':'maximum') + ' \\text{ local en } ' + q + ' \\text{ sur } I\\,} \\]</p>'
-          : '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est } ' + (sExt>0?'\\text{strictement croissante}':'\\text{strictement décroissante}') + ' \\text{ et monotone sur } I\\,} \\]</p>')
+          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (sExt>0?'minimum':'maximum') + ' \\text{ local en } ' + q + '\\,} \\]</p>'
+          : '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est } ' + (sExt>0?'\\text{croissante}':'\\text{décroissante}') + ' \\text{ sur } I\\,} \\]</p>')
     });
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const r=ex.r;
     let correctPhrases, distractors;
     if(caseType === 'in'){
       correctPhrases = [
-        "Sur $[" + A + "\\,;\\," + r + "]$, on a $f'(x) " + (k>0?'<':'>') + " 0$, donc $f$ est " + (k>0?'strictement décroissante':'strictement croissante') + " sur $[" + A + "\\,;\\," + r + "]$.",
-        "Sur $[" + r + "\\,;\\," + B + "]$, on a $f'(x) " + (k>0?'>':'<') + " 0$, donc $f$ est " + (k>0?'strictement croissante':'strictement décroissante') + " sur $[" + r + "\\,;\\," + B + "]$.",
-        "$f$ admet un " + (k>0?'minimum':'maximum') + " local en $x = " + r + "$ sur $I$."
+        "Sur $[" + A + "\\,;\\," + r + "]$, $f'(x) " + (k>0?'<':'>') + " 0$, $f$ " + (k>0?'décroissante':'croissante') + ".",
+        "Sur $[" + r + "\\,;\\," + B + "]$, $f'(x) " + (k>0?'>':'<') + " 0$, $f$ " + (k>0?'croissante':'décroissante') + ".",
+        "$f$ admet un " + (k>0?'minimum':'maximum') + " local en $" + r + "$."
       ];
-      distractors = [
-        "$f$ est croissante sur tout $I$.",
-        "$f$ admet un maximum en $x = " + A + "$.",
-        "$f$ est constante sur $I$.",
-        "Le signe de $f'$ change deux fois sur $I$."
-      ];
+      distractors = ["$f$ croissante sur tout $I$.", "Maximum en $A$.", "$f$ constante.", "Signe change deux fois."];
     } else {
       const croiss = (caseType === 'out-right') === (k>0);
       correctPhrases = [
-        "Sur $I$, $f'$ garde un signe constant (aucune racine n'est dans $I$).",
-        "Sur $I$, $f'(x) " + (croiss?'>':'<') + " 0$ pour tout $x$.",
-        "Donc $f$ est " + (croiss?'strictement croissante':'strictement décroissante') + " sur $I$.",
-        "$f$ est monotone sur $I$ : elle n'admet ni maximum ni minimum à l'intérieur de $I$."
+        "Sur $I$, $f'$ garde un signe constant.",
+        "Sur $I$, $f'(x) " + (croiss?'>':'<') + " 0$.",
+        "Donc $f$ est " + (croiss?'croissante':'décroissante') + " sur $I$.",
+        "$f$ est monotone sur $I$."
       ];
-      distractors = [
-        "$f$ admet un extremum sur $I$.",
-        "$f$ est croissante puis décroissante sur $I$.",
-        "Le signe de $f'$ change sur $I$.",
-        "$f$ est constante sur $I$."
-      ];
+      distractors = ["$f$ admet un extremum.", "$f$ croissante puis décroissante.", "Signe change sur $I$.", "$f$ constante."];
     }
     Q.push({
-      title:"Question 6 — Variations de $f$ sur $I$ (avec des phrases)",
-      consigne:"Décrire les variations de $f$ sur $I$ à l'aide du signe de $f'$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct: correctPhrases,
-      distractors: distractors,
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Conclusion (encadrée)</h3>' +
+      title:"Question 6 — Variations de $f$ sur $I$",
+      consigne:"Décrire les variations de $f$ sur $I$. Conclusion marquée F et encadrée.",
+      correct: correctPhrases, distractors: distractors,
+      solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
         (caseType === 'in'
-          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (k>0?'minimum':'maximum') + ' \\text{ local en } ' + r + ' \\text{ sur } I\\,} \\]</p>'
+          ? '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ admet un } ' + (k>0?'minimum':'maximum') + ' \\text{ local en } ' + r + '\\,} \\]</p>'
           : '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est monotone sur } I\\,} \\]</p>')
     });
-  }
-  else{
+  } else{
     const a=ex.a;
     Q.push({
-      title:"Question 6 — Variations de $f$ sur $I$ (avec des phrases)",
-      consigne:"Décrire les variations de $f$ sur $I$ à l'aide du signe de $f'$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      title:"Question 6 — Variations de $f$ sur $I$",
+      consigne:"Décrire les variations de $f$ sur $I$. Conclusion marquée F et encadrée.",
       correct:[
         "$f'(x) = " + a + "$ est constant sur $I$.",
-        "Sur $I$, $f'(x) " + (a>0?'>':'<') + " 0$ pour tout $x$.",
-        "Donc $f$ est " + (a>0?'strictement croissante':'strictement décroissante') + " sur tout $I$.",
-        "$f$ est monotone sur $I$ : elle n'admet ni maximum ni minimum à l'intérieur de $I$."
+        "Sur $I$, $f'(x) " + (a>0?'>':'<') + " 0$.",
+        "Donc $f$ est " + (a>0?'croissante':'décroissante') + " sur tout $I$.",
+        "$f$ est monotone sur $I$."
       ],
-      distractors:[
-        "$f$ est croissante puis décroissante sur $I$.",
-        "$f$ est constante sur $I$.",
-        "$f$ admet un maximum en $x = " + A + "$.",
-        "Le sens de variation change au milieu de $I$."
-      ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Conclusion (encadrée)</h3>' +
-        '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est } ' + (a>0?'\\text{strictement croissante}':'\\text{strictement décroissante}') + ' \\text{ sur } I\\,} \\]</p>'
+      distractors:["$f$ croissante puis décroissante.", "$f$ constante.", "Maximum en $A$.", "Variation change au milieu."],
+      solution: RAPPEL_DERIVEES + '<h3>Conclusion (encadrée)</h3>' +
+        '<p>\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est } ' + (a>0?'\\text{croissante}':'\\text{décroissante}') + ' \\text{ sur } I\\,} \\]</p>'
     });
   }
 
-  /* =========================================================
-     Q7 — Tableau de variation
-     ========================================================= */
+  /* Q7 — Tableau de variation (avec constructeur) */
   if(deg===3){
     const p=ex.p, q=ex.q;
     const fpp=evalPoly(ex.coeffs,p), fqq=evalPoly(ex.coeffs,q);
@@ -1179,96 +893,53 @@ function makeQuestions(ex){
     let correctPhrases, distractors, tableHTML;
     if(caseType === 'both'){
       correctPhrases = [
-        "On place dans la première ligne les bornes de $I$ et les valeurs qui annulent $f'$ : $" + A + "$, $" + p + "$, $" + q + "$, $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
+        "On place les bornes de $I$ et les racines de $f'$ dans $I$ : $" + A + "$, $" + p + "$, $" + q + "$, $" + B + "$.",
+        "On place les images correspondantes.",
         "On dessine les flèches selon le signe de $f'$.",
         "On fait apparaître les extremums locaux en $" + p + "$ et $" + q + "$."
       ];
-      distractors = [
-        "On place uniquement les valeurs qui annulent $f$.",
-        "On dessine toujours des flèches montantes.",
-        "Le tableau ne dépend pas du signe de $f'$.",
-        "On oublie les bornes de $I$."
-      ];
-      tableHTML =
-        '<table class="tab">' +
-        '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + p + '$</td>' +
-        '      <td class="itv"></td><td>$' + q + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
-        '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + fpp + '$</td>' +
-        '      <td class="arr">' + dn1 + '</td><td>$' + fqq + '$</td>' +
-        '      <td class="arr">' + up1 + '</td><td>$' + ex.fB + '$</td></tr>' +
-        '</table>';
+      distractors = ["Placer uniquement les racines de $f$.", "Toujours des flèches montantes.", "Indépendant du signe de $f'$.", "Oublier les bornes."];
+      tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + p + '$</td><td class="itv"></td><td>$' + q + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+        '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + fpp + '$</td><td class="arr">' + dn1 + '</td><td>$' + fqq + '$</td><td class="arr">' + up1 + '</td><td>$' + ex.fB + '$</td></tr></table>';
     } else if(caseType === 'onlyP'){
       correctPhrases = [
-        "On place dans la première ligne les bornes de $I$ et la valeur qui annule $f'$ dans $I$ : $" + A + "$, $" + p + "$, $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
-        "On dessine les flèches selon le signe de $f'$ (changement en $" + p + "$).",
+        "On place les bornes de $I$ et la seule racine de $f'$ dans $I$ : $" + A + "$, $" + p + "$, $" + B + "$.",
+        "On place les images correspondantes.",
+        "On dessine les flèches selon le signe de $f'$.",
         "On fait apparaître l'extremum local en $" + p + "$."
       ];
-      distractors = [
-        "On place aussi $" + q + "$ dans la première ligne.",
-        "On place uniquement les valeurs qui annulent $f$.",
-        "On dessine toujours des flèches montantes.",
-        "Le tableau ne dépend pas du signe de $f'$."
-      ];
-      tableHTML =
-        '<table class="tab">' +
-        '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + p + '$</td>' +
-        '      <td class="itv"></td><td>$' + B + '$</td></tr>' +
-        '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + fpp + '$</td>' +
-        '      <td class="arr">' + dn1 + '</td><td>$' + ex.fB + '$</td></tr>' +
-        '</table>';
+      distractors = ["Placer aussi $" + q + "$.", "Placer uniquement les racines de $f$.", "Toujours des flèches montantes.", "Indépendant du signe de $f'$."];
+      tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + p + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+        '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + fpp + '$</td><td class="arr">' + dn1 + '</td><td>$' + ex.fB + '$</td></tr></table>';
     } else if(caseType === 'onlyQ'){
       correctPhrases = [
-        "On place dans la première ligne les bornes de $I$ et la valeur qui annule $f'$ dans $I$ : $" + A + "$, $" + q + "$, $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
-        "On dessine les flèches selon le signe de $f'$ (changement en $" + q + "$).",
+        "On place les bornes de $I$ et la seule racine de $f'$ dans $I$ : $" + A + "$, $" + q + "$, $" + B + "$.",
+        "On place les images correspondantes.",
+        "On dessine les flèches selon le signe de $f'$.",
         "On fait apparaître l'extremum local en $" + q + "$."
       ];
-      distractors = [
-        "On place aussi $" + p + "$ dans la première ligne.",
-        "On place uniquement les valeurs qui annulent $f$.",
-        "On dessine toujours des flèches montantes.",
-        "Le tableau ne dépend pas du signe de $f'$."
-      ];
-      tableHTML =
-        '<table class="tab">' +
-        '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + q + '$</td>' +
-        '      <td class="itv"></td><td>$' + B + '$</td></tr>' +
-        '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + dn1 + '</td><td>$' + fqq + '$</td>' +
-        '      <td class="arr">' + up1 + '</td><td>$' + ex.fB + '$</td></tr>' +
-        '</table>';
+      distractors = ["Placer aussi $" + p + "$.", "Placer uniquement les racines de $f$.", "Toujours des flèches montantes.", "Indépendant du signe de $f'$."];
+      tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + q + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+        '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + dn1 + '</td><td>$' + fqq + '$</td><td class="arr">' + up1 + '</td><td>$' + ex.fB + '$</td></tr></table>';
     } else {
       correctPhrases = [
-        "On place dans la première ligne les bornes de $I$ : $" + A + "$ et $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
-        "Aucune valeur n'annule $f'$ dans $I$ : on dessine une seule flèche " + (k>0?'montante':'descendante') + "."
+        "On place les bornes de $I$ : $" + A + "$ et $" + B + "$.",
+        "On place les images correspondantes.",
+        "Aucune racine dans $I$ : une seule flèche " + (k>0?'montante':'descendante') + "."
       ];
-      distractors = [
-        "On place un extremum au milieu de $I$.",
-        "On dessine deux flèches opposées.",
-        "Le tableau ne dépend pas du signe de $f'$.",
-        "On n'écrit pas les valeurs de $f$ aux bornes."
-      ];
-      tableHTML =
-        '<table class="tab">' +
-        '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
-        '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + ex.fB + '$</td></tr>' +
-        '</table>';
+      distractors = ["Extremum au milieu de $I$.", "Deux flèches opposées.", "Indépendant du signe de $f'$.", "Ne pas écrire les images."];
+      tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+        '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + ex.fB + '$</td></tr></table>';
     }
     Q.push({
       title:"Question 7 — Tableau de variation de $f$ sur $I$",
-      consigne:"Dresser le tableau de variation de $f$ sur $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct: correctPhrases,
-      distractors: distractors,
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Tableau de variation</h3>' + tableHTML +
+      consigne:"Dresser le tableau de variation. <strong>Utilisez le constructeur interactif ci-dessous</strong> pour bâtir directement le tableau, et/ou reconstituez le raisonnement. Conclusion marquée F et encadrée.",
+      correct: correctPhrases, distractors: distractors, variationBuilder: true,
+      solution: RAPPEL_DERIVEES + '<h3>Tableau de variation attendu</h3>' + tableHTML +
         '<h3>Conclusion (encadrée)</h3>' +
-        '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ sur } I \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
+        '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
     });
-  }
-  else if(deg===2){
+  } else if(deg===2){
     const r=ex.r;
     const vr=evalPoly(ex.coeffs,r);
     const up1 = k>0 ? '↘' : '↗';
@@ -1276,116 +947,83 @@ function makeQuestions(ex){
     let correctPhrases, distractors, tableHTML;
     if(caseType === 'in'){
       correctPhrases = [
-        "On place dans la première ligne les bornes de $I$ et la valeur qui annule $f'$ : $" + A + "$, $" + r + "$, $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
+        "On place les bornes de $I$ et la racine de $f'$ : $" + A + "$, $" + r + "$, $" + B + "$.",
+        "On place les images correspondantes.",
         "On dessine les flèches selon le signe de $f'$.",
         "On fait apparaître l'extremum local en $" + r + "$."
       ];
-      distractors = [
-        "On place uniquement les racines de $f$.",
-        "On dessine toujours des flèches montantes.",
-        "Le tableau est indépendant du signe de $f'$."
-      ];
-      tableHTML =
-        '<table class="tab">' +
-        '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + r + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
-        '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + vr + '$</td>' +
-        '      <td class="arr">' + up2 + '</td><td>$' + ex.fB + '$</td></tr>' +
-        '</table>';
+      distractors = ["Uniquement les racines de $f$.", "Toujours des flèches montantes.", "Indépendant du signe de $f'$."];
+      tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + r + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+        '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + up1 + '</td><td>$' + vr + '$</td><td class="arr">' + up2 + '</td><td>$' + ex.fB + '$</td></tr></table>';
     } else {
       const arr = (caseType==='out-right') === (k>0) ? '↗' : '↘';
       correctPhrases = [
-        "On place dans la première ligne les bornes de $I$ : $" + A + "$ et $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
-        "Aucune valeur n'annule $f'$ dans $I$ : on dessine une seule flèche " + (arr==='↗'?'montante':'descendante') + "."
+        "On place les bornes de $I$ : $" + A + "$ et $" + B + "$.",
+        "On place les images correspondantes.",
+        "Aucune racine dans $I$ : une seule flèche " + (arr==='↗'?'montante':'descendante') + "."
       ];
-      distractors = [
-        "On place un extremum au milieu de $I$.",
-        "On dessine deux flèches opposées.",
-        "On n'écrit pas les valeurs de $f$ aux bornes."
-      ];
-      tableHTML =
-        '<table class="tab">' +
-        '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
-        '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + arr + '</td><td>$' + ex.fB + '$</td></tr>' +
-        '</table>';
+      distractors = ["Extremum au milieu de $I$.", "Deux flèches opposées.", "Ne pas écrire les images."];
+      tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+        '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + arr + '</td><td>$' + ex.fB + '$</td></tr></table>';
     }
     Q.push({
       title:"Question 7 — Tableau de variation de $f$ sur $I$",
-      consigne:"Dresser le tableau de variation de $f$ sur $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
-      correct: correctPhrases,
-      distractors: distractors,
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Tableau de variation</h3>' + tableHTML +
+      consigne:"Dresser le tableau de variation. <strong>Utilisez le constructeur interactif ci-dessous</strong> et/ou reconstituez le raisonnement. Conclusion marquée F et encadrée.",
+      correct: correctPhrases, distractors: distractors, variationBuilder: true,
+      solution: RAPPEL_DERIVEES + '<h3>Tableau de variation attendu</h3>' + tableHTML +
         '<h3>Conclusion (encadrée)</h3>' +
-        '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ sur } I \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
+        '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
     });
-  }
-  else{
+  } else{
     const a=ex.a;
     const arr = a>0 ? '↗' : '↘';
-    const tableHTML =
-      '<table class="tab">' +
-      '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
-      '  <tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + arr + '</td><td>$' + ex.fB + '$</td></tr>' +
-      '</table>';
+    const tableHTML = '<table class="tab"><tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+      '<tr><th>$f(x)$</th><td>$' + ex.fA + '$</td><td class="arr">' + arr + '</td><td>$' + ex.fB + '$</td></tr></table>';
     Q.push({
       title:"Question 7 — Tableau de variation de $f$ sur $I$",
-      consigne:"Dresser le tableau de variation de $f$ sur $I$. Reconstituer le raisonnement. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      consigne:"Dresser le tableau de variation. <strong>Utilisez le constructeur interactif ci-dessous</strong> et/ou reconstituez le raisonnement. Conclusion marquée F et encadrée.",
       correct:[
-        "On place dans la première ligne les bornes de $I$ : $" + A + "$ et $" + B + "$.",
-        "On place dans la deuxième ligne les images correspondantes.",
-        "Comme $f'(x) = " + a + " " + (a>0?'>':'<') + " 0$ sur $I$, on dessine une seule flèche " + (a>0?'montante':'descendante') + "."
+        "On place les bornes de $I$ : $" + A + "$ et $" + B + "$.",
+        "On place les images correspondantes.",
+        "Comme $f'(x) = " + a + " " + (a>0?'>':'<') + " 0$, une seule flèche " + (a>0?'montante':'descendante') + "."
       ],
-      distractors:[
-        "On place un extremum au milieu de $I$.",
-        "On dessine deux flèches opposées.",
-        "On n'écrit pas les valeurs de $f$ aux bornes."
-      ],
-      solution:
-        RAPPEL_DERIVEES +
-        '<h3>Tableau de variation</h3>' + tableHTML +
+      distractors:["Extremum au milieu.", "Deux flèches opposées.", "Ne pas écrire les images."],
+      variationBuilder: true,
+      solution: RAPPEL_DERIVEES + '<h3>Tableau de variation attendu</h3>' + tableHTML +
         '<h3>Conclusion (encadrée)</h3>' +
-        '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ sur } I \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
+        '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
     });
   }
 
-  /* =========================================================
-     Q8 — Tangente
-     ========================================================= */
+  /* Q8 — Tangente */
   {
     const x0 = ex.x0, fx0 = ex.fx0, fpx0 = ex.fpx0;
     const ord = fx0 - x0*fpx0;
     const x0Part = x0>=0 ? '(x - ' + x0 + ')' : '(x + ' + (-x0) + ')';
     const reduced = (fpx0===0) ? 'y = ' + fx0 : 'y = ' + fpx0 + 'x' + (ord>0 ? ' + ' + ord : (ord<0 ? ' - ' + (-ord) : ''));
     let rappelFormule;
-    if(deg===3) rappelFormule = "Ici $f$ est un polynôme de degré 3, donc $f'(x) = 3ax^{2}+2bx+c$, soit $f'(x) = " + fpL + "$.";
-    else if(deg===2) rappelFormule = "Ici $f$ est un polynôme de degré 2, donc $f'(x) = 2ax+b$, soit $f'(x) = " + fpL + "$.";
-    else rappelFormule = "Ici $f$ est une fonction affine, donc $f'(x) = a$ (constante), soit $f'(x) = " + fpL + "$.";
-
+    if(deg===3) rappelFormule = "$(ax^{3}+bx^{2}+cx+d)\' = 3ax^{2}+2bx+c$, donc $f'(x) = " + fpL + "$.";
+    else if(deg===2) rappelFormule = "$(ax^{2}+bx+c)\' = 2ax+b$, donc $f'(x) = " + fpL + "$.";
+    else rappelFormule = "$(ax+b)\' = a$, donc $f'(x) = " + fpL + "$.";
     Q.push({
-      title:"Question 8 — Équation de la tangente au point d'abscisse $x_0 = " + x0 + "$",
-      consigne:"Déterminer l'équation réduite de la tangente $T$ à la courbe de $f$ au point d'abscisse $x_0 = " + x0 + "$ (avec $x_0 \\in I$). La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      title:"Question 8 — Équation de la tangente en $x_0 = " + x0 + "$",
+      consigne:"Déterminer l'équation de la tangente $T$. Conclusion marquée F et encadrée.",
       correct:[
-        "La tangente au point d'abscisse $x_0$ a pour équation $y = f'(x_0)(x - x_0) + f(x_0)$.",
+        "La tangente a pour équation $y = f'(x_0)(x - x_0) + f(x_0)$.",
         "On calcule $f(" + x0 + ") = " + fx0 + "$.",
         "On calcule $f'(" + x0 + ") = " + fpx0 + "$.",
         "On remplace : $y = " + fpx0 + x0Part + (fx0>=0 ? ' + ' + fx0 : ' - ' + (-fx0)) + "$.",
-        "En développant et réduisant, on obtient : $T : " + reduced + "$."
+        "En développant : $T : " + reduced + "$."
       ],
       distractors:[
         "$y = f(x_0)(x - x_0) + f'(x_0)$",
         "$y = f'(x_0)\\,x + f(x_0)$",
-        "La tangente passe toujours par l'origine du repère.",
+        "La tangente passe toujours par l'origine.",
         "$y = f(x_0)\\,x + f'(x_0)$"
       ],
-      solution:
-        RAPPEL_DERIVEES +
+      solution: RAPPEL_DERIVEES +
         '<div class="rappel"><strong>📘 Formule</strong> $y = f\'(x_0)(x-x_0) + f(x_0)$.</div>' +
-        '<h3>Rappel de la dérivée</h3><p>' + rappelFormule + '</p>' +
-        '<h3>Étape 1</h3><p>$f(' + x0 + ') = ' + fx0 + '$, $f\'(' + x0 + ') = ' + fpx0 + '$.</p>' +
-        '<h3>Étape 2</h3>\\[ y = ' + fpx0 + '\\left(x ' + (x0>=0 ? '- ' + x0 : '+ ' + (-x0)) + '\\right) ' + (fx0>=0 ? '+ ' + fx0 : '- ' + (-fx0)) + ' \\]' +
+        '<p>' + rappelFormule + '</p>' +
         '<h3>Conclusion (encadrée)</h3>' +
         '\\[ \\boxed{\\,\\text{Finalement, } T : ' + reduced + '\\,} \\]'
     });
@@ -1395,12 +1033,161 @@ function makeQuestions(ex){
 }
 
 /* ============================================================
-   RENDU D'UNE QUESTION AVEC DRAG & DROP
+   CONSTRUCTEUR DE TABLEAU UNIFIÉ
+   ============================================================ */
+function createTableBuilder(cfg){
+  const wrap = document.createElement('div');
+  wrap.className = 'table-builder ' + (cfg.variant || 'sign');
+
+  const heading = document.createElement('p');
+  heading.className = 'tb-heading';
+  heading.innerHTML = cfg.title + ' <span class="badge-new">' + cfg.badge + '</span>';
+  wrap.appendChild(heading);
+
+  const hint = document.createElement('p');
+  hint.className = 'tb-hint';
+  hint.innerHTML = cfg.hint;
+  wrap.appendChild(hint);
+
+  const state = { rows: 0, cols: 0, data: [] };
+  function initState(){
+    state.rows = cfg.defaultData.length;
+    state.cols = cfg.defaultData[0].length;
+    state.data = cfg.defaultData.map(row => row.slice());
+  }
+  initState();
+
+  const controls = document.createElement('div');
+  controls.className = 'tb-controls';
+  controls.innerHTML =
+    '<button type="button" data-act="add-row">➕ Ligne</button>' +
+    '<button type="button" data-act="del-row">➖ Ligne</button>' +
+    '<button type="button" data-act="add-col">➕ Colonne</button>' +
+    '<button type="button" data-act="del-col">➖ Colonne</button>' +
+    '<button type="button" data-act="reset" class="tb-reset">🔄 Réinitialiser</button>';
+  wrap.appendChild(controls);
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'tb-table-wrap';
+  wrap.appendChild(tableWrap);
+
+  function isTextCell(r, c){ return r === 0 || c === 0; }
+
+  function applyCellClass(btn, val){
+    btn.classList.remove('pos','neg','zero','up','down');
+    if(val === '+') btn.classList.add('pos');
+    else if(val === '−') btn.classList.add('neg');
+    else if(val === '0') btn.classList.add('zero');
+    else if(val === '↗') btn.classList.add('up');
+    else if(val === '↘') btn.classList.add('down');
+  }
+
+  function render(){
+    const tbl = document.createElement('table');
+    tbl.className = 'tb-table';
+    for(let r = 0; r < state.rows; r++){
+      const tr = document.createElement('tr');
+      for(let c = 0; c < state.cols; c++){
+        const td = document.createElement('td');
+        if(isTextCell(r, c)){
+          td.classList.add('tb-text');
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'tb-input';
+          inp.value = state.data[r][c] || '';
+          inp.addEventListener('input', () => { state.data[r][c] = inp.value; });
+          td.appendChild(inp);
+        } else {
+          td.classList.add('tb-cell');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'tb-sign';
+          const val = state.data[r][c];
+          btn.textContent = val || '·';
+          applyCellClass(btn, val);
+          btn.addEventListener('click', () => {
+            const cyc = cfg.cellCycle;
+            const cur = state.data[r][c];
+            const idx = cyc.indexOf(cur);
+            state.data[r][c] = cyc[(idx + 1) % cyc.length];
+            btn.textContent = state.data[r][c] || '·';
+            applyCellClass(btn, state.data[r][c]);
+          });
+          td.appendChild(btn);
+        }
+        tr.appendChild(td);
+      }
+      tbl.appendChild(tr);
+    }
+    tableWrap.innerHTML = '';
+    tableWrap.appendChild(tbl);
+  }
+
+  controls.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-act]');
+    if(!btn) return;
+    const act = btn.dataset.act;
+    if(act === 'add-row'){
+      const newRow = [];
+      for(let c = 0; c < state.cols; c++) newRow.push('');
+      state.data.push(newRow);
+      state.rows++;
+    } else if(act === 'del-row'){
+      if(state.rows > 2){ state.data.pop(); state.rows--; }
+    } else if(act === 'add-col'){
+      for(let r = 0; r < state.rows; r++) state.data[r].push('');
+      state.cols++;
+    } else if(act === 'del-col'){
+      if(state.cols > 2){ for(let r = 0; r < state.rows; r++) state.data[r].pop(); state.cols--; }
+    } else if(act === 'reset'){
+      initState();
+    }
+    render();
+  });
+
+  render();
+  return wrap;
+}
+
+function createSignTableBuilder(){
+  return createTableBuilder({
+    title: '🧮 Constructeur de tableau de signes',
+    badge: 'INTERACTIF',
+    variant: 'sign',
+    hint: 'Cliquez sur une cellule blanche pour faire défiler : <code>∅ → + → − → 0</code>. ' +
+          'Tapez dans les cellules grises : valeurs des bornes, racines de $f\'$, facteurs, expression finale (ex : <code>f\'(x)</code>).',
+    cellCycle: ['', '+', '−', '0'],
+    defaultData: [
+      ['x','','','',''],
+      ['','','','',''],
+      ["f'(x)",'','','','']
+    ]
+  });
+}
+
+function createVariationTableBuilder(){
+  return createTableBuilder({
+    title: '📈 Constructeur de tableau de variation',
+    badge: 'INTERACTIF',
+    variant: 'variation',
+    hint: 'Cliquez sur une cellule blanche pour faire défiler : <code>∅ → ↗ → ↘ → + → − → 0</code>. ' +
+          'Tapez dans les cellules grises : valeurs des bornes, des racines, images de $f$, étiquettes (ex : <code>f\'(x)</code>, <code>f(x)</code>). ' +
+          'Utilisez <code>↗</code> et <code>↘</code> pour les flèches de variation, <code>+</code> et <code>−</code> pour le signe de $f\'$.',
+    cellCycle: ['', '↗', '↘', '+', '−', '0'],
+    defaultData: [
+      ['x','','','','','',''],
+      ["f'(x)",'','','','','',''],
+      ['f(x)','','','','','','']
+    ]
+  });
+}
+
+/* ============================================================
+   RENDU D'UNE QUESTION
    ============================================================ */
 function renderQuestion(q, qIndex){
   const card = document.createElement('div');
   card.className = 'card';
-
   const header = document.createElement('div');
   header.innerHTML = '<h2 class="qtitle">' + q.title + '</h2>' +
                      '<p class="consigne">' + q.consigne + '</p>';
@@ -1428,37 +1215,41 @@ function renderQuestion(q, qIndex){
   const poolList = zones.querySelector('.pool-list');
   const reasoningList = zones.querySelector('.reasoning-list');
 
+  /* Ajout des constructeurs selon la question */
+  if(q.tableBuilder === true){
+    card.appendChild(createSignTableBuilder());
+  }
+  if(q.variationBuilder === true){
+    card.appendChild(createVariationTableBuilder());
+  }
+
   function createItemEl(it){
     const li = document.createElement('li');
     li.className = 'drag-item';
     li.draggable = true;
-    li.dataset.key   = it.key;
-    li.dataset.ok    = it.ok ? 'true' : 'false';
+    li.dataset.key = it.key;
+    li.dataset.ok = it.ok ? 'true' : 'false';
     li.dataset.order = it.order;
     li.dataset.finalement = 'false';
-    li.dataset.boxed      = 'false';
+    li.dataset.boxed = 'false';
     li.innerHTML =
-      '<span class="handle" aria-hidden="true">☰</span>' +
+      '<span class="handle">☰</span>' +
       '<span class="badge"></span>' +
-      '<span class="txt">' +
-        '<span class="finalement-prefix" style="display:none;">Finalement, </span>' +
-        it.t +
-      '</span>' +
+      '<span class="txt"><span class="finalement-prefix" style="display:none;">Finalement, </span>' + it.t + '</span>' +
       '<span class="item-tools">' +
-        '<button type="button" class="toggle-btn f-btn"   title="Ajouter/retirer « Finalement »">F</button>' +
-        '<button type="button" class="toggle-btn box-btn" title="Encadrer / retirer l\'encadrement">▢</button>' +
-        '<button type="button" class="move-btn"           title="Déplacer vers l\'autre zone">→</button>' +
+        '<button type="button" class="toggle-btn f-btn" title="« Finalement »">F</button>' +
+        '<button type="button" class="toggle-btn box-btn" title="Encadrer">▢</button>' +
+        '<button type="button" class="move-btn" title="Déplacer">→</button>' +
       '</span>';
     return li;
   }
-
   items.forEach(it => poolList.appendChild(createItemEl(it)));
 
   const btnrow = document.createElement('div');
   btnrow.className = 'btnrow';
   btnrow.innerHTML =
-    '<button class="btn check-btn">✅ Vérifier</button>' +
-    '<button class="btn reset-btn">🔄 Réinitialiser</button>' +
+    '<button class="btn check-btn">✅ Vérifier le raisonnement</button>' +
+    '<button class="btn reset-btn">🔄 Réinitialiser le raisonnement</button>' +
     '<button class="btn sol-btn">Solution</button>';
   card.appendChild(btnrow);
 
@@ -1477,10 +1268,8 @@ function renderQuestion(q, qIndex){
   const solution = document.createElement('div');
   solution.className = 'solution';
   solution.innerHTML =
-    '<div class="ordre"><strong>Ordre correct attendu.</strong> La dernière phrase (conclusion) doit être placée en dernier, ' +
-      'commencer par <em>« Finalement »</em> et être <strong>encadrée</strong> (boutons F et ▢ sur la phrase concernée).</div>' +
-    '<ol class="items">' + correctListHTML + '</ol>' +
-    q.solution;
+    '<div class="ordre"><strong>Ordre correct attendu.</strong> La dernière phrase doit être marquée « Finalement » (F) et encadrée (▢).</div>' +
+    '<ol class="items">' + correctListHTML + '</ol>' + q.solution;
   card.appendChild(solution);
 
   function updateBadges(){
@@ -1509,7 +1298,6 @@ function renderQuestion(q, qIndex){
       return closest;
     }, {offset: Number.NEGATIVE_INFINITY, element: null}).element;
   }
-
   function attachDragHandlers(li){
     li.addEventListener('dragstart', e => {
       draggedEl = li; li.classList.add('dragging');
@@ -1578,7 +1366,7 @@ function renderQuestion(q, qIndex){
     const rItems = [...reasoningList.querySelectorAll('.drag-item')];
     if(rItems.length === 0){
       feedback.className = 'feedback show info';
-      feedback.textContent = '⚠️ Placez au moins une phrase dans la zone « Mon raisonnement ».';
+      feedback.textContent = '⚠️ Placez au moins une phrase dans « Mon raisonnement ».';
       return;
     }
     let orderOk = (rItems.length === q.correct.length);
@@ -1595,13 +1383,13 @@ function renderQuestion(q, qIndex){
     });
     if(orderOk && finalOk){
       feedback.className = 'feedback show ok';
-      feedback.textContent = '🎉 Bravo ! Raisonnement complet, dans le bon ordre, avec conclusion marquée « Finalement » et encadrée.';
+      feedback.textContent = '🎉 Bravo ! Raisonnement complet et conclusion bien mise en valeur.';
     } else if(orderOk && !finalOk){
       feedback.className = 'feedback show warn';
-      feedback.textContent = '⚠️ L\'ordre est correct, mais la conclusion doit être la DERNIÈRE phrase, marquée F et encadrée (▢). Aucune autre phrase ne doit porter ces marques.';
+      feedback.textContent = '⚠️ Ordre correct, mais la conclusion doit être la dernière phrase, marquée F et encadrée (▢).';
     } else {
       feedback.className = 'feedback show ko';
-      feedback.textContent = '❌ Erreurs : vert = bien placé, rouge = à corriger. Pensez aussi à la marque de conclusion (F + ▢).';
+      feedback.textContent = '❌ Erreurs : vert = bien placé, rouge = à corriger.';
     }
   });
 
@@ -1638,27 +1426,23 @@ function buildEnonceHTML(ex){
   let html = '<h2 class="qtitle">Énoncé</h2>';
   html += '<p>On considère la fonction $f$ définie sur $\\mathbb{R}$ par :</p>';
   html += '\\[ f(x) = ' + ex.fLatex + ' \\]';
-  html += '<p>On note $\\mathcal{C}_f$ sa courbe représentative dans un repère orthonormé, et on considère l\'intervalle ';
-  html += '$I = \\left[' + ex.I[0] + '\\,;\\,' + ex.I[1] + '\\right]$.</p>';
+  html += '<p>On note $\\mathcal{C}_f$ sa courbe, et $I = \\left[' + ex.I[0] + '\\,;\\,' + ex.I[1] + '\\right]$.</p>';
   if(ex.deg===3 || ex.deg===2){
-    html += '<p>On propose la forme factorisée : $f\'(x) = ' + ex.fpFact + '$.</p>';
+    html += '<p>Forme factorisée proposée : $f\'(x) = ' + ex.fpFact + '$.</p>';
   } else {
-    html += '<p>La fonction $f$ est une fonction affine : sa dérivée est constante.</p>';
+    html += '<p>$f$ est affine : sa dérivée est constante.</p>';
   }
-  html += '<p><strong>Formules utiles :</strong> la dérivée d\'une somme est la somme des dérivées ; ' +
-          'la dérivée de $x \\mapsto ax+b$ est $x \\mapsto a$ ; ' +
-          'la dérivée de $x \\mapsto ax^{2}+bx+c$ est $x \\mapsto 2ax+b$ ; ' +
-          'la dérivée de $x \\mapsto ax^{3}+bx^{2}+cx+d$ est $x \\mapsto 3ax^{2}+2bx+c$.</p>';
+  html += '<p><strong>Formules utiles :</strong> $(u+v)\' = u\'+v\'$ ; $(ax+b)\' = a$ ; $(ax^{2}+bx+c)\' = 2ax+b$ ; $(ax^{3}+bx^{2}+cx+d)\' = 3ax^{2}+2bx+c$.</p>';
   html += '<div class="rappel" style="margin-top:12px;">' +
-          '<strong>🎯 Consigne générale — Mise en valeur de la conclusion</strong>' +
-          '<p>Dans chaque question, la <strong>dernière phrase</strong> du raisonnement (celle qui conclut et répond précisément à la question) doit être mise en valeur :</p>' +
+          '<strong>🎯 Consignes</strong>' +
           '<ul>' +
-          '<li>placée <strong>en dernier</strong> dans la zone « Mon raisonnement » ;</li>' +
-          '<li>commençant par <em>« Finalement »</em> : utilisez le bouton <span style="display:inline-block;background:var(--or);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">F</span> ;</li>' +
-          '<li><strong>encadrée</strong> : utilisez le bouton <span style="display:inline-block;background:var(--violet);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">▢</span> ;</li>' +
-          '<li>aucune autre phrase ne doit porter ces marques.</li>' +
+          '<li>Reconstruisez chaque raisonnement par <strong>glisser-déposer</strong>.</li>' +
+          '<li>La phrase de conclusion doit être en <strong>dernier</strong>, marquée <span style="display:inline-block;background:var(--or);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">F</span> (« Finalement ») et <strong>encadrée</strong> avec <span style="display:inline-block;background:var(--violet);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">▢</span>.</li>' +
+          '<li><strong>Question 4</strong> (tableau de <em>signes</em>) et <strong>Question 7</strong> (tableau de <em>variation</em>) : un <strong>constructeur interactif de tableau</strong> apparaît sous les zones de phrases.</li>' +
+          '<li><strong>Tableau de signes</strong> : cellules blanches à cycler sur <code>∅ → + → − → 0</code>.</li>' +
+          '<li><strong>Tableau de variation</strong> : cellules blanches à cycler sur <code>∅ → ↗ → ↘ → + → − → 0</code> (flèches pour les variations, signes pour $f\'$).</li>' +
+          '<li>Cellules grises (1ʳᵉ ligne et 1ʳᵉ colonne) : tapez valeurs, étiquettes et expressions. Boutons ➕/➖ pour ajouter ou supprimer lignes et colonnes.</li>' +
           '</ul></div>';
-  html += '<p><em>Huit questions vous sont proposées (dérivée, forme factorisée, solutions de $f\'(x)=0$ sur $I$, tableau de signe de $f\'$, images, variations, tableau de variation, tangente). Faites glisser les phrases puis marquez la conclusion. Certaines phrases sont des <strong>distracteurs</strong>.</em></p>';
   return html;
 }
 
@@ -1667,17 +1451,14 @@ function buildEnonceHTML(ex){
    ============================================================ */
 function render(){
   const ex = buildExercise();
-  const Q  = makeQuestions(ex);
+  const Q = makeQuestions(ex);
   const app = document.getElementById('app');
   app.innerHTML = '';
-
   const enonce = document.createElement('div');
   enonce.className = 'card enonce';
   enonce.innerHTML = buildEnonceHTML(ex);
   app.appendChild(enonce);
-
   Q.forEach((q, i) => app.appendChild(renderQuestion(q, i)));
-
   if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([app]).catch(()=>{});
 }
 
@@ -1685,19 +1466,16 @@ function render(){
    INITIALISATION
    ============================================================ */
 document.getElementById('newBtn').addEventListener('click', render);
-
 const overlay = document.getElementById('modalOverlay');
 document.getElementById('licenceBtn').addEventListener('click', () => overlay.classList.add('show'));
 document.getElementById('closeModal').addEventListener('click', () => overlay.classList.remove('show'));
 overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.classList.remove('show'); });
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') overlay.classList.remove('show'); });
-
 (function(){
   const mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
   const d = new Date();
   document.getElementById('dateToday').textContent = mois[d.getMonth()] + ' ' + d.getFullYear();
 })();
-
 render();
 </script>
 </body>

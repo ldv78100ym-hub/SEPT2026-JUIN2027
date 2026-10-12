@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercices – Fonctions exponentielles de base a</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['\\[','\\]'], ['$$','$$']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{ --bleu:#1e3a8a; --bleu2:#2563eb; --bleuclair:#dbeafe; --bord:#cbd5e1; --vert:#15803d; --rouge:#b91c1c; --or:#b45309; --violet:#7c3aed; --cyan:#0e7490; }
+  *{box-sizing:border-box;}
+  body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin:0; background:#eef2f7; color:#1f2937; line-height:1.55; }
+  .wrap{max-width:1080px; margin:0 auto; padding:24px 16px 90px;}
+  header h1{font-size:1.55rem; color:var(--bleu); margin:0 0 6px;}
+  header .sub{color:#475569; font-size:.95rem; margin:0 0 20px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;}
+  .card{ background:#fff; border-radius:14px; padding:18px 22px; margin-bottom:18px; box-shadow:0 2px 10px rgba(15,23,42,.08); border:1px solid var(--bord); }
+  .card.enonce{border-left:6px solid var(--bleu2);}
+  .qtitle{color:var(--bleu); font-size:1.08rem; font-weight:700; margin:0 0 8px;}
+  .consigne{font-style:italic; color:#475569; margin:0 0 12px;}
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+  button{ font-family:inherit; font-size:.92rem; border-radius:9px; cursor:pointer; border:1px solid transparent; padding:8px 16px; transition:.15s; }
+  .btn{background:var(--bleu); color:#fff;} .btn:hover{background:#16307a;}
+  .btn-new{background:#0f766e; color:#fff;} .btn-new:hover{background:#0d5f59;}
+  .btn-licence{background:#334155; color:#fff;} .btn-licence:hover{background:#1e293b;}
+  .btn.check-btn{background:#15803d;} .btn.check-btn:hover{background:#166534;}
+  .btn.reset-btn{background:#475569;} .btn.reset-btn:hover{background:#334155;}
+
+  .zones{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:14px 0;}
+  @media (max-width:760px){ .zones{grid-template-columns:1fr;} }
+  .zone{ background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; padding:10px 12px; min-height:120px; transition:.15s; }
+  .zone.drag-over{border-color:var(--bleu2); background:#eff6ff;}
+  .zone-title{ font-weight:700; font-size:.88rem; color:#475569; margin-bottom:8px; }
+  .zone-title small{font-weight:400; color:#94a3b8; font-size:.78rem;}
+  .drop-list{ list-style:none; padding:0; margin:0; min-height:60px; display:flex; flex-direction:column; gap:6px; }
+  .drag-item{ display:flex; align-items:flex-start; gap:6px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px; cursor:grab; user-select:none; }
+  .drag-item:hover{border-color:var(--bleu2); box-shadow:0 2px 6px rgba(37,99,235,.15);}
+  .drag-item.dragging{opacity:.35;}
+  .drag-item .handle{color:#94a3b8; font-size:1rem; flex-shrink:0;}
+  .drag-item .badge{ display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; border-radius:50%; background:#e2e8f0; color:#475569; font-weight:700; font-size:.76rem; flex-shrink:0; margin-top:1px; }
+  .reasoning-list .drag-item .badge{background:var(--bleu); color:#fff;}
+  .drag-item .txt{flex:1; font-size:.94rem; min-width:0;}
+  .drag-item .finalement-prefix{ font-weight:700; color:var(--or); }
+  .drag-item .item-tools{ display:flex; gap:3px; align-items:center; flex-shrink:0; align-self:center; }
+  .toggle-btn, .move-btn{ border:none; border-radius:6px; padding:2px 7px; font-size:.8rem; cursor:pointer; }
+  .toggle-btn{background:#e2e8f0; color:#334155;}
+  .move-btn{background:#e2e8f0; color:#334155;}
+  .f-btn.active{background:var(--or); color:#fff;}
+  .box-btn.active{background:var(--violet); color:#fff;}
+  .drag-item.boxed{ outline:3px solid var(--violet); outline-offset:2px; background:#faf5ff; }
+  .pool-list .f-btn, .pool-list .box-btn{display:none;}
+  .pool-list .finalement-prefix{display:none !important;}
+  .pool-list .drag-item.boxed{outline:none; background:#fff;}
+  .drag-item.correct{border-color:var(--vert); background:#f0fdf4;}
+  .drag-item.wrong{border-color:var(--rouge); background:#fef2f2;}
+
+  /* Constructeurs de tableau */
+  .table-builder{ margin-top:20px; padding:16px 18px; border-radius:14px; box-shadow:0 4px 14px rgba(6,182,212,.18); }
+  .table-builder.sign{ background:linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%); border:3px solid #06b6d4; }
+  .table-builder.variation{ background:linear-gradient(180deg,#fdf2f8 0%,#fce7f3 100%); border:3px solid #ec4899; box-shadow:0 4px 14px rgba(236,72,153,.18); }
+  .tb-heading{ font-weight:800; font-size:1rem; margin:0 0 8px; display:flex; align-items:center; gap:8px; }
+  .sign .tb-heading{ color:#0e7490; } .variation .tb-heading{ color:#9d174d; }
+  .tb-heading .badge-new{ color:#fff; font-size:.68rem; padding:3px 9px; border-radius:10px; font-weight:700; letter-spacing:.5px; }
+  .sign .tb-heading .badge-new{ background:#06b6d4; }
+  .variation .tb-heading .badge-new{ background:#ec4899; }
+  .tb-hint{ font-size:.86rem; color:#334155; margin:4px 0 12px; background:#fff; padding:8px 12px; border-radius:6px; }
+  .sign .tb-hint{ border-left:4px solid #06b6d4; }
+  .variation .tb-hint{ border-left:4px solid #ec4899; }
+  .tb-hint code{ padding:1px 6px; border-radius:4px; font-size:.83rem; }
+  .sign .tb-hint code{ background:#cffafe; }
+  .variation .tb-hint code{ background:#fce7f3; }
+  .tb-controls{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .tb-controls button{ background:#fff; padding:6px 12px; font-size:.85rem; border-radius:8px; font-weight:600; }
+  .sign .tb-controls button{ border:2px solid #0891b2; color:#0e7490; }
+  .sign .tb-controls button:hover{ background:#cffafe; }
+  .variation .tb-controls button{ border:2px solid #db2777; color:#9d174d; }
+  .variation .tb-controls button:hover{ background:#fce7f3; }
+  .tb-controls button.tb-reset{ background:#fff7ed; border-color:#f97316; color:#c2410c; }
+  .tb-controls button.tb-reset:hover{ background:#ffedd5; }
+  .tb-table-wrap{ overflow-x:auto; padding:4px; }
+  table.tb-table{ border-collapse:collapse; margin:0 auto; background:#fff; box-shadow:0 2px 8px rgba(15,23,42,.08); }
+  table.tb-table td{ padding:0; text-align:center; vertical-align:middle; min-width:60px; height:42px; }
+  .sign table.tb-table td{ border:2px solid #0891b2; }
+  .variation table.tb-table td{ border:2px solid #db2777; }
+  table.tb-table td.tb-text{ background:#f1f5f9; }
+  table.tb-table td.tb-text input.tb-input{ width:100%; height:40px; border:none; background:transparent; text-align:center; font-family:inherit; font-size:.92rem; padding:0 6px; outline:none; }
+  .sign table.tb-table td.tb-text input.tb-input:focus{ background:#cffafe; }
+  .variation table.tb-table td.tb-text input.tb-input:focus{ background:#fce7f3; }
+  table.tb-table td.tb-cell{ background:#fff; }
+  table.tb-table button.tb-sign{ width:100%; height:40px; border:none; background:transparent; font-size:1.2rem; font-weight:800; color:#cbd5e1; cursor:pointer; }
+  table.tb-table button.tb-sign:hover{ background:#f8fafc; }
+  table.tb-table button.tb-sign.pos{ color:var(--vert); }
+  table.tb-table button.tb-sign.neg{ color:var(--rouge); }
+  table.tb-table button.tb-sign.zero{ color:var(--bleu2); font-size:1rem; }
+  table.tb-table button.tb-sign.up{ color:#0d9488; font-size:1.35rem; }
+  table.tb-table button.tb-sign.down{ color:#be185d; font-size:1.35rem; }
+
+  .feedback{ margin-top:10px; padding:10px 14px; border-radius:9px; font-weight:600; font-size:.92rem; display:none; }
+  .feedback.show{display:block;}
+  .feedback.ok{background:#dcfce7; color:var(--vert);}
+  .feedback.ko{background:#fee2e2; color:var(--rouge);}
+  .feedback.info{background:#dbeafe; color:var(--bleu);}
+  .feedback.warn{background:#fef3c7; color:#92400e;}
+
+  .solution{display:none; margin-top:14px; padding:16px 18px; border-radius:12px; background:#f1f5f9; border-left:5px solid var(--vert);}
+  .solution.show{display:block;}
+  .solution h3{margin:14px 0 6px; font-size:1rem; color:var(--vert);}
+  .solution p{margin:8px 0;}
+  .rappel{background:#fffbeb; border-left:5px solid #f59e0b; padding:10px 14px; border-radius:8px; margin:10px 0;}
+  .rappel ul{margin:6px 0 0 18px; padding:0;}
+  .rappel ul ul{margin:4px 0 4px 18px;}
+  .ordre{background:#e0e7ff; border-radius:8px; padding:8px 12px; margin-bottom:10px;}
+  ol.items{padding-left:24px; margin:6px 0;}
+  ol.items li{margin:5px 0;}
+  ol.items li.final-li{ list-style:none; margin-left:-24px; border:3px solid var(--violet); background:#faf5ff; border-radius:8px; padding:8px 12px 8px 30px; position:relative; font-weight:600; }
+  ol.items li.final-li::before{ content:"★"; color:var(--violet); position:absolute; left:10px; top:8px; font-size:1rem; }
+  .final-label{color:var(--or); font-weight:700;}
+
+  table.tab{border-collapse:collapse; margin:14px auto; min-width:60%;}
+  table.tab th, table.tab td{border:1px solid #94a3b8; padding:6px 12px; text-align:center; min-width:46px;}
+  table.tab th{background:#e2e8f0; font-weight:600;}
+  table.tab td.itv{font-weight:700; font-size:1.15rem;}
+  table.tab td.arr{font-size:1.35rem; color:var(--bleu2); font-weight:700;}
+  .pos{color:var(--vert);} .neg{color:var(--rouge);}
+  footer{margin-top:28px; text-align:center;}
+  .overlay{ display:none; position:fixed; inset:0; background:rgba(15,23,42,.6); z-index:1000; padding:20px; overflow:auto; }
+  .overlay.show{display:flex; align-items:flex-start; justify-content:center;}
+  .modal{ background:#fff; border-radius:14px; max-width:760px; width:100%; padding:24px 28px; box-shadow:0 20px 50px rgba(0,0,0,.35); margin-top:40px; }
+  .modal h2{margin-top:0; color:var(--bleu); font-size:1.15rem;}
+  .modal p, .modal li{font-size:.93rem;}
+  .modal .close{background:var(--bleu); color:#fff; margin-top:12px;}
+  @media (max-width:600px){
+    .wrap{padding:14px 8px 70px;}
+    .card{padding:14px 14px;}
+    .drag-item{flex-wrap:wrap;}
+    table.tb-table td{min-width:44px; height:36px;}
+    table.tb-table button.tb-sign{font-size:1rem; height:34px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fonctions exponentielles de base $a$</h1>
+    <p class="sub">
+      <span>Exercice généré aléatoirement — prolongement par continuité des suites géométriques $(a^n)$.</span>
+      <button id="newBtn" class="btn-new">🔄 Nouvel exercice</button>
+    </p>
+  </header>
+  <div id="app"></div>
+  <footer>
+    <button id="licenceBtn" class="btn-licence">⚖️ Droits d'auteur et licence</button>
+  </footer>
+</div>
+
+<div id="modalOverlay" class="overlay">
+  <div class="modal">
+    <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — <span id="dateToday"></span></p>
+    <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré (« Générateur d'exercices – Fonctions exponentielles de base $a$ ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <ul>
+      <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> usage personnel, éducatif, non lucratif.</li>
+      <li><strong>Utilisation Commerciale (Interdite) :</strong> interdite sans accord écrit préalable.</li>
+      <li><strong>Attribution :</strong> conserver la mention de l'auteur originale (Yann Merdy) et la présente notice.</li>
+    </ul>
+    <button id="closeModal" class="close">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   OUTILS
+   ============================================================ */
+const rnd  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const sg  = v => v>0 ? '+' : (v<0 ? '−' : '0');
+const cls = v => v>0 ? 'pos' : (v<0 ? 'neg' : '');
+
+function numToLatex(v){
+  if(Number.isInteger(v)) return String(v);
+  for(let d = 2; d <= 30; d++){
+    if(Math.abs(v * d - Math.round(v * d)) < 1e-9){
+      const n = Math.round(v * d);
+      if(n === 1)  return '\\dfrac{1}{' + d + '}';
+      if(n === -1) return '-\\dfrac{1}{' + d + '}';
+      return '\\dfrac{' + n + '}{' + d + '}';
+    }
+  }
+  return v.toString();
+}
+
+const RAPPEL_EXP =
+  '<div class="rappel"><strong>📘 Rappel de cours — Fonction exponentielle de base $a$</strong>' +
+  '<ul>' +
+  '<li>Pour $a>0$, la suite $(a^n)_{n\\in\\mathbb{N}}$ est géométrique de raison $a$ et de premier terme $1$.</li>' +
+  '<li>La fonction $x \\mapsto a^x$ est l\'unique <strong>prolongement par continuité</strong> de cette suite à $\\mathbb{R}$.</li>' +
+  '<li><strong>Propriété fondamentale :</strong> pour tous réels $x, y$ : $a^{x+y} = a^x \\cdot a^y$, et donc $\\dfrac{a^y}{a^x} = a^{y-x}$.</li>' +
+  '<li>Pour tout réel $x$ : $a^x > 0$.</li>' +
+  '<li><strong>Variations :</strong> si $a>1$, $x \\mapsto a^x$ est <strong>strictement croissante</strong> sur $\\mathbb{R}$ ; ' +
+      'si $0<a<1$, elle est <strong>strictement décroissante</strong> sur $\\mathbb{R}$.</li>' +
+  '</ul></div>';
+
+/* ============================================================
+   GÉNÉRATION DE L'EXERCICE
+   ============================================================ */
+function buildExercise(){
+  /* Choix du type de base : entier > 1, ou inverse d'entier (0 < a < 1) */
+  const isInteger = Math.random() < 0.5;
+  let a, aLatex, aIsFrac;
+  if(isInteger){
+    const n = pick([2, 3, 4, 5]);
+    a = n;
+    aLatex = String(n);
+    aIsFrac = false;
+  } else {
+    const n = pick([2, 3, 4]);
+    a = 1/n;
+    aLatex = '\\dfrac{1}{' + n + '}';
+    aIsFrac = true;
+  }
+  const aIsGt1 = a > 1;
+
+  /* Écriture de a^x en LaTeX */
+  const aPowX = aIsFrac ? '\\left(' + aLatex + '\\right)^x' : aLatex + '^x';
+
+  /* Intervalle I = [A, B] */
+  const A = rnd(-4, -2);
+  const B = rnd(2, 4);
+
+  const fA = Math.pow(a, A);
+  const fB = Math.pow(a, B);
+  const f0 = 1;
+  const f1 = a;
+  const f_1 = 1/a;
+
+  return { a, aLatex, aIsFrac, aIsGt1, aPowX, A, B, fA, fB, f0, f1, f_1 };
+}
+
+/* Évaluation de a^x pour x entier */
+function evalExp(a, x){ return Math.pow(a, x); }
+
+/* Écriture LaTeX de a^x pour un x donné */
+function aPowLatex(ex, x){
+  const expStr = String(x);
+  if(ex.aIsFrac) return '\\left(' + ex.aLatex + '\\right)^{' + expStr + '}';
+  return ex.aLatex + '^{' + expStr + '}';
+}
+
+/* ============================================================
+   QUESTIONS
+   ============================================================ */
+function makeQuestions(ex){
+  const Q = [];
+  const { a, aLatex, aIsFrac, aIsGt1, aPowX, A, B, fA, fB } = ex;
+
+  /* ---- Q1 : nature géométrique de la suite (a^n) ---- */
+  Q.push({
+    title:"Question 1 — Nature géométrique de la suite $(a^n)$",
+    consigne:"Montrer que la suite $u_n = f(n) = a^n$ est géométrique. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+    correct:[
+      "Pour tout entier naturel $n$, on pose $u_n = f(n) = a^n$.",
+      "On calcule le rapport $\\dfrac{u_{n+1}}{u_n} = \\dfrac{a^{n+1}}{a^n} = a$.",
+      "Ce rapport est constant (égal à $a$) et ne dépend pas de $n$.",
+      "Le premier terme est $u_0 = a^0 = 1$.",
+      "La suite $(u_n)$ est donc géométrique de raison $a$ et de premier terme $1$."
+    ],
+    distractors:[
+      "La suite $(a^n)$ est arithmétique de raison $a$.",
+      "On a $u_{n+1} = u_n + a$.",
+      "Le premier terme est $u_0 = a$.",
+      "Le rapport $u_{n+1}/u_n$ dépend de $n$."
+    ],
+    solution:
+      RAPPEL_EXP +
+      '<h3>Raisonnement</h3>' +
+      '<p>Pour tout $n\\in\\mathbb{N}$ : $u_{n+1}/u_n = a^{n+1}/a^n = a^{n+1-n} = a$.</p>' +
+      '<p>Le rapport est constant, donc la suite est géométrique de raison $a$. Son premier terme est $u_0 = 1$.</p>' +
+      '<h3>Conclusion (encadrée)</h3>' +
+      '\\[ \\boxed{\\,\\text{Finalement, la suite } (a^n) \\text{ est géométrique de raison } a>0 \\text{ et de premier terme } 1\\,} \\]'
+  });
+
+  /* ---- Q2 : valeurs remarquables ---- */
+  Q.push({
+    title:"Question 2 — Valeurs remarquables",
+    consigne:"Calculer $f(0)$, $f(1)$ et $f(-1)$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+    correct:[
+      "On calcule $f(0) = a^0 = 1$.",
+      "On calcule $f(1) = a^1 = a = " + numToLatex(a) + "$.",
+      "On calcule $f(-1) = a^{-1} = \\dfrac{1}{a} = " + numToLatex(1/a) + "$."
+    ],
+    distractors:[
+      "$f(0) = 0$.",
+      "$f(-1) = -a$.",
+      "$f(0) = a$.",
+      "$f(1) = 1$."
+    ],
+    solution:
+      RAPPEL_EXP +
+      '<p>Pour $x = 0$ : $a^0 = 1$. Pour $x = 1$ : $a^1 = a$. Pour $x = -1$ : $a^{-1} = 1/a$.</p>' +
+      '<h3>Conclusion (encadrée)</h3>' +
+      '\\[ \\boxed{\\,\\text{Finalement, } f(0)=1,\\; f(1)=' + numToLatex(a) + ',\\; f(-1)=' + numToLatex(1/a) + '\\,} \\]'
+  });
+
+  /* ---- Q3 : signe de f (avec constructeur de tableau de signe) ---- */
+  Q.push({
+    title:"Question 3 — Signe de $f(x)$ sur $I = [" + A + "\\,;\\," + B + "]$",
+    consigne:"Montrer que $f(x)>0$ pour tout $x\\in I$. <strong>Utilisez le constructeur interactif ci-dessous</strong> pour dresser le tableau de signe, et/ou reconstituez le raisonnement par phrases. Conclusion marquée F et encadrée.",
+    correct:[
+      "Pour tout entier naturel $n$, $a^n > 0$ (produit de $n$ facteurs strictement positifs, et $a^0 = 1 > 0$).",
+      "Pour $n \\in \\mathbb{Z}$ négatif, $a^n = \\dfrac{1}{a^{-n}} > 0$.",
+      "En prolongeant par continuité, on obtient $a^x > 0$ pour tout réel $x$.",
+      "Donc $f(x) > 0$ pour tout $x \\in I$."
+    ],
+    distractors:[
+      "$f$ change de signe sur $I$.",
+      "$f(x) < 0$ pour $x < 0$.",
+      "$f$ s'annule en $x = 0$."
+    ],
+    tableBuilder: true,
+    solution:
+      RAPPEL_EXP +
+      '<h3>Tableau de signe</h3>' +
+      '<table class="tab">' +
+      '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+      '  <tr><th>$f(x)$</th><td></td><td class="itv pos">+</td><td></td></tr>' +
+      '</table>' +
+      '<p>La fonction $x \\mapsto a^x$ est <strong>strictement positive</strong> sur $\\mathbb{R}$, donc sur $I$.</p>' +
+      '<h3>Conclusion (encadrée)</h3>' +
+      '\\[ \\boxed{\\,\\text{Finalement, } f(x) > 0 \\text{ pour tout } x \\in I\\,} \\]'
+  });
+
+  /* ---- Q4 : position de a par rapport à 1 ---- */
+  Q.push({
+    title:"Question 4 — Position de $a$ par rapport à $1$",
+    consigne:"Déterminer si $a>1$, $a=1$, ou $0<a<1$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+    correct: aIsGt1 ? [
+      "On compare la valeur de $a$ au nombre $1$.",
+      "Ici, $a = " + aLatex + "$.",
+      "On a clairement $a > 1$."
+    ] : [
+      "On compare la valeur de $a$ au nombre $1$.",
+      "Ici, $a = " + aLatex + "$ avec le dénominateur strictement supérieur à $1$.",
+      "Donc $0 < a < 1$."
+    ],
+    distractors: [
+      "$a = 1$.",
+      "$a < 0$.",
+      "On ne peut pas comparer $a$ à 1 sans calculatrice."
+    ],
+    solution:
+      RAPPEL_EXP +
+      '<p>Ici $a = ' + aLatex + '$, et ' + (aIsGt1 ? '$a > 1$.' : '$0 < a < 1$ (car $a$ est l\'inverse d\'un entier supérieur ou égal à 2).') + '</p>' +
+      '<h3>Conclusion (encadrée)</h3>' +
+      '\\[ \\boxed{\\,\\text{Finalement, } ' + (aIsGt1 ? 'a > 1' : '0 < a < 1') + '\\,} \\]'
+  });
+
+  /* ---- Q5 : variations de f sur I ---- */
+  if(aIsGt1){
+    Q.push({
+      title:"Question 5 — Variations de $f$ sur $I$",
+      consigne:"Déterminer les variations de $f$ sur $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      correct:[
+        "Soient $x < y$ deux réels. Alors $y - x > 0$.",
+        "On a $\\dfrac{a^y}{a^x} = a^{y-x}$.",
+        "Comme $a>1$ et $y-x>0$, on a $a^{y-x}>1$ (le produit par $a>1$ augmente les valeurs).",
+        "Donc $a^y > a^x$ : la fonction $f$ est strictement croissante sur $\\mathbb{R}$."
+      ],
+      distractors:[
+        "$f$ est strictement décroissante sur $\\mathbb{R}$.",
+        "$f$ est constante sur $\\mathbb{R}$.",
+        "$f$ admet un maximum en $x=0$."
+      ],
+      solution:
+        RAPPEL_EXP +
+        '<h3>Raisonnement</h3>' +
+        '<p>Pour $x<y$ : $\\dfrac{a^y}{a^x} = a^{y-x}$, et $y-x>0$. Comme $a>1$, multiplier par $a$ augmente : $a^{y-x}>1$.</p>' +
+        '<p>Donc $a^y > a^x$. La fonction est strictement croissante.</p>' +
+        '<h3>Conclusion (encadrée)</h3>' +
+        '\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est strictement croissante sur } I\\,} \\]'
+    });
+  } else {
+    Q.push({
+      title:"Question 5 — Variations de $f$ sur $I$",
+      consigne:"Déterminer les variations de $f$ sur $I$. La phrase finale devra être placée en dernier, marquée F et encadrée.",
+      correct:[
+        "Soient $x < y$ deux réels. Alors $y - x > 0$.",
+        "On a $\\dfrac{a^y}{a^x} = a^{y-x}$.",
+        "Comme $0<a<1$ et $y-x>0$, on a $a^{y-x}<1$ (multiplier par $a<1$ diminue les valeurs).",
+        "Donc $a^y < a^x$ : la fonction $f$ est strictement décroissante sur $\\mathbb{R}$."
+      ],
+      distractors:[
+        "$f$ est strictement croissante sur $\\mathbb{R}$.",
+        "$f$ est constante sur $\\mathbb{R}$.",
+        "$f$ admet un minimum en $x=0$."
+      ],
+      solution:
+        RAPPEL_EXP +
+        '<h3>Raisonnement</h3>' +
+        '<p>Pour $x<y$ : $\\dfrac{a^y}{a^x} = a^{y-x}$, avec $y-x>0$. Comme $0<a<1$, multiplier par $a$ diminue : $a^{y-x}<1$.</p>' +
+        '<p>Donc $a^y < a^x$. La fonction est strictement décroissante.</p>' +
+        '<h3>Conclusion (encadrée)</h3>' +
+        '\\[ \\boxed{\\,\\text{Finalement, } f \\text{ est strictement décroissante sur } I\\,} \\]'
+    });
+  }
+
+  /* ---- Q6 : tableau de variation (avec constructeur) ---- */
+  const arr = aIsGt1 ? '↗' : '↘';
+  Q.push({
+    title:"Question 6 — Tableau de variation de $f$ sur $I = [" + A + "\\,;\\," + B + "]$",
+    consigne:"Dresser le tableau de variation de $f$ sur $I$. <strong>Utilisez le constructeur interactif ci-dessous</strong> et/ou reconstituez le raisonnement. Conclusion marquée F et encadrée.",
+    correct:[
+      "On place les bornes de $I$ dans la première ligne : $" + A + "$ et $" + B + "$.",
+      "On calcule $f(" + A + ") = " + aPowLatex(ex, A) + " = " + numToLatex(fA) + "$ et $f(" + B + ") = " + aPowLatex(ex, B) + " = " + numToLatex(fB) + "$.",
+      "Comme $f$ est strictement " + (aIsGt1 ? 'croissante' : 'décroissante') + " sur $I$, on dessine une seule flèche " + (aIsGt1 ? 'montante ↗' : 'descendante ↘') + "."
+    ],
+    distractors:[
+      "On dessine deux flèches opposées.",
+      "On place un extremum au milieu de $I$.",
+      "On place un changement de signe dans la ligne de $f(x)$."
+    ],
+    variationBuilder: true,
+    solution:
+      RAPPEL_EXP +
+      '<h3>Tableau de variation attendu</h3>' +
+      '<table class="tab">' +
+      '  <tr><th>$x$</th><td>$' + A + '$</td><td class="itv"></td><td>$' + B + '$</td></tr>' +
+      '  <tr><th>$f(x)$</th><td>$' + numToLatex(fA) + '$</td><td class="arr">' + arr + '</td><td>$' + numToLatex(fB) + '$</td></tr>' +
+      '</table>' +
+      '<h3>Conclusion (encadrée)</h3>' +
+      '<p>\\[ \\boxed{\\,\\text{Finalement, le tableau de variation de } f \\text{ sur } I \\text{ est celui présenté ci-dessus}\\,} \\]</p>'
+  });
+
+  /* ---- Q7 : comparaison de deux exponentielles ---- */
+  const x1 = rnd(A, -1);
+  const x2 = rnd(1, B);
+  const v1 = evalExp(a, x1);
+  const v2 = evalExp(a, x2);
+  const ineq = aIsGt1 ? '<' : '>';
+  Q.push({
+    title:"Question 7 — Comparaison de $f(" + x1 + ")$ et $f(" + x2 + ")$",
+    consigne:"Comparer $a^{" + x1 + "}$ et $a^{" + x2 + "}$ sans calculatrice, en utilisant les variations de $f$. Conclusion marquée F et encadrée.",
+    correct:[
+      "On a $" + x1 + " < " + x2 + "$.",
+      "On calcule le rapport : $\\dfrac{a^{" + x2 + "}}{a^{" + x1 + "}} = a^{" + x2 + "-(" + x1 + ")} = a^{" + (x2-x1) + "}$.",
+      (aIsGt1
+        ? "Comme $a>1$ et $" + (x2-x1) + " > 0$, on a $a^{" + (x2-x1) + "} > 1$."
+        : "Comme $0<a<1$ et $" + (x2-x1) + " > 0$, on a $a^{" + (x2-x1) + "} < 1$."),
+      (aIsGt1
+        ? "Donc $a^{" + x2 + "} > a^{" + x1 + "}$."
+        : "Donc $a^{" + x2 + "} < a^{" + x1 + "}$.")
+    ],
+    distractors:[
+      "$a^{" + x1 + "} " + ineq + " a^{" + x2 + "}$ (la comparaison est inversée).",
+      "On ne peut pas comparer sans calculatrice.",
+      "Les deux valeurs sont égales car $f$ est monotone."
+    ],
+    solution:
+      RAPPEL_EXP +
+      '<p>On a $' + x1 + ' < ' + x2 + '$, donc $' + x2 + ' - (' + x1 + ') = ' + (x2-x1) + ' > 0$.</p>' +
+      '<p>$\\dfrac{a^{' + x2 + '}}{a^{' + x1 + '}} = a^{' + (x2-x1) + '}$. ' +
+        (aIsGt1 ? 'Comme $a>1$, $a^{' + (x2-x1) + '} > 1$.' : 'Comme $0<a<1$, $a^{' + (x2-x1) + '} < 1$.') +
+      '</p>' +
+      '<h3>Conclusion (encadrée)</h3>' +
+      '\\[ \\boxed{\\,\\text{Finalement, } a^{' + x1 + '} ' + (aIsGt1 ? '<' : '>') + ' a^{' + x2 + '}\\,} \\]'
+  });
+
+  return Q;
+}
+
+/* ============================================================
+   CONSTRUCTEUR DE TABLEAU
+   ============================================================ */
+function createTableBuilder(cfg){
+  const wrap = document.createElement('div');
+  wrap.className = 'table-builder ' + (cfg.variant || 'sign');
+  const heading = document.createElement('p');
+  heading.className = 'tb-heading';
+  heading.innerHTML = cfg.title + ' <span class="badge-new">' + cfg.badge + '</span>';
+  wrap.appendChild(heading);
+  const hint = document.createElement('p');
+  hint.className = 'tb-hint';
+  hint.innerHTML = cfg.hint;
+  wrap.appendChild(hint);
+
+  const state = { rows: 0, cols: 0, data: [] };
+  function initState(){
+    state.rows = cfg.defaultData.length;
+    state.cols = cfg.defaultData[0].length;
+    state.data = cfg.defaultData.map(row => row.slice());
+  }
+  initState();
+
+  const controls = document.createElement('div');
+  controls.className = 'tb-controls';
+  controls.innerHTML =
+    '<button type="button" data-act="add-row">➕ Ligne</button>' +
+    '<button type="button" data-act="del-row">➖ Ligne</button>' +
+    '<button type="button" data-act="add-col">➕ Colonne</button>' +
+    '<button type="button" data-act="del-col">➖ Colonne</button>' +
+    '<button type="button" data-act="reset" class="tb-reset">🔄 Réinitialiser</button>';
+  wrap.appendChild(controls);
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'tb-table-wrap';
+  wrap.appendChild(tableWrap);
+
+  function isTextCell(r, c){ return r === 0 || c === 0; }
+
+  function applyCellClass(btn, val){
+    btn.classList.remove('pos','neg','zero','up','down');
+    if(val === '+') btn.classList.add('pos');
+    else if(val === '−') btn.classList.add('neg');
+    else if(val === '0') btn.classList.add('zero');
+    else if(val === '↗') btn.classList.add('up');
+    else if(val === '↘') btn.classList.add('down');
+  }
+
+  function render(){
+    const tbl = document.createElement('table');
+    tbl.className = 'tb-table';
+    for(let r = 0; r < state.rows; r++){
+      const tr = document.createElement('tr');
+      for(let c = 0; c < state.cols; c++){
+        const td = document.createElement('td');
+        if(isTextCell(r, c)){
+          td.classList.add('tb-text');
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'tb-input';
+          inp.value = state.data[r][c] || '';
+          inp.addEventListener('input', () => { state.data[r][c] = inp.value; });
+          td.appendChild(inp);
+        } else {
+          td.classList.add('tb-cell');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'tb-sign';
+          const val = state.data[r][c];
+          btn.textContent = val || '·';
+          applyCellClass(btn, val);
+          btn.addEventListener('click', () => {
+            const cyc = cfg.cellCycle;
+            const cur = state.data[r][c];
+            const idx = cyc.indexOf(cur);
+            state.data[r][c] = cyc[(idx + 1) % cyc.length];
+            btn.textContent = state.data[r][c] || '·';
+            applyCellClass(btn, state.data[r][c]);
+          });
+          td.appendChild(btn);
+        }
+        tr.appendChild(td);
+      }
+      tbl.appendChild(tr);
+    }
+    tableWrap.innerHTML = '';
+    tableWrap.appendChild(tbl);
+  }
+
+  controls.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-act]');
+    if(!btn) return;
+    const act = btn.dataset.act;
+    if(act === 'add-row'){
+      const newRow = []; for(let c = 0; c < state.cols; c++) newRow.push('');
+      state.data.push(newRow); state.rows++;
+    } else if(act === 'del-row'){
+      if(state.rows > 2){ state.data.pop(); state.rows--; }
+    } else if(act === 'add-col'){
+      for(let r = 0; r < state.rows; r++) state.data[r].push('');
+      state.cols++;
+    } else if(act === 'del-col'){
+      if(state.cols > 2){ for(let r = 0; r < state.rows; r++) state.data[r].pop(); state.cols--; }
+    } else if(act === 'reset'){
+      initState();
+    }
+    render();
+  });
+  render();
+  return wrap;
+}
+
+function createSignTableBuilder(){
+  return createTableBuilder({
+    title: '🧮 Constructeur de tableau de signes',
+    badge: 'INTERACTIF', variant: 'sign',
+    hint: 'Cliquez sur une cellule blanche pour faire défiler : <code>∅ → + → − → 0</code>. ' +
+          'Tapez dans les cellules grises : bornes, étiquettes (ex : <code>f(x)</code>).',
+    cellCycle: ['', '+', '−', '0'],
+    defaultData: [['x','','','',''], ['','','','',''], ['f(x)','','','','']]
+  });
+}
+
+function createVariationTableBuilder(){
+  return createTableBuilder({
+    title: '📈 Constructeur de tableau de variation',
+    badge: 'INTERACTIF', variant: 'variation',
+    hint: 'Cliquez sur une cellule blanche pour faire défiler : <code>∅ → ↗ → ↘ → + → − → 0</code>. ' +
+          'Tapez dans les cellules grises : bornes, images de $f$, étiquettes.',
+    cellCycle: ['', '↗', '↘', '+', '−', '0'],
+    defaultData: [
+      ['x','','','','','',''],
+      ['f(x)','','','','','','']
+    ]
+  });
+}
+
+/* ============================================================
+   RENDU D'UNE QUESTION
+   ============================================================ */
+function renderQuestion(q, qIndex){
+  const card = document.createElement('div');
+  card.className = 'card';
+  const header = document.createElement('div');
+  header.innerHTML = '<h2 class="qtitle">' + q.title + '</h2>' +
+                     '<p class="consigne">' + q.consigne + '</p>';
+  card.appendChild(header);
+
+  const items = [];
+  q.correct.forEach((t, i) => items.push({t, ok:true, order:i, key:'c'+qIndex+'_'+i}));
+  q.distractors.forEach((t, i) => items.push({t, ok:false, order:-1, key:'d'+qIndex+'_'+i}));
+  const orderedItems = items.slice();
+  shuffle(items);
+
+  const zones = document.createElement('div');
+  zones.className = 'zones';
+  zones.innerHTML =
+    '<div class="zone pool-zone">' +
+      '<div class="zone-title">📦 Phrases disponibles <small>(glissez ou cliquez sur →)</small></div>' +
+      '<ul class="drop-list pool-list" data-zone="pool"></ul>' +
+    '</div>' +
+    '<div class="zone reasoning-zone">' +
+      '<div class="zone-title">✏️ Mon raisonnement <small>(glissez pour ordonner — F = « Finalement », ▢ = encadrer)</small></div>' +
+      '<ul class="drop-list reasoning-list" data-zone="reasoning"></ul>' +
+    '</div>';
+  card.appendChild(zones);
+
+  const poolList = zones.querySelector('.pool-list');
+  const reasoningList = zones.querySelector('.reasoning-list');
+
+  if(q.tableBuilder === true)     card.appendChild(createSignTableBuilder());
+  if(q.variationBuilder === true) card.appendChild(createVariationTableBuilder());
+
+  function createItemEl(it){
+    const li = document.createElement('li');
+    li.className = 'drag-item';
+    li.draggable = true;
+    li.dataset.key = it.key;
+    li.dataset.ok = it.ok ? 'true' : 'false';
+    li.dataset.order = it.order;
+    li.dataset.finalement = 'false';
+    li.dataset.boxed = 'false';
+    li.innerHTML =
+      '<span class="handle">☰</span>' +
+      '<span class="badge"></span>' +
+      '<span class="txt"><span class="finalement-prefix" style="display:none;">Finalement, </span>' + it.t + '</span>' +
+      '<span class="item-tools">' +
+        '<button type="button" class="toggle-btn f-btn" title="« Finalement »">F</button>' +
+        '<button type="button" class="toggle-btn box-btn" title="Encadrer">▢</button>' +
+        '<button type="button" class="move-btn" title="Déplacer">→</button>' +
+      '</span>';
+    return li;
+  }
+  items.forEach(it => poolList.appendChild(createItemEl(it)));
+
+  const btnrow = document.createElement('div');
+  btnrow.className = 'btnrow';
+  btnrow.innerHTML =
+    '<button class="btn check-btn">✅ Vérifier le raisonnement</button>' +
+    '<button class="btn reset-btn">🔄 Réinitialiser le raisonnement</button>' +
+    '<button class="btn sol-btn">Solution</button>';
+  card.appendChild(btnrow);
+
+  const feedback = document.createElement('div');
+  feedback.className = 'feedback';
+  card.appendChild(feedback);
+
+  const nbCorr = q.correct.length;
+  const correctListHTML = q.correct.map((t, i) => {
+    if(i === nbCorr - 1){
+      return '<li class="final-li"><span class="final-label">Finalement, </span>' + t + '</li>';
+    }
+    return '<li>' + t + '</li>';
+  }).join('');
+
+  const solution = document.createElement('div');
+  solution.className = 'solution';
+  solution.innerHTML =
+    '<div class="ordre"><strong>Ordre correct attendu.</strong> La dernière phrase doit être marquée « Finalement » (F) et encadrée (▢).</div>' +
+    '<ol class="items">' + correctListHTML + '</ol>' + q.solution;
+  card.appendChild(solution);
+
+  function updateBadges(){
+    poolList.querySelectorAll('.drag-item').forEach(li => {
+      li.querySelector('.badge').textContent = '';
+      li.querySelector('.move-btn').textContent = '→';
+    });
+    reasoningList.querySelectorAll('.drag-item').forEach((li, i) => {
+      li.querySelector('.badge').textContent = String(i+1);
+      li.querySelector('.move-btn').textContent = '←';
+    });
+  }
+  function clearMarks(){
+    card.querySelectorAll('.drag-item').forEach(li => li.classList.remove('correct','wrong'));
+    feedback.className = 'feedback';
+    feedback.textContent = '';
+  }
+
+  let draggedEl = null;
+  function getDragAfterElement(container, y){
+    const els = [...container.querySelectorAll('.drag-item')].filter(el => el !== draggedEl);
+    return els.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height/2;
+      if(offset < 0 && offset > closest.offset) return {offset, element: child};
+      return closest;
+    }, {offset: Number.NEGATIVE_INFINITY, element: null}).element;
+  }
+  function attachDragHandlers(li){
+    li.addEventListener('dragstart', e => {
+      draggedEl = li; li.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', li.dataset.key); } catch(_){}
+    });
+    li.addEventListener('dragend', () => {
+      li.classList.remove('dragging'); draggedEl = null;
+      card.querySelectorAll('.zone').forEach(z => z.classList.remove('drag-over'));
+      updateBadges();
+    });
+  }
+  card.querySelectorAll('.drag-item').forEach(attachDragHandlers);
+
+  function attachListHandlers(list){
+    list.addEventListener('dragover', e => {
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      if(!draggedEl) return;
+      list.closest('.zone').classList.add('drag-over');
+      const after = getDragAfterElement(list, e.clientY);
+      if(after == null){ if(list.lastElementChild !== draggedEl) list.appendChild(draggedEl); }
+      else if(after !== draggedEl) list.insertBefore(draggedEl, after);
+      updateBadges(); clearMarks();
+    });
+    list.addEventListener('dragleave', e => { if(!list.contains(e.relatedTarget)) list.closest('.zone').classList.remove('drag-over'); });
+    list.addEventListener('drop', e => { e.preventDefault(); list.closest('.zone').classList.remove('drag-over'); updateBadges(); clearMarks(); });
+  }
+  attachListHandlers(poolList);
+  attachListHandlers(reasoningList);
+
+  card.addEventListener('click', e => {
+    const fBtn = e.target.closest('.f-btn');
+    if(fBtn){
+      e.stopPropagation();
+      const li = fBtn.closest('.drag-item'); if(!li) return;
+      const cur = li.dataset.finalement === 'true';
+      li.dataset.finalement = cur ? 'false' : 'true';
+      fBtn.classList.toggle('active', !cur);
+      const prefix = li.querySelector('.finalement-prefix');
+      if(prefix) prefix.style.display = cur ? 'none' : 'inline';
+      clearMarks(); return;
+    }
+    const boxBtn = e.target.closest('.box-btn');
+    if(boxBtn){
+      e.stopPropagation();
+      const li = boxBtn.closest('.drag-item'); if(!li) return;
+      const cur = li.dataset.boxed === 'true';
+      li.dataset.boxed = cur ? 'false' : 'true';
+      li.classList.toggle('boxed', !cur);
+      boxBtn.classList.toggle('active', !cur);
+      clearMarks(); return;
+    }
+    const mvBtn = e.target.closest('.move-btn');
+    if(mvBtn){
+      e.stopPropagation();
+      const li = mvBtn.closest('.drag-item'); if(!li) return;
+      if(li.parentElement === reasoningList) poolList.appendChild(li);
+      else reasoningList.appendChild(li);
+      updateBadges(); clearMarks(); return;
+    }
+  });
+
+  btnrow.querySelector('.check-btn').addEventListener('click', () => {
+    clearMarks();
+    const rItems = [...reasoningList.querySelectorAll('.drag-item')];
+    if(rItems.length === 0){
+      feedback.className = 'feedback show info';
+      feedback.textContent = '⚠️ Placez au moins une phrase dans « Mon raisonnement ».';
+      return;
+    }
+    let orderOk = (rItems.length === q.correct.length);
+    rItems.forEach((li, i) => {
+      const isOk = li.dataset.ok === 'true' && parseInt(li.dataset.order, 10) === i;
+      li.classList.add(isOk ? 'correct' : 'wrong');
+      if(!isOk) orderOk = false;
+    });
+    let finalOk = true;
+    const last = rItems[rItems.length-1];
+    if(last.dataset.finalement !== 'true' || last.dataset.boxed !== 'true') finalOk = false;
+    rItems.slice(0, -1).forEach(li => {
+      if(li.dataset.finalement === 'true' || li.dataset.boxed === 'true') finalOk = false;
+    });
+    if(orderOk && finalOk){
+      feedback.className = 'feedback show ok';
+      feedback.textContent = '🎉 Bravo ! Raisonnement complet et conclusion bien mise en valeur.';
+    } else if(orderOk && !finalOk){
+      feedback.className = 'feedback show warn';
+      feedback.textContent = '⚠️ Ordre correct, mais la conclusion doit être la dernière phrase, marquée F et encadrée (▢).';
+    } else {
+      feedback.className = 'feedback show ko';
+      feedback.textContent = '❌ Erreurs : vert = bien placé, rouge = à corriger.';
+    }
+  });
+
+  btnrow.querySelector('.reset-btn').addEventListener('click', () => {
+    poolList.innerHTML = ''; reasoningList.innerHTML = '';
+    shuffle(orderedItems);
+    orderedItems.forEach(it => {
+      const li = createItemEl(it);
+      poolList.appendChild(li);
+      attachDragHandlers(li);
+    });
+    updateBadges(); clearMarks();
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([card]).catch(()=>{});
+  });
+
+  const solBtn = btnrow.querySelector('.sol-btn');
+  solBtn.addEventListener('click', () => {
+    const shown = solution.classList.toggle('show');
+    solBtn.textContent = shown ? 'Masquer la solution' : 'Solution';
+    if(shown && !solution.dataset.typeset){
+      solution.dataset.typeset = '1';
+      if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([solution]).catch(()=>{});
+    }
+  });
+
+  updateBadges();
+  return card;
+}
+
+/* ============================================================
+   ÉNONCÉ
+   ============================================================ */
+function buildEnonceHTML(ex){
+  const { aLatex, aPowX, aIsFrac, A, B } = ex;
+  let html = '<h2 class="qtitle">Énoncé</h2>';
+  html += '<p><strong>Contexte.</strong> Soit $a>0$ un réel fixé. On considère la suite géométrique $(a^n)_{n\\in\\mathbb{N}}$ à termes strictement positifs. ' +
+          'La fonction <em>exponentielle de base $a$</em> est le <strong>prolongement par continuité</strong> de cette suite à $\\mathbb{R}$ : on la note $x \\mapsto a^x$.</p>';
+  html += '<p>On étudie dans cet exercice la fonction $f$ définie sur $\\mathbb{R}$ par :</p>';
+  html += '\\[ f(x) = ' + aPowX + ' \\quad\\text{avec}\\quad a = ' + aLatex + ' \\]';
+  html += '<p>On considère l\'intervalle $I = \\left[' + A + '\\,;\\,' + B + '\\right]$.</p>';
+  html += '<div class="rappel" style="margin-top:12px;">' +
+          '<strong>🎯 Consignes</strong>' +
+          '<ul>' +
+          '<li>Reconstruisez chaque raisonnement par <strong>glisser-déposer</strong> des phrases dans le bon ordre.</li>' +
+          '<li>La <strong>phrase de conclusion</strong> doit être placée en dernier, commencer par « Finalement » ' +
+              '(bouton <span style="display:inline-block;background:var(--or);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">F</span>) ' +
+              'et être <strong>encadrée</strong> (bouton <span style="display:inline-block;background:var(--violet);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">▢</span>).</li>' +
+          '<li><strong>Q3</strong> (tableau de signe) et <strong>Q6</strong> (tableau de variation) comportent un <strong>constructeur interactif de tableau</strong>.</li>' +
+          '<li><strong>Tableau de signe</strong> : cellules blanches à cycler sur <code>∅ → + → − → 0</code>.</li>' +
+          '<li><strong>Tableau de variation</strong> : cellules blanches à cycler sur <code>∅ → ↗ → ↘ → + → − → 0</code>.</li>' +
+          '<li>Cellules grises : tapez valeurs et étiquettes. Boutons ➕/➖ pour ajouter ou supprimer lignes et colonnes.</li>' +
+          '</ul></div>';
+  return html;
+}
+
+/* ============================================================
+   RENDU GLOBAL
+   ============================================================ */
+function render(){
+  const ex = buildExercise();
+  const Q = makeQuestions(ex);
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const enonce = document.createElement('div');
+  enonce.className = 'card enonce';
+  enonce.innerHTML = buildEnonceHTML(ex);
+  app.appendChild(enonce);
+  Q.forEach((q, i) => app.appendChild(renderQuestion(q, i)));
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([app]).catch(()=>{});
+}
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+document.getElementById('newBtn').addEventListener('click', render);
+const overlay = document.getElementById('modalOverlay');
+document.getElementById('licenceBtn').addEventListener('click', () => overlay.classList.add('show'));
+document.getElementById('closeModal').addEventListener('click', () => overlay.classList.remove('show'));
+overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.classList.remove('show'); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') overlay.classList.remove('show'); });
+(function(){
+  const mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const d = new Date();
+  document.getElementById('dateToday').textContent = mois[d.getMonth()] + ' ' + d.getFullYear();
+})();
+render();
+</script>
+</body>
+</html>

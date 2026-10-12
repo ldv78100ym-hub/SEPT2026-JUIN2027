@@ -95,7 +95,45 @@
   #plot{display:block;width:100%;height:260px}
   .masque{display:none !important}
   footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:28px}
+  footer #btn-licence{
+    margin-top:10px;font:inherit;font-size:.82rem;background:#fff;color:var(--txt);
+    border:1px solid var(--line);border-radius:10px;padding:9px 16px;cursor:pointer;
+    box-shadow:0 1px 2px rgba(30,60,120,.04);transition:.15s ease;
+  }
+  footer #btn-licence:hover{border-color:#bcd0f0;box-shadow:0 4px 12px rgba(30,60,120,.10);transform:translateY(-1px)}
   .erreur{padding:16px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:.9rem}
+
+  /* ---------- Modale de licence ---------- */
+  .modal-fond{
+    display:none;position:fixed;inset:0;z-index:1000;
+    background:rgba(15,30,60,.45);backdrop-filter:blur(2px);
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-fond.ouvert{display:flex}
+  .modal-fenetre{
+    background:#fff;border-radius:16px;max-width:640px;width:100%;
+    max-height:82vh;display:flex;flex-direction:column;overflow:hidden;
+    box-shadow:0 20px 60px rgba(15,30,60,.35);animation:pop .25s ease both;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-fenetre .ent{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:18px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  .modal-fenetre .ent h2{margin:0;font-size:1.05rem;font-weight:700}
+  .modal-fenetre .btn-fermer{
+    font:inherit;font-size:1.1rem;line-height:1;background:#fff;color:var(--muted);
+    border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;transition:.15s;
+  }
+  .modal-fenetre .btn-fermer:hover{color:var(--txt);border-color:#bcd0f0}
+  .modal-corps{padding:20px 24px;overflow-y:auto;font-size:.9rem;line-height:1.65;color:#334155}
+  .modal-corps h3{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-weight:700}
+  .modal-corps p{margin:8px 0}
+  .modal-corps ul{padding-left:20px;margin:8px 0}
+  .modal-corps li{margin:6px 0}
+  .modal-corps .accent{background:var(--violet-soft);border-left:3px solid var(--violet);padding:10px 14px;border-radius:8px;color:#4c1d95}
+  .modal-corps .interdit{background:#fef2f2;border-left:3px solid #dc2626;padding:10px 14px;border-radius:8px;color:#7f1d1d}
+  .modal-corps .signature{margin-top:16px;font-size:.82rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -114,7 +152,54 @@
 
   <main id="carte"></main>
 
-  <footer>MathJax 3 · Canvas 2D · Moteur d'isolation symbolique intégré</footer>
+  <footer>
+    MathJax 3 · Canvas 2D · Moteur d'isolation symbolique intégré<br>
+    <button id="btn-licence">⚖️ Droits d'Auteur et Licence d'Utilisation</button>
+  </footer>
+</div>
+
+<!-- Modale : droits d'auteur et licence -->
+<div class="modal-fond" id="modal-licence" role="dialog" aria-modal="true" aria-labelledby="titre-licence">
+  <div class="modal-fenetre">
+    <div class="ent">
+      <h2 id="titre-licence">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+      <button class="btn-fermer" id="btn-fermer-licence" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-corps">
+      <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — Octobre 2026</p>
+
+      <h3>Licence d'Utilisation Non Commerciale</h3>
+      <p>
+        Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+        (« Générateur d'équations littérales ») sont la propriété intellectuelle
+        exclusive de l'auteur, Yann Merdy.
+      </p>
+
+      <h3>Conditions</h3>
+      <ul>
+        <li class="accent">
+          <strong>Utilisation Privée et Éducative (Autorisée) :</strong> vous êtes autorisé·e à
+          utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins
+          personnelles, éducatives et non lucratives.
+        </li>
+        <li class="interdit">
+          <strong>Utilisation Commerciale (Interdite) :</strong> toute utilisation, distribution,
+          intégration ou reproduction du code ou du contenu (total ou partiel) à des fins
+          commerciales, lucratives ou professionnelles est strictement interdite sans un accord
+          écrit préalable et explicite de l'auteur.
+        </li>
+        <li>
+          <strong>Attribution :</strong> toute reproduction ou modification doit conserver la mention
+          de l'auteur original (Yann Merdy) et la présente notice de droits d'auteur.
+        </li>
+      </ul>
+
+      <p class="signature">
+        Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter
+        l'auteur à l'adresse indiquée ci-dessus.
+      </p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1321,6 +1406,19 @@ window.addEventListener('resize', () => {
 initSelect();
 document.getElementById('chk-masquer').checked = true;
 generer();
+
+/* ============================================================
+   15. MODALE LICENCE
+   ============================================================ */
+(function(){
+  const fond = document.getElementById('modal-licence');
+  const ouvrir = () => fond.classList.add('ouvert');
+  const fermer = () => fond.classList.remove('ouvert');
+  document.getElementById('btn-licence').addEventListener('click', ouvrir);
+  document.getElementById('btn-fermer-licence').addEventListener('click', fermer);
+  fond.addEventListener('click', e => { if(e.target === fond) fermer(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') fermer(); });
+})();
 </script>
 </body>
 </html>

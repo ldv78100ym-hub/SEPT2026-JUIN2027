@@ -314,8 +314,22 @@ function aPowLatex(ex, x){
   return '\\left(' + ex.aLatex + '\\right)^{' + e + '}';
 }
 
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+   Le terme a^x est présenté avec des parenthèses englobantes
+   UNIQUEMENT lorsque la base n'est pas déjà entre parenthèses.
+   Ainsi, on évite les doubles parenthèses du type ((..)).
+   Exemples produits :
+     k=3, a=2    ->  3\,\left(2^x\right)            (base entière, on encadre)
+     k=1, a=2    ->  \left(2^x\right)
+     k=-1, a=2   ->  -\left(2^x\right)
+     k=2, a=1/2  ->  2\,\left(\dfrac{1}{2}\right)^x   (base déjà parenthésée)
+     k=3, a=√2   ->  3\,\left(\sqrt{2}\right)^x        (base déjà parenthésée)
+   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 function termLatex(ex){
-  const aPow = ex.aType === 'integer' ? ex.aLatex + '^x' : '\\left(' + ex.aLatex + '\\right)^x';
+  /* aPow : le terme a^x, sans parenthèses englobantes superflues */
+  const aPow = ex.aType === 'integer'
+    ? '\\left(' + ex.aLatex + '^x\\right)'                 /* base entière : on encadre a^x */
+    : '\\left(' + ex.aLatex + '\\right)^x';                /* base déjà parenthésée : pas de double */
   const k = ex.k, kAbsL = ex.kAbsLatex;
   if(k === 1)  return aPow;
   if(k === -1) return '-' + aPow;
@@ -331,9 +345,11 @@ function fLatex(ex){
 
 function fEval(ex, x){ return ex.k * Math.pow(ex.a, x) + ex.b; }
 
+/* Version "valeur" (utilisée pour afficher f(A), f(B), etc.)
+   Même règle : ne pas dupliquer les parenthèses déjà présentes. */
 function fValueLatex(ex, x){
   if(ex.aType === 'irrational'){
-    const aPow = ex.aType === 'integer' ? ex.aLatex + '^{' + x + '}' : '\\left(' + ex.aLatex + '\\right)^{' + x + '}';
+    const aPow = '\\left(' + ex.aLatex + '\\right)^{' + x + '}';
     const k = ex.k, kAbsL = ex.kAbsLatex;
     let term;
     if(k === 1)  term = aPow;
@@ -347,16 +363,29 @@ function fValueLatex(ex, x){
 
 /* ============================================================
    GÉNÉRATION DES ALLURES DE COURBES (SVG)
+   ------------------------------------------------------------
+   Géométrie repensée pour qu'aucune courbe ne soit écrêtée :
+     - viewport 220 × 160
+     - axe des abscisses au milieu (y0 = 80)
+     - amplitude verticale max = 40 (amp)
+     - asymptote décalée de ±30 (offset) selon le signe de b
+   Toutes les valeurs restent dans [4 ; 156] : plus de plateau.
    ============================================================ */
 function curveSketchSVG(variant, opts){
-  const W = 200, H = 140;
-  const x0 = 100, y0 = 105, yAsym = 45, amp = 55;
-  const yAsymCorrect = opts.bZero ? y0 : yAsym;
-  const yAsymWrong = opts.bZero ? yAsym : y0;
+  const W = 220, H = 160;
+  const x0 = 110, y0 = 80;
+  const offset = 30, amp = 40;
 
+  /* Position de l'asymptote selon le signe de b */
+  let yAsym;
+  if(opts.bZero)          yAsym = y0;
+  else if(opts.bSign > 0) yAsym = y0 - offset;   // au-dessus de l'axe (py plus petit)
+  else                    yAsym = y0 + offset;   // au-dessous de l'axe (py plus grand)
+
+  /* Courbe exponentielle correcte (et base des variantes dérivées) */
   function expY(xn, yA){
     const shape = opts.aIsGt1 ? Math.pow(xn, 3) : Math.pow(1 - xn, 3);
-    const sgn = (opts.k > 0) ? -1 : 1;
+    const sgn = (opts.k > 0) ? -1 : 1;   // k>0 : courbe au-dessus de l'asymptote (py diminue)
     return yA + sgn * amp * shape;
   }
 
@@ -367,25 +396,28 @@ function curveSketchSVG(variant, opts){
     const px = 15 + (W - 30) * xn;
     let py;
     if(variant === 'correct'){
-      py = expY(xn, yAsymCorrect);
+      py = expY(xn, yAsym);
     } else if(variant === 'linear'){
-      const up = (opts.k > 0) === opts.aIsGt1;
-      const mid = opts.bZero ? y0 : yAsym;
-      py = mid + (up ? -1 : 1) * 45 * (xn - 0.5) * 2;
+      /* Vraie droite, sans rapport avec l'asymptote */
+      py = (opts.k > 0) ? (25 + 110 * xn) : (135 - 110 * xn);
     } else if(variant === 'parabola'){
-      const up = (opts.k > 0);
-      const mid = opts.bZero ? y0 : yAsym;
-      py = mid + (up ? 40 : -40) - (up ? -1 : 1) * 45 * Math.pow(2*xn - 1, 2);
+      /* Parabole symétrique à vertex central, indépendante des paramètres */
+      py = 30 + 100 * Math.pow(2*xn - 1, 2);
     } else if(variant === 'opposite'){
+      /* Même forme mais sens de variation inversé */
       const shape = opts.aIsGt1 ? Math.pow(1 - xn, 3) : Math.pow(xn, 3);
       const sgn = (opts.k > 0) ? -1 : 1;
-      py = yAsymCorrect + sgn * amp * shape;
+      py = yAsym + sgn * amp * shape;
     } else if(variant === 'mirror'){
-      const yCor = expY(xn, yAsymCorrect);
-      py = 2 * yAsymCorrect - yCor;
+      /* Symétrique de la courbe correcte par rapport à l'asymptote */
+      const yCor = expY(xn, yAsym);
+      py = 2 * yAsym - yCor;
     } else if(variant === 'wrongAsym'){
-      py = expY(xn, yAsymWrong);
+      /* Forme correcte mais asymptote déplacée */
+      const yA = opts.bZero ? (y0 - offset) : y0;
+      py = expY(xn, yA);
     }
+    /* Sécurité (ne devrait jamais se déclencher avec les nouvelles coordonnées) */
     py = Math.max(4, Math.min(H - 4, py));
     pts.push([px, py]);
   }
@@ -397,13 +429,17 @@ function curveSketchSVG(variant, opts){
   svg += '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">';
   svg += '<defs><marker id="' + uid + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker></defs>';
   svg += '<rect width="' + W + '" height="' + H + '" fill="#fefefe" rx="6"/>';
+  /* Repères légers */
   svg += '<line x1="0" y1="' + y0 + '" x2="' + W + '" y2="' + y0 + '" stroke="#e2e8f0" stroke-width="1"/>';
   svg += '<line x1="' + x0 + '" y1="0" x2="' + x0 + '" y2="' + H + '" stroke="#e2e8f0" stroke-width="1"/>';
+  /* Axes (avec flèche) */
   svg += '<line x1="5" y1="' + y0 + '" x2="' + (W-5) + '" y2="' + y0 + '" stroke="#475569" stroke-width="1" marker-end="url(#' + uid + ')"/>';
   svg += '<line x1="' + x0 + '" y1="' + (H-5) + '" x2="' + x0 + '" y2="5" stroke="#475569" stroke-width="1" marker-end="url(#' + uid + ')"/>';
+  /* Asymptote (pointillés rouges) — sauf pour linear / parabola qui n'en ont pas */
   if(!opts.bZero && variant !== 'linear' && variant !== 'parabola'){
     svg += '<line x1="10" y1="' + yAsym + '" x2="' + (W-10) + '" y2="' + yAsym + '" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="5,4" opacity="0.8"/>';
   }
+  /* Courbe */
   svg += '<path d="' + pathD + '" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round"/>';
   svg += '</svg>';
   return svg;
@@ -676,7 +712,10 @@ function makeQuestions(ex){
     '<li>est <strong>' + verb + '</strong> sur $\\mathbb{R}$.</li>' +
     '</ul>' +
     '<h3>Conclusion (encadrée)</h3>' +
-    '\\[ \\boxed{\\,\\text{Finalement, l\'allure correcte est celle qui est ' + growthWord + ' et qui se situe ' + aboveOrBelow + ' de son asymptote}\\,} \\]';
+    /* La lettre (A..F) est placée HORS du \\text{} pour garantir le rendu MathJax. */
+    '\\[ \\boxed{\\,\\text{Finalement, l\'allure correcte est celle de la courbe }\\;\\mathbf{%%CORRECT_LETTER%%}\\,} \\]' +
+    '<p>Justification : la courbe <strong>%%CORRECT_LETTER%%</strong> est ' + growthWord +
+      ' sur $\\mathbb{R}$ et se situe ' + aboveOrBelow + ' de son asymptote ' + asympo + '.</p>';
 
   Q.push({
     title:"Question 7 — Choix de l'allure de la courbe de $f$",
@@ -684,7 +723,8 @@ function makeQuestions(ex){
              "Vous pouvez vous aider du tableau de variation et des questions précédentes. " +
              "Cliquez sur l'allure de votre choix, puis cliquez sur <strong>Vérifier</strong>.",
     curveSelector: true,
-    curveOpts: { k, aIsGt1, bZero },
+    /* bSign est transmis pour placer correctement l'asymptote */
+    curveOpts: { k, aIsGt1, bZero, bSign: b > 0 ? 1 : (b < 0 ? -1 : 0) },
     solution: solCurve
   });
 
@@ -738,6 +778,7 @@ function renderCurveQuestion(q, qIndex){
     const cell = document.createElement('div');
     cell.className = 'curve-card';
     cell.dataset.variant = v.id;
+    cell.dataset.label = labels[i];
     cell.innerHTML =
       '<div class="curve-label">' + labels[i] + '</div>' +
       '<div class="curve-svg">' + curveSketchSVG(v.id, q.curveOpts) + '</div>';
@@ -764,7 +805,12 @@ function renderCurveQuestion(q, qIndex){
 
   const solution = document.createElement('div');
   solution.className = 'solution';
-  solution.innerHTML = q.solution;
+
+  /* Détermine la lettre effective de la courbe correcte APRÈS mélange,
+     puis remplace le marqueur %%CORRECT_LETTER%% dans la solution. */
+  const correctCell = grid.querySelector('.curve-card[data-variant="correct"]');
+  const correctLetter = correctCell ? correctCell.dataset.label : '?';
+  solution.innerHTML = q.solution.split('%%CORRECT_LETTER%%').join(correctLetter);
   card.appendChild(solution);
 
   btnrow.querySelector('.check-btn').addEventListener('click', () => {
@@ -781,11 +827,11 @@ function renderCurveQuestion(q, qIndex){
     });
     if(selected.dataset.variant === 'correct'){
       feedback.className = 'feedback show ok';
-      feedback.textContent = '🎉 Bravo ! C\'est bien l\'allure correcte de la courbe de $f$.';
+      feedback.textContent = '🎉 Bravo ! La courbe ' + correctLetter + ' est bien l\'allure correcte de la courbe de $f$.';
     } else {
       selected.classList.add('wrong');
       feedback.className = 'feedback show ko';
-      feedback.textContent = '❌ Ce n\'est pas la bonne allure. La bonne réponse est encadrée en vert.';
+      feedback.textContent = '❌ Ce n\'est pas la bonne allure. La bonne réponse est la courbe ' + correctLetter + ' (encadrée en vert).';
     }
     if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([feedback]).catch(()=>{});
   });
@@ -1196,7 +1242,7 @@ function buildEnonceHTML(ex){
             '<span style="display:inline-block;background:var(--or);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">F</span>) ' +
             'et être <strong>encadrée</strong> (bouton <span style="display:inline-block;background:var(--violet);color:#fff;border-radius:4px;padding:0 6px;font-weight:700;">▢</span>).</li>' +
           '<li><strong>Q3</strong> (signe) et <strong>Q6</strong> (variation) comportent un <strong>constructeur interactif de tableau</strong>.</li>' +
-          '<li><strong>Q7</strong> est un <strong>choix d\'allure de courbe</strong> : cliquez sur l\'allure qui vous semble correcte, puis vérifiez.</li>' +
+          '<li><strong>Q7</strong> est un <strong>choix d\'allure de courbe</strong> : cliquez sur l\'allure qui vous semble correcte, puis vérifiez. La correction précise la <strong>lettre</strong> de la courbe correcte (A, B, C, D, E ou F).</li>' +
           '</ul></div>';
   return html;
 }

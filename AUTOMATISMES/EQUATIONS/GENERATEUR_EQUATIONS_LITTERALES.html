@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Équations littérales — générateur pas à pas</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true
+    },
+    svg: { fontCache: 'global' },
+    options: { enableMenu: false }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+  :root{
+    --bg:#f6f8fc; --bg2:#eef2f9; --card:#ffffff; --line:#e2e8f2;
+    --txt:#1a2740; --muted:#64748b;
+    --blue:#2563eb; --blue-soft:#dbeafe;
+    --green:#059669; --green-soft:#d1fae5;
+    --amber:#b45309; --amber-soft:#fef3c7;
+    --violet:#7c3aed; --violet-soft:#ede9fe;
+    --shadow:0 4px 24px rgba(30,60,120,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    color:var(--txt);
+    background:linear-gradient(180deg, var(--bg), var(--bg2));
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1020px;margin:0 auto;padding:32px 18px 80px}
+  header{text-align:center;margin-bottom:26px}
+  header h1{font-size:clamp(1.4rem,3.4vw,2rem);margin:0 0 8px;font-weight:700;letter-spacing:-.01em;color:var(--txt)}
+  header h1 span{color:var(--blue)}
+  header p{margin:0;color:var(--muted);font-size:.95rem}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:22px 0}
+  select,button,.chk{
+    font:inherit;font-size:.9rem;background:#fff;color:var(--txt);
+    border:1px solid var(--line);border-radius:10px;padding:10px 15px;cursor:pointer;
+    box-shadow:0 1px 2px rgba(30,60,120,.04);transition:.15s ease;
+  }
+  select:hover,button:hover,.chk:hover{border-color:#bcd0f0;box-shadow:0 4px 12px rgba(30,60,120,.10);transform:translateY(-1px)}
+  button.primary{background:linear-gradient(120deg,#2563eb,#3b82f6);color:#fff;border-color:#2563eb;font-weight:600}
+  button.primary:hover{background:linear-gradient(120deg,#1d4ed8,#2563eb)}
+  .chk{display:inline-flex;align-items:center;gap:8px;user-select:none}
+  .chk input{accent-color:var(--blue)}
+  #carte{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:24px clamp(16px,3vw,32px) 28px;box-shadow:var(--shadow);
+  }
+  .entete{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .tag{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:999px;font-weight:600;background:var(--blue-soft);color:#1d4ed8}
+  .tag2{background:var(--green-soft);color:#047857}
+  .question{font-size:1.02rem;line-height:1.6;color:#334155;margin:.2em 0 1em}
+  .question b{color:var(--blue);font-weight:700}
+  .equation{text-align:center;margin:10px 0;overflow-x:auto;padding:10px 4px;font-size:1.05em}
+  hr.sep{border:0;height:1px;margin:24px 0 18px;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+  .titre-section{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 16px;text-align:center;font-weight:600}
+  .step{display:grid;grid-template-columns:32px 1fr;gap:14px;padding:12px 0;border-bottom:1px dashed #eef2f9;animation:fade .35s ease both}
+  .step:last-child{border-bottom:0}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .step .num{
+    width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:.76rem;font-weight:700;color:#fff;background:linear-gradient(140deg,#3b82f6,#2563eb);
+    margin-top:6px;box-shadow:0 2px 6px rgba(37,99,235,.35);
+  }
+  .step .eq{overflow-x:auto;padding:2px 0}
+  .step .note{color:var(--muted);font-size:.88rem;margin-top:6px;line-height:1.55}
+  .step .rule{
+    margin-top:8px;padding:9px 12px;border-radius:8px;
+    background:var(--amber-soft);border-left:3px solid var(--amber);
+    font-size:.86rem;color:#78350f;line-height:1.55;
+  }
+  .step .rule b{color:var(--amber);font-weight:700}
+  /* encart violet pour la conversion en puissance négative */
+  .step .rule.negpow{
+    background:var(--violet-soft);border-left-color:var(--violet);color:#4c1d95;
+  }
+  .step .rule.negpow b{color:var(--violet)}
+  .reponse{
+    margin-top:22px;padding:20px;border-radius:12px;
+    background:linear-gradient(120deg,#eff6ff,#ecfdf5);border:1px solid #bfdbfe;text-align:center;
+  }
+  .reponse .rlabel{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:8px;font-weight:700}
+  .zone-canvas{margin-top:24px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fbfcfe}
+  .zone-canvas .legende{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;font-size:.78rem;color:var(--muted);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  #plot{display:block;width:100%;height:260px}
+  .masque{display:none !important}
+  footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:28px}
+  .erreur{padding:16px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Générateur d'<span>équations littérales</span></h1>
+    <p>Isoler une grandeur en fonction des autres — formules de physique, chimie, économie, géométrie…</p>
+  </header>
+
+  <div class="toolbar">
+    <select id="domaine"></select>
+    <button class="primary" id="btn-generer">⟳ Nouvelle équation</button>
+    <label class="chk"><input type="checkbox" id="chk-masquer" checked> Mode entraînement</label>
+  </div>
+
+  <main id="carte"></main>
+
+  <footer>MathJax 3 · Canvas 2D · Moteur d'isolation symbolique intégré</footer>
+</div>
+
+<script>
+/* ============================================================
+   1. ARBRE D'EXPRESSION
+   ============================================================ */
+const Num = v => ({t:'num', v});
+const Sym = s => ({t:'sym', s});
+const Add = (a,b) => ({t:'add', a, b});
+const Sub = (a,b) => ({t:'sub', a, b});
+const Mul = (a,b) => ({t:'mul', a, b});
+const Div = (a,b) => ({t:'div', a, b});
+const Pow = (a,b) => ({t:'pow', a, b});
+const Neg = a => ({t:'neg', a});
+const Fn  = (f,a) => ({t:'fn', f, a});
+const Sqrt = a => Fn('sqrt', a);
+
+const isNum = (n, v) => n && n.t === 'num' && (v === undefined || n.v === v);
+const isFrac = n => n && n.t === 'div';
+const rnd  = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+
+/* ============================================================
+   2. UTILITAIRES DE STRUCTURE
+   ============================================================ */
+function has(n, x){
+  if(!n) return false;
+  switch(n.t){
+    case 'num': return false;
+    case 'sym': return n.s === x;
+    case 'neg': case 'fn': return has(n.a, x);
+    default: return has(n.a, x) || has(n.b, x);
+  }
+}
+function countX(n, x){
+  if(!n) return 0;
+  switch(n.t){
+    case 'num': return 0;
+    case 'sym': return n.s === x ? 1 : 0;
+    case 'neg': case 'fn': return countX(n.a, x);
+    default: return countX(n.a, x) + countX(n.b, x);
+  }
+}
+function sameExpr(a, b){
+  if(!a || !b) return false;
+  if(a.t !== b.t) return false;
+  switch(a.t){
+    case 'num': return a.v === b.v;
+    case 'sym': return a.s === b.s;
+    case 'neg': return sameExpr(a.a, b.a);
+    case 'fn':  return a.f === b.f && sameExpr(a.a, b.a);
+    default:    return sameExpr(a.a, b.a) && sameExpr(a.b, b.b);
+  }
+}
+function containsDiv(n){
+  if(!n) return false;
+  if(n.t === 'div') return true;
+  if(n.t === 'neg' || n.t === 'fn') return containsDiv(n.a);
+  if(n.t === 'add' || n.t === 'sub' || n.t === 'mul' || n.t === 'pow'){
+    return containsDiv(n.a) || containsDiv(n.b);
+  }
+  return false;
+}
+function hasNestedDiv(n){
+  if(!n) return false;
+  if(n.t === 'div') return containsDiv(n.a) || containsDiv(n.b);
+  if(n.t === 'pow'){
+    if(isNum(n.b) && n.b.v < 0 && Number.isInteger(n.b.v) && containsDiv(n.a)) return true;
+    return hasNestedDiv(n.a) || hasNestedDiv(n.b);
+  }
+  if(n.t === 'neg' || n.t === 'fn') return hasNestedDiv(n.a);
+  if(n.t === 'add' || n.t === 'sub' || n.t === 'mul'){
+    return hasNestedDiv(n.a) || hasNestedDiv(n.b);
+  }
+  return false;
+}
+
+/* ============================================================
+   3. SIMPLIFICATION LÉGÈRE
+   ============================================================ */
+function simp(n){
+  if(!n) return n;
+  switch(n.t){
+    case 'num': case 'sym': return n;
+    case 'neg': {
+      const a = simp(n.a);
+      if(isNum(a)) return Num(-a.v);
+      if(a.t === 'neg') return a.a;
+      return Neg(a);
+    }
+    case 'add': {
+      const a = simp(n.a), b = simp(n.b);
+      if(isNum(a,0)) return b;
+      if(isNum(b,0)) return a;
+      if(isNum(a) && isNum(b)) return Num(a.v + b.v);
+      if(b.t === 'neg') return simp(Sub(a, b.a));
+      if(a.t === 'neg') return simp(Sub(b, a.a));
+      return Add(a, b);
+    }
+    case 'sub': {
+      const a = simp(n.a), b = simp(n.b);
+      if(isNum(b,0)) return a;
+      if(isNum(a,0)) return simp(Neg(b));
+      if(isNum(a) && isNum(b)) return Num(a.v - b.v);
+      if(b.t === 'neg') return simp(Add(a, b.a));
+      if(sameExpr(a,b)) return Num(0);
+      return Sub(a, b);
+    }
+    case 'mul': {
+      const a = simp(n.a), b = simp(n.b);
+      if(isNum(a,0) || isNum(b,0)) return Num(0);
+      if(isNum(a,1)) return b;
+      if(isNum(b,1)) return a;
+      if(isNum(a,-1)) return simp(Neg(b));
+      if(isNum(b,-1)) return simp(Neg(a));
+      if(isNum(a) && isNum(b)) return Num(a.v * b.v);
+      if(!isNum(a) && isNum(b)) return Mul(b, a);
+      if(b.t === 'neg') return simp(Neg(Mul(a, b.a)));
+      return Mul(a, b);
+    }
+    case 'div': {
+      const a = simp(n.a), b = simp(n.b);
+      if(isNum(a,0)) return Num(0);
+      if(isNum(b,1)) return a;
+      if(isNum(b,-1)) return simp(Neg(a));
+      if(isNum(a) && isNum(b) && b.v !== 0 && Number.isInteger(a.v/b.v)) return Num(a.v/b.v);
+      if(a.t === 'neg') return simp(Neg(Div(a.a, b)));
+      if(b.t === 'neg') return simp(Neg(Div(a, b.a)));
+      if(sameExpr(a,b)) return Num(1);
+      return Div(a, b);
+    }
+    case 'pow': {
+      const a = simp(n.a), b = simp(n.b);
+      if(isNum(b,1)) return a;
+      if(isNum(b,0)) return Num(1);
+      if(isNum(a,1)) return Num(1);
+      if(isNum(a) && isNum(b) && Number.isInteger(b.v) && b.v >= 0 && b.v <= 6)
+        return Num(Math.pow(a.v, b.v));
+      if(a.t === 'div' && isNum(b) && Number.isInteger(b.v) && b.v !== 0 && Math.abs(b.v) <= 4){
+        const k = Math.abs(b.v);
+        const pn = Pow(a.a, Num(k));
+        const pd = Pow(a.b, Num(k));
+        return b.v > 0 ? simp(Div(pn, pd)) : simp(Div(pd, pn));
+      }
+      return Pow(a, b);
+    }
+    case 'fn': return Fn(n.f, simp(n.a));
+  }
+  return n;
+}
+
+/* ============================================================
+   3b. APLATISSEMENT DES FRACTIONS IMBRIQUÉES
+   ============================================================ */
+function toFlatRat(n){
+  if(!n) return {num: Num(1), den: Num(1)};
+  switch(n.t){
+    case 'num': case 'sym': case 'fn':
+      return {num: n, den: Num(1)};
+    case 'neg': { const r = toFlatRat(n.a); return {num: Neg(r.num), den: r.den}; }
+    case 'add': case 'sub': {
+      const A = toFlatRat(n.a), B = toFlatRat(n.b);
+      const t1 = Mul(A.num, B.den);
+      const t2 = Mul(B.num, A.den);
+      return { num: n.t === 'add' ? Add(t1, t2) : Sub(t1, t2), den: Mul(A.den, B.den) };
+    }
+    case 'mul': { const A = toFlatRat(n.a), B = toFlatRat(n.b);
+      return {num: Mul(A.num, B.num), den: Mul(A.den, B.den)}; }
+    case 'div': { const A = toFlatRat(n.a), B = toFlatRat(n.b);
+      return {num: Mul(A.num, B.den), den: Mul(A.den, B.num)}; }
+    case 'pow': {
+      if(isNum(n.b) && n.b.v < 0 && Number.isInteger(n.b.v)){
+        const r = toFlatRat(n.a); const k = -n.b.v;
+        let num = r.den, den = r.num;
+        for(let i = 1; i < k; i++){ num = Mul(num, r.den); den = Mul(den, r.num); }
+        return {num, den};
+      }
+      if(isNum(n.b) && Number.isInteger(n.b.v) && n.b.v > 0 && n.b.v <= 6){
+        const A = toFlatRat(n.a);
+        if(A.den.t !== 'num' || A.den.v !== 1){
+          let num = A.num, den = A.den;
+          for(let i = 1; i < n.b.v; i++){ num = Mul(num, A.num); den = Mul(den, A.den); }
+          return {num, den};
+        }
+      }
+      return {num: n, den: Num(1)};
+    }
+  }
+  return {num: n, den: Num(1)};
+}
+function gcd(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  while(b){ const t = b; b = a % b; a = t; }
+  return a;
+}
+function flatten(n){
+  const r = toFlatRat(n);
+  let num = simp(r.num), den = simp(r.den);
+  if(isNum(num) && isNum(den) && den.v !== 0 && Number.isInteger(num.v) && Number.isInteger(den.v)){
+    const g = gcd(Math.abs(num.v), Math.abs(den.v));
+    if(g > 1){ num = Num(num.v/g); den = Num(den.v/g); }
+  }
+  if(isNum(den, 1)) return num;
+  if(isNum(den, -1)) return simp(Neg(num));
+  return simp(Div(num, den));
+}
+
+/* ============================================================
+   3c. CONVERSION \dfrac{a}{b^{c}}  ->  a \times b^{-c}
+       (et  \dfrac{a}{\sqrt{b}}  ->  a \times b^{-1/2})
+       Récursive : s'applique à toute sous-expression.
+   ============================================================ */
+function isPowerLike(n){
+  if(!n) return false;
+  if(n.t === 'pow') return true;
+  if(n.t === 'fn' && (n.f === 'sqrt' || n.f === 'cbrt')) return true;
+  return false;
+}
+function toNegPow(n){
+  if(!n) return n;
+  switch(n.t){
+    case 'num': case 'sym': return n;
+    case 'neg': return Neg(toNegPow(n.a));
+    case 'add': return Add(toNegPow(n.a), toNegPow(n.b));
+    case 'sub': return Sub(toNegPow(n.a), toNegPow(n.b));
+    case 'mul': return Mul(toNegPow(n.a), toNegPow(n.b));
+    case 'pow': return Pow(toNegPow(n.a), toNegPow(n.b));
+    case 'fn':  return Fn(n.f, toNegPow(n.a));
+    case 'div': {
+      const A = toNegPow(n.a);
+      const B = toNegPow(n.b);
+      /* a / b^c  ->  a · b^(-c) */
+      if(B.t === 'pow'){
+        return Mul(A, Pow(B.a, simp(Neg(B.b))));
+      }
+      /* a / sqrt(b)  ->  a · b^(-1/2) */
+      if(B.t === 'fn' && B.f === 'sqrt'){
+        return Mul(A, Pow(B.a, Div(Num(-1), Num(2))));
+      }
+      /* a / cbrt(b)  ->  a · b^(-1/3) */
+      if(B.t === 'fn' && B.f === 'cbrt'){
+        return Mul(A, Pow(B.a, Div(Num(-1), Num(3))));
+      }
+      return Div(A, B);
+    }
+  }
+  return n;
+}
+/* test : la racine contient-elle une division dont le dénominateur est une puissance ? */
+function containsNegPowTarget(n){
+  if(!n) return false;
+  if(n.t === 'div') return isPowerLike(n.b);
+  if(n.t === 'neg' || n.t === 'fn') return containsNegPowTarget(n.a);
+  if(n.t === 'add' || n.t === 'sub' || n.t === 'mul' || n.t === 'pow'){
+    return containsNegPowTarget(n.a) || containsNegPowTarget(n.b);
+  }
+  return false;
+}
+
+/* ============================================================
+   4. RENDU LaTeX
+   ============================================================ */
+function prec(n){
+  switch(n.t){
+    case 'add': case 'sub': return 1;
+    case 'neg': return 1.5;
+    case 'mul': case 'div': return 2;
+    case 'pow': return 3;
+    case 'fn': return 4;
+    default: return 5;
+  }
+}
+function render(n, minP){
+  const s = renderRaw(n);
+  return prec(n) < minP ? '\\left(' + s + '\\right)' : s;
+}
+function renderRaw(n){
+  switch(n.t){
+    case 'num': return String(n.v);
+    case 'sym': return n.s;
+    case 'add': {
+      if(isNum(n.b) && n.b.v < 0) return render(n.a,1) + ' - ' + render(Num(-n.b.v),2);
+      if(n.b.t === 'neg') return render(n.a,1) + ' - ' + render(n.b.a,2);
+      return render(n.a,1) + ' + ' + render(n.b,2);
+    }
+    case 'sub': {
+      if(isNum(n.b) && n.b.v < 0) return render(n.a,1) + ' + ' + render(Num(-n.b.v),2);
+      if(n.b.t === 'neg') return render(n.a,1) + ' + ' + render(n.b.a,2);
+      return render(n.a,1) + ' - ' + render(n.b,2);
+    }
+    case 'neg': return '-' + render(n.a, 2);
+    case 'mul': {
+      if(isNum(n.a)) return String(n.a.v) + render(n.b, 2);
+      if(isNum(n.b)) return String(n.b.v) + render(n.a, 2);
+      if(prec(n.a) >= 3 && prec(n.b) >= 3) return render(n.a,3) + '\\,' + render(n.b,3);
+      return render(n.a,2) + '\\cdot ' + render(n.b,2);
+    }
+    case 'div': return '\\dfrac{' + render(n.a,0) + '}{' + render(n.b,0) + '}';
+    case 'pow': {
+      if(isNum(n.b)){
+        const k = n.b.v;
+        if(k === 1) return render(n.a, 3);
+        if(k === -1) return '\\dfrac{1}{' + render(n.a,0) + '}';
+        if(k < 0) return '\\dfrac{1}{' + render(Pow(n.a, Num(-k)), 0) + '}';
+        return render(n.a,3) + '^{' + k + '}';
+      }
+      /* exposant fractionnaire simple : -1/2, 1/3, ... */
+      if(n.b.t === 'div' && isNum(n.b.a) && isNum(n.b.b)
+         && Math.abs(n.b.a.v) <= 9 && Math.abs(n.b.b.v) <= 9){
+        const s = n.b.a.v + '/' + n.b.b.v;
+        return render(n.a,3) + '^{' + s + '}';
+      }
+      return render(n.a,3) + '^{' + render(n.b,0) + '}';
+    }
+    case 'fn': {
+      const arg = render(n.a, 0);
+      switch(n.f){
+        case 'sqrt': return '\\sqrt{' + arg + '}';
+        case 'cbrt': return '\\sqrt[3]{' + arg + '}';
+        case 'exp':  return 'e^{' + arg + '}';
+        case 'ln':   return '\\ln\\!\\left(' + arg + '\\right)';
+        case 'log10':return '\\log\\!\\left(' + arg + '\\right)';
+        case 'sin': case 'cos': case 'tan':
+          return '\\' + n.f + '\\!\\left(' + arg + '\\right)';
+        case 'asin': return '\\arcsin\\!\\left(' + arg + '\\right)';
+        case 'acos': return '\\arccos\\!\\left(' + arg + '\\right)';
+        case 'atan': return '\\arctan\\!\\left(' + arg + '\\right)';
+      }
+      return '\\operatorname{' + n.f + '}\\left(' + arg + '\\right)';
+    }
+  }
+  return '';
+}
+function tex(node){ return render(simp(node), 0); }
+
+/* affichage "normalisé" : fractions plates + puissances négatives */
+function texDisplay(node){
+  let n = simp(node);
+  if(hasNestedDiv(n)) n = flatten(n);
+  n = simp(toNegPow(n));
+  return render(n, 0);
+}
+
+/* ============================================================
+   5. ISOLATION SYMBOLIQUE PAS À PAS
+   ============================================================ */
+function isoler(L, R, x, steps){
+  if(L.t === 'sym' && L.s === x) return R;
+
+  if(!has(L, x) && has(R, x)){
+    steps.push({lhs: R, rhs: L,
+      note:"On échange les deux membres de l'équation pour placer l'inconnue à gauche.",
+      rule:"L'égalité est symétrique : si $A = B$, alors $B = A$."});
+    return isoler(R, L, x, steps);
+  }
+
+  if(has(L, x) && has(R, x)){
+    const newL = simp(Sub(L, R));
+    steps.push({lhs: newL, rhs: Num(0),
+      note:"On regroupe tous les termes en l'inconnue dans le membre de gauche.",
+      rule:"On peut ajouter ou retrancher le même terme aux deux membres : si $A = B$, alors $A - B = 0$."});
+    return isoler(newL, Num(0), x, steps);
+  }
+
+  if(!has(L, x)) throw new Error("inconnue absente");
+  if(countX(L, x) !== 1) throw new Error("occurrences multiples");
+
+  switch(L.t){
+    case 'add': {
+      let nL, nR, retranché;
+      if(has(L.a, x)){ nL = L.a; retranché = L.b; }
+      else           { nL = L.b; retranché = L.a; }
+      nR = simp(Sub(R, retranché));
+      steps.push({lhs: nL, rhs: nR,
+        note:"On retranche $" + tex(retranché) + "$ aux deux membres.",
+        rule:"**Règle** : si $X + b = c$, alors $X = c - b$ — pour isoler $X$, on retranche $b$ des deux côtés."});
+      return isoler(nL, nR, x, steps);
+    }
+    case 'sub': {
+      if(has(L.a, x)){
+        const nL = L.a, nR = simp(Add(R, L.b));
+        steps.push({lhs: nL, rhs: nR,
+          note:"On ajoute $" + tex(L.b) + "$ aux deux membres.",
+          rule:"**Règle** : si $X - b = c$, alors $X = c + b$ — pour isoler $X$, on ajoute $b$ des deux côtés."});
+        return isoler(nL, nR, x, steps);
+      } else {
+        const nL = L.b, nR = simp(Sub(L.a, R));
+        steps.push({lhs: nL, rhs: nR,
+          note:"L'inconnue est dans le terme soustrait. On échange les rôles.",
+          rule:"**Règle** : si $a - X = c$, alors $X = a - c$."});
+        return isoler(nL, nR, x, steps);
+      }
+    }
+    case 'mul': {
+      let nL, nR, diviseur, note, rule;
+      if(has(L.a, x)){ nL = L.a; diviseur = L.b; }
+      else           { nL = L.b; diviseur = L.a; }
+
+      if(isFrac(diviseur)){
+        nR = simp(Mul(R, Div(diviseur.b, diviseur.a)));
+        note = "On divise les deux membres par $" + tex(diviseur) + "$.";
+        rule = "**Règle** : diviser par une fraction revient à multiplier par son inverse : " +
+               "$\\dfrac{X}{\\frac{p}{q}} = X \\times \\dfrac{q}{p}$.";
+      } else {
+        nR = simp(Div(R, diviseur));
+        note = "On divise les deux membres par $" + tex(diviseur) + "$.";
+        rule = "**Règle** : si $X \\cdot b = c$ avec $b \\neq 0$, alors $X = \\dfrac{c}{b}$ — " +
+               "diviser par $b$ revient à multiplier par son inverse $\\dfrac{1}{b}$.";
+      }
+      steps.push({lhs: nL, rhs: nR, note, rule});
+      return isoler(nL, nR, x, steps);
+    }
+    case 'div': {
+      if(has(L.a, x)){
+        const nL = L.a, nR = simp(Mul(R, L.b));
+        let rule;
+        if(isFrac(L.b)){
+          rule = "**Règle** : multiplier par une fraction revient à multiplier par son numérateur puis diviser par son dénominateur.";
+        } else {
+          rule = "**Règle** : si $\\dfrac{X}{b} = c$ avec $b \\neq 0$, alors $X = c \\cdot b$ — on multiplie les deux membres par $b$.";
+        }
+        steps.push({lhs: nL, rhs: nR,
+          note:"On multiplie les deux membres par $" + tex(L.b) + "$ pour faire disparaître le dénominateur.",
+          rule});
+        return isoler(nL, nR, x, steps);
+      } else {
+        const nL = L.b;
+        let nR = simp(Div(L.a, R));
+        let note, rule;
+        if(containsDiv(R)){
+          nR = simp(flatten(nR));
+          note = "Pour extraire $X$ du dénominateur, on utilise la règle de division par une fraction.";
+          rule = "**Règle** : $\\dfrac{a}{\\frac{p}{q}} = a \\times \\dfrac{q}{p}$ — " +
+                 "diviser par une fraction revient à multiplier par son inverse.";
+        } else {
+          note = "On isole $X$ : on multiplie les deux membres par $X$, puis on divise par " + tex(R) + ".";
+          rule = "**Règle** : si $\\dfrac{a}{X} = c$ (avec $X \\neq 0$ et $c \\neq 0$), alors $X = \\dfrac{a}{c}$ — " +
+                 "produit en croix : $a = c \\cdot X$, d'où $X = \\dfrac{a}{c}$.";
+        }
+        steps.push({lhs: nL, rhs: nR, note, rule});
+        return isoler(nL, nR, x, steps);
+      }
+    }
+    case 'neg': {
+      const nL = L.a, nR = simp(Neg(R));
+      steps.push({lhs: nL, rhs: nR,
+        note:"On multiplie les deux membres par $-1$.",
+        rule:"**Règle** : si $-X = c$, alors $X = -c$ — multiplier par $-1$ change le signe de chaque membre."});
+      return isoler(nL, nR, x, steps);
+    }
+    case 'pow': {
+      if(has(L.b, x)){
+        if(has(L.a, x)) throw new Error("exposant et base contiennent x");
+        const nL = L.b, nR = simp(Div(Fn('ln', R), Fn('ln', L.a)));
+        steps.push({lhs: nL, rhs: nR,
+          note:"L'inconnue est en exposant : on applique le logarithme népérien aux deux membres.",
+          rule:"**Règle** : si $a^{X} = b$ avec $a > 0$, $a \\neq 1$ et $b > 0$, alors $X = \\dfrac{\\ln b}{\\ln a}$."});
+        return isoler(nL, nR, x, steps);
+      }
+      if(L.b.t !== 'num') throw new Error("exposant non numérique");
+      const k = L.b.v;
+      const nL = L.a;
+      let nR, note, rule;
+      if(k === 1){ nR = R; note = "Rien à faire."; rule = null; }
+      else if(k === 2){
+        nR = Sqrt(R);
+        note = "On prend la racine carrée des deux membres.";
+        rule = "**Règle** : si $X^2 = b$ avec $b \\geq 0$, alors $X = \\sqrt{b}$ — on prend la racine positive.";
+      }
+      else if(k === 3){
+        nR = Fn('cbrt', R);
+        note = "On prend la racine cubique des deux membres.";
+        rule = "**Règle** : si $X^3 = b$, alors $X = \\sqrt[3]{b}$.";
+      }
+      else if(k === -1){
+        nR = Div(Num(1), R);
+        note = "On inverse les deux membres.";
+        rule = "**Règle** : si $\\dfrac{1}{X} = b$, alors $X = \\dfrac{1}{b}$ — on échange numérateur et dénominateur.";
+      }
+      else if(k === -2){
+        nR = Div(Num(1), Sqrt(R));
+        note = "On inverse puis on prend la racine carrée.";
+        rule = "**Règle** : si $\\dfrac{1}{X^2} = b$, alors $X = \\dfrac{1}{\\sqrt{b}}$.";
+      }
+      else if(Number.isInteger(k)){
+        nR = Pow(R, Div(Num(1), Num(k)));
+        note = "On élève les deux membres à la puissance $\\frac{1}{" + k + "}$.";
+        rule = "**Règle** : si $X^{" + k + "} = b$, alors $X = b^{1/" + k + "}$.";
+      }
+      else throw new Error("exposant non entier");
+      steps.push({lhs: nL, rhs: nR, note, rule});
+      return isoler(nL, nR, x, steps);
+    }
+    case 'fn': {
+      const nL = L.a;
+      let nR, note, rule;
+      switch(L.f){
+        case 'sqrt':
+          nR = Pow(R, Num(2));
+          note = "On élève les deux membres au carré.";
+          rule = "**Règle** : si $\\sqrt{X} = b$ (avec $b \\geq 0$), alors $X = b^2$.";
+          break;
+        case 'cbrt':
+          nR = Pow(R, Num(3));
+          note = "On élève les deux membres au cube.";
+          rule = "**Règle** : si $\\sqrt[3]{X} = b$, alors $X = b^3$.";
+          break;
+        case 'exp':
+          nR = Fn('ln', R);
+          note = "On applique le logarithme népérien aux deux membres.";
+          rule = "**Règle** : si $e^{X} = b$ avec $b > 0$, alors $X = \\ln b$.";
+          break;
+        case 'ln':
+          nR = Fn('exp', R);
+          note = "On applique la fonction exponentielle aux deux membres.";
+          rule = "**Règle** : si $\\ln X = b$, alors $X = e^{b}$.";
+          break;
+        case 'log10':
+          nR = Pow(Num(10), R);
+          note = "On passe à la puissance $10$ dans les deux membres.";
+          rule = "**Règle** : si $\\log_{10} X = b$, alors $X = 10^{b}$.";
+          break;
+        case 'sin':
+          nR = Fn('asin', R);
+          note = "On applique $\\arcsin$ aux deux membres.";
+          rule = "**Règle** : si $\\sin X = b$ avec $b \\in [-1,1]$, alors $X = \\arcsin b$ (modulo $2\\pi$).";
+          break;
+        case 'cos':
+          nR = Fn('acos', R);
+          note = "On applique $\\arccos$ aux deux membres.";
+          rule = "**Règle** : si $\\cos X = b$ avec $b \\in [-1,1]$, alors $X = \\arccos b$ (modulo $2\\pi$).";
+          break;
+        case 'tan':
+          nR = Fn('atan', R);
+          note = "On applique $\\arctan$ aux deux membres.";
+          rule = "**Règle** : si $\\tan X = b$, alors $X = \\arctan b$ (modulo $\\pi$).";
+          break;
+        default: throw new Error("fonction non inversible : " + L.f);
+      }
+      steps.push({lhs: nL, rhs: nR, note, rule});
+      return isoler(nL, nR, x, steps);
+    }
+  }
+  throw new Error("descente impossible");
+}
+
+/* ============================================================
+   6. RÉSOLUTION POLYNOMIALE (secours)
+   ============================================================ */
+function polyOf(n, x){
+  switch(n.t){
+    case 'num': return [n];
+    case 'sym': return n.s === x ? [Num(0), Num(1)] : [n];
+    case 'neg': { const p = polyOf(n.a, x); return p ? p.map(Neg) : null; }
+    case 'add': case 'sub': {
+      const p = polyOf(n.a, x), q = polyOf(n.b, x);
+      if(!p || !q) return null;
+      const m = Math.max(p.length, q.length);
+      const r = [];
+      for(let i = 0; i < m; i++){
+        const ci = p[i] || Num(0), di = q[i] || Num(0);
+        r[i] = n.t === 'add' ? Add(ci, di) : Sub(ci, di);
+      }
+      return r;
+    }
+    case 'mul': {
+      const p = polyOf(n.a, x), q = polyOf(n.b, x);
+      if(!p || !q) return null;
+      if((p.length - 1) + (q.length - 1) > 2) return null;
+      const r = new Array(p.length + q.length - 1);
+      for(let i = 0; i < r.length; i++) r[i] = Num(0);
+      for(let i = 0; i < p.length; i++)
+        for(let j = 0; j < q.length; j++)
+          r[i+j] = Add(r[i+j], Mul(p[i], q[j]));
+      return r;
+    }
+    case 'div': {
+      const p = polyOf(n.a, x), q = polyOf(n.b, x);
+      if(!p || !q) return null;
+      if(q.length > 1) return null;
+      if(isNum(q[0], 0)) return null;
+      return p.map(c => Div(c, q[0]));
+    }
+    case 'pow': {
+      if(n.b.t !== 'num') return null;
+      const k = n.b.v;
+      if(!Number.isInteger(k) || k < 0 || k > 2) return null;
+      let p = polyOf(n.a, x);
+      if(!p) return null;
+      let r = [Num(1)];
+      for(let i = 0; i < k; i++){
+        if((r.length - 1) + (p.length - 1) > 2) return null;
+        const t = new Array(r.length + p.length - 1);
+        for(let u = 0; u < t.length; u++) t[u] = Num(0);
+        for(let u = 0; u < r.length; u++)
+          for(let v = 0; v < p.length; v++)
+            t[u+v] = Add(t[u+v], Mul(r[u], p[v]));
+        r = t;
+      }
+      return r;
+    }
+    case 'fn': return has(n, x) ? null : [n];
+  }
+  return null;
+}
+function trimPoly(p){
+  while(p.length > 1 && isNum(p[p.length-1], 0)) p.pop();
+  return p;
+}
+function solvePoly(L0, R0, x, steps){
+  const diff = simp(Sub(L0, R0));
+  steps.push({lhs: diff, rhs: Num(0),
+    note:"On regroupe tous les termes dans le membre de gauche.",
+    rule:"**Règle** : pour résoudre $A = B$, on se ramène à $A - B = 0$."});
+
+  let poly = polyOf(diff, x);
+  if(!poly) throw new Error("non polynomial");
+  trimPoly(poly);
+  const deg = poly.length - 1;
+  if(deg < 1) throw new Error("degré nul");
+
+  let display = Num(0);
+  for(let i = poly.length - 1; i >= 0; i--){
+    if(isNum(poly[i], 0)) continue;
+    const term = (i === 0) ? poly[i] : Mul(poly[i], Pow(Sym(x), Num(i)));
+    display = Add(display, term);
+  }
+  display = simp(display);
+  steps.push({lhs: display, rhs: Num(0),
+    note: deg === 1 ? "On développe et on réduit : équation du premier degré en l'inconnue."
+                    : "On développe et on réduit : équation du second degré en l'inconnue.",
+    rule: deg === 1 ? "**Règle** : on regroupe les termes en $X$ d'un côté et les constantes de l'autre."
+                    : "**Règle** : on se ramène à la forme $aX^2 + bX + c = 0$."});
+
+  if(deg === 1){
+    const [c0, c1] = poly;
+    const result = simp(Div(Neg(c0), c1));
+    steps.push({lhs: Sym(x), rhs: result,
+      note:"On isole l'inconnue.",
+      rule:"**Règle** : si $aX + b = 0$ avec $a \\neq 0$, alors $X = -\\dfrac{b}{a}$."});
+    return result;
+  }
+  if(deg === 2){
+    const [c0, c1, c2] = poly;
+    const delta = simp(Sub(Pow(c1, Num(2)), Mul(Num(4), Mul(c2, c0))));
+    steps.push({lhs: Sym('\\Delta'), rhs: delta,
+      note:"On calcule le discriminant.",
+      rule:"**Règle** : pour $aX^2 + bX + c = 0$, on pose $\\Delta = b^2 - 4ac$."});
+    const result = simp(Div(Add(Neg(c1), Sqrt(delta)), Mul(Num(2), c2)));
+    steps.push({lhs: Sym(x), rhs: result,
+      note:"On applique la formule des racines (branche $+\\sqrt{\\Delta}$).",
+      rule:"**Règle** : $X = \\dfrac{-b \\pm \\sqrt{\\Delta}}{2a}$."});
+    return result;
+  }
+  throw new Error("degré non géré");
+}
+
+/* ============================================================
+   7. RÉSOLUTION COMPLÈTE
+   ============================================================ */
+function resoudre(L0, R0, x){
+  const steps1 = [{lhs: L0, rhs: R0, note:"Équation de départ.", rule:null}];
+  try {
+    const result = isoler(L0, R0, x, steps1);
+    return {steps: steps1, result, methode:'isolation'};
+  } catch(e){ /* on continue */ }
+
+  const steps2 = [{lhs: L0, rhs: R0, note:"Équation de départ.", rule:null}];
+  try {
+    const result = solvePoly(L0, R0, x, steps2);
+    return {steps: steps2, result, methode:'polynome'};
+  } catch(e){ /* échec complet */ }
+
+  return null;
+}
+
+/* ============================================================
+   8. BIBLIOTHÈQUE DE FORMULES
+   ============================================================ */
+function F(domaine, titre, lhs, rhs, vars){
+  return {domaine, titre, lhs, rhs, vars};
+}
+
+const FORMULES = [
+  F("Mécanique","Vitesse moyenne", Sym('v'), Div(Sym('d'), Sym('t')),
+    {v:"vitesse (m/s)", d:"distance (m)", t:"durée (s)"}),
+  F("Mécanique","Deuxième loi de Newton", Sym('F'), Mul(Sym('m'), Sym('a')),
+    {F:"force (N)", m:"masse (kg)", a:"accélération (m/s²)"}),
+  F("Mécanique","Énergie cinétique", Sym('E_c'),
+    Mul(Div(Num(1),Num(2)), Mul(Sym('m'), Pow(Sym('v'), Num(2)))),
+    {E_c:"énergie cinétique (J)", m:"masse (kg)", v:"vitesse (m/s)"}),
+  F("Mécanique","Énergie potentielle", Sym('E_p'),
+    Mul(Mul(Sym('m'), Sym('g')), Sym('h')),
+    {E_p:"énergie potentielle (J)", m:"masse (kg)", g:"pesanteur (N/kg)", h:"hauteur (m)"}),
+  F("Mécanique","Travail d'une force", Sym('W'),
+    Mul(Mul(Sym('F'), Sym('L')), Fn('cos', Sym('\\theta'))),
+    {W:"travail (J)", F:"force (N)", L:"déplacement (m)", '\\theta':"angle (rad)"}),
+  F("Mécanique","Quantité de mouvement", Sym('p'), Mul(Sym('m'), Sym('v')),
+    {p:"quantité de mouvement (kg·m/s)", m:"masse (kg)", v:"vitesse (m/s)"}),
+  F("Mécanique","Chute libre", Sym('h'),
+    Mul(Div(Num(1),Num(2)), Mul(Sym('g'), Pow(Sym('t'), Num(2)))),
+    {h:"hauteur (m)", g:"pesanteur (m/s²)", t:"durée (s)"}),
+  F("Mécanique","Distance de freinage", Sym('d'),
+    Div(Pow(Sym('v'), Num(2)), Mul(Num(2), Sym('a'))),
+    {d:"distance (m)", v:"vitesse (m/s)", a:"décélération (m/s²)"}),
+  F("Mécanique","Loi de Hooke", Sym('F'), Mul(Sym('k'), Sym('x')),
+    {F:"force (N)", k:"raideur (N/m)", x:"allongement (m)"}),
+  F("Mécanique","Poussée d'Archimède", Sym('F_A'),
+    Mul(Mul(Sym('\\rho'), Sym('V')), Sym('g')),
+    {F_A:"poussée (N)", '\\rho':"masse volumique (kg/m³)", V:"volume (m³)", g:"pesanteur (N/kg)"}),
+  F("Mécanique","Accélération centripète", Sym('a'),
+    Div(Pow(Sym('v'), Num(2)), Sym('r')),
+    {a:"accélération (m/s²)", v:"vitesse (m/s)", r:"rayon (m)"}),
+  F("Mécanique","Mouvement uniformément accéléré", Sym('v'),
+    Add(Sym('v_0'), Mul(Sym('a'), Sym('t'))),
+    {v:"vitesse finale (m/s)", v_0:"vitesse initiale (m/s)", a:"accélération (m/s²)", t:"durée (s)"}),
+
+  F("Gravitation","Loi de la gravitation universelle", Sym('F'),
+    Div(Mul(Mul(Sym('G'), Sym('m_1')), Sym('m_2')), Pow(Sym('d'), Num(2))),
+    {F:"force (N)", G:"constante G", m_1:"masse 1 (kg)", m_2:"masse 2 (kg)", d:"distance (m)"}),
+  F("Gravitation","Loi de Coulomb", Sym('F'),
+    Div(Mul(Mul(Sym('k'), Sym('q_1')), Sym('q_2')), Pow(Sym('r'), Num(2))),
+    {F:"force (N)", k:"constante k", q_1:"charge 1 (C)", q_2:"charge 2 (C)", r:"distance (m)"}),
+
+  F("Électricité","Loi d'Ohm", Sym('U'), Mul(Sym('R'), Sym('I')),
+    {U:"tension (V)", R:"résistance (Ω)", I:"intensité (A)"}),
+  F("Électricité","Puissance électrique", Sym('P'), Mul(Sym('U'), Sym('I')),
+    {P:"puissance (W)", U:"tension (V)", I:"intensité (A)"}),
+  F("Électricité","Résistance d'un conducteur", Sym('R'),
+    Div(Mul(Sym('\\rho'), Sym('L')), Sym('S')),
+    {R:"résistance (Ω)", '\\rho':"résistivité (Ω·m)", L:"longueur (m)", S:"section (m²)"}),
+  F("Électricité","Constante de temps RC", Sym('\\tau'), Mul(Sym('R'), Sym('C')),
+    {'\\tau':"constante (s)", R:"résistance (Ω)", C:"capacité (F)"}),
+  F("Électricité","Énergie du condensateur", Sym('E'),
+    Mul(Div(Num(1),Num(2)), Mul(Sym('C'), Pow(Sym('U'), Num(2)))),
+    {E:"énergie (J)", C:"capacité (F)", U:"tension (V)"}),
+  F("Électricité","Charge et intensité", Sym('Q'), Mul(Sym('I'), Sym('t')),
+    {Q:"charge (C)", I:"intensité (A)", t:"durée (s)"}),
+
+  F("Thermodynamique","Équation d'état du gaz parfait",
+    Mul(Sym('P'), Sym('V')), Mul(Mul(Sym('n'), Sym('R')), Sym('T')),
+    {P:"pression (Pa)", V:"volume (m³)", n:"quantité (mol)", R:"constante R", T:"température (K)"}),
+  F("Thermodynamique","Chaleur sensible", Sym('Q'),
+    Mul(Mul(Sym('m'), Sym('c')), Sym('\\Delta T')),
+    {Q:"énergie (J)", m:"masse (kg)", c:"capacité thermique massique", '\\Delta T':"variation de T (K)"}),
+  F("Thermodynamique","Loi de Boyle-Mariotte",
+    Mul(Sym('P_1'), Sym('V_1')), Mul(Sym('P_2'), Sym('V_2')),
+    {P_1:"pression initiale", V_1:"volume initial", P_2:"pression finale", V_2:"volume final"}),
+
+  F("Chimie","Quantité de matière", Sym('n'), Div(Sym('m'), Sym('M')),
+    {n:"quantité (mol)", m:"masse (g)", M:"masse molaire (g/mol)"}),
+  F("Chimie","Concentration molaire", Sym('C'), Div(Sym('n'), Sym('V')),
+    {C:"concentration (mol/L)", n:"quantité (mol)", V:"volume (L)"}),
+  F("Chimie","Dilution", Mul(Sym('C_1'), Sym('V_1')), Mul(Sym('C_2'), Sym('V_2')),
+    {C_1:"concentration initiale", V_1:"volume prélevé", C_2:"concentration finale", V_2:"volume final"}),
+  F("Chimie","Loi de Beer-Lambert", Sym('A'),
+    Mul(Mul(Sym('\\varepsilon'), Sym('\\ell')), Sym('c')),
+    {A:"absorbance", '\\varepsilon':"coefficient d'absorption", '\\ell':"trajet optique (cm)", c:"concentration (mol/L)"}),
+  F("Chimie","Masse volumique", Sym('\\rho'), Div(Sym('m'), Sym('V')),
+    {'\\rho':"masse volumique (kg/m³)", m:"masse (kg)", V:"volume (m³)"}),
+
+  F("Ondes","Longueur d'onde", Sym('\\lambda'), Div(Sym('v'), Sym('f')),
+    {'\\lambda':"longueur d'onde (m)", v:"célérité (m/s)", f:"fréquence (Hz)"}),
+  F("Ondes","Période d'un pendule simple", Sym('T'),
+    Mul(Num(2), Mul(Sym('\\pi'), Sqrt(Div(Sym('l'), Sym('g'))))),
+    {T:"période (s)", l:"longueur du fil (m)", g:"pesanteur (m/s²)"}),
+  F("Ondes","Période d'un oscillateur élastique", Sym('T'),
+    Mul(Num(2), Mul(Sym('\\pi'), Sqrt(Div(Sym('m'), Sym('k'))))),
+    {T:"période (s)", m:"masse (kg)", k:"raideur (N/m)"}),
+  F("Optique","Relation de conjugaison", Div(Num(1), Sym('f')),
+    Add(Div(Num(1), Sym('p')), Div(Num(1), Sym('q'))),
+    {f:"distance focale (m)", p:"distance objet (m)", q:"distance image (m)"}),
+  F("Optique","Indice de réfraction", Sym('n'), Div(Sym('c'), Sym('v')),
+    {n:"indice", c:"célérité dans le vide (m/s)", v:"célérité dans le milieu (m/s)"}),
+  F("Optique","Loi de Wien", Sym('\\lambda_{max}'), Div(Sym('b'), Sym('T')),
+    {'\\lambda_{max}':"longueur d'onde maximale (m)", b:"constante de Wien", T:"température (K)"}),
+  F("Nucléaire","Décroissance radioactive", Sym('N'),
+    Mul(Sym('N_0'), Fn('exp', Neg(Mul(Sym('\\lambda'), Sym('t'))))),
+    {N:"noyaux restants", N_0:"noyaux initiaux", '\\lambda':"constante radioactive", t:"durée (s)"}),
+  F("Nucléaire","Activité d'un échantillon", Sym('A'),
+    Mul(Sym('\\lambda'), Sym('N')),
+    {A:"activité (Bq)", '\\lambda':"constante radioactive", N:"nombre de noyaux"}),
+
+  F("Géométrie","Aire d'un disque", Sym('A'),
+    Mul(Sym('\\pi'), Pow(Sym('r'), Num(2))),
+    {A:"aire (m²)", r:"rayon (m)"}),
+  F("Géométrie","Volume d'une sphère", Sym('V'),
+    Mul(Div(Num(4),Num(3)), Mul(Sym('\\pi'), Pow(Sym('r'), Num(3)))),
+    {V:"volume (m³)", r:"rayon (m)"}),
+  F("Géométrie","Volume d'un cylindre", Sym('V'),
+    Mul(Mul(Sym('\\pi'), Pow(Sym('r'), Num(2))), Sym('h')),
+    {V:"volume (m³)", r:"rayon (m)", h:"hauteur (m)"}),
+  F("Géométrie","Volume d'un cône", Sym('V'),
+    Mul(Div(Num(1),Num(3)), Mul(Mul(Sym('\\pi'), Pow(Sym('r'), Num(2))), Sym('h'))),
+    {V:"volume (m³)", r:"rayon (m)", h:"hauteur (m)"}),
+  F("Géométrie","Aire d'un triangle", Sym('A'),
+    Div(Mul(Sym('b'), Sym('h')), Num(2)),
+    {A:"aire (m²)", b:"base (m)", h:"hauteur (m)"}),
+  F("Géométrie","Théorème de Pythagore", Pow(Sym('c'), Num(2)),
+    Add(Pow(Sym('a'), Num(2)), Pow(Sym('b'), Num(2))),
+    {c:"hypoténuse (m)", a:"côté de l'angle droit (m)", b:"autre côté (m)"}),
+  F("Géométrie","Périmètre d'un rectangle", Sym('P'),
+    Mul(Num(2), Add(Sym('l'), Sym('L'))),
+    {P:"périmètre (m)", l:"largeur (m)", L:"longueur (m)"}),
+  F("Géométrie","Aire d'un trapèze", Sym('A'),
+    Div(Mul(Add(Sym('B'), Sym('b')), Sym('h')), Num(2)),
+    {A:"aire (m²)", B:"grande base (m)", b:"petite base (m)", h:"hauteur (m)"}),
+  F("Géométrie","Distance entre deux points", Sym('d'),
+    Sqrt(Add(Pow(Sub(Sym('x_2'), Sym('x_1')), Num(2)),
+             Pow(Sub(Sym('y_2'), Sym('y_1')), Num(2)))),
+    {d:"distance (m)", x_1:"abscisse de A", x_2:"abscisse de B",
+     y_1:"ordonnée de A", y_2:"ordonnée de B"}),
+
+  F("Suites","Suite arithmétique", Sym('u_n'),
+    Add(Sym('u_0'), Mul(Sym('n'), Sym('r'))),
+    {u_n:"terme de rang n", u_0:"premier terme", n:"rang", r:"raison"}),
+  F("Suites","Suite géométrique", Sym('u_n'),
+    Mul(Sym('u_0'), Pow(Sym('q'), Sym('n'))),
+    {u_n:"terme de rang n", u_0:"premier terme", q:"raison", n:"rang"}),
+  F("Statistiques","Moyenne pondérée", Sym('\\bar{x}'),
+    Div(Add(Mul(Sym('n_1'), Sym('x_1')), Mul(Sym('n_2'), Sym('x_2'))),
+        Add(Sym('n_1'), Sym('n_2'))),
+    {'\\bar{x}':"moyenne globale", n_1:"effectif 1", x_1:"moyenne 1",
+     n_2:"effectif 2", x_2:"moyenne 2"}),
+
+  F("Économie","Intérêts simples", Sym('I'),
+    Mul(Mul(Sym('C'), Sym('t')), Sym('i')),
+    {I:"intérêt (€)", C:"capital (€)", t:"durée (années)", i:"taux (décimal)"}),
+  F("Économie","Intérêts composés", Sym('C_n'),
+    Mul(Sym('C_0'), Pow(Add(Num(1), Sym('i')), Sym('n'))),
+    {C_n:"capital acquis (€)", C_0:"capital initial (€)", i:"taux par période", n:"nombre de périodes"}),
+  F("Économie","Taux de marge", Sym('t_m'),
+    Div(Sub(Sym('PV'), Sym('PA')), Sym('PA')),
+    {t_m:"taux de marge", PV:"prix de vente (€)", PA:"prix d'achat (€)"}),
+  F("Économie","Multiplicateur keynésien", Sym('k'),
+    Div(Num(1), Sub(Num(1), Sym('c'))),
+    {k:"multiplicateur", c:"propension marginale à consommer"}),
+
+  F("Biologie","Indice de masse corporelle", Sym('IMC'),
+    Div(Sym('m'), Pow(Sym('h'), Num(2))),
+    {IMC:"IMC (kg/m²)", m:"masse (kg)", h:"taille (m)"}),
+  F("Démographie","Densité de population", Sym('D'),
+    Div(Sym('P'), Sym('S')),
+    {D:"densité (hab/km²)", P:"population", S:"superficie (km²)"}),
+  F("Hydraulique","Débit volumique", Sym('Q'),
+    Div(Sym('V'), Sym('t')),
+    {Q:"débit (m³/s)", V:"volume écoulé (m³)", t:"durée (s)"}),
+  F("Hydraulique","Pression", Sym('P'),
+    Div(Sym('F'), Sym('S')),
+    {P:"pression (Pa)", F:"force pressante (N)", S:"surface (m²)"}),
+
+  F("Algèbre littérale","Relation implicite a = b/(a+c)",
+    Sym('a'), Div(Sym('b'), Add(Sym('a'), Sym('c'))),
+    {a:"grandeur a", b:"grandeur b", c:"grandeur c"}),
+  F("Algèbre littérale","Relation implicite x = (a+x)/b",
+    Sym('x'), Div(Add(Sym('a'), Sym('x')), Sym('b')),
+    {x:"inconnue x", a:"paramètre a", b:"paramètre b"}),
+  F("Algèbre littérale","Relation homographique y = ax/(x+b)",
+    Sym('y'), Div(Mul(Sym('a'), Sym('x')), Add(Sym('x'), Sym('b'))),
+    {y:"grandeur y", a:"paramètre a", x:"paramètre x", b:"paramètre b"}),
+];
+
+/* ============================================================
+   9. ÉVALUATION NUMÉRIQUE
+   ============================================================ */
+function evaluer(n, env){
+  switch(n.t){
+    case 'num': return n.v;
+    case 'sym': {
+      if(n.s === '\\pi') return Math.PI;
+      if(n.s === 'e') return Math.E;
+      if(n.s in env) return env[n.s];
+      throw new Error("symbole non défini : " + n.s);
+    }
+    case 'add': return evaluer(n.a, env) + evaluer(n.b, env);
+    case 'sub': return evaluer(n.a, env) - evaluer(n.b, env);
+    case 'mul': return evaluer(n.a, env) * evaluer(n.b, env);
+    case 'div': return evaluer(n.a, env) / evaluer(n.b, env);
+    case 'neg': return -evaluer(n.a, env);
+    case 'pow': return Math.pow(evaluer(n.a, env), evaluer(n.b, env));
+    case 'fn': {
+      const a = evaluer(n.a, env);
+      switch(n.f){
+        case 'sqrt': return Math.sqrt(a);
+        case 'cbrt': return Math.cbrt(a);
+        case 'ln':   return Math.log(a);
+        case 'log10':return Math.log10(a);
+        case 'exp':  return Math.exp(a);
+        case 'sin':  return Math.sin(a);
+        case 'cos':  return Math.cos(a);
+        case 'tan':  return Math.tan(a);
+        case 'asin': return Math.asin(a);
+        case 'acos': return Math.acos(a);
+        case 'atan': return Math.atan(a);
+      }
+      throw new Error("fonction inconnue : " + n.f);
+    }
+  }
+  throw new Error("noeud inconnu");
+}
+
+/* ============================================================
+   10. MOTEUR DE GÉNÉRATION
+   ============================================================ */
+let courant = null;
+
+function generer(){
+  try {
+    const sel = document.getElementById('domaine').value;
+    const pool = (sel === '*') ? FORMULES : FORMULES.filter(f => f.domaine === sel);
+    if(pool.length === 0){ afficherErreur("Aucune formule dans ce domaine."); return; }
+
+    let formule = null, x = null, res = null;
+    for(let essai = 0; essai < 800 && !res; essai++){
+      const f = pick(pool);
+      const inconnues = Object.keys(f.vars);
+      if(inconnues.length === 0) continue;
+      const xi = pick(inconnues);
+      if(f.lhs.t === 'sym' && f.lhs.s === xi) continue;
+      if(f.rhs.t === 'sym' && f.rhs.s === xi) continue;
+      const r = resoudre(f.lhs, f.rhs, xi);
+      if(r){ formule = f; x = xi; res = r; }
+    }
+
+    if(!res){ afficherErreur("Aucune équation exploitable n'a pu être générée. Réessayez."); return; }
+
+    courant = {formule, x, res};
+    afficher();
+  } catch(e){
+    console.error(e);
+    afficherErreur("Erreur de génération : " + (e && e.message ? e.message : e));
+  }
+}
+
+function afficherErreur(msg){
+  document.getElementById('carte').innerHTML =
+    '<div class="erreur">' + msg + '</div>';
+}
+
+/* ============================================================
+   11. AFFICHAGE
+   ============================================================ */
+function afficher(){
+  const {formule, x, res} = courant;
+  const autres = Object.keys(formule.vars).filter(k => k !== x);
+
+  /* -- réponse brute (fractions plates) puis normalisée en puissances négatives -- */
+  const solRaw  = simp(res.result);
+  const solFlat = hasNestedDiv(solRaw) ? flatten(solRaw) : solRaw;
+  const solNorm = simp(toNegPow(solFlat));
+
+  /* On détecte s'il y a effectivement une conversion à expliquer :
+     soit parce que la normalisation change l'écriture,
+     soit parce que la forme plate contient encore une puissance au dénominateur. */
+  const needsNegPowStep = containsNegPowTarget(solFlat) || (tex(solFlat) !== tex(solNorm));
+
+  /* -- construction de la liste des étapes à afficher -- */
+  const displaySteps = res.steps.slice();
+  if(needsNegPowStep){
+    displaySteps.push({
+      lhs: Sym(x),
+      rhs: solNorm,
+      note: "On réécrit la division par une puissance sous la forme d'une multiplication par une puissance négative.",
+      ruleClass: "negpow",
+      rule: "**Règle** : $\\dfrac{a}{b^{c}} = a \\times b^{-c}$. " +
+            "Diviser par $b^{c}$ revient à multiplier par l'inverse de $b^{c}$, c'est-à-dire $b^{-c}$. " +
+            "De même, $\\dfrac{1}{b^{c}} = b^{-c}$, $\\dfrac{a}{\\sqrt{b}} = a \\times b^{-1/2}$ et " +
+            "$\\dfrac{a}{\\sqrt[3]{b}} = a \\times b^{-1/3}$."
+    });
+  }
+
+  const listeAutres = autres.map(k => '$' + k + '$').join(', ');
+
+  const stepsHtml = displaySteps.map((s, i) => {
+    const ruleHtml = s.rule
+      ? `<div class="rule ${s.ruleClass || ''}">${s.rule}</div>`
+      : '';
+    return `
+    <div class="step" style="animation-delay:${Math.min(i*40, 400)}ms">
+      <div class="num">${i+1}</div>
+      <div>
+        <div class="eq">$$${texDisplay(s.lhs)} = ${texDisplay(s.rhs)}$$</div>
+        <div class="note">${s.note}</div>
+        ${ruleHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('carte').innerHTML = `
+    <div class="entete">
+      <span class="tag">${formule.domaine}</span>
+      <span class="tag tag2">${res.methode === 'isolation' ? 'Isolation directe' : 'Mise en équation polynomiale'}</span>
+    </div>
+
+    <p class="question">
+      Exprimer <b>$ ${x}$</b> — ${formule.vars[x]} — en fonction de ${listeAutres}.
+    </p>
+
+    <div class="equation">$$${texDisplay(formule.lhs)} = ${texDisplay(formule.rhs)}$$</div>
+
+    <hr class="sep">
+    <p class="titre-section">Résolution détaillée</p>
+    <div id="resolution">${stepsHtml}</div>
+
+    <div class="reponse">
+      <div class="rlabel">Résultat</div>
+      <div>$$${x} = ${texDisplay(solNorm)}$$</div>
+    </div>
+
+    <div class="zone-canvas">
+      <div class="legende">
+        <span>Tracé indicatif de $${x}$$ en fonction d'une autre grandeur</span>
+        <span id="leg-valeurs"></span>
+      </div>
+      <canvas id="plot"></canvas>
+    </div>
+  `;
+
+  typeset(document.getElementById('carte'));
+  dessiner(formule, x, solNorm);
+  appliquerModeEntrainement();
+}
+
+/* ============================================================
+   12. TYPESET MATHJAX
+   ============================================================ */
+let essaisMJ = 0;
+function typeset(el){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([el]).catch(e => console.warn('MathJax :', e));
+  } else if(essaisMJ++ < 60){
+    setTimeout(() => typeset(el), 200);
+  }
+}
+
+/* ============================================================
+   13. TRACÉ CANVAS
+   ============================================================ */
+function valeurPour(s){
+  if(s === '\\pi') return Math.PI;
+  if(s === 'e') return Math.E;
+  const v = 0.5 + Math.random() * 4.2;
+  return Math.round(v * 100) / 100;
+}
+function fmt(v){
+  const a = Math.abs(v);
+  if(a === 0) return '0';
+  if(a >= 1e4 || a < 1e-3) return v.toExponential(1);
+  if(a >= 100) return v.toFixed(0);
+  if(a >= 10)  return v.toFixed(1);
+  return v.toFixed(2);
+}
+function dessiner(formule, x, sol){
+  const cv = document.getElementById('plot');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = Math.max(320, cv.clientWidth || 640);
+  const H = 260;
+  cv.width  = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#fbfcfe';
+  ctx.fillRect(0, 0, W, H);
+
+  const autres = Object.keys(formule.vars).filter(k => k !== x);
+  const legVal = document.getElementById('leg-valeurs');
+
+  if(autres.length === 0){
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText("Pas d'autre grandeur à faire varier.", W/2, H/2);
+    return;
+  }
+  const varX = pick(autres);
+  const env = {};
+  for(const k of autres) if(k !== varX) env[k] = valeurPour(k);
+
+  const XMIN = 0.3, XMAX = 5.5, NP = 420;
+  const pts = [];
+  for(let i = 0; i <= NP; i++){
+    const t = XMIN + (XMAX - XMIN) * i / NP;
+    const e = Object.assign({}, env);
+    e[varX] = t;
+    let y = NaN;
+    try { y = evaluer(sol, e); } catch(err){ y = NaN; }
+    pts.push({x: t, y: (typeof y === 'number' && isFinite(y)) ? y : NaN});
+  }
+  const finis = pts.filter(p => isFinite(p.y)).map(p => p.y).sort((a,b) => a-b);
+  if(finis.length < 15){
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText("Tracé non disponible pour cette expression.", W/2, H/2);
+    if(legVal) legVal.textContent = '';
+    return;
+  }
+  let lo = finis[Math.floor(finis.length * 0.04)];
+  let hi = finis[Math.floor(finis.length * 0.96)];
+  if(hi - lo < 1e-9){ lo -= 1; hi += 1; }
+  const padY = (hi - lo) * 0.15;
+  lo -= padY; hi += padY;
+
+  const M = {l: 62, r: 18, t: 34, b: 40};
+  const pw = W - M.l - M.r, ph = H - M.t - M.b;
+  const PX = t => M.l + (t - XMIN) / (XMAX - XMIN) * pw;
+  const PY = y => M.t + (hi - y) / (hi - lo) * ph;
+
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
+  for(let i = 0; i <= 6; i++){
+    const t = XMIN + (XMAX - XMIN) * i / 6;
+    const X0 = PX(t);
+    ctx.strokeStyle = '#eef2f9';
+    ctx.beginPath(); ctx.moveTo(X0, M.t); ctx.lineTo(X0, M.t + ph); ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText(fmt(t), X0, H - 18);
+  }
+  for(let i = 0; i <= 5; i++){
+    const yv = lo + (hi - lo) * i / 5;
+    const Y0 = PY(yv);
+    ctx.strokeStyle = '#eef2f9';
+    ctx.beginPath(); ctx.moveTo(M.l, Y0); ctx.lineTo(M.l + pw, Y0); ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(yv), M.l - 8, Y0 + 4);
+  }
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.moveTo(M.l, M.t); ctx.lineTo(M.l, M.t + ph); ctx.lineTo(M.l + pw, M.t + ph);
+  ctx.stroke();
+  if(lo < 0 && hi > 0){
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.beginPath(); ctx.moveTo(M.l, PY(0)); ctx.lineTo(M.l + pw, PY(0)); ctx.stroke();
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.rect(M.l, M.t, pw, ph); ctx.clip();
+  const grad = ctx.createLinearGradient(M.l, 0, M.l + pw, 0);
+  grad.addColorStop(0, '#3b82f6');
+  grad.addColorStop(1, '#059669');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2.4;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.shadowColor = 'rgba(59,130,246,.35)'; ctx.shadowBlur = 8;
+  ctx.beginPath();
+  let started = false, lastY = null;
+  for(const p of pts){
+    if(!isFinite(p.y)){ started = false; lastY = null; continue; }
+    const X0 = PX(p.x), Y0 = PY(p.y);
+    if(lastY !== null && Math.abs(Y0 - lastY) > ph * 1.4) started = false;
+    if(!started){ ctx.moveTo(X0, Y0); started = true; } else ctx.lineTo(X0, Y0);
+    lastY = Y0;
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#2563eb';
+  ctx.font = '600 12px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(x + ' = f(' + varX + ')', M.l + 6, 20);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(varX, M.l + pw, H - 4);
+  if(legVal){
+    const parts = Object.keys(env).slice(0, 4).map(k => k + ' = ' + fmt(env[k]));
+    legVal.textContent = parts.join('   ·   ');
+  }
+}
+
+/* ============================================================
+   14. INTERFACE
+   ============================================================ */
+function initSelect(){
+  const sel = document.getElementById('domaine');
+  const domaines = Array.from(new Set(FORMULES.map(f => f.domaine))).sort((a,b) => a.localeCompare(b, 'fr'));
+  sel.innerHTML = '<option value="*">Tous les domaines (' + FORMULES.length + ' formules)</option>' +
+    domaines.map(d => {
+      const n = FORMULES.filter(f => f.domaine === d).length;
+      return '<option value="' + d + '">' + d + ' (' + n + ')</option>';
+    }).join('');
+}
+function appliquerModeEntrainement(){
+  const masque = document.getElementById('chk-masquer').checked;
+  const bloc = document.getElementById('resolution');
+  const rep  = document.querySelector('.reponse');
+  if(bloc) bloc.classList.toggle('masque', masque);
+  if(rep)  rep.classList.toggle('masque', masque);
+}
+document.getElementById('btn-generer').addEventListener('click', generer);
+document.getElementById('domaine').addEventListener('change', generer);
+document.getElementById('chk-masquer').addEventListener('change', appliquerModeEntrainement);
+window.addEventListener('resize', () => {
+  if(courant){
+    let sol = simp(courant.res.result);
+    if(hasNestedDiv(sol)) sol = flatten(sol);
+    sol = simp(toNegPow(sol));
+    dessiner(courant.formule, courant.x, sol);
+  }
+});
+initSelect();
+document.getElementById('chk-masquer').checked = true;
+generer();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déchiffreur du rapport — L'Odyssée du Second Degré</title>
+<style>
+  :root{
+    --gold:#D4A017; --gold-dark:#B8860B;
+    --purple:#7C3AED; --purple-dark:#5B21B6;
+    --ink:#2D2350; --ink-soft:#4A3E7A; --ink-muted:#6B5D9E;
+    --success:#10B981; --danger:#DC2626; --warn:#F59E0B; --info:#2563EB;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;min-height:100vh}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--ink);line-height:1.6;
+    background:radial-gradient(ellipse at 20% 0%, #FFF8E0 0%, transparent 55%),
+      linear-gradient(180deg, #A8D4FF 0%, #C8E4FF 30%, #E4F1FF 60%, #FFF6E0 100%);}
+  header{background:linear-gradient(180deg, #FFF9E0, #FFE3A0);border-bottom:3px solid var(--gold-dark);
+    padding:18px 26px;box-shadow:0 6px 24px rgba(184,134,11,.28);}
+  header h1{margin:0;font-size:1.25rem;color:var(--purple-dark);display:flex;align-items:center;gap:10px;}
+  header p{margin:4px 0 0;font-size:.85rem;color:var(--ink-muted);font-weight:600;}
+  main{max-width:1100px;margin:0 auto;padding:26px 18px 60px;}
+  .dropzone{border:3px dashed var(--gold-dark);border-radius:16px;padding:30px 22px;text-align:center;cursor:pointer;
+    background:rgba(255,255,255,.6);transition:.2s;font-weight:700;color:var(--ink-soft);}
+  .dropzone:hover,.dropzone.over{background:rgba(255,244,213,.9);border-color:var(--purple);transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(124,58,237,.2);}
+  .dropzone .big{font-size:2.2rem;display:block;margin-bottom:8px}
+  .dropzone small{font-weight:600;color:var(--ink-muted)}
+  .filelist{margin:14px 0 0;display:flex;flex-direction:column;gap:6px;text-align:left}
+  .filelist .frow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.8);
+    border:1.5px solid rgba(184,134,11,.35);border-radius:10px;padding:7px 12px;font-size:.85rem;font-weight:700;}
+  .filelist .frow .fname{flex:1;word-break:break-all}
+  .filelist .frow .fsize{color:var(--ink-muted);font-weight:600;font-size:.75rem}
+  .filelist .frow button{border:1.5px solid rgba(220,38,38,.4);background:#fff;color:var(--danger);
+    border-radius:6px;cursor:pointer;font-weight:900;padding:2px 8px;font-family:inherit}
+  .filelist .frow button:hover{background:#FEE2E2}
+  .or{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--ink-muted);font-weight:700;font-size:.8rem}
+  .or::before,.or::after{content:'';flex:1;height:1px;background:rgba(184,134,11,.4)}
+  textarea{width:100%;min-height:100px;border:2px solid rgba(184,134,11,.45);border-radius:12px;padding:12px;
+    font-family:ui-monospace,Menlo,monospace;font-size:.8rem;background:#fff;color:var(--ink);resize:vertical;}
+  textarea:focus{outline:3px solid var(--purple);outline-offset:2px}
+  .field{margin:16px 0}
+  .field label{display:block;font-weight:800;font-size:.85rem;color:var(--purple-dark);margin-bottom:5px}
+  input[type=password]{width:100%;padding:11px 14px;border-radius:10px;border:2px solid rgba(184,134,11,.45);
+    font-family:inherit;font-size:.95rem;background:#fff;color:var(--ink);}
+  .btn{background:linear-gradient(135deg, var(--purple), var(--purple-dark));color:#fff;border:2px solid var(--gold);
+    padding:12px 26px;border-radius:12px;font-size:.95rem;font-weight:800;cursor:pointer;font-family:inherit;
+    box-shadow:0 6px 18px rgba(124,58,237,.45);transition:.18s;}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.ghost{background:linear-gradient(180deg,#fff,#FFF4D5);color:var(--purple-dark);box-shadow:0 4px 12px rgba(184,134,11,.25)}
+  .actions-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .status{margin-top:14px;padding:12px 16px;border-radius:10px;font-weight:700;display:none}
+  .status.error{display:block;background:rgba(220,38,38,.12);border-left:4px solid var(--danger);color:#991B1B}
+  .status.info{display:block;background:rgba(37,99,235,.1);border-left:4px solid var(--info);color:#1E40AF}
+  #report{display:none;margin-top:26px}
+  .card{background:linear-gradient(180deg,#FFFDF6,#FFFAEC);border:2px solid rgba(184,134,11,.35);border-radius:16px;
+    padding:22px 26px;margin-bottom:20px;box-shadow:0 8px 28px rgba(90,64,180,.14);}
+  .card.student-card{border-color:var(--purple);box-shadow:0 8px 28px rgba(124,58,237,.22)}
+  .file-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:30px 0 10px;padding:10px 16px;
+    background:linear-gradient(135deg, var(--purple), var(--purple-dark));color:#fff;border-radius:12px 12px 0 0;
+    font-weight:800;font-size:.9rem;box-shadow:0 4px 14px rgba(124,58,237,.35);border-radius:12px;}
+  .file-header .fh-state{background:rgba(255,255,255,.2);padding:2px 12px;border-radius:14px;font-size:.75rem}
+  .file-header .fh-state.err{background:#DC2626}
+  .card h2{margin:0 0 14px;color:var(--purple-dark);font-size:1.05rem;display:flex;gap:8px;align-items:center;
+    border-bottom:2px solid rgba(184,134,11,.3);padding-bottom:8px;}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:8px 0}
+  th,td{padding:8px 10px;border:1px solid rgba(184,134,11,.25);text-align:left;vertical-align:top}
+  th{background:linear-gradient(180deg,#FFFAE0,#FFE9A8);color:var(--purple-dark)}
+  tr:nth-child(even) td{background:rgba(255,244,213,.35)}
+  .pill{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.75rem;font-weight:800}
+  .pill.ok{background:#D1FAE5;color:#065F46}
+  .pill.warn{background:#FEF3C7;color:#92400E}
+  .pill.bad{background:#FEE2E2;color:#991B1B}
+  .pill.muted{background:#E0E7FF;color:#3730A3}
+  ul.pos{padding-left:20px;margin:6px 0}
+  ul.pos li{color:#065F46;margin:4px 0}
+  ul.neg{padding-left:20px;margin:6px 0}
+  ul.neg li{color:#991B1B;margin:4px 0}
+  .json-view{max-height:340px;overflow:auto;background:#2D2350;color:#E9E4FF;border-radius:12px;padding:14px;
+    font-family:ui-monospace,Menlo,monospace;font-size:.72rem;white-space:pre;}
+  details.raw summary{cursor:pointer;font-weight:800;color:var(--purple-dark)}
+  .summary-xp{font-weight:900;color:var(--purple-dark)}
+  footer{text-align:center;padding:20px;color:var(--ink-muted);font-size:.8rem;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔓 Déchiffreur du rapport — L'Odyssée du Second Degré</h1>
+  <p>Décrypte <b>un ou plusieurs</b> fichiers <b>odyssee_*.json</b> en lot et affiche le suivi pédagogique complet de chaque élève.</p>
+</header>
+<main>
+  <div class="dropzone" id="dropzone">
+    <span class="big">📂</span>
+    Glisse ici <b>un ou plusieurs</b> fichiers <b>.json</b> chiffrés<br>
+    <small>ou clique pour les sélectionner (Ctrl+clic pour choisir plusieurs fichiers)</small>
+    <input type="file" id="fileInput" accept=".json,application/json" multiple hidden>
+    <div class="filelist" id="fileList"></div>
+  </div>
+  <div class="or">ou colle le contenu d'un rapport</div>
+  <textarea id="pasteZone" placeholder="Colle ici le contenu brut d'un fichier .json (l'enveloppe avec « payload »)…"></textarea>
+  <div class="field">
+    <label for="pass">🔑 Phrase secrète (laisser telle quelle pour les rapports du jeu)</label>
+    <input type="password" id="pass" value="Odyssee2ndDegre_YannMerdy_2026_AES-GCM">
+  </div>
+  <div class="actions-bar">
+    <button class="btn" id="decryptBtn">🔓 Déchiffrer le lot</button>
+    <button class="btn ghost" id="exportBtn" style="display:none">📤 Exporter le lot fusionné (.json en clair)</button>
+    <button class="btn ghost" id="clearBtn">♻️ Recommencer</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div id="report"></div>
+</main>
+<footer>« L'Odyssée du Second Degré » — outil de déchiffrement du rapport pédagogique ✦ Yann Merdy 2026</footer>
+
+<script>
+/* ================================================================
+   DÉCHIFFREMENT AES-GCM 256 — symétrique de l'application du jeu
+   ================================================================ */
+function b64ToU8(b64){
+  const bin = atob(b64);
+  const u8 = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+async function decryptPayload(payload, passphrase){
+  if(payload.algorithm === 'NONE'){
+    return decodeURIComponent(escape(atob(payload.ciphertext)));
+  }
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  const salt = b64ToU8(payload.salt);
+  const iv = b64ToU8(payload.iv);
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), { name:'PBKDF2' }, false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt:salt, iterations:payload.iterations || 100000, hash:'SHA-256' },
+    keyMaterial, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+  const plain = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, b64ToU8(payload.ciphertext));
+  return dec.decode(plain);
+}
+
+/* ================================================================
+   GESTION DU LOT DE FICHIERS
+   ================================================================ */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileListEl = document.getElementById('fileList');
+const pasteZone = document.getElementById('pasteZone');
+const statusEl = document.getElementById('status');
+const reportEl = document.getElementById('report');
+const exportBtn = document.getElementById('exportBtn');
+
+let batch = [];        /* [{ name, size, text }] */
+let lastReports = [];  /* [{ name, ok, report, error }] pour l'export */
+
+function setStatus(msg, kind){
+  statusEl.className = 'status ' + (kind || 'info');
+  statusEl.innerHTML = msg;
+}
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderFileList(){
+  fileListEl.innerHTML = batch.length
+    ? batch.map((f,i) =>
+        '<div class="frow"><span>📄</span><span class="fname">' + esc(f.name) + '</span>'
+        + '<span class="fsize">' + f.size + ' octets</span>'
+        + '<button data-i="' + i + '" title="Retirer">✕</button></div>').join('')
+    : '';
+  fileListEl.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      batch.splice(parseInt(b.dataset.i), 1);
+      renderFileList();
+    });
+  });
+}
+
+function addFiles(files){
+  let pending = 0, done = 0;
+  const list = Array.from(files || []);
+  if(!list.length) return;
+  pending = list.length;
+  list.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      batch.push({ name:f.name, size:f.size, text:String(reader.result) });
+      if(++done === pending){ renderFileList(); setStatus(list.length + ' fichier' + (list.length>1?'s':'') + ' prêt' + (list.length>1?'s':'') + ' — clique sur « Déchiffrer le lot ».', 'info'); }
+    };
+    reader.onerror = () => { setStatus('❌ Impossible de lire « ' + esc(f.name) + ' ».', 'error'); if(++done === pending) renderFileList(); };
+    reader.readAsText(f);
+  });
+}
+
+dropzone.addEventListener('click', e => { if(e.target.closest('button')) return; fileInput.click(); });
+['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('over'); }));
+dropzone.addEventListener('drop', e => { addFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+/* ================================================================
+   DÉCHIFFREMENT DU LOT
+   ================================================================ */
+document.getElementById('decryptBtn').addEventListener('click', async () => {
+  /* construire la liste des entrées : fichiers + zone de collage éventuelle */
+  const entries = batch.map(f => ({ name:f.name, text:f.text }));
+  const pasted = pasteZone.value.trim();
+  if(pasted) entries.push({ name:'contenu collé', text:pasted });
+  if(!entries.length){ setStatus('❌ Aucun fichier ni contenu : glisse des .json ou colle un rapport.', 'error'); return; }
+
+  const pass = document.getElementById('pass').value;
+  setStatus('⏳ Déchiffrement de ' + entries.length + ' rapport' + (entries.length>1?'s':'') + '…', 'info');
+  const results = [];
+
+  for(const entry of entries){
+    let report = null, error = null;
+    try{
+      const envelope = JSON.parse(entry.text);
+      const payload = envelope.payload;
+      if(!payload || !payload.ciphertext) throw new Error('champ « payload » manquant');
+      const plaintext = await decryptPayload(payload, pass);
+      report = JSON.parse(plaintext);
+    }catch(e){
+      error = /payload/.test(e.message||'') ? 'fichier non reconnu (payload manquant)'
+        : /JSON/.test(e.message||'') ? 'JSON invalide ou contenu déchiffré illisible'
+        : 'phrase secrète incorrecte ou fichier endommagé';
+    }
+    results.push({ name:entry.name, ok:!!report, report, error });
+  }
+
+  const okCount = results.filter(r => r.ok).length;
+  const errCount = results.length - okCount;
+  lastReports = results;
+  exportBtn.style.display = okCount ? 'inline-block' : 'none';
+  setStatus('✅ ' + okCount + ' rapport' + (okCount>1?'s':'') + ' déchiffré' + (okCount>1?'s':'')
+    + (errCount ? ' · ❌ ' + errCount + ' en échec' : '') + '.', 'info');
+
+  renderBatch(results);
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  batch = []; lastReports = [];
+  renderFileList();
+  pasteZone.value = '';
+  reportEl.style.display = 'none'; reportEl.innerHTML = '';
+  exportBtn.style.display = 'none';
+  statusEl.className = 'status'; statusEl.innerHTML = '';
+  document.getElementById('pass').value = 'Odyssee2ndDegre_YannMerdy_2026_AES-GCM';
+});
+
+/* Export du lot fusionné en clair */
+exportBtn.addEventListener('click', () => {
+  const ok = lastReports.filter(r => r.ok);
+  if(!ok.length) return;
+  const merged = ok.map(r => ({ fichier:r.name, rapport:r.report }));
+  const blob = new Blob([JSON.stringify(merged, null, 2)], { type:'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'odyssee_lot_dechiffre_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToastMsg('Export du lot en clair téléchargé (' + ok.length + ' rapports).');
+});
+function showToastMsg(msg){ setStatus(msg, 'info'); }
+
+/* ================================================================
+   AFFICHAGE DU LOT
+   ================================================================ */
+function fmtDate(iso){
+  if(!iso) return '—';
+  try{ return new Date(iso).toLocaleString('fr-FR'); }catch(e){ return iso; }
+}
+function statusPill(s){
+  if(s === 'terminée') return '<span class="pill ok">✔ terminée</span>';
+  if(s === 'en cours') return '<span class="pill warn">⏳ en cours</span>';
+  return '<span class="pill muted">— non commencée</span>';
+}
+const QUEST_LABELS = { p1:'🎈 Quête 1 — Le tir au mur', p2:'📐 Quête 2 — Le code à 3 chiffres',
+  p3:'🎯 Quête 3 — Le signe et l\'amplitude', p4:'⚖️ Quête 4 — La symétrie cachée',
+  p5:'⚓ Quête 5 — Le point fixe', p6:'🔝 Quête 6 — Sommet reconstitué' };
+
+function renderBatch(results){
+  let html = '';
+
+  /* Tableau récapitulatif du lot */
+  html += '<div class="card"><h2>🧮 Récapitulatif du lot (' + results.length + ')</h2>'
+    + '<table><tr><th>Fichier</th><th>Élève</th><th>Classe</th><th>XP</th><th>Rang</th><th>État</th></tr>'
+    + results.map(r => {
+        if(!r.ok) return '<tr><td>' + esc(r.name) + '</td><td colspan="4">—</td><td><span class="pill bad">❌ ' + esc(r.error) + '</span></td></tr>';
+        const id = r.report.identite || {}, xp = r.report.progressionXP || {};
+        return '<tr><td>' + esc(r.name) + '</td><td>' + esc((id.prenom||'') + ' ' + (id.nom||'')) + '</td>'
+          + '<td>' + esc(id.classe||'—') + '</td>'
+          + '<td class="summary-xp">' + (xp.xpFinal||0) + '/' + (xp.xpMaximum||900) + '</td>'
+          + '<td>' + esc(xp.rangFinal||'Novice') + '</td><td><span class="pill ok">✅ déchiffré</span></td></tr>';
+      }).join('')
+    + '</table></div>';
+
+  /* Un rapport détaillé par fichier */
+  results.forEach((r, idx) => {
+    if(!r.ok){
+      html += '<div class="file-header"><span>📄 ' + esc(r.name) + '</span><span class="fh-state err">échec</span></div>'
+        + '<div class="card"><p>❌ Impossible de déchiffrer ce fichier : <b>' + esc(r.error) + '</b>.</p></div>';
+      return;
+    }
+    html += '<div class="file-header"><span>📄 ' + esc(r.name) + '</span><span class="fh-state">rapport n°' + (idx+1) + '</span></div>';
+    html += renderReport(r.report);
+  });
+
+  reportEl.innerHTML = html;
+  reportEl.style.display = 'block';
+  reportEl.scrollIntoView({ behavior:'smooth' });
+}
+
+function renderReport(r){
+  const id = r.identite || {};
+  const t = r.horodatage || {};
+  const c = r.compteurs || {};
+  const xp = r.progressionXP || {};
+  let html = '';
+
+  html += '<div class="card student-card"><h2>🎓 Élève</h2><table>'
+    + '<tr><th>Nom</th><td>' + esc(id.nom) + '</td></tr>'
+    + '<tr><th>Prénom</th><td>' + esc(id.prenom) + '</td></tr>'
+    + '<tr><th>Classe</th><td>' + esc(id.classe) + '</td></tr>'
+    + '<tr><th>Rapport généré le</th><td>' + fmtDate((r.meta||{}).generatedAt) + '</td></tr>'
+    + '</table></div>';
+
+  html += '<div class="card"><h2>⏱️ Session</h2><table>'
+    + '<tr><th>Début</th><td>' + fmtDate(t.sessionDebut) + '</td></tr>'
+    + '<tr><th>Fin / dernier point</th><td>' + fmtDate(t.sessionFin) + '</td></tr>'
+    + '<tr><th>Durée totale</th><td>' + esc(t.dureeTotaleFormatee || (t.dureeTotaleSecondes + ' s')) + '</td></tr>'
+    + '<tr><th>Durée active</th><td>' + esc(t.dureeActiveFormatee || (t.dureeActiveSecondes + ' s')) + '</td></tr>'
+    + '</table></div>';
+
+  html += '<div class="card"><h2>📊 Bilan</h2><table>'
+    + '<tr><th>Validations (tentatives)</th><td>' + (c.nombreTentatives||0) + '</td></tr>'
+    + '<tr><th>Validations réussies</th><td><span class="pill ok">' + (c.validationsReussies||0) + '</span></td></tr>'
+    + '<tr><th>Validations échouées</th><td><span class="pill bad">' + (c.validationsEchouees||0) + '</span></td></tr>'
+    + '<tr><th>Indices utilisés</th><td>' + (c.indicesUtilises||0) + '</td></tr>'
+    + '<tr><th>Clics sur distracteurs</th><td>' + (c.clicsDistracteurs||0) + '</td></tr>'
+    + '<tr><th>Sorties de souris / onglets cachés</th><td>' + (c.sortiesSouris||0) + ' / ' + (c.changementsOnglet||0) + '</td></tr>'
+    + '<tr><th>XP</th><td>' + (xp.xpFinal||0) + ' / ' + (xp.xpMaximum||900) + ' — rang : <b>' + esc(xp.rangFinal||'Novice') + '</b></td></tr>'
+    + '</table></div>';
+
+  const an = r.analyseParQuete || {};
+  html += '<div class="card"><h2>🗺️ Analyse par quête</h2>';
+  Object.keys(QUEST_LABELS).forEach(qid => {
+    const q = an[qid];
+    if(!q){ html += '<p><b>' + QUEST_LABELS[qid] + '</b> : <span class="pill muted">non commencée</span></p>'; return; }
+    html += '<h3 style="color:var(--purple-dark);margin:16px 0 6px">' + QUEST_LABELS[qid] + ' ' + statusPill(q.status) + '</h3>'
+      + '<table>'
+      + '<tr><th>Tentatives</th><td>' + q.attempts + '</td></tr>'
+      + '<tr><th>Indices</th><td>' + q.hintsUsed + '</td></tr>'
+      + '<tr><th>Temps actif</th><td>' + q.activeTimeSec + ' s</td></tr>';
+    if(q.firstActivatedAt) html += '<tr><th>Premier accès</th><td>' + fmtDate(q.firstActivatedAt) + '</td></tr>';
+    if(q.completedAt) html += '<tr><th>Terminée le</th><td>' + fmtDate(q.completedAt) + '</td></tr>';
+    const rp = q.responses || {};
+    const rpKeys = Object.keys(rp);
+    if(rpKeys.length) html += '<tr><th>Réponses saisies</th><td>' + rpKeys.map(k => esc(k) + ' = <b>' + esc(rp[k]) + '</b>').join(' · ') + '</td></tr>';
+    if(q.distractorClicks && q.distractorClicks.length){
+      html += '<tr><th>Distracteurs testés</th><td>' + q.distractorClicks.map(d => esc(d.inputId) + ' = ' + esc(d.value) + ' (' + fmtDate(d.at) + ')').join('<br>') + '</td></tr>';
+    }
+    html += '</table>';
+    if(q.pointsPositifs && q.pointsPositifs.length) html += '<ul class="pos">' + q.pointsPositifs.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>';
+    if(q.pointsNegatifs && q.pointsNegatifs.length) html += '<ul class="neg">' + q.pointsNegatifs.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>';
+  });
+  html += '</div>';
+
+  const ev = r.journalEvenements || [];
+  html += '<div class="card"><h2>📜 Journal des événements (' + ev.length + ')</h2>'
+    + '<table><tr><th>#</th><th>Date</th><th>Type</th><th>Détails</th></tr>'
+    + ev.map((e,i) => '<tr><td>' + (i+1) + '</td><td>' + fmtDate(e.at) + '</td><td>' + esc(e.type) + '</td><td>' + esc(JSON.stringify(e.details)) + '</td></tr>').join('')
+    + '</table></div>';
+
+  html += '<div class="card"><details class="raw"><summary>🧾 Contenu déchiffré (JSON brut)</summary>'
+    + '<div class="json-view">' + esc(JSON.stringify(r, null, 2)) + '</div></details></div>';
+
+  return html;
+}
+</script>
+</body>
+</html>

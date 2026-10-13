@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Chasse au Trésor des Suites - Maths Complémentaires</title>
+    
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #1a2a6c;
+            --secondary: #b21f1f;
+            --gold: #fdbb2d;
+            --bg: #f4f1ea;
+            --text: #333;
+            --success: #2e7d32;
+            --error: #c62828;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+            border-bottom: 5px solid var(--gold);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        header p { font-size: 1.1rem; margin-top: 0.5rem; font-style: italic; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--primary);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); }
+        h2 { color: var(--primary); border-bottom: 2px solid var(--gold); padding-bottom: 0.5rem; margin-top: 0; }
+        h3 { color: var(--secondary); }
+        .theorem {
+            background-color: #eef2f5;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .theorem strong { color: var(--primary); }
+        .example {
+            background-color: #fff9e6;
+            border: 1px dashed var(--gold);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        .btn:hover { background-color: var(--secondary); }
+        .btn-active { background-color: var(--gold); color: var(--text); font-weight: bold; }
+        .btn-orange { background-color: #e67e22; }
+        .btn-orange:hover { background-color: #d35400; }
+        canvas {
+            background-color: #fafafa;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+            margin: 1rem auto;
+            max-width: 100%;
+        }
+        .quiz {
+            background-color: #e8f5e9;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+        .quiz button {
+            background-color: #4caf50;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        .quiz button:hover { background-color: #388e3c; }
+        .feedback { font-weight: bold; margin-top: 10px; }
+        .success { color: var(--success); }
+        .error { color: var(--error); }
+        .step {
+            background: #f8f9fa;
+            border-left: 3px solid var(--primary);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .step-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            border-radius: 50%;
+            line-height: 25px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        #exo-container {
+            background: #fdfdfd;
+            border: 2px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            min-height: 100px;
+        }
+        #exo-solution {
+            display: none;
+            margin-top: 1rem;
+            border-top: 1px dashed #ccc;
+            padding-top: 1rem;
+            background-color: #f0fdf4;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        .canvas-exo { margin: 1rem auto; display: block; border: 1px solid #aaa; background: #fff; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: var(--primary); color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .oscillation-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .oscillation-graph { flex: 1; min-width: 300px; }
+        .oscillation-info {
+            flex: 1;
+            min-width: 250px;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+        }
+        .oscillation-info h4 { margin-top: 0; color: var(--primary); }
+        .info-box {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+        .highlight { background-color: #fff3cd; padding: 2px 5px; border-radius: 3px; font-weight: bold; }
+        .quiz-options { margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🗺️ La Chasse au Trésor des Suites 🗺️</h1>
+        <p>Moussaillon, pour trouver le trésor du Capitaine Nemo, tu devras maîtriser les suites !</p>
+    </header>
+
+    <div class="container">
+
+        <!-- ÉPREUVE 1 -->
+        <div class="card" id="epreuve1">
+            <h2>Épreuve 1 : Le Ressac des Vagues (Limite d'une suite géométrique)</h2>
+            <p>Pour accoster sur l'île au trésor, il faut comprendre le mouvement des vagues. Une vague est modélisée par une suite géométrique de raison positive $q$.</p>
+            
+            <div class="theorem">
+                <strong>Définition :</strong> Une suite géométrique est définie par $u_{n+1} = q \times u_n$ (ou $u_n = u_0 \times q^n$).<br>
+                <strong>Règle d'or (Limite) :</strong> Soit $q > 0$. La limite de $q^n$ dépend de $q$ :
+                <ul>
+                    <li>Si $0 < q < 1$, alors $\lim_{n \to +\infty} q^n = 0$ (la vague s'apaise).</li>
+                    <li>Si $q = 1$, alors $q^n = 1$ (la vague est constante).</li>
+                    <li>Si $q > 1$, alors $\lim_{n \to +\infty} q^n = +\infty$ (tsunami !).</li>
+                </ul>
+                <em>Conséquence :</em> La limite de $u_n = u_0 \times q^n$ est donc $0$ si $0<q<1$, et $+\infty$ (ou $-\infty$ selon le signe de $u_0$) si $q>1$.
+            </div>
+
+            <div class="example">
+                <strong>Exemple concret :</strong> Soit $u_n = 3 \times (0.5)^n$. Ici $u_0 = 3$ et $q = 0.5$. Comme $0 < 0.5 < 1$, la limite est $0$.<br>
+                Soit $v_n = 2 \times 1.2^n$. Ici $q = 1.2 > 1$, la limite est $+\infty$.
+            </div>
+
+            <h3>🔍 Observe le comportement des vagues :</h3>
+            <canvas id="canvasGeo" width="600" height="300"></canvas>
+            <button class="btn" onclick="drawGeo('converge')">Vague qui s'apaise (q=0.5)</button>
+            <button class="btn" onclick="drawGeo('diverge')">Tsunami (q=1.2)</button>
+
+            <div class="quiz" id="quiz1">
+                <p id="quiz1-question"><strong>Question de pirate :</strong> Chargement...</p>
+                <div id="quiz1-options" class="quiz-options"></div>
+                <div id="q1" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ÉPREUVE 2 -->
+        <div class="card" id="epreuve2">
+            <h2>Épreuve 2 : Le Trésor Cumulé (Limite de la somme)</h2>
+            <p>Le trésor est constitué de pièces d'or. Chaque jour, tu ajoutes des pièces selon une suite géométrique. Quelle est la somme totale à la fin ?</p>
+            
+            <div class="theorem">
+                <strong>Formule de la somme :</strong> Pour une suite géométrique de raison $q \neq 1$, la somme des $n+1$ premiers termes est :<br>
+                $$S_n = u_0 + u_1 + \dots + u_n = u_0 \times \frac{1 - q^{n+1}}{1 - q}$$
+                <strong>Limite de la somme (cas $0 < q < 1$) :</strong> Si $0 < q < 1$, alors $q^{n+1} \to 0$. Donc :<br>
+                $$\lim_{n \to +\infty} S_n = u_0 \times \frac{1}{1 - q}$$
+            </div>
+
+            <div class="example">
+                <strong>Exemple :</strong> Tu reçois 1 pièce le 1er jour, puis la moitié de la veille chaque jour suivant. $u_0 = 1$, $q = 0.5$.<br>
+                La somme totale tend vers $S = 1 \times \frac{1}{1 - 0.5} = \frac{1}{0.5} = 2$ pièces. Tu ne dépasseras jamais 2 pièces !
+            </div>
+
+            <h3>🔍 Visualisation de l'accumulation du trésor :</h3>
+            <canvas id="canvasSum" width="600" height="200"></canvas>
+            <button class="btn" onclick="drawSum()">Voir l'accumulation (u0=1, q=0.5)</button>
+
+            <div class="quiz" id="quiz2">
+                <p id="quiz2-question"><strong>Question de pirate :</strong> Chargement...</p>
+                <div id="quiz2-options" class="quiz-options"></div>
+                <div id="q2" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ÉPREUVE 3 -->
+        <div class="card" id="epreuve3">
+            <h2>Épreuve 3 : La Potion Magique (Suites Arithmético-géométriques)</h2>
+            <p>Pour devenir invincible, tu bois une potion. Son effet diminue de moitié chaque heure, mais tu rajoutes 3 gouttes magiques à chaque fois. C'est une suite arithmético-géométrique !</p>
+            
+            <div class="theorem">
+                <strong>Définition :</strong> $u_{n+1} = a \times u_n + b$ (avec $a \neq 1$).<br>
+                <strong>Méthode de résolution (Recherche d'une solution particulière constante) :</strong>
+                <div class="step"><span class="step-number">1</span> On cherche un nombre $c$ tel que $c = a \times c + b$. C'est le point d'équilibre (la potion se stabilise).</div>
+                <div class="step"><span class="step-number">2</span> On pose $v_n = u_n - c$. La suite $v_n$ est alors <strong>géométrique</strong> de raison $a$.</div>
+                <div class="step"><span class="step-number">3</span> On exprime $v_n$ en fonction de $n$, puis on en déduit $u_n = v_n + c$.</div>
+            </div>
+
+            <div class="example">
+                <strong>Exemple :</strong> $u_{n+1} = 0.5 \times u_n + 3$ avec $u_0 = 1$.<br>
+                <strong>Étape 1 :</strong> $c = 0.5c + 3 \Rightarrow 0.5c = 3 \Rightarrow c = 6$.<br>
+                <strong>Étape 2 :</strong> $v_n = u_n - 6$. Donc $v_{n+1} = 0.5v_n$. $v_0 = 1 - 6 = -5$.<br>
+                <strong>Étape 3 :</strong> $v_n = -5 \times (0.5)^n$. Donc $u_n = -5 \times (0.5)^n + 6$.<br>
+                <em>Limite :</em> $u_n \to 6$. La potion se stabilise à 6 gouttes.
+            </div>
+
+            <div class="quiz" id="quiz3">
+                <p id="quiz3-question"><strong>Question de pirate :</strong> Chargement...</p>
+                <div id="quiz3-options" class="quiz-options"></div>
+                <div id="q3" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ÉPREUVE 4 -->
+        <div class="card" id="epreuve4">
+            <h2>Épreuve 4 : La Carte au Trésor (Représentation graphique)</h2>
+            <p>Pour trouver le chemin exact vers le coffre, il faut tracer la "toile d'araignée" de la suite récurrente $u_{n+1} = f(u_n)$.</p>
+            
+            <div class="theorem">
+                <strong>Méthode de la toile d'araignée :</strong>
+                <div class="step"><span class="step-number">1</span> Tracer la courbe $y = f(x)$ et la droite $y = x$.</div>
+                <div class="step"><span class="step-number">2</span> Placer $u_0$ sur l'axe des abscisses.</div>
+                <div class="step"><span class="step-number">3</span> Monter verticalement jusqu'à la courbe $y = f(x)$ pour trouver $u_1$.</div>
+                <div class="step"><span class="step-number">4</span> Aller horizontalement jusqu'à la droite $y = x$ pour ramener $u_1$ sur l'axe des abscisses.</div>
+                <div class="step"><span class="step-number">5</span> Répéter l'opération pour voir si la suite converge (vers le trésor) ou diverge.</div>
+            </div>
+
+            <h3>🔍 Trace ton chemin vers le trésor :</h3>
+            <p>Fais glisser le curseur pour choisir ton point de départ $u_0$ et regarde si tu atteins le point d'équilibre (le trésor).</p>
+            <input type="range" id="u0Slider" min="0" max="10" step="0.5" value="1" oninput="drawCobweb()">
+            <span id="u0Value">u₀ = 1</span>
+            <canvas id="canvasCobweb" width="600" height="400"></canvas>
+            <p><em>Ici, $f(x) = 0.5x + 3$. Le trésor est caché au point d'équilibre $x = 6$ !</em></p>
+
+            <div class="quiz" id="quiz4">
+                <p id="quiz4-question"><strong>Question de pirate :</strong> Chargement...</p>
+                <div id="quiz4-options" class="quiz-options"></div>
+                <div id="q4" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ÉPREUVE 5 : DIVERGENCE ET OSCILLATION -->
+        <div class="card" id="epreuve5" style="border-left-color: #8e44ad;">
+            <h2>Épreuve 5 : Les Sirènes de l'Oscillation (Divergence et valeurs d'adhérence)</h2>
+            <p>Certaines suites ne trouvent jamais le trésor ! Elles oscillent sans cesse ou partent dans l'infini. Le capitaine Nemo appelle cela des <strong>suites non convergentes</strong>.</p>
+            
+            <div class="theorem">
+                <strong>Divergence :</strong> Une suite diverge si elle n'a pas de limite finie. Elle peut :
+                <ul>
+                    <li><strong>Partir à l'infini :</strong> $u_n \to +\infty$ ou $-\infty$ (ex: $q > 1$).</li>
+                    <li><strong>Osciller sans se stabiliser :</strong> Elle ne tend vers rien du tout.</li>
+                </ul>
+                <strong>Valeurs d'adhérence :</strong> Ce sont les valeurs vers lesquelles la suite revient régulièrement. Si une suite a <strong>plusieurs valeurs d'adhérence</strong>, elle ne peut pas converger (car une limite est unique !).<br><br>
+                <em>Exemple clé :</em> La suite $u_n = (-1)^n$ oscille entre $-1$ et $1$. Elle a deux valeurs d'adhérence : $-1$ et $1$. Elle ne converge pas.
+            </div>
+
+            <h3>🔍 Observe l'oscillation pas à pas :</h3>
+            <p>Clique sur les boutons ci-dessous pour voir comment la suite se comporte selon la valeur de $q$. Le tableau à droite te montre les premières valeurs calculées.</p>
+            
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <button class="btn" id="btn-osc-1" onclick="drawOscillation('minus1')">q = -1 (Oscillation pure)</button>
+                <button class="btn" id="btn-osc-2" onclick="drawOscillation('minus1_5')">q = -1.5 (Divergence oscillante)</button>
+                <button class="btn" id="btn-osc-3" onclick="drawOscillation('minus0_5')">q = -0.5 (Convergence alternée)</button>
+            </div>
+
+            <div class="oscillation-container">
+                <div class="oscillation-graph">
+                    <canvas id="canvasOscillation" width="500" height="300"></canvas>
+                </div>
+                <div class="oscillation-info">
+                    <h4>Analyse de la suite</h4>
+                    <div class="info-box" id="oscillation-text">
+                        <p>Clique sur un bouton pour commencer l'analyse.</p>
+                    </div>
+                    <h4 style="margin-top: 15px;">Tableau des valeurs</h4>
+                    <table id="oscillation-table">
+                        <thead><tr><th>$n$</th><th>$u_n$</th></tr></thead>
+                        <tbody><tr><td colspan="2">En attente...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="quiz" id="quiz5">
+                <p id="quiz5-question"><strong>Question de pirate :</strong> Chargement...</p>
+                <div id="quiz5-options" class="quiz-options"></div>
+                <div id="q5" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ÉPREUVE 6 : DÉPENDANCE AU PREMIER TERME -->
+        <div class="card" id="epreuve6" style="border-left-color: #e67e22;">
+            <h2>Épreuve 6 : Le Choix du Destin (Dépendance au premier terme)</h2>
+            <p>Moussaillon, le trésor n'est pas accessible à tous ! Pour les suites $u_{n+1} = f(u_n)$, le point de départ $u_0$ détermine si tu atteins le trésor (convergence), si tu restes bloqué (constante) ou si tu te perds dans l'océan (divergence).</p>
+            
+            <div class="theorem">
+                <strong>Le point fixe :</strong> On appelle point fixe un nombre $c$ tel que $f(c) = c$.<br>
+                Si $u_0 = c$, la suite est constante (elle ne bouge plus).<br><br>
+                <strong>Bassin d'attraction :</strong> Selon la valeur de $u_0$, la suite peut :
+                <ul>
+                    <li>Converger vers le point fixe $c$ (point fixe <strong>attractif</strong>).</li>
+                    <li>S'éloigner du point fixe et diverger (point fixe <strong>répulsif</strong>).</li>
+                </ul>
+            </div>
+
+            <div class="example">
+                <strong>Exemple phare : $f(x) = x^2$</strong><br>
+                Cherchons les points fixes : $x^2 = x \Rightarrow x(x-1) = 0$. Les points fixes sont <strong>0 et 1</strong>.<br><br>
+                <table>
+                    <tr><th>Valeur de $u_0$</th><th>Comportement de la suite</th></tr>
+                    <tr><td>$u_0 = 0$ ou $u_0 = 1$</td><td>La suite est <strong>constante</strong>.</td></tr>
+                    <tr><td>$-1 < u_0 < 1$ (mais $\neq 0$)</td><td>La suite <strong>converge vers 0</strong> (point fixe attractif).</td></tr>
+                    <tr><td>$u_0 > 1$ ou $u_0 < -1$</td><td>La suite <strong>diverge vers $+\infty$</strong> (point fixe répulsif).</td></tr>
+                </table>
+            </div>
+
+            <h3>🔍 Choisis ton destin avec $f(x) = x^2$ :</h3>
+            <p>Fais glisser le curseur pour choisir $u_0$ et observe si tu atteins le trésor (0), si tu restes bloqué, ou si tu diverges.</p>
+            <input type="range" id="u0SliderDyn" min="-2" max="2" step="0.1" value="0.5" oninput="drawDependance()">
+            <span id="u0ValueDyn">u₀ = 0.5</span>
+            <canvas id="canvasDependance" width="600" height="400"></canvas>
+            <p><em>Le trésor est caché en 0 (point fixe attractif). Le point 1 est un piège (point fixe répulsif).</em></p>
+
+            <div class="quiz" id="quiz6">
+                <p id="quiz6-question"><strong>Question de pirate :</strong> Chargement...</p>
+                <div id="quiz6-options" class="quiz-options"></div>
+                <div id="q6" class="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ÉPREUVE FINALE : EXERCICES ALÉATOIRES -->
+        <div class="card" id="epreuve-finale" style="border-left-color: var(--secondary); background: linear-gradient(to bottom right, #ffffff, #fff9e6);">
+            <h2>🏴‍☠️ Épreuve Finale : Le Labyrinthe des Exercices 🏴‍☠️</h2>
+            <p>Le chemin vers le trésor est semé d'embûches. Résous ces énigmes générées aléatoirement pour prouver ta valeur ! À chaque clic, un nouveau défi t'attend.</p>
+            
+            <div id="exo-container">
+                <p style="text-align: center; color: #888;">Clique sur le bouton ci-dessous pour générer ton premier défi...</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-orange" onclick="generateRandomExercise()">🎲 Générer une nouvelle énigme</button>
+            </div>
+            
+            <div id="exo-solution"></div>
+        </div>
+
+        <!-- CONCLUSION -->
+        <div class="card" style="border-left-color: var(--gold); text-align: center;">
+            <h2>🏆 Félicitations, Moussaillon ! 🏆</h2>
+            <p>Tu as maîtrisé les limites des suites géométriques, les sommes, les suites arithmético-géométriques, leur représentation graphique, ainsi que les cas de divergence et d'oscillation.</p>
+            <p>Le trésor du Capitaine Nemo est à toi : c'est la <strong>connaissance</strong> et la <strong>rigueur</strong> !</p>
+        </div>
+
+    </div>
+
+    <script>
+        // ===================================================================
+        // GESTION DES QUIZ ALÉATOIRES
+        // ===================================================================
+        
+        // Utilitaire pour mélanger un tableau (Fisher-Yates)
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // Utilitaire : génère un entier aléatoire entre min et max inclus
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Utilitaire : génère un décimal à 1 ou 2 chiffres
+        function randDec(min, max, decimals = 1) {
+            const val = Math.random() * (max - min) + min;
+            const factor = Math.pow(10, decimals);
+            return Math.round(val * factor) / factor;
+        }
+
+        // Fonction générique pour créer les boutons d'options
+        function createOptions(containerId, options, correctValue, feedbackId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.innerHTML = opt.label;
+                btn.onclick = () => {
+                    const feedback = document.getElementById(feedbackId);
+                    if (opt.value === correctValue) {
+                        feedback.innerHTML = "✅ Bravo ! C'est exact. " + (opt.explanation || '');
+                        feedback.className = "feedback success";
+                    } else {
+                        feedback.innerHTML = "❌ Essaie encore, moussaillon ! " + (opt.explanation || '');
+                        feedback.className = "feedback error";
+                    }
+                };
+                container.appendChild(btn);
+            });
+            MathJax.typesetPromise([container]);
+        }
+
+        // ===================================================================
+        // QUIZ 1 : Limite d'une suite géométrique
+        // ===================================================================
+        const quiz1Contexts = [
+            { txt: "une colonie de bactéries qui diminue dans une boîte de Petri", unit: "bactéries" },
+            { txt: "la radioactivité d'un échantillon d'uranium qui décroît", unit: "Bq" },
+            { txt: "un signal radio qui s'affaiblit en traversant l'océan", unit: "dB" },
+            { txt: "la luminosité d'une étoile mourante", unit: "lumens" },
+            { txt: "la population de baleines bleues dans un sanctuaire marin", unit: "individus" },
+            { txt: "la quantité d'eau dans un réservoir qui fuit", unit: "litres" },
+            { txt: "la concentration d'un médicament dans le sang d'un patient", unit: "mg/L" },
+            { txt: "l'énergie d'un pendule qui s'amortit", unit: "joules" },
+            { txt: "le nombre d'abonnés d'une chaîne qui décline", unit: "abonnés" },
+            { txt: "la production d'une usine qui ralentit", unit: "pièces" },
+            { txt: "la chaleur d'une tasse de café sur la table du capitaine", unit: "°C" },
+            { txt: "l'intensité d'un séisme après la secousse principale", unit: "unités" }
+        ];
+
+        function generateQuiz1() {
+            const ctx = quiz1Contexts[randInt(0, quiz1Contexts.length - 1)];
+            const u0 = randInt(2, 10);
+            const isConv = Math.random() < 0.5;
+            let q, qStr;
+            if (isConv) {
+                q = randDec(0.2, 0.9, 1);
+                qStr = q.toFixed(1);
+            } else {
+                q = randDec(1.1, 2.0, 1);
+                qStr = q.toFixed(1);
+            }
+
+            const questionText = `<strong>Question de pirate :</strong> Tu observes ${ctx.txt}. On modélise son évolution par la suite $u_n = ${u0} \\times (${qStr})^n$ (en ${ctx.unit}). Quelle est la limite de $u_n$ lorsque $n \\to +\\infty$ ?`;
+            document.getElementById('quiz1-question').innerHTML = questionText;
+
+            const correctAnswer = isConv ? '0' : '+inf';
+            const options = shuffle([
+                { label: '0', value: '0', explanation: isConv ? 'En effet, $0 < q < 1$ implique $q^n \\to 0$.' : '' },
+                { label: '+∞', value: '+inf', explanation: !isConv ? 'En effet, $q > 1$ implique $q^n \\to +\\infty$.' : '' },
+                { label: `$${u0}$`, value: 'u0', explanation: 'Ce n\'est pas la limite mais la valeur initiale.' }
+            ]);
+            createOptions('quiz1-options', options, correctAnswer, 'q1');
+            MathJax.typesetPromise([document.getElementById('quiz1-question')]);
+        }
+
+        // ===================================================================
+        // QUIZ 2 : Limite d'une somme géométrique
+        // ===================================================================
+        const quiz2Contexts = [
+            { txt: "les pièces d'or d'un trésor maudit", unit: "pièces" },
+            { txt: "les gouttes d'une potion magique versées chaque heure", unit: "gouttes" },
+            { txt: "les grains de sable d'un sablier", unit: "grains" },
+            { txt: "les feuilles d'un arbre magique qui tombent", unit: "feuilles" },
+            { txt: "les pas d'un explorateur qui ralentit", unit: "pas" },
+            { txt: "les miettes de pain semées par un oiseau", unit: "miettes" },
+            { txt: "les étoiles filantes observées chaque nuit", unit: "étoiles" },
+            { txt: "les macarons mangés lors d'un goûter", unit: "macarons" },
+            { txt: "les perles d'un collier qui se défile", unit: "perles" },
+            { txt: "les cartes distribuées lors d'une partie", unit: "cartes" },
+            { txt: "les gouttes de pluie recueillies dans un seau", unit: "gouttes" },
+            { txt: "les bonbons que le capitaine distribue à l'équipage", unit: "bonbons" }
+        ];
+
+        function generateQuiz2() {
+            const ctx = quiz2Contexts[randInt(0, quiz2Contexts.length - 1)];
+            const u0 = randInt(2, 8);
+            const q = randDec(0.2, 0.8, 1);
+            const qStr = q.toFixed(1);
+            const S = u0 / (1 - q);
+            const S_round = Math.round(S * 100) / 100;
+
+            const questionText = `<strong>Question de pirate :</strong> Tu accumules ${ctx.txt}. La première récolte est $u_0 = ${u0}$ ${ctx.unit}. Chaque récolte suivante vaut $${qStr}$ fois la précédente. Vers quelle valeur tend la somme totale $S_n$ lorsque $n \\to +\\infty$ ?`;
+            document.getElementById('quiz2-question').innerHTML = questionText;
+
+            // Distracteurs : S_round (correct), u0/(1-q) arrondi différemment, u0, 2*u0
+            const distractors = [
+                { label: `$${u0}$`, value: 'u0', explanation: 'Ce n\'est que la première récolte.' },
+                { label: `$${(2 * u0).toFixed(2)}$`, value: '2u0', explanation: 'C\'est une valeur arbitraire, pas la limite.' }
+            ];
+            const options = shuffle([
+                { label: `$${S_round}$`, value: 'correct', explanation: `En effet, $S = u_0 \\times \\frac{1}{1-q} = ${u0} \\times \\frac{1}{1-${qStr}} = ${S_round}$.` },
+                ...distractors
+            ]);
+            createOptions('quiz2-options', options, 'correct', 'q2');
+            MathJax.typesetPromise([document.getElementById('quiz2-question')]);
+        }
+
+        // ===================================================================
+        // QUIZ 3 : Point d'équilibre d'une suite arithmético-géométrique
+        // ===================================================================
+        const quiz3Contexts = [
+            "la concentration d'un médicament dans le sang",
+            "la température d'un four qui refroidit",
+            "la charge d'une batterie qui se décharge",
+            "le niveau d'eau dans un château d'eau",
+            "la population de renards sur une île",
+            "le nombre de visiteurs dans un musée",
+            "la quantité de sucre dans une confiture",
+            "la tension d'un condensateur qui se décharge",
+            "le nombre de poissons dans un aquarium",
+            "la luminosité d'une lampe qui chauffe",
+            "le taux d'humidité dans une cave",
+            "la concentration d'un réactif dans un bécher"
+        ];
+
+        function generateQuiz3() {
+            const ctx = quiz3Contexts[randInt(0, quiz3Contexts.length - 1)];
+            const a = randDec(0.2, 0.8, 1);
+            const aStr = a.toFixed(1);
+            const b = randInt(2, 8);
+            const c = b / (1 - a);
+            const c_round = Math.round(c * 100) / 100;
+
+            const questionText = `<strong>Question de pirate :</strong> Pour ${ctx}, on a $u_{n+1} = ${aStr} u_n + ${b}$. Quelle est la valeur du point d'équilibre $c$ (tel que $c = ${aStr}c + ${b}$) ?`;
+            document.getElementById('quiz3-question').innerHTML = questionText;
+
+            // Distracteurs
+            const d1 = b;
+            const d2 = a;
+            const d3 = Math.round((b / (1 + a)) * 100) / 100;
+            const options = shuffle([
+                { label: `$${c_round}$`, value: 'correct', explanation: `$c = \\frac{${b}}{1 - ${aStr}} = ${c_round}$.` },
+                { label: `$${d1}$`, value: 'd1', explanation: 'C\'est la valeur de $b$, pas le point fixe.' },
+                { label: `$${d2}$`, value: 'd2', explanation: 'C\'est la valeur de $a$, pas le point fixe.' },
+                { label: `$${d3}$`, value: 'd3', explanation: 'Attention au signe dans le dénominateur.' }
+            ]);
+            createOptions('quiz3-options', options, 'correct', 'q3');
+            MathJax.typesetPromise([document.getElementById('quiz3-question')]);
+        }
+
+        // ===================================================================
+        // QUIZ 4 : Toile d'araignée et convergence
+        // ===================================================================
+        const quiz4Questions = [
+            {
+                q: "Si la toile d'araignée forme un <strong>escalier</strong> qui se rapproche d'un point sur la droite $y=x$, que peut-on dire de la suite ?",
+                correct: 'converge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si la toile d'araignée forme un <strong>spirale</strong> qui s'enroule vers un point, que peut-on dire de la suite ?",
+                correct: 'converge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si la toile d'araignée forme un <strong>escalier qui s'éloigne</strong> du point d'intersection, que peut-on dire de la suite ?",
+                correct: 'diverge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si $f(x) = x$ pour tout $x$ dans un intervalle, alors pour tout $u_0$ dans cet intervalle, la suite est...",
+                correct: 'constante',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si la toile d'araignée part à l'infini sans jamais se rapprocher d'un point, la suite...",
+                correct: 'diverge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si $f(x) = 0.5x + 3$ et $u_0 = 6$, la toile d'araignée est réduite à un point. La suite est...",
+                correct: 'constante',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si la toile d'araignée forme un <strong>rectangle</strong> fermé (cycle de période 2), la suite...",
+                correct: 'diverge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Pour $f(x) = 0.8x + 1$ et $u_0 = 0$, la toile d'araignée se rapproche du point fixe $c=5$. La suite...",
+                correct: 'converge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si $f(x) = 2x - 1$ et $u_0 = 2$, la toile d'araignée s'éloigne du point fixe $c=1$. La suite...",
+                correct: 'diverge',
+                opts: ['converge', 'diverge', 'constante']
+            },
+            {
+                q: "Si la toile d'araignée forme un <strong>escalier</strong> qui descend vers 0 sans jamais l'atteindre, la suite...",
+                correct: 'converge',
+                opts: ['converge', 'diverge', 'constante']
+            }
+        ];
+
+        function generateQuiz4() {
+            const item = quiz4Questions[randInt(0, quiz4Questions.length - 1)];
+            const questionText = `<strong>Question de pirate :</strong> ${item.q}`;
+            document.getElementById('quiz4-question').innerHTML = questionText;
+
+            const labels = {
+                'converge': 'Elle converge',
+                'diverge': 'Elle diverge',
+                'constante': 'Elle est constante'
+            };
+            const options = shuffle(item.opts.map(v => ({
+                label: labels[v],
+                value: v,
+                explanation: v === item.correct ? '' : 'Regarde à nouveau le graphique ou la définition.'
+            })));
+            createOptions('quiz4-options', options, item.correct, 'q4');
+            MathJax.typesetPromise([document.getElementById('quiz4-question')]);
+        }
+
+        // ===================================================================
+        // QUIZ 5 : Valeurs d'adhérence
+        // ===================================================================
+        const quiz5Questions = [
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = (-1)^n$ ?",
+                correct: '2',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle oscille entre $-1$ et $1$."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = (-0.5)^n$ ?",
+                correct: '1',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle converge vers 0, donc une seule valeur d'adhérence."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = (-2)^n$ ?",
+                correct: '0',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle diverge vers $\\pm\\infty$, aucune valeur d'adhérence finie."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = \\cos(n\\pi)$ ?",
+                correct: '2',
+                opts: ['0', '1', '2', '3'],
+                expl: "$\\cos(n\\pi) = (-1)^n$, donc 2 valeurs d'adhérence : 1 et -1."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite constante $u_n = 3$ ?",
+                correct: '1',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle est constante, donc une seule valeur d'adhérence."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède une suite qui converge vers 5 ?",
+                correct: '1',
+                opts: ['0', '1', '2', '3'],
+                expl: "La limite est unique, donc une seule valeur d'adhérence."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = (-1)^n + \\frac{1}{n+1}$ ?",
+                correct: '2',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle oscille autour de -1 et 1, ces deux valeurs sont des valeurs d'adhérence."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = n$ ?",
+                correct: '0',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle diverge vers $+\\infty$, aucune valeur d'adhérence finie."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = (-1.5)^n$ ?",
+                correct: '0',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle diverge en oscillant, aucune valeur d'adhérence finie."
+            },
+            {
+                q: "Combien de valeurs d'adhérence possède la suite $u_n = 2 + (-0.3)^n$ ?",
+                correct: '1',
+                opts: ['0', '1', '2', '3'],
+                expl: "Elle converge vers 2."
+            }
+        ];
+
+        function generateQuiz5() {
+            const item = quiz5Questions[randInt(0, quiz5Questions.length - 1)];
+            const questionText = `<strong>Question de pirate :</strong> ${item.q}`;
+            document.getElementById('quiz5-question').innerHTML = questionText;
+
+            const options = shuffle(item.opts.map(v => ({
+                label: v,
+                value: v,
+                explanation: v === item.correct ? item.expl : ''
+            })));
+            createOptions('quiz5-options', options, item.correct, 'q5');
+            MathJax.typesetPromise([document.getElementById('quiz5-question')]);
+        }
+
+        // ===================================================================
+        // QUIZ 6 : Dépendance au premier terme (f(x) = x^2 ou affine)
+        // ===================================================================
+        function generateQuiz6() {
+            // Trois cas possibles
+            const caseType = randInt(0, 2);
+            let questionText, correct, options;
+
+            if (caseType === 0) {
+                // f(x) = x^2, u0 proche de 0 (converge)
+                const u0 = randDec(-0.9, 0.9, 2);
+                questionText = `<strong>Question de pirate :</strong> Pour $f(x) = x^2$ et $u_0 = ${u0}$, que fait la suite ?`;
+                correct = 'converge';
+                options = [
+                    { label: 'Elle converge vers 0', value: 'converge', explanation: `$|u_0| < 1$, donc la suite converge vers le point fixe attractif 0.` },
+                    { label: 'Elle diverge vers +∞', value: 'diverge', explanation: '' },
+                    { label: 'Elle est constante', value: 'constante', explanation: '' }
+                ];
+            } else if (caseType === 1) {
+                // f(x) = x^2, u0 > 1 (diverge)
+                const u0 = randDec(1.1, 2.5, 2);
+                questionText = `<strong>Question de pirate :</strong> Pour $f(x) = x^2$ et $u_0 = ${u0}$, que fait la suite ?`;
+                correct = 'diverge';
+                options = [
+                    { label: 'Elle converge vers 0', value: 'converge', explanation: '' },
+                    { label: 'Elle diverge vers +∞', value: 'diverge', explanation: `$|u_0| > 1$, le point fixe 0 est répulsif : la suite diverge.` },
+                    { label: 'Elle est constante', value: 'constante', explanation: '' }
+                ];
+            } else {
+                // f(x) = 2x - 1 ou 0.5x + 2
+                const choice = Math.random() < 0.5 ? 'replusif' : 'attractif';
+                if (choice === 'replusif') {
+                    const u0 = randDec(1.5, 3, 2);
+                    questionText = `<strong>Question de pirate :</strong> Pour $f(x) = 2x - 1$ et $u_0 = ${u0}$, que fait la suite ?`;
+                    correct = 'diverge';
+                    options = [
+                        { label: 'Elle converge vers 1', value: 'converge', explanation: '' },
+                        { label: 'Elle diverge vers +∞', value: 'diverge', explanation: `Le point fixe est 1 et il est répulsif. La suite diverge.` },
+                        { label: 'Elle est constante', value: 'constante', explanation: '' }
+                    ];
+                } else {
+                    const u0 = randDec(0, 3, 2);
+                    questionText = `<strong>Question de pirate :</strong> Pour $f(x) = 0.5x + 2$ et $u_0 = ${u0}$, que fait la suite ?`;
+                    correct = 'converge';
+                    options = [
+                        { label: 'Elle converge vers 4', value: 'converge', explanation: `Le point fixe est 4 et il est attractif. La suite converge.` },
+                        { label: 'Elle diverge vers +∞', value: 'diverge', explanation: '' },
+                        { label: 'Elle est constante', value: 'constante', explanation: '' }
+                    ];
+                }
+            }
+            document.getElementById('quiz6-question').innerHTML = questionText;
+            const shuffled = shuffle(options);
+            createOptions('quiz6-options', shuffled, correct, 'q6');
+            MathJax.typesetPromise([document.getElementById('quiz6-question')]);
+        }
+
+        // ===================================================================
+        // CANVAS 1 : LIMITE SUITE GÉOMÉTRIQUE
+        // ===================================================================
+        const canvasGeo = document.getElementById('canvasGeo');
+        const ctxGeo = canvasGeo.getContext('2d');
+
+        function drawGeo(type) {
+            ctxGeo.clearRect(0, 0, canvasGeo.width, canvasGeo.height);
+            ctxGeo.beginPath();
+            ctxGeo.moveTo(50, 250); ctxGeo.lineTo(550, 250);
+            ctxGeo.moveTo(50, 250); ctxGeo.lineTo(50, 50);
+            ctxGeo.strokeStyle = '#333'; ctxGeo.stroke();
+            ctxGeo.fillStyle = '#333'; ctxGeo.font = '12px Arial';
+            ctxGeo.fillText('n', 560, 255); ctxGeo.fillText('u_n', 30, 40);
+
+            let points = [], color = '';
+            if (type === 'converge') {
+                for (let n = 0; n <= 10; n++) points.push({x: 50 + n * 45, y: 250 - (3 * Math.pow(0.5, n)) * 50});
+                color = 'blue';
+                ctxGeo.fillText('q = 0.5 (Converge vers 0)', 200, 30);
+            } else {
+                for (let n = 0; n <= 10; n++) {
+                    let val = 2 * Math.pow(1.2, n);
+                    let y = 250 - val * 15;
+                    if (y < 20) y = 20;
+                    points.push({x: 50 + n * 45, y: y});
+                }
+                color = 'red';
+                ctxGeo.fillText('q = 1.2 (Diverge vers +∞)', 200, 30);
+            }
+            ctxGeo.fillStyle = color;
+            for (let i = 0; i < points.length; i++) {
+                ctxGeo.beginPath();
+                ctxGeo.arc(points[i].x, points[i].y, 4, 0, 2 * Math.PI);
+                ctxGeo.fill();
+                if (i > 0) {
+                    ctxGeo.beginPath();
+                    ctxGeo.moveTo(points[i-1].x, points[i-1].y);
+                    ctxGeo.lineTo(points[i].x, points[i].y);
+                    ctxGeo.strokeStyle = color; ctxGeo.stroke();
+                }
+            }
+        }
+
+        // ===================================================================
+        // CANVAS 2 : SOMME GÉOMÉTRIQUE
+        // ===================================================================
+        const canvasSum = document.getElementById('canvasSum');
+        const ctxSum = canvasSum.getContext('2d');
+
+        function drawSum() {
+            ctxSum.clearRect(0, 0, canvasSum.width, canvasSum.height);
+            ctxSum.beginPath();
+            ctxSum.moveTo(50, 150); ctxSum.lineTo(550, 150);
+            ctxSum.strokeStyle = '#333'; ctxSum.stroke();
+            ctxSum.fillStyle = '#333';
+            ctxSum.fillText('n', 560, 155); ctxSum.fillText('S_n', 20, 30);
+            ctxSum.fillText('Limite = 2', 480, 40);
+
+            ctxSum.beginPath();
+            ctxSum.moveTo(50, 150 - 2 * 40); ctxSum.lineTo(550, 150 - 2 * 40);
+            ctxSum.strokeStyle = 'green'; ctxSum.setLineDash([5, 5]); ctxSum.stroke();
+            ctxSum.setLineDash([]);
+
+            let u0 = 1, q = 0.5, S = 0, points = [];
+            for (let n = 0; n <= 10; n++) {
+                S += u0 * Math.pow(q, n);
+                points.push({x: 50 + n * 45, y: 150 - S * 40});
+            }
+            ctxSum.fillStyle = 'rgba(253, 187, 45, 0.7)';
+            for (let i = 0; i < points.length; i++) {
+                let barWidth = 30;
+                let barHeight = (points[i].y - 150) * -1;
+                ctxSum.fillRect(points[i].x - barWidth/2, 150 - barHeight, barWidth, barHeight);
+            }
+            ctxSum.beginPath();
+            ctxSum.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) ctxSum.lineTo(points[i].x, points[i].y);
+            ctxSum.strokeStyle = '#b21f1f'; ctxSum.lineWidth = 2; ctxSum.stroke();
+        }
+
+        // ===================================================================
+        // CANVAS 3 : TOILE D'ARAIGNÉE FIXE
+        // ===================================================================
+        const canvasCobweb = document.getElementById('canvasCobweb');
+        const ctxCobweb = canvasCobweb.getContext('2d');
+        const u0Slider = document.getElementById('u0Slider');
+        const u0Value = document.getElementById('u0Value');
+
+        function f(x) { return 0.5 * x + 3; }
+
+        function drawCobweb() {
+            let u0 = parseFloat(u0Slider.value);
+            u0Value.textContent = `u₀ = ${u0}`;
+            ctxCobweb.clearRect(0, 0, canvasCobweb.width, canvasCobweb.height);
+            const scale = 30, originX = 50, originY = 350;
+            ctxCobweb.beginPath();
+            ctxCobweb.moveTo(originX, 0); ctxCobweb.lineTo(originX, originY); ctxCobweb.lineTo(600, originY);
+            ctxCobweb.strokeStyle = '#333'; ctxCobweb.stroke();
+
+            ctxCobweb.fillStyle = '#666'; ctxCobweb.font = '12px Arial';
+            for (let i = 1; i <= 10; i++) {
+                ctxCobweb.fillText(i, originX + i * scale - 5, originY + 15);
+                ctxCobweb.fillText(i, originX - 20, originY - i * scale + 5);
+                ctxCobweb.beginPath(); ctxCobweb.moveTo(originX + i * scale, originY); ctxCobweb.lineTo(originX + i * scale, 0);
+                ctxCobweb.strokeStyle = '#eee'; ctxCobweb.stroke();
+                ctxCobweb.beginPath(); ctxCobweb.moveTo(originX, originY - i * scale); ctxCobweb.lineTo(600, originY - i * scale);
+                ctxCobweb.stroke();
+            }
+            ctxCobweb.beginPath();
+            ctxCobweb.moveTo(originX, originY); ctxCobweb.lineTo(originX + 10 * scale, originY - 10 * scale);
+            ctxCobweb.strokeStyle = 'black'; ctxCobweb.stroke();
+            ctxCobweb.fillText('y = x', originX + 8 * scale, originY - 9 * scale);
+
+            ctxCobweb.beginPath();
+            for (let x = 0; x <= 10; x += 0.1) {
+                let px = originX + x * scale, py = originY - f(x) * scale;
+                if (x === 0) ctxCobweb.moveTo(px, py); else ctxCobweb.lineTo(px, py);
+            }
+            ctxCobweb.strokeStyle = 'blue'; ctxCobweb.stroke();
+            ctxCobweb.fillText('y = f(x)', originX + 8 * scale, originY - f(8) * scale - 10);
+
+            let u = u0;
+            ctxCobweb.beginPath();
+            ctxCobweb.moveTo(originX + u * scale, originY);
+            for (let i = 0; i < 15; i++) {
+                let nextU = f(u);
+                ctxCobweb.lineTo(originX + u * scale, originY - nextU * scale);
+                ctxCobweb.lineTo(originX + nextU * scale, originY - nextU * scale);
+                u = nextU;
+                if (u > 10 || u < 0) break;
+            }
+            ctxCobweb.strokeStyle = 'red'; ctxCobweb.lineWidth = 2; ctxCobweb.stroke();
+
+            let c = 6;
+            ctxCobweb.beginPath();
+            ctxCobweb.arc(originX + c * scale, originY - c * scale, 6, 0, 2 * Math.PI);
+            ctxCobweb.fillStyle = 'gold'; ctxCobweb.fill();
+            ctxCobweb.strokeStyle = 'black'; ctxCobweb.stroke();
+            ctxCobweb.fillStyle = 'black';
+            ctxCobweb.fillText('🏆 Trésor (x=6)', originX + c * scale + 10, originY - c * scale - 10);
+        }
+
+        // ===================================================================
+        // CANVAS 4 : OSCILLATION
+        // ===================================================================
+        const canvasOsc = document.getElementById('canvasOscillation');
+        const ctxOsc = canvasOsc.getContext('2d');
+
+        function drawOscillation(type) {
+            document.getElementById('btn-osc-1').classList.remove('btn-active');
+            document.getElementById('btn-osc-2').classList.remove('btn-active');
+            document.getElementById('btn-osc-3').classList.remove('btn-active');
+            if (type === 'minus1') document.getElementById('btn-osc-1').classList.add('btn-active');
+            if (type === 'minus1_5') document.getElementById('btn-osc-2').classList.add('btn-active');
+            if (type === 'minus0_5') document.getElementById('btn-osc-3').classList.add('btn-active');
+
+            ctxOsc.clearRect(0, 0, canvasOsc.width, canvasOsc.height);
+            let u0 = 2, q, scale, textHTML;
+            if (type === 'minus1') {
+                q = -1; scale = 50;
+                textHTML = `<p><strong>q = -1 : Oscillation pure</strong></p>
+                    <p>La suite rebondit indéfiniment entre <span class="highlight">1</span> et <span class="highlight">-1</span>.</p>
+                    <p>Elle ne se stabilise jamais. On dit qu'elle a <strong>deux valeurs d'adhérence</strong> : 1 et -1.</p>
+                    <p>Elle ne converge donc pas.</p>`;
+            } else if (type === 'minus1_5') {
+                q = -1.5; scale = 15;
+                textHTML = `<p><strong>q = -1.5 : Divergence oscillante</strong></p>
+                    <p>La suite change de signe à chaque étape, mais son amplitude <strong>augmente</strong>.</p>
+                    <p>Elle s'éloigne vers $+\\infty$ et $-\\infty$ en alternance.</p>
+                    <p>Elle diverge (pas de limite finie).</p>`;
+            } else {
+                q = -0.5; scale = 50;
+                textHTML = `<p><strong>q = -0.5 : Convergence alternée</strong></p>
+                    <p>La suite change de signe à chaque étape, mais son amplitude <strong>diminue</strong>.</p>
+                    <p>Elle se rapproche de plus en plus de 0.</p>
+                    <p>Elle converge vers 0 (une seule valeur d'adhérence).</p>`;
+            }
+            document.getElementById('oscillation-text').innerHTML = textHTML;
+
+            const originX = 50, originY = canvasOsc.height / 2;
+            const graphWidth = canvasOsc.width - 100, numPoints = 8;
+            const stepX = graphWidth / numPoints;
+
+            ctxOsc.beginPath();
+            ctxOsc.moveTo(originX, 20); ctxOsc.lineTo(originX, canvasOsc.height - 20);
+            ctxOsc.moveTo(originX, originY); ctxOsc.lineTo(canvasOsc.width - 20, originY);
+            ctxOsc.strokeStyle = '#333'; ctxOsc.lineWidth = 1; ctxOsc.stroke();
+            ctxOsc.fillStyle = '#333'; ctxOsc.font = '12px Arial';
+            ctxOsc.fillText('n', canvasOsc.width - 15, originY + 15);
+            ctxOsc.fillText('u_n', originX - 25, 20);
+
+            let u = u0, points = [], tableRows = '';
+            for (let n = 0; n <= numPoints; n++) {
+                let y = originY - u * scale;
+                points.push({x: originX + n * stepX, y: y, val: u});
+                tableRows += `<tr><td>${n}</td><td>${u.toFixed(2)}</td></tr>`;
+                u = q * u;
+            }
+            document.getElementById('oscillation-table').querySelector('tbody').innerHTML = tableRows;
+
+            let mainColor = (type === 'minus1') ? '#8e44ad' : (type === 'minus1_5') ? '#c0392b' : '#2980b9';
+            ctxOsc.beginPath();
+            ctxOsc.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) ctxOsc.lineTo(points[i].x, points[i].y);
+            ctxOsc.strokeStyle = mainColor; ctxOsc.lineWidth = 3; ctxOsc.stroke();
+
+            for (let i = 0; i < points.length; i++) {
+                ctxOsc.beginPath();
+                ctxOsc.arc(points[i].x, points[i].y, 5, 0, 2 * Math.PI);
+                ctxOsc.fillStyle = mainColor; ctxOsc.fill();
+                ctxOsc.strokeStyle = 'white'; ctxOsc.lineWidth = 1.5; ctxOsc.stroke();
+                ctxOsc.fillStyle = '#333'; ctxOsc.font = '11px Arial';
+                ctxOsc.fillText(points[i].val.toFixed(1), points[i].x - 10, points[i].y - 10);
+            }
+
+            if (type === 'minus1') {
+                ctxOsc.beginPath();
+                ctxOsc.moveTo(originX, originY - 1 * scale); ctxOsc.lineTo(canvasOsc.width - 20, originY - 1 * scale);
+                ctxOsc.strokeStyle = '#e74c3c'; ctxOsc.setLineDash([5, 5]); ctxOsc.stroke();
+                ctxOsc.fillStyle = '#e74c3c';
+                ctxOsc.fillText('Valeur d\'adhérence = 1', canvasOsc.width - 160, originY - 1 * scale - 5);
+                ctxOsc.beginPath();
+                ctxOsc.moveTo(originX, originY + 1 * scale); ctxOsc.lineTo(canvasOsc.width - 20, originY + 1 * scale);
+                ctxOsc.stroke();
+                ctxOsc.fillText('Valeur d\'adhérence = -1', canvasOsc.width - 160, originY + 1 * scale + 15);
+                ctxOsc.setLineDash([]);
+            } else if (type === 'minus1_5') {
+                ctxOsc.fillStyle = '#e74c3c';
+                ctxOsc.fillText('Amplitude augmente →', originX + 4 * stepX, originY - 6 * scale - 10);
+            } else {
+                ctxOsc.fillStyle = '#2980b9';
+                ctxOsc.fillText('← Amplitude diminue', originX + 2 * stepX, originY - 1 * scale);
+            }
+        }
+
+        // ===================================================================
+        // CANVAS 5 : DÉPENDANCE AU PREMIER TERME
+        // ===================================================================
+        const canvasDyn = document.getElementById('canvasDependance');
+        const ctxDyn = canvasDyn.getContext('2d');
+        const u0SliderDyn = document.getElementById('u0SliderDyn');
+        const u0ValueDyn = document.getElementById('u0ValueDyn');
+
+        function fDyn(x) { return x * x; }
+
+        function drawDependance() {
+            let u0 = parseFloat(u0SliderDyn.value);
+            u0ValueDyn.textContent = `u₀ = ${u0}`;
+            ctxDyn.clearRect(0, 0, canvasDyn.width, canvasDyn.height);
+            const scale = 80, originX = canvasDyn.width / 2, originY = canvasDyn.height / 2 + 50;
+
+            ctxDyn.beginPath();
+            ctxDyn.moveTo(0, originY); ctxDyn.lineTo(canvasDyn.width, originY);
+            ctxDyn.moveTo(originX, 0); ctxDyn.lineTo(originX, canvasDyn.height);
+            ctxDyn.strokeStyle = '#333'; ctxDyn.stroke();
+
+            ctxDyn.fillStyle = '#333'; ctxDyn.font = '12px Arial';
+            ctxDyn.fillText('x', canvasDyn.width - 15, originY - 5);
+            ctxDyn.fillText('y', originX + 5, 15);
+            for (let i = -2; i <= 2; i++) {
+                if (i === 0) continue;
+                ctxDyn.fillText(i, originX + i * scale - 5, originY + 15);
+                ctxDyn.fillText(i, originX - 20, originY - i * scale + 5);
+            }
+            ctxDyn.fillText('0', originX - 15, originY + 15);
+
+            ctxDyn.beginPath();
+            ctxDyn.moveTo(originX - 2.5 * scale, originY + 2.5 * scale);
+            ctxDyn.lineTo(originX + 2.5 * scale, originY - 2.5 * scale);
+            ctxDyn.strokeStyle = 'black'; ctxDyn.stroke();
+            ctxDyn.fillText('y = x', originX + 1.8 * scale, originY - 2 * scale);
+
+            ctxDyn.beginPath();
+            for (let x = -2; x <= 2; x += 0.05) {
+                let px = originX + x * scale, py = originY - fDyn(x) * scale;
+                if (x === -2) ctxDyn.moveTo(px, py); else ctxDyn.lineTo(px, py);
+            }
+            ctxDyn.strokeStyle = 'blue'; ctxDyn.stroke();
+            ctxDyn.fillText('y = x²', originX + 1.2 * scale, originY - 1.5 * scale);
+
+            let u = u0;
+            ctxDyn.beginPath();
+            ctxDyn.moveTo(originX + u * scale, originY);
+            ctxDyn.strokeStyle = 'red'; ctxDyn.lineWidth = 2;
+            for (let i = 0; i < 10; i++) {
+                let nextU = fDyn(u);
+                ctxDyn.lineTo(originX + u * scale, originY - nextU * scale);
+                ctxDyn.lineTo(originX + nextU * scale, originY - nextU * scale);
+                u = nextU;
+                if (u > 2.5 || u < -2.5) break;
+            }
+            ctxDyn.stroke();
+
+            ctxDyn.beginPath();
+            ctxDyn.arc(originX, originY, 6, 0, 2 * Math.PI);
+            ctxDyn.fillStyle = 'gold'; ctxDyn.fill();
+            ctxDyn.strokeStyle = 'black'; ctxDyn.stroke();
+            ctxDyn.fillStyle = 'black';
+            ctxDyn.fillText('🏆 Trésor (0)', originX - 40, originY + 25);
+
+            ctxDyn.beginPath();
+            ctxDyn.arc(originX + 1 * scale, originY - 1 * scale, 6, 0, 2 * Math.PI);
+            ctxDyn.fillStyle = 'red'; ctxDyn.fill();
+            ctxDyn.strokeStyle = 'black'; ctxDyn.stroke();
+            ctxDyn.fillStyle = 'black';
+            ctxDyn.fillText('⚠️ Piège (1)', originX + 1 * scale + 10, originY - 1 * scale - 10);
+        }
+
+        // ===================================================================
+        // GÉNÉRATEUR D'EXERCICES ALÉATOIRES (ÉPREUVE FINALE)
+        // ===================================================================
+        const contexts = [
+            "la désintégration radioactive d'un échantillon d'uranium",
+            "le refroidissement d'une tasse de café sur la table du capitaine",
+            "la vitesse d'un satellite en orbite autour de la Terre",
+            "la concentration d'un réactif dans un bécher",
+            "la pression d'un gaz dans une bouteille de plongée",
+            "la luminosité d'une supernova qui s'estompe",
+            "la distance parcourue par un rover sur Mars",
+            "la propagation d'une onde sismique dans la croûte terrestre",
+            "la croissance d'une colonie de bactéries dans une boîte de Petri",
+            "la concentration d'un médicament dans le sang d'un patient",
+            "la taille d'une population de tortues marines sur l'île",
+            "le nombre de battements de cœur d'un colibri",
+            "l'inflation annuelle dans un pays lointain",
+            "le taux de chômage dans la cité portuaire",
+            "la propagation d'une rumeur sur les réseaux sociaux",
+            "le nombre d'abonnés à une chaîne de télévision pirate",
+            "la courbe des ventes d'un nouveau smartphone",
+            "le budget d'une expédition archéologique",
+            "la dépréciation d'une monnaie locale face à l'or",
+            "le nombre de pages lues chaque soir par un bibliophile",
+            "la dégradation d'une peinture de maître exposée à la lumière",
+            "le nombre de notes dans une mélodie qui s'évanouit",
+            "la progression d'un récit à tiroirs",
+            "le nombre de spectateurs dans un théâtre au fil des représentations",
+            "la renommée d'un écrivain après la publication de son chef-d'œuvre",
+            "la production d'une usine de conserves de sardines",
+            "l'usure d'une courroie de transmission dans une machine",
+            "le stock de matières premières dans un entrepôt",
+            "la puissance d'un réacteur nucléaire en phase de démarrage",
+            "le nombre de composants électroniques produits à la chaîne",
+            "la vitesse d'un train à grande vitesse qui freine",
+            "la charge d'une batterie de téléphone qui se décharge",
+            "la fonte d'un glacier du Groenland",
+            "le niveau d'une rivière après une crue",
+            "la pollution d'un lac par les microplastiques",
+            "la surface d'une forêt amazonienne qui diminue",
+            "le nombre d'abeilles dans une ruche qui périclite",
+            "la profondeur de la neige sur les pistes de ski",
+            "le score d'une équipe de football au fil des matchs",
+            "le nombre de tours effectués par un coureur cycliste",
+            "la précision d'un archer qui s'améliore",
+            "le nombre de joueurs dans un tournoi d'échecs",
+            "la fermentation d'une pâte à pain",
+            "la cuisson d'un rôti au four",
+            "le nombre de macarons dans une boîte qui se vide",
+            "le nombre de gemmes dans une caverne de jeu vidéo",
+            "la puissance d'un sortilège dans un jeu de rôle",
+            "le nombre de planètes explorées dans une galaxie lointaine",
+            "la taille d'un dragon qui grandit",
+            "le nombre de voitures dans un embouteillage monstre",
+            "la file d'attente à l'entrée d'un concert",
+            "le nombre de pétales d'une fleur magique",
+            "la distance qui sépare deux amoureux",
+            "le nombre de pas d'un marcheur infatigable"
+        ];
+
+        let randomCobwebCanvas = null;
+
+        function generateRandomExercise() {
+            const type = Math.floor(Math.random() * 6);
+            let exoHTML = "", solHTML = "";
+            const context = contexts[Math.floor(Math.random() * contexts.length)];
+
+            if (type === 0) {
+                let u0 = randInt(2, 9);
+                let q = (Math.random() > 0.5) ? randDec(0.2, 0.9, 1) : randDec(1.1, 2.0, 1);
+                let qStr = q.toFixed(1);
+                exoHTML = `<p><strong>🔍 Contexte :</strong> Tu observes ${context}. On modélise son évolution par $u_n = ${u0} \\times (${qStr})^n$.</p>
+                    <p><strong>❓ Question :</strong> Détermine la limite de $u_n$ lorsque $n \\to +\\infty$.</p>`;
+                let limitText = (q < 1) ? "0" : "+\\infty";
+                let reason = (q < 1) ? "car $0 < q < 1$." : "car $q > 1$.";
+                solHTML = `<p><strong>✅ Solution :</strong></p>
+                    <div class="step">$u_0 = ${u0}$, $q = ${qStr}$.</div>
+                    <div class="step">$\\lim q^n = ${limitText}$ (${reason})</div>
+                    <div class="step">Donc $\\lim u_n = ${u0} \\times ${limitText} = ${limitText === '0' ? '0' : '+\\infty'}$.</div>`;
+            } else if (type === 1) {
+                let u0 = randInt(2, 8);
+                let q = randDec(0.2, 0.8, 1);
+                let qStr = q.toFixed(1);
+                let S = u0 / (1 - q);
+                let S_round = Math.round(S * 100) / 100;
+                exoHTML = `<p><strong>🔍 Contexte :</strong> Tu accumules des richesses liées à ${context}. $u_0 = ${u0}$, chaque terme suivant vaut $${qStr}$ fois le précédent.</p>
+                    <p><strong>❓ Question :</strong> Quelle est la limite de $S_n = u_0 + u_1 + ... + u_n$ ?</p>`;
+                solHTML = `<p><strong>✅ Solution :</strong></p>
+                    <div class="step">$S_n = u_0 \\times \\frac{1-q^{n+1}}{1-q}$.</div>
+                    <div class="step">$0 < q < 1 \\Rightarrow q^{n+1} \\to 0$.</div>
+                    <div class="step">$S = ${u0} \\times \\frac{1}{1-${qStr}} = ${S_round}$.</div>`;
+            } else if (type === 2) {
+                let a = randDec(0.2, 0.8, 1);
+                let aStr = a.toFixed(1);
+                let b = randInt(2, 8);
+                let u0 = randInt(1, 5);
+                let c = b / (1 - a);
+                let c_round = Math.round(c * 100) / 100;
+                let v0 = u0 - c;
+                let v0_round = Math.round(v0 * 100) / 100;
+                exoHTML = `<p><strong>🔍 Contexte :</strong> Tu étudies ${context}. $u_{n+1} = ${aStr} u_n + ${b}$, $u_0 = ${u0}$.</p>
+                    <p><strong>❓ Question :</strong> 1) Trouve $c$. 2) Exprime $u_n$. 3) Donne la limite.</p>`;
+                solHTML = `<p><strong>✅ Solution :</strong></p>
+                    <div class="step">$c = \\frac{${b}}{1-${aStr}} = ${c_round}$.</div>
+                    <div class="step">$v_n = u_n - ${c_round}$, $v_0 = ${v0_round}$, $v_n = ${v0_round} \\times (${aStr})^n$.</div>
+                    <div class="step">$u_n = ${v0_round} \\times (${aStr})^n + ${c_round}$.</div>
+                    <div class="step">$\\lim u_n = ${c_round}$.</div>`;
+            } else if (type === 3) {
+                let a = randDec(0.1, 0.8, 1);
+                let aStr = a.toFixed(1);
+                let b = randInt(1, 8);
+                let u0 = randInt(1, 5);
+                let c = b / (1 - a);
+                let c_round = Math.round(c * 100) / 100;
+                exoHTML = `<p><strong>🔍 Contexte :</strong> Tu observes ${context}. $u_{n+1} = f(u_n)$ avec $f(x) = ${aStr}x + ${b}$, $u_0 = ${u0}$.</p>
+                    <p><strong>❓ Question :</strong> Trace la toile d'araignée et conjecture la limite.</p>
+                    <canvas id="randomCobwebCanvas" class="canvas-exo" width="400" height="300"></canvas>`;
+                solHTML = `<p><strong>✅ Solution :</strong></p>
+                    <div class="step">Graphiquement, la suite converge vers $${c_round}$.</div>
+                    <div class="step">Calcul : $c = \\frac{${b}}{1-${aStr}} = ${c_round}$.</div>
+                    <div class="step">Comme $0 < ${aStr} < 1$, $u_n \\to ${c_round}$.</div>`;
+                window.randomCobwebParams = { a, b, u0 };
+            } else if (type === 4) {
+                let subType = Math.floor(Math.random() * 3);
+                let q, qStr, limitText, reason, valuesText;
+                if (subType === 0) { q = -1; qStr = "-1"; limitText = "n'a pas de limite"; reason = "oscille entre 1 et -1."; valuesText = "Valeurs d'adhérence : 1 et -1."; }
+                else if (subType === 1) { q = -1.5; qStr = "-1.5"; limitText = "diverge"; reason = "amplitude augmente."; valuesText = "Pas de valeur d'adhérence finie."; }
+                else { q = -0.5; qStr = "-0.5"; limitText = "0"; reason = "amplitude diminue."; valuesText = "Valeur d'adhérence : 0."; }
+                exoHTML = `<p><strong>🔍 Contexte :</strong> Tu observes ${context}. $u_n = 2 \\times (${qStr})^n$.</p>
+                    <p><strong>❓ Question :</strong> La suite converge-t-elle ? Quelles sont ses valeurs d'adhérence ?</p>`;
+                solHTML = `<p><strong>✅ Solution :</strong></p>
+                    <div class="step">$q = ${qStr} < 0$ : oscillation.</div>
+                    <div class="step">$|q| = ${Math.abs(q)}$ : ${Math.abs(q) < 1 ? "amplitude diminue" : "amplitude augmente"}.</div>
+                    <div class="step">Conclusion : ${limitText} (${reason})</div>
+                    <div class="step">${valuesText}</div>`;
+            } else {
+                let choice = Math.floor(Math.random() * 3);
+                let funcStr, pointsFixes, comportement;
+                if (choice === 0) {
+                    funcStr = "f(x) = x^2"; pointsFixes = "0 et 1";
+                    comportement = "$u_0 \\in ]-1,1[ \\Rightarrow$ converge vers 0. Sinon diverge.";
+                } else if (choice === 1) {
+                    funcStr = "f(x) = 2x - 1"; pointsFixes = "1";
+                    comportement = "Point fixe 1 répulsif. Si $u_0 \\neq 1$, la suite diverge.";
+                } else {
+                    funcStr = "f(x) = 0.5x + 2"; pointsFixes = "4";
+                    comportement = "Point fixe 4 attractif. La suite converge toujours vers 4.";
+                }
+                let u0_test = randInt(-2, 3);
+                exoHTML = `<p><strong>🔍 Contexte :</strong> Tu observes ${context}. $u_{n+1} = ${funcStr}$.</p>
+                    <p><strong>❓ Question :</strong> 1) Trouve le(s) point(s) fixe(s). 2) Comportement si $u_0 = ${u0_test}$ ?</p>`;
+                solHTML = `<p><strong>✅ Solution :</strong></p>
+                    <div class="step">Points fixes : <strong>${pointsFixes}</strong>.</div>
+                    <div class="step">${comportement}</div>
+                    <div class="step">Cas $u_0 = ${u0_test}$ : ${choice === 0 ? (Math.abs(u0_test) < 1 ? "converge vers 0" : "diverge") : (choice === 1 ? (u0_test === 1 ? "constante" : "diverge") : "converge vers 4")}.</div>`;
+            }
+
+            document.getElementById('exo-container').innerHTML = exoHTML;
+            if (type === 3) {
+                randomCobwebCanvas = document.getElementById('randomCobwebCanvas');
+                if (randomCobwebCanvas) drawRandomCobweb(window.randomCobwebParams.a, window.randomCobwebParams.b, window.randomCobwebParams.u0);
+            } else { randomCobwebCanvas = null; }
+
+            const solDiv = document.getElementById('exo-solution');
+            solDiv.innerHTML = solHTML;
+            solDiv.style.display = 'none';
+
+            let btnSol = document.getElementById('btn-solution');
+            if (!btnSol) {
+                btnSol = document.createElement('button');
+                btnSol.id = 'btn-solution';
+                btnSol.className = 'btn';
+                btnSol.style.backgroundColor = '#b21f1f';
+                btnSol.style.display = 'block';
+                btnSol.style.margin = '0 auto';
+                btnSol.onclick = function() {
+                    const sol = document.getElementById('exo-solution');
+                    if (sol.style.display === 'none') { sol.style.display = 'block'; btnSol.innerText = '🙈 Cacher la solution'; }
+                    else { sol.style.display = 'none'; btnSol.innerText = '🔍 Révéler la solution'; }
+                };
+                solDiv.parentNode.insertBefore(btnSol, solDiv);
+            }
+            btnSol.innerText = '🔍 Révéler la solution';
+            MathJax.typesetPromise();
+        }
+
+        function drawRandomCobweb(a, b, u0) {
+            const canvas = randomCobwebCanvas;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width, height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            const scale = 25, originX = 40, originY = height - 40;
+            ctx.beginPath();
+            ctx.moveTo(originX, 0); ctx.lineTo(originX, originY); ctx.lineTo(width, originY);
+            ctx.strokeStyle = '#333'; ctx.stroke();
+            ctx.fillStyle = '#333'; ctx.font = '12px Arial';
+            ctx.fillText('x', width - 15, originY + 15);
+            ctx.fillText('y', originX - 15, 15);
+            ctx.strokeStyle = '#eee';
+            for (let i = 1; i <= 12; i++) {
+                ctx.beginPath(); ctx.moveTo(originX + i * scale, originY); ctx.lineTo(originX + i * scale, 0); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(originX, originY - i * scale); ctx.lineTo(width, originY - i * scale); ctx.stroke();
+                ctx.fillStyle = '#666';
+                ctx.fillText(i, originX + i * scale - 5, originY + 15);
+                ctx.fillText(i, originX - 15, originY - i * scale + 5);
+            }
+            ctx.beginPath();
+            ctx.moveTo(originX, originY); ctx.lineTo(originX + 12 * scale, originY - 12 * scale);
+            ctx.strokeStyle = 'black'; ctx.stroke();
+            ctx.fillText('y = x', originX + 8 * scale, originY - 9 * scale);
+            ctx.beginPath();
+            for (let x = 0; x <= 12; x += 0.1) {
+                let px = originX + x * scale, py = originY - (a * x + b) * scale;
+                if (x === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.strokeStyle = 'blue'; ctx.stroke();
+            ctx.fillText('y = f(x)', originX + 8 * scale, originY - (a * 8 + b) * scale - 10);
+            let u = u0;
+            ctx.beginPath();
+            ctx.moveTo(originX + u * scale, originY);
+            ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
+            for (let i = 0; i < 15; i++) {
+                let nextU = a * u + b;
+                ctx.lineTo(originX + u * scale, originY - nextU * scale);
+                ctx.lineTo(originX + nextU * scale, originY - nextU * scale);
+                u = nextU;
+                if (u > 12 || u < 0) break;
+            }
+            ctx.stroke();
+            let c = b / (1 - a);
+            if (c >= 0 && c <= 12) {
+                ctx.beginPath();
+                ctx.arc(originX + c * scale, originY - c * scale, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = 'gold'; ctx.fill();
+                ctx.strokeStyle = 'black'; ctx.stroke();
+                ctx.fillStyle = 'black';
+                ctx.fillText('🏆 Trésor', originX + c * scale + 8, originY - c * scale - 8);
+            }
+        }
+
+        // ===================================================================
+        // INITIALISATION
+        // ===================================================================
+        window.onload = function() {
+            drawGeo('converge');
+            drawSum();
+            drawCobweb();
+            drawOscillation('minus1');
+            drawDependance();
+            generateQuiz1();
+            generateQuiz2();
+            generateQuiz3();
+            generateQuiz4();
+            generateQuiz5();
+            generateQuiz6();
+            generateRandomExercise();
+        };
+    </script>
+</body>
+</html>

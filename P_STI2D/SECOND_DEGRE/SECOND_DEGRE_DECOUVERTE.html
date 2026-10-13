@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>À la découverte des fonctions du second degré</title>
+
+<!-- ============ MathJax 3 ============ -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    color:#1e293b;line-height:1.6;
+    background:
+      radial-gradient(1200px 600px at 8% -10%, #e0e7ff 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #cffafe 0%, transparent 55%),
+      #f8fafc;
+    min-height:100vh;
+  }
+  header{text-align:center;padding:2.6rem 1rem 1.4rem}
+  header h1{
+    margin:0 0 .35rem;font-size:clamp(1.4rem,4vw,2.3rem);letter-spacing:-.5px;
+    background:linear-gradient(90deg,#4f46e5,#0ea5e9);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  header p{margin:0;color:#64748b;font-size:1rem}
+
+  main{max-width:1000px;margin:0 auto;padding:0 1rem 4rem;
+       display:flex;flex-direction:column;gap:1.4rem}
+
+  .card{
+    background:#fff;border-radius:18px;padding:1.4rem 1.4rem 1.6rem;
+    border:1px solid #eef2f7;
+    box-shadow:0 12px 30px -14px rgba(30,41,59,.28), 0 2px 6px rgba(30,41,59,.05);
+  }
+  .card h2{
+    margin:0 0 1rem;font-size:1.2rem;display:flex;align-items:center;gap:.65rem;
+  }
+  .num{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+    width:32px;height:32px;border-radius:10px;color:#fff;font-weight:700;font-size:.95rem;
+    background:linear-gradient(135deg,#4f46e5,#0ea5e9);
+    box-shadow:0 4px 12px -3px rgba(79,70,229,.6);
+  }
+  .card p{margin:.5rem 0}
+  .mathline{text-align:center;font-size:1.08rem;margin:.7rem 0 !important}
+
+  canvas{display:block;width:100%;height:auto;border-radius:14px;background:#fff}
+  #cv1,#cv2{aspect-ratio:2/1}
+  #cv3{aspect-ratio:1/1;max-width:520px;margin:0 auto;border:1px solid #eef2f7}
+  #cv2{cursor:grab;touch-action:none}
+  #cv2.dragging{cursor:grabbing}
+
+  .controls{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:.9rem 1.4rem;margin-top:1.1rem;
+  }
+  .ctrl{display:flex;flex-direction:column;gap:.35rem}
+  .ctrl label{
+    font-size:.9rem;font-weight:600;color:#475569;
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .ctrl output{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    background:#eef2ff;color:#4338ca;border-radius:7px;
+    padding:.05rem .45rem;font-size:.85rem;font-weight:700;
+  }
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;
+    background:linear-gradient(90deg,#c7d2fe,#bae6fd);outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:#4f46e5;border:3px solid #fff;cursor:pointer;
+    box-shadow:0 2px 8px rgba(79,70,229,.55);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;background:#4f46e5;
+    border:3px solid #fff;cursor:pointer;box-shadow:0 2px 8px rgba(79,70,229,.55);
+  }
+
+  .readout{
+    margin-top:1.1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;
+    background:#f8fafc;border:1px dashed #dbe3ef;border-radius:14px;padding:1rem 1.1rem;
+  }
+  @media(max-width:640px){.readout{grid-template-columns:1fr}}
+  .formula{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:1.12rem;font-weight:700;color:#4f46e5;
+    background:#eef2ff;border-radius:10px;padding:.55rem .8rem;
+    text-align:center;letter-spacing:.3px;
+  }
+  .facts{list-style:none;margin:0;padding:0;font-size:.93rem}
+  .facts li{padding:.22rem 0;border-bottom:1px solid #eef2f7}
+  .facts li:last-child{border-bottom:none}
+  .facts b{color:#0f172a}
+
+  .calc{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:.7rem;margin-top:1rem;
+  }
+  .calc .box{
+    background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;
+    padding:.6rem .8rem;text-align:center;
+  }
+  .calc .box span{display:block;font-size:.78rem;color:#9a3412;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .calc .box b{font-size:1.18rem;color:#9a3412;font-family:ui-monospace,monospace}
+  .calc .box.rose{background:#fff1f2;border-color:#fecdd3}
+  .calc .box.rose span,.calc .box.rose b{color:#be123c}
+
+  .hint{
+    background:linear-gradient(90deg,#eef2ff,#ecfeff);
+    border-left:4px solid #4f46e5;border-radius:0 12px 12px 0;
+    padding:.75rem 1rem;margin-top:1rem;font-size:.95rem;
+  }
+  .check{display:flex;align-items:center;gap:.5rem;font-size:.92rem;font-weight:600;color:#475569;
+         margin-top:.9rem;cursor:pointer;user-select:none}
+  .check input{width:18px;height:18px;accent-color:#4f46e5;cursor:pointer}
+
+  .game-bar{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin-top:1rem}
+  .game-bar .ctrl{flex:1 1 190px}
+  .btn{
+    border:none;border-radius:12px;padding:.7rem 1.2rem;font-size:.95rem;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:transform .12s, box-shadow .12s;
+    background:linear-gradient(135deg,#4f46e5,#0ea5e9);color:#fff;
+    box-shadow:0 8px 18px -8px rgba(79,70,229,.9);
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:#fff;color:#4f46e5;border:2px solid #e0e7ff;box-shadow:none}
+  .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+  .game-msg{
+    margin-top:1rem;padding:.85rem 1rem;border-radius:12px;font-size:.98rem;
+    background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;
+  }
+  .game-msg.ok{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+
+  .challenges{margin:.8rem 0 0;padding-left:1.2rem;font-size:.95rem}
+  .challenges li{margin:.35rem 0}
+
+  footer{text-align:center;color:#94a3b8;font-size:.85rem;padding:0 1rem 2.5rem}
+  mjx-container{overflow:visible !important}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎯 À la découverte des fonctions du second degré</h1>
+  <p>Paraboles, taux de variation… et un panier de basket</p>
+</header>
+
+<main>
+
+  <!-- ================= INTRO ================= -->
+  <section class="card">
+    <p>Un ballon lancé, un jet d'eau, la trajectoire d'un boulet de canon… toutes ces courbes
+       ont la <strong>même forme</strong> : une <strong>parabole</strong>.</p>
+    <p class="mathline">$f(x) = ax^2 + bx + c \qquad \text{avec } a \neq 0$</p>
+    <p>Dans cette page, tu vas manipuler cette formule, comprendre le rôle de $a$, $b$ et $c$,
+       découvrir le <strong>taux de variation</strong>, puis terminer par un petit défi.</p>
+  </section>
+
+  <!-- ================= ATELIER 1 ================= -->
+  <section class="card">
+    <h2><span class="num">1</span> La machine à paraboles</h2>
+
+    <canvas id="cv1"></canvas>
+
+    <div class="controls">
+      <div class="ctrl">
+        <label for="sa">Coefficient $a$ <output id="out-a">0,5</output></label>
+        <input type="range" id="sa" min="-1" max="1" step="0.05" value="0.5">
+      </div>
+      <div class="ctrl">
+        <label for="sb">Coefficient $b$ <output id="out-b">−1</output></label>
+        <input type="range" id="sb" min="-4" max="4" step="0.1" value="-1">
+      </div>
+      <div class="ctrl">
+        <label for="sc">Coefficient $c$ <output id="out-c">−1,5</output></label>
+        <input type="range" id="sc" min="-4" max="4" step="0.1" value="-1.5">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="formula" id="formula1">f(x) = 0,5x² − 1x − 1,5</div>
+      <ul class="facts">
+        <li>Sens d'ouverture : <b id="f-sens">vers le haut</b></li>
+        <li>Sommet : <b id="f-sommet">S(1 ; −2)</b></li>
+        <li>Axe de symétrie : <b id="f-axe">x = 1</b></li>
+        <li>Racines : <b id="f-racines">x = −1 et x = 3</b></li>
+      </ul>
+    </div>
+
+    <div class="hint">
+      <strong>Défis éclair 🕵️</strong>
+      <ol class="challenges">
+        <li>Fais en sorte que la parabole soit <em>ouverte vers le bas</em>.</li>
+        <li>Obtiens <em>deux</em> points d'intersection avec l'axe des abscisses, puis <em>aucun</em>.</li>
+        <li>Place le sommet exactement en $(0\,;\,0)$.</li>
+        <li>Règle $a = 0$… que devient la courbe ? Pourquoi dit-on « second degré » ?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= ATELIER 2 ================= -->
+  <section class="card">
+    <h2><span class="num">2</span> Le taux de variation</h2>
+
+    <p>Le <strong>taux de variation</strong> entre deux nombres $x_1$ et $x_2$, c'est la
+       « vitesse moyenne » à laquelle la courbe monte (ou descend) entre ces deux points :</p>
+    <p class="mathline">
+      $T \;=\; \dfrac{f(x_2)-f(x_1)}{x_2-x_1} \;=\; \dfrac{\Delta y}{\Delta x}$
+    </p>
+    <p>Sur le dessin, $T$ est tout simplement la <strong>pente de la droite $(AB)$</strong>.
+       Déplace les points (curseurs <em>ou</em> glisser-déposer sur le graphique) et observe.</p>
+
+    <canvas id="cv2"></canvas>
+
+    <div class="controls">
+      <div class="ctrl">
+        <label for="sx1">Abscisse de A &nbsp;$x_1$ <output id="out-x1">0</output></label>
+        <input type="range" id="sx1" min="-6" max="6" step="0.25" value="0">
+      </div>
+      <div class="ctrl">
+        <label for="sx2">Abscisse de B &nbsp;$x_2$ <output id="out-x2">3</output></label>
+        <input type="range" id="sx2" min="-6" max="6" step="0.25" value="3">
+      </div>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" id="lockMid">
+      🔒 Garder le milieu de $[x_1;x_2]$ fixe
+    </label>
+
+    <div class="calc">
+      <div class="box"><span>Δx = x₂ − x₁</span><b id="v-dx">3</b></div>
+      <div class="box"><span>Δy = f(x₂) − f(x₁)</span><b id="v-dy">1,5</b></div>
+      <div class="box rose"><span>Taux de variation T</span><b id="v-t">0,5</b></div>
+      <div class="box rose"><span>a(x₁+x₂) + b</span><b id="v-t2">0,5</b></div>
+    </div>
+
+    <div class="hint">
+      <strong>La grande découverte 🔍</strong><br>
+      Coche « garder le milieu fixe » et déplace $x_1$ : $T$ <strong>ne change pas</strong> !
+      <br>En effet, pour une fonction du second degré :
+      <p class="mathline">$T \;=\; a\,(x_1+x_2) + b$</p>
+      Le taux de variation ne dépend que de $a$ et du <strong>milieu</strong> de l'intervalle
+      (car $x_1+x_2 = 2m$). Il est donc <em>affine</em> en le milieu : c'est ce qui rend la parabole
+      « de plus en plus pentue » quand on s'éloigne du sommet.
+    </div>
+  </section>
+
+  <!-- ================= ATELIER 3 : LE JEU ================= -->
+  <section class="card">
+    <h2><span class="num">3</span> Le défi : vise le cerceau !</h2>
+
+    <p>Le ballon part de l'origine : on a donc $c = 0$ et la trajectoire vaut
+       $f(x) = ax^2 + bx$. À toi de régler $a$ et $b$ pour faire passer la courbe
+       <strong>exactement dans le cerceau</strong>.</p>
+
+    <canvas id="cv3"></canvas>
+
+    <div class="game-bar">
+      <div class="ctrl">
+        <label for="ga">Courbure $a$ <output id="out-ga">−0,20</output></label>
+        <input type="range" id="ga" min="-0.5" max="0.1" step="0.005" value="-0.2">
+      </div>
+      <div class="ctrl">
+        <label for="gb">Élan $b$ <output id="out-gb">2,00</output></label>
+        <input type="range" id="gb" min="0" max="8" step="0.05" value="2">
+      </div>
+      <button class="btn ghost" id="btnNew">🎲 Nouveau panier</button>
+      <button class="btn" id="btnShoot">🏀 Lancer !</button>
+    </div>
+
+    <div class="game-msg" id="gameMsg">Règle les curseurs…</div>
+
+    <div class="hint">
+      <strong>Indice de pro 🧠</strong> Le cerceau est au point $(x_T\,;\,y_T)$.
+      Il faut donc résoudre $a\,x_T^2 + b\,x_T = y_T$.
+      <br>Commence par $a$ : plus $a$ est négatif, plus la trajectoire est « bombée ».
+      Puis ajuste $b$ pour la hauteur.
+    </div>
+  </section>
+
+  <!-- ================= BILAN ================= -->
+  <section class="card">
+    <h2><span class="num">★</span> Ce qu'il faut retenir</h2>
+    <ul class="facts">
+      <li>Une fonction du second degré s'écrit $f(x)=ax^2+bx+c$ avec $a\neq 0$ ;
+          sa courbe est une <strong>parabole</strong>.</li>
+      <li>Le signe de $a$ donne le sens d'ouverture ; le sommet est en
+          $\left(-\dfrac{b}{2a}\,;\;f\!\left(-\dfrac{b}{2a}\right)\right)$.</li>
+      <li>Le taux de variation entre $x_1$ et $x_2$ vaut
+          $T=\dfrac{f(x_2)-f(x_1)}{x_2-x_1}=a(x_1+x_2)+b$.</li>
+      <li>En posant $x_1=x$ et $x_2=x+h$ :
+          $T = 2ax + ah + b$ — le taux de variation est une fonction
+          <strong>affine</strong> de $x$.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>Activité interactive — HTML · CSS · Canvas · MathJax 3</footer>
+
+<script>
+(function () {
+'use strict';
+
+/* ==================================================================
+   0. OUTILS
+   ================================================================== */
+const $ = id => document.getElementById(id);
+const MINUS = '\u2212';
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+function fmt(v, d = 2) {
+  if (!isFinite(v)) return '—';
+  let s = v.toFixed(d);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  if (s === '-0' || s === '') s = '0';
+  return s.replace('-', MINUS).replace('.', ',');
+}
+
+/* Prépare un canvas en tenant compte de la densité de pixels. */
+function fitCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = cv.getBoundingClientRect();
+  const w = Math.max(200, rect.width);
+  const h = Math.max(120, rect.height);
+  const pw = Math.round(w * dpr);
+  const ph = Math.round(h * dpr);
+  if (cv.width !== pw) cv.width = pw;
+  if (cv.height !== ph) cv.height = ph;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+
+/* Repère monde -> écran */
+function makeMapper(w, h, world) {
+  const sx = w / (world.xmax - world.xmin);
+  const sy = h / (world.ymax - world.ymin);
+  return {
+    X: x => (x - world.xmin) * sx,
+    Y: y => h - (y - world.ymin) * sy,
+    invX: px => px / sx + world.xmin,
+    invY: py => (h - py) / sy + world.ymin,
+    sx, sy, w, h
+  };
+}
+
+function drawGrid(ctx, w, h, M, world, labels = true) {
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#e8eef7';
+  ctx.beginPath();
+  for (let x = Math.ceil(world.xmin); x <= world.xmax; x++) {
+    ctx.moveTo(M.X(x), 0); ctx.lineTo(M.X(x), h);
+  }
+  for (let y = Math.ceil(world.ymin); y <= world.ymax; y++) {
+    ctx.moveTo(0, M.Y(y)); ctx.lineTo(w, M.Y(y));
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  if (0 >= world.ymin && 0 <= world.ymax) {
+    ctx.moveTo(0, M.Y(0)); ctx.lineTo(w, M.Y(0));
+  }
+  if (0 >= world.xmin && 0 <= world.xmax) {
+    ctx.moveTo(M.X(0), 0); ctx.lineTo(M.X(0), h);
+  }
+  ctx.stroke();
+
+  if (!labels) { ctx.restore(); return; }
+
+  ctx.fillStyle = '#9aa8bd';
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let x = Math.ceil(world.xmin); x <= world.xmax; x++) {
+    if (x === 0) continue;
+    ctx.fillText(String(x), M.X(x), M.Y(0) + 4);
+  }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let y = Math.ceil(world.ymin); y <= world.ymax; y++) {
+    if (y === 0) continue;
+    ctx.fillText(String(y), M.X(0) - 6, M.Y(y));
+  }
+  ctx.restore();
+}
+
+function plot(ctx, M, f, xa, xb, color, lw, dash) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.setLineDash(dash || []);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  const N = 700;
+  let first = true;
+  for (let i = 0; i <= N; i++) {
+    const x = xa + (xb - xa) * i / N;
+    const y = f(x);
+    if (!isFinite(y)) { first = true; continue; }
+    const px = M.X(x);
+    const py = clamp(M.Y(y), -1e5, 1e5);
+    if (first) { ctx.moveTo(px, py); first = false; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function dot(ctx, px, py, color, label, r = 6.5) {
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+  if (label) {
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px system-ui, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(label, px + r + 5, py - 6);
+  }
+}
+
+function polyStr(a, b, c) {
+  const A = v => fmt(Math.abs(v));
+  let s = (a < 0 ? MINUS : '') +
+          (Math.abs(Math.abs(a) - 1) < 1e-9 ? '' : A(a)) + 'x²';
+  if (Math.abs(b) > 1e-9) {
+    s += (b < 0 ? ' ' + MINUS + ' ' : ' + ') +
+         (Math.abs(Math.abs(b) - 1) < 1e-9 ? '' : A(b)) + 'x';
+  }
+  if (Math.abs(c) > 1e-9) {
+    s += (c < 0 ? ' ' + MINUS + ' ' : ' + ') + A(c);
+  }
+  return s;
+}
+
+/* ==================================================================
+   1. ÉTAT GLOBAL
+   ================================================================== */
+const State = {
+  a: 0.5, b: -1, c: -1.5,
+  x1: 0, x2: 3,
+  gameA: -0.2, gameB: 2,
+  target: { x: 6, y: 3 },
+  ball: { x: 0, y: 0 },
+  animating: false
+};
+let lockedMid = null;         // position du milieu quand le verrou est actif
+let lockedEnabled = false;
+let animRaf = 0;
+
+const W1 = { xmin: -8, xmax: 8, ymin: -4, ymax: 4 };
+const W2 = { xmin: -8, xmax: 8, ymin: -4, ymax: 4 };
+const W3 = { xmin: -0.8, xmax: 9.2, ymin: -0.8, ymax: 9.2 };
+
+const fMain = x => State.a * x * x + State.b * x + State.c;
+const fGame = x => State.gameA * x * x + State.gameB * x;
+
+/* ==================================================================
+   2. SCÈNE 1 — La machine à paraboles
+   ================================================================== */
+function render1() {
+  const { ctx, w, h } = fitCanvas($('cv1'));
+  if (w < 10 || h < 10) return;
+  const M = makeMapper(w, h, W1);
+  drawGrid(ctx, w, h, M, W1);
+
+  const { a, b, c } = State;
+
+  // Axe de symétrie (si parabole valide)
+  if (Math.abs(a) > 1e-9) {
+    const alpha = -b / (2 * a);
+    if (alpha >= W1.xmin && alpha <= W1.xmax) {
+      ctx.save();
+      ctx.setLineDash([7, 7]);
+      ctx.strokeStyle = '#c7d2fe';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(M.X(alpha), 0);
+      ctx.lineTo(M.X(alpha), h);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Courbe principale
+  plot(ctx, M, fMain, W1.xmin, W1.xmax, '#4f46e5', 3.5);
+
+  // Ordonnée à l'origine
+  if (c >= W1.ymin && c <= W1.ymax) {
+    dot(ctx, M.X(0), M.Y(c), '#0ea5e9', '(0 ; ' + fmt(c) + ')');
+  }
+
+  // Sommet
+  if (Math.abs(a) > 1e-9) {
+    const alpha = -b / (2 * a);
+    const beta = fMain(alpha);
+    if (alpha >= W1.xmin - 2 && alpha <= W1.xmax + 2 &&
+        beta >= W1.ymin - 2 && beta <= W1.ymax + 2) {
+      dot(ctx, M.X(alpha), M.Y(beta), '#f59e0b',
+          'S(' + fmt(alpha) + ' ; ' + fmt(beta) + ')');
+    }
+  }
+
+  // Racines
+  if (Math.abs(a) > 1e-9) {
+    const d = b * b - 4 * a * c;
+    if (d >= 0) {
+      const s = Math.sqrt(d);
+      const r1 = (-b - s) / (2 * a);
+      const r2 = (-b + s) / (2 * a);
+      [r1, r2].forEach(r => {
+        if (r >= W1.xmin && r <= W1.xmax) {
+          ctx.beginPath();
+          ctx.arc(M.X(r), M.Y(0), 5.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#10b981'; ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+        }
+      });
+    }
+  }
+}
+
+function updateReadout1() {
+  const { a, b, c } = State;
+  $('formula1').textContent = 'f(x) = ' + polyStr(a, b, c);
+
+  if (Math.abs(a) < 1e-9) {
+    $('f-sens').textContent = "ce n'est plus une parabole (a = 0) !";
+    $('f-sommet').textContent = '—';
+    $('f-axe').textContent = '—';
+    $('f-racines').textContent = 'une seule racine (fonction affine)';
+    return;
+  }
+
+  $('f-sens').textContent = a > 0 ? 'vers le haut ∪ (a > 0)' : 'vers le bas ∩ (a < 0)';
+  const alpha = -b / (2 * a);
+  const beta = fMain(alpha);
+  $('f-sommet').textContent = 'S(' + fmt(alpha) + ' ; ' + fmt(beta) + ')';
+  $('f-axe').textContent = 'x = ' + fmt(alpha);
+
+  const d = b * b - 4 * a * c;
+  if (d < -1e-9) {
+    $('f-racines').textContent = 'aucune racine réelle (Δ < 0)';
+  } else if (Math.abs(d) < 1e-9) {
+    $('f-racines').textContent = 'x = ' + fmt(alpha) + ' (racine double)';
+  } else {
+    const s = Math.sqrt(d);
+    const r1 = (-b - s) / (2 * a);
+    const r2 = (-b + s) / (2 * a);
+    $('f-racines').textContent = 'x₁ = ' + fmt(r1) + '  et  x₂ = ' + fmt(r2);
+  }
+}
+
+/* ==================================================================
+   3. SCÈNE 2 — Le taux de variation
+   ================================================================== */
+function render2() {
+  const { ctx, w, h } = fitCanvas($('cv2'));
+  if (w < 10 || h < 10) return;
+  const M = makeMapper(w, h, W2);
+  drawGrid(ctx, w, h, M, W2);
+
+  const { x1, x2 } = State;
+  const y1 = fMain(x1), y2 = fMain(x2);
+  const dx = x2 - x1;
+  const T = Math.abs(dx) < 1e-6 ? NaN : (y2 - y1) / dx;
+  const m = (x1 + x2) / 2;
+
+  // Parabole pâle
+  plot(ctx, M, fMain, W2.xmin, W2.xmax, '#c7d2fe', 2.5);
+
+  // Verticale du milieu
+  ctx.save();
+  ctx.setLineDash([3, 7]);
+  ctx.strokeStyle = '#dbe3ef';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(M.X(m), 0); ctx.lineTo(M.X(m), h);
+  ctx.stroke();
+  ctx.restore();
+
+  // Triangle Δx / Δy
+  ctx.save();
+  ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(M.X(x1), M.Y(y1));
+  ctx.lineTo(M.X(x2), M.Y(y1));
+  ctx.lineTo(M.X(x2), M.Y(y2));
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 12px system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText('Δx', (M.X(x1) + M.X(x2)) / 2, M.Y(y1) + 7);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('Δy', M.X(x2) + 9, (M.Y(y1) + M.Y(y2)) / 2);
+
+  // Sécante
+  if (isFinite(T)) {
+    const sec = x => y1 + T * (x - x1);
+    plot(ctx, M, sec, W2.xmin, W2.xmax, '#e11d48', 2.6, [10, 6]);
+  }
+
+  // Points A et B
+  dot(ctx, M.X(x1), M.Y(y1), '#e11d48', 'A');
+  dot(ctx, M.X(x2), M.Y(y2), '#e11d48', 'B');
+}
+
+function updateReadout2() {
+  const { a, b, x1, x2 } = State;
+  const y1 = fMain(x1), y2 = fMain(x2);
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const T = Math.abs(dx) < 1e-6 ? NaN : dy / dx;
+  const T2 = a * (x1 + x2) + b;
+
+  $('out-x1').textContent = fmt(x1);
+  $('out-x2').textContent = fmt(x2);
+  $('v-dx').textContent = fmt(dx);
+  $('v-dy').textContent = fmt(dy);
+  $('v-t').textContent  = isFinite(T) ? fmt(T) : 'indéfini';
+  $('v-t2').textContent = fmt(T2);
+}
+
+/* ==================================================================
+   4. SCÈNE 3 — Le jeu du panier
+   ================================================================== */
+function render3() {
+  const { ctx, w, h } = fitCanvas($('cv3'));
+  if (w < 10 || h < 10) return;
+  const M = makeMapper(w, h, W3);
+
+  // Fond
+  const gy = M.Y(0);
+  ctx.fillStyle = '#fbfdff';
+  ctx.fillRect(0, 0, w, gy);
+  ctx.fillStyle = '#eef2f7';
+  ctx.fillRect(0, gy, w, h - gy);
+
+  drawGrid(ctx, w, h, M, W3, false);
+
+  const t = State.target;
+  const yc = fGame(t.x);
+  const ok = Math.abs(yc - t.y) < 0.4;
+
+  // Trajectoire « fantôme » (courbe complète)
+  plot(ctx, M, fGame, W3.xmin, W3.xmax, '#e6ecf5', 2, [6, 6]);
+  // Trajectoire réelle
+  plot(ctx, M, fGame, 0, W3.xmax, ok ? '#10b981' : '#4f46e5', 3.5);
+
+  // Écart vertical au niveau du cerceau
+  if (!ok) {
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(M.X(t.x), M.Y(t.y));
+    ctx.lineTo(M.X(t.x), M.Y(yc));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---- Le cerceau ----
+  const px = M.X(t.x), py = M.Y(t.y);
+  const r = 0.45 * M.sx;
+
+  // Panneau
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(px + r + 6, py - 1.3 * M.sy);
+  ctx.lineTo(px + r + 6, py + 0.45 * M.sy);
+  ctx.stroke();
+
+  // Filet
+  ctx.strokeStyle = ok ? 'rgba(16,185,129,.55)' : 'rgba(148,163,184,.5)';
+  ctx.lineWidth = 1.4;
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath();
+    ctx.moveTo(px + i * r / 2.4, py + 3);
+    ctx.lineTo(px + i * r / 4, py + 0.55 * M.sy);
+    ctx.stroke();
+  }
+
+  // Anneau
+  ctx.beginPath();
+  ctx.ellipse(px, py, r, r * 0.34, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = ok ? '#10b981' : '#f97316';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // ---- Le ballon ----
+  const bx = State.ball ? State.ball.x : 0;
+  const by = State.ball ? State.ball.y : 0;
+  const br = 0.28 * M.sx;
+  const grad = ctx.createRadialGradient(
+    M.X(bx) - br * 0.35, M.Y(by) - br * 0.35, br * 0.15,
+    M.X(bx), M.Y(by), br);
+  grad.addColorStop(0, '#fdba74');
+  grad.addColorStop(1, '#ea580c');
+  ctx.beginPath();
+  ctx.arc(M.X(bx), M.Y(by), br, 0, Math.PI * 2);
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = '#9a3412'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(M.X(bx) - br, M.Y(by));
+  ctx.quadraticCurveTo(M.X(bx), M.Y(by) - br * 0.8, M.X(bx) + br, M.Y(by));
+  ctx.strokeStyle = 'rgba(154,52,18,.5)'; ctx.lineWidth = 1.4; ctx.stroke();
+}
+
+function updateGameMsg() {
+  const t = State.target;
+  const yc = fGame(t.x);
+  const gap = yc - t.y;
+  const el = $('gameMsg');
+  if (Math.abs(gap) < 0.4) {
+    el.className = 'game-msg ok';
+    el.innerHTML = '🎉 <b>Panier réussi !</b> Bravo, la trajectoire traverse le cerceau.';
+  } else {
+    el.className = 'game-msg';
+    el.innerHTML = 'La trajectoire passe <b>' + fmt(Math.abs(gap)) +
+      '</b> unité' + (Math.abs(gap) > 1 ? 's' : '') + ' ' +
+      (gap > 0 ? 'au-dessus' : 'en dessous') + ' du cerceau. Continue !';
+  }
+}
+
+function newTarget() {
+  const tx = 4 + Math.round(Math.random() * 8) / 2;   // 4 → 8 par pas de 0,5
+  const ty = 2 + Math.round(Math.random() * 8) / 2;   // 2 → 6 par pas de 0,5
+  State.target = { x: tx, y: ty };
+  State.ball = { x: 0, y: 0 };
+  updateGameMsg();
+  render3();
+}
+
+/* --- Animation du ballon --- */
+function launchBall() {
+  if (State.animating) return;
+  State.animating = true;
+  $('btnShoot').disabled = true;
+
+  const start = performance.now();
+  const xMax = State.target.x * 1.35;
+  const duration = 900;                          // ms
+
+  function step(now) {
+    const p = clamp((now - start) / duration, 0, 1);
+    const eased = 1 - Math.pow(1 - p, 2);        // ease-out quadratique
+    const x = eased * xMax;
+    State.ball = { x, y: fGame(x) };
+    render3();
+
+    if (p < 1) {
+      animRaf = requestAnimationFrame(step);
+    } else {
+      State.animating = false;
+      $('btnShoot').disabled = false;
+    }
+  }
+  animRaf = requestAnimationFrame(step);
+}
+
+/* ==================================================================
+   5. ÉVÉNEMENTS
+   ================================================================== */
+
+/* --- Scène 1 --- */
+function bindScene1() {
+  const sa = $('sa'), sb = $('sb'), sc = $('sc');
+  const oa = $('out-a'), ob = $('out-b'), oc = $('out-c');
+
+  function refresh() {
+    State.a = parseFloat(sa.value);
+    State.b = parseFloat(sb.value);
+    State.c = parseFloat(sc.value);
+    oa.textContent = fmt(State.a);
+    ob.textContent = fmt(State.b);
+    oc.textContent = fmt(State.c);
+    updateReadout1();
+    render1();
+    // Met aussi à jour la scène 2 (dépend de a, b, c)
+    updateReadout2();
+    render2();
+  }
+  sa.addEventListener('input', refresh);
+  sb.addEventListener('input', refresh);
+  sc.addEventListener('input', refresh);
+  refresh();
+}
+
+/* --- Scène 2 --- */
+function bindScene2() {
+  const sx1 = $('sx1'), sx2 = $('sx2'), lk = $('lockMid');
+  const ox1 = $('out-x1'), ox2 = $('out-x2');
+
+  function refresh() {
+    State.x1 = parseFloat(sx1.value);
+    State.x2 = parseFloat(sx2.value);
+    ox1.textContent = fmt(State.x1);
+    ox2.textContent = fmt(State.x2);
+    updateReadout2();
+    render2();
+  }
+
+  sx1.addEventListener('input', () => {
+    if (lockedEnabled && lockedMid !== null) {
+      const newX2 = clamp(2 * lockedMid - parseFloat(sx1.value), -6, 6);
+      sx2.value = newX2;
+    }
+    refresh();
+  });
+  sx2.addEventListener('input', () => {
+    if (lockedEnabled && lockedMid !== null) {
+      const newX1 = clamp(2 * lockedMid - parseFloat(sx2.value), -6, 6);
+      sx1.value = newX1;
+    }
+    refresh();
+  });
+  lk.addEventListener('change', () => {
+    lockedEnabled = lk.checked;
+    lockedMid = lockedEnabled ? (State.x1 + State.x2) / 2 : null;
+    refresh();
+  });
+
+  /* ---- Glisser-déposer sur le canvas ---- */
+  const cv = $('cv2');
+  let dragWhich = null;
+  const HIT_RADIUS = 22;                          // en pixels écran
+
+  function pointerPos(e) {
+    const rect = cv.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    const rect = cv.getBoundingClientRect();
+    const M = makeMapper(rect.width, rect.height, W2);
+    const p = pointerPos(e);
+    const y1 = fMain(State.x1), y2 = fMain(State.x2);
+    const dA = Math.hypot(p.x - M.X(State.x1), p.y - M.Y(y1));
+    const dB = Math.hypot(p.x - M.X(State.x2), p.y - M.Y(y2));
+    if (Math.min(dA, dB) > HIT_RADIUS) return;
+
+    dragWhich = dA <= dB ? 'x1' : 'x2';
+    cv.setPointerCapture(e.pointerId);
+    cv.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  cv.addEventListener('pointermove', e => {
+    if (!dragWhich) return;
+    const rect = cv.getBoundingClientRect();
+    const M = makeMapper(rect.width, rect.height, W2);
+    const p = pointerPos(e);
+    let x = clamp(M.invX(p.x), -6, 6);
+    x = Math.round(x * 4) / 4;                    // pas de 0,25
+
+    if (dragWhich === 'x1') {
+      sx1.value = x;
+      if (lockedEnabled && lockedMid !== null) {
+        const newX2 = clamp(2 * lockedMid - x, -6, 6);
+        sx2.value = Math.round(newX2 * 4) / 4;
+      }
+    } else {
+      sx2.value = x;
+      if (lockedEnabled && lockedMid !== null) {
+        const newX1 = clamp(2 * lockedMid - x, -6, 6);
+        sx1.value = Math.round(newX1 * 4) / 4;
+      }
+    }
+    refresh();
+  });
+
+  function endDrag(e) {
+    if (!dragWhich) return;
+    dragWhich = null;
+    cv.classList.remove('dragging');
+    try { cv.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+
+  refresh();
+}
+
+/* --- Scène 3 --- */
+function bindScene3() {
+  const ga = $('ga'), gb = $('gb');
+  const oa = $('out-ga'), ob = $('out-gb');
+
+  function refresh() {
+    State.gameA = parseFloat(ga.value);
+    State.gameB = parseFloat(gb.value);
+    oa.textContent = fmt(State.gameA);
+    ob.textContent = fmt(State.gameB);
+    if (!State.animating) {
+      // Remet le ballon au point de départ quand on touche aux réglages
+      State.ball = { x: 0, y: 0 };
+    }
+    updateGameMsg();
+    render3();
+  }
+  ga.addEventListener('input', refresh);
+  gb.addEventListener('input', refresh);
+
+  $('btnNew').addEventListener('click', () => {
+    if (State.animating) return;
+    newTarget();
+  });
+  $('btnShoot').addEventListener('click', launchBall);
+
+  refresh();
+  newTarget();
+}
+
+/* ==================================================================
+   6. RESIZE (debounce léger)
+   ================================================================== */
+let resizeTimer = 0;
+function handleResize() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    render1();
+    render2();
+    render3();
+  }, 80);
+}
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', handleResize);
+
+/* ==================================================================
+   7. INITIALISATION
+   ================================================================== */
+function initAll() {
+  bindScene1();
+  bindScene2();
+  bindScene3();
+  // Double rendu : un immédiat, un après que MathJax ait fini de composer
+  requestAnimationFrame(() => {
+    render1(); render2(); render3();
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAll);
+} else {
+  initAll();
+}
+
+// Re-rendu après le chargement complet (polices + MathJax)
+window.addEventListener('load', () => {
+  setTimeout(() => { render1(); render2(); render3(); }, 150);
+});
+
+// Si MathJax est prêt, on redessine une fois de plus
+if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+  MathJax.startup.promise.then(() => {
+    render1(); render2(); render3();
+  });
+}
+
+})();
+</script>
+
+</body>
+</html>

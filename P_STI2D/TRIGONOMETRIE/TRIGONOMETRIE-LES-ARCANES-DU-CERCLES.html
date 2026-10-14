@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les Arcanes du Cercle &#8212; Qu&#234;te Trigonom&#233;trique</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+    startup: { typeset: false }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#fdfbf3; --bg-grad-2:#efe6cc;
+  --panel:#ffffff; --panel2:#fbf7ea;
+  --border:#d8cba3; --border-soft:#e8dec2;
+  --gold:#a67c00; --gold-dark:#7a5a00; --gold-light:#c9a227;
+  --accent:#0f6b8a; --accent-light:#1d8fb8;
+  --text:#2b241a; --text-soft:#4a3f2c; --muted:#7a6c50;
+  --ok:#1c7a3d; --ok-bg:#e6f6ea;
+  --err:#a82020; --err-bg:#fbeaea;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{
+  font-family:'EB Garamond',Georgia,serif;
+  background:radial-gradient(ellipse at top,#fffdf6 0%,var(--bg) 45%,var(--bg-grad-2) 100%);
+  color:var(--text);min-height:100vh;line-height:1.65;
+  padding:22px 12px 60px;
+}
+#app{max-width:920px;margin:0 auto}
+header{text-align:center;margin-bottom:26px}
+h1{font-family:'Cinzel',serif;font-size:clamp(1.6rem,4.5vw,2.6rem);
+  color:var(--gold-dark);letter-spacing:2px;
+  text-shadow:0 1px 0 #fff,0 2px 6px rgba(166,124,0,.15);margin-bottom:8px;}
+.subtitle{color:var(--muted);font-style:italic;font-size:1.05rem;margin-bottom:20px}
+.progress-bar{height:10px;background:#ece2c4;border:1px solid var(--border);
+  border-radius:6px;overflow:hidden;margin-bottom:6px;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);}
+.progress-fill{height:100%;width:0%;
+  background:linear-gradient(90deg,#c9a227,var(--gold),var(--gold-dark));transition:width .5s ease;}
+.progress-text{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold-dark);
+  letter-spacing:1.5px;text-align:right;}
+section{background:var(--panel);border:1px solid var(--border-soft);
+  border-radius:10px;padding:22px 24px;margin-bottom:20px;
+  box-shadow:0 2px 10px rgba(122,90,0,.07),0 8px 26px rgba(122,90,0,.05);}
+section.story-panel{border-left:4px solid var(--gold);
+  background:linear-gradient(135deg,#fffbef 0%,#fdf6e2 100%);}
+section.story-panel h2{font-family:'Cinzel',serif;color:var(--gold-dark);
+  font-size:1.35rem;margin-bottom:12px;letter-spacing:1px;}
+#storyText{font-size:1.08rem;color:var(--text-soft)}
+#storyText em{color:var(--gold-dark);font-style:italic}
+.canvas-panel{padding:14px;background:#fbf6e6;border:1px solid var(--border-soft)}
+#mainCanvas{display:block;width:100%;height:auto;aspect-ratio:5/4;
+  border-radius:6px;background:#fffbee;border:1px solid var(--border-soft);}
+
+.composer-panel{
+  border-left:4px solid var(--gold-light);
+  background:linear-gradient(135deg,#fdf6e2,#fbf7ea);
+  border-radius:10px;padding:18px 20px;margin-bottom:20px;
+  border:1px solid var(--border-soft);border-left-width:4px;
+}
+.composer-panel h4{font-family:'Cinzel',serif;color:var(--gold-dark);
+  font-size:1.05rem;letter-spacing:1px;margin-bottom:6px;}
+.composer-hint{font-size:.92rem;color:var(--muted);font-style:italic;margin-bottom:14px;line-height:1.5;}
+.composer-hint strong{color:var(--gold-dark);font-style:normal;}
+.composer-sub{margin-bottom:14px}
+.composer-sub:last-child{margin-bottom:0}
+.composer-label{font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold-dark);
+  letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:center;}
+.composer-count{font-family:'EB Garamond',Georgia,serif;font-size:.82rem;
+  color:var(--muted);font-style:italic;letter-spacing:0;text-transform:none;}
+.frag-bank{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:#fff;
+  border:1px dashed var(--border);border-radius:8px;min-height:48px;}
+.frag-bank.empty::before{content:"(tous les fragments ont \0000e9t\0000e9  plac\0000e9s dans votre raisonnement)";
+  color:var(--muted);font-style:italic;font-size:.88rem;}
+.frag{display:inline-flex;align-items:center;padding:6px 12px;border-radius:16px;
+  font-size:.9rem;cursor:pointer;transition:.15s;border:1.5px solid var(--border);
+  background:#fff;color:var(--text);font-family:inherit;text-align:left;line-height:1.3;}
+.frag:hover{border-color:var(--gold);background:#fdf6dd;transform:translateY(-1px)}
+.frag:active{transform:translateY(0)}
+.frag-zone{min-height:70px;padding:10px;background:#fff;border:1px solid var(--border);
+  border-radius:8px;display:flex;flex-direction:column;gap:6px;}
+.frag-zone.empty::before{
+  content:"Cliquez sur les fragments de la banque pour construire ici votre raisonnement, puis glissez-les ou utilisez \002191/\002193  pour les ordonner.";
+  color:var(--muted);font-style:italic;font-size:.9rem;padding:4px;line-height:1.4;}
+.frag-chosen{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:#fdf6dd;border:1.5px solid var(--border-soft);border-radius:6px;
+  font-size:.92rem;cursor:grab;transition:.15s;user-select:none;line-height:1.35;}
+.frag-chosen:hover{border-color:var(--gold-light)}
+.frag-chosen:focus{outline:2px solid var(--accent);outline-offset:2px}
+.frag-chosen.dragging{opacity:.35;cursor:grabbing}
+.frag-chosen.drag-over{border-color:var(--gold);background:#fdf0d5;transform:scale(1.01);}
+.drag-handle{color:var(--gold-dark);font-weight:700;font-size:1.1rem;
+  user-select:none;cursor:grab;padding:0 2px;}
+.frag-text{flex:1;line-height:1.35}
+.frag-btn{background:transparent;border:1px solid var(--border-soft);
+  color:var(--text-soft);font-size:.85rem;width:26px;height:26px;border-radius:5px;
+  cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;
+  transition:.12s;flex-shrink:0;}
+.frag-btn:hover{background:#fdf0d5;border-color:var(--gold-light)}
+.frag-remove{background:transparent;border:none;color:var(--err);font-size:1.25rem;
+  cursor:pointer;padding:0 6px;line-height:1;border-radius:4px;transition:.12s;flex-shrink:0;}
+.frag-remove:hover{background:rgba(168,32,32,.12)}
+.frag-relevant{background:#e6f6ea !important;border-color:var(--ok) !important;}
+.frag-distractor{background:#fbeaea !important;border-color:var(--err) !important;
+  text-decoration:line-through;opacity:.7;}
+.frag-error{background:#fbeaea !important;border-color:var(--err) !important;}
+.frag-error .frag-text{text-decoration:line-through;}
+.feedback ul,.feedback ol{margin:8px 0 12px 22px}
+.feedback li{margin-bottom:9px;line-height:1.5}
+.feedback li em{font-style:normal;font-weight:600}
+.composer-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+.composer-actions button{font-family:'EB Garamond',Georgia,serif;font-size:.85rem;
+  padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;
+  color:var(--muted);cursor:pointer;transition:.12s;}
+.composer-actions button:hover{color:var(--gold-dark);border-color:var(--gold-light)}
+
+.question-panel{border-left:4px solid var(--accent-light)}
+.question-text{font-size:1.15rem;margin-bottom:18px;color:var(--text)}
+.answer-zone{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.option{background:var(--panel2);border:1.5px solid var(--border);
+  border-radius:8px;padding:13px 18px;cursor:pointer;color:var(--text);
+  font-family:inherit;font-size:1.05rem;text-align:left;transition:.18s;
+  display:flex;align-items:center;gap:10px;}
+.option:hover{border-color:var(--accent-light);background:#f6eed5}
+.option.selected{border-color:var(--accent);background:#eaf4f8;
+  box-shadow:0 0 0 2px rgba(15,107,138,.15);}
+.option.correct{border-color:var(--ok);background:var(--ok-bg);
+  box-shadow:0 0 0 2px rgba(28,122,61,.15);}
+.option.wrong{border-color:var(--err);background:var(--err-bg)}
+.option .letter{font-family:'Cinzel',serif;color:var(--gold-dark);
+  font-weight:700;min-width:22px;}
+.option.disabled{pointer-events:none;opacity:.92}
+.feedback{padding:12px 16px;border-radius:8px;font-size:1.02rem;
+  margin-bottom:14px;display:none;}
+.feedback.show{display:block}
+.feedback.ok{background:var(--ok-bg);border-left:3px solid var(--ok);color:#14532d}
+.feedback.err{background:var(--err-bg);border-left:3px solid var(--err);color:#7f1d1d}
+.attempts{font-size:.92rem;color:var(--muted);font-style:italic;margin-bottom:12px;min-height:20px}
+.buttons{display:flex;flex-wrap:wrap;gap:12px}
+button.action{font-family:'Cinzel',serif;letter-spacing:1.5px;
+  padding:12px 26px;border-radius:8px;border:none;cursor:pointer;
+  font-size:.95rem;font-weight:700;transition:.18s;}
+#validateBtn{background:linear-gradient(135deg,#c9a227,var(--gold));color:#fff8e0;
+  box-shadow:0 2px 6px rgba(122,90,0,.25);}
+#validateBtn:hover{box-shadow:0 4px 12px rgba(122,90,0,.35);transform:translateY(-1px)}
+#solutionBtn{background:#ffffff;border:1.5px solid var(--accent);color:var(--accent)}
+#solutionBtn:hover{background:#eaf4f8}
+#nextBtn{background:linear-gradient(135deg,var(--accent),var(--accent-light));
+  color:#ffffff;box-shadow:0 2px 6px rgba(15,107,138,.25);}
+#nextBtn:hover{box-shadow:0 4px 12px rgba(15,107,138,.35);transform:translateY(-1px)}
+.hidden{display:none !important}
+.solution-panel{border-left:4px solid var(--gold-light);
+  background:linear-gradient(135deg,#fffbee,#fdf6e2);animation:fadeIn .5s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.solution-panel h3{font-family:'Cinzel',serif;color:var(--gold-dark);
+  margin-bottom:14px;font-size:1.2rem;letter-spacing:1px;}
+#solutionContent{font-size:1.03rem;color:var(--text-soft)}
+#solutionContent p{margin-bottom:10px}
+#solutionContent strong{color:var(--gold-dark)}
+#solutionContent ul{margin:8px 0 8px 22px}
+#solutionContent .keypoint{background:#fdf6dd;border-left:3px solid var(--gold);
+  padding:10px 14px;border-radius:6px;margin:12px 0;color:var(--text);}
+footer{text-align:center;margin-top:36px;color:var(--muted);font-size:.85rem;font-style:italic}
+mjx-container{color:var(--text) !important}
+#loadError{background:#fbeaea;border-left:4px solid var(--err);padding:14px 18px;
+  border-radius:8px;color:#7f1d1d;margin-bottom:20px}
+@media(max-width:600px){
+  section{padding:16px}
+  .question-text{font-size:1rem}
+  .option{font-size:.98rem;padding:11px 14px}
+  .frag{font-size:.85rem;padding:5px 10px}
+  .frag-chosen{font-size:.88rem;padding:7px 8px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="loadError" class="hidden"></div>
+
+  <header>
+    <h1>&#10022; Les Arcanes du Cercle &#10022;</h1>
+    <p class="subtitle">Une qu&#234;te en neuf &#233;preuves pour percer les secrets de la trigonom&#233;trie</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">&#201;preuve I / IX</div>
+  </header>
+
+  <main>
+    <section class="story-panel">
+      <h2 id="stepTitle">Chargement&#8230;</h2>
+      <div id="storyText"></div>
+    </section>
+
+    <section class="canvas-panel">
+      <canvas id="mainCanvas" width="800" height="640"></canvas>
+    </section>
+
+    <section class="question-panel">
+      <div class="composer-panel">
+        <h4>&#129513; Composez votre raisonnement</h4>
+        <p class="composer-hint">
+          Cliquez sur les phrases de votre choix pour construire votre raisonnement,
+          puis r&#233;ordonnez-les par <strong>glisser-d&#233;poser</strong> ou avec les boutons <strong>&#8593; &#8595;</strong>.
+          Attention : certains fragments sont des <strong>distracteurs</strong> (erreurs classiques).
+          Prenez le temps de <em>tout lire</em> et de comparer les fragments entre eux avant de choisir !
+          &#9888; L'analyse porte <strong>uniquement sur les phrases que vous avez choisies</strong> et sur leur ordre :
+          toute phrase non choisie est ignor&#233;e.
+          Votre r&#233;ponse ne sera accept&#233;e que si les phrases choisies sont correctes et bien ordonn&#233;es.
+          En cas d'erreur, <strong>chaque fragment fautif vous sera expliqu&#233; en d&#233;tail</strong>
+          pour que vous puissiez apprendre de vos erreurs.
+        </p>
+
+        <div class="composer-sub">
+          <div class="composer-label">
+            <span>Banque de fragments</span>
+            <span class="composer-count" id="bankCount"></span>
+          </div>
+          <div id="fragBank" class="frag-bank"></div>
+        </div>
+
+        <div class="composer-sub">
+          <div class="composer-label">
+            <span>Votre raisonnement</span>
+            <span class="composer-count" id="chosenCount"></span>
+          </div>
+          <div id="fragZone" class="frag-zone" role="list" aria-label="Votre raisonnement"></div>
+          <div class="composer-actions">
+            <button type="button" id="clearFrags">&#8634; Tout renvoyer dans la banque</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-text" id="questionText"></div>
+      <div class="answer-zone" id="answerZone"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="attempts" id="attemptsDisplay"></div>
+      <div class="buttons">
+        <button class="action" id="validateBtn">&#9876; Valider</button>
+        <button class="action hidden" id="solutionBtn">&#128220; R&#233;v&#233;ler la solution</button>
+        <button class="action hidden" id="nextBtn">&#10148; Continuer l'aventure</button>
+      </div>
+    </section>
+
+    <section class="solution-panel hidden" id="solutionPanel">
+      <h3>&#128220; R&#233;v&#233;lation du Grimoire</h3>
+      <div id="solutionContent"></div>
+    </section>
+  </main>
+
+  <footer>Que les &#233;toiles guident vos calculs, jeune arcaniste.</footer>
+</div>
+
+<noscript>
+  <p style="padding:20px;background:#fbeaea;color:#7f1d1d;text-align:center">
+    JavaScript doit &#234;tre activ&#233; pour lancer la qu&#234;te.
+  </p>
+</noscript>
+
+<script>
+/* ============================================================
+   OUTILS
+   ============================================================ */
+function gcd(a,b){ return b ? gcd(b, a % b) : Math.abs(a); }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function randChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){
+  a = a.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+const SPECIAL = [
+  {deg:0,n:0,d:1},{deg:30,n:1,d:6},{deg:45,n:1,d:4},
+  {deg:60,n:1,d:3},{deg:90,n:1,d:2},{deg:120,n:2,d:3},
+  {deg:135,n:3,d:4},{deg:150,n:5,d:6},{deg:180,n:1,d:1},
+  {deg:210,n:7,d:6},{deg:225,n:5,d:4},{deg:240,n:4,d:3},
+  {deg:270,n:3,d:2},{deg:300,n:5,d:3},{deg:315,n:7,d:4},
+  {deg:330,n:11,d:6}
+];
+
+function piLatex(n,d){
+  if(n===0) return '0';
+  let s=''; if(n<0){ s='-'; n=-n; }
+  if(d===1) return s + (n===1 ? '\\pi' : n+'\\pi');
+  if(n===1) return s + '\\frac{\\pi}{'+d+'}';
+  return s + '\\frac{'+n+'\\pi}{'+d+'}';
+}
+function simplify(n,d){
+  if(d<0){ n=-n; d=-d; }
+  const g = gcd(Math.abs(n), d) || 1;
+  return { n: n/g, d: d/g };
+}
+function reduceMod2pi(n,d){
+  while(n<0) n += 2*d;
+  while(n >= 2*d) n -= 2*d;
+  return simplify(n,d);
+}
+const COS_SIN = {
+  '0/1':['1','0'],'1/6':['\\frac{\\sqrt{3}}{2}','\\frac{1}{2}'],
+  '1/4':['\\frac{\\sqrt{2}}{2}','\\frac{\\sqrt{2}}{2}'],
+  '1/3':['\\frac{1}{2}','\\frac{\\sqrt{3}}{2}'],
+  '1/2':['0','1'],'2/3':['-\\frac{1}{2}','\\frac{\\sqrt{3}}{2}'],
+  '3/4':['-\\frac{\\sqrt{2}}{2}','\\frac{\\sqrt{2}}{2}'],
+  '5/6':['-\\frac{\\sqrt{3}}{2}','\\frac{1}{2}'],
+  '1/1':['-1','0'],'7/6':['-\\frac{\\sqrt{3}}{2}','-\\frac{1}{2}'],
+  '5/4':['-\\frac{\\sqrt{2}}{2}','-\\frac{\\sqrt{2}}{2}'],
+  '4/3':['-\\frac{1}{2}','-\\frac{\\sqrt{3}}{2}'],
+  '3/2':['0','-1'],'5/3':['\\frac{1}{2}','-\\frac{\\sqrt{3}}{2}'],
+  '7/4':['\\frac{\\sqrt{2}}{2}','-\\frac{\\sqrt{2}}{2}'],
+  '11/6':['\\frac{\\sqrt{3}}{2}','-\\frac{1}{2}']
+};
+function cosSin(n,d){
+  const r = reduceMod2pi(n,d);
+  return COS_SIN[r.n + '/' + r.d] || ['?','?'];
+}
+function piVal(n,d){ return n*Math.PI/d; }
+const MINUS = '\u2212';
+function piText(n,d){
+  if(n===0) return '0';
+  let s=''; if(n<0){ s=MINUS; n=-n; }
+  if(d===1) return s + (n===1 ? '\u03c0' : n+'\u03c0');
+  if(n===1) return s + '\u03c0/'+d;
+  return s + n+'\u03c0/'+d;
+}
+function degText(a){ return a + '\u00B0'; }
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+function setupCanvas(cv){
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 800;
+  const H = cv.clientHeight || Math.round(W*0.8);
+  cv.width = Math.round(W*dpr);
+  cv.height = Math.round(H*dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,W,H,cx:W/2,cy:H/2,R:Math.min(W,H)*0.38};
+}
+function arrow(ctx,x,y,dx,dy,size){
+  size = size || 9;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x-size*dx+size*0.5*dy, y-size*dy+size*0.5*dx);
+  ctx.lineTo(x-size*dx-size*0.5*dy, y-size*dy-size*0.5*dx);
+  ctx.closePath(); ctx.fill();
+}
+function drawBase(cv){
+  const s = setupCanvas(cv);
+  const {ctx,W,H,cx,cy,R} = s;
+  const grd = ctx.createRadialGradient(cx,cy,20,cx,cy,Math.max(W,H)/1.1);
+  grd.addColorStop(0,'#fffdf6'); grd.addColorStop(1,'#f3ead0');
+  ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(122,90,0,.08)'; ctx.lineWidth=1;
+  for(let i=-3;i<=3;i++){
+    if(i===0) continue;
+    const gx = cx + i*R/1.5, gy = cy + i*R/1.5;
+    ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke();
+  }
+  ctx.strokeStyle='#5c4a24'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,H); ctx.lineTo(cx,0); ctx.stroke();
+  ctx.fillStyle='#5c4a24';
+  arrow(ctx,W-12,cy,1,0); arrow(ctx,cx,12,0,-1);
+  ctx.font='italic 18px Georgia';
+  ctx.fillText('i',W-28,cy-10); ctx.fillText('j',cx+12,26);
+  ctx.font='italic 16px Georgia'; ctx.fillText('O',cx-18,cy+20);
+  ctx.strokeStyle='#a67c00'; ctx.lineWidth=2.2;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,2*Math.PI); ctx.stroke();
+  ctx.strokeStyle='rgba(166,124,0,.35)'; ctx.lineWidth=1;
+  for(let k=0;k<12;k++){
+    const a = k*Math.PI/6;
+    ctx.beginPath();
+    ctx.moveTo(cx+R*0.97*Math.cos(a), cy-R*0.97*Math.sin(a));
+    ctx.lineTo(cx+R*1.03*Math.cos(a), cy-R*1.03*Math.sin(a));
+    ctx.stroke();
+  }
+  return s;
+}
+function drawPoint(ctx,s,theta,label,color){
+  color = color || '#0f6b8a';
+  const {cx,cy,R} = s;
+  const x = cx + R*Math.cos(theta), y = cy - R*Math.sin(theta);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x,y,6,0,2*Math.PI); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.strokeStyle = color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+  if(label){
+    ctx.fillStyle = color; ctx.font='bold 16px Georgia';
+    const offx = Math.cos(theta)>=0 ? 12 : -46;
+    const offy = Math.sin(theta)>=0 ? -10 : 22;
+    ctx.fillText(label, x+offx, y+offy);
+  }
+}
+function drawArc(ctx,s,theta,label,color,radiusFactor){
+  color = color || '#7a5a00';
+  radiusFactor = radiusFactor || 0.28;
+  const {cx,cy,R} = s;
+  const r = R*radiusFactor;
+  ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.beginPath();
+  if(theta>=0) ctx.arc(cx,cy,r,0,-theta,true);
+  else ctx.arc(cx,cy,r,0,-theta,false);
+  ctx.stroke();
+  if(label){
+    const mid = theta/2;
+    ctx.fillStyle = color; ctx.font='italic 15px Georgia';
+    ctx.fillText(label, cx + (r+16)*Math.cos(mid) - 5, cy - (r+16)*Math.sin(mid) + 5);
+  }
+}
+function drawProjections(ctx,s,theta,color){
+  color = color || 'rgba(15,107,138,.55)';
+  const {cx,cy,R} = s;
+  const x = cx + R*Math.cos(theta), y = cy - R*Math.sin(theta);
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(cx,y); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/* ============================================================
+   BANQUES DE FRAGMENTS \u2014 ENRICHIES
+   Chaque fragment porte un champ \u00ab why \u00bb qui explique :
+   - son r\u00f4le dans le raisonnement (fragments pertinents),
+   - l'erreur qu'il repr\u00e9sente et la correction (distracteurs).
+   ============================================================ */
+function fragLibStep1(){
+  return [
+    /* Pertinents */
+    {text:'je sais que 180\u00b0 correspond \u00e0 \u03c0 radians', relevant:true,
+     why:"c'est la correspondance fondamentale entre degr\u00e9s et radians : elle donne le sens de la conversion."},
+    {text:'je pose la proportion \u03c0/180', relevant:true,
+     why:'ce facteur de conversion transforme des degr\u00e9s en radians.'},
+    {text:'je multiplie l\'angle en degr\u00e9s par \u03c0/180', relevant:true,
+     why:'appliquer ce facteur \u00e0 la mesure en degr\u00e9s donne la mesure en radians.'},
+    {text:'j\'obtiens une fraction avec \u03c0 au num\u00e9rateur', relevant:true,
+     why:'le r\u00e9sultat est de la forme (a\u00b7\u03c0)/180, pr\u00eat \u00e0 \u00eatre simplifi\u00e9.'},
+    {text:'je simplifie la fraction par le PGCD', relevant:true,
+     why:'simplifier par le PGCD du nombre de degr\u00e9s et de 180 donne la fraction irr\u00e9ductible.'},
+    {text:'j\'obtiens la mesure exacte en radians', relevant:true,
+     why:'la forme simplifi\u00e9e avec le symbole \u03c0 est la mesure exacte attendue.'},
+    /* Distracteurs */
+    {text:'je multiplie par 180/\u03c0', relevant:false,
+     why:"ce facteur convertit dans l'autre sens (radians \u2192 degr\u00e9s). Pour passer de degr\u00e9s \u00e0 radians, il faut \u03c0/180."},
+    {text:'je divise l\'angle par 360', relevant:false,
+     why:'360 correspond au tour complet, mais la correspondance \u00e0 utiliser est 180\u00b0 \u2194 \u03c0 rad.'},
+    {text:'je convertis le r\u00e9sultat en degr\u00e9s', relevant:false,
+     why:'on cherche justement une mesure en radians : reconvertir en degr\u00e9s annulerait la conversion.'},
+    {text:'j\'ajoute \u03c0/2 au r\u00e9sultat', relevant:false,
+     why:'ajouter \u03c0/2 modifie l\'angle (un quart de tour) ; une conversion d\'unit\u00e9 ne change jamais l\'angle.'},
+    {text:'je multiplie l\'angle par 2\u03c0', relevant:false,
+     why:'2\u03c0 est la mesure d\'un tour complet en radians, pas un facteur de conversion.'},
+    {text:'j\'utilise la tangente de l\'angle', relevant:false,
+     why:'la tangente est un rapport trigonom\u00e9trique : elle n\'intervient pas dans une conversion d\'unit\u00e9s.'},
+    {text:'je remplace \u03c0 par 3,14', relevant:false,
+     why:'3,14 n\'est qu\'une valeur approch\u00e9e : la r\u00e9ponse demand\u00e9e doit rester exacte, avec le symbole \u03c0.'},
+    {text:'je prends l\'oppos\u00e9 de l\'angle', relevant:false,
+     why:'changer le signe donne l\'angle oppos\u00e9, ce n\'est pas une conversion de degr\u00e9s en radians.'},
+    {text:'je divise l\'angle par \u03c0', relevant:false,
+     why:'pour convertir il faut multiplier par \u03c0/180, pas diviser par \u03c0.'},
+    {text:'je multiplie le num\u00e9rateur par 2', relevant:false,
+     why:'cela d\u00e9forme la fraction : on simplifie par le PGCD, on ne multiplie rien.'}
+  ];
+}
+function fragLibStep2(){
+  return [
+    /* Pertinents */
+    {text:'je cherche un r\u00e9el qui rep\u00e8re le m\u00eame point du cercle', relevant:true,
+     why:'objectif : trouver un nombre qui donne la m\u00eame position sur le cercle.'},
+    {text:'deux r\u00e9els rep\u00e8rent le m\u00eame point s\'ils diff\u00e8rent d\'un multiple de 2\u03c0', relevant:true,
+     why:"un tour complet (2\u03c0) ram\u00e8ne exactement au m\u00eame point : c'est le crit\u00e8re d\u00e9cisif."},
+    {text:'c\'est-\u00e0-dire \u03b8\' = \u03b8 + 2k\u03c0 avec k entier relatif', relevant:true,
+     why:'forme g\u00e9n\u00e9rale : on ajoute ou on retranche k tours complets, k \u00e9tant un entier.'},
+    {text:'j\'ajoute ou je retranche 2\u03c0 \u00e0 l\'angle de d\u00e9part', relevant:true,
+     why:'faire un tour de plus ou de moins ne change pas le point rep\u00e9r\u00e9.'},
+    {text:'le point M reste au m\u00eame endroit sur le cercle', relevant:true,
+     why:'v\u00e9rification visuelle sur le cercle : M ne bouge pas quand on ajoute des tours complets.'},
+    {text:'je compare avec les valeurs propos\u00e9es', relevant:true,
+     why:"on teste chaque proposition : seule celle qui diff\u00e8re de l'angle de d\u00e9part d'un multiple de 2\u03c0 convient."},
+    /* Distracteurs */
+    {text:'ils diff\u00e8rent d\'un multiple de \u03c0', relevant:false,
+     why:'\u03c0 est un demi-tour : il conduit au point oppos\u00e9, pas au m\u00eame point. Il faut un multiple de 2\u03c0.'},
+    {text:'j\'ajoute seulement \u03c0 \u00e0 l\'angle', relevant:false,
+     why:'ajouter \u03c0 donne le point diam\u00e9tralement oppos\u00e9 (sym\u00e9trie centrale), pas le m\u00eame point.'},
+    {text:'je multiplie l\'angle par 2\u03c0', relevant:false,
+     why:'on ajoute des multiples de 2\u03c0, on ne multiplie pas l\'angle par 2\u03c0 : ce serait un autre angle.'},
+    {text:'je prends l\'oppos\u00e9 de l\'angle', relevant:false,
+     why:'\u2212\u03b8 rep\u00e8re le point sym\u00e9trique par rapport \u00e0 l\'axe des abscisses : ce n\'est pas le m\u00eame point en g\u00e9n\u00e9ral.'},
+    {text:'je passe en degr\u00e9s pour comparer', relevant:false,
+     why:'inutile et source d\'erreurs : la congruence modulo 2\u03c0 se lit directement en radians.'},
+    {text:'j\'inverse num\u00e9rateur et d\u00e9nominateur', relevant:false,
+     why:'inverser la fraction change compl\u00e8tement la valeur de l\'angle, pas ses tours complets.'},
+    {text:'je change le signe du cosinus', relevant:false,
+     why:'le cosinus n\'intervient pas ici : on compare des mesures d\'angles, pas des valeurs de cosinus.'},
+    {text:'je fais un demi-tour suppl\u00e9mentaire', relevant:false,
+     why:'un demi-tour (+\u03c0) conduit au point oppos\u00e9 ; il faut des tours complets (2\u03c0).'},
+    {text:'je soustrais \u03b8 \u00e0 2\u03c0', relevant:false,
+     why:'2\u03c0 \u2212 \u03b8 rep\u00e8re le point sym\u00e9trique de M par rapport \u00e0 l\'axe (O, i) : ce n\'est pas M en g\u00e9n\u00e9ral.'},
+    {text:'je remplace \u03c0 par 180', relevant:false,
+     why:'\u03c0 n\'est pas \u00ab \u00e9gal \u00e0 180 \u00bb : ce sont deux unit\u00e9s diff\u00e9rentes (180\u00b0 \u2194 \u03c0 rad).'}
+  ];
+}
+function fragLibStep3(){
+  return [
+    /* Pertinents */
+    {text:'la mesure principale appartient \u00e0 ]\u2212\u03c0 ; \u03c0]', relevant:true,
+     why:"d\u00e9finition \u00e0 appliquer : c'est l'unique mesure de l'angle dans l'intervalle ]\u2212\u03c0 ; \u03c0]."},
+    {text:'je cherche la mesure la plus proche de 0', relevant:true,
+     why:'la mesure principale s\'obtient en retirant les tours complets pour se rapprocher de 0.'},
+    {text:'je retranche 2\u03c0 (ou j\'ajoute 2\u03c0) au besoin', relevant:true,
+     why:'on \u00e9limine les tours complets : cela ne change pas l\'angle orient\u00e9.'},
+    {text:'je r\u00e9p\u00e8te jusqu\'\u00e0 tomber dans l\'intervalle', relevant:true,
+     why:'on it\u00e8re tant que la mesure sort de ]\u2212\u03c0 ; \u03c0].'},
+    {text:'la mesure trouv\u00e9e est unique', relevant:true,
+     why:"l'unicit\u00e9 justifie qu'on parle de LA mesure principale (et non d'une parmi d'autres)."},
+    {text:'c\'est la mesure principale de \u03b8', relevant:true,
+     why:'conclusion : la valeur obtenue est la mesure principale demand\u00e9e.'},
+    /* Distracteurs */
+    {text:'la mesure principale appartient \u00e0 [0 ; 2\u03c0[', relevant:false,
+     why:"c'est un autre intervalle possible pour les mesures, mais la mesure principale est d\u00e9finie dans ]\u2212\u03c0 ; \u03c0]."},
+    {text:'j\'ajoute \u03c0 \u00e0 l\'angle', relevant:false,
+     why:'ajouter \u03c0 change l\'angle (un demi-tour) ; on ajoute ou retranche 2\u03c0, jamais \u03c0.'},
+    {text:'je divise l\'angle par 2', relevant:false,
+     why:'diviser par 2 donne un angle diff\u00e9rent, pas sa mesure principale.'},
+    {text:'je multiplie l\'angle par 2\u03c0', relevant:false,
+     why:'aucun sens ici : on retranche (ou ajoute) des multiples de 2\u03c0, on ne multiplie pas.'},
+    {text:'je prends la valeur absolue de l\'angle', relevant:false,
+     why:'la valeur absolue donne l\'angle sym\u00e9trique ; la mesure principale peut \u00eatre n\u00e9gative.'},
+    {text:'je choisis la mesure la plus grande', relevant:false,
+     why:'au contraire : on se rapproche de 0 en retirant les tours complets.'},
+    {text:'je remplace \u03c0 par 180 pour simplifier', relevant:false,
+     why:'on m\u00e9langerait les unit\u00e9s : tout le raisonnement reste en radians.'},
+    {text:'je divise par 2\u03c0', relevant:false,
+     why:'diviser par 2\u03c0 donne un nombre de tours, pas une mesure d\'angle.'},
+    {text:'je fais un demi-tour suppl\u00e9mentaire', relevant:false,
+     why:'un demi-tour est \u03c0 : il change l\'angle. Il faut des tours complets (2\u03c0).'},
+    {text:'je prends l\'oppos\u00e9 de l\'angle', relevant:false,
+     why:'\u2212\u03b8 est un autre angle (sym\u00e9trique), pas la mesure principale de \u03b8.'}
+  ];
+}
+function fragLibStep4(type){
+  if(type==='axeOi'){
+    return [
+      /* Pertinents */
+      {text:'la sym\u00e9trie d\'axe (O, i) est le miroir horizontal', relevant:true,
+       why:'premi\u00e8re \u00e9tape : identifier la transformation avant tout calcul.'},
+      {text:'elle agit sur l\'ordonn\u00e9e uniquement', relevant:true,
+       why:'un miroir horizontal ne change que la hauteur du point.'},
+      {text:'je garde l\'abscisse x inchang\u00e9e', relevant:true,
+       why:'la projection sur l\'axe des abscisses est conserv\u00e9e.'},
+      {text:'je change le signe de l\'ordonn\u00e9e y', relevant:true,
+       why:'le miroir renverse le haut et le bas : y devient \u2212y.'},
+      {text:'donc M\'(x ; \u2212y)', relevant:true,
+       why:'conclusion : coordonn\u00e9es de l\'image de M par cette sym\u00e9trie.'},
+      {text:'l\'angle \u03b8 devient \u2212\u03b8', relevant:true,
+       why:'sur le cercle, la sym\u00e9trie d\'axe (O, i) envoie \u03b8 sur \u2212\u03b8.'},
+      /* Distracteurs */
+      {text:'je change le signe de l\'abscisse x', relevant:false,
+       why:'ce serait l\'effet de la sym\u00e9trie d\'axe (O, j) ; ici l\'abscisse est conserv\u00e9e.'},
+      {text:'je permute x et y', relevant:false,
+       why:'une permutation des coordonn\u00e9es n\'est pas une sym\u00e9trie axiale.'},
+      {text:'je change les deux signes \u00e0 la fois', relevant:false,
+       why:'changer les deux signes \u00e0 la fois est la sym\u00e9trie centrale (rotation de 180\u00b0).'},
+      {text:'l\'angle devient \u03c0 \u2212 \u03b8', relevant:false,
+       why:'\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, j), pas \u00e0 celle d\'axe (O, i).'},
+      {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+       why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie de centre O.'},
+      {text:'je fais une rotation de 90\u00b0', relevant:false,
+       why:'une rotation de 90\u00b0 n\'est pas une sym\u00e9trie axiale : ce sont deux transformations diff\u00e9rentes.'},
+      {text:'je multiplie les coordonn\u00e9es par 2', relevant:false,
+       why:'une sym\u00e9trie conserve les distances : rien \u00e0 multiplier.'},
+      {text:'je garde l\'ordonn\u00e9e et je change l\'abscisse', relevant:false,
+       why:'c\'est l\'effet de la sym\u00e9trie d\'axe (O, j), pas de celle d\'axe (O, i).'},
+      {text:'l\'angle devient 2\u03c0 \u2212 \u03b8', relevant:false,
+       why:'2\u03c0 \u2212 \u03b8 n\'est qu\'une \u00e9criture non simplifi\u00e9e de \u2212\u03b8 modulo 2\u03c0 : la transformation s\'\u00e9nonce directement \u2212\u03b8.'},
+      {text:'je fais un demi-tour', relevant:false,
+       why:'un demi-tour correspond \u00e0 la sym\u00e9trie centrale, pas \u00e0 une sym\u00e9trie axiale.'}
+    ];
+  }
+  if(type==='axeOj'){
+    return [
+      /* Pertinents */
+      {text:'la sym\u00e9trie d\'axe (O, j) est le miroir vertical', relevant:true,
+       why:'premi\u00e8re \u00e9tape : identifier la transformation avant tout calcul.'},
+      {text:'elle agit sur l\'abscisse uniquement', relevant:true,
+       why:'un miroir vertical ne change que la position gauche/droite.'},
+      {text:'je garde l\'ordonn\u00e9e y inchang\u00e9e', relevant:true,
+       why:'la hauteur du point est conserv\u00e9e.'},
+      {text:'je change le signe de l\'abscisse x', relevant:true,
+       why:'le miroir renverse la gauche et la droite : x devient \u2212x.'},
+      {text:'donc M\'(\u2212x ; y)', relevant:true,
+       why:'conclusion : coordonn\u00e9es de l\'image de M par cette sym\u00e9trie.'},
+      {text:'l\'angle \u03b8 devient \u03c0 \u2212 \u03b8', relevant:true,
+       why:'sur le cercle, la sym\u00e9trie d\'axe (O, j) envoie \u03b8 sur \u03c0 \u2212 \u03b8.'},
+      /* Distracteurs */
+      {text:'je change le signe de l\'ordonn\u00e9e y', relevant:false,
+       why:'ce serait l\'effet de la sym\u00e9trie d\'axe (O, i) ; ici l\'ordonn\u00e9e est conserv\u00e9e.'},
+      {text:'je permute x et y', relevant:false,
+       why:'une permutation des coordonn\u00e9es n\'est pas une sym\u00e9trie axiale.'},
+      {text:'je change les deux signes \u00e0 la fois', relevant:false,
+       why:'changer les deux signes \u00e0 la fois est la sym\u00e9trie centrale (rotation de 180\u00b0).'},
+      {text:'l\'angle devient \u2212\u03b8', relevant:false,
+       why:'\u2212\u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+      {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+       why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie de centre O.'},
+      {text:'je garde l\'abscisse et je change l\'ordonn\u00e9e', relevant:false,
+       why:'c\'est l\'effet de la sym\u00e9trie d\'axe (O, i), pas de celle d\'axe (O, j).'},
+      {text:'je fais une rotation de 90\u00b0', relevant:false,
+       why:'une sym\u00e9trie axiale n\'est pas une rotation : ce sont des transformations diff\u00e9rentes.'},
+      {text:'je multiplie x par 2', relevant:false,
+       why:'une sym\u00e9trie conserve les distances : rien \u00e0 multiplier.'},
+      {text:'l\'angle devient 2\u03c0 \u2212 \u03b8', relevant:false,
+       why:'2\u03c0 \u2212 \u03b8 correspond (modulo 2\u03c0) \u00e0 \u2212\u03b8, c\'est-\u00e0-dire \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+      {text:'je fais un demi-tour', relevant:false,
+       why:'un demi-tour correspond \u00e0 la sym\u00e9trie centrale, pas \u00e0 une sym\u00e9trie axiale.'}
+    ];
+  }
+  return [
+    /* Pertinents */
+    {text:'la sym\u00e9trie de centre O est une sym\u00e9trie centrale', relevant:true,
+     why:'premi\u00e8re \u00e9tape : identifier la transformation \u2014 M, O et M\' sont align\u00e9s, avec OM\' = OM.'},
+    {text:'elle change les signes des deux coordonn\u00e9es', relevant:true,
+     why:'le point image est le \u00ab prolongement \u00bb de M \u00e0 travers O.'},
+    {text:'je change le signe de x', relevant:true,
+     why:'l\'abscisse de l\'image est l\'oppos\u00e9e de celle de M.'},
+    {text:'je change le signe de y', relevant:true,
+     why:'l\'ordonn\u00e9e de l\'image est l\'oppos\u00e9e de celle de M.'},
+    {text:'donc M\'(\u2212x ; \u2212y)', relevant:true,
+     why:'conclusion : coordonn\u00e9es de l\'image de M.'},
+    {text:'l\'angle \u03b8 devient \u03c0 + \u03b8', relevant:true,
+     why:'la sym\u00e9trie centrale ajoute un demi-tour \u00e0 l\'angle.'},
+    {text:'c\'est aussi une rotation de 180\u00b0', relevant:true,
+     why:'propri\u00e9t\u00e9 cl\u00e9 : sym\u00e9trie centrale = rotation de 180\u00b0 autour de O.'},
+    /* Distracteurs */
+    {text:'je garde x et je change y', relevant:false,
+     why:'ne changer qu\'une coordonn\u00e9e correspond \u00e0 une sym\u00e9trie axiale, pas centrale.'},
+    {text:'je garde y et je change x', relevant:false,
+     why:'l\u00e0 encore, un seul signe chang\u00e9 = sym\u00e9trie axiale, pas centrale.'},
+    {text:'je permute x et y', relevant:false,
+     why:'une permutation des coordonn\u00e9es n\'est pas une sym\u00e9trie centrale.'},
+    {text:'l\'angle devient \u2212\u03b8', relevant:false,
+     why:'\u2212\u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+    {text:'l\'angle devient \u03c0 \u2212 \u03b8', relevant:false,
+     why:'\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, j).'},
+    {text:'je multiplie les coordonn\u00e9es par 2', relevant:false,
+     why:'la sym\u00e9trie conserve les distances : les coordonn\u00e9es deviennent oppos\u00e9es, pas doubl\u00e9es.'},
+    {text:'je fais une rotation de 90\u00b0', relevant:false,
+     why:'la sym\u00e9trie centrale est une rotation de 180\u00b0, pas de 90\u00b0.'},
+    {text:'je ne change qu\'un seul signe', relevant:false,
+     why:'un seul signe chang\u00e9 caract\u00e9rise une sym\u00e9trie axiale ; la sym\u00e9trie centrale change les deux.'}
+  ];
+}
+function fragLibStep5(sens){
+  if(sens==='+'){
+    return [
+      /* Pertinents */
+      {text:'rotation de +90\u00b0 dans le sens direct', relevant:true,
+       why:'premi\u00e8re \u00e9tape : identifier la transformation (un quart de tour dans le sens trigonom\u00e9trique).'},
+      {text:'l\'axe (O, i) se transforme en axe (O, j)', relevant:true,
+       why:'un quart de tour direct envoie l\'axe horizontal sur l\'axe vertical.'},
+      {text:'la nouvelle abscisse est \u2212y', relevant:true,
+       why:'la projection sur (O, i) apr\u00e8s la rotation vient de l\'ancienne ordonn\u00e9e, chang\u00e9e de signe.'},
+      {text:'la nouvelle ordonn\u00e9e est x', relevant:true,
+       why:'la projection sur (O, j) apr\u00e8s la rotation vient de l\'ancienne abscisse.'},
+      {text:'donc M\'(\u2212y ; x)', relevant:true,
+       why:'conclusion : coordonn\u00e9es de l\'image de M.'},
+      {text:'l\'angle \u03b8 devient \u03b8 + \u03c0/2', relevant:true,
+       why:'ajouter \u03c0/2 = un quart de tour dans le sens direct.'},
+      /* Distracteurs */
+      {text:'la nouvelle abscisse est y', relevant:false,
+       why:'sans le changement de signe, on obtient l\'image d\'une rotation de \u221290\u00b0, pas de +90\u00b0.'},
+      {text:'la nouvelle ordonn\u00e9e est \u2212x', relevant:false,
+       why:'c\'est la formule de la rotation de \u221290\u00b0, pas de +90\u00b0.'},
+      {text:'je ne change ni x ni y', relevant:false,
+       why:'une rotation de 90\u00b0 d\u00e9place forc\u00e9ment le point (sauf le centre O).'},
+      {text:'c\'est une rotation de \u221290\u00b0', relevant:false,
+       why:'le sens direct (+90\u00b0) est le sens trigonom\u00e9trique ; \u221290\u00b0 serait le sens indirect.'},
+      {text:'c\'est une rotation de 180\u00b0', relevant:false,
+       why:'180\u00b0 correspond \u00e0 la sym\u00e9trie centrale, pas \u00e0 un quart de tour.'},
+      {text:'l\'angle devient \u03b8 \u2212 \u03c0/2', relevant:false,
+       why:'retrancher \u03c0/2 correspond \u00e0 une rotation de \u221290\u00b0.'},
+      {text:'l\'angle devient \u2212\u03b8', relevant:false,
+       why:'\u2212\u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+      {text:'je multiplie les coordonn\u00e9es par \u03c0', relevant:false,
+       why:'\u03c0 est une mesure d\'angle, pas un facteur sur les coordonn\u00e9es.'},
+      {text:'je divise les coordonn\u00e9es par 2', relevant:false,
+       why:'une rotation conserve les distances : rien \u00e0 diviser.'},
+      {text:'l\'angle devient \u03c0 \u2212 \u03b8', relevant:false,
+       why:'\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, j).'}
+    ];
+  }
+  return [
+    /* Pertinents */
+    {text:'rotation de \u221290\u00b0 dans le sens indirect', relevant:true,
+     why:'premi\u00e8re \u00e9tape : identifier la transformation (un quart de tour dans le sens des aiguilles d\'une montre).'},
+    {text:'la nouvelle abscisse est y', relevant:true,
+     why:'la projection sur (O, i) apr\u00e8s la rotation vient de l\'ancienne ordonn\u00e9e.'},
+    {text:'la nouvelle ordonn\u00e9e est \u2212x', relevant:true,
+     why:'la projection sur (O, j) apr\u00e8s la rotation vient de l\'ancienne abscisse, chang\u00e9e de signe.'},
+    {text:'donc M\'(y ; \u2212x)', relevant:true,
+     why:'conclusion : coordonn\u00e9es de l\'image de M.'},
+    {text:'l\'angle \u03b8 devient \u03b8 \u2212 \u03c0/2', relevant:true,
+     why:'retrancher \u03c0/2 = un quart de tour dans le sens indirect.'},
+    /* Distracteurs */
+    {text:'la nouvelle abscisse est \u2212y', relevant:false,
+     why:'c\'est la formule de la rotation de +90\u00b0, pas de \u221290\u00b0.'},
+    {text:'la nouvelle ordonn\u00e9e est x', relevant:false,
+     why:'c\'est la formule de la rotation de +90\u00b0, pas de \u221290\u00b0.'},
+    {text:'je ne change ni x ni y', relevant:false,
+     why:'une rotation de 90\u00b0 d\u00e9place forc\u00e9ment le point (sauf le centre O).'},
+    {text:'c\'est une rotation de +90\u00b0', relevant:false,
+     why:'le sens indirect est \u221290\u00b0, l\'oppos\u00e9 du sens trigonom\u00e9trique.'},
+    {text:'c\'est une rotation de 180\u00b0', relevant:false,
+     why:'180\u00b0 correspond \u00e0 la sym\u00e9trie centrale, pas \u00e0 un quart de tour.'},
+    {text:'l\'angle devient \u03b8 + \u03c0/2', relevant:false,
+     why:'ajouter \u03c0/2 correspond \u00e0 une rotation de +90\u00b0.'},
+    {text:'l\'angle devient \u2212\u03b8', relevant:false,
+     why:'\u2212\u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+    {text:'je multiplie les coordonn\u00e9es par \u22121', relevant:false,
+     why:'multiplier par \u22121 (changer les deux signes) = sym\u00e9trie centrale de 180\u00b0, pas une rotation de 90\u00b0.'},
+    {text:'je divise les coordonn\u00e9es par \u03c0', relevant:false,
+     why:'\u03c0 est une mesure d\'angle, pas un facteur sur les coordonn\u00e9es.'},
+    {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+     why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie de centre O.'}
+  ];
+}
+function fragLibStep6(){
+  return [
+    /* Pertinents */
+    {text:'le cercle trigonom\u00e9trique a pour rayon 1', relevant:true,
+     why:'sur un cercle de rayon 1, la longueur de l\'arc est exactement \u00e9gale \u00e0 la mesure de l\'angle en radians.'},
+    {text:'l\'angle doit \u00eatre exprim\u00e9 en radians', relevant:true,
+     why:'la formule longueur d\'arc = R\u00b7\u03b8 (et la lecture sur le cercle) exige \u03b8 en radians.'},
+    {text:'je convertis les degr\u00e9s en radians', relevant:true,
+     why:'indispensable avant tout calcul sur le cercle trigonom\u00e9trique.'},
+    {text:'j\'utilise la correspondance 180\u00b0 = \u03c0 rad', relevant:true,
+     why:'correspondance fondamentale pour la conversion.'},
+    {text:'je multiplie par \u03c0/180', relevant:true,
+     why:'facteur de conversion degr\u00e9s \u2192 radians.'},
+    {text:'je simplifie la fraction par le PGCD', relevant:true,
+     why:'obtenir la fraction irr\u00e9ductible, donc la mesure exacte.'},
+    {text:'j\'obtiens la mesure exacte en radians', relevant:true,
+     why:'cette mesure est aussi la longueur de l\'arc parcouru sur le cercle de rayon 1.'},
+    /* Distracteurs */
+    {text:'je multiplie par 180/\u03c0', relevant:false,
+     why:'facteur inverse : il convertit des radians en degr\u00e9s, l\'oppos\u00e9 de ce qu\'on veut.'},
+    {text:'le rayon du cercle vaut 2', relevant:false,
+     why:'faux : le cercle trigonom\u00e9trique a un rayon de 1 par d\u00e9finition.'},
+    {text:'je divise l\'angle par 2\u03c0', relevant:false,
+     why:'diviser par 2\u03c0 donne un nombre de tours, pas une mesure en radians.'},
+    {text:'je convertis finalement en degr\u00e9s', relevant:false,
+     why:'on veut des radians ; revenir aux degr\u00e9s annulerait la conversion.'},
+    {text:'je prends le cosinus de l\'angle', relevant:false,
+     why:'le cosinus donne une abscisse, pas la longueur de l\'arc.'},
+    {text:'je mesure la longueur du rayon', relevant:false,
+     why:'le rayon est connu : il vaut 1, rien \u00e0 mesurer.'},
+    {text:'je remplace \u03c0 par 3', relevant:false,
+     why:'\u03c0 \u2248 3,14 : remplacer \u03c0 par une valeur approch\u00e9e fait perdre l\'exactitude demand\u00e9e.'},
+    {text:'j\'ajoute \u03c0 au r\u00e9sultat', relevant:false,
+     why:'ajouter \u03c0 modifie l\'angle d\'un demi-tour sans aucune raison.'}
+  ];
+}
+function fragLibStep7(){
+  return [
+    /* Pertinents */
+    {text:'sur le cercle trigonom\u00e9trique, M = (cos \u03b8 ; sin \u03b8)', relevant:true,
+     why:'d\u00e9finition : les coordonn\u00e9es de M sont (cos \u03b8 ; sin \u03b8).'},
+    {text:'l\'abscisse de M est le cosinus de \u03b8', relevant:true,
+     why:'le cosinus se lit comme abscisse, sur l\'axe (O, i).'},
+    {text:'l\'ordonn\u00e9e de M est le sinus de \u03b8', relevant:true,
+     why:'le sinus se lit comme ordonn\u00e9e, sur l\'axe (O, j).'},
+    {text:'je lis le tableau des angles remarquables', relevant:true,
+     why:'les valeurs exactes pour \u03c0/6, \u03c0/4, \u03c0/3\u2026 y sont consign\u00e9es.'},
+    {text:'l\'identit\u00e9 cos\u00b2\u03b8 + sin\u00b2\u03b8 = 1 permet de v\u00e9rifier', relevant:true,
+     why:'contr\u00f4le : la somme des carr\u00e9s des valeurs trouv\u00e9es doit valoir 1.'},
+    {text:'je v\u00e9rifie le signe selon le quadrant', relevant:true,
+     why:'le quadrant dans lequel se trouve M impose les signes de cos et sin.'},
+    /* Distracteurs */
+    {text:'M = (sin \u03b8 ; cos \u03b8)', relevant:false,
+     why:'les r\u00f4les sont invers\u00e9s : l\'abscisse est cos \u03b8, l\'ordonn\u00e9e est sin \u03b8.'},
+    {text:'l\'abscisse est le sinus de \u03b8', relevant:false,
+     why:'l\'abscisse est le cosinus ; le sinus est l\'ordonn\u00e9e.'},
+    {text:'l\'ordonn\u00e9e est le cosinus de \u03b8', relevant:false,
+     why:'l\'ordonn\u00e9e est le sinus ; le cosinus est l\'abscisse.'},
+    {text:'M = (tan \u03b8 ; 1)', relevant:false,
+     why:'la tangente n\'est pas une coordonn\u00e9e de M.'},
+    {text:'cos \u03b8 = sin \u03b8 pour tout angle', relevant:false,
+     why:'faux : ce n\'est vrai que pour des angles particuliers (\u03c0/4 modulo \u03c0).'},
+    {text:'le rayon vaut 2 donc je multiplie par 2', relevant:false,
+     why:'le cercle trigonom\u00e9trique a un rayon de 1 : rien \u00e0 multiplier.'},
+    {text:'je convertis d\'abord en degr\u00e9s', relevant:false,
+     why:'inutile : le tableau des valeurs remarquables s\'utilise directement en radians.'},
+    {text:'je prends l\'oppos\u00e9 du sinus', relevant:false,
+     why:'changer le signe du sinus donne le point sym\u00e9trique par rapport \u00e0 l\'axe (O, i).'}
+  ];
+}
+function fragLibStep8(key){
+  const lib = {
+    'neg': [
+      /* Pertinents */
+      {text:'c\'est la sym\u00e9trie d\'axe (O, i)', relevant:true,
+       why:'parcourir \u2212\u03b8 revient \u00e0 r\u00e9fl\u00e9chir M par rapport \u00e0 l\'axe des abscisses.'},
+      {text:'l\'angle \u03b8 devient \u2212\u03b8', relevant:true,
+       why:'transformation de l\'angle pour ce cas.'},
+      {text:'cos(\u2212\u03b8) = cos \u03b8', relevant:true,
+       why:'la sym\u00e9trie horizontale conserve l\'abscisse.'},
+      {text:'sin(\u2212\u03b8) = \u2212sin \u03b8', relevant:true,
+       why:'la sym\u00e9trie horizontale renverse l\'ordonn\u00e9e.'},
+      {text:'le cosinus est une fonction paire', relevant:true,
+       why:'cos(\u2212x) = cos(x) pour tout x : c\'est la parit\u00e9 du cosinus.'},
+      {text:'le sinus est une fonction impaire', relevant:true,
+       why:'sin(\u2212x) = \u2212sin(x) pour tout x : c\'est l\'imparit\u00e9 du sinus.'},
+      /* Distracteurs */
+      {text:'cos(\u2212\u03b8) = \u2212cos \u03b8', relevant:false,
+       why:'faux : le cosinus est pair, il ne change pas de signe. cos(\u2212\u03b8) = cos \u03b8.'},
+      {text:'sin(\u2212\u03b8) = sin \u03b8', relevant:false,
+       why:'faux : le sinus est impair. sin(\u2212\u03b8) = \u2212sin \u03b8.'},
+      {text:'le cosinus est une fonction impaire', relevant:false,
+       why:'non : cos(\u2212x) = cos(x), le cosinus est pair, pas impair.'},
+      {text:'c\'est la sym\u00e9trie d\'axe (O, j)', relevant:false,
+       why:'la sym\u00e9trie d\'axe (O, j) correspond \u00e0 \u03c0 \u2212 \u03b8, pas \u00e0 \u2212\u03b8.'},
+      {text:'l\'angle devient \u03c0 \u2212 \u03b8', relevant:false,
+       why:'\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, j).'},
+      {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+       why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie de centre O.'},
+      {text:'c\'est une rotation de 90\u00b0', relevant:false,
+       why:'\u2212\u03b8 n\'est pas un quart de tour : c\'est une sym\u00e9trie axiale.'}
+    ],
+    'pi-': [
+      /* Pertinents */
+      {text:'c\'est la sym\u00e9trie d\'axe (O, j)', relevant:true,
+       why:'\u03c0 \u2212 \u03b8 revient \u00e0 r\u00e9fl\u00e9chir M par rapport \u00e0 l\'axe des ordonn\u00e9es.'},
+      {text:'l\'angle \u03b8 devient \u03c0 \u2212 \u03b8', relevant:true,
+       why:'transformation de l\'angle pour ce cas.'},
+      {text:'cos(\u03c0 \u2212 \u03b8) = \u2212cos \u03b8', relevant:true,
+       why:'les abscisses des deux points sont oppos\u00e9es.'},
+      {text:'sin(\u03c0 \u2212 \u03b8) = sin \u03b8', relevant:true,
+       why:'les ordonn\u00e9es des deux points sont \u00e9gales.'},
+      {text:'les points ont la m\u00eame ordonn\u00e9e', relevant:true,
+       why:'la sym\u00e9trie verticale conserve la hauteur.'},
+      {text:'leurs abscisses sont oppos\u00e9es', relevant:true,
+       why:'le miroir vertical renverse la gauche et la droite.'},
+      /* Distracteurs */
+      {text:'cos(\u03c0 \u2212 \u03b8) = cos \u03b8', relevant:false,
+       why:'faux : les abscisses sont oppos\u00e9es, le cosinus change de signe.'},
+      {text:'sin(\u03c0 \u2212 \u03b8) = \u2212sin \u03b8', relevant:false,
+       why:'faux : les ordonn\u00e9es sont \u00e9gales, le sinus est conserv\u00e9.'},
+      {text:'c\'est la sym\u00e9trie de centre O', relevant:false,
+       why:'la sym\u00e9trie centrale correspond \u00e0 \u03c0 + \u03b8, pas \u00e0 \u03c0 \u2212 \u03b8.'},
+      {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+       why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie de centre O, pas \u00e0 celle d\'axe (O, j).'},
+      {text:'l\'angle devient \u2212\u03b8', relevant:false,
+       why:'\u2212\u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+      {text:'c\'est une rotation de 90\u00b0', relevant:false,
+       why:'une sym\u00e9trie axiale n\'est pas une rotation.'},
+      {text:'les points ont la m\u00eame abscisse', relevant:false,
+       why:'non : seules les ordonn\u00e9es co\u00efncident ; les abscisses sont oppos\u00e9es.'}
+    ],
+    'pi+': [
+      /* Pertinents */
+      {text:'c\'est la sym\u00e9trie de centre O', relevant:true,
+       why:'\u03c0 + \u03b8 revient \u00e0 faire un demi-tour autour de O.'},
+      {text:'l\'angle \u03b8 devient \u03c0 + \u03b8', relevant:true,
+       why:'transformation de l\'angle pour ce cas.'},
+      {text:'c\'est aussi une rotation de 180\u00b0', relevant:true,
+       why:'propri\u00e9t\u00e9 cl\u00e9 : sym\u00e9trie centrale = rotation de 180\u00b0.'},
+      {text:'cos(\u03c0 + \u03b8) = \u2212cos \u03b8', relevant:true,
+       why:'l\'abscisse du point image est l\'oppos\u00e9e de celle de M.'},
+      {text:'sin(\u03c0 + \u03b8) = \u2212sin \u03b8', relevant:true,
+       why:'l\'ordonn\u00e9e du point image est l\'oppos\u00e9e de celle de M.'},
+      {text:'les deux coordonn\u00e9es changent de signe', relevant:true,
+       why:'le point image est l\'oppos\u00e9 du point de d\u00e9part.'},
+      /* Distracteurs */
+      {text:'cos(\u03c0 + \u03b8) = cos \u03b8', relevant:false,
+       why:'faux : l\'abscisse devient son oppos\u00e9e.'},
+      {text:'sin(\u03c0 + \u03b8) = sin \u03b8', relevant:false,
+       why:'faux : l\'ordonn\u00e9e devient son oppos\u00e9e.'},
+      {text:'l\'angle devient \u03c0 \u2212 \u03b8', relevant:false,
+       why:'\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, j).'},
+      {text:'l\'angle devient \u2212\u03b8', relevant:false,
+       why:'\u2212\u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+      {text:'c\'est une rotation de 90\u00b0', relevant:false,
+       why:'le demi-tour est une rotation de 180\u00b0, pas de 90\u00b0.'},
+      {text:'seule l\'abscisse change de signe', relevant:false,
+       why:'les DEUX coordonn\u00e9es changent de signe dans une sym\u00e9trie centrale.'},
+      {text:'seule l\'ordonn\u00e9e change de signe', relevant:false,
+       why:'les DEUX coordonn\u00e9es changent de signe dans une sym\u00e9trie centrale.'}
+    ],
+    'pi2-': [
+      /* Pertinents */
+      {text:'c\'est un angle compl\u00e9mentaire \u00e0 \u03b8', relevant:true,
+       why:'\u03c0/2 \u2212 \u03b8 et \u03b8 sont compl\u00e9mentaires : leur somme vaut \u03c0/2.'},
+      {text:'la somme \u03b8 + (\u03c0/2 \u2212 \u03b8) vaut \u03c0/2', relevant:true,
+       why:'d\u00e9finition m\u00eame des angles compl\u00e9mentaires.'},
+      {text:'cos(\u03c0/2 \u2212 \u03b8) = sin \u03b8', relevant:true,
+       why:'le cosinus de l\'angle compl\u00e9mentaire est le sinus de \u03b8.'},
+      {text:'sin(\u03c0/2 \u2212 \u03b8) = cos \u03b8', relevant:true,
+       why:'le sinus de l\'angle compl\u00e9mentaire est le cosinus de \u03b8.'},
+      {text:'le cosinus de l\'un est le sinus de l\'autre', relevant:true,
+       why:'synth\u00e8se : cosinus et sinus s\'\u00e9changent sur des angles compl\u00e9mentaires.'},
+      /* Distracteurs */
+      {text:'cos(\u03c0/2 \u2212 \u03b8) = \u2212sin \u03b8', relevant:false,
+       why:'faux : aucun changement de signe ici. cos(\u03c0/2 \u2212 \u03b8) = sin \u03b8.'},
+      {text:'sin(\u03c0/2 \u2212 \u03b8) = \u2212cos \u03b8', relevant:false,
+       why:'faux : sin(\u03c0/2 \u2212 \u03b8) = cos \u03b8, sans changement de signe.'},
+      {text:'cos(\u03c0/2 \u2212 \u03b8) = cos \u03b8', relevant:false,
+       why:'faux : ce serait le cas pour \u03c0 \u2212 \u03b8 ou 2\u03c0 \u2212 \u03b8 ; ici le cosinus devient un sinus.'},
+      {text:'c\'est une rotation de 90\u00b0', relevant:false,
+       why:'une rotation de 90\u00b0 correspond \u00e0 \u03c0/2 + \u03b8, pas \u00e0 \u03c0/2 \u2212 \u03b8.'},
+      {text:'les deux angles sont suppl\u00e9mentaires', relevant:false,
+       why:'suppl\u00e9mentaires = somme \u00e9gale \u00e0 \u03c0 ; ici la somme vaut \u03c0/2 : ils sont compl\u00e9mentaires.'},
+      {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+       why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie centrale.'}
+    ],
+    'pi2+': [
+      /* Pertinents */
+      {text:'c\'est une rotation de +90\u00b0 = +\u03c0/2', relevant:true,
+       why:'identifier la transformation : un quart de tour dans le sens direct.'},
+      {text:'on ajoute un quart de tour \u00e0 \u03b8', relevant:true,
+       why:'l\'angle image est d\u00e9cal\u00e9 de \u03c0/2 dans le sens direct.'},
+      {text:'cos(\u03c0/2 + \u03b8) = \u2212sin \u03b8', relevant:true,
+       why:'apr\u00e8s un quart de tour direct, la nouvelle abscisse est l\'oppos\u00e9e de l\'ancienne ordonn\u00e9e.'},
+      {text:'sin(\u03c0/2 + \u03b8) = cos \u03b8', relevant:true,
+       why:'apr\u00e8s un quart de tour direct, la nouvelle ordonn\u00e9e est l\'ancienne abscisse.'},
+      {text:'l\'angle \u03b8 devient \u03b8 + \u03c0/2', relevant:true,
+       why:'transformation de l\'angle pour ce cas.'},
+      /* Distracteurs */
+      {text:'cos(\u03c0/2 + \u03b8) = sin \u03b8', relevant:false,
+       why:'faux : il manque le changement de signe. La bonne formule est \u2212sin \u03b8.'},
+      {text:'sin(\u03c0/2 + \u03b8) = \u2212cos \u03b8', relevant:false,
+       why:'faux : c\'est cos \u03b8, sans changement de signe.'},
+      {text:'cos(\u03c0/2 + \u03b8) = cos \u03b8', relevant:false,
+       why:'faux : apr\u00e8s un quart de tour, le cosinus devient l\'oppos\u00e9 du sinus.'},
+      {text:'c\'est un angle compl\u00e9mentaire', relevant:false,
+       why:'\u03c0/2 + \u03b8 n\'est pas compl\u00e9mentaire \u00e0 \u03b8 : leur diff\u00e9rence vaut \u03c0/2, pas leur somme.'},
+      {text:'l\'angle devient \u03c0 \u2212 \u03b8', relevant:false,
+       why:'\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, j).'},
+      {text:'c\'est une rotation de \u221290\u00b0', relevant:false,
+       why:'on AJOUTE \u03c0/2 : c\'est une rotation de +90\u00b0 (sens direct).'}
+    ],
+    '2pi-': [
+      /* Pertinents */
+      {text:'c\'est l\'angle oppos\u00e9 modulo 2\u03c0', relevant:true,
+       why:'2\u03c0 \u2212 \u03b8 est ce qui reste quand on retranche \u03b8 d\'un tour complet.'},
+      {text:'on retranche \u03b8 \u00e0 un tour complet', relevant:true,
+       why:'c\'est ainsi qu\'on construit 2\u03c0 \u2212 \u03b8.'},
+      {text:'cos(2\u03c0 \u2212 \u03b8) = cos \u03b8', relevant:true,
+       why:'2\u03c0 \u2212 \u03b8 \u2261 \u2212\u03b8 (modulo 2\u03c0) et le cosinus est pair : il est conserv\u00e9.'},
+      {text:'sin(2\u03c0 \u2212 \u03b8) = \u2212sin \u03b8', relevant:true,
+       why:'2\u03c0 \u2212 \u03b8 \u2261 \u2212\u03b8 (modulo 2\u03c0) et le sinus est impair : il change de signe.'},
+      {text:'l\'angle \u03b8 devient 2\u03c0 \u2212 \u03b8', relevant:true,
+       why:'transformation de l\'angle pour ce cas.'},
+      /* Distracteurs */
+      {text:'cos(2\u03c0 \u2212 \u03b8) = \u2212cos \u03b8', relevant:false,
+       why:'faux : le cosinus est conserv\u00e9 (2\u03c0 \u2212 \u03b8 \u2261 \u2212\u03b8 et le cosinus est pair).'},
+      {text:'sin(2\u03c0 \u2212 \u03b8) = sin \u03b8', relevant:false,
+       why:'faux : le sinus change de signe (2\u03c0 \u2212 \u03b8 \u2261 \u2212\u03b8 et le sinus est impair).'},
+      {text:'l\'angle reste \u00e9gal \u00e0 \u03b8', relevant:false,
+       why:'2\u03c0 \u2212 \u03b8 n\'est pas \u03b8 : c\'est l\'angle \u2212\u03b8 vu modulo 2\u03c0.'},
+      {text:'c\'est une rotation de 90\u00b0', relevant:false,
+       why:'aucun quart de tour ici : 2\u03c0 \u2212 \u03b8 correspond \u00e0 la sym\u00e9trie d\'axe (O, i).'},
+      {text:'c\'est la sym\u00e9trie de centre O', relevant:false,
+       why:'la sym\u00e9trie centrale correspond \u00e0 \u03c0 + \u03b8, pas \u00e0 2\u03c0 \u2212 \u03b8.'},
+      {text:'l\'angle devient \u03c0 + \u03b8', relevant:false,
+       why:'\u03c0 + \u03b8 correspond \u00e0 la sym\u00e9trie centrale.'}
+    ]
+  };
+  return lib[key] || lib['neg'];
+}
+function fragLibStep9(kind){
+  if(kind==='mp'){
+    return [
+      /* Pertinents */
+      {text:'la mesure principale est dans ]\u2212\u03c0 ; \u03c0]', relevant:true,
+       why:'d\u00e9finition \u00e0 appliquer en premier.'},
+      {text:'je cherche la mesure la plus proche de 0', relevant:true,
+       why:'on retire les tours complets pour se rapprocher de 0.'},
+      {text:'je retranche 2\u03c0 jusqu\'\u00e0 tomber dans l\'intervalle', relevant:true,
+       why:'on it\u00e8re les soustractions de 2\u03c0 (ou les additions si la mesure est trop petite).'},
+      {text:'la mesure trouv\u00e9e est unique', relevant:true,
+       why:'unicit\u00e9 de la mesure principale : c\'est un r\u00e9sultat du cours.'},
+      {text:'c\'est la mesure principale de \u03b8', relevant:true,
+       why:'conclusion du raisonnement.'},
+      /* Distracteurs */
+      {text:'la mesure principale est dans [0 ; 2\u03c0[', relevant:false,
+       why:"mauvais intervalle : la mesure principale vit dans ]\u2212\u03c0 ; \u03c0]."},
+      {text:'j\'ajoute \u03c0 \u00e0 l\'angle', relevant:false,
+       why:'ajouter \u03c0 change l\'angle d\'un demi-tour ; on ajoute ou retranche 2\u03c0.'},
+      {text:'je prends l\'oppos\u00e9 de l\'angle', relevant:false,
+       why:'l\'oppos\u00e9 est un autre angle, pas la mesure principale de \u03b8.'},
+      {text:'je divise l\'angle par 2\u03c0', relevant:false,
+       why:'cela donne un nombre de tours, pas une mesure d\'angle.'},
+      {text:'je prends la valeur absolue', relevant:false,
+       why:'la mesure principale peut \u00eatre n\u00e9gative : on ne prend pas la valeur absolue.'},
+      {text:'je choisis la plus grande mesure', relevant:false,
+       why:'au contraire : on se rapproche de 0 en retirant les tours complets.'}
+    ];
+  }
+  if(kind==='sym'){
+    return [
+      /* Pertinents */
+      {text:'j\'identifie la transformation (axe ou centre)', relevant:true,
+       why:'premi\u00e8re \u00e9tape : savoir de quelle sym\u00e9trie il s\'agit avant de calculer.'},
+      {text:'je d\u00e9termine la relation sur les coordonn\u00e9es', relevant:true,
+       why:'chaque sym\u00e9trie a son effet propre sur (x ; y).'},
+      {text:'je change le(s) signe(s) des coordonn\u00e9es', relevant:true,
+       why:'une sym\u00e9trie axiale change un signe ; la sym\u00e9trie centrale change les deux.'},
+      {text:'j\'en d\u00e9duis le nouvel angle', relevant:true,
+       why:'chaque transformation correspond \u00e0 une r\u00e8gle sur \u03b8 : \u2212\u03b8, \u03c0 \u2212 \u03b8, \u03c0 + \u03b8\u2026'},
+      {text:'je v\u00e9rifie avec le quadrant du point image', relevant:true,
+       why:'contr\u00f4le : le point image doit se trouver dans le bon quadrant.'},
+      /* Distracteurs */
+      {text:'je permute x et y', relevant:false,
+       why:'aucune de ces sym\u00e9tries ne permute les coordonn\u00e9es.'},
+      {text:'j\'ajoute \u03c0/2 \u00e0 l\'angle', relevant:false,
+       why:'\u03c0/2 correspond \u00e0 une rotation de 90\u00b0, pas \u00e0 une sym\u00e9trie.'},
+      {text:'je multiplie les coordonn\u00e9es par 2', relevant:false,
+       why:'une sym\u00e9trie conserve les distances : rien \u00e0 multiplier.'},
+      {text:'je change les deux signes dans tous les cas', relevant:false,
+       why:'seule la sym\u00e9trie centrale change les deux signes ; les sym\u00e9tries axiales n\'en changent qu\'un.'},
+      {text:'je ne change aucun signe', relevant:false,
+       why:'une sym\u00e9trie modifie toujours au moins un signe (hors cas particuliers sur les axes).'},
+      {text:'je remplace cos par sin', relevant:false,
+       why:'remplacer cos par sin correspond aux angles compl\u00e9mentaires, pas \u00e0 ces sym\u00e9tries.'}
+    ];
+  }
+  if(kind==='rot'){
+    return [
+      /* Pertinents */
+      {text:'c\'est une rotation de centre O', relevant:true,
+       why:'premi\u00e8re \u00e9tape : identifier la transformation.'},
+      {text:'l\'angle tourne de \u00b190\u00b0', relevant:true,
+       why:'un quart de tour, dans un sens ou dans l\'autre.'},
+      {text:'j\'ajoute ou je retranche \u03c0/2 \u00e0 l\'angle', relevant:true,
+       why:'+\u03c0/2 pour le sens direct, \u2212\u03c0/2 pour le sens indirect.'},
+      {text:'j\'en d\u00e9duis le cosinus et le sinus', relevant:true,
+       why:'le nouveau point a pour coordonn\u00e9es (cos \u03b8\' ; sin \u03b8\') : on les d\u00e9duit des formules.'},
+      {text:'je v\u00e9rifie avec le tableau des angles remarquables', relevant:true,
+       why:'contr\u00f4le avec les valeurs exactes connues.'},
+      /* Distracteurs */
+      {text:'j\'ajoute \u03c0 \u00e0 l\'angle', relevant:false,
+       why:'\u03c0 correspond \u00e0 un demi-tour, pas \u00e0 un quart de tour.'},
+      {text:'je change les deux signes', relevant:false,
+       why:'changer les deux signes = sym\u00e9trie centrale (180\u00b0), pas une rotation de 90\u00b0.'},
+      {text:'je permute x et y', relevant:false,
+       why:'une rotation de 90\u00b0 n\'est pas une simple permutation : les signes changent aussi.'},
+      {text:'c\'est une sym\u00e9trie centrale', relevant:false,
+       why:'une rotation de 90\u00b0 n\'est pas une sym\u00e9trie centrale (180\u00b0).'},
+      {text:'je multiplie l\'angle par 2', relevant:false,
+       why:'rien \u00e0 multiplier : on ajoute ou retranche \u03c0/2.'}
+    ];
+  }
+  return [
+    /* Pertinents */
+    {text:'sur le cercle trigonom\u00e9trique M = (cos \u03b8 ; sin \u03b8)', relevant:true,
+     why:'d\u00e9finition des coordonn\u00e9es de M.'},
+    {text:'l\'abscisse est le cosinus de \u03b8', relevant:true,
+     why:'lecture sur l\'axe (O, i).'},
+    {text:'l\'ordonn\u00e9e est le sinus de \u03b8', relevant:true,
+     why:'lecture sur l\'axe (O, j).'},
+    {text:'je lis le tableau des angles remarquables', relevant:true,
+     why:'les valeurs exactes y sont consign\u00e9es.'},
+    {text:'cos\u00b2\u03b8 + sin\u00b2\u03b8 = 1 permet de v\u00e9rifier', relevant:true,
+     why:'contr\u00f4le de coh\u00e9rence du couple (cos ; sin) trouv\u00e9.'},
+    /* Distracteurs */
+    {text:'M = (sin \u03b8 ; cos \u03b8)', relevant:false,
+     why:'r\u00f4les invers\u00e9s : l\'abscisse est cos, l\'ordonn\u00e9e est sin.'},
+    {text:'l\'abscisse est le sinus', relevant:false,
+     why:'l\'abscisse est le cosinus.'},
+    {text:'l\'ordonn\u00e9e est le cosinus', relevant:false,
+     why:'l\'ordonn\u00e9e est le sinus.'},
+    {text:'je change le signe de \u03b8', relevant:false,
+     why:'changer le signe de \u03b8 donne un autre point (le sym\u00e9trique par rapport \u00e0 l\'axe des abscisses).'},
+    {text:'je convertis d\'abord en degr\u00e9s', relevant:false,
+     why:'inutile : les valeurs remarquables s\'utilisent en radians.'}
+  ];
+}
+
+/* ============================================================
+   \u00c9PREUVES
+   ============================================================ */
+function distractorsPi(correct, nb){
+  nb = nb || 3;
+  const used = new Set([correct.deg]);
+  const out = []; let tries = 0;
+  while(out.length < nb && tries < 40){
+    tries++;
+    const a = randChoice(SPECIAL);
+    if(used.has(a.deg) || a.deg===0) continue;
+    used.add(a.deg);
+    out.push({label:'$'+piLatex(a.n,a.d)+'$',deg:a.deg,correct:false});
+  }
+  return out;
+}
+
+function step1(){
+  const a = randChoice(SPECIAL.filter(x=>x.deg!==0));
+  const opts = [{label:'$'+piLatex(a.n,a.d)+'$',correct:true}, ...distractorsPi(a)];
+  const shuffled = shuffle(opts);
+  return {
+    title:'\u00c9preuve I \u2014 La Forge des Degr\u00e9s',
+    story:"Vous franchissez le seuil de la <em>Forge des Degr\u00e9s</em>. Sur l'enclume br\u00fble un parchemin o\u00f9 s'inscrit un angle en degr\u00e9s. Le Gardien, une silhouette de bronze, gronde : <em>\u00ab Traduis cet angle en radians, si tu veux passer. \u00bb</em>",
+    question:"Convertis l'angle $"+a.deg+"^\\circ$ en radians. Quelle est sa mesure exacte en radians ?",
+    options: shuffled.map(o=>o.label),
+    correctIndex: shuffled.findIndex(o=>o.correct),
+    fragments: fragLibStep1(),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      const th = piVal(a.n,a.d);
+      drawArc(ctx,s,th, degText(a.deg) ,'#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+      drawProjections(ctx,s,th);
+    },
+    solution: function(){
+      const d = gcd(a.deg,180);
+      const nRed = a.deg/d, dRed = 180/d;
+      return "<p>Pour convertir un angle de degr\u00e9s en radians, on utilise la <strong>proportionnalit\u00e9 fondamentale</strong> :</p>"+
+        "<p>$$180^\\circ \\longleftrightarrow \\pi \\text{ rad}$$</p>"+
+        "<p>Donc pour un angle de $"+a.deg+"^\\circ$ :</p>"+
+        "<p>$$"+a.deg+"^\\circ = "+a.deg+"\\times \\frac{\\pi}{180} = \\frac{"+a.deg+"\\pi}{180}\\text{ rad}$$</p>"+
+        "<p>On <strong>simplifie la fraction</strong> par le PGCD :</p>"+
+        "<p>$$\\text{PGCD}("+a.deg+"\\,,\\,180) = "+d+"$$</p>"+
+        "<p>$$\\frac{"+a.deg+"\\pi}{180} = \\frac{"+nRed+"\\pi}{"+dRed+"}"+(dRed===1?'':' = '+piLatex(nRed,dRed))+"$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $"+a.deg+"^\\circ = "+piLatex(a.n,a.d)+"$ rad.</div>"+
+        "<p>\ud83d\udca1 <em>Les fragments pertinents \u00e9taient surlign\u00e9s en vert dans votre raisonnement.</em></p>";
+    }
+  };
+}
+
+function step2(){
+  const a = randChoice(SPECIAL.filter(x=>x.deg!==0 && x.deg!==180));
+  const k = randChoice([-2,-1,1,2,3]);
+  const nMod = a.n + 2*k*a.d;
+  const correct = piLatex(nMod, a.d);
+  const opts = shuffle([
+    {label:'$'+correct+'$',correct:true},
+    {label:'$'+piLatex(a.n + a.d, a.d)+'$',correct:false},
+    {label:'$'+piLatex(a.n - a.d, a.d)+'$',correct:false},
+    {label:'$'+piLatex(a.n + k*a.d, a.d)+'$',correct:false}
+  ]);
+  return {
+    title:'\u00c9preuve II \u2014 Le Labyrinthe des Tours',
+    story:"Vous voil\u00e0 dans un <em>labyrinthe circulaire</em> o\u00f9 les couloirs se r\u00e9p\u00e8tent \u00e0 l'infini. Chaque tour complet vous ram\u00e8ne au m\u00eame endroit. Un spectre murmure : <em>\u00ab Deux nombres qui diff\u00e8rent d'un multiple de $2\\pi$ d\u00e9signent le m\u00eame point du cercle. Sauras-tu le reconna\u00eetre ? \u00bb</em>",
+    question:"Le nombre $"+piLatex(a.n,a.d)+"$ rep\u00e8re un point $M$ du cercle trigonom\u00e9trique. Parmi ces quatre nombres, lequel rep\u00e8re <strong>le m\u00eame point</strong> $M$ ?",
+    options: opts.map(o=>o.label),
+    correctIndex: opts.findIndex(o=>o.correct),
+    fragments: fragLibStep2(),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      const th = piVal(a.n,a.d);
+      drawArc(ctx,s,th, piText(a.n,a.d) ,'#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+      for(let i=1;i<=2;i++){
+        drawArc(ctx,s,th+2*Math.PI*i,'','rgba(15,107,138,.28)',0.28+i*0.06);
+        drawArc(ctx,s,th-2*Math.PI*i,'','rgba(15,107,138,.28)',0.28+i*0.06);
+      }
+      ctx.fillStyle='#7a5a00'; ctx.font='italic 13px Georgia';
+      ctx.fillText('chaque tour ram\u00e8ne au m\u00eame point', 20, s.H-18);
+    },
+    solution: function(){
+      return "<p>Deux angles rep\u00e8rent le <strong>m\u00eame point</strong> sur le cercle trigonom\u00e9trique si et seulement si leur diff\u00e9rence est un multiple entier de $2\\pi$ :</p>"+
+        "<p>$$\\theta \\equiv \\theta' \\pmod{2\\pi} \\iff \\exists\\,k\\in\\mathbb{Z},\\; \\theta = \\theta' + 2k\\pi$$</p>"+
+        "<p>Angle de d\u00e9part : $\\theta_0 = "+piLatex(a.n,a.d)+"$.</p>"+
+        "<p>$$\\theta_0 + 2k\\pi = \\frac{"+a.n+"\\pi}{"+a.d+"} + \\frac{"+(2*k*a.d)+"\\pi}{"+a.d+"} = \\frac{"+nMod+"\\pi}{"+a.d+"}$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $"+piLatex(a.n,a.d)+" \\equiv "+correct+" \\pmod{2\\pi}$.</div>"+
+        "<p>\u26a0\ufe0f <em>Attention :</em> ajouter $\\pi$ donne le point <strong>oppos\u00e9</strong> par rapport \u00e0 $O$.</p>";
+    }
+  };
+}
+
+function step3(){
+  const base = randChoice(SPECIAL.filter(x=>x.deg!==0 && x.deg!==180));
+  let n0 = base.n, d0 = base.d;
+  if(n0/d0 > 1) n0 = n0 - 2*d0;
+  const k = randChoice([1,2,3,-1,-2]);
+  const nBig = n0 + 2*k*d0;
+  const correct = piLatex(n0, d0);
+  const opts = shuffle([
+    {label:'$'+correct+'$',correct:true},
+    {label:'$'+piLatex(n0+2*d0, d0)+'$',correct:false},
+    {label:'$'+piLatex(-n0, d0)+'$',correct:false},
+    {label:'$'+piLatex(n0+d0, d0)+'$',correct:false}
+  ]);
+  return {
+    title:'\u00c9preuve III \u2014 Le Tribunal des Mesures',
+    story:"Un <em>Tribunal de Cristal</em> vous juge. Le juge d\u00e9clare : <em>\u00ab Tout angle orient\u00e9 poss\u00e8de une infinit\u00e9 de mesures, mais une seule est sa MESURE PRINCIPALE, celle qui appartient \u00e0 l'intervalle $]-\\pi\\,;\\,\\pi]$. Donne-la, ou sois banni ! \u00bb</em>",
+    question:"Quelle est la <strong>mesure principale</strong> de l'angle $\\theta = "+piLatex(nBig,d0)+"$ ?",
+    options: opts.map(o=>o.label),
+    correctIndex: opts.findIndex(o=>o.correct),
+    fragments: fragLibStep3(),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      drawArc(ctx,s,piVal(nBig,d0), piText(nBig,d0) ,'#a82020',0.28);
+      drawPoint(ctx,s,piVal(nBig,d0),'\u03b8','#a82020');
+      drawArc(ctx,s,piVal(n0,d0),'','#1c7a3d',0.22);
+      drawPoint(ctx,s,piVal(n0,d0),'\u03b8p','#1c7a3d');
+    },
+    solution: function(){
+      return "<p>La <strong>mesure principale</strong> d'un angle orient\u00e9 est l'unique r\u00e9el $\\alpha$ tel que $-\\pi < \\alpha \\le \\pi$.</p>"+
+        "<p>On retranche $2\\pi$ jusqu'\u00e0 tomber dans cet intervalle.</p>"+
+        "<p>$$"+piLatex(nBig,d0)+" - 2\\pi = \\frac{"+(nBig-2*d0)+"\\pi}{"+d0+"} = "+piLatex(nBig-2*d0,d0)+"$$</p>"+
+        "<p>$$\\theta_p = \\frac{"+n0+"\\pi}{"+d0+"} = "+correct+"$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> la mesure principale est $"+correct+"$.</div>";
+    }
+  };
+}
+
+function step4(){
+  let a,b;
+  do { a = randInt(-4,4); b = randInt(-4,4); } while(a===0 || b===0);
+  const types = [
+    {key:'axeOi', label:"la sym\u00e9trie d'axe $(O,\\vec{i})$", correct:[a,-b]},
+    {key:'axeOj', label:"la sym\u00e9trie d'axe $(O,\\vec{j})$", correct:[-a,b]},
+    {key:'centreO', label:"la sym\u00e9trie de centre $O$", correct:[-a,-b]}
+  ];
+  const chosen = randChoice(types);
+  const x0 = chosen.correct[0], y0 = chosen.correct[1];
+  const cands = [[-b,a],[b,-a],[b,a],[-a,-b],[-b,-a],[a,b]]
+    .filter(p=>!(p[0]===x0 && p[1]===y0));
+  const distract = shuffle(cands).slice(0,3);
+  const fmt = p => "$\\big("+p[0]+"\\,;\\,"+p[1]+"\\big)$";
+  const opts = shuffle([
+    {label:fmt([x0,y0]),correct:true},
+    ...distract.map(p=>({label:fmt(p),correct:false}))
+  ]);
+  return {
+    title:'\u00c9preuve IV \u2014 Les Miroirs Jumeaux',
+    story:"Deux miroirs se dressent : l'un <em>horizontal</em> (l'axe $(O,\\vec{i})$), l'autre <em>vertical</em> (l'axe $(O,\\vec{j})$). Entre eux tournoie un spectre qui peut aussi basculer par le centre $O$. Lequel va refl\u00e9ter votre point $M$ ?",
+    question:"Soit $M\\big("+a+"\\,;\\,"+b+"\\big)$. Quelles sont les coordonn\u00e9es de l'image $M'$ de $M$ par <strong>"+chosen.label+"</strong> ?",
+    options: opts.map(o=>o.label),
+    correctIndex: opts.findIndex(o=>o.correct),
+    fragments: fragLibStep4(chosen.key),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      const cx=s.cx, cy=s.cy, R=s.R;
+      const scale = R/5.5;
+      const X = v => cx + v*scale, Y = v => cy - v*scale;
+      ctx.fillStyle='#0f6b8a';
+      ctx.beginPath(); ctx.arc(X(a),Y(b),6,0,2*Math.PI); ctx.fill();
+      ctx.font='bold 15px Georgia'; ctx.fillText('M', X(a)+10, Y(b)-8);
+      ctx.strokeStyle='#0f6b8a'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(X(a),Y(b)); ctx.stroke();
+      ctx.fillStyle='#a67c00';
+      ctx.beginPath(); ctx.arc(X(x0),Y(y0),6,0,2*Math.PI); ctx.fill();
+      ctx.fillText("M'", X(x0)+10, Y(y0)-8);
+      ctx.strokeStyle='#a67c00'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(X(x0),Y(y0)); ctx.stroke();
+      ctx.strokeStyle='rgba(0,0,0,.2)'; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(X(a),Y(b)); ctx.lineTo(X(x0),Y(y0)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#4a3f2c'; ctx.font='14px Georgia';
+      ctx.fillText('M(' + a + ' ; ' + b + ')', 20, 26);
+    },
+    solution: function(){
+      return "<p>On consid\u00e8re $M\\big("+a+"\\,;\\,"+b+"\\big)$ dans le rep\u00e8re orthonorm\u00e9 $(O,\\vec{i},\\vec{j})$.</p>"+
+        "<div class=\"keypoint\">"+
+        "<strong>1. Sym\u00e9trie d'axe $(O,\\vec{i})$</strong> : $(x\\,;\\,y) \\longmapsto (x\\,;\\,-y)$.<br>"+
+        "<strong>2. Sym\u00e9trie d'axe $(O,\\vec{j})$</strong> : $(x\\,;\\,y) \\longmapsto (-x\\,;\\,y)$.<br>"+
+        "<strong>3. Sym\u00e9trie de centre $O$</strong> : $(x\\,;\\,y) \\longmapsto (-x\\,;\\,-y)$."+
+        "</div>"+
+        "<p>Application \u00e0 $M\\big("+a+"\\,;\\,"+b+"\\big)$ :</p>"+
+        "<p>$$M\\big("+a+"\\,;\\,"+b+"\\big) \\longmapsto M'\\big("+x0+"\\,;\\,"+y0+"\\big)$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $M'\\big("+x0+"\\,;\\,"+y0+"\\big)$.</div>";
+    }
+  };
+}
+
+function step5(){
+  let a,b;
+  do { a = randInt(-5,5); b = randInt(-5,5); } while(a===0||b===0||(a===b));
+  const sens = randChoice(['+','-']);
+  const correct = sens==='+' ? [-b,a] : [b,-a];
+  const fmt = p => "$\\big("+p[0]+"\\,;\\,"+p[1]+"\\big)$";
+  const cands = [[b,-a],[-b,a],[-a,-b],[a,b],[-b,-a],[b,a]]
+    .filter(p=>!(p[0]===correct[0]&&p[1]===correct[1]));
+  const distract = shuffle(cands).slice(0,3);
+  const opts = shuffle([
+    {label:fmt(correct),correct:true},
+    ...distract.map(p=>({label:fmt(p),correct:false}))
+  ]);
+  const angLatex = sens==='+' ? '+90^\\circ' : '-90^\\circ';
+  return {
+    title:'\u00c9preuve V \u2014 La Roue des Quarts',
+    story:"Une immense <em>roue d'horloge</em> tourne dans le vide. Le m\u00e9canisme n'accepte qu'un seul mouvement : un quart de tour. Mais dans quel sens ? Un souffle vous indique : <em>\u00ab Tourne de $"+angLatex+"$ et dis-moi o\u00f9 atterrit ton point. \u00bb</em>",
+    question:"Soit $M\\big("+a+"\\,;\\,"+b+"\\big)$. On effectue une rotation de centre $O$ et d'angle $"+angLatex+"$. Quelles sont les coordonn\u00e9es de l'image $M'$ ?",
+    options: opts.map(o=>o.label),
+    correctIndex: opts.findIndex(o=>o.correct),
+    fragments: fragLibStep5(sens),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      const cx=s.cx, cy=s.cy, R=s.R;
+      const scale = R/6.5;
+      const X = v => cx + v*scale, Y = v => cy - v*scale;
+      ctx.fillStyle='#0f6b8a';
+      ctx.beginPath(); ctx.arc(X(a),Y(b),6,0,2*Math.PI); ctx.fill();
+      ctx.font='bold 15px Georgia'; ctx.fillText('M', X(a)+10, Y(b)-8);
+      ctx.strokeStyle='#0f6b8a'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(X(a),Y(b)); ctx.stroke();
+      ctx.fillStyle='#a67c00';
+      ctx.beginPath(); ctx.arc(X(correct[0]),Y(correct[1]),6,0,2*Math.PI); ctx.fill();
+      ctx.fillText("M'", X(correct[0])+10, Y(correct[1])-8);
+      ctx.strokeStyle='#a67c00'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(X(correct[0]),Y(correct[1])); ctx.stroke();
+      const th1 = Math.atan2(b,a);
+      const th2 = sens==='+' ? th1+Math.PI/2 : th1-Math.PI/2;
+      ctx.strokeStyle='rgba(166,124,0,.65)'; ctx.lineWidth=2; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.arc(cx,cy,R*0.6, -th1, -th2, sens==='+');
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#4a3f2c'; ctx.font='14px Georgia';
+      ctx.fillText('M(' + a + ' ; ' + b + ')', 20, 26);
+    },
+    solution: function(){
+      return "<p><strong>R\u00e8gle :</strong></p>"+
+        "<div class=\"keypoint\">"+
+        "<ul><li>Rotation de $+90^\\circ$ : $(x\\,;\\,y) \\longmapsto (-y\\,;\\,x)$</li>"+
+        "<li>Rotation de $-90^\\circ$ : $(x\\,;\\,y) \\longmapsto (y\\,;\\,-x)$</li></ul>"+
+        "</div>"+
+        "<p>Application \u00e0 $M\\big("+a+"\\,;\\,"+b+"\\big)$ :</p>"+
+        "<p>$$M\\big("+a+"\\,;\\,"+b+"\\big) \\longmapsto M'\\big("+correct[0]+"\\,;\\,"+correct[1]+"\\big)$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $M'\\big("+correct[0]+"\\,;\\,"+correct[1]+"\\big)$.</div>";
+    }
+  };
+}
+
+function step6(){
+  const a = randChoice(SPECIAL.filter(x=>x.deg!==0));
+  const correct = piLatex(a.n,a.d);
+  const distract = distractorsPi(a, 3).map(o=>o.label);
+  const opts = shuffle([
+    {label:'$'+correct+'$',correct:true},
+    ...distract.map(l=>({label:l,correct:false}))
+  ]);
+  return {
+    title:'\u00c9preuve VI \u2014 La Carte du Cercle',
+    story:"Vous p\u00e9n\u00e9trez dans un <em>plan\u00e9tarium</em> o\u00f9 un cercle dor\u00e9 flotte dans la lumi\u00e8re. Un point lumineux $M$ s'y d\u00e9place. Une voix grave demande : <em>\u00ab Quel est l'angle orient\u00e9 $(\\vec{i},\\overrightarrow{OM})$ en radians ? \u00bb</em>",
+    question:"Le point $M$ est plac\u00e9 sur le cercle trigonom\u00e9trique \u00e0 un angle de $"+a.deg+"^\\circ$ par rapport \u00e0 l'axe $(O,\\vec{i})$. Quelle est la mesure en radians de cet angle ?",
+    options: opts.map(o=>o.label),
+    correctIndex: opts.findIndex(o=>o.correct),
+    fragments: fragLibStep6(),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      const th = piVal(a.n,a.d);
+      drawArc(ctx,s,th,'\u03b8','#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+      drawProjections(ctx,s,th);
+      ctx.fillStyle='#7a5a00'; ctx.font='italic 15px Georgia';
+      ctx.fillText(degText(a.deg), s.cx+60, s.cy-30);
+    },
+    solution: function(){
+      const d = gcd(a.deg,180);
+      const nR = a.deg/d, dR = 180/d;
+      return "<p>Sur le cercle trigonom\u00e9trique, un angle de $"+a.deg+"^\\circ$ correspond \u00e0 :</p>"+
+        "<p>$$"+a.deg+"^\\circ = "+a.deg+"\\times \\frac{\\pi}{180} = \\frac{"+nR+"\\pi}{"+dR+"} = "+piLatex(a.n,a.d)+"\\text{ rad}$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $\\theta = "+correct+"$.</div>";
+    }
+  };
+}
+
+function step7(){
+  const a = randChoice(SPECIAL.filter(x=>x.deg!==0 && x.deg!==180));
+  const cs = cosSin(a.n, a.d);
+  const correct = "$\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$";
+  const csNeg = cosSin(-a.n, a.d);
+  const csPiMinus = cosSin(a.d - a.n, a.d);
+  const csPiPlus = cosSin(a.n + a.d, a.d);
+  const cands = shuffle([
+    {label:correct,correct:true},
+    {label:"$\\big("+csNeg[0]+"\\,;\\,"+csNeg[1]+"\\big)$",correct:false},
+    {label:"$\\big("+csPiMinus[0]+"\\,;\\,"+csPiMinus[1]+"\\big)$",correct:false},
+    {label:"$\\big("+csPiPlus[0]+"\\,;\\,"+csPiPlus[1]+"\\big)$",correct:false}
+  ]);
+  const uniq = []; const seen = new Set();
+  for(const o of cands){ if(!seen.has(o.label)){ seen.add(o.label); uniq.push(o); } }
+  let tries = 0;
+  while(uniq.length < 4 && tries < 40){
+    tries++;
+    const extra = randChoice(SPECIAL);
+    const c2 = cosSin(extra.n, extra.d);
+    const l = "$\\big("+c2[0]+"\\,;\\,"+c2[1]+"\\big)$";
+    if(!seen.has(l)){ seen.add(l); uniq.push({label:l,correct:false}); }
+  }
+  const opts = shuffle(uniq);
+  return {
+    title:'\u00c9preuve VII \u2014 Les Coordonn\u00e9es Cosmiques',
+    story:"Une sph\u00e8re c\u00e9leste vous pr\u00e9sente un point $M$ sur le cercle trigonom\u00e9trique. Un vieil astronome murmure : <em>\u00ab Les coordonn\u00e9es de ce point, mon enfant, ne sont rien d'autre que son cosinus et son sinus. Donne-les moi. \u00bb</em>",
+    question:"Le point $M$ du cercle trigonom\u00e9trique correspond \u00e0 l'angle $\\theta = "+piLatex(a.n,a.d)+"$. Quelles sont ses coordonn\u00e9es ?",
+    options: opts.map(o=>o.label),
+    correctIndex: opts.findIndex(o=>o.correct),
+    fragments: fragLibStep7(),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      const th = piVal(a.n,a.d);
+      drawArc(ctx,s,th, piText(a.n,a.d) ,'#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+      drawProjections(ctx,s,th);
+      const x = Math.cos(th), y = Math.sin(th);
+      ctx.fillStyle='#4a3f2c'; ctx.font='italic 14px Georgia';
+      ctx.fillText('cos \u03b8', s.cx + x*s.R - 30, s.cy + (y>=0?20:-12));
+      ctx.fillText('sin \u03b8', s.cx - 55, s.cy - y*s.R + 4);
+    },
+    solution: function(){
+      return "<p>Sur le cercle trigonom\u00e9trique : $M = \\big(\\cos\\theta\\,;\\,\\sin\\theta\\big)$.</p>"+
+        "<p>Pour $\\theta = "+piLatex(a.n,a.d)+"$ :</p>"+
+        "<div class=\"keypoint\">$$\\cos\\theta = "+cs[0]+" \\qquad \\sin\\theta = "+cs[1]+"$$</div>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $M\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$.</div>";
+    }
+  };
+}
+
+function step8(){
+  const base = randChoice(SPECIAL.filter(x=>x.deg!==0 && x.deg!==90 && x.deg!==180 && x.deg!==270));
+  const transforms = [
+    {key:'neg',label:'-\\theta',calc:(n,d)=>simplify(-n,d),
+     formule:'\\cos(-\\theta)=\\cos\\theta,\\quad \\sin(-\\theta)=-\\sin\\theta',
+     expl:"sym\u00e9trie d'axe $(O,\\vec{i})$"},
+    {key:'pi-',label:'\\pi-\\theta',calc:(n,d)=>simplify(d-n,d),
+     formule:'\\cos(\\pi-\\theta)=-\\cos\\theta,\\quad \\sin(\\pi-\\theta)=\\sin\\theta',
+     expl:"sym\u00e9trie d'axe $(O,\\vec{j})$"},
+    {key:'pi+',label:'\\pi+\\theta',calc:(n,d)=>simplify(d+n,d),
+     formule:'\\cos(\\pi+\\theta)=-\\cos\\theta,\\quad \\sin(\\pi+\\theta)=-\\sin\\theta',
+     expl:"sym\u00e9trie de centre $O$"},
+    {key:'pi2-',label:'\\frac{\\pi}{2}-\\theta',calc:(n,d)=>simplify(d-2*n,2*d),
+     formule:'\\cos\\left(\\frac{\\pi}{2}-\\theta\\right)=\\sin\\theta,\\quad \\sin\\left(\\frac{\\pi}{2}-\\theta\\right)=\\cos\\theta',
+     expl:"angle compl\u00e9mentaire"},
+    {key:'pi2+',label:'\\frac{\\pi}{2}+\\theta',calc:(n,d)=>simplify(d+2*n,2*d),
+     formule:'\\cos\\left(\\frac{\\pi}{2}+\\theta\\right)=-\\sin\\theta,\\quad \\sin\\left(\\frac{\\pi}{2}+\\theta\\right)=\\cos\\theta',
+     expl:"rotation de $+90^\\circ$"},
+    {key:'2pi-',label:'2\\pi-\\theta',calc:(n,d)=>simplify(2*d-n,d),
+     formule:'\\cos(2\\pi-\\theta)=\\cos\\theta,\\quad \\sin(2\\pi-\\theta)=-\\sin\\theta',
+     expl:"angle oppos\u00e9 modulo $2\\pi$"}
+  ];
+  const tr = randChoice(transforms);
+  const res = tr.calc(base.n, base.d);
+  const cs = cosSin(res.n, res.d);
+  const correct = "$\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$";
+  const w1 = cosSin(base.n, base.d);
+  const w2 = cosSin(-base.n, base.d);
+  const w3 = cosSin(base.d - base.n, base.d);
+  const options0 = shuffle([
+    {label:correct,correct:true},
+    {label:"$\\big("+w1[0]+"\\,;\\,"+w1[1]+"\\big)$",correct:false},
+    {label:"$\\big("+w2[0]+"\\,;\\,"+w2[1]+"\\big)$",correct:false},
+    {label:"$\\big("+w3[0]+"\\,;\\,"+w3[1]+"\\big)$",correct:false}
+  ]);
+  const uniq = []; const seen = new Set();
+  for(const o of options0){ if(!seen.has(o.label)){ seen.add(o.label); uniq.push(o); } }
+  let tries = 0;
+  while(uniq.length < 4 && tries < 40){
+    tries++;
+    const a2 = randChoice(SPECIAL);
+    const c2 = cosSin(a2.n,a2.d);
+    const l = "$\\big("+c2[0]+"\\,;\\,"+c2[1]+"\\big)$";
+    if(!seen.has(l)){ seen.add(l); uniq.push({label:l,correct:false}); }
+  }
+  const finalOpts = shuffle(uniq);
+  return {
+    title:'\u00c9preuve VIII \u2014 Le Ch\u0153ur des Angles',
+    story:"Un ch\u0153ur spectral entonne des formules anciennes. Chaque voix chante un angle diff\u00e9rent mais tous sont <em>li\u00e9s</em> au m\u00eame angle $\\theta$. Le chef de ch\u0153ur s'approche : <em>\u00ab Reconnais le cosinus et le sinus de l'angle associ\u00e9, et le ch\u0153ur te laissera passer. \u00bb</em>",
+    question:"Soit $\\theta = "+piLatex(base.n,base.d)+"$. Quelles sont les valeurs de $\\cos\\left("+tr.label+"\\right)$ et $\\sin\\left("+tr.label+"\\right)$ ?",
+    options: finalOpts.map(o=>o.label),
+    correctIndex: finalOpts.findIndex(o=>o.correct),
+    fragments: fragLibStep8(tr.key),
+    canvas: function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      drawArc(ctx,s,piVal(base.n,base.d), piText(base.n,base.d) ,'#7a5a00');
+      drawPoint(ctx,s,piVal(base.n,base.d),'M','#0f6b8a');
+      drawArc(ctx,s,piVal(res.n,res.d), piText(res.n,res.d) ,'#a82020',0.22);
+      drawPoint(ctx,s,piVal(res.n,res.d),"M'",'#a82020');
+      drawProjections(ctx,s,piVal(res.n,res.d),'rgba(168,32,32,.5)');
+    },
+    solution: function(){
+      return "<p>L'angle associ\u00e9 est $"+tr.label+"$, reli\u00e9 \u00e0 $\\theta = "+piLatex(base.n,base.d)+"$.</p>"+
+        "<p>Formule d'angles associ\u00e9s :</p>"+
+        "<div class=\"keypoint\">$$"+tr.formule+"$$</div>"+
+        "<p>Elle provient de la <strong>"+tr.expl+"</strong>.</p>"+
+        "<p>Avec $\\theta = "+piLatex(base.n,base.d)+"$, on obtient $"+tr.label+" = "+piLatex(res.n,res.d)+"$.</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$.</div>";
+    }
+  };
+}
+
+function step9(){
+  const a = randChoice(SPECIAL.filter(x=>x.deg!==0 && x.deg!==180));
+  const kind = randChoice(['mp','sym','rot','coord']);
+  const th = piVal(a.n,a.d);
+  const cs = cosSin(a.n,a.d);
+  let question, options, correctIndex, solutionFn, canvasFn;
+
+  if(kind==='mp'){
+    const k = randChoice([1,2,-1]);
+    const nBig = a.n + 2*k*a.d;
+    const correct = piLatex(a.n,a.d);
+    const opts = shuffle([
+      {label:'$'+correct+'$',correct:true},
+      {label:'$'+piLatex(-a.n,a.d)+'$',correct:false},
+      {label:'$'+piLatex(nBig,a.d)+'$',correct:false},
+      {label:'$'+piLatex(a.n+a.d,a.d)+'$',correct:false}
+    ]);
+    question = "Quelle est la <strong>mesure principale</strong> de $"+piLatex(nBig,a.d)+"$ ?";
+    options = opts.map(o=>o.label);
+    correctIndex = opts.findIndex(o=>o.correct);
+    solutionFn = function(){
+      return "<p>On retranche $2\\pi$ jusqu'\u00e0 tomber dans $]-\\pi\\,;\\,\\pi]$ :</p>"+
+        "<p>$$"+piLatex(nBig,a.d)+" - "+(2*Math.abs(k))+"\\pi = "+correct+"$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $"+correct+"$.</div>";
+    };
+    canvasFn = function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      drawArc(ctx,s,piVal(nBig,a.d), piText(nBig,a.d) ,'#a82020');
+      drawPoint(ctx,s,piVal(nBig,a.d),'\u03b8','#a82020');
+      drawArc(ctx,s,th,'','#1c7a3d',0.22);
+      drawPoint(ctx,s,th,'\u03b8p','#1c7a3d');
+    };
+  } else if(kind==='sym'){
+    const type = randChoice([
+      {l:"l'axe $(O,\\vec{i})$", y:'axeOi'},
+      {l:"l'axe $(O,\\vec{j})$", y:'axeOj'},
+      {l:"le centre $O$", y:'ctr'}
+    ]);
+    let cs2;
+    if(type.y==='axeOi') cs2 = cosSin(-a.n,a.d);
+    else if(type.y==='axeOj') cs2 = cosSin(a.d-a.n,a.d);
+    else cs2 = cosSin(a.n+a.d,a.d);
+    const correct = "$\\big("+cs2[0]+"\\,;\\,"+cs2[1]+"\\big)$";
+    const opts = shuffle([
+      {label:correct,correct:true},
+      {label:"$\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$",correct:false},
+      {label:"$\\big("+cs[1]+"\\,;\\,"+cs[0]+"\\big)$",correct:false},
+      {label:"$\\big(-"+cs[0]+"\\,;\\,"+cs[1]+"\\big)$",correct:false}
+    ]);
+    question = "Le point $M$ a pour angle $\\theta = "+piLatex(a.n,a.d)+"$. Quelles sont les coordonn\u00e9es de son image par la sym\u00e9trie d'axe <strong>"+type.l+"</strong> ?";
+    options = opts.map(o=>o.label);
+    correctIndex = opts.findIndex(o=>o.correct);
+    solutionFn = function(){
+      const angleImg = type.y==='axeOi' ? piLatex(-a.n,a.d)
+                     : type.y==='axeOj' ? piLatex(a.d-a.n,a.d)
+                     : piLatex(a.n+a.d,a.d);
+      return "<p>Angle de d\u00e9part : $\\theta = "+piLatex(a.n,a.d)+"$.</p>"+
+        "<p>Par "+type.l+", l'angle image est : $\\theta' = "+angleImg+"$.</p>"+
+        "<p>On en d\u00e9duit : $\\cos\\theta' = "+cs2[0]+"$ et $\\sin\\theta' = "+cs2[1]+"$.</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $\\big("+cs2[0]+"\\,;\\,"+cs2[1]+"\\big)$.</div>";
+    };
+    canvasFn = function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      drawArc(ctx,s,th, piText(a.n,a.d) ,'#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+    };
+  } else if(kind==='rot'){
+    const dir = randChoice(['+','-']);
+    const rr = simplify(2*a.n + (dir==='+'?a.d:-a.d), 2*a.d);
+    const cs2 = cosSin(rr.n, rr.d);
+    const correct = "$\\big("+cs2[0]+"\\,;\\,"+cs2[1]+"\\big)$";
+    const opts = shuffle([
+      {label:correct,correct:true},
+      {label:"$\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$",correct:false},
+      {label:"$\\big("+cs[1]+"\\,;\\,"+cs[0]+"\\big)$",correct:false},
+      {label:"$\\big(-"+cs[1]+"\\,;\\,"+cs[0]+"\\big)$",correct:false}
+    ]);
+    const sign = dir==='+' ? '+' : '\u2212';
+    question = "Le point $M$ a pour angle $\\theta = "+piLatex(a.n,a.d)+"$. On effectue une rotation de centre $O$ et d'angle $"+(dir==='+'?'+90^\\circ':'-90^\\circ')+"$. Quelles sont les coordonn\u00e9es de $M'$ ?";
+    options = opts.map(o=>o.label);
+    correctIndex = opts.findIndex(o=>o.correct);
+    solutionFn = function(){
+      return "<p>Rotation d'angle $"+(dir==='+'?'+90^\\circ':'-90^\\circ')+"$ : on "+(dir==='+'?'ajoute':'retranche')+" $\\frac{\\pi}{2}$ \u00e0 l'angle.</p>"+
+        "<p>$$\\theta' = "+piLatex(a.n,a.d)+" "+sign+" \\frac{\\pi}{2} = "+piLatex(rr.n,rr.d)+"$$</p>"+
+        "<p>Donc $\\cos\\theta' = "+cs2[0]+"$ et $\\sin\\theta' = "+cs2[1]+"$.</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $\\big("+cs2[0]+"\\,;\\,"+cs2[1]+"\\big)$.</div>";
+    };
+    canvasFn = function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      drawArc(ctx,s,th, piText(a.n,a.d) ,'#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+      drawArc(ctx,s,piVal(rr.n,rr.d), piText(rr.n,rr.d) ,'#a82020',0.22);
+      drawPoint(ctx,s,piVal(rr.n,rr.d),"M'",'#a82020');
+    };
+  } else {
+    const correct = "$\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$";
+    const c2 = cosSin(-a.n,a.d);
+    const c3 = cosSin(a.d-a.n,a.d);
+    const c4 = cosSin(a.n+a.d,a.d);
+    const opts = shuffle([
+      {label:correct,correct:true},
+      {label:"$\\big("+c2[0]+"\\,;\\,"+c2[1]+"\\big)$",correct:false},
+      {label:"$\\big("+c3[0]+"\\,;\\,"+c3[1]+"\\big)$",correct:false},
+      {label:"$\\big("+c4[0]+"\\,;\\,"+c4[1]+"\\big)$",correct:false}
+    ]);
+    question = "Quelles sont les coordonn\u00e9es du point $M$ du cercle trigonom\u00e9trique d'angle $\\theta = "+piLatex(a.n,a.d)+"$ ?";
+    options = opts.map(o=>o.label);
+    correctIndex = opts.findIndex(o=>o.correct);
+    solutionFn = function(){
+      return "<p>Sur le cercle trigonom\u00e9trique, $M = \\big(\\cos\\theta\\,;\\,\\sin\\theta\\big)$.</p>"+
+        "<p>Pour $\\theta = "+piLatex(a.n,a.d)+"$ :</p>"+
+        "<p>$$\\cos\\theta = "+cs[0]+", \\quad \\sin\\theta = "+cs[1]+"$$</p>"+
+        "<div class=\"keypoint\"><strong>R\u00e9ponse :</strong> $\\big("+cs[0]+"\\,;\\,"+cs[1]+"\\big)$.</div>";
+    };
+    canvasFn = function(){
+      const cv = document.getElementById('mainCanvas');
+      const s = drawBase(cv); const ctx = s.ctx;
+      drawArc(ctx,s,th, piText(a.n,a.d) ,'#7a5a00');
+      drawPoint(ctx,s,th,'M','#0f6b8a');
+      drawProjections(ctx,s,th);
+    };
+  }
+
+  return {
+    title:'\u00c9preuve IX \u2014 Le Sceau Final',
+    story:"Vous voici devant le <em>Sceau du Cercle</em>, un disque d'or grav\u00e9 de symboles. Le Grand Ma\u00eetre de l'Ordre appara\u00eet : <em>\u00ab Tu as franchi huit \u00e9preuves. Cette derni\u00e8re synth\u00e9tise tout ce que tu as appris. R\u00e9ponds juste, et le sceau s'ouvrira. \u00bb</em>",
+    question: question,
+    options: options,
+    correctIndex: correctIndex,
+    fragments: fragLibStep9(kind),
+    canvas: canvasFn,
+    solution: solutionFn
+  };
+}
+
+/* ============================================================
+   \u00c9TAT
+   ============================================================ */
+const STEP_GENERATORS = [step1,step2,step3,step4,step5,step6,step7,step8,step9];
+const STEP_LABELS = ['I','II','III','IV','V','VI','VII','VIII','IX'];
+
+const state = {
+  step: 0,
+  attempts: 0,
+  solved: false,
+  solutionShown: false,
+  data: null,
+  selected: null,
+  fragmentPool: [],
+  fragmentsBank: [],
+  fragmentsChosen: []
+};
+
+function $(id){ return document.getElementById(id); }
+
+/* ============================================================
+   COMPOSEUR
+   ============================================================ */
+let fragDragSrcIdx = null;
+
+function updateCounts(){
+  const b = $('bankCount'); const c = $('chosenCount');
+  if(b) b.textContent = state.fragmentsBank.length + ' restant' + (state.fragmentsBank.length>1?'s':'');
+  if(c){
+    const n = state.fragmentsChosen.length;
+    c.textContent = n + ' fragment' + (n>1?'s':'') + ' dans le raisonnement';
+  }
+}
+
+function renderComposer(){
+  const bank = $('fragBank');
+  const zone = $('fragZone');
+  if(!bank || !zone) return;
+
+  bank.innerHTML = '';
+  zone.innerHTML = '';
+
+  bank.classList.toggle('empty', state.fragmentsBank.length === 0);
+  zone.classList.toggle('empty', state.fragmentsChosen.length === 0);
+
+  state.fragmentsBank.forEach(function(f){
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'frag';
+    el.textContent = f.text;
+    el.dataset.id = f.id;
+    el.addEventListener('click', function(){ addFragment(f.id); });
+    bank.appendChild(el);
+  });
+
+  state.fragmentsChosen.forEach(function(f, i){
+    const el = document.createElement('div');
+    el.className = 'frag-chosen';
+    el.draggable = true;
+    el.tabIndex = 0;
+    el.dataset.idx = i;
+    el.dataset.id = f.id;
+    el.setAttribute('role', 'listitem');
+
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '\u2630';
+    handle.setAttribute('aria-hidden', 'true');
+
+    const txt = document.createElement('span');
+    txt.className = 'frag-text';
+    txt.textContent = f.text;
+
+    const up = document.createElement('button');
+    up.type = 'button';
+    up.className = 'frag-btn frag-up';
+    up.textContent = '\u2191';
+    up.title = 'Monter (ou touche \u2191)';
+    up.setAttribute('aria-label', 'Monter ce fragment');
+    up.addEventListener('click', function(e){ e.stopPropagation(); moveFragment(i, i-1); });
+
+    const down = document.createElement('button');
+    down.type = 'button';
+    down.className = 'frag-btn frag-down';
+    down.textContent = '\u2193';
+    down.title = 'Descendre (ou touche \u2193)';
+    down.setAttribute('aria-label', 'Descendre ce fragment');
+    down.addEventListener('click', function(e){ e.stopPropagation(); moveFragment(i, i+1); });
+
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'frag-remove';
+    rm.innerHTML = '&times;';
+    rm.title = 'Retirer ce fragment';
+    rm.setAttribute('aria-label', 'Retirer ce fragment');
+    rm.addEventListener('click', function(e){ e.stopPropagation(); removeFragment(i); });
+
+    el.appendChild(handle);
+    el.appendChild(txt);
+    el.appendChild(up);
+    el.appendChild(down);
+    el.appendChild(rm);
+
+    el.addEventListener('dragstart', function(e){
+      fragDragSrcIdx = i;
+      el.classList.add('dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(f.id)); } catch(err){}
+    });
+    el.addEventListener('dragend', function(){
+      fragDragSrcIdx = null;
+      document.querySelectorAll('.frag-chosen.dragging, .frag-chosen.drag-over').forEach(function(x){
+        x.classList.remove('dragging'); x.classList.remove('drag-over');
+      });
+    });
+    el.addEventListener('dragover', function(e){
+      e.preventDefault();
+      if(fragDragSrcIdx === null || fragDragSrcIdx === i) return;
+      el.classList.add('drag-over');
+      try { e.dataTransfer.dropEffect = 'move'; } catch(err){}
+    });
+    el.addEventListener('dragleave', function(){ el.classList.remove('drag-over'); });
+    el.addEventListener('drop', function(e){
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if(fragDragSrcIdx === null || fragDragSrcIdx === i) return;
+      const moved = state.fragmentsChosen.splice(fragDragSrcIdx, 1)[0];
+      state.fragmentsChosen.splice(i, 0, moved);
+      fragDragSrcIdx = null;
+      renderComposer();
+    });
+    el.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowUp' && i > 0){
+        e.preventDefault(); moveFragment(i, i-1); focusFragment(i-1);
+      } else if(e.key === 'ArrowDown' && i < state.fragmentsChosen.length-1){
+        e.preventDefault(); moveFragment(i, i+1); focusFragment(i+1);
+      } else if(e.key === 'Delete' || e.key === 'Backspace'){
+        e.preventDefault(); removeFragment(i);
+      }
+    });
+
+    zone.appendChild(el);
+  });
+
+  updateCounts();
+}
+
+function addFragment(id){
+  const idx = state.fragmentsBank.findIndex(function(f){ return f.id === id; });
+  if(idx === -1) return;
+  const f = state.fragmentsBank.splice(idx, 1)[0];
+  state.fragmentsChosen.push(f);
+  renderComposer();
+}
+function removeFragment(i){
+  if(i < 0 || i >= state.fragmentsChosen.length) return;
+  const f = state.fragmentsChosen.splice(i, 1)[0];
+  state.fragmentsBank.push(f);
+  renderComposer();
+}
+function moveFragment(from, to){
+  if(from === to) return;
+  if(to < 0 || to >= state.fragmentsChosen.length) return;
+  const f = state.fragmentsChosen.splice(from, 1)[0];
+  state.fragmentsChosen.splice(to, 0, f);
+  renderComposer();
+}
+function focusFragment(i){
+  const el = document.querySelector('.frag-chosen[data-idx="'+i+'"]');
+  if(el) el.focus();
+}
+function resetComposer(){
+  if(!state.fragmentPool) return;
+  state.fragmentsBank = shuffle(state.fragmentPool.slice());
+  state.fragmentsChosen = [];
+  renderComposer();
+}
+function revealFragments(){
+  document.querySelectorAll('.frag, .frag-chosen').forEach(function(el){
+    const id = el.dataset.id;
+    const f = state.fragmentPool.find(function(x){ return String(x.id) === String(id); });
+    if(!f) return;
+    if(f.relevant) el.classList.add('frag-relevant');
+    else el.classList.add('frag-distractor');
+  });
+}
+
+/* ============================================================
+   RENDU
+   ============================================================ */
+function typeset(){
+  if(window.MathJax && window.MathJax.typesetPromise){
+    try { window.MathJax.typesetPromise().catch(function(e){ console.warn('MathJax:', e); }); }
+    catch(e){ console.warn('MathJax:', e); }
+  }
+}
+
+function loadStep(i){
+  state.step = i;
+  state.attempts = 0;
+  state.solved = false;
+  state.solutionShown = false;
+  state.selected = null;
+  state.data = STEP_GENERATORS[i]();
+  /* Banque de fragments : on m\u00e9lange l'ordre pour obliger \u00e0 lire */
+  state.fragmentPool = (state.data.fragments || []).map(function(f, idx){
+    return { id: idx, text: f.text, relevant: f.relevant, why: f.why || '' };
+  });
+  state.fragmentsBank = shuffle(state.fragmentPool.slice());
+  state.fragmentsChosen = [];
+  render();
+}
+
+function render(){
+  const d = state.data;
+  $('stepTitle').innerHTML = d.title;
+  $('storyText').innerHTML = d.story;
+  $('questionText').innerHTML = d.question;
+  $('progressFill').style.width = ((state.step+1)/9*100) + '%';
+  $('progressText').textContent = '\u00c9preuve ' + STEP_LABELS[state.step] + ' / IX';
+
+  const zone = $('answerZone');
+  zone.innerHTML = '';
+  d.options.forEach(function(opt, idx){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'option';
+    btn.innerHTML = '<span class="letter">' + String.fromCharCode(65+idx) + '.</span><span>' + opt + '</span>';
+    btn.addEventListener('click', function(){ selectOption(idx, btn); });
+    zone.appendChild(btn);
+  });
+
+  $('feedback').className = 'feedback';
+  $('feedback').innerHTML = '';
+  $('attemptsDisplay').textContent = '';
+  $('validateBtn').classList.remove('hidden');
+  $('solutionBtn').classList.add('hidden');
+  $('nextBtn').classList.add('hidden');
+  $('solutionPanel').classList.add('hidden');
+
+  renderComposer();
+  try { d.canvas(); } catch(e){ console.warn('Canvas:', e); }
+  typeset();
+}
+
+function selectOption(idx, btn){
+  if(state.solved || state.solutionShown) return;
+  const all = document.querySelectorAll('.option');
+  for(let i=0;i<all.length;i++) all[i].classList.remove('selected');
+  btn.classList.add('selected');
+  state.selected = idx;
+}
+
+/* ============================================================
+   CONTR\u00d4LE DU RAISONNEMENT
+   L'analyse porte uniquement sur les phrases choisies par
+   l'\u00e9l\u00e8ve et sur leur ordre : toute phrase non choisie
+   est ignor\u00e9e. Le raisonnement est correct si :
+   - les phrases choisies ne contiennent aucun distracteur,
+   - elles apparaissent dans le bon ordre logique.
+   Toute erreur est explicit\u00e9e en d\u00e9tail pour que l'\u00e9l\u00e8ve
+   puisse apprendre de ses erreurs.
+   ============================================================ */
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getReasoningReport(){
+  /* L'analyse porte uniquement sur les phrases choisies par
+     l'\u00e9l\u00e8ve et sur leur ordre : toute phrase non choisie
+     dans la banque est ignor\u00e9e. */
+  const chosen = state.fragmentsChosen;
+  const intruders = chosen.filter(function(f){ return !f.relevant; });
+  const expectedIds = state.fragmentPool
+    .filter(function(f){ return f.relevant; })
+    .map(function(f){ return f.id; });
+  /* Ordre attendu des phrases choisies : celui du raisonnement mod\u00e8le. */
+  const expectedOrder = chosen.slice()
+    .filter(function(f){ return expectedIds.indexOf(f.id) >= 0; })
+    .sort(function(a,b){
+      return expectedIds.indexOf(a.id) - expectedIds.indexOf(b.id);
+    });
+  let orderOk = true;
+  if(chosen.length > 0 && intruders.length === 0){
+    /* Les phrases choisies doivent appara\u00eetre dans le m\u00eame
+       ordre relatif que dans le raisonnement attendu :
+       on compare l'ordre R\u00c9EL choisi par l'\u00e9l\u00e8ve. */
+    const chosenIds = chosen.map(function(f){ return f.id; });
+    let k = 0;
+    for(let i=0;i<chosenIds.length;i++){
+      while(k < expectedIds.length && expectedIds[k] !== chosenIds[i]){ k++; }
+      if(k >= expectedIds.length){ orderOk = false; break; }
+      k++;
+    }
+  }
+  return {
+    empty: chosen.length === 0,
+    intruders: intruders,
+    expectedOrder: expectedOrder,
+    orderOk: orderOk,
+    correct: chosen.length > 0 && intruders.length === 0 && orderOk
+  };
+}
+
+function reasoningFeedback(rep){
+  /* L'analyse ne porte que sur les phrases choisies par l'\u00e9l\u00e8ve
+     et sur leur ordre : aucune phrase non choisie n'est mentionn\u00e9e. */
+  let html = '<p><strong>\u2717 Ton raisonnement n\'est pas encore correct : la r\u00e9ponse ne peut pas \u00eatre accept\u00e9e.</strong></p>';
+  if(rep.empty){
+    html += '<p>Ton raisonnement est <strong>vide</strong> : construis-le en cliquant sur les phrases de la banque que tu veux utiliser.</p>';
+  }
+  if(rep.intruders.length){
+    html += '<p><strong>\ud83d\udeab Phrase' + (rep.intruders.length>1?'s':'') + ' erron\u00e9' + (rep.intruders.length>1?'es':'e') + ' \u00e0 retirer (' + rep.intruders.length + ') :</strong></p><ul>';
+    rep.intruders.forEach(function(f){
+      html += '<li>\u00ab ' + escapeHtml(f.text) + ' \u00bb \u2014 <em>pourquoi c\'est une erreur :</em> ' + (f.why || 'cette phrase ne fait pas partie du raisonnement attendu.') + '</li>';
+    });
+    html += '</ul>';
+  }
+  if(!rep.orderOk){
+    html += '<p><strong>\u2195\ufe0f Tes phrases sont justes, mais mal ordonn\u00e9es.</strong> Un raisonnement se lit de haut en bas : chaque \u00e9tape doit d\u00e9couler de la pr\u00e9c\u00e9dente. Voici l\'ordre attendu de tes propres phrases :</p><ol>';
+    rep.expectedOrder.forEach(function(f){
+      html += '<li>' + escapeHtml(f.text) + '</li>';
+    });
+    html += '</ol>';
+  }
+  html += '<p><em>Corrige ton raisonnement (phrases en rouge : \u00e0 retirer ; tu peux r\u00e9ordonner avec les boutons \u2191/\u2193), puis valide \u00e0 nouveau. Ces corrections de raisonnement ne consomment pas tes 3 tentatives de r\u00e9ponse.</em></p>';
+  return html;
+}
+
+function flagReasoningErrors(rep){
+  rep.intruders.forEach(function(f){
+    document.querySelectorAll('.frag-chosen[data-id="'+f.id+'"]').forEach(function(el){
+      el.classList.add('frag-error');
+    });
+  });
+}
+
+function validate(){
+  if(state.solved || state.solutionShown) return;
+
+  /* 1) LE RAISONNEMENT EST V\u00c9RIFI\u00c9 AVANT LA R\u00c9PONSE :
+        une r\u00e9ponse n'est accept\u00e9e que si et seulement si
+        l'\u00e9l\u00e8ve a g\u00e9n\u00e9r\u00e9 un raisonnement correct. */
+  const rep = getReasoningReport();
+  if(!rep.correct){
+    flagReasoningErrors(rep);
+    showFeedback('err', reasoningFeedback(rep));
+    $('attemptsDisplay').textContent = '\u26a0 La r\u00e9ponse sera accept\u00e9e uniquement lorsque le raisonnement sera correct.';
+    return;
+  }
+
+  /* 2) Raisonnement correct : on peut maintenant \u00e9valuer la r\u00e9ponse. */
+  if(state.selected === null){
+    showFeedback('ok','\u2726 Ton raisonnement est correct ! Il ne reste plus qu\'\u00e0 choisir la bonne r\u00e9ponse, puis \u00e0 valider.');
+    return;
+  }
+  const d = state.data;
+  const btns = document.querySelectorAll('.option');
+  if(state.selected === d.correctIndex){
+    state.solved = true;
+    btns[state.selected].classList.add('correct');
+    for(let i=0;i<btns.length;i++) btns[i].classList.add('disabled');
+    showFeedback('ok','\u2726 Bravo ! Ton raisonnement est rigoureux ET ta r\u00e9ponse est exacte. Le sceau s\'illumine.');
+    $('validateBtn').classList.add('hidden');
+    $('nextBtn').classList.remove('hidden');
+    revealFragments();
+  } else {
+    state.attempts++;
+    btns[state.selected].classList.add('wrong');
+    btns[state.selected].classList.add('disabled');
+    state.selected = null;
+    if(state.attempts < 3){
+      showFeedback('err','\u2717 Ton raisonnement est correct, mais ce n\'est pas la bonne r\u00e9ponse... (tentative ' + state.attempts + '/3)');
+    } else {
+      showFeedback('err','\u2717 Trois \u00e9checs. Le Grimoire s\'ouvre pour t\'aider.');
+      $('solutionBtn').classList.remove('hidden');
+    }
+    $('attemptsDisplay').textContent = 'Tentatives : ' + state.attempts + ' / 3';
+  }
+}
+
+function showFeedback(type, msg){
+  const f = $('feedback');
+  f.className = 'feedback show ' + type;
+  f.innerHTML = msg;
+}
+
+function showSolution(){
+  if(state.solutionShown) return;
+  state.solutionShown = true;
+  const d = state.data;
+  $('solutionContent').innerHTML = d.solution();
+  $('solutionPanel').classList.remove('hidden');
+  $('solutionBtn').classList.add('hidden');
+  $('validateBtn').classList.add('hidden');
+  $('nextBtn').classList.remove('hidden');
+  const all = document.querySelectorAll('.option');
+  for(let i=0;i<all.length;i++) all[i].classList.add('disabled');
+  revealFragments();
+  typeset();
+  $('solutionPanel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function nextStep(){
+  if(state.step < 8){
+    loadStep(state.step+1);
+    window.scrollTo({top:0, behavior:'smooth'});
+  } else {
+    finish();
+  }
+}
+
+function finish(){
+  $('stepTitle').innerHTML = '\u2726 Fin de la Qu\u00eate \u2726';
+  $('storyText').innerHTML =
+    '<p>Vous avez franchi les neuf \u00e9preuves des <em>Arcanes du Cercle</em>. Le Grand Ma\u00eetre vous remet le titre de <strong>Ma\u00eetre Arcaniste</strong>.</p>' +
+    '<p>Gr\u00e2ce \u00e0 cette qu\u00eate, vous ma\u00eetrisez d\u00e9sormais :</p>' +
+    '<ul style="margin:10px 0 0 24px">' +
+    '<li>la conversion degr\u00e9 $\\leftrightarrow$ radian ;</li>' +
+    '<li>la congruence modulo $2\\pi$ et la mesure principale ;</li>' +
+    '<li>les sym\u00e9tries d\'axe $(O,\\vec{i})$, $(O,\\vec{j})$ et de centre $O$ ;</li>' +
+    '<li>les rotations d\'angle $\\pm 90^\\circ$ ;</li>' +
+    '<li>le cercle trigonom\u00e9trique et les coordonn\u00e9es $(\\cos\\theta\\,;\\,\\sin\\theta)$ ;</li>' +
+    '<li>les angles associ\u00e9s.</li>' +
+    '</ul>' +
+    '<p style="margin-top:14px">Que les \u00e9toiles guident toujours vos calculs. \u2726</p>';
+  $('questionText').innerHTML = '';
+  $('answerZone').innerHTML = '';
+  $('fragBank').innerHTML = '';
+  $('fragZone').innerHTML = '';
+  $('feedback').className = 'feedback';
+  $('attemptsDisplay').textContent = '';
+  $('validateBtn').classList.add('hidden');
+  $('solutionBtn').classList.add('hidden');
+  $('nextBtn').classList.add('hidden');
+  $('progressFill').style.width = '100%';
+  $('progressText').textContent = 'Qu\u00eate achev\u00e9e !';
+
+  const cv = document.getElementById('mainCanvas');
+  const s = drawBase(cv); const ctx = s.ctx;
+  ctx.fillStyle = '#7a5a00';
+  ctx.font = 'bold 26px Cinzel, Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('\u2726 SCEAU DU CERCLE \u2726', s.cx, s.cy - s.R - 30);
+  ctx.textAlign = 'left';
+  for(let k=0;k<16;k++){
+    const a = k*Math.PI/8;
+    drawArc(ctx, s, a+Math.PI/16, '', 'rgba(166,124,0,' + (0.25 + k*0.02) + ')', 0.15+k*0.03);
+    drawPoint(ctx, s, a, '', 'rgba(15,107,138,' + (0.35+k*0.03) + ')');
+  }
+  typeset();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+let initialized = false;
+
+function init(){
+  if(initialized) return;
+  initialized = true;
+  try {
+    $('validateBtn').addEventListener('click', validate);
+    $('solutionBtn').addEventListener('click', showSolution);
+    $('nextBtn').addEventListener('click', nextStep);
+    $('clearFrags').addEventListener('click', resetComposer);
+    loadStep(0);
+  } catch(e){
+    console.error('Init error:', e);
+    const err = $('loadError');
+    if(err){
+      err.classList.remove('hidden');
+      err.innerHTML = '<strong>Erreur de chargement :</strong> ' + (e.message || e);
+    }
+  }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+setTimeout(function(){ if(!initialized) init(); }, 1500);
+
+let resizeTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){
+    if(state.data && $('stepTitle').textContent.indexOf('Fin') === -1){
+      try { state.data.canvas(); } catch(e){}
+    }
+  }, 200);
+});
+</script>
+</body>
+</html>

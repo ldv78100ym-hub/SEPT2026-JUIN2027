@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecteur en lot — Sujets Trigonométrie PCM</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+    startup: { typeset: false }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+:root{
+  --bg:#f6f3ea; --panel:#ffffff; --border:#cfc7a8; --border-soft:#e6e0ca;
+  --accent:#0f6b8a; --accent-dark:#0a4f66; --accent-light:#2a8fb8;
+  --text:#1e1a12; --text-soft:#3a3424; --muted:#6e6448;
+  --ok:#1c7a3d; --ok-bg:#e8f5ec;
+  --err:#a82020; --err-bg:#fbeaea;
+  --warn:#8b6f1a; --warn-bg:#fdf6dd;
+  --gold:#a67c00; --gold-dark:#7a5a00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{
+  font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  color:var(--text);line-height:1.55;padding:24px 14px 60px;min-height:100vh;
+  background:linear-gradient(180deg, #faf7ee 0%, #f0ebd8 100%);
+}
+.wrap{max-width:1400px;margin:0 auto}
+
+header{
+  text-align:center;margin-bottom:20px;padding-bottom:14px;
+  border-bottom:2px solid var(--accent);
+}
+header h1{
+  font-size:clamp(1.15rem, 3vw, 1.55rem);
+  color:var(--accent-dark);letter-spacing:.3px;margin-bottom:6px;
+  font-weight:700;
+}
+header .sub{color:var(--muted);font-style:italic;font-size:.95rem}
+
+/* Barre de contrôle */
+.control-panel{
+  background:linear-gradient(135deg, #fffbe8 0%, #fdf6dd 100%);
+  border:1px solid var(--border-soft);
+  border-left:4px solid var(--accent);
+  border-radius:8px;padding:16px 20px;margin-bottom:18px;
+  box-shadow:0 2px 8px rgba(15,107,138,.08);
+}
+.control-panel h2{
+  font-size:1rem;color:var(--accent-dark);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;font-weight:700;
+}
+.control-panel h2::before{content:"\1F4C1";font-size:1.1rem}
+.control-grid{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:12px;align-items:center;
+}
+@media(max-width:800px){
+  .control-grid{grid-template-columns:1fr;}
+}
+.file-input-wrap{
+  position:relative;display:inline-block;width:100%;
+}
+#fileInput{
+  position:absolute;left:-9999px;
+}
+.file-label{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:11px 20px;border:2px dashed var(--accent-light);
+  border-radius:8px;background:#fff;color:var(--accent-dark);
+  cursor:pointer;font-weight:600;font-size:.96rem;
+  transition:.15s;text-align:center;
+}
+.file-label:hover{
+  background:#eaf4f8;border-color:var(--accent);
+}
+.file-label.dragover{
+  background:#dff0f5;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(15,107,138,.18);
+}
+.file-label strong{color:var(--accent-dark)}
+
+button.act{
+  font-family:inherit;font-size:.9rem;font-weight:600;letter-spacing:.3px;
+  padding:10px 18px;border-radius:8px;border:1.5px solid var(--accent);
+  background:#fff;color:var(--accent-dark);cursor:pointer;transition:.15s;
+  white-space:nowrap;
+}
+button.act:hover{background:#eaf4f8}
+button.act.primary{
+  background:linear-gradient(135deg, var(--accent-light), var(--accent));
+  color:#fff;border-color:var(--accent-dark);
+  box-shadow:0 2px 6px rgba(15,107,138,.25);
+}
+button.act.primary:hover{filter:brightness(1.06);transform:translateY(-1px)}
+button.act:disabled{
+  opacity:.5;cursor:not-allowed;filter:grayscale(.5);transform:none;
+}
+
+/* Zone de statut */
+#status{
+  margin-top:12px;padding:0;font-size:.9rem;
+  line-height:1.5;display:none;
+}
+#status.show{display:block;padding:10px 14px;border-radius:6px;}
+#status.info{background:#eaf4f8;border-left:3px solid var(--accent);color:var(--accent-dark);}
+#status.ok{background:var(--ok-bg);border-left:3px solid var(--ok);color:#14532d;}
+#status.warn{background:var(--warn-bg);border-left:3px solid var(--warn);color:#6e5a10;}
+#status.err{background:var(--err-bg);border-left:3px solid var(--err);color:#7f1d1d;}
+
+/* Résumé statistique */
+.summary-panel{
+  display:none;background:var(--panel);
+  border:1px solid var(--border-soft);border-left:4px solid var(--gold);
+  border-radius:8px;padding:16px 20px;margin-bottom:18px;
+  box-shadow:0 2px 8px rgba(120,100,40,.06);
+}
+.summary-panel.show{display:block}
+.summary-panel h2{
+  font-size:1rem;color:var(--gold-dark);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;font-weight:700;
+}
+.summary-panel h2::before{content:"\1F4CA";font-size:1.1rem}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+  gap:12px;
+}
+.stat-card{
+  background:#fffdf6;border:1px solid var(--border-soft);
+  border-radius:8px;padding:12px 14px;text-align:center;
+}
+.stat-card .stat-val{
+  font-size:1.6rem;font-weight:700;color:var(--accent-dark);
+  line-height:1.1;display:block;margin-bottom:2px;
+}
+.stat-card .stat-lbl{
+  font-size:.82rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+/* Tableau global */
+.table-panel{
+  display:none;background:var(--panel);
+  border:1px solid var(--border-soft);border-radius:8px;
+  padding:0;margin-bottom:18px;
+  box-shadow:0 2px 8px rgba(120,100,40,.06);
+  overflow:hidden;
+}
+.table-panel.show{display:block}
+.table-panel h2{
+  font-size:1rem;color:var(--gold-dark);padding:14px 20px;
+  background:linear-gradient(135deg, #fbf6e6, #fdf6dd);
+  border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:center;gap:8px;font-weight:700;
+}
+.table-panel h2::before{content:"\1F4CB";font-size:1.1rem}
+.table-scroll{overflow-x:auto;max-width:100%}
+table.batch{
+  border-collapse:collapse;width:100%;font-size:.88rem;
+  min-width:900px;
+}
+table.batch th, table.batch td{
+  border-bottom:1px solid var(--border-soft);
+  padding:9px 12px;text-align:left;vertical-align:top;
+}
+table.batch th{
+  background:#f6efd8;color:var(--gold-dark);font-weight:700;
+  position:sticky;top:0;z-index:2;
+}
+table.batch tr:hover td{background:#fdfbf2}
+table.batch td.num, table.batch th.num{text-align:center;white-space:nowrap}
+table.batch td.nom{font-weight:700;color:var(--accent-dark);white-space:nowrap}
+table.batch td.classe{white-space:nowrap;font-weight:600}
+table.batch td.score{font-weight:700;white-space:nowrap}
+table.batch td.score.good{color:var(--ok)}
+table.batch td.score.med{color:#b07a00}
+table.batch td.score.bad{color:var(--err)}
+table.batch .fname{
+  font-family:'Consolas','Monaco',monospace;font-size:.78rem;
+  color:var(--muted);
+}
+table.batch .flag{
+  display:inline-block;font-size:.72rem;padding:2px 6px;border-radius:4px;
+  font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+}
+table.batch .flag.ok{background:var(--ok-bg);color:#14532d;}
+table.batch .flag.warn{background:var(--warn-bg);color:#6e5a10;}
+table.batch .flag.err{background:var(--err-bg);color:#7f1d1d;}
+
+/* Ligne dépliable par étudiant */
+table.batch tr.student-row{cursor:pointer;}
+table.batch tr.student-row:hover td{background:#f4f9fc;}
+table.batch tr.details-row td{
+  background:#fbfaf2;border-bottom:2px solid var(--border-soft);
+  padding:0;
+}
+.details-inner{
+  padding:14px 20px;font-size:.9rem;color:var(--text-soft);
+}
+.details-inner h4{
+  font-size:.95rem;color:var(--accent-dark);margin:10px 0 6px;
+  font-weight:700;
+}
+.details-inner h4:first-child{margin-top:0}
+.exo-detail{
+  margin-bottom:12px;padding:10px 14px;background:#fff;
+  border:1px solid var(--border-soft);border-radius:6px;
+}
+.exo-detail .exo-title{
+  font-weight:700;color:var(--gold-dark);margin-bottom:6px;
+}
+.qcm-detail{
+  margin:6px 0;padding:6px 10px;background:#fbfaf2;
+  border-left:3px solid var(--border);border-radius:4px;font-size:.88rem;
+}
+.qcm-detail.correct{border-left-color:var(--ok);background:var(--ok-bg);}
+.qcm-detail.wrong{border-left-color:var(--err);background:var(--err-bg);}
+.qcm-detail.empty{border-left-color:var(--warn);background:var(--warn-bg);}
+.qcm-detail .qtxt{margin-bottom:3px;}
+.qcm-detail .ans{margin-top:3px;font-size:.85rem;}
+.qcm-detail .ans .lbl{color:var(--muted);font-style:italic;}
+.qcm-detail .ans .good{color:#14532d;font-weight:700;}
+.qcm-detail .ans .bad{color:#7f1d1d;font-weight:700;}
+.qcm-detail .ans .na{color:#6e5a10;font-weight:700;}
+
+/* Erreurs */
+.error-block{
+  background:var(--err-bg);border-left:3px solid var(--err);
+  padding:10px 14px;border-radius:5px;margin:8px 0;
+  color:#7f1d1d;font-size:.9rem;
+}
+.error-block strong{color:#a82020}
+
+/* Message vide */
+.empty-state{
+  display:none;text-align:center;padding:60px 20px;color:var(--muted);
+  font-style:italic;
+}
+.empty-state.show{display:block}
+
+footer.page-foot{
+  text-align:center;margin-top:30px;color:var(--muted);
+  font-size:.85rem;font-style:italic;
+}
+
+mjx-container{color:var(--text) !important}
+
+@media(max-width:600px){
+  body{padding:14px 8px 40px;}
+  .control-panel{padding:12px 14px}
+  .file-label{padding:14px 12px;font-size:.88rem}
+  table.batch{font-size:.82rem}
+  table.batch th, table.batch td{padding:7px 8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Lecteur en lot — Sujets Trigonométrie PCM</h1>
+    <p class="sub">Sélectionnez les fichiers <code>.json</code> chiffrés remis par les élèves pour les déchiffrer et les analyser.</p>
+  </header>
+
+  <!-- ==============================
+       PANNEAU DE CONTRÔLE
+       ============================== -->
+  <div class="control-panel">
+    <h2>Chargement des fichiers</h2>
+
+    <div class="control-grid">
+      <div class="file-input-wrap">
+        <input type="file" id="fileInput" accept=".json,application/json" multiple>
+        <label for="fileInput" class="file-label" id="fileLabel">
+          <span>&#128193;</span>
+          <span>Cliquez ou glissez-d&#233;posez ici vos fichiers <strong>.json</strong> (s&#233;lection multiple possible)</span>
+        </label>
+      </div>
+      <button type="button" class="act primary" id="btnAnalyse" disabled>&#9881;&#65039; Analyser</button>
+      <button type="button" class="act" id="btnReset">&#8634; R&#233;initialiser</button>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <!-- ==============================
+       RÉSUMÉ STATISTIQUE
+       ============================== -->
+  <div class="summary-panel" id="summaryPanel">
+    <h2>Synth&#232;se g&#233;n&#233;rale</h2>
+    <div class="stats-grid" id="statsGrid"></div>
+  </div>
+
+  <!-- ==============================
+       TABLEAU RÉCAPITULATIF
+       ============================== -->
+  <div class="table-panel" id="tablePanel">
+    <h2>D&#233;tail par &#233;l&#232;ve <span style="font-weight:400;color:var(--muted);font-size:.85rem;margin-left:auto">(cliquez sur une ligne pour d&#233;plier les r&#233;ponses)</span></h2>
+    <div class="table-scroll">
+      <table class="batch" id="batchTable">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Nom</th>
+            <th>Pr&#233;nom</th>
+            <th>Classe</th>
+            <th>Date</th>
+            <th class="num">Score</th>
+            <th class="num">%</th>
+            <th class="num">Corrig&#233;s ?</th>
+            <th>Fichier</th>
+            <th class="num">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="batchBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Message si aucun fichier -->
+  <div class="empty-state" id="emptyState">
+    Aucun fichier charg&#233; pour l'instant. Utilisez le panneau ci-dessus pour s&#233;lectionner les fichiers <code>.json</code>.
+  </div>
+
+  <footer class="page-foot">
+    Lecteur en lot &#8212; Sujet Trigonom&#233;trie PCM 2026 &#8212; Chiffrement AES-GCM-256
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============================================================
+     MOT DE PASSE DE DÉCHIFFREMENT (doit correspondre à celui
+     utilisé par les copies élèves).
+     ============================================================ */
+  var ENCRYPTION_PASSWORD = 'TRIGO_PCM_2026_ARCANES_DU_CERCLE';
+
+  var HAS_WEBCRYPTO = !!(window.crypto && window.crypto.subtle &&
+                         typeof window.crypto.subtle.importKey === 'function');
+
+  /* ============================================================
+     BASE64 → Uint8Array
+     ============================================================ */
+  function base64ToBytes(b64){
+    var bin = atob(b64);
+    var bytes = new Uint8Array(bin.length);
+    for(var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  /* ============================================================
+     DÉCHIFFREMENT
+     ============================================================ */
+  async function decryptPayload(envelope){
+    var enc = new TextEncoder();
+
+    /* Repli XOR si Web Crypto indisponible */
+    if(envelope.algorithme === 'XOR-Base64-fallback' || !HAS_WEBCRYPTO){
+      var passBytes = enc.encode(ENCRYPTION_PASSWORD);
+      var cipherBytes = base64ToBytes(envelope.donnees);
+      var plainBytes = new Uint8Array(cipherBytes.length);
+      for(var i = 0; i < cipherBytes.length; i++){
+        plainBytes[i] = cipherBytes[i] ^ passBytes[i % passBytes.length];
+      }
+      var txt = new TextDecoder().decode(plainBytes);
+      return JSON.parse(txt);
+    }
+
+    /* AES-GCM standard */
+    if(envelope.algorithme !== 'AES-GCM-256-PBKDF2-SHA256-100000'){
+      throw new Error('Algorithme inconnu : ' + envelope.algorithme);
+    }
+
+    var salt = base64ToBytes(envelope.sel);
+    var iv = base64ToBytes(envelope.iv);
+    var cipherData = base64ToBytes(envelope.donnees);
+
+    var keyMaterial = await crypto.subtle.importKey(
+      'raw', enc.encode(ENCRYPTION_PASSWORD),
+      { name: 'PBKDF2' }, false, ['deriveKey']
+    );
+    var key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+      keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+    );
+    var decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv }, key, cipherData
+    );
+    return JSON.parse(new TextDecoder().decode(decrypted));
+  }
+
+  /* ============================================================
+     ÉTAT GLOBAL
+     ============================================================ */
+  var files = [];          /* File[] sélectionnés */
+  var results = [];        /* objets de résultat après analyse */
+
+  /* ============================================================
+     AFFICHAGE STATUT
+     ============================================================ */
+  var statusEl = document.getElementById('status');
+  function setStatus(type, html){
+    if(!statusEl) return;
+    statusEl.className = 'show ' + type;
+    statusEl.innerHTML = html;
+  }
+  function clearStatus(){
+    if(!statusEl) return;
+    statusEl.className = '';
+    statusEl.innerHTML = '';
+  }
+
+  /* ============================================================
+     SÉLECTION DES FICHIERS
+     ============================================================ */
+  var fileInput = document.getElementById('fileInput');
+  var fileLabel = document.getElementById('fileLabel');
+  var btnAnalyse = document.getElementById('btnAnalyse');
+  var btnReset = document.getElementById('btnReset');
+
+  fileInput.addEventListener('change', function(e){
+    files = Array.prototype.slice.call(e.target.files || []);
+    updateFileSelection();
+  });
+
+  /* Drag & drop */
+  ['dragenter','dragover'].forEach(function(evt){
+    fileLabel.addEventListener(evt, function(e){
+      e.preventDefault(); e.stopPropagation();
+      fileLabel.classList.add('dragover');
+    });
+  });
+  ['dragleave','drop'].forEach(function(evt){
+    fileLabel.addEventListener(evt, function(e){
+      e.preventDefault(); e.stopPropagation();
+      fileLabel.classList.remove('dragover');
+    });
+  });
+  fileLabel.addEventListener('drop', function(e){
+    var dt = e.dataTransfer;
+    if(!dt) return;
+    var dropped = Array.prototype.slice.call(dt.files || [])
+      .filter(function(f){ return /\.json$/i.test(f.name); });
+    if(dropped.length === 0){
+      setStatus('warn', '&#9888; Aucun fichier <code>.json</code> dans le d&#233;p&#244;t.');
+      return;
+    }
+    /* Fusion avec la sélection précédente, en évitant les doublons par nom */
+    var seen = {};
+    files.concat(dropped).forEach(function(f){ seen[f.name] = f; });
+    files = Object.keys(seen).map(function(k){ return seen[k]; });
+    updateFileSelection();
+  });
+
+  function updateFileSelection(){
+    if(files.length === 0){
+      btnAnalyse.disabled = true;
+      clearStatus();
+      return;
+    }
+    btnAnalyse.disabled = false;
+    setStatus('info',
+      '&#128193; <strong>' + files.length + '</strong> fichier' +
+      (files.length > 1 ? 's' : '') + ' s\u00e9lectionn\u00e9' + (files.length > 1 ? 's' : '') +
+      '. Cliquez sur <strong>Analyser</strong> pour les d\u00e9chiffrer.'
+    );
+  }
+
+  /* ============================================================
+     ANALYSE EN LOT
+     ============================================================ */
+  btnAnalyse.addEventListener('click', async function(){
+    if(files.length === 0) return;
+
+    btnAnalyse.disabled = true;
+    btnReset.disabled = true;
+    results = [];
+
+    var okCount = 0, errCount = 0;
+    var errList = [];
+
+    setStatus('info', '&#8987; D\u00e9chiffrement en cours\u2026 (0 / ' + files.length + ')');
+
+    for(var i = 0; i < files.length; i++){
+      var f = files[i];
+      setStatus('info', '&#8987; D\u00e9chiffrement en cours\u2026 (' + (i+1) + ' / ' + files.length +
+                        ') &mdash; <code>' + escapeHtml(f.name) + '</code>');
+
+      try {
+        var text = await readFileAsText(f);
+        var envelope = JSON.parse(text);
+        var payload = await decryptPayload(envelope);
+
+        results.push({
+          filename: f.name,
+          ok: true,
+          meta: payload.meta || {},
+          enonce: payload.enonce || [],
+          reponses: payload.reponses || {},
+          score: payload.score || null,
+          raw: payload
+        });
+        okCount++;
+      } catch(err){
+        errCount++;
+        errList.push({ filename: f.name, error: err && err.message ? err.message : String(err) });
+        results.push({
+          filename: f.name,
+          ok: false,
+          error: err && err.message ? err.message : String(err)
+        });
+      }
+    }
+
+    btnAnalyse.disabled = false;
+    btnReset.disabled = false;
+
+    if(errCount === 0){
+      setStatus('ok',
+        '&#10003; <strong>' + okCount + '</strong> fichier' + (okCount > 1 ? 's' : '') +
+        ' d\u00e9chiffr\u00e9' + (okCount > 1 ? 's' : '') + ' avec succ\u00e8s.'
+      );
+    } else if(okCount === 0){
+      setStatus('err',
+        '&#10007; Aucun fichier n\'a pu \u00eatre d\u00e9chiffr\u00e9. V\u00e9rifiez le mot de passe ou l\'int\u00e9grit\u00e9 des fichiers.'
+      );
+    } else {
+      setStatus('warn',
+        '&#9888; <strong>' + okCount + '</strong> succ\u00e8s, <strong>' + errCount +
+        '</strong> \u00e9chec' + (errCount > 1 ? 's' : '') + '. Voir les d\u00e9tails dans le tableau.'
+      );
+    }
+
+    renderResults(errList);
+  });
+
+  function readFileAsText(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result); };
+      reader.onerror = function(){ reject(new Error('Lecture impossible du fichier')); };
+      reader.readAsText(file, 'utf-8');
+    });
+  }
+
+  /* ============================================================
+     RENDU DES RÉSULTATS
+     ============================================================ */
+  function renderResults(errList){
+    var tbody = document.getElementById('batchBody');
+    tbody.innerHTML = '';
+    document.getElementById('emptyState').classList.remove('show');
+    document.getElementById('summaryPanel').classList.remove('show');
+    document.getElementById('tablePanel').classList.remove('show');
+
+    if(results.length === 0) return;
+
+    /* Récapitulatif statistique */
+    renderSummary();
+
+    /* Lignes du tableau */
+    var validResults = results.filter(function(r){ return r.ok; });
+    validResults.sort(function(a, b){
+      var na = (a.meta.nom || '').toLowerCase();
+      var nb = (b.meta.nom || '').toLowerCase();
+      if(na < nb) return -1;
+      if(na > nb) return 1;
+      var pa = (a.meta.prenom || '').toLowerCase();
+      var pb = (b.meta.prenom || '').toLowerCase();
+      if(pa < pb) return -1;
+      if(pa > pb) return 1;
+      return 0;
+    });
+
+    validResults.forEach(function(r, idx){
+      renderStudentRow(tbody, r, idx + 1);
+    });
+
+    /* Éventuelles erreurs */
+    (errList || []).forEach(function(e){
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="num">\u2014</td>' +
+        '<td colspan="8"><strong>\u274C Erreur de d\u00e9chiffrement</strong> \u2014 ' +
+          '<code>' + escapeHtml(e.filename) + '</code><br>' +
+          '<span style="color:#7f1d1d">' + escapeHtml(e.error) + '</span></td>' +
+        '<td class="num">\u2014</td>';
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('summaryPanel').classList.add('show');
+    document.getElementById('tablePanel').classList.add('show');
+
+    if(window.MathJax && window.MathJax.typesetPromise){
+      window.MathJax.typesetPromise().catch(function(e){ console.warn(e); });
+    }
+  }
+
+  function renderSummary(){
+    var valid = results.filter(function(r){ return r.ok; });
+    var totalEleves = valid.length;
+
+    var totalBon = 0, totalQ = 0;
+    var parExo = {};        /* { num: { bon, total } } */
+
+    valid.forEach(function(r){
+      if(!r.score) return;
+      totalBon += r.score.bon || 0;
+      totalQ   += r.score.total || 0;
+      var pe = r.score.parExercice || {};
+      Object.keys(pe).forEach(function(k){
+        if(!parExo[k]) parExo[k] = { bon: 0, total: 0 };
+        parExo[k].bon   += pe[k].bon || 0;
+        parExo[k].total += pe[k].total || 0;
+      });
+    });
+
+    var pct = totalQ > 0 ? Math.round(totalBon / totalQ * 100) : 0;
+
+    var grid = document.getElementById('statsGrid');
+    var html = '';
+    html += statCard(totalEleves, 'Copies valides');
+    html += statCard(totalBon + ' / ' + totalQ, 'Total bonnes r\u00e9ponses');
+    html += statCard(pct + ' %', 'Taux de r\u00e9ussite global');
+
+    /* Par exercice */
+    var exoNums = Object.keys(parExo).map(Number).sort(function(a,b){ return a-b; });
+    exoNums.forEach(function(num){
+      var s = parExo[num];
+      var p = s.total > 0 ? Math.round(s.bon / s.total * 100) : 0;
+      html += statCard(p + ' %', 'Exercice ' + num + ' (' + s.bon + '/' + s.total + ')');
+    });
+
+    grid.innerHTML = html;
+  }
+
+  function statCard(val, lbl){
+    return '<div class="stat-card">' +
+      '<span class="stat-val">' + val + '</span>' +
+      '<span class="stat-lbl">' + lbl + '</span>' +
+    '</div>';
+  }
+
+  function renderStudentRow(tbody, r, idx){
+    var m = r.meta || {};
+    var sc = r.score || { bon: 0, total: 0 };
+    var pct = sc.total > 0 ? Math.round(sc.bon / sc.total * 100) : 0;
+    var scoreClass = pct >= 80 ? 'good' : (pct >= 50 ? 'med' : 'bad');
+
+    var tr = document.createElement('tr');
+    tr.className = 'student-row';
+    tr.dataset.idx = idx;
+
+    var flagHtml = m.solutionsAffichees
+      ? '<span class="flag err" title="L\'\u00e9l\u00e8ve a consult\u00e9 les corrig\u00e9s">Oui</span>'
+      : '<span class="flag ok" title="L\'\u00e9l\u00e8ve n\'a pas consult\u00e9 les corrig\u00e9s">Non</span>';
+
+    tr.innerHTML =
+      '<td class="num">' + idx + '</td>' +
+      '<td class="nom">' + escapeHtml(m.nom || '?') + '</td>' +
+      '<td>' + escapeHtml(m.prenom || '?') + '</td>' +
+      '<td class="classe">' + escapeHtml(m.classe || '?') + '</td>' +
+      '<td>' + escapeHtml(m.date || '?') + '</td>' +
+      '<td class="num score ' + scoreClass + '">' + sc.bon + ' / ' + sc.total + '</td>' +
+      '<td class="num score ' + scoreClass + '">' + pct + ' %</td>' +
+      '<td class="num">' + flagHtml + '</td>' +
+      '<td class="fname" title="' + escapeHtml(r.filename) + '">' +
+        escapeHtml(truncate(r.filename, 34)) + '</td>' +
+      '<td class="num"><button type="button" class="act" data-action="toggle">' +
+        '\u25B6 D\u00e9plier</button></td>';
+
+    tbody.appendChild(tr);
+
+    /* Ligne de détail (masquée par défaut) */
+    var trd = document.createElement('tr');
+    trd.className = 'details-row';
+    trd.style.display = 'none';
+    var td = document.createElement('td');
+    td.colSpan = 10;
+    td.innerHTML = buildStudentDetails(r);
+    trd.appendChild(td);
+    tbody.appendChild(trd);
+
+    /* Toggle au clic */
+    tr.addEventListener('click', function(){
+      var open = trd.style.display !== 'none';
+      trd.style.display = open ? 'none' : 'table-row';
+      var btn = tr.querySelector('[data-action="toggle"]');
+      if(btn) btn.innerHTML = open ? '\u25B6 D\u00e9plier' : '\u25BC Replier';
+      if(!open && window.MathJax && window.MathJax.typesetPromise){
+        window.MathJax.typesetPromise([td]).catch(function(e){ console.warn(e); });
+      }
+    });
+  }
+
+  function buildStudentDetails(r){
+    var m = r.meta || {};
+    var html = '<div class="details-inner">';
+
+    /* Bandeau méta */
+    html += '<p><strong>Fichier :</strong> <code>' + escapeHtml(r.filename) + '</code></p>';
+    html += '<p><strong>Horodatage :</strong> ' + escapeHtml(m.horodatage || '') + '</p>';
+    html += '<p><strong>Corrig\u00e9s affich\u00e9s :</strong> ' +
+            (m.solutionsAffichees ? '<span style="color:#a82020;font-weight:700">OUI</span>' :
+                                    '<span style="color:#1c7a3d;font-weight:700">NON</span>') + '</p>';
+
+    /* Détail par exercice */
+    (r.enonce || []).forEach(function(ex){
+      html += '<div class="exo-detail">';
+      html += '<div class="exo-title">Exercice ' + ex.num + ' \u2014 ' +
+              escapeHtml(ex.title || '') + ' <span style="color:var(--muted);font-weight:400">(' +
+              ex.pts + ' pt' + (ex.pts > 1 ? 's' : '') + ')</span></div>';
+
+      (ex.questions || []).forEach(function(q, qi){
+        var rep = r.reponses[q.id];
+        var isCorrect = (typeof rep === 'number' && rep === q.correctIndex);
+        var isEmpty = (typeof rep !== 'number' || rep === null);
+        var cls = isEmpty ? 'empty' : (isCorrect ? 'correct' : 'wrong');
+        var label = isEmpty ? '\u26AA Non r\u00e9pondu' :
+                    (isCorrect ? '\u2713 Correct' : '\u2717 Incorrect');
+
+        html += '<div class="qcm-detail ' + cls + '">';
+        html += '<div class="qtxt"><strong>Q' + (qi + 1) + '.</strong> ' +
+                (q.text || '') + '</div>';
+        html += '<div class="ans">';
+        html += '<span class="lbl">\u00c9l\u00e8ve :</span> ';
+        if(isEmpty){
+          html += '<span class="na">Aucune r\u00e9ponse</span>';
+        } else {
+          html += '<span class="' + (isCorrect ? 'good' : 'bad') + '">' +
+                  (q.options[rep] || '\u2014') + '</span>';
+        }
+        if(!isCorrect){
+          html += '<br><span class="lbl">Bonne r\u00e9ponse :</span> ' +
+                  '<span class="good">' + (q.options[q.correctIndex] || '\u2014') + '</span>';
+        }
+        html += '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    html += '</div>';
+    return html;
+  }
+
+  /* ============================================================
+     OUTILS TEXTE
+     ============================================================ */
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function truncate(s, n){
+    s = String(s);
+    return s.length > n ? s.slice(0, n - 1) + '\u2026' : s;
+  }
+
+  /* ============================================================
+     RÉINITIALISATION
+     ============================================================ */
+  btnReset.addEventListener('click', function(){
+    files = [];
+    results = [];
+    fileInput.value = '';
+    clearStatus();
+    document.getElementById('batchBody').innerHTML = '';
+    document.getElementById('summaryPanel').classList.remove('show');
+    document.getElementById('tablePanel').classList.remove('show');
+    document.getElementById('emptyState').classList.add('show');
+    btnAnalyse.disabled = true;
+  });
+
+  /* État initial */
+  document.getElementById('emptyState').classList.add('show');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Odyssée du second degré — Partie 2</title>
+
+<style>
+  #error-banner{display:none;position:sticky;top:0;z-index:9999;
+    background:#A4243B;color:#fff;padding:10px 16px;
+    font-family:Segoe UI,sans-serif;font-size:.9rem;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  #error-banner strong{text-decoration:underline}
+</style>
+
+<script>
+window.addEventListener('error', function(ev){
+  var b = document.getElementById('error-banner');
+  if (!b){ b = document.createElement('div'); b.id = 'error-banner';
+    document.body && document.body.insertBefore(b, document.body.firstChild); }
+  if (b){ b.style.display='block';
+    b.innerHTML = '<strong>Erreur JavaScript :</strong> ' +
+      (ev.message || 'inconnue') + ' — ouvrez la console (F12).'; }
+}, true);
+window.addEventListener('unhandledrejection', function(ev){
+  var b = document.getElementById('error-banner');
+  if (b){ b.style.display='block';
+    b.innerHTML = '<strong>Promesse rejetée :</strong> ' +
+      (ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason)); }
+});
+</script>
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+<style>
+:root{
+  --ink:#0D0D0D; --charcoal:#262626; --slate:#4D4D4D;
+  --gray:#808080; --silver:#B3B3B3; --smoke:#D9D9D9;
+  --paper:#F4F4F4; --card:#FFFFFF; --accent:#3C6E71;
+  --ok:#1F7A4D; --warn:#B8860B; --bad:#A4243B;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--paper); color:var(--charcoal); line-height:1.55; font-size:15px;}
+header{background:var(--ink); color:#fff; padding:22px 26px;
+  border-bottom:4px solid var(--slate);}
+header h1{margin:0;font-size:1.5rem;letter-spacing:.4px}
+header p{margin:4px 0 0;color:var(--silver);font-size:.92rem}
+main{max-width:1080px;margin:0 auto;padding:22px 18px 80px}
+.card{background:var(--card); border-radius:14px; padding:20px 22px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:22px;
+  border:1px solid var(--smoke);}
+.hidden{display:none !important}
+h2{font-size:1.15rem;margin:0 0 12px;color:var(--ink);
+   border-left:5px solid var(--slate);padding-left:10px}
+h3{font-size:1rem;margin:18px 0 8px;color:var(--slate)}
+label{font-size:.9rem}
+input,select{font:inherit;padding:7px 9px;border:1px solid var(--silver);
+  border-radius:8px;background:#fff;color:var(--charcoal);}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.field-block{display:flex;flex-direction:column;gap:4px}
+.btn{font:inherit;cursor:pointer;border:none;border-radius:10px;
+  padding:9px 16px;background:var(--slate);color:#fff;font-weight:600;
+  transition:transform .08s ease,background .2s;}
+.btn:hover{background:var(--ink)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent)}
+.btn.primary:hover{background:#2c5356}
+.btn.ghost{background:transparent;color:var(--slate);border:1px solid var(--silver)}
+.btn.ghost:hover{background:var(--smoke);color:var(--ink)}
+.btn.small{padding:5px 10px;font-size:.82rem;border-radius:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.question{background:var(--card);border:1px solid var(--smoke);border-radius:14px;
+  padding:20px 22px;margin-bottom:22px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.q-head{display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px dashed var(--silver);padding-bottom:8px;margin-bottom:12px;}
+.q-title{font-weight:700;color:var(--ink)}
+.badge{font-size:.75rem;background:var(--smoke);color:var(--slate);
+  padding:3px 10px;border-radius:20px;font-weight:600;}
+.formula{background:#f7f9fa;border-left:4px solid var(--accent);
+  padding:10px 14px;border-radius:6px;font-size:1.05rem;margin:10px 0;}
+.statement{margin-bottom:12px}
+
+.rappel-wrap{display:inline-block;margin:6px 0 10px;position:relative}
+.rappel-btn{font-size:.82rem;color:var(--slate);cursor:help;
+  background:var(--smoke);padding:4px 12px;border-radius:20px;font-weight:600;}
+.rappel{max-height:0;overflow:hidden;transition:max-height .45s ease;
+  background:#eef4f5;border-radius:10px;margin-top:6px;border:1px solid #d6e3e4;}
+.rappel-wrap:hover .rappel{max-height:520px}
+.rappel-inner{padding:12px 14px;font-size:.88rem;color:var(--slate)}
+
+.fields{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0}
+.field{display:flex;flex-direction:column;gap:3px}
+.field span.fl{font-size:.85rem;color:var(--slate)}
+.field input{width:110px}
+.field input.wide, .field select.wide{width:190px}
+
+.workshop{border:1px solid var(--smoke);border-radius:12px;padding:14px;
+  background:#fbfbfb;margin-top:14px;}
+.workshop.calc{background:#f7f4fb;border-color:#e0d6ec}
+.ws-head{display:flex;justify-content:space-between;align-items:center;
+  gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.ws-title{font-weight:700;font-size:.92rem;color:var(--ink)}
+.ws-counter{font-size:.8rem;color:var(--gray)}
+.pool{display:flex;flex-wrap:wrap;gap:7px;min-height:46px;
+  background:#fff;border:1px dashed var(--silver);border-radius:10px;
+  padding:9px;margin-bottom:12px;}
+.pool.over{border-color:var(--accent);background:#f0f8f8}
+.lines{display:flex;flex-direction:column;gap:8px}
+.line{display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+  min-height:44px;background:#fff;border:1px solid var(--smoke);
+  border-radius:10px;padding:7px 9px;}
+.line.over{border-color:var(--accent);background:#f0f8f8}
+.line-tools{display:flex;gap:4px;margin-left:auto}
+.line-tools button{border:none;background:var(--smoke);color:var(--slate);
+  border-radius:6px;cursor:pointer;font-size:.8rem;padding:3px 7px;}
+.line-tools button:hover{background:var(--silver)}
+.chip{display:inline-block;padding:5px 10px;border-radius:8px;
+  background:#fff;border:1px solid var(--silver);cursor:grab;
+  font-size:.88rem;user-select:none;transition:transform .1s,background .15s;
+  white-space:nowrap;}
+.chip:hover{background:#eef4f5;transform:translateY(-1px)}
+.chip.distractor{border-style:dotted;color:var(--gray)}
+.chip.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip.dragging{opacity:.4}
+.chip.final-keyword{font-weight:800;color:var(--ok);border-color:var(--ok);
+  background:#e8f6ee;}
+.chip.final-keyword.selected{background:var(--ok);color:#fff}
+.toolbar{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.toolbar button{border:1px solid var(--silver);background:#fff;color:var(--slate);
+  border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.85rem;}
+.toolbar button:hover{background:var(--smoke)}
+
+.correction{margin-top:14px;border-radius:12px;padding:14px 16px;
+  background:#f7f9fa;border:1px solid var(--smoke);}
+.correction h4{margin:0 0 8px;font-size:.95rem;color:var(--ink)}
+.final{margin-top:12px;background:#e8f6ee;border:2px solid var(--ok);
+  border-radius:12px;padding:12px 16px;color:#14532d;}
+.final strong{color:var(--ok)}
+.final.path-box{margin-top:8px;background:#e8f6ee;border:2px solid var(--ok);
+  border-radius:10px;padding:10px 12px;font-family:ui-monospace,Consolas,monospace;
+  font-size:.85rem;color:#14532d;}
+.verdict{font-weight:700;margin-bottom:6px}
+.verdict.ok{color:var(--ok)}
+.verdict.mid{color:var(--warn)}
+.verdict.bad{color:var(--bad)}
+.path-box{font-family:ui-monospace,Consolas,monospace;font-size:.82rem;
+  background:#fff;border:1px solid var(--silver);border-radius:8px;
+  padding:8px 10px;margin:6px 0;word-break:break-word;}
+.score-line{font-size:.9rem;margin:4px 0}
+.stars{color:#D4A017;letter-spacing:2px}
+
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:14px}
+.stat{background:#f7f9fa;border-radius:10px;padding:12px 14px;border:1px solid var(--smoke)}
+.stat .k{font-size:.75rem;text-transform:uppercase;letter-spacing:.6px;color:var(--gray)}
+.stat .v{font-size:1.15rem;font-weight:700;color:var(--ink)}
+
+canvas{display:block;max-width:100%;border-radius:10px;background:#fff;border:1px solid var(--smoke)}
+
+.graph-status{font-size:.85rem;color:var(--gray);margin-top:10px;text-align:center;
+  padding:8px 10px;background:#f7f9fa;border-radius:8px;border:1px solid var(--smoke);}
+.graph-status .on{color:var(--ok);font-weight:700}
+.graph-status .off{color:var(--gray)}
+
+footer{text-align:center;font-size:.78rem;color:var(--gray);padding:20px}
+.verify-bar{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--smoke);
+  padding:12px 18px;display:flex;justify-content:center;gap:10px;
+  margin-top:20px;z-index:10;box-shadow:0 -2px 10px rgba(0,0,0,.05);}
+</style>
+</head>
+
+<body>
+<div id="error-banner"></div>
+
+<header>
+  <h1>L'Odyssée du second degré — Partie 2</h1>
+  <p>Les métamorphoses · transformations de la parabole · Première STI2D</p>
+</header>
+
+<main>
+
+  <section id="setup" class="card">
+    <h2>Identité de l'enquêteur</h2>
+    <p style="font-size:.9rem;color:var(--slate);margin-top:0">
+      Les énoncés sont générés à partir de vos informations : deux élèves n'ont jamais le même sujet.
+    </p>
+    <div class="grid-form">
+      <div class="field-block"><label for="in-nom">Nom</label>
+        <input id="in-nom" type="text" placeholder="DUPONT" autocomplete="family-name"></div>
+      <div class="field-block"><label for="in-prenom">Prénom</label>
+        <input id="in-prenom" type="text" placeholder="Marie" autocomplete="given-name"></div>
+      <div class="field-block"><label for="in-classe">Classe</label>
+        <input id="in-classe" type="text" placeholder="1STI2D-1"></div>
+      <div class="field-block"><label for="in-date">Date</label>
+        <input id="in-date" type="date"></div>
+      <div class="field-block"><label for="in-level">Niveau de départ</label>
+        <select id="in-level">
+          <option value="1">Niveau 1 — Une seule transformation</option>
+          <option value="2">Niveau 2 — Synthèse canonique</option>
+          <option value="3">Niveau 3 — Canonique ↔ développée</option>
+          <option value="4">Niveau 4 — Composition et inverse</option>
+        </select></div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn primary" id="btn-start" type="button">Ouvrir l'enquête</button>
+      <button class="btn ghost" id="btn-load" type="button">Recharger ma sauvegarde</button>
+    </div>
+  </section>
+
+  <section id="dashboard" class="card hidden">
+    <h2>Tableau de bord</h2>
+    <div class="dash-grid">
+      <div class="stat"><div class="k">Enquêteur</div><div class="v" id="dash-name">—</div></div>
+      <div class="stat"><div class="k">Classe</div><div class="v" id="dash-classe">—</div></div>
+      <div class="stat"><div class="k">Date</div><div class="v" id="dash-date">—</div></div>
+      <div class="stat"><div class="k">Niveau</div><div class="v" id="dash-level">—</div></div>
+      <div class="stat"><div class="k">Graine</div><div class="v" id="dash-seed" style="font-size:.85rem">—</div></div>
+      <div class="stat"><div class="k">Score global</div><div class="v" id="dash-score">—</div></div>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="btn-verify" type="button">Vérifier mes réponses</button>
+      <button class="btn ghost" id="btn-next-level" type="button">Niveau supérieur</button>
+      <button class="btn ghost" id="btn-regen" type="button">Régénérer</button>
+      <button class="btn ghost" id="btn-download" type="button">Télécharger la sauvegarde</button>
+      <button class="btn ghost" id="btn-reset" type="button">Tout effacer</button>
+    </div>
+    <p id="save-status" style="font-size:.78rem;color:var(--gray);margin:10px 0 0"></p>
+  </section>
+
+  <section id="exercises"></section>
+  <section id="remediation" class="card hidden"></section>
+
+  <div id="verify-bar" class="verify-bar hidden">
+    <button class="btn primary" id="btn-verify-bottom" type="button">Vérifier mes réponses</button>
+  </div>
+
+  <footer>L'Odyssée du second degré · Partie 2 · document autonome · sauvegarde chiffrée locale</footer>
+</main>
+
+<script>
+/* ============================================================
+   0. OUTILS GÉNÉRAUX
+   ============================================================ */
+function L(strings){
+  var raw = (strings && strings.raw) || strings;
+  var out = raw[0];
+  for (var i = 1; i < arguments.length; i++) out += String(arguments[i]) + raw[i];
+  return out;
+}
+function mulberry32(a){
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashSeed(s){
+  var h = 2166136261 >>> 0;
+  for (var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function stringHash(s){ return hashSeed(s); }
+function shuffleInPlace(arr, rng){
+  for (var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(rng() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+function rint(rng, a, b){ return a + Math.floor(rng() * (b - a + 1)); }
+function pickFrom(rng, arr){ return arr[Math.floor(rng() * arr.length)]; }
+function flatten(arr){
+  var out = [];
+  for (var i = 0; i < arr.length; i++){
+    if (Array.isArray(arr[i])) for (var j = 0; j < arr[i].length; j++) out.push(arr[i][j]);
+    else out.push(arr[i]);
+  }
+  return out;
+}
+function parseNum(s){
+  if (s === null || s === undefined) return NaN;
+  s = String(s).trim().replace(/\s+/g, '').replace(',', '.');
+  if (s === '') return NaN;
+  var m = s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+  if (m) return parseFloat(m[1]) / parseFloat(m[2]);
+  s = s.replace(/^\((.*)\)$/, '$1');
+  var v = Number(s);
+  return isFinite(v) ? v : NaN;
+}
+function fmt(n){
+  if (Number.isInteger(n)) return String(n);
+  return String(Math.round(n * 1000) / 1000).replace('.', ',');
+}
+function polyStr(a, b, c, v){
+  v = v || 'x';
+  var s = '';
+  if (a === 1) s += v + '^2';
+  else if (a === -1) s += '-' + v + '^2';
+  else s += a + v + '^2';
+  if (b !== 0){
+    if (b > 0) s += '+' + (b === 1 ? '' : b) + v;
+    else s += '-' + (b === -1 ? '' : -b) + v;
+  }
+  if (c !== 0) s += (c > 0 ? '+' : '') + c;
+  return s;
+}
+function polyTex(a, b, c, v){ return polyStr(a, b, c, v); }
+function canonTex(a, alpha, beta, v){
+  v = v || 'x';
+  var s = '';
+  if (a === 1) s += '(' + v + '-' + alpha + ')^2';
+  else if (a === -1) s += '-(' + v + '-' + alpha + ')^2';
+  else s += a + '(' + v + '-' + alpha + ')^2';
+  if (beta > 0) s += '+' + beta;
+  else if (beta < 0) s += '' + beta;
+  return s;
+}
+function el(tag, cls, html){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html !== undefined) n.innerHTML = html;
+  return n;
+}
+function repeat(ch, n){ var s=''; for (var i=0;i<n;i++) s+=ch; return s; }
+
+/* ---- Typeset robuste MathJax 3 ---- */
+var _mjQueue = [];
+var _mjTimer = null;
+function typeset(target){
+  var targets = target ? [target] : undefined;
+  if (window.MathJax && typeof MathJax.typesetPromise === 'function'){
+    return MathJax.typesetPromise(targets).catch(function(e){
+      console.warn('[MathJax] typeset error:', e);
+    });
+  }
+  _mjQueue.push(targets);
+  if (!_mjTimer){
+    _mjTimer = setInterval(function(){
+      if (window.MathJax && typeof MathJax.typesetPromise === 'function'){
+        clearInterval(_mjTimer); _mjTimer = null;
+        var q = _mjQueue; _mjQueue = [];
+        q.forEach(function(t){
+          MathJax.typesetPromise(t).catch(function(e){
+            console.warn('[MathJax] typeset error:', e);
+          });
+        });
+      }
+    }, 80);
+  }
+}
+
+/* ============================================================
+   1. TOKENIZER — clés dérivées de la solution
+   ============================================================ */
+function tokenizeSolution(html){
+  var mathBlocks = [];
+  var s = html;
+  s = s.replace(/<strong>\s*Finalement\s*<\/strong>/gi, ' ⟦FINALTOKEN⟧ ');
+  s = s.replace(/\$[^$]*\$/g, function(m){
+    mathBlocks.push(m);
+    return ' ⟦MATH' + (mathBlocks.length - 1) + '⟧ ';
+  });
+  s = s.replace(/<[^>]+>/g, ' ');
+  s = s.replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+       .replace(/&#39;/g,"'").replace(/&quot;/g,'"');
+  s = s.replace(/\s+/g, ' ').trim();
+  var parts = s.split(' ');
+  var tokens = [];
+  for (var i = 0; i < parts.length; i++){
+    var p = parts[i];
+    if (!p) continue;
+    if (p === '⟦FINALTOKEN⟧'){ tokens.push('Finalement'); }
+    else {
+      var m = p.match(/^⟦MATH(\d+)⟧(.*)$/);
+      if (m){
+        var idx = parseInt(m[1], 10);
+        tokens.push(mathBlocks[idx] + m[2]);
+      } else if (!/^[.,;:?!«»"'()\[\]]+$/.test(p)){ tokens.push(p); }
+    }
+  }
+  return tokens;
+}
+
+var OPTIONAL_WORDS = {
+  'le':1,'la':1,'les':1,'un':1,'une':1,'de':1,'du':1,'des':1,
+  'et':1,'ou':1,'où':1,'mais':1,'donc':1,'or':1,'car':1,'puis':1,'si':1,'comme':1,
+  'à':1,'au':1,'aux':1,'en':1,'dans':1,'sur':1,'par':1,'pour':1,'avec':1,
+  'ce':1,'cette':1,'ces':1,'son':1,'sa':1,'ses':1,
+  'il':1,'elle':1,'on':1,'nous':1,
+  'est':1,'sont':1,'a':1,'ont':1,
+  'ici':1,'ainsi':1,'alors':1,'aussi':1,'très':1,'par':1
+};
+
+/* ============================================================
+   2. DISTRACTEURS
+   ============================================================ */
+function generateDistractors(canonTokens, count, rng){
+  var pool = [];
+  var tokenSet = {};
+  canonTokens.forEach(function(t){ tokenSet[t] = true; });
+  var pushIfNew = function(t){
+    if (!t || tokenSet[t] || pool.indexOf(t) !== -1) return;
+    pool.push(t);
+  };
+
+  ['donc','or','car','ainsi','toutefois','cependant','pourtant','néanmoins',
+   'en effet','remarquons','considérons','notons','on vérifie'
+  ].forEach(pushIfNew);
+
+  canonTokens.forEach(function(t){
+    if (t.charAt(0) === '$' && t.indexOf('=') !== -1){
+      var m = t.match(/^(.*?=\s*)(-?\d+(?:[.,]\d+)?)(.*)$/);
+      if (m){
+        var num = parseFloat(m[2].replace(',', '.'));
+        if (!isNaN(num) && num !== 0){ pushIfNew(m[1] + (-num) + m[3]); }
+      }
+    }
+  });
+
+  var sh = pool.slice();
+  for (var i = sh.length - 1; i > 0; i--){
+    var j = Math.floor(rng() * (i + 1));
+    var tmp = sh[i]; sh[i] = sh[j]; sh[j] = tmp;
+  }
+  return sh.slice(0, count);
+}
+
+/* ============================================================
+   3. CONSTRUCTION DES ATELIERS
+   ============================================================ */
+function buildWsFromSolution(solutionHtml, distractorCount, rng){
+  var tokens = tokenizeSolution(solutionHtml);
+  if (tokens.indexOf('Finalement') === -1){
+    console.warn('[P2] solution sans Finalement :', solutionHtml.slice(0, 80));
+  }
+  var canonOptSet = {};
+  var optionalCount = 0;
+  tokens.forEach(function(t){
+    if (t !== 'Finalement' && OPTIONAL_WORDS[t.toLowerCase()]){
+      canonOptSet[t] = true; optionalCount++;
+    }
+  });
+  var requiredSeq = tokens.filter(function(t){ return !canonOptSet[t]; });
+  function evaluate(path){
+    var pathReq = path.filter(function(t){ return !canonOptSet[t]; });
+    if (pathReq.join('\u0001') !== requiredSeq.join('\u0001')) return null;
+    var presentOpt = 0;
+    path.forEach(function(t){ if (canonOptSet[t]) presentOpt++; });
+    return Math.max(1, Math.min(20, 20 - 0.7 * (optionalCount - presentOpt)));
+  }
+  var distractors = generateDistractors(tokens, distractorCount, rng);
+  return {
+    tokens: tokens, canonical: tokens, canonOptSet: canonOptSet,
+    requiredSeq: requiredSeq, optionalCount: optionalCount,
+    size: Math.pow(2, optionalCount),
+    evaluate: evaluate, distractors: distractors
+  };
+}
+
+function makeCalcWorkshop(steps, answer, distractors){
+  var tokens = [];
+  for (var i = 0; i < steps.length; i++) tokens.push(steps[i]);
+  tokens.push('Finalement');
+  tokens.push(answer);
+  function evaluate(path){
+    if (path.join('\u0001') !== tokens.join('\u0001')) return null;
+    return 20;
+  }
+  return {
+    tokens: tokens, canonical: tokens, canonOptSet: {},
+    requiredSeq: tokens, optionalCount: 0, size: 1,
+    evaluate: evaluate, distractors: distractors || []
+  };
+}
+
+/* ============================================================
+   4. SCÉNARIOS
+   ============================================================ */
+var SCENARIOS = [
+  { id:'vitrail',  name:"le vitrail de la chapelle",    v:'x' },
+  { id:'jet',      name:"le jet d'eau du jardin",       v:'x' },
+  { id:'arche',    name:"l'arche du vieux pont",        v:'x' },
+  { id:'drone',    name:"le vol du drone",              v:'t' },
+  { id:'phare',    name:"le faisceau du phare",         v:'x' },
+  { id:'cascade',  name:"la cascade du moulin",         v:'x' },
+  { id:'ballon',   name:"la trajectoire du ballon",     v:'t' },
+  { id:'antenne',  name:"l'antenne parabolique",        v:'x' },
+  { id:'cable',    name:"le câble suspendu",            v:'x' },
+  { id:'skieur',   name:"le tremplin du skieur",        v:'x' },
+  { id:'hangar',   name:"le toit du hangar",            v:'x' },
+  { id:'dome',     name:"le dôme du théâtre",           v:'x' },
+  { id:'tyro',     name:"la tyrolienne",                v:'x' },
+  { id:'pic',      name:"le pic du dragon",             v:'x' },
+  { id:'cable2',   name:"le câble électrique",          v:'x' },
+  { id:'gps',      name:"la triangulation GPS",         v:'x' }
+];
+
+/* ============================================================
+   5. RAPPELS DE COURS (adaptés par niveau)
+   ============================================================ */
+function rappel(level){
+  var base = L`<p><strong>Référence :</strong> la parabole $y = x^2$ a son sommet en $(0\,;\,0)$.</p>
+  <p><strong>Étirement :</strong> $a\,x^2$ multiplie les ordonnées par $a$ ; le sommet ne bouge pas.</p>
+  <p><strong>Translation verticale :</strong> $x^2+\beta$ décale de $\beta$ vers le haut (si $\beta>0$).</p>
+  <p><strong>Translation horizontale :</strong> $(x-\alpha)^2$ décale de $\alpha$ vers la droite (si $\alpha>0$).</p>
+  <p><strong>Forme canonique :</strong> $a(x-\alpha)^2+\beta$ combine les trois ; le sommet est $(\alpha\,;\,\beta)$.</p>`;
+  if (level === 1) return base + L`<p>Une seule transformation à la fois.</p>`;
+  if (level === 2) return base + L`<p>Lire directement $a$, $\alpha$, $\beta$ sur la forme canonique.</p>`;
+  if (level === 3) return base + L`<p><strong>Développement :</strong> $a(x-\alpha)^2+\beta = ax^2 - 2a\alpha x + a\alpha^2 + \beta$, d'où $b=-2a\alpha$ et $c=a\alpha^2+\beta$.</p>
+    <p><strong>Canonique depuis développée :</strong> $\alpha=-\dfrac{b}{2a}$, $\beta=f(\alpha)$.</p>`;
+  return base + L`<p><strong>Depuis le sommet :</strong> $a = \dfrac{y_0-\beta}{(x_0-\alpha)^2}$.</p>
+    <p><strong>Sans développement :</strong> $b = -2a\alpha$, $c = a\alpha^2+\beta$.</p>`;
+}
+
+/* ============================================================
+   6. GÉNÉRATEURS — NIVEAU 1
+   ============================================================ */
+function baseParams(rng){
+  var a = pickFrom(rng, [-3,-2,-1,1,2,3]);
+  var alpha = pickFrom(rng, [-3,-2,-1,0,1,2,3]);
+  var beta = pickFrom(rng, [-5,-4,-3,-2,-1,1,2,3,4,5]);
+  var b = -2 * a * alpha;
+  var c = a * alpha * alpha + beta;
+  return { a:a, b:b, c:c, alpha:alpha, beta:beta };
+}
+
+function genLevel1(rng, scen){
+  var p = baseParams(rng);
+  var a = p.a, alpha = p.alpha, beta = p.beta;
+
+  // Q1 : étirement a·x²
+  var a1 = pickFrom(rng, [2, 3, 0.5]);
+  var qs = [];
+  qs.push({
+    title:'Question 1 — Étirement',
+    statement: L`<p>On part de la parabole de référence $y = x^2$.</p>
+      <p>Après application d'une transformation, ${scen.name} est modélisé par :</p>
+      <div class="formula">$f(${scen.v}) = ${fmt(a1)}${scen.v}^2$</div>
+      <p>Quelle transformation a été appliquée ? Donne le facteur $a$ et les coordonnées du sommet.</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:a1,param:'a'},
+      {label:L`$x_S=$`,kind:'num',expected:0,param:'alpha'},
+      {label:L`$y_S=$`,kind:'num',expected:0,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>On compare l'expression à la forme de référence $y = x^2$.</p>
+      <p>La transformation est un étirement de facteur $a = ${fmt(a1)}$.</p>
+      <p>Le sommet reste à l'origine.</p>
+      <div class="final"><strong>Finalement</strong>, $a = ${fmt(a1)}$ et le sommet est $(0\,;\,0)$.</div>`
+  });
+
+  // Q2 : translation verticale x²+β
+  var beta2 = pickFrom(rng, [-5,-4,-3,-2,-1,1,2,3,4,5]);
+  qs.push({
+    title:'Question 2 — Translation verticale',
+    statement: L`<p>On part encore de $y = x^2$.</p>
+      <p>Après application d'une transformation, ${scen.name} est modélisé par :</p>
+      <div class="formula">$f(${scen.v}) = ${scen.v}^2 ${beta2>0?'+':''}${beta2}$</div>
+      <p>Quelle valeur a été ajoutée (translation verticale) ? Donne les coordonnées du sommet.</p>`,
+    fields:[
+      {label:L`$\beta=$`,kind:'num',expected:beta2,param:'beta'},
+      {label:L`$x_S=$`,kind:'num',expected:0,param:'alpha'},
+      {label:L`$y_S=$`,kind:'num',expected:beta2,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>On compare à $y = x^2$.</p>
+      <p>La transformation est une translation verticale de $\beta = ${beta2}$.</p>
+      <p>Le sommet est décalé verticalement.</p>
+      <div class="final"><strong>Finalement</strong>, $\beta = ${beta2}$ et le sommet est $(0\,;\,${beta2})$.</div>`
+  });
+
+  // Q3 : translation horizontale (x-α)²
+  var alpha3 = pickFrom(rng, [-3,-2,-1,1,2,3]);
+  qs.push({
+    title:'Question 3 — Translation horizontale',
+    statement: L`<p>On part encore de $y = x^2$.</p>
+      <p>Après application d'une transformation, ${scen.name} est modélisé par :</p>
+      <div class="formula">$f(${scen.v}) = (${scen.v} ${alpha3>0?'-':'+'} ${Math.abs(alpha3)})^2$</div>
+      <p>Quelle valeur de $\alpha$ a été appliquée ? Donne les coordonnées du sommet.</p>`,
+    fields:[
+      {label:L`$\alpha=$`,kind:'num',expected:alpha3,param:'alpha'},
+      {label:L`$x_S=$`,kind:'num',expected:alpha3,param:'alpha'},
+      {label:L`$y_S=$`,kind:'num',expected:0,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>On compare à la forme $(x-\alpha)^2$.</p>
+      <p>La transformation est une translation horizontale de $\alpha = ${alpha3}$.</p>
+      <p>Le sommet se trouve décalé horizontalement.</p>
+      <div class="final"><strong>Finalement</strong>, $\alpha = ${alpha3}$ et le sommet est $(${alpha3}\,;\,0)$.</div>`
+  });
+
+  return { params:p, questions:qs, scen:scen };
+}
+
+/* ============================================================
+   7. GÉNÉRATEURS — NIVEAU 2
+   ============================================================ */
+function genLevel2(rng, scen){
+  var p = baseParams(rng);
+  var a = p.a, b = p.b, c = p.c, alpha = p.alpha, beta = p.beta;
+  var qs = [];
+
+  // Q1 : identifier a, α, β
+  qs.push({
+    title:'Question 1 — Lire la forme canonique',
+    statement: L`<p>${scen.name} est modélisé par la fonction :</p>
+      <div class="formula">$f(${scen.v}) = ${canonTex(a, alpha, beta, scen.v)}$</div>
+      <p>Identifie les trois nombres $a$, $\alpha$ et $\beta$.</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:a,param:'a'},
+      {label:L`$\alpha=$`,kind:'num',expected:alpha,param:'alpha'},
+      {label:L`$\beta=$`,kind:'num',expected:beta,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>On lit directement sur la forme canonique $f(x) = a(x-\alpha)^2+\beta$.</p>
+      <div class="final"><strong>Finalement</strong>, $a = ${a}$, $\alpha = ${alpha}$ et $\beta = ${beta}$.</div>`
+  });
+
+  // Q2 : nature de l'ordonnée du sommet
+  qs.push({
+    title:'Question 2 — Nature de l\'extremum',
+    statement: L`<p>Reprenons $f(x) = ${canonTex(a, alpha, beta, scen.v)}$, avec $a = ${a}$.</p>
+      <p>L'ordonnée du sommet est-elle minimale ou maximale ?</p>`,
+    fields:[
+      {label:L`Nature`,kind:'select',options:['ordonnée minimale','ordonnée maximale'],
+        expected: a > 0 ? 'ordonnée minimale' : 'ordonnée maximale'}
+    ],
+    calc: null,
+    solution: L`<p>Ici $a = ${a}$ ${a>0?'> 0':'< 0'}$, donc l'ordonnée du sommet est ${a>0?'un minimum':'un maximum'}.</p>
+      <div class="final"><strong>Finalement</strong>, l'ordonnée du sommet est ${a>0?'minimale':'maximale'}.</div>`
+  });
+
+  // Q3 : coordonnées du sommet
+  qs.push({
+    title:'Question 3 — Coordonnées du sommet',
+    statement: L`<p>Toujours avec $f(x) = ${canonTex(a, alpha, beta, scen.v)}$.</p>
+      <p>Donne les coordonnées du sommet $S$.</p>`,
+    fields:[
+      {label:L`$x_S=$`,kind:'num',expected:alpha,param:'alpha'},
+      {label:L`$y_S=$`,kind:'num',expected:beta,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>Dans la forme canonique $a(x-\alpha)^2+\beta$, le sommet est $(\alpha\,;\,\beta)$.</p>
+      <div class="final"><strong>Finalement</strong>, le sommet est $(${alpha}\,;\,${beta})$.</div>`
+  });
+
+  return { params:p, questions:qs, scen:scen };
+}
+
+/* ============================================================
+   8. GÉNÉRATEURS — NIVEAU 3
+   ============================================================ */
+function genLevel3(rng, scen){
+  var p = baseParams(rng);
+  var a = p.a, b = p.b, c = p.c, alpha = p.alpha, beta = p.beta;
+  var qs = [];
+
+  // Q1 : développer a(x-α)²+β → a, b, c
+  qs.push({
+    title:'Question 1 — Développer',
+    statement: L`<p>On considère :</p>
+      <div class="formula">$f(x) = ${canonTex(a, alpha, beta, 'x')}$</div>
+      <p>Développe cette expression et identifie les coefficients $a$, $b$, $c$ de la forme développée $ax^2+bx+c$.</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:a,param:'a'},
+      {label:L`$b=$`,kind:'num',expected:b,param:'b'},
+      {label:L`$c=$`,kind:'num',expected:c,param:'c'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$a(x-\alpha)^2+\beta$`,
+       L`$= a(x^2 - 2\alpha x + \alpha^2) + \beta$`,
+       L`$= ax^2 - 2a\alpha x + a\alpha^2 + \beta$`,
+       L`$b = -2a\alpha = ${b}$`,
+       L`$c = a\alpha^2+\beta = ${c}$`],
+      L`$f(x) = ${polyTex(a,b,c,'x')}$`,
+      [L`$b = 2a\alpha = ${-b}$`, L`$c = a\alpha^2-\beta = ${a*alpha*alpha-beta}$`, L`$a = ${-a}$`]
+    ),
+    solution: L`<p>On développe $a(x-\alpha)^2+\beta$ :</p>
+      <p>$= a(x^2 - 2\alpha x + \alpha^2)+\beta = ax^2 - 2a\alpha x + a\alpha^2+\beta$.</p>
+      <p>On identifie donc $b = -2a\alpha$ et $c = a\alpha^2+\beta$.</p>
+      <div class="final"><strong>Finalement</strong>, $a = ${a}$, $b = ${b}$ et $c = ${c}$.</div>`
+  });
+
+  // Q2 : forme canonique depuis développée
+  qs.push({
+    title:'Question 2 — Mise sous forme canonique',
+    statement: L`<p>On considère :</p>
+      <div class="formula">$f(x) = ${polyTex(a,b,c,'x')}$</div>
+      <p>Retrouve les nombres $\alpha$ et $\beta$ de la forme canonique $a(x-\alpha)^2+\beta$.</p>`,
+    fields:[
+      {label:L`$\alpha=$`,kind:'num',expected:alpha,param:'alpha'},
+      {label:L`$\beta=$`,kind:'num',expected:beta,param:'beta'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$\alpha = -\dfrac{b}{2a} = -\dfrac{${b}}{2\times ${a}} = ${alpha}$`,
+       L`$\beta = f(\alpha) = ${a}\times ${alpha}^2 + ${b}\times ${alpha} + ${c} = ${beta}$`],
+      L`$f(x) = ${canonTex(a, alpha, beta, 'x')}$`,
+      [L`$\alpha = ${-alpha}$`, L`$\beta = ${-beta}$`, L`$\alpha = ${beta}$`]
+    ),
+    solution: L`<p>On calcule $\alpha = -\dfrac{b}{2a} = ${alpha}$, puis $\beta = f(\alpha) = ${beta}$.</p>
+      <div class="final"><strong>Finalement</strong>, $\alpha = ${alpha}$ et $\beta = ${beta}$.</div>`
+  });
+
+  // Q3 : quelle forme montre le sommet ?
+  qs.push({
+    title:'Question 3 — Choisir la bonne forme',
+    statement: L`<p>On dispose des deux écritures :</p>
+      <div class="formula">$f(x) = ${canonTex(a, alpha, beta, 'x')} = ${polyTex(a,b,c,'x')}$</div>
+      <p>Laquelle des deux formes montre IMMÉDIATEMENT les coordonnées du sommet ? Donne aussi ces coordonnées.</p>`,
+    fields:[
+      {label:L`Forme`,kind:'select',options:['canonique','développée'],expected:'canonique'},
+      {label:L`$x_S=$`,kind:'num',expected:alpha,param:'alpha'},
+      {label:L`$y_S=$`,kind:'num',expected:beta,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>La forme canonique $a(x-\alpha)^2+\beta$ montre directement le sommet $(\alpha\,;\,\beta)$.</p>
+      <p>La forme développée $ax^2+bx+c$ masque le sommet : il faut un calcul pour le retrouver.</p>
+      <div class="final"><strong>Finalement</strong>, c'est la forme canonique qui montre directement le sommet $(${alpha}\,;\,${beta})$.</div>`
+  });
+
+  return { params:p, questions:qs, scen:scen };
+}
+
+/* ============================================================
+   9. GÉNÉRATEURS — NIVEAU 4
+   ============================================================ */
+function genLevel4(rng, scen){
+  var p = baseParams(rng);
+  var a = p.a, b = p.b, c = p.c, alpha = p.alpha, beta = p.beta;
+  var qs = [];
+
+  // Q1 : à partir de points symétriques + un 3ème point
+  var d = pickFrom(rng, [1,2,3,4]);
+  var x1 = alpha - d, x2 = alpha + d;
+  var x0 = alpha + 2*d + 1;
+  var y1 = a*d*d + beta;
+  var y0 = a*(x0-alpha)*(x0-alpha) + beta;
+
+  qs.push({
+    title:'Question 1 — Retrouver a, α, β',
+    statement: L`<p>On sait que $f(x_1) = f(x_2)$ avec $x_1 = ${x1}$ et $x_2 = ${x2}$. La valeur commune est $f(${x1}) = f(${x2}) = ${y1}$.</p>
+      <p>On donne aussi $f(${x0}) = ${y0}$.</p>
+      <p>Détermine $a$, $\alpha$ et $\beta$ pour écrire $f(x) = a(x-\alpha)^2+\beta$.</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:a,param:'a'},
+      {label:L`$\alpha=$`,kind:'num',expected:alpha,param:'alpha'},
+      {label:L`$\beta=$`,kind:'num',expected:beta,param:'beta'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$f(x_1) = f(x_2) \Rightarrow \alpha = \dfrac{${x1}+${x2}}{2} = ${alpha}$`,
+       L`$\beta = f(\alpha) = ${y1}$`,
+       L`$a = \dfrac{f(${x0})-\beta}{(${x0}-\alpha)^2} = \dfrac{${y0}-${beta}}{(${x0}-${alpha})^2} = ${a}$`],
+      L`$f(x) = ${canonTex(a, alpha, beta, 'x')}$`,
+      [L`$\alpha = ${x1}$`, L`$\beta = ${-beta}$`, L`$a = ${-a}$`, L`$\alpha = ${beta}$`]
+    ),
+    solution: L`<p>Comme $f(x_1) = f(x_2)$, la droite $x = \alpha$ est un axe de symétrie, donc $\alpha = \dfrac{x_1+x_2}{2} = ${alpha}$.</p>
+      <p>Puis $\beta = f(\alpha) = ${beta}$.</p>
+      <p>Enfin, $f(x_0) = a(x_0-\alpha)^2+\beta$ donne $a = ${a}$.</p>
+      <div class="final"><strong>Finalement</strong>, $a = ${a}$, $\alpha = ${alpha}$ et $\beta = ${beta}$.</div>`
+  });
+
+  // Q2 : sommet + point → a, b, c
+  qs.push({
+    title:'Question 2 — Du sommet à la forme développée',
+    statement: L`<p>On donne le sommet $S(${alpha}\,;\,${beta})$ et un point $M(${x0}\,;\,${y0})$ de la parabole.</p>
+      <p>Détermine $a$, puis les coefficients $b$ et $c$ de la forme développée.</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:a,param:'a'},
+      {label:L`$b=$`,kind:'num',expected:b,param:'b'},
+      {label:L`$c=$`,kind:'num',expected:c,param:'c'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$\alpha = ${alpha}, \beta = ${beta}$`,
+       L`$a = \dfrac{${y0}-${beta}}{(${x0}-${alpha})^2} = ${a}$`,
+       L`$b = -2a\alpha = -2\times ${a}\times ${alpha} = ${b}$`,
+       L`$c = a\alpha^2+\beta = ${a}\times ${alpha}^2 + ${beta} = ${c}$`],
+      L`$f(x) = ${polyTex(a,b,c,'x')}$`,
+      [L`$a = ${-a}$`, L`$b = ${-b}$`, L`$c = ${-c}$`, L`$b = ${-2*a*alpha*-1}$`]
+    ),
+    solution: L`<p>Le sommet donne $\alpha = ${alpha}$ et $\beta = ${beta}$.</p>
+      <p>Le point $M(${x0}\,;\,${y0})$ donne $a = \dfrac{y_0-\beta}{(x_0-\alpha)^2} = ${a}$.</p>
+      <p>Puis $b = -2a\alpha = ${b}$ et $c = a\alpha^2+\beta = ${c}$.</p>
+      <div class="final"><strong>Finalement</strong>, $a = ${a}$, $b = ${b}$ et $c = ${c}$.</div>`
+  });
+
+  // Q3 : sans développement, b et c
+  qs.push({
+    title:'Question 3 — Sans développer',
+    statement: L`<p>On donne $f(x) = ${canonTex(a, alpha, beta, 'x')}$.</p>
+      <p>Sans développer, utilise les formules $b = -2a\alpha$ et $c = a\alpha^2+\beta$ pour donner directement les coefficients $b$ et $c$ de la forme développée.</p>`,
+    fields:[
+      {label:L`$b=$`,kind:'num',expected:b,param:'b'},
+      {label:L`$c=$`,kind:'num',expected:c,param:'c'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$b = -2a\alpha = -2\times ${a}\times ${alpha} = ${b}$`,
+       L`$c = a\alpha^2+\beta = ${a}\times ${alpha}^2 + ${beta} = ${c}$`],
+      L`$f(x) = ${polyTex(a,b,c,'x')}$`,
+      [L`$b = ${-b}$`, L`$c = ${-c}$`, L`$b = ${2*a*alpha}$`]
+    ),
+    solution: L`<p>On applique les formules :</p>
+      <p>$b = -2a\alpha = -2\times ${a}\times ${alpha} = ${b}$.</p>
+      <p>$c = a\alpha^2+\beta = ${a}\times ${alpha}^2 + ${beta} = ${c}$.</p>
+      <div class="final"><strong>Finalement</strong>, $b = ${b}$ et $c = ${c}$.</div>`
+  });
+
+  return { params:p, questions:qs, scen:scen };
+}
+
+var GENERATORS = {1:genLevel1, 2:genLevel2, 3:genLevel3, 4:genLevel4};
+function generateLevel(level, seed){
+  var rng = mulberry32(seed >>> 0);
+  var scen = pickFrom(rng, SCENARIOS);
+  return GENERATORS[level](rng, scen);
+}
+
+/* ============================================================
+   10. ÉTAT GLOBAL
+   ============================================================ */
+var App = {
+  student:{nom:'',prenom:'',classe:'',date:''},
+  seed:0, level:1, data:null,
+  workshops:[], calcWorkshops:[],
+  results:null, dirty:false, saveTimer:null
+};
+
+/* ============================================================
+   11. ATELIERS — pool mélangé et rendu
+   ============================================================ */
+function buildWorkshopState(qid, ws){
+  var maxCount = {};
+  ws.canonical.forEach(function(t){ maxCount[t] = (maxCount[t] || 0) + 1; });
+  var items = []; var uid = 0;
+  for (var t in maxCount){
+    var n = maxCount[t] + 1;
+    for (var i = 0; i < n; i++)
+      items.push({id:'k'+(uid++), label:t, kind:'key', placed:false});
+  }
+  var used = {};
+  for (var k in maxCount) used[k] = true;
+  var usedDistractors = {};
+  var nd = [3,5,7,10][App.level - 1];
+  var guard = 0;
+  var drng = mulberry32(((App.seed ^ 0xCAFEBABE) + items.length + stringHash(qid)) >>> 0);
+  while (Object.keys(usedDistractors).length < nd && guard++ < 300){
+    var d = pickFrom(drng, ws.distractors);
+    if (!d || used[d] || usedDistractors[d]) continue;
+    usedDistractors[d] = true;
+    items.push({id:'d'+(uid++), label:d, kind:'distractor', placed:false});
+  }
+  var shuffleRng = mulberry32((App.seed ^ stringHash(qid) ^ 0x5EEDF00D) >>> 0);
+  shuffleInPlace(items, shuffleRng);
+  return {qid:qid, ws:ws, items:items, lines:[[]], selected:null, note:null};
+}
+
+function renderWorkshop(st){
+  var wrap = document.getElementById('ws-' + st.qid);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  var head = el('div','ws-head');
+  var isCalc = st.qid.indexOf('_calc') !== -1;
+  head.appendChild(el('div','ws-title',
+    isCalc ? '📐 Détail des calculs' : '🧩 Atelier de rédaction'));
+  var counter = el('div','ws-counter'); head.appendChild(counter);
+  wrap.appendChild(head);
+
+  var pool = el('div','pool'); pool.dataset.qid = st.qid;
+  st.items.filter(function(it){return !it.placed;}).forEach(function(it){
+    var cls = 'chip' + (it.kind === 'distractor' ? ' distractor' : '');
+    if (it.label === 'Finalement') cls += ' final-keyword';
+    var chip = el('span', cls, it.label);
+    chip.draggable = true; chip.dataset.id = it.id;
+    chip.addEventListener('dragstart', function(ev){
+      ev.dataTransfer.setData('text/plain','pool:'+it.id);
+      chip.classList.add('dragging');
+    });
+    chip.addEventListener('dragend', function(){chip.classList.remove('dragging');});
+    chip.addEventListener('click', function(){addToLastLine(st, it.id);});
+    pool.appendChild(chip);
+  });
+  wrap.appendChild(pool);
+
+  var linesBox = el('div','lines');
+  st.lines.forEach(function(line, li){
+    var ln = el('div','line');
+    ln.dataset.li = li;
+    line.forEach(function(itemId, ci){
+      var it = st.items.find(function(x){return x.id === itemId;});
+      if (!it) return;
+      var cls = 'chip' + (it.kind === 'distractor' ? ' distractor' : '');
+      if (it.label === 'Finalement') cls += ' final-keyword';
+      var chip = el('span', cls, it.label);
+      chip.draggable = true; chip.dataset.id = itemId;
+      if (st.selected && st.selected.li === li && st.selected.ci === ci)
+        chip.classList.add('selected');
+      chip.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        st.selected = {li:li, ci:ci};
+        renderWorkshop(st);
+      });
+      chip.addEventListener('dragstart', function(ev){
+        ev.dataTransfer.setData('text/plain','line:'+li+':'+ci);
+        chip.classList.add('dragging');
+      });
+      chip.addEventListener('dragend', function(){chip.classList.remove('dragging');});
+      ln.appendChild(chip);
+    });
+
+    var tools = el('div','line-tools');
+    var up = el('button',null,'↑'); up.title = 'Monter cette ligne';
+    up.addEventListener('click', function(){moveLine(st, li, -1);});
+    var dn = el('button',null,'↓'); dn.title = 'Descendre cette ligne';
+    dn.addEventListener('click', function(){moveLine(st, li, +1);});
+    var del = el('button',null,'🗑'); del.title = 'Vider cette ligne';
+    del.addEventListener('click', function(){clearLine(st, li);});
+    tools.appendChild(up); tools.appendChild(dn); tools.appendChild(del);
+    ln.appendChild(tools);
+
+    ln.addEventListener('dragover', function(ev){ev.preventDefault(); ln.classList.add('over');});
+    ln.addEventListener('dragleave', function(){ln.classList.remove('over');});
+    ln.addEventListener('drop', function(ev){
+      ev.preventDefault(); ln.classList.remove('over');
+      handleDrop(st, ev.dataTransfer.getData('text/plain'), li);
+    });
+    linesBox.appendChild(ln);
+  });
+  wrap.appendChild(linesBox);
+
+  var tb = el('div','toolbar');
+  function mk(label, title, fn){
+    var b = el('button',null,label); b.title = title;
+    b.addEventListener('click', fn); return b;
+  }
+  tb.appendChild(mk('←','Déplacer à gauche', function(){moveSelected(st,0,-1);}));
+  tb.appendChild(mk('→','Déplacer à droite', function(){moveSelected(st,0,+1);}));
+  tb.appendChild(mk('↑','Vers la ligne précédente', function(){moveSelected(st,-1,0);}));
+  tb.appendChild(mk('↓','Vers la ligne suivante', function(){moveSelected(st,+1,0);}));
+  tb.appendChild(mk('🗑','Retirer la clé sélectionnée', function(){removeSelected(st);}));
+  wrap.appendChild(tb);
+
+  var addLine = el('button','btn small ghost','+ Ajouter une ligne');
+  addLine.style.marginTop = '10px';
+  addLine.addEventListener('click', function(){st.lines.push([]); renderWorkshop(st);});
+  wrap.appendChild(addLine);
+
+  var placedCount = st.items.filter(function(i){return i.placed;}).length;
+  var remaining = st.items.length - placedCount;
+  var nDistr = st.items.filter(function(i){return i.kind === 'distractor';}).length;
+  counter.textContent = st.ws.canonical.length + ' clés (' +
+    st.ws.optionalCount + ' facultatives) · ' +
+    nDistr + ' distracteurs · ' + remaining + ' restantes';
+
+  pool.addEventListener('dragover', function(ev){ev.preventDefault(); pool.classList.add('over');});
+  pool.addEventListener('dragleave', function(){pool.classList.remove('over');});
+  pool.addEventListener('drop', function(ev){
+    ev.preventDefault(); pool.classList.remove('over');
+    handleDrop(st, ev.dataTransfer.getData('text/plain'), -1);
+  });
+
+  typeset(wrap);
+}
+
+function handleDrop(st, payload, targetLine){
+  if (!payload) return;
+  var parts = payload.split(':');
+  if (parts[0] === 'pool'){
+    var id = parts[1];
+    var it = st.items.find(function(x){return x.id === id;});
+    if (!it || it.placed) return;
+    if (targetLine < 0){renderWorkshop(st); return;}
+    it.placed = true;
+    if (!st.lines[targetLine]) st.lines[targetLine] = [];
+    st.lines[targetLine].push(id);
+  } else if (parts[0] === 'line'){
+    var li = parseInt(parts[1], 10);
+    var ci = parseInt(parts[2], 10);
+    var line = st.lines[li];
+    if (!line || ci >= line.length) return;
+    var id2 = line.splice(ci, 1)[0];
+    if (targetLine < 0){
+      var it2 = st.items.find(function(x){return x.id === id2;});
+      if (it2) it2.placed = false;
+    } else {
+      if (!st.lines[targetLine]) st.lines[targetLine] = [];
+      st.lines[targetLine].push(id2);
+    }
+  }
+  st.selected = null;
+  renderWorkshop(st);
+  App.dirty = true;
+}
+
+function addToLastLine(st, id){
+  var it = st.items.find(function(x){return x.id === id;});
+  if (!it || it.placed) return;
+  it.placed = true;
+  if (st.lines.length === 0) st.lines.push([]);
+  st.lines[st.lines.length - 1].push(id);
+  renderWorkshop(st);
+  App.dirty = true;
+}
+
+function moveSelected(st, dLine, dCol){
+  if (!st.selected) return;
+  var li = st.selected.li, ci = st.selected.ci;
+  var line = st.lines[li];
+  if (!line || ci >= line.length) return;
+  if (dCol !== 0){
+    var nj = ci + dCol;
+    if (nj < 0 || nj >= line.length) return;
+    var tmp = line[ci]; line[ci] = line[nj]; line[nj] = tmp;
+    st.selected = {li:li, ci:nj};
+  }
+  if (dLine !== 0){
+    var nl = li + dLine;
+    if (nl < 0 || nl >= st.lines.length) return;
+    var moved = st.lines[li].splice(ci, 1)[0];
+    st.lines[nl].push(moved);
+    st.selected = {li:nl, ci:st.lines[nl].length - 1};
+  }
+  renderWorkshop(st);
+  App.dirty = true;
+}
+
+function removeSelected(st){
+  if (!st.selected) return;
+  var li = st.selected.li, ci = st.selected.ci;
+  var line = st.lines[li];
+  if (!line || ci >= line.length) return;
+  var id = line.splice(ci, 1)[0];
+  var it = st.items.find(function(x){return x.id === id;});
+  if (it) it.placed = false;
+  st.selected = null;
+  renderWorkshop(st);
+  App.dirty = true;
+}
+
+function moveLine(st, li, delta){
+  var nl = li + delta;
+  if (nl < 0 || nl >= st.lines.length) return;
+  var tmp = st.lines[li]; st.lines[li] = st.lines[nl]; st.lines[nl] = tmp;
+  st.selected = null;
+  renderWorkshop(st);
+  App.dirty = true;
+}
+
+function clearLine(st, li){
+  st.lines[li].forEach(function(id){
+    var it = st.items.find(function(x){return x.id === id;});
+    if (it) it.placed = false;
+  });
+  st.lines[li] = [];
+  st.selected = null;
+  renderWorkshop(st);
+  App.dirty = true;
+}
+
+/* ============================================================
+   12. RENDU DES QUESTIONS
+   ============================================================ */
+function renderExercises(){
+  var box = document.getElementById('exercises');
+  box.innerHTML = '';
+  App.workshops = [];
+  App.calcWorkshops = [];
+  var qs = App.data.questions;
+  var nd = [3,5,7,10][App.level - 1];
+
+  qs.forEach(function(q, qi){
+    var drng = mulberry32(((App.seed ^ 0xCAFEBABE) + qi * 977) >>> 0);
+    q.ws = buildWsFromSolution(q.solution, nd, drng);
+
+    var qid = 'q' + App.level + '_' + qi;
+    var sec = el('section','question');
+    sec.id = qid;
+
+    var head = el('div','q-head');
+    head.appendChild(el('div','q-title', q.title));
+    head.appendChild(el('span','badge','Niveau ' + App.level));
+    sec.appendChild(head);
+
+    sec.appendChild(el('div','statement', q.statement));
+
+    var rw = el('div','rappel-wrap');
+    rw.appendChild(el('span','rappel-btn','💡 Rappel de cours (survoler)'));
+    var rp = el('div','rappel');
+    rp.appendChild(el('div','rappel-inner', rappel(App.level)));
+    rw.appendChild(rp);
+    sec.appendChild(rw);
+
+    var fields = el('div','fields');
+    q.fields.forEach(function(f, fi){
+      var fb = el('div','field');
+      fb.appendChild(el('span','fl', f.label));
+      var inp;
+      if (f.kind === 'select'){
+        inp = el('select');
+        f.options.forEach(function(o){ var opt = el('option',null,o); opt.value = o; inp.appendChild(opt);});
+        inp.classList.add('wide');
+      } else {
+        inp = el('input'); inp.type = 'text';
+        inp.setAttribute('inputmode','decimal'); inp.placeholder = '?';
+      }
+      inp.id = qid + '_f' + fi;
+      inp.dataset.qid = qid; inp.dataset.fi = fi;
+      inp.addEventListener('input', function(){ App.dirty = true; updateGraph(); });
+      inp.addEventListener('change', function(){ App.dirty = true; updateGraph(); });
+      fb.appendChild(inp); fields.appendChild(fb);
+    });
+    sec.appendChild(fields);
+
+    var wsBox = el('div','workshop'); wsBox.id = 'ws-' + qid;
+    sec.appendChild(wsBox);
+
+    if (q.calc){
+      var calcBox = el('div','workshop calc'); calcBox.id = 'ws-' + qid + '_calc';
+      sec.appendChild(calcBox);
+    }
+
+    var corr = el('div','correction hidden'); corr.id = 'corr-' + qid;
+    sec.appendChild(corr);
+
+    box.appendChild(sec);
+
+    var st = buildWorkshopState(qid, q.ws);
+    App.workshops.push(st);
+    renderWorkshop(st);
+
+    if (q.calc){
+      var calcSt = buildWorkshopState(qid + '_calc', q.calc);
+      App.calcWorkshops.push(calcSt);
+      renderWorkshop(calcSt);
+    }
+  });
+
+  renderGraphSection(box);
+  typeset(box);
+  var vbar = document.getElementById('verify-bar');
+  if (vbar) vbar.classList.remove('hidden');
+}
+
+function renderGraphSection(box){
+  var wrap = el('section','card');
+  wrap.appendChild(el('h2',null,'Le graphe des métamorphoses'));
+  wrap.appendChild(el('p',null,
+    "La parabole de référence y = x² apparaît en gris pointillé dès qu'une transformation est connue. La courbe, l'axe de symétrie et le sommet se dessinent progressivement."));
+  var canvas = el('canvas'); canvas.id = 'graph';
+  canvas.width = 900; canvas.height = 420;
+  wrap.appendChild(canvas);
+  var status = el('div','graph-status','☐ Courbe · ☐ Axe · ☐ Sommet');
+  status.id = 'graph-status';
+  wrap.appendChild(status);
+  box.appendChild(wrap);
+  requestAnimationFrame(function(){ updateGraph(); });
+}
+
+var _graphPending = false;
+function updateGraph(){
+  if (_graphPending) return;
+  _graphPending = true;
+  requestAnimationFrame(function(){
+    _graphPending = false;
+    _doUpdateGraph();
+  });
+}
+function _doUpdateGraph(){
+  if (!App.data) return;
+  var canvas = document.getElementById('graph');
+  if (!canvas) return;
+  var known = computeKnown();
+  drawGraph(canvas, App.data.params, known);
+
+  var showParabola = (known.a && known.b && known.c) || (known.a && known.alpha && known.beta);
+  var showAxis = !!known.alpha;
+  var showVertex = !!(known.alpha && known.beta);
+
+  var status = document.getElementById('graph-status');
+  if (status){
+    var complete = showParabola && showAxis && showVertex;
+    status.innerHTML =
+      '<span class="' + (showParabola?'on':'off') + '">' + (showParabola?'✔':'☐') + ' Courbe</span>' +
+      ' &nbsp;·&nbsp; ' +
+      '<span class="' + (showAxis?'on':'off') + '">' + (showAxis?'✔':'☐') + ' Axe de symétrie</span>' +
+      ' &nbsp;·&nbsp; ' +
+      '<span class="' + (showVertex?'on':'off') + '">' + (showVertex?'✔':'☐') + ' Sommet</span>' +
+      (complete ? ' <strong style="color:var(--ok)">— graphe complet</strong>' : '');
+  }
+}
+
+function computeKnown(){
+  var known = { a:false, b:false, c:false, alpha:false, beta:false };
+  if (!App.data) return known;
+  App.data.questions.forEach(function(q, qi){
+    q.fields.forEach(function(f, fi){
+      if (!f.param) return;
+      var inp = document.getElementById('q' + App.level + '_' + qi + '_f' + fi);
+      if (!inp) return;
+      var ok = false;
+      if (f.kind === 'select'){ ok = inp.value === f.expected; }
+      else { var v = parseNum(inp.value); ok = isFinite(v) && Math.abs(v - f.expected) < 1e-6; }
+      if (ok) known[f.param] = true;
+    });
+  });
+  return known;
+}
+
+function drawGraph(canvas, p, known){
+  known = known || {};
+  var dpr = window.devicePixelRatio || 1;
+  var W = 900, H = 420;
+  canvas.style.width = '100%'; canvas.style.height = 'auto';
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr, dpr);
+
+  var a = p.a, b = p.b, c = p.c, alpha = p.alpha, beta = p.beta;
+
+  var xMin = Math.min(-4, alpha - 2);
+  var xMax = Math.max(4, alpha + 2);
+
+  var yVals = [beta, 0, xMin*xMin, xMax*xMax,
+               a*xMin*xMin + b*xMin + c, a*xMax*xMax + b*xMax + c];
+  var yMin = Math.min.apply(null, yVals);
+  var yMax = Math.max.apply(null, yVals);
+  var pad = Math.max(1, (yMax - yMin) * 0.15);
+  yMin -= pad; yMax += pad;
+
+  function mapX(x){return 40 + (x - xMin) / (xMax - xMin) * (W - 60);}
+  function mapY(y){return H - 30 - (y - yMin) / (yMax - yMin) * (H - 60);}
+
+  var showRef = !!(known.a || known.alpha || known.beta);
+  var showParabola = (known.a && known.b && known.c) || (known.a && known.alpha && known.beta);
+  var showAxis = !!known.alpha;
+  var showVertex = !!(known.alpha && known.beta);
+  var showGrid = showParabola || showAxis || showVertex;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,W,H);
+
+  var stepX = niceStep((xMax-xMin)/10);
+  var stepY = niceStep((yMax-yMin)/8);
+
+  if (showGrid){
+    ctx.strokeStyle = '#eeeeee'; ctx.lineWidth = 1;
+    var xg;
+    for (xg = Math.ceil(xMin/stepX)*stepX; xg <= xMax; xg += stepX){
+      ctx.beginPath(); ctx.moveTo(mapX(xg),30); ctx.lineTo(mapX(xg),H-30); ctx.stroke();
+    }
+    var yg;
+    for (yg = Math.ceil(yMin/stepY)*stepY; yg <= yMax; yg += stepY){
+      ctx.beginPath(); ctx.moveTo(40,mapY(yg)); ctx.lineTo(W-20,mapY(yg)); ctx.stroke();
+    }
+  }
+
+  ctx.strokeStyle = '#4D4D4D'; ctx.lineWidth = 1.6;
+  var y0 = Math.max(30, Math.min(H-30, mapY(0)));
+  var x0 = Math.max(40, Math.min(W-20, mapX(0)));
+  ctx.beginPath(); ctx.moveTo(40,y0); ctx.lineTo(W-20,y0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x0,30); ctx.lineTo(x0,H-30); ctx.stroke();
+
+  if (showGrid){
+    ctx.fillStyle = '#808080'; ctx.font = '11px Segoe UI';
+    ctx.textAlign = 'center';
+    var xs;
+    for (xs = Math.ceil(xMin/stepX)*stepX; xs <= xMax; xs += stepX){
+      if (Math.abs(xs) < 1e-9) continue;
+      ctx.fillText(String(Math.round(xs*100)/100).replace('.',','), mapX(xs), y0+14);
+    }
+    ctx.textAlign = 'right';
+    var ys;
+    for (ys = Math.ceil(yMin/stepY)*stepY; ys <= yMax; ys += stepY){
+      if (Math.abs(ys) < 1e-9) continue;
+      ctx.fillText(String(Math.round(ys*100)/100).replace('.',','), x0-6, mapY(ys)+4);
+    }
+  }
+
+  // Courbe de référence y = x² (en gris clair pointillé)
+  if (showRef){
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    var firstRef = true;
+    for (var i = 0; i <= 300; i++){
+      var xx = xMin + (xMax - xMin) * i / 300;
+      var yy = xx * xx;
+      var px = mapX(xx), py = mapY(yy);
+      if (firstRef){ctx.moveTo(px,py); firstRef = false;} else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#999999';
+    ctx.font = 'italic 11px Segoe UI';
+    ctx.textAlign = 'right';
+    ctx.fillText('y = x²', W - 30, mapY(Math.min(yMax, (xMax-0.5)*(xMax-0.5))) + 12);
+  }
+
+  // Axe de symétrie
+  if (showAxis){
+    ctx.setLineDash([6,5]);
+    ctx.strokeStyle = '#C0392B'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(mapX(alpha),30); ctx.lineTo(mapX(alpha),H-30); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Flèche de translation (0,0) → (α, β)
+  if (showVertex && (Math.abs(alpha) > 0.01 || Math.abs(beta) > 0.01)){
+    var ox = mapX(0), oy = mapY(0);
+    var vx0 = mapX(alpha), vy0 = mapY(beta);
+    if (Math.abs(vx0 - ox) > 3 || Math.abs(vy0 - oy) > 3){
+      ctx.strokeStyle = '#3C6E71';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(vx0, vy0);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // pointe de flèche
+      var ang = Math.atan2(vy0 - oy, vx0 - ox);
+      var al = 9;
+      ctx.beginPath();
+      ctx.moveTo(vx0, vy0);
+      ctx.lineTo(vx0 - al*Math.cos(ang - Math.PI/6), vy0 - al*Math.sin(ang - Math.PI/6));
+      ctx.moveTo(vx0, vy0);
+      ctx.lineTo(vx0 - al*Math.cos(ang + Math.PI/6), vy0 - al*Math.sin(ang + Math.PI/6));
+      ctx.stroke();
+    }
+  }
+
+  // Parabole transformée
+  if (showParabola){
+    ctx.strokeStyle = '#262626'; ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    var first = true, N = 400;
+    for (var i = 0; i <= N; i++){
+      var xx = xMin + (xMax - xMin) * i / N;
+      var yy = a*xx*xx + b*xx + c;
+      var px = mapX(xx), py = mapY(yy);
+      if (first){ctx.moveTo(px,py); first = false;} else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+  }
+
+  if (showVertex){
+    var vx = mapX(alpha), vy = mapY(beta);
+    ctx.fillStyle = '#3C6E71';
+    ctx.beginPath(); ctx.arc(vx,vy,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#0D0D0D'; ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'left';
+    ctx.fillText('S(' + fmt(alpha) + ' ; ' + fmt(beta) + ')', vx+8, vy-8);
+  }
+
+  ctx.fillStyle = '#4D4D4D'; ctx.font = 'bold 13px Segoe UI'; ctx.textAlign = 'left';
+  if (showParabola){
+    ctx.fillText('f(x) = ' + polyStr(a,b,c,'x'), 46, 20);
+  } else {
+    ctx.fillText('Le graphe se dessine à mesure que tu réponds…', 46, 20);
+  }
+}
+
+function niceStep(raw){
+  var p = Math.pow(10, Math.floor(Math.log10(raw)));
+  var n = raw / p, m;
+  if (n < 1.5) m = 1;
+  else if (n < 3) m = 2;
+  else if (n < 7) m = 5;
+  else m = 10;
+  return m * p;
+}
+
+/* ============================================================
+   13. VÉRIFICATION
+   ============================================================ */
+function verifyAll(){
+  if (!App.data || !App.workshops.length){ alert('Aucun exercice chargé.'); return; }
+  var qs = App.data.questions;
+  var totalFields = 0, okFields = 0;
+  var sumWs = 0, nWs = 0;
+  var sumCalc = 0, nCalc = 0;
+  var details = [];
+
+  App.workshops.forEach(function(st, qi){
+    var q = qs[qi];
+    var qOk = 0;
+    q.fields.forEach(function(f, fi){
+      totalFields++;
+      var inp = document.getElementById('q' + App.level + '_' + qi + '_f' + fi);
+      if (!inp) return;
+      var ok = false;
+      if (f.kind === 'select') ok = inp.value === f.expected;
+      else { var v = parseNum(inp.value); ok = isFinite(v) && Math.abs(v - f.expected) < 1e-6; }
+      if (ok){ okFields++; qOk++; }
+      inp.style.borderColor = ok ? 'var(--ok)' : 'var(--bad)';
+      inp.style.background = ok ? '#eefaf2' : '#fdeef1';
+    });
+
+    var wsFlat = pathOf(st);
+    var wsScore = st.ws.evaluate(wsFlat);
+    var wsRecog = wsScore !== null;
+    var wsNote = wsScore;
+    if (wsRecog){ sumWs += wsNote; nWs++; }
+    st.note = wsNote;
+
+    var calcSt = App.calcWorkshops[qi];
+    var calcFlat = calcSt ? pathOf(calcSt) : null;
+    var calcScore = calcSt ? calcSt.ws.evaluate(calcFlat) : null;
+    var calcRecog = calcScore !== null;
+    var calcNote = calcScore;
+    if (calcRecog){ sumCalc += calcNote; nCalc++; }
+    if (calcSt) calcSt.note = calcNote;
+
+    details.push({qi:qi, q:q, qOk:qOk, wsNote:wsNote, wsRecog:wsRecog,
+      calcNote:calcNote, calcRecog:calcRecog,
+      wsFlat:wsFlat, calcFlat:calcFlat, st:st, calcSt:calcSt});
+
+    var corr = document.getElementById('corr-' + st.qid);
+    corr.classList.remove('hidden');
+    corr.innerHTML = '';
+
+    var allOk = qOk === q.fields.length;
+    var vd = el('div','verdict ' + (allOk ? 'ok' : (qOk > 0 ? 'mid' : 'bad')));
+    vd.textContent = allOk ? '✔ Question juste' : '✘ ' + qOk + '/' + q.fields.length + ' champ(s) correct(s)';
+    corr.appendChild(vd);
+    corr.appendChild(el('div', null, q.solution));
+
+    corr.appendChild(el('h4', null, 'Rédaction (atelier)'));
+    corr.appendChild(renderAtelierResult(st, wsRecog, wsNote, wsFlat));
+
+    if (calcSt){
+      corr.appendChild(el('h4', null, 'Détail des calculs (atelier)'));
+      corr.appendChild(renderAtelierResult(calcSt, calcRecog, calcNote, calcFlat));
+    }
+    typeset(corr);
+  });
+
+  var pctFields = totalFields ? okFields / totalFields : 0;
+  var pctWs = nWs ? sumWs / (20 * nWs) : 0;
+  var pctCalc = nCalc ? sumCalc / (20 * nCalc) : pctWs;
+  var hasCalc = nCalc > 0;
+  var score;
+  if (hasCalc) score = Math.round((pctFields*40 + pctWs*30 + pctCalc*30) * 10) / 10;
+  else score = Math.round((pctFields*50 + pctWs*50) * 10) / 10;
+
+  App.results = {score:score, okFields:okFields, totalFields:totalFields,
+    sumWs:sumWs, nWs:nWs, sumCalc:sumCalc, nCalc:nCalc, details:details};
+  document.getElementById('dash-score').textContent = score + ' %';
+  renderRemediation(score, details);
+  App.dirty = true;
+  scheduleSave();
+}
+
+function pathOf(st){
+  var flat = [];
+  st.lines.forEach(function(line){
+    line.forEach(function(id){
+      var it = st.items.find(function(x){return x.id === id;});
+      if (it) flat.push(it.label);
+    });
+  });
+  return flat;
+}
+
+function renderAtelierResult(st, recog, note, flat){
+  var box = el('div');
+  if (recog){
+    var stars = Math.round(note / 4);
+    var v2 = el('div','verdict ' + (note >= 18 ? 'ok' : note >= 14 ? 'mid' : 'bad'));
+    v2.innerHTML = '<span class="stars">' + repeat('★', Math.max(0, stars)) +
+      repeat('☆', Math.max(0, 5-stars)) + '</span> ' + fmt(note) + '/20';
+    box.appendChild(v2);
+    var conseil;
+    if (note >= 18) conseil = 'Rédaction optimale : rien à redire, continue ainsi.';
+    else if (note >= 14) conseil = 'Rédaction valide mais perfectible : quelques mots facultatifs manquent.';
+    else if (note >= 10) conseil = 'Rédaction acceptable : reprends le rappel de cours et soigne l\'enchaînement.';
+    else conseil = 'Rédaction incomplète : refais l\'atelier avec le rappel sous les yeux.';
+    box.appendChild(el('p', null, conseil));
+  } else {
+    box.appendChild(el('div','verdict bad',
+      '✘ NON RECONNU — le chemin proposé ne correspond pas à une reconstruction valide de la solution.'));
+  }
+  var your = el('div');
+  your.innerHTML = '<div style="font-size:.8rem;color:var(--gray);margin-top:6px">Votre chemin :</div>' + pathHtml(flat);
+  box.appendChild(your);
+  var optimal = el('div');
+  optimal.innerHTML = '<div style="font-size:.8rem;color:var(--gray);margin-top:6px">Chemin optimal (solution complète) :</div>' + pathHtml(st.ws.canonical);
+  box.appendChild(optimal);
+  box.appendChild(el('div','score-line',
+    'Matrice de ' + st.ws.size + ' chemins valides (' + st.ws.optionalCount + ' mots facultatifs).'));
+  return box;
+}
+
+function pathHtml(path){
+  if (!path || !path.length) return '<div class="path-box">(vide)</div>';
+  var idx = path.indexOf('Finalement');
+  if (idx === -1){
+    return '<div class="path-box">' + path.join(' ') +
+      ' — <em style="color:var(--warn)">mot-clé Finalement manquant</em></div>';
+  }
+  var before = path.slice(0, idx);
+  var after = path.slice(idx);
+  var html = '';
+  if (before.length) html += '<div class="path-box">' + before.join(' ') + '</div>';
+  html += '<div class="final path-box"><strong>Finalement</strong>';
+  if (after.length > 1) html += ' ' + after.slice(1).join(' ');
+  html += '</div>';
+  return html;
+}
+
+/* ============================================================
+   14. REMÉDIATION
+   ============================================================ */
+function renderRemediation(score, details){
+  var box = document.getElementById('remediation');
+  box.innerHTML = '';
+  if (score >= 80){
+    box.classList.remove('hidden');
+    box.appendChild(el('h2',null,'Excellent travail'));
+    box.appendChild(el('p',null,'Score de ' + score + ' % : tu maîtrises les métamorphoses de ce niveau. Passe au niveau ' + Math.min(4, App.level + 1) + '.'));
+    var b = el('button','btn primary', App.level < 4 ? 'Passer au niveau supérieur' : 'Revoir le niveau 4');
+    b.addEventListener('click', function(){ if (App.level < 4) changeLevel(App.level + 1); });
+    box.appendChild(b);
+    typeset(box);
+    return;
+  }
+  if (score >= 60){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  box.appendChild(el('h2',null,'Remédiation ciblée'));
+  var weak = details.filter(function(d){
+    return !d.wsRecog || (d.calcSt && !d.calcRecog) || d.qOk < d.q.fields.length;
+  });
+  var notions = {};
+  weak.forEach(function(d){
+    if (!d.wsRecog) notions['rédaction'] = true;
+    if (d.calcSt && !d.calcRecog) notions['calculs'] = true;
+    if (d.qOk < d.q.fields.length) notions['valeurs'] = true;
+  });
+  box.appendChild(el('p',null,'Score de ' + score + ' % : notions à consolider (' +
+    (Object.keys(notions).join(', ') || 'ensemble') + ').'));
+
+  var rng = mulberry32((App.seed ^ 0x9E3779B9) >>> 0);
+  var scen = pickFrom(rng, SCENARIOS);
+  var extra = GENERATORS[App.level](rng, scen);
+  var wrap = el('div');
+  extra.questions.slice(0,2).forEach(function(q, i){
+    var sec = el('section','question');
+    var head = el('div','q-head');
+    head.appendChild(el('div','q-title','Remédiation ' + (i+1)));
+    sec.appendChild(head);
+    sec.appendChild(el('div','statement', q.statement));
+    var fields = el('div','fields');
+    q.fields.forEach(function(f){
+      var fb = el('div','field');
+      fb.appendChild(el('span','fl', f.label));
+      var inp = el('input'); inp.type = 'text'; inp.placeholder = '?'; inp.style.width = '110px';
+      fb.appendChild(inp); fields.appendChild(fb);
+    });
+    sec.appendChild(fields);
+    var btn = el('button','btn small ghost','Voir la correction');
+    var corr = el('div','correction hidden');
+    corr.appendChild(el('div', null, q.solution));
+    btn.addEventListener('click', function(){ corr.classList.toggle('hidden'); typeset(corr); });
+    sec.appendChild(btn); sec.appendChild(corr);
+    wrap.appendChild(sec);
+  });
+  box.appendChild(wrap);
+  typeset(box);
+}
+
+/* ============================================================
+   15. NIVEAU / RÉGÉNÉRATION
+   ============================================================ */
+function changeLevel(level){
+  App.level = level;
+  App.seed = hashSeed(App.student.nom + '|' + App.student.prenom + '|' +
+    App.student.classe + '|' + App.student.date + '|P2|n' + level);
+  App.data = generateLevel(level, App.seed);
+  App.workshops = []; App.calcWorkshops = [];
+  document.getElementById('exercises').innerHTML = '';
+  document.getElementById('remediation').classList.add('hidden');
+  document.getElementById('dash-level').textContent = level;
+  document.getElementById('dash-seed').textContent = App.seed;
+  document.getElementById('dash-score').textContent = '—';
+  renderExercises();
+  App.dirty = true; scheduleSave();
+}
+
+/* ============================================================
+   16. SAUVEGARDE CHIFFRÉE
+   ============================================================ */
+var CRYPTO_KEY = 'cle_secrete_odyssee_2024';
+function toB64(bytes){
+  var s = '', chunk = 0x8000;
+  for (var i = 0; i < bytes.length; i += chunk)
+    s += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(s);
+}
+function encryptJSON(obj){
+  var enc = new TextEncoder();
+  var data = enc.encode(JSON.stringify(obj));
+  if (window.crypto && crypto.subtle && crypto.subtle.digest){
+    return crypto.subtle.digest('SHA-256', enc.encode(CRYPTO_KEY))
+      .then(function(k){ return crypto.subtle.importKey('raw', k, {name:'AES-GCM'}, false, ['encrypt']); })
+      .then(function(key){
+        var iv = crypto.getRandomValues(new Uint8Array(12));
+        return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key, data)
+          .then(function(ct){ return {alg:'AES-GCM', iv:toB64(iv), data:toB64(new Uint8Array(ct))}; });
+      })
+      .catch(function(){ return xorEncrypt(data, enc); });
+  }
+  return Promise.resolve(xorEncrypt(data, enc));
+}
+function xorEncrypt(data, enc){
+  var kb = enc.encode(CRYPTO_KEY); var out = new Uint8Array(data.length);
+  for (var i = 0; i < data.length; i++) out[i] = data[i] ^ kb[i % kb.length];
+  return {alg:'XOR', data:toB64(out)};
+}
+function snapshot(){
+  return {
+    nom:App.student.nom, prenom:App.student.prenom, classe:App.student.classe,
+    date:App.student.date, heure:new Date().toISOString(),
+    niveau:App.level, graine:App.seed,
+    enonces: App.data ? App.data.questions.map(function(q){return q.statement;}) : [],
+    reponses: App.workshops.map(function(st){
+      return {lignes: st.lines.map(function(l){
+        return l.map(function(id){
+          var it = st.items.find(function(x){return x.id === id;});
+          return it ? it.label : '';
+        });
+      }), note: st.note};
+    }),
+    calculs: App.calcWorkshops.map(function(st){
+      return {lignes: st.lines.map(function(l){
+        return l.map(function(id){
+          var it = st.items.find(function(x){return x.id === id;});
+          return it ? it.label : '';
+        });
+      }), note: st.note};
+    }),
+    scores: App.results ? {score:App.results.score,
+      okFields:App.results.okFields, totalFields:App.results.totalFields} : null,
+    timestamp:Date.now()
+  };
+}
+function scheduleSave(){
+  if (App.saveTimer) clearTimeout(App.saveTimer);
+  App.saveTimer = setTimeout(saveNow, 800);
+}
+function saveNow(){
+  if (!App.student.nom) return;
+  try {
+    var snap = snapshot();
+    encryptJSON(snap).then(function(enc){
+      try {
+        localStorage.setItem('odyssee_partie2_' + App.seed, JSON.stringify(enc));
+        var st = document.getElementById('save-status');
+        if (st) st.textContent = 'Sauvegarde chiffrée · ' + new Date().toLocaleTimeString();
+      } catch(e){ console.warn('localStorage indisponible', e); }
+    }).catch(function(e){ console.warn('Chiffrement échoué', e); });
+  } catch(e){ console.warn('Sauvegarde impossible', e); }
+}
+function downloadSave(){
+  var snap = snapshot();
+  encryptJSON(snap).then(function(enc){
+    var blob = new Blob([JSON.stringify(enc, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var nom = (App.student.nom || 'ANONYME').replace(/\s+/g,'_');
+    var prenom = (App.student.prenom || 'X').replace(/\s+/g,'_');
+    a.href = url;
+    a.download = 'odyssee_partie2_' + nom + '_' + prenom + '_' + App.student.date + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);}, 2000);
+  });
+}
+
+/* ============================================================
+   17. DÉMARRAGE
+   ============================================================ */
+function normalizeStudent(){
+  var nom = (document.getElementById('in-nom').value || '').trim().toUpperCase();
+  var prenom = (document.getElementById('in-prenom').value || '').trim();
+  prenom = prenom ? prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase() : '';
+  var classe = (document.getElementById('in-classe').value || '').trim().toUpperCase();
+  var dateInput = document.getElementById('in-date').value;
+  return {nom:nom, prenom:prenom, classe:classe,
+    date: dateInput || new Date().toISOString().slice(0,10)};
+}
+function start(){
+  try {
+    var s = normalizeStudent();
+    if (!s.nom || !s.prenom || !s.classe){
+      alert('Merci de renseigner votre nom, votre prénom et votre classe.'); return;
+    }
+    App.student = s;
+    App.level = parseInt(document.getElementById('in-level').value, 10) || 1;
+    App.seed = hashSeed(s.nom + '|' + s.prenom + '|' + s.classe + '|' + s.date + '|P2|n' + App.level);
+    App.data = generateLevel(App.level, App.seed);
+    App.workshops = []; App.calcWorkshops = [];
+
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('dash-name').textContent = s.prenom + ' ' + s.nom;
+    document.getElementById('dash-classe').textContent = s.classe;
+    document.getElementById('dash-date').textContent = s.date;
+    document.getElementById('dash-level').textContent = App.level;
+    document.getElementById('dash-seed').textContent = App.seed;
+    document.getElementById('dash-score').textContent = '—';
+
+    renderExercises();
+    App.dirty = true; saveNow();
+    window.scrollTo({top:0, behavior:'smooth'});
+  } catch(err){
+    console.error('[P2] erreur dans start()', err);
+    alert('Erreur au démarrage :\n' + err.message +
+      '\n\nDétail :\n' + (err.stack || '').split('\n').slice(0,5).join('\n'));
+  }
+}
+function tryLoad(){
+  var s = normalizeStudent();
+  if (!s.nom){ alert('Renseignez d\'abord votre identité.'); return; }
+  var found = null;
+  try {
+    for (var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if (k && k.indexOf('odyssee_partie2_') === 0) found = k;
+    }
+  } catch(e){}
+  if (!found){ alert('Aucune sauvegarde Partie 2 trouvée sur cet appareil.'); return; }
+  alert('Sauvegarde détectée. La reprise complète nécessite la clé de déchiffrement côté enseignant : le fichier téléchargé est le format officiel de remise.');
+}
+
+/* ============================================================
+   18. INIT
+   ============================================================ */
+function init(){
+  var btnStart = document.getElementById('btn-start');
+  if (!btnStart){ console.error('Bouton démarrer introuvable'); return; }
+  var dateInput = document.getElementById('in-date');
+  if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
+
+  btnStart.addEventListener('click', start);
+  var btnLoad = document.getElementById('btn-load');
+  if (btnLoad) btnLoad.addEventListener('click', tryLoad);
+  var btnVerify = document.getElementById('btn-verify');
+  if (btnVerify) btnVerify.addEventListener('click', verifyAll);
+  var btnVerifyBottom = document.getElementById('btn-verify-bottom');
+  if (btnVerifyBottom) btnVerifyBottom.addEventListener('click', verifyAll);
+  var btnNext = document.getElementById('btn-next-level');
+  if (btnNext) btnNext.addEventListener('click', function(){
+    if (App.level < 4) changeLevel(App.level + 1);
+    else alert('Vous êtes déjà au niveau maximal.');
+  });
+  var btnRegen = document.getElementById('btn-regen');
+  if (btnRegen) btnRegen.addEventListener('click', function(){
+    App.seed = (App.seed * 1664525 + 1013904223) >>> 0;
+    App.data = generateLevel(App.level, App.seed);
+    App.workshops = []; App.calcWorkshops = [];
+    document.getElementById('exercises').innerHTML = '';
+    document.getElementById('remediation').classList.add('hidden');
+    document.getElementById('dash-seed').textContent = App.seed;
+    document.getElementById('dash-score').textContent = '—';
+    renderExercises();
+    App.dirty = true; scheduleSave();
+  });
+  var btnDownload = document.getElementById('btn-download');
+  if (btnDownload) btnDownload.addEventListener('click', downloadSave);
+  var btnReset = document.getElementById('btn-reset');
+  if (btnReset) btnReset.addEventListener('click', function(){
+    if (!confirm('Effacer toutes les sauvegardes Partie 2 ?')) return;
+    try {
+      for (var i = localStorage.length - 1; i >= 0; i--){
+        var k = localStorage.key(i);
+        if (k && k.indexOf('odyssee_partie2_') === 0) localStorage.removeItem(k);
+      }
+    } catch(e){}
+    location.reload();
+  });
+
+  console.info('[Odyssée P2] écouteurs posés · bouton démarrer =', !!btnStart);
+
+  if (window.MathJax && MathJax.startup && MathJax.startup.promise){
+    MathJax.startup.promise.then(function(){ typeset(document.body); });
+  } else {
+    typeset(document.body);
+  }
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>

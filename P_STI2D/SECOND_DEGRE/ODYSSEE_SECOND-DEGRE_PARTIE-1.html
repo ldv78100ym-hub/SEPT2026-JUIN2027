@@ -182,6 +182,34 @@ footer .footer-actions{display:flex;justify-content:center;gap:10px;
   padding:12px 18px;display:flex;justify-content:center;gap:10px;
   margin-top:20px;z-index:10;box-shadow:0 -2px 10px rgba(0,0,0,.05);}
 
+/* ---------- Menu vertical de vérification ---------- */
+.verify-wrap{position:relative;display:inline-block}
+.phase-menu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  background:var(--card);border:1px solid var(--silver);border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);padding:6px;min-width:250px;z-index:50;
+  display:flex;flex-direction:column;}
+.phase-menu.hidden{display:none !important}
+.phase-menu button{font:inherit;border:none;background:transparent;color:var(--charcoal);
+  text-align:left;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:.92rem;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.phase-menu button:hover:not(:disabled){background:#eef4f5}
+.phase-menu button.active{background:var(--accent);color:#fff;font-weight:600}
+.phase-menu button:disabled{opacity:.45;cursor:not-allowed}
+.phase-menu .menu-sep{border-top:1px dashed var(--silver);margin:4px 0}
+
+/* ---------- Vues exclusives « Mes réponses » / « La correction » ---------- */
+.correction-only .statement, .correction-only .rappel-wrap,
+.correction-only .fields, .correction-only .workshop,
+.correction-only .graph-card{display:none !important}
+
+/* ---------- Ambiances de fond : camaïeux clairs et discrets ---------- */
+/* Exercice = camaïeu gris-bleu · Correction = camaïeu sable chaud ·
+   Remédiation = camaïeu vert d'eau */
+body{transition:background .45s ease}
+body.flow-exercise{background:linear-gradient(180deg,#F3F6FA 0%,#EBF0F5 100%)}
+body.flow-correction{background:linear-gradient(180deg,#FBF6EC 0%,#F3EBD9 100%)}
+body.flow-remediation{background:linear-gradient(180deg,#F0F6F1 0%,#E7F1EA 100%)}
+
 /* ---------- Modale de licence ---------- */
 .modal-overlay{
   position:fixed; inset:0; z-index:10000;
@@ -292,7 +320,15 @@ footer .footer-actions{display:flex;justify-content:center;gap:10px;
   <section id="remediation" class="card hidden"></section>
 
   <div id="verify-bar" class="verify-bar hidden">
-    <button class="btn primary" id="btn-verify-bottom" type="button">Vérifier mes réponses</button>
+    <div class="verify-wrap">
+      <button class="btn primary" id="btn-verify-bottom" type="button">Vérifier mes réponses</button>
+      <div id="phase-menu" class="phase-menu hidden" role="menu">
+        <button type="button" id="mi-answers" role="menuitem">📝 Mes réponses</button>
+        <button type="button" id="mi-correction" role="menuitem" disabled>✅ La correction</button>
+        <div class="menu-sep" id="menu-sep-rem" style="display:none"></div>
+        <button type="button" id="mi-remediation" class="hidden" role="menuitem">🎯 Remédiation</button>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -915,7 +951,8 @@ var App = {
   student:{nom:'',prenom:'',classe:'',date:''},
   seed:0, level:1, data:null,
   workshops:[], calcWorkshops:[],
-  results:null, dirty:false, saveTimer:null
+  results:null, dirty:false, saveTimer:null,
+  flow:null, remData:null
 };
 
 /* ============================================================
@@ -1246,7 +1283,7 @@ function renderExercises(){
 }
 
 function renderGraphSection(box){
-  var wrap = el('section','card');
+  var wrap = el('section','card graph-card');
   wrap.appendChild(el('h2',null,'Le graphe du suspect'));
   wrap.appendChild(el('p',null,
     "Le graphe se dessine progressivement : fournis les bonnes valeurs pour voir la courbe, l'axe de symétrie et le sommet apparaître."));
@@ -1474,7 +1511,6 @@ function verifyAll(){
       wsFlat:wsFlat, calcFlat:calcFlat, st:st, calcSt:calcSt});
 
     var corr = document.getElementById('corr-' + st.qid);
-    corr.classList.remove('hidden');
     corr.innerHTML = '';
 
     var allOk = qOk === q.fields.length;
@@ -1505,7 +1541,6 @@ function verifyAll(){
   App.results = {score:score, okFields:okFields, totalFields:totalFields,
     sumWs:sumWs, nWs:nWs, sumCalc:sumCalc, nCalc:nCalc, details:details};
   document.getElementById('dash-score').textContent = score + ' %';
-  renderRemediation(score, details);
   App.dirty = true;
   scheduleSave();
 }
@@ -1568,63 +1603,221 @@ function pathHtml(path){
 }
 
 /* ============================================================
-   12. REMÉDIATION
+   12. FLUX D'AFFICHAGE (menu vertical) + REMÉDIATION
+   ------------------------------------------------------------
+   Le bouton « Vérifier mes réponses » ouvre un menu vertical
+   avec « Mes réponses » et « La correction » : chaque entrée
+   affiche uniquement la partie qui la concerne.
+   En vue correction, le bouton devient « Lecture de la
+   correction terminée » ; après clic, « Remédiation » apparaît
+   dans le menu. La remédiation est gérée comme un nouvel
+   exercice (mêmes boutons, même menu).
    ============================================================ */
-function renderRemediation(score, details){
-  var box = document.getElementById('remediation');
-  box.innerHTML = '';
-  if (score >= 80){
-    box.classList.remove('hidden');
-    box.appendChild(el('h2',null,'Excellent travail'));
-    box.appendChild(el('p',null,'Score de ' + score + ' % : tu maîtrises ce niveau. Passe au niveau ' + Math.min(4, App.level + 1) + '.'));
-    var b = el('button','btn primary', App.level < 4 ? 'Passer au niveau supérieur' : 'Revoir le niveau 4');
-    b.addEventListener('click', function(){ if (App.level < 4) changeLevel(App.level + 1); });
-    box.appendChild(b);
-    typeset(box);
+function newFlowPhase(id, chain){
+  return {id:id, chain:chain || 0, verified:false, view:'answers', correctionRead:false};
+}
+function initFlow(){
+  App.flow = {active:'main', main:newFlowPhase('main'), rem:null, menuOpen:false};
+}
+function activePhase(){
+  return App.flow.active === 'main' ? App.flow.main : App.flow.rem;
+}
+function applyView(box, view){
+  var corrOnly = view === 'correction';
+  box.classList.toggle('correction-only', corrOnly);
+  var cs = box.querySelectorAll('.correction');
+  for (var i = 0; i < cs.length; i++){
+    if (corrOnly) cs[i].classList.remove('hidden');
+    else cs[i].classList.add('hidden');
+  }
+}
+function renderFlow(){
+  if (!App.flow) return;
+  var exBox = document.getElementById('exercises');
+  var remBox = document.getElementById('remediation');
+  var bd = document.body;
+  bd.classList.remove('flow-exercise','flow-correction','flow-remediation');
+  if (App.flow.active === 'main'){
+    exBox.classList.remove('hidden');
+    remBox.classList.add('hidden');
+    applyView(exBox, App.flow.main.view);
+    bd.classList.add(App.flow.main.view === 'correction' ? 'flow-correction' : 'flow-exercise');
+  } else {
+    exBox.classList.add('hidden');
+    remBox.classList.remove('hidden');
+    applyView(remBox, App.flow.rem.view);
+    bd.classList.add(App.flow.rem.view === 'correction' ? 'flow-correction' : 'flow-remediation');
+  }
+  renderVerifyBar();
+}
+function renderVerifyBar(){
+  if (!App.flow) return;
+  var ph = activePhase();
+  var btnBottom = document.getElementById('btn-verify-bottom');
+  var btnTop = document.getElementById('btn-verify');
+  var reading = ph.view === 'correction' && ph.verified && !ph.correctionRead;
+  if (btnBottom){
+    btnBottom.textContent = reading ? '✅ Lecture de la correction terminée' : 'Vérifier mes réponses ▾';
+  }
+  if (btnTop){
+    btnTop.textContent = reading ? 'Lecture de la correction terminée' : 'Vérifier mes réponses';
+  }
+  var miA = document.getElementById('mi-answers');
+  var miC = document.getElementById('mi-correction');
+  var miR = document.getElementById('mi-remediation');
+  var sep = document.getElementById('menu-sep-rem');
+  if (miA) miA.classList.toggle('active', ph.view === 'answers');
+  if (miC){
+    miC.classList.toggle('active', ph.view === 'correction');
+    miC.disabled = !ph.verified;
+  }
+  if (miR){
+    var show = !!ph.correctionRead;
+    miR.classList.toggle('hidden', !show);
+    if (sep) sep.style.display = show ? '' : 'none';
+    miR.textContent = App.flow.active === 'main' ? '🎯 Remédiation' : '🎯 Remédiation suivante';
+  }
+  var menu = document.getElementById('phase-menu');
+  if (menu) menu.classList.toggle('hidden', !App.flow.menuOpen);
+}
+function onVerifyBarClick(){
+  if (!App.flow) return;
+  var ph = activePhase();
+  if (ph.view === 'correction' && ph.verified && !ph.correctionRead){
+    ph.correctionRead = true;
+    App.flow.menuOpen = true;
+    renderFlow();
     return;
   }
-  if (score >= 60){ box.classList.add('hidden'); return; }
-  box.classList.remove('hidden');
-  box.appendChild(el('h2',null,'Remédiation ciblée'));
-  var weak = details.filter(function(d){
-    return !d.wsRecog || (d.calcSt && !d.calcRecog) || d.qOk < d.q.fields.length;
-  });
-  var notions = {};
-  weak.forEach(function(d){
-    if (!d.wsRecog) notions['rédaction'] = true;
-    if (d.calcSt && !d.calcRecog) notions['calculs'] = true;
-    if (d.qOk < d.q.fields.length) notions['valeurs'] = true;
-  });
-  box.appendChild(el('p',null,'Score de ' + score + ' % : notions à consolider (' +
-    (Object.keys(notions).join(', ') || 'ensemble') + ').'));
+  if (App.flow.active === 'main') verifyAll();
+  else verifyRemediation();
+  ph.verified = true;
+  App.flow.menuOpen = !App.flow.menuOpen;
+  renderFlow();
+}
+function setViewAndClose(view){
+  if (!App.flow) return;
+  var ph = activePhase();
+  if (view === 'correction' && !ph.verified) return;
+  ph.view = view;
+  App.flow.menuOpen = false;
+  renderFlow();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function onRemediationClick(){
+  if (!App.flow) return;
+  var ph = activePhase();
+  if (!ph.correctionRead) return;
+  var chain = App.flow.rem ? App.flow.rem.chain + 1 : 1;
+  App.flow.rem = newFlowPhase('rem', chain);
+  App.flow.active = 'rem';
+  App.flow.menuOpen = false;
+  buildRemediationContent(chain);
+  renderFlow();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 
-  var rng = mulberry32((App.seed ^ 0x9E3779B9) >>> 0);
+/* ---------- Remédiation : un nouvel exercice ---------- */
+function buildRemediationContent(chain){
+  var box = document.getElementById('remediation');
+  box.innerHTML = '';
+  box.classList.remove('hidden');
+  box.appendChild(el('h2',null,'Remédiation ' + chain + ' — nouvel exercice'));
+  var noteTxt;
+  if (App.results){
+    var sc = App.results.score;
+    noteTxt = sc >= 80
+      ? 'Score de ' + sc + ' % au niveau ' + App.level + ' : niveau maîtrisé. La remédiation reste disponible pour consolider les acquis.'
+      : 'Score de ' + sc + ' % : notions à consolider. Traite cette remédiation comme un nouvel exercice.';
+  } else {
+    noteTxt = 'Traite cette remédiation comme un nouvel exercice.';
+  }
+  box.appendChild(el('p',null,noteTxt));
+  if (App.results && App.results.score >= 80 && App.level < 4){
+    var bl = el('button','btn ghost','Passer au niveau supérieur');
+    bl.addEventListener('click', function(){ changeLevel(App.level + 1); });
+    box.appendChild(bl);
+  }
+  box.appendChild(el('p',null,
+    'Réponds aux questions, puis clique sur « Vérifier mes réponses » : le menu vertical te permet de basculer entre « Mes réponses » et « La correction ».'));
+  var scoreLine = el('p'); scoreLine.id = 'rem-score';
+  scoreLine.style.cssText = 'font-size:.85rem;color:var(--slate)';
+  box.appendChild(scoreLine);
+
+  var rng = mulberry32(((App.seed ^ 0x9E3779B9) + chain * 7919) >>> 0);
   var scen = pickFrom(rng, SCENARIOS);
   var extra = GENERATORS[App.level](rng, scen);
-  var wrap = el('div');
-  extra.questions.slice(0,2).forEach(function(q, i){
+  App.remData = {chain:chain, questions:extra.questions.slice(0,2)};
+
+  App.remData.questions.forEach(function(q, i){
     var sec = el('section','question');
+    sec.id = 'rem' + chain + '_q' + i;
     var head = el('div','q-head');
-    head.appendChild(el('div','q-title','Remédiation ' + (i+1)));
+    head.appendChild(el('div','q-title','Remédiation ' + chain + ' — question ' + (i+1)));
+    head.appendChild(el('span','badge','Niveau ' + App.level));
     sec.appendChild(head);
     sec.appendChild(el('div','statement', q.statement));
     var fields = el('div','fields');
-    q.fields.forEach(function(f){
+    q.fields.forEach(function(f, j){
       var fb = el('div','field');
       fb.appendChild(el('span','fl', f.label));
-      var inp = el('input'); inp.type = 'text'; inp.placeholder = '?'; inp.style.width = '110px';
+      var inp;
+      if (f.kind === 'select'){
+        inp = el('select');
+        f.options.forEach(function(o){ var opt = el('option',null,o); opt.value = o; inp.appendChild(opt); });
+        inp.classList.add('wide');
+      } else {
+        inp = el('input'); inp.type = 'text';
+        inp.setAttribute('inputmode','decimal'); inp.placeholder = '?'; inp.style.width = '110px';
+      }
+      inp.id = 'rem' + chain + '_q' + i + '_f' + j;
       fb.appendChild(inp); fields.appendChild(fb);
     });
     sec.appendChild(fields);
-    var btn = el('button','btn small ghost','Voir la correction');
-    var corr = el('div','correction hidden');
-    corr.appendChild(el('div', null, q.solution));
-    btn.addEventListener('click', function(){ corr.classList.toggle('hidden'); typeset(corr); });
-    sec.appendChild(btn); sec.appendChild(corr);
-    wrap.appendChild(sec);
+    var corr = el('div','correction hidden'); corr.id = 'remcorr' + chain + '_q' + i;
+    sec.appendChild(corr);
+    box.appendChild(sec);
   });
-  box.appendChild(wrap);
   typeset(box);
+}
+function verifyRemediation(){
+  var rd = App.remData;
+  if (!rd){ alert('Aucune remédiation chargée.'); return; }
+  var chain = rd.chain;
+  var total = 0, ok = 0;
+  rd.questions.forEach(function(q, i){
+    var qOk = 0;
+    q.fields.forEach(function(f, j){
+      total++;
+      var inp = document.getElementById('rem' + chain + '_q' + i + '_f' + j);
+      if (!inp) return;
+      var good = false;
+      if (f.kind === 'select') good = inp.value === f.expected;
+      else {
+        var v = parseNum(inp.value);
+        good = isFinite(v) && Math.abs(v - f.expected) < 1e-6;
+      }
+      if (good){ ok++; qOk++; }
+      inp.style.borderColor = good ? 'var(--ok)' : 'var(--bad)';
+      inp.style.background = good ? '#eefaf2' : '#fdeef1';
+    });
+    var corr = document.getElementById('remcorr' + chain + '_q' + i);
+    if (corr){
+      corr.innerHTML = '';
+      var allOk = qOk === q.fields.length;
+      var vd = el('div','verdict ' + (allOk ? 'ok' : (qOk > 0 ? 'mid' : 'bad')));
+      vd.textContent = allOk ? '✔ Question juste' : '✘ ' + qOk + '/' + q.fields.length + ' champ(s) correct(s)';
+      corr.appendChild(vd);
+      corr.appendChild(el('div', null, q.solution));
+      typeset(corr);
+    }
+  });
+  var scoreLine = document.getElementById('rem-score');
+  if (scoreLine){
+    var pct = total ? Math.round(ok / total * 1000) / 10 : 0;
+    scoreLine.textContent = 'Remédiation ' + chain + ' : ' + ok + '/' + total + ' champ(s) correct(s) — ' + pct + ' %.';
+  }
+  App.dirty = true;
 }
 
 /* ============================================================
@@ -1637,11 +1830,16 @@ function changeLevel(level){
   App.data = generateLevel(level, App.seed);
   App.workshops = []; App.calcWorkshops = [];
   document.getElementById('exercises').innerHTML = '';
-  document.getElementById('remediation').classList.add('hidden');
+  var remBox = document.getElementById('remediation');
+  remBox.classList.add('hidden');
+  remBox.innerHTML = '';
+  App.remData = null;
+  initFlow();
   document.getElementById('dash-level').textContent = level;
   document.getElementById('dash-seed').textContent = App.seed;
   document.getElementById('dash-score').textContent = '—';
   renderExercises();
+  renderFlow();
   App.dirty = true; scheduleSave();
 }
 
@@ -1768,6 +1966,8 @@ function start(){
     document.getElementById('dash-score').textContent = '—';
 
     renderExercises();
+    initFlow();
+    renderFlow();
     App.dirty = true; saveNow();
     window.scrollTo({top:0, behavior:'smooth'});
   } catch(err){
@@ -1848,9 +2048,25 @@ function init(){
   var btnLoad = document.getElementById('btn-load');
   if (btnLoad) btnLoad.addEventListener('click', tryLoad);
   var btnVerify = document.getElementById('btn-verify');
-  if (btnVerify) btnVerify.addEventListener('click', verifyAll);
+  if (btnVerify) btnVerify.addEventListener('click', onVerifyBarClick);
   var btnVerifyBottom = document.getElementById('btn-verify-bottom');
-  if (btnVerifyBottom) btnVerifyBottom.addEventListener('click', verifyAll);
+  if (btnVerifyBottom) btnVerifyBottom.addEventListener('click', onVerifyBarClick);
+  var miA = document.getElementById('mi-answers');
+  if (miA) miA.addEventListener('click', function(){ setViewAndClose('answers'); });
+  var miC = document.getElementById('mi-correction');
+  if (miC) miC.addEventListener('click', function(){ setViewAndClose('correction'); });
+  var miR = document.getElementById('mi-remediation');
+  if (miR) miR.addEventListener('click', onRemediationClick);
+  document.addEventListener('click', function(e){
+    if (!App.flow || !App.flow.menuOpen) return;
+    var bar = document.getElementById('verify-bar');
+    if (bar && !bar.contains(e.target)){ App.flow.menuOpen = false; renderVerifyBar(); }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && App.flow && App.flow.menuOpen){
+      App.flow.menuOpen = false; renderVerifyBar();
+    }
+  });
   var btnNext = document.getElementById('btn-next-level');
   if (btnNext) btnNext.addEventListener('click', function(){
     if (App.level < 4) changeLevel(App.level + 1);
@@ -1862,10 +2078,15 @@ function init(){
     App.data = generateLevel(App.level, App.seed);
     App.workshops = []; App.calcWorkshops = [];
     document.getElementById('exercises').innerHTML = '';
-    document.getElementById('remediation').classList.add('hidden');
+    var remBox2 = document.getElementById('remediation');
+    remBox2.classList.add('hidden');
+    remBox2.innerHTML = '';
+    App.remData = null;
+    initFlow();
     document.getElementById('dash-seed').textContent = App.seed;
     document.getElementById('dash-score').textContent = '—';
     renderExercises();
+    renderFlow();
     App.dirty = true; scheduleSave();
   });
   var btnDownload = document.getElementById('btn-download');

@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Affaire des Congruences — Cours de Mathématiques Expertes</title>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global' },
+            startup: { typeset: false }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep:#dfe2e8; --bg-dark:#e7eaef; --bg-mid:#eef0f4; --bg-light:#f5f6f9; --bg-hi:#fbfbfd;
+            --border:#b6bac4; --border-mid:#959aa6; --border-hi:#666b7a;
+            --text:#262932; --text-mid:#4a4e5a; --text-dim:#7a7e8c; --text-hi:#0d0f16;
+            --accent:#3d4254; --accent-dim:#868aa0;
+            --shadow-md:0 4px 12px rgba(20,22,30,0.10),0 2px 4px rgba(20,22,30,0.06);
+            --shadow-lg:0 20px 40px rgba(20,22,30,0.14),0 8px 16px rgba(20,22,30,0.08);
+            --shadow-xl:0 30px 60px rgba(20,22,30,0.18),0 12px 24px rgba(20,22,30,0.10);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; scrollbar-width:thin; scrollbar-color:#959aa6 #dfe2e8; }
+        ::-webkit-scrollbar { width:10px; height:10px; }
+        ::-webkit-scrollbar-track { background:var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#959aa6,#7a7e8c); border:1px solid #b6bac4; border-radius:6px; }
+
+        body {
+            font-family:'Rajdhani','Segoe UI',system-ui,sans-serif;
+            font-size:18px; line-height:1.7; color:var(--text); min-height:100vh;
+            padding:84px 20px 40px;
+            background-color:var(--bg-deep);
+            background-image:
+                radial-gradient(ellipse 1400px 500px at 50% -8%, rgba(255,255,255,0.75), transparent 65%),
+                linear-gradient(rgba(80,85,100,0.045) 1px, transparent 1px) 0 0 / 44px 44px,
+                linear-gradient(90deg, rgba(80,85,100,0.045) 1px, transparent 1px) 0 0 / 44px 44px,
+                var(--bg-deep);
+            background-attachment:fixed;
+            counter-reset:chapter;
+        }
+
+        #loader {
+            position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+            background:var(--bg-deep); z-index:99999;
+            transition:opacity 0.5s ease, visibility 0.5s ease;
+            font-family:'Share Tech Mono',monospace; color:var(--text-hi);
+            letter-spacing:0.2em; text-transform:uppercase;
+        }
+        #loader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+        .loader-inner { display:flex; align-items:center; gap:18px; font-size:1rem; }
+        .loader-dot { width:12px; height:12px; border-radius:50%; background:var(--accent); animation:pulseDot 1.2s ease-in-out infinite; }
+
+        .hud {
+            position:fixed; top:0; left:0; right:0; height:56px;
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            background:linear-gradient(180deg,#f8f9fb,#e9ebf0);
+            border-bottom:1px solid var(--border-mid);
+            box-shadow:0 2px 8px rgba(20,22,30,0.06);
+            z-index:1000;
+            font-family:'Share Tech Mono','Consolas',monospace;
+            font-size:0.8rem; letter-spacing:0.12em; color:var(--text-mid); text-transform:uppercase;
+        }
+        .hud-left,.hud-right { display:flex; align-items:center; gap:14px; }
+        .hud-dot {
+            width:8px; height:8px; border-radius:50%; background:var(--accent);
+            box-shadow:0 0 0 3px rgba(61,66,84,0.15);
+            animation:pulseDot 2s ease-in-out infinite;
+        }
+        .hud-title { color:var(--text-hi); font-family:'Orbitron','Impact',sans-serif; font-weight:700; letter-spacing:0.25em; font-size:0.72rem; }
+        .hud-status { color:var(--text-hi); display:flex; align-items:center; gap:6px; font-weight:700; }
+        .hud-status::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--text-hi); animation:blinkRec 1.4s steps(1) infinite; }
+        .hud-time { color:var(--accent); font-variant-numeric:tabular-nums; padding-left:14px; border-left:1px solid var(--border); font-weight:600; }
+        .hud-progress { position:absolute; left:0; right:0; bottom:-1px; height:2px; background:rgba(80,85,100,0.10); overflow:hidden; }
+        .hud-progress-fill { height:100%; width:20%; background:linear-gradient(90deg,var(--accent-dim),var(--accent),var(--text-hi)); transition:width 0.4s ease; }
+
+        @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.55; transform:scale(0.85); } }
+        @keyframes blinkRec { 0%,60% { opacity:1; } 61%,100% { opacity:0.2; } }
+
+        .page {
+            position:relative; max-width:980px; margin:0 auto; padding:60px 70px;
+            background:linear-gradient(145deg,#ffffff 0%,#f7f8fb 45%,#f0f2f6 100%);
+            border:1px solid var(--border);
+            box-shadow:var(--shadow-xl),inset 0 1px 0 rgba(255,255,255,0.9),inset 0 -1px 0 rgba(120,125,140,0.05);
+        }
+        body.loaded .page { display:none; }
+        body.loaded .page.active { display:block; animation:pageEnter 0.45s cubic-bezier(0.2,0.9,0.3,1.05); }
+        @keyframes pageEnter { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+        .page::before { content:''; position:absolute; top:0; left:40px; right:40px; height:1px; background:linear-gradient(90deg,transparent,rgba(80,85,100,0.35) 50%,transparent); pointer-events:none; }
+        .page::after { content:''; position:absolute; top:14px; right:14px; width:26px; height:26px; border-top:1px solid var(--border-mid); border-right:1px solid var(--border-mid); opacity:0.8; pointer-events:none; }
+
+        h1,h2,h3 { font-family:'Orbitron','Impact','Arial Black',sans-serif; color:var(--text-hi); text-transform:uppercase; }
+        h1 {
+            font-size:clamp(1.8rem,4.2vw,3rem); font-weight:900; letter-spacing:0.18em;
+            text-align:center; padding-bottom:26px; margin-bottom:34px; position:relative; line-height:1.15;
+            background:linear-gradient(180deg,#0d0f16 0%,#2a2f3d 55%,#4a4e5a 100%);
+            -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        h1::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:200px; height:2px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
+        h2 {
+            font-size:clamp(1.15rem,2.2vw,1.6rem); font-weight:700; letter-spacing:0.12em;
+            padding:0 0 16px 0; margin-bottom:28px; position:relative;
+            border-bottom:1px solid var(--border); counter-increment:chapter;
+        }
+        h2::before { content:'◢ PART ' counter(chapter,decimal-leading-zero) ' ◣'; display:block; font-family:'Share Tech Mono',monospace; font-size:0.62rem; font-weight:400; letter-spacing:0.35em; color:var(--accent); padding-bottom:12px; opacity:0.9; }
+        h2::after { content:''; position:absolute; bottom:-1px; left:0; width:90px; height:2px; background:linear-gradient(90deg,var(--accent),transparent); }
+        h3 { font-size:0.82rem; font-weight:700; letter-spacing:0.22em; color:var(--accent); margin-bottom:18px; padding-bottom:10px; border-bottom:1px dashed rgba(80,85,100,0.30); }
+        p { margin-bottom:16px; text-align:justify; font-size:1.02rem; color:var(--text); }
+        .important { color:var(--text-hi); font-weight:700; }
+
+        .definition,.propriete,.theoreme,.exemple {
+            position:relative; margin:32px 0; padding:26px 30px 40px;
+            background:linear-gradient(160deg,#ffffff 0%,#f5f6fa 100%);
+            border:1px solid var(--border); border-left-width:4px;
+            box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,1);
+            transition:transform 0.3s ease,box-shadow 0.3s ease;
+        }
+        .definition:hover,.propriete:hover,.theoreme:hover,.exemple:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,1); }
+        .definition::before,.propriete::before,.theoreme::before,.exemple::before {
+            position:absolute; top:14px; right:18px;
+            font-family:'Orbitron',sans-serif; font-size:1.4rem; font-weight:900; opacity:0.35; pointer-events:none;
+        }
+        .definition { border-left-color:#6a6a86; }
+        .definition::before { content:'§'; color:#6a6a86; }
+        .propriete { border-left-color:#55586a; }
+        .propriete::before { content:'▣'; color:#55586a; }
+        .theoreme { border-left-color:#2a2f3d; }
+        .theoreme::before { content:'✦'; color:#2a2f3d; }
+        .exemple { border-left-color:#7a7e8c; background:linear-gradient(160deg,#fbfcfe 0%,#f0f2f6 100%); }
+        .exemple::before { content:'◈'; color:#7a7e8c; }
+
+        .rule-block { cursor:pointer; }
+        .rule-block::after {
+            content:'🎲 Exemple dynamique';
+            position:absolute; bottom:8px; right:12px;
+            font-family:'Share Tech Mono',monospace; font-size:0.66rem;
+            letter-spacing:0.12em; text-transform:uppercase; color:var(--text-mid);
+            background:rgba(255,255,255,0.95); padding:3px 8px;
+            border:1px solid var(--border); border-radius:3px;
+            opacity:0; transition:opacity 0.25s ease; pointer-events:none; z-index:5;
+        }
+        .rule-block:hover::after { opacity:1; }
+
+        .definition ul,.propriete ul,.theoreme ul,.exemple ul,
+        .definition ol,.propriete ol,.theoreme ol,.exemple ol { padding-left:26px; margin:12px 0; }
+        .definition li,.propriete li,.theoreme li,.exemple li { margin-bottom:6px; color:var(--text); }
+
+        .formule {
+            position:relative; margin:26px 0; padding:30px 26px 26px;
+            background:linear-gradient(180deg,#ffffff,#f5f6fa);
+            border:1px solid var(--border-mid);
+            box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7),0 2px 6px rgba(20,22,30,0.06),0 1px 2px rgba(20,22,30,0.04);
+            text-align:center; font-size:1.15rem; color:var(--text-hi); overflow:hidden;
+        }
+        .formule::before { content:'◇ CALC //'; position:absolute; top:8px; left:14px; font-family:'Share Tech Mono',monospace; font-size:0.62rem; letter-spacing:0.25em; color:var(--accent-dim); opacity:0.95; }
+        .formule::after { content:'_'; position:absolute; bottom:6px; right:16px; font-family:'Share Tech Mono',monospace; font-size:0.9rem; color:var(--accent); animation:blinkCaret 1.1s steps(1) infinite; }
+        @keyframes blinkCaret { 0%,55% { opacity:1; } 56%,100% { opacity:0; } }
+
+        .dialogue {
+            position:relative; margin:28px 0; padding:26px 30px 24px 92px;
+            background:linear-gradient(180deg,#ffffff,#f4f5f9);
+            border:1px solid var(--border-mid);
+            box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,1);
+            font-family:'Rajdhani',sans-serif; font-size:1rem; color:var(--text);
+            border-left-width:4px; border-left-color:var(--accent);
+        }
+        .dialogue::before {
+            content:'◉'; position:absolute; left:24px; top:50%; transform:translateY(-50%);
+            width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+            font-size:1.4rem; color:var(--accent);
+            border:2px solid var(--border-mid); border-radius:50%;
+            background:radial-gradient(circle at 30% 30%,#ffffff,#e8eaf0);
+            box-shadow:0 2px 6px rgba(20,22,30,0.12),inset 0 1px 0 rgba(255,255,255,1);
+        }
+        .dialogue p { margin-bottom:10px; text-align:left; }
+        .dialogue p:last-child { margin-bottom:0; }
+
+        .récit { font-style:italic; color:var(--text-mid); border-left:2px solid rgba(80,85,100,0.35); padding-left:20px; margin:22px 0; font-size:1rem; }
+
+        .candidates-panel {
+            position:relative; margin:26px 0; padding:20px 24px 18px;
+            background:linear-gradient(160deg,#f5f6fa 0%,#eef0f4 100%);
+            border:1px solid var(--border-mid); border-left:4px solid var(--accent);
+            box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,1);
+            font-family:'Share Tech Mono',monospace; font-size:0.92rem; color:var(--text);
+        }
+        .candidates-panel::before {
+            content:'🔍'; position:absolute; top:-12px; left:16px;
+            width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+            font-size:0.95rem; background:#ffffff; border:1px solid var(--border-mid); border-radius:50%;
+        }
+        .candidates-panel .label { display:block; margin-bottom:8px; font-weight:700; color:var(--text-hi); letter-spacing:0.05em; text-transform:uppercase; font-size:0.78rem; }
+        .candidates-panel .count { color:var(--accent); font-weight:700; font-size:1rem; }
+        .candidates-panel .list { color:var(--text-mid); word-break:break-word; line-height:1.65; font-size:0.88rem; }
+        .candidates-panel.final {
+            background:linear-gradient(160deg,#2a2f3d 0%,#0d0f16 100%);
+            color:#ffffff; border-color:var(--text-hi); border-left-color:var(--text-hi);
+        }
+        .candidates-panel.final .label { color:#ffffff; }
+        .candidates-panel.final .count { color:#ffffff; text-shadow:0 0 8px rgba(255,255,255,0.5); }
+        .candidates-panel.final .list { color:#e0e0ea; }
+
+        canvas {
+            display:block; margin:32px auto;
+            border:1px solid var(--border-mid);
+            background:radial-gradient(ellipse at center,#ffffff 0%,#eef0f4 100%);
+            box-shadow:0 4px 12px rgba(20,22,30,0.10),inset 0 1px 0 rgba(255,255,255,1);
+            max-width:100%;
+        }
+
+        .nav { display:flex; justify-content:space-between; align-items:center; margin-top:42px; padding-top:24px; border-top:1px solid var(--border); gap:16px; }
+        .nav span { flex:0 0 auto; }
+        .nav a {
+            display:inline-flex; align-items:center; gap:10px;
+            font-family:'Orbitron','Impact',sans-serif; font-size:0.78rem; font-weight:700;
+            letter-spacing:0.18em; text-transform:uppercase; text-decoration:none;
+            color:var(--text-hi); padding:14px 26px;
+            background:linear-gradient(180deg,#ffffff,#eef0f5);
+            border:1px solid var(--border-mid);
+            box-shadow:0 2px 4px rgba(20,22,30,0.08),inset 0 1px 0 rgba(255,255,255,1);
+            transition:all 0.25s ease; position:relative; overflow:hidden;
+        }
+        .nav a::after { content:''; position:absolute; inset:0; background:linear-gradient(120deg,transparent 30%,rgba(80,85,100,0.10) 50%,transparent 70%); transform:translateX(-120%); transition:transform 0.5s ease; pointer-events:none; }
+        .nav a:hover { border-color:var(--border-hi); box-shadow:0 6px 14px rgba(20,22,30,0.16),inset 0 1px 0 rgba(255,255,255,1); transform:translateY(-2px); }
+        .nav a:hover::after { transform:translateX(120%); }
+
+        .footer-licence { max-width:980px; margin:40px auto 60px; text-align:center; padding:20px; }
+        .btn-licence {
+            position:relative; font-family:'Orbitron','Impact',sans-serif; font-size:0.82rem;
+            font-weight:700; letter-spacing:0.25em; text-transform:uppercase;
+            color:var(--text-hi); padding:20px 44px;
+            background:linear-gradient(180deg,#ffffff,#e8eaf0);
+            border:1px solid var(--border-mid); cursor:pointer;
+            box-shadow:0 8px 20px rgba(20,22,30,0.14),inset 0 1px 0 rgba(255,255,255,1);
+            transition:transform 0.2s ease,border-color 0.2s ease;
+        }
+        .btn-licence:hover { border-color:var(--border-hi); transform:translateY(-2px); }
+
+        .modal { display:none; position:fixed; z-index:2000; inset:0; background:rgba(200,203,210,0.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:24px; }
+        .modal.active { display:flex; animation:fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        .modal-content {
+            position:relative; max-width:760px; width:100%; max-height:86vh; overflow-y:auto;
+            padding:44px 46px 40px;
+            background:linear-gradient(160deg,#ffffff 0%,#f4f5f9 100%);
+            border:1px solid var(--border-mid);
+            box-shadow:var(--shadow-xl),inset 0 1px 0 rgba(255,255,255,1);
+            animation:modalIn 0.35s cubic-bezier(0.2,0.9,0.3,1.1);
+        }
+        @keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+        .modal-content h2 { font-family:'Orbitron',sans-serif; font-size:1.05rem; letter-spacing:0.15em; border:none; padding:0 0 18px; margin-bottom:22px; color:var(--text-hi); counter-increment:none; }
+        .modal-content h2::before,.modal-content h2::after { display:none; }
+        .modal-content h3 { font-size:0.78rem; margin-top:26px; color:var(--text-hi); border-bottom:1px solid var(--border); padding-bottom:8px; }
+        .modal-content p,.modal-content li { font-size:0.95rem; text-align:justify; margin-bottom:12px; color:var(--text); }
+        .modal-content ul { padding-left:22px; }
+        .modal-content .auteur { display:block; font-family:'Share Tech Mono',monospace; color:var(--text-hi); padding:14px 18px; background:#f0f2f6; border:1px solid var(--border); border-left:3px solid var(--accent); letter-spacing:0.05em; margin-bottom:22px; }
+        .modal-close { position:absolute; top:8px; right:18px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-size:2rem; line-height:1; color:var(--text-mid); cursor:pointer; transition:color 0.2s,transform 0.2s; user-select:none; z-index:10; }
+        .modal-close:hover { color:var(--text-hi); transform:rotate(90deg); }
+
+        .rule-modal .modal-content {
+            display:flex; flex-direction:column;
+            max-width:820px; max-height:90vh; overflow:hidden;
+            padding:36px 42px 28px;
+        }
+        .rule-modal .modal-content h2 {
+            font-size:1rem; letter-spacing:0.12em; margin-bottom:16px;
+            padding-bottom:16px; border-bottom:2px solid var(--border); flex:0 0 auto;
+        }
+        .rule-modal-body {
+            flex:1 1 auto; overflow-y:auto; min-height:0;
+            padding-right:12px; margin-bottom:20px;
+        }
+        .rule-modal-body p { font-size:0.95rem; margin-bottom:10px; }
+        .rule-modal-body h3 { font-size:0.78rem; color:var(--text-hi); margin-top:20px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px dashed rgba(80,85,100,0.3); }
+        .rule-modal-body ul, .rule-modal-body ol { padding-left:24px; margin:10px 0; }
+        .rule-modal-body li { font-size:0.92rem; margin-bottom:5px; }
+        .rule-modal-body table { margin:12px auto; border-collapse:collapse; font-size:0.85rem; }
+        .rule-modal-body th, .rule-modal-body td { padding:6px 12px; border:1px solid var(--border); text-align:center; }
+        .rule-modal-body th { background:#e8eaf0; font-weight:700; }
+        .rule-modal-body mjx-container[jax="SVG"][display="true"] { overflow-x:auto; overflow-y:hidden; max-width:100%; }
+        .rule-modal-actions {
+            flex:0 0 auto; display:flex; justify-content:center; gap:12px;
+            padding-top:16px; border-top:1px solid var(--border);
+        }
+        .btn-regenerate {
+            font-family:'Orbitron','Impact',sans-serif; font-size:0.8rem; font-weight:700;
+            letter-spacing:0.18em; text-transform:uppercase; color:var(--text-hi);
+            padding:14px 30px; background:linear-gradient(180deg,#ffffff,#e8eaf0);
+            border:1px solid var(--border-mid); cursor:pointer;
+            box-shadow:0 4px 12px rgba(20,22,30,0.10),inset 0 1px 0 rgba(255,255,255,1);
+            transition:transform 0.2s ease,border-color 0.2s ease;
+        }
+        .btn-regenerate:hover { border-color:var(--border-hi); transform:translateY(-1px); }
+        .btn-regenerate:active { transform:translateY(0); }
+
+        @media (max-width:720px) {
+            body { padding:80px 12px 30px; font-size:16px; }
+            .hud { padding:0 14px; font-size:0.7rem; }
+            .hud-title { display:none; }
+            .page { padding:40px 22px; }
+            .page::after { display:none; }
+            .dialogue { padding:22px 22px 20px 78px; }
+            .dialogue::before { left:16px; width:40px; height:40px; font-size:1.1rem; }
+            h2 { font-size:1.05rem; letter-spacing:0.08em; }
+            .formule { padding:26px 16px 22px; }
+            .nav { flex-direction:column; align-items:stretch; }
+            .nav a { justify-content:center; }
+            .modal-content { padding:32px 24px 28px; }
+            .rule-modal .modal-content { padding:28px 18px 20px; }
+        }
+
+        @media print {
+            body { background:#fff !important; color:#000 !important; padding:0 !important; font-size:12pt; }
+            #loader,.hud,.footer-licence,.modal { display:none !important; }
+            body.loaded .page { display:block !important; page-break-after:always; }
+            body.loaded .page.active { animation:none; }
+            .page { background:#fff !important; border:1px solid #000 !important; box-shadow:none !important; padding:20px !important; max-width:100%; color:#000 !important; }
+            .page::before,.page::after { display:none !important; }
+            h1,h2,h3 { color:#000 !important; -webkit-text-fill-color:#000 !important; background:none !important; }
+            h1::after,h2::after { display:none !important; }
+            .definition,.propriete,.theoreme,.exemple,.dialogue,.formule,.récit,.candidates-panel {
+                background:#f4f4f4 !important; border:1px solid #000 !important; box-shadow:none !important; color:#000 !important;
+            }
+            .dialogue::before,.formule::before,.formule::after,
+            .definition::before,.propriete::before,.theoreme::before,.exemple::before,
+            .candidates-panel::before,.rule-block::after { display:none !important; }
+            .nav a { background:#fff !important; color:#000 !important; border:1px solid #000 !important; box-shadow:none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="loader-inner"><span class="loader-dot"></span><span>Préparation de l'enquête…</span></div></div>
+
+<div class="hud">
+    <div class="hud-left"><span class="hud-dot"></span><span class="hud-title">Mission · L'Affaire des Congruences</span></div>
+    <div class="hud-right"><span class="hud-status" id="hudPage">1 / 5</span><span class="hud-time" id="hudTime">00:00:00</span></div>
+    <div class="hud-progress"><div class="hud-progress-fill" id="scrollFill"></div></div>
+</div>
+
+<div class="page active" id="partie1">
+    <h1>L'Affaire des Congruences</h1>
+    <h2>Le Message Crypté</h2>
+
+    <p class="récit">
+        <span class="important">La rue des Résidus</span>. Neuf cent cinquante maisons, numérotées de <span class="important">50 à 999</span>. Depuis trois semaines, un voleur insaisissable y sévit. Chaque nuit, il laisse derrière lui une signature : une suite de nombres soigneusement choisie. Le détective <span class="important">Lemaître</span> est appelé à 3 h du matin.
+    </p>
+
+    <div class="dialogue">
+        <p>— Inspecteur, la nuit dernière, une nouvelle lettre a été déposée. Elle contient une série de nombres : <span id="d1-list"></span>. Et une phrase : « Mon numéro, divisé par <span id="d1-dial-d" class="important">12</span>, laisse le même reste que ces nombres. »</p>
+        <p>— Un plaisantin ?</p>
+        <p>— Non, inspecteur. C'est la quatrième. Le voleur nargue la police. Il nous indique lui-même la <span class="important">classe de congruence</span> de son repaire.</p>
+    </div>
+
+    <p>
+        Lemaître examine les nombres. En les divisant tous par <span class="important" id="d1-d">12</span>, il obtient le même reste : <span class="important" id="d1-r">1</span>. Le voleur a signé sa cachette :
+    </p>
+
+    <div class="formule" id="d1-form"></div>
+
+    <p id="d1-prose"></p>
+
+    <p class="récit">
+        Mais Lemaître ne se contente pas d'une intuition : il lui faut la méthode. Il ressort son vieux manuel de mathématiques expertes.
+    </p>
+
+    <div class="definition rule-block" data-rule="congruence-def">
+        <h3>Définition — Congruence modulo \(d\)</h3>
+        <p>Soient \(a\) et \(b\) deux entiers relatifs et \(d\) un entier naturel non nul (\(d \in \mathbb{N}^*\)). On dit que \(a\) et \(b\) sont <span class="important">congrus modulo \(d\)</span>, et on note</p>
+        <p class="formule">\(a \equiv b \pmod{d}\)</p>
+        <p>si \(d\) divise la différence \(a - b\), c'est-à-dire s'il existe un entier relatif \(k\) tel que \(a = b + kd\).</p>
+        <p>De manière équivalente, \(a \equiv b \pmod{d}\) si et seulement si \(a\) et \(b\) ont le même reste dans la division euclidienne par \(d\).</p>
+    </div>
+
+    <p>Lemaître note que la congruence est une <span class="important">relation d'équivalence</span> : elle est réflexive, symétrique et transitive. Les entiers se répartissent donc en <span class="important">classes de congruence</span>.</p>
+
+    <div class="propriete rule-block" data-rule="equiv-relation">
+        <h3>Propriété — Relation d'équivalence</h3>
+        <p>Pour tout entier \(d \geq 2\), la relation de congruence modulo \(d\) vérifie :</p>
+        <ul>
+            <li><span class="important">Réflexivité</span> : \(a \equiv a \pmod{d}\).</li>
+            <li><span class="important">Symétrie</span> : si \(a \equiv b \pmod{d}\), alors \(b \equiv a \pmod{d}\).</li>
+            <li><span class="important">Transitivité</span> : si \(a \equiv b \pmod{d}\) et \(b \equiv c \pmod{d}\), alors \(a \equiv c \pmod{d}\).</li>
+        </ul>
+    </div>
+
+    <p>Il y a exactement \(d\) classes modulo \(d\), représentées par \(0, 1, 2, \ldots, d-1\).</p>
+
+    <canvas id="canvasClasses" width="600" height="200"></canvas>
+
+    <p class="récit">
+        Lemaître sait maintenant que le numéro <span class="important">\(N\)</span> du voleur est dans la classe <span class="important" id="d1-r2">1</span> modulo <span class="important" id="d1-d2">12</span>. Il faut filtrer les 950 maisons de la rue.
+    </p>
+
+    <div class="candidates-panel">
+        <span class="label">🔍 CANDIDATS RESTANTS APRÈS FILTRAGE :</span>
+        <span class="count" id="d1-count">—</span>
+        <div class="list" id="d1-candidates">—</div>
+    </div>
+
+    <div class="nav">
+        <span></span>
+        <a href="#partie2">Suivant →</a>
+    </div>
+</div>
+
+<div class="page" id="partie2">
+    <h2>Les Règles du Jeu</h2>
+
+    <p class="récit">
+        Le lendemain, une <span class="important">seconde lettre</span> arrive. Elle est plus cryptée : des calculs, des annotations savantes. Le professeur <span class="important">Gauss</span>, du labo scientifique, l'analyse.
+    </p>
+
+    <div class="dialogue">
+        <p>— Lemaître ! Le voleur joue avec les <span class="important">opérations</span> sur les congruences. Regarde : il combine des additions, des multiplications. Il croit qu'on ne peut pas le suivre. Mais c'est justement ce qui va le trahir.</p>
+        <p>— Explique-toi, Gauss.</p>
+        <p>— Connaître les restes de deux nombres, c'est connaître le reste de leur somme, de leur différence, de leur produit, et même de leurs puissances. C'est la clé de tout.</p>
+    </div>
+
+    <div class="propriete rule-block" data-rule="operations">
+        <h3>Propriétés — Opérations sur les congruences</h3>
+        <p>Soient \(a, b, c, d\) des entiers relatifs et \(n \in \mathbb{N}^*\). Si \(a \equiv b \pmod{n}\) et \(c \equiv d \pmod{n}\), alors :</p>
+        <ul>
+            <li><span class="important">Addition</span> : \(a + c \equiv b + d \pmod{n}\).</li>
+            <li><span class="important">Soustraction</span> : \(a - c \equiv b - d \pmod{n}\).</li>
+            <li><span class="important">Multiplication</span> : \(a \times c \equiv b \times d \pmod{n}\).</li>
+            <li><span class="important">Puissance</span> : pour tout entier \(p \geq 0\), \(a^p \equiv b^p \pmod{n}\).</li>
+        </ul>
+    </div>
+
+    <p>Gauss désigne une ligne du message, particulièrement travaillée :</p>
+
+    <div class="exemple rule-block" data-rule="div-11">
+        <h3>Exemple — Critère de divisibilité par 11</h3>
+        <p>On remarque que \(10 \equiv -1 \pmod{11}\). Donc, pour tout \(k \geq 0\), \(10^k \equiv (-1)^k \pmod{11}\).</p>
+        <p>Un nombre \(A = \overline{a_n a_{n-1} \ldots a_0} = a_n 10^n + \cdots + a_1 10 + a_0\) vérifie alors :</p>
+        <p class="formule">\(A \equiv a_0 - a_1 + a_2 - a_3 + \cdots + (-1)^n a_n \pmod{11}\).</p>
+        <p>Ainsi, \(A\) est divisible par \(11\) si et seulement si la somme alternée de ses chiffres est divisible par \(11\).</p>
+    </div>
+
+    <div class="dialogue">
+        <p>— Fascinant ! dit Lemaître. Et le voleur, qu'a-t-il laissé exactement ?</p>
+        <p>— Relis le cryptogramme. Il affirme : <span class="important">« mon numéro est un multiple de 11 »</span>. Il a utilisé le critère de divisibilité dans son propre message, comme une signature supplémentaire.</p>
+        <p>— Donc \(N \equiv 0 \pmod{11}\).</p>
+        <p>— Précisément. Et maintenant, on filtre.</p>
+    </div>
+
+    <div class="candidates-panel">
+        <span class="label">🔍 CANDIDATS APRÈS APPLICATION DU FILTRE (multiples de 11) :</span>
+        <span class="count" id="d2-count">—</span>
+        <div class="list" id="d2-candidates">—</div>
+    </div>
+
+    <div class="nav">
+        <a href="#partie1">← Précédent</a>
+        <a href="#partie3">Suivant →</a>
+    </div>
+</div>
+
+<div class="page" id="partie3">
+    <h2>Le Pouvoir des Nombres Premiers</h2>
+
+    <p class="récit">
+        Une troisième lettre arrive, enfermée dans une enveloppe scellée d'un symbole étrange : un nombre premier entouré d'un cercle. Gauss la déchiffre.
+    </p>
+
+    <div class="dialogue">
+        <p>— Lemaître, cette fois, le message est bref : « Multipliez le numéro de ma maison par <span id="d3-a3-text" class="important">—</span>, et le reste modulo <span id="d3-p-text" class="important">7</span> sera 1. »</p>
+        <p>— C'est du charabia.</p>
+        <p>— Non, c'est un <span class="important">inverse modulaire</span>. Et comme le module est premier, l'inverse existe toujours.</p>
+    </div>
+
+    <div class="theoreme rule-block" data-rule="inv-prime">
+        <h3>Théorème — Inverse modulo un nombre premier</h3>
+        <p>Soit \(p\) un nombre premier. Pour tout entier \(a\) tel que \(a \not\equiv 0 \pmod{p}\), il existe un unique entier \(b\) (à congruence près) tel que</p>
+        <p class="formule">\(a \times b \equiv 1 \pmod{p}\).</p>
+        <p>On dit que \(b\) est l'<span class="important">inverse de \(a\) modulo \(p\)</span>, et on note \(b \equiv a^{-1} \pmod{p}\).</p>
+    </div>
+
+    <div class="exemple">
+        <h3>Exemple — Table des inverses modulo <span id="d3-p-title">7</span></h3>
+        <p>Voici les inverses de chaque résidu non nul modulo <span id="d3-p-text2">7</span> :</p>
+        <ul id="d3-list"></ul>
+    </div>
+
+    <p>Gauss poursuivit en mentionnant le célèbre <span class="important">Petit Théorème de Fermat</span>, un raccourci puissant pour les puissances modulo un nombre premier.</p>
+
+    <div class="theoreme rule-block" data-rule="fermat">
+        <h3>Petit Théorème de Fermat</h3>
+        <p>Soit \(p\) un nombre premier. Pour tout entier \(a\) non divisible par \(p\) (\(a \not\equiv 0 \pmod{p}\)), on a :</p>
+        <p class="formule">\(a^{p-1} \equiv 1 \pmod{p}\).</p>
+        <p>De manière équivalente, pour tout entier \(a\), \(a^p \equiv a \pmod{p}\).</p>
+    </div>
+
+    <div class="dialogue">
+        <p>— Le message nous dit donc : <span id="d3-eq1"></span> En multipliant par l'inverse de <span id="d3-a3-inline2"></span>, on trouve <span id="d3-eq2"></span>.</p>
+        <p>— Encore un filtre, dit Lemaître.</p>
+        <p>— Le filtre le plus élégant : la primalité garantit qu'aucun résidu non nul n'échappe à l'inversion.</p>
+    </div>
+
+    <div class="candidates-panel">
+        <span class="label">🔍 CANDIDATS APRÈS APPLICATION DE LA CONGRUENCE MODULO <span id="d3-p-count">p</span> :</span>
+        <span class="count" id="d3-count">—</span>
+        <div class="list" id="d3-candidates">—</div>
+    </div>
+
+    <div class="nav">
+        <a href="#partie2">← Précédent</a>
+        <a href="#partie4">Suivant →</a>
+    </div>
+</div>
+
+<div class="page" id="partie4">
+    <h2>Le Piège des Modules Composés</h2>
+
+    <p class="récit">
+        Une quatrième lettre arrive. Sur l'enveloppe, un nombre composé : <span class="important" id="d4-n-title">8</span>. Lemaître fronce les sourcils. Gauss, lui, sourit.
+    </p>
+
+    <div class="dialogue">
+        <p>— Modulo un nombre composé, Lemaître, la situation change. Tous les éléments non nuls ne sont pas inversibles !</p>
+        <p>— C'est-à-dire ?</p>
+        <p>— Qu'un élément \(a\) n'a d'inverse modulo \(n\) que si \(a\) et \(n\) sont <span class="important">premiers entre eux</span>. Sinon, impossible.</p>
+    </div>
+
+    <div class="theoreme rule-block" data-rule="inv-composite">
+        <h3>Théorème — Inverse modulo un nombre composé</h3>
+        <p>Soit \(n \geq 2\) un entier. Un entier \(a\) admet un inverse modulo \(n\) si et seulement si</p>
+        <p class="formule">\(\gcd(a, n) = 1\).</p>
+        <p>Dans ce cas, l'inverse est unique modulo \(n\).</p>
+    </div>
+
+    <div class="exemple">
+        <h3>Exemple — Modulo <span id="d4-n-text1">8</span></h3>
+        <p>Modulo <span id="d4-n-text2">8</span>, les entiers premiers avec <span id="d4-n-text3">8</span> sont <span id="d4-coprimes"></span>. Ils admettent tous un inverse :</p>
+        <ul id="d4-list"></ul>
+        <p>En revanche, <span id="d4-noncoprimes"></span> ne sont pas inversibles modulo <span id="d4-n-text4">8</span> car ils partagent un facteur avec <span id="d4-n-text5">8</span>.</p>
+    </div>
+
+    <p id="d4-method-text"></p>
+
+    <div class="propriete rule-block" data-rule="method-disjunction">
+        <h3>Méthode — Recherche d'inverse par disjonction de cas</h3>
+        <p>Pour trouver l'inverse de \(a\) modulo \(n\) lorsque \(\gcd(a, n) = 1\), on peut :</p>
+        <ol>
+            <li>Dresser un tableau des valeurs de \(a \times k \pmod{n}\) pour \(k = 1, 2, \ldots, n-1\).</li>
+            <li>Identifier la valeur \(k\) pour laquelle \(a \times k \equiv 1 \pmod{n}\).</li>
+            <li>Cet entier \(k\) est l'inverse recherché.</li>
+        </ol>
+    </div>
+
+    <div class="dialogue">
+        <p>— Le voleur nous nargue encore : « Multipliez mon numéro par <span id="d4-a4-text" class="important">—</span>, et vous obtiendrez 1 modulo <span id="d4-n-inline" class="important">8</span>. » Le message précise même que son numéro est premier avec <span id="d4-n-inline2">8</span>. Sans ça, aucun inverse n'existerait.</p>
+        <p>— Donc <span id="d4-eq1"></span>, et <span id="d4-eq2"></span>.</p>
+        <p>— Exactement. Encore un filtre, plus subtil que les précédents.</p>
+    </div>
+
+    <div class="candidates-panel">
+        <span class="label">🔍 CANDIDATS APRÈS APPLICATION DE LA CONGRUENCE MODULO <span id="d4-n-count">n</span> :</span>
+        <span class="count" id="d4-count">—</span>
+        <div class="list" id="d4-candidates">—</div>
+    </div>
+
+    <div class="nav">
+        <a href="#partie3">← Précédent</a>
+        <a href="#partie5">Suivant →</a>
+    </div>
+</div>
+
+<div class="page" id="partie5">
+    <h2>Le Dénouement</h2>
+
+    <p class="récit">
+        Cinquième et dernière lettre. Le message est bref : une équation de congruence. Gauss la lit à voix haute :
+    </p>
+
+    <div class="formule" id="d5-eq"></div>
+
+    <div class="dialogue">
+        <p>— <span id="d5-inv-text"></span></p>
+        <p>— Alors, dit Lemaître, <span id="d5-sol-inline"></span>.</p>
+    </div>
+
+    <div class="formule" id="d5-sol"></div>
+
+    <p id="d5-address-text"></p>
+
+    <div class="candidates-panel final">
+        <span class="label">🎯 CANDIDAT UNIQUE :</span>
+        <span class="count" id="d5-count">—</span>
+        <div class="list" id="d5-candidates">—</div>
+    </div>
+
+    <p class="récit">
+        L'affaire était résolue. Le voleur, trop confiant dans ses énigmes mathématiques, avait signé son propre arrestation. Chaque message avait ajouté un filtre, chaque filtre avait éliminé des possibilités, et les congruences — tour à tour simples, opérationnelles, inversibles, puis composées — avaient convergé vers un seul numéro.
+    </p>
+
+    <div class="theoreme">
+        <h3>Récapitulatif — Les cinq filtres de l'enquête</h3>
+        <table style="width:100%; border-collapse:collapse; margin-top:15px;">
+            <tr style="background-color:#e8eaf0;">
+                <th style="padding:12px; border:1px solid var(--border); text-align:left;">Étape</th>
+                <th style="padding:12px; border:1px solid var(--border); text-align:left;">Type de congruence</th>
+                <th style="padding:12px; border:1px solid var(--border); text-align:left;">Notion mobilisée</th>
+            </tr>
+            <tr>
+                <td style="padding:10px; border:1px solid var(--border);">Lettre 1</td>
+                <td style="padding:10px; border:1px solid var(--border);">\(N \equiv r_1 \pmod{d_1}\)</td>
+                <td style="padding:10px; border:1px solid var(--border);">Définition directe, relation d'équivalence</td>
+            </tr>
+            <tr>
+                <td style="padding:10px; border:1px solid var(--border);">Lettre 2</td>
+                <td style="padding:10px; border:1px solid var(--border);">\(N \equiv 0 \pmod{11}\)</td>
+                <td style="padding:10px; border:1px solid var(--border);">Opérations sur les congruences, critère de divisibilité</td>
+            </tr>
+            <tr>
+                <td style="padding:10px; border:1px solid var(--border);">Lettre 3</td>
+                <td style="padding:10px; border:1px solid var(--border);">\(N \times a \equiv 1 \pmod{p}\)</td>
+                <td style="padding:10px; border:1px solid var(--border);">Inverse modulo un nombre premier, Fermat</td>
+            </tr>
+            <tr>
+                <td style="padding:10px; border:1px solid var(--border);">Lettre 4</td>
+                <td style="padding:10px; border:1px solid var(--border);">\(N \times a' \equiv 1 \pmod{n}\)</td>
+                <td style="padding:10px; border:1px solid var(--border);">Inverse modulo un nombre composé</td>
+            </tr>
+            <tr>
+                <td style="padding:10px; border:1px solid var(--border);">Lettre 5</td>
+                <td style="padding:10px; border:1px solid var(--border);">\(a_5 x \equiv b_5 \pmod{p_5}\)</td>
+                <td style="padding:10px; border:1px solid var(--border);">Résolution d'équation de congruence</td>
+            </tr>
+        </table>
+    </div>
+
+    <p class="récit">
+        <span class="important">Le coupable habitait au <span id="final-address">—</span>, rue des Résidus.</span> Son nom : <span class="important" id="culprit-name">—</span>. Fin de l'affaire.
+    </p>
+
+    <div class="nav">
+        <a href="#partie4">← Précédent</a>
+        <a href="#partie1">↻ Recommencer</a>
+    </div>
+</div>
+
+<footer class="footer-licence">
+    <button type="button" class="btn-licence" id="btnLicence" aria-haspopup="dialog" aria-controls="modalLicence">
+        ⚖️ Droits d'Auteur et Licence d'Utilisation
+    </button>
+</footer>
+
+<div class="modal" id="modalLicence" role="dialog" aria-modal="true" aria-labelledby="titreLicence">
+    <div class="modal-content">
+        <span class="modal-close" id="btnFermerLicence" aria-label="Fermer la fenêtre">&times;</span>
+        <h2 id="titreLicence">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+        <span class="auteur">Auteur : Yann Merdy (yann.merdy@gmail.com) — octobre 2026</span>
+        <h3>Licence d'Utilisation Non Commerciale</h3>
+        <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« <strong>L'Affaire des Congruences — Cours de Mathématiques Expertes</strong> ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+        <h3>Conditions</h3>
+        <ul>
+            <li><strong>Utilisation Privée et Éducative (Autorisée)</strong> : vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+            <li><strong>Utilisation Commerciale (Interdite)</strong> : toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+            <li><strong>Attribution</strong> : toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+        </ul>
+        <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+    </div>
+</div>
+
+<div class="modal rule-modal" id="ruleModal" role="dialog" aria-modal="true" aria-labelledby="ruleModalTitle">
+    <div class="modal-content">
+        <span class="modal-close" id="btnFermerRule" aria-label="Fermer la fenêtre">&times;</span>
+        <h2 id="ruleModalTitle">Exemple dynamique</h2>
+        <div class="rule-modal-body" id="ruleModalBody"></div>
+        <div class="rule-modal-actions">
+            <button type="button" class="btn-regenerate" id="btnRegenerateRule">🔄 Nouvel exemple</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==============================================================
+   UTILITAIRES
+   ============================================================== */
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = b; b = a % b; a = t; } return a; }
+function lcm(a, b) { return a / gcd(a, b) * b; }
+function lcmMany(arr) { return arr.reduce(lcm, 1); }
+function modInv(a, m) {
+    a = ((a % m) + m) % m;
+    for (let x = 1; x < m; x++) if ((a * x) % m === 1) return x;
+    return null;
+}
+function modPow(base, exp, mod) {
+    let result = 1n;
+    let b = BigInt(base) % BigInt(mod);
+    let e = BigInt(exp);
+    const m = BigInt(mod);
+    while (e > 0n) {
+        if (e & 1n) result = (result * b) % m;
+        e >>= 1n;
+        b = (b * b) % m;
+    }
+    return result;
+}
+function getPowTrace(base, exp, mod) {
+    const M = BigInt(mod);
+    const baseM = BigInt(base) % M;
+    const expBin = exp.toString(2);
+    const powers = [];
+    let current = baseM;
+    let pw = 1;
+    while (pw <= exp) {
+        powers.push({ pw, val: current.toString() });
+        current = (current * current) % M;
+        pw *= 2;
+    }
+    const used = [];
+    for (let i = 0; i < expBin.length; i++) {
+        if (expBin[expBin.length - 1 - i] === '1') {
+            const p2 = 2 ** i;
+            const pObj = powers.find(x => x.pw === p2);
+            if (pObj) used.push(pObj);
+        }
+    }
+    let result = 1n;
+    for (const u of used) result = (result * BigInt(u.val)) % M;
+    return { expBin, powers, used, result: result.toString() };
+}
+
+/* ==============================================================
+   GÉNÉRATEURS D'EXEMPLES DYNAMIQUES
+   ============================================================== */
+
+function genCongruenceDef() {
+    const d = randInt(5, 15);
+    const r = randInt(0, d - 1);
+    let k1 = randInt(2, 15);
+    let k2 = randInt(2, 15);
+    while (k1 === k2) k2 = randInt(2, 15);
+    if (Math.random() < 0.5) [k1, k2] = [k2, k1];
+    const a = r + k1 * d;
+    const b = r + k2 * d;
+    const diff = a - b;
+    const quotient = k1 - k2;
+
+    const qa = Math.floor(a / d);
+    const ra = a - qa * d;
+    const qb = Math.floor(b / d);
+    const rb = b - qb * d;
+
+    const body = `
+        <p style="font-family:'Share Tech Mono',monospace; font-size:0.9rem; color:#4a4e5a;">
+            Soit <b>d = ${d}</b>, <b>a = ${a}</b>, <b>b = ${b}</b>.
+        </p>
+
+        <h3>Étape 1 — Calculer la différence a − b</h3>
+        <p>On commence par calculer la différence entre les deux entiers :</p>
+        \\[a - b = ${a} - ${b} = ${diff}\\]
+
+        <h3>Étape 2 — Vérifier si d divise (a − b)</h3>
+        <p>On regarde si ${diff} est un multiple de ${d} :</p>
+        \\[${diff} = ${quotient} \\times ${d}\\]
+        <p>Comme ${quotient} est bien un entier, <b>${d} divise ${diff}</b>.</p>
+
+        <h3>Conclusion</h3>
+        <p>On peut donc écrire :</p>
+        \\[${a} \\equiv ${b} \\pmod{${d}}\\]
+
+        <h3>Vérification alternative — division euclidienne</h3>
+        <p>On effectue la division euclidienne de chacun par ${d} :</p>
+        <ul>
+            <li>$a = ${a}$ : $${a} = ${qa} \\times ${d} + ${ra}$, reste <b>${ra}</b>.</li>
+            <li>$b = ${b}$ : $${b} = ${qb} \\times ${d} + ${rb}$, reste <b>${rb}</b>.</li>
+        </ul>
+        <p>Les deux restes sont égaux (${ra} = ${rb}), ce qui confirme $${a} \\equiv ${b} \\pmod{${d}}$.</p>
+    `;
+
+    return { title: `Congruence modulo ${d} — Exemple dynamique`, body };
+}
+
+function genEquivRelation() {
+    const d = randInt(5, 12);
+    const r = randInt(0, d - 1);
+    let k1 = randInt(1, 10), k2 = randInt(1, 10), k3 = randInt(1, 10);
+    while (k2 === k1) k2 = randInt(1, 10);
+    while (k3 === k1 || k3 === k2) k3 = randInt(1, 10);
+    const a = r + k1 * d;
+    const b = r + k2 * d;
+    const c = r + k3 * d;
+
+    const body = `
+        <p>Prenons <b>d = ${d}</b>, et trois entiers construits avec le même reste <b>${r}</b> :</p>
+        \\[a = ${a}, \\quad b = ${b}, \\quad c = ${c}\\]
+        <p>Ces trois nombres sont congrus à ${r} modulo ${d}. Vérifions les trois propriétés :</p>
+
+        <h3>① Réflexivité : a ≡ a (mod d)</h3>
+        <p>On calcule $a - a = 0 = 0 \\times ${d}$. Or ${d} divise 0.</p>
+        <p>Donc $${a} \\equiv ${a} \\pmod{${d}}$. ✓</p>
+
+        <h3>② Symétrie : si a ≡ b alors b ≡ a (mod d)</h3>
+        <p>On sait que $${a} \\equiv ${b} \\pmod{${d}}$ car $${a} - ${b} = ${a - b} = ${(a - b) / d} \\times ${d}$.</p>
+        <p>Réciproquement, $${b} - ${a} = ${b - a} = ${(b - a) / d} \\times ${d}$.</p>
+        <p>Donc $${b} \\equiv ${a} \\pmod{${d}}$. ✓</p>
+
+        <h3>③ Transitivité : si a ≡ b et b ≡ c alors a ≡ c (mod d)</h3>
+        <p>On a $${a} \\equiv ${b} \\pmod{${d}}$ et $${b} \\equiv ${c} \\pmod{${d}}$.</p>
+        <p>Alors :</p>
+        \\[a - c = (${a} - ${b}) + (${b} - ${c}) = ${a - b} + ${b - c} = ${a - c}\\]
+        <p>Or $${a - c} = ${(a - c) / d} \\times ${d}$.</p>
+        <p>Donc $${a} \\equiv ${c} \\pmod{${d}}$. ✓</p>
+
+        <h3>Conclusion</h3>
+        <p>La relation de congruence est bien une <b>relation d'équivalence</b> : réflexive, symétrique et transitive.</p>
+    `;
+
+    return { title: `Relation d'équivalence — Exemple dynamique`, body };
+}
+
+/* ===== GÉNÉRATEUR MODIFIÉ : exposant p ∈ [2, 100] ===== */
+function genOperations() {
+    const n = randInt(6, 12);
+    const b = randInt(2, n - 1);
+    const dVal = randInt(2, n - 1);
+    const ka = randInt(1, 8);
+    const kc = randInt(1, 8);
+    const a = b + ka * n;
+    const c = dVal + kc * n;
+
+    /* Exposant aléatoire dans [2, 100] */
+    const p = randInt(2, 100);
+
+    const sumLHS = a + c;
+    const sumRHS = b + dVal;
+    const sumDiff = sumLHS - sumRHS;
+
+    const diffLHS = a - c;
+    const diffRHS = b - dVal;
+    const diffDiff = diffLHS - diffRHS;
+
+    const prodLHS = a * c;
+    const prodRHS = b * dVal;
+    const prodDiff = prodLHS - prodRHS;
+
+    /* Calcul des résidus de a^p et b^p modulo n (exponentiation rapide) */
+    const aPowModN = modPow(a, p, n).toString();
+    const bPowModN = modPow(b, p, n).toString();
+
+    /* Section puissance — adaptée au régime */
+    let powerSection = '';
+
+    if (p <= 4) {
+        /* Petit exposant : calcul direct */
+        const aPowFull = (BigInt(a) ** BigInt(p)).toString();
+        const bPowFull = (BigInt(b) ** BigInt(p)).toString();
+        powerSection = `
+            <h3>④ Puissance : a<sup>${p}</sup> ≡ b<sup>${p}</sup> (mod n)</h3>
+            <p>Prenons <b>p = ${p}</b>. Puisque $a \\equiv b \\pmod{${n}}$, on a
+            $a^{${p}} \\equiv b^{${p}} \\pmod{${n}}$.</p>
+            <p>Calculons directement (petit exposant) :</p>
+            <ul>
+                <li>$a^{${p}} = ${a}^{${p}} = ${aPowFull}$, et
+                    $${aPowFull} \\pmod{${n}} = ${aPowModN}$</li>
+                <li>$b^{${p}} = ${b}^{${p}} = ${bPowFull}$, et
+                    $${bPowFull} \\pmod{${n}} = ${bPowModN}$</li>
+            </ul>
+            <p>Les deux restes sont égaux : <b>${aPowModN} = ${bPowModN}</b>, d'où
+            $${a}^{${p}} \\equiv ${b}^{${p}} \\pmod{${n}}$ ✓</p>
+        `;
+    } else {
+        /* Grand exposant : exponentiation modulaire rapide + trace binaire */
+        const trace = getPowTrace(b, p, n);
+
+        /* Longueur du nombre a^p (pour justifier l'usage de l'exponentiation rapide) */
+        const aPowDigits = (BigInt(a) ** BigInt(p)).toString().length;
+        const bPowDigits = (BigInt(b) ** BigInt(p)).toString().length;
+
+        powerSection = `
+            <h3>④ Puissance : a<sup>${p}</sup> ≡ b<sup>${p}</sup> (mod n)</h3>
+            <p>Prenons un exposant <b>p = ${p}</b>. Puisque $a \\equiv b \\pmod{${n}}$, on a
+            $a^{${p}} \\equiv b^{${p}} \\pmod{${n}}$.</p>
+            <p>Une remarque préalable : $${a}^{${p}}$ possède
+            <b>${aPowDigits} chiffres</b> et $${b}^{${p}}$ en possède <b>${bPowDigits}</b>.
+            Le calcul direct serait donc très coûteux. On utilise
+            l'<b>exponentiation modulaire rapide</b>.</p>
+
+            <p><b>Calcul de $b^{${p}} \\pmod{${n}}$ :</b></p>
+            <p>Comme $b = ${b} \\in [0, ${n - 1}]$, on a $b \\equiv ${b} \\pmod{${n}}$.
+            L'exposant s'écrit en binaire : $${p} = (${trace.expBin})_2$.</p>
+
+            <p>Puissances de 2 successives de ${b} modulo ${n} :</p>
+            <ul>
+                ${trace.powers.map(pp =>
+                    `<li>$${b}^{${pp.pw}} \\equiv ${pp.val} \\pmod{${n}}$</li>`
+                ).join('')}
+            </ul>
+
+            <p>Décomposition de $${p}$ en puissances de 2 :
+            $${p} = ${trace.used.map(u => u.pw).join(' + ')}$.</p>
+
+            <p>On multiplie les résidus correspondants :</p>
+            \\[${b}^{${p}} \\equiv ${trace.used.map(u => u.val).join(' \\times ')} \\equiv ${trace.result} \\pmod{${n}}\\]
+
+            <p><b>Calcul de $a^{${p}} \\pmod{${n}}$ :</b></p>
+            <p>Puisque $a \\equiv b \\pmod{${n}}$, le résidu est nécessairement le même.
+            Vérification par exponentiation rapide sur ${a} :</p>
+            \\[${a}^{${p}} \\pmod{${n}} = ${aPowModN}\\]
+
+            <p><b>Conclusion :</b> $${a}^{${p}} \\equiv ${aPowModN} \\equiv ${bPowModN} \\equiv ${b}^{${p}} \\pmod{${n}}$ ✓</p>
+        `;
+    }
+
+    /* Preuve générale */
+    const proofSection = `
+        <h3>Preuve générale de la propriété (puissance)</h3>
+        <p>Si $a \\equiv b \\pmod{n}$, alors $n \\mid (a - b)$. Or, pour tout entier $p \\geq 1$ :</p>
+        \\[a^p - b^p = (a - b)\\left(a^{p-1} + a^{p-2}b + \\cdots + ab^{p-2} + b^{p-1}\\right)\\]
+        <p>Le second facteur est un entier, donc $n \\mid (a^p - b^p)$.</p>
+        <p>Conclusion : $a^p \\equiv b^p \\pmod{n}$ ✓</p>
+    `;
+
+    const body = `
+        <p>Soit <b>n = ${n}</b>. Choisissons deux paires de nombres congrus :</p>
+        \\[a = ${a}, \\quad b = ${b} \\quad (a \\equiv b \\pmod{${n}})\\]
+        \\[c = ${c}, \\quad d = ${dVal} \\quad (c \\equiv d \\pmod{${n}})\\]
+        <p>Vérifions d'abord :</p>
+        <ul>
+            <li>$a - b = ${a - b} = ${ka} \\times ${n}$</li>
+            <li>$c - d = ${c - dVal} = ${kc} \\times ${n}$</li>
+        </ul>
+
+        <h3>① Addition : a + c ≡ b + d (mod n)</h3>
+        \\[(a + c) - (b + d) = ${sumDiff}\\]
+        <p>$${sumDiff} = ${ka + kc} \\times ${n}$, donc :</p>
+        \\[${sumLHS} \\equiv ${sumRHS} \\pmod{${n}}\\] ✓
+
+        <h3>② Soustraction : a − c ≡ b − d (mod n)</h3>
+        \\[(a - c) - (b - d) = ${diffDiff}\\]
+        <p>$${diffDiff} = ${ka - kc} \\times ${n}$, donc :</p>
+        \\[${diffLHS} \\equiv ${diffRHS} \\pmod{${n}}\\] ✓
+
+        <h3>③ Multiplication : a × c ≡ b × d (mod n)</h3>
+        \\[a \\times c - b \\times d = ${prodLHS} - ${prodRHS} = ${prodDiff}\\]
+        <p>$${prodDiff} = ${prodDiff / n} \\times ${n}$, donc :</p>
+        \\[${prodLHS} \\equiv ${prodRHS} \\pmod{${n}}\\] ✓
+
+        ${powerSection}
+
+        ${proofSection}
+    `;
+
+    return { title: `Opérations sur les congruences — Exemple dynamique`, body };
+}
+
+function genDiv11() {
+    const N = randInt(1000, 99999);
+    const digits = N.toString().split('').map(Number);
+
+    let altSum = 0;
+    let altDisplay = '';
+    for (let i = 0; i < digits.length; i++) {
+        const digitFromRight = digits[digits.length - 1 - i];
+        const sign = i % 2 === 0 ? 1 : -1;
+        altSum += sign * digitFromRight;
+        if (i === 0) altDisplay += digitFromRight;
+        else altDisplay += ' ' + (sign === 1 ? '+' : '-') + ' ' + digitFromRight;
+    }
+
+    const isDiv11 = N % 11 === 0;
+    const altDiv11 = altSum % 11 === 0;
+
+    const body = `
+        <p>Prenons <b>N = ${N}</b>.</p>
+
+        <h3>Étape 1 — Extraire les chiffres</h3>
+        <p>Les chiffres de ${N} sont : <b>${digits.join(', ')}</b>.</p>
+
+        <h3>Étape 2 — Calculer la somme alternée</h3>
+        <p>On additionne les chiffres en partant de la droite, avec des signes alternés :</p>
+        \\[${altDisplay} = ${altSum}\\]
+
+        <h3>Étape 3 — Vérifier la divisibilité de la somme alternée</h3>
+        <p>La somme alternée vaut <b>${altSum}</b>.</p>
+        <p>Est-ce que ${altSum} est un multiple de 11 ?</p>
+        \\[${altSum} = 11 \\times ${Math.floor(altSum / 11)} + ${((altSum % 11) + 11) % 11}\\]
+
+        <h3>Conclusion</h3>
+        <p>${altDiv11
+            ? `Puisque ${altSum} est un multiple de 11, on en déduit que <b>${N} est divisible par 11</b>.`
+            : `Puisque ${altSum} n'est pas un multiple de 11, on en déduit que <b>${N} n'est pas divisible par 11</b>.`
+        }</p>
+
+        <h3>Vérification directe</h3>
+        <p>On effectue la division euclidienne de ${N} par 11 :</p>
+        \\[${N} = 11 \\times ${Math.floor(N / 11)} + ${N % 11}\\]
+        <p>Le reste est ${N % 11}, ce qui confirme ${isDiv11 ? 'la divisibilité' : "l'absence de divisibilité"}.</p>
+    `;
+
+    return { title: `Critère de divisibilité par 11 — Exemple dynamique`, body };
+}
+
+function genInvPrime() {
+    const primes = [5, 7, 11, 13, 17, 19];
+    const p = pick(primes);
+    const a = randInt(2, p - 1);
+
+    let inv = null;
+    for (let k = 1; k < p; k++) if ((a * k) % p === 1) { inv = k; break; }
+
+    const prod = a * inv;
+    const q = Math.floor(prod / p);
+    const remainder = prod - q * p;
+
+    let tableHtml = '<table><tr><th>k</th>';
+    for (let k = 1; k < p; k++) tableHtml += `<th>${k}</th>`;
+    tableHtml += '</tr><tr><th>a × k mod p</th>';
+    for (let k = 1; k < p; k++) {
+        const val = (a * k) % p;
+        const style = val === 1 ? 'background:#0d0f16; color:#ffffff; font-weight:bold;' : '';
+        tableHtml += `<td style="${style}">${val}</td>`;
+    }
+    tableHtml += '</tr></table>';
+
+    const body = `
+        <p>Prenons le nombre premier <b>p = ${p}</b> et cherchons l'inverse de <b>a = ${a}</b> modulo ${p}.</p>
+
+        <h3>Étape 1 — Vérifier que a n'est pas nul modulo p</h3>
+        <p>On a bien $${a} \\not\\equiv 0 \\pmod{${p}}$ (car $0 < ${a} < ${p}$). L'inverse existe donc, et il est unique.</p>
+
+        <h3>Étape 2 — Chercher b tel que a × b ≡ 1 (mod p)</h3>
+        <p>On teste les valeurs de $b = 1, 2, \\ldots, ${p - 1}$ :</p>
+        ${tableHtml}
+
+        <h3>Étape 3 — Identifier l'inverse</h3>
+        <p>On trouve $b = ${inv}$ car $${a} \\times ${inv} = ${prod} \\equiv 1 \\pmod{${p}}$.</p>
+        <p>En effet : $${prod} = ${q} \\times ${p} + 1$, donc le reste de la division par ${p} est bien 1.</p>
+
+        <h3>Conclusion</h3>
+        \\[${a}^{-1} \\equiv ${inv} \\pmod{${p}}\\]
+        <p>Vérification : $${a} \\times ${inv} = ${prod} \\equiv 1 \\pmod{${p}}$. ✓</p>
+    `;
+
+    return { title: `Inverse modulo ${p} (premier) — Exemple dynamique`, body };
+}
+
+function genFermat() {
+    const primes = [5, 7, 11, 13];
+    const p = pick(primes);
+    const a = randInt(2, p - 1);
+
+    let bigResult = 1n;
+    const bigA = BigInt(a);
+    for (let i = 0; i < p - 1; i++) bigResult *= bigA;
+    const modResult = bigResult % BigInt(p);
+
+    const bigResultP = bigResult * bigA;
+    const modResultP = bigResultP % BigInt(p);
+
+    const body = `
+        <p>Prenons le nombre premier <b>p = ${p}</b> et <b>a = ${a}</b> (non divisible par ${p}).</p>
+
+        <h3>Étape 1 — Calculer a^(p−1)</h3>
+        <p>On calcule $${a}^{${p - 1}}$ :</p>
+        \\[${a}^{${p - 1}} = ${bigResult.toString()}\\]
+
+        <h3>Étape 2 — Réduire modulo p</h3>
+        <p>On divise ${bigResult.toString()} par ${p} :</p>
+        \\[${bigResult.toString()} = ${p} \\times ${(bigResult / BigInt(p)).toString()} + ${modResult.toString()}\\]
+        <p>Le reste est <b>${modResult.toString()}</b>.</p>
+
+        <h3>Conclusion (Petit Théorème de Fermat)</h3>
+        \\[${a}^{${p - 1}} \\equiv 1 \\pmod{${p}}\\] ✓
+
+        <h3>Vérification de la forme équivalente</h3>
+        <p>La forme équivalente dit : $a^p \\equiv a \\pmod{p}$.</p>
+        <p>On calcule $${a}^{${p}}$ :</p>
+        \\[${a}^{${p}} = ${bigResultP.toString()}\\]
+        <p>Division euclidienne par ${p} :</p>
+        \\[${bigResultP.toString()} = ${p} \\times ${(bigResultP / BigInt(p)).toString()} + ${modResultP.toString()}\\]
+        <p>Or ${modResultP.toString()} = ${a} (car $${a} < ${p}$), donc :</p>
+        \\[${a}^{${p}} \\equiv ${a} \\pmod{${p}}\\] ✓
+    `;
+
+    return { title: `Petit Théorème de Fermat — Exemple dynamique`, body };
+}
+
+function genInvComposite() {
+    const nChoices = [6, 8, 9, 10, 12, 14, 15, 16, 18, 20];
+    const n = pick(nChoices);
+    const coprimeOptions = [];
+    for (let k = 2; k < n; k++) if (gcd(k, n) === 1) coprimeOptions.push(k);
+    const a = pick(coprimeOptions);
+
+    let inv = null;
+    for (let k = 1; k < n; k++) if ((a * k) % n === 1) { inv = k; break; }
+    const prod = a * inv;
+    const q = Math.floor(prod / n);
+    const r = prod - q * n;
+
+    const nonCoprimeOptions = [];
+    for (let k = 2; k < n; k++) if (gcd(k, n) > 1) nonCoprimeOptions.push(k);
+    const aNon = pick(nonCoprimeOptions);
+    const g = gcd(aNon, n);
+
+    let tableRows = '';
+    for (let k = 1; k < n; k++) {
+        const val = (a * k) % n;
+        const style = val === 1 ? 'background:#0d0f16; color:#ffffff; font-weight:bold;' : '';
+        tableRows += `<tr><td>${k}</td><td style="${style}">${val}</td></tr>`;
+    }
+
+    const body = `
+        <p>Prenons <b>n = ${n}</b> (composé) et cherchons l'inverse de <b>a = ${a}</b> modulo ${n}.</p>
+
+        <h3>Étape 1 — Vérifier que a et n sont premiers entre eux</h3>
+        <p>On calcule $\\gcd(${a}, ${n})$ par l'algorithme d'Euclide :</p>
+        \\[\\gcd(${a}, ${n}) = ${gcd(a, n)}\\]
+        <p>Comme le PGCD vaut 1, <b>${a} est inversible modulo ${n}</b>.</p>
+
+        <h3>Étape 2 — Chercher b tel que ${a} × b ≡ 1 (mod ${n})</h3>
+        <table>
+            <tr><th>b</th><th>${a} × b mod ${n}</th></tr>
+            ${tableRows}
+        </table>
+
+        <h3>Étape 3 — Vérification</h3>
+        <p>On a trouvé $b = ${inv}$ :</p>
+        \\[${a} \\times ${inv} = ${prod} = ${q} \\times ${n} + ${r}\\]
+        <p>Le reste vaut ${r} = 1, donc $${a} \\times ${inv} \\equiv 1 \\pmod{${n}}$. ✓</p>
+
+        <h3>Conclusion</h3>
+        \\[${a}^{-1} \\equiv ${inv} \\pmod{${n}}\\]
+
+        <h3>Contre-exemple : si a et n ne sont pas premiers entre eux</h3>
+        <p>Prenons $a' = ${aNon}$. On a $\\gcd(${aNon}, ${n}) = ${g} > 1$.</p>
+        <p>On teste les valeurs de $b$ :</p>
+        <ul>
+            ${Array.from({length: n - 1}, (_, i) => i + 1).map(k => {
+                const val = (aNon * k) % n;
+                return `<li>$b = ${k}$ → $${aNon} \\times ${k} = ${aNon * k} \\equiv ${val} \\pmod{${n}}$</li>`;
+            }).join('')}
+        </ul>
+        <p>Aucune valeur de $b$ ne donne 1 : en effet, ${aNon} et ${n} partagent le facteur ${g}, donc tout multiple de ${aNon} est aussi multiple de ${g}, et ne peut jamais être congru à 1 modulo ${n}.</p>
+        <p><b>Conclusion : ${aNon} n'est pas inversible modulo ${n}.</b></p>
+    `;
+
+    return { title: `Inverse modulo ${n} (composé) — Exemple dynamique`, body };
+}
+
+function genMethodDisjunction() {
+    const nChoices = [6, 8, 9, 10, 12, 15];
+    const n = pick(nChoices);
+    const coprimeOptions = [];
+    for (let k = 2; k < n; k++) if (gcd(k, n) === 1) coprimeOptions.push(k);
+    const a = pick(coprimeOptions);
+
+    let rows = '';
+    for (let k = 1; k < n; k++) {
+        const val = (a * k) % n;
+        const style = val === 1 ? 'background:#0d0f16; color:#ffffff; font-weight:bold;' : '';
+        rows += `<tr><td>${k}</td><td style="${style}">${val}</td></tr>`;
+    }
+
+    let inv = null;
+    for (let k = 1; k < n; k++) if ((a * k) % n === 1) { inv = k; break; }
+
+    const body = `
+        <p>Pour trouver l'inverse de <b>a = ${a}</b> modulo <b>n = ${n}</b>, on dresse un tableau des valeurs de $a \\times k \\pmod{${n}}$ pour $k = 1, 2, \\ldots, ${n - 1}$.</p>
+
+        <h3>Vérification préliminaire</h3>
+        \\[\\gcd(${a}, ${n}) = ${gcd(a, n)}\\]
+        <p>Comme $\\gcd(${a}, ${n}) = 1$, l'inverse existe. Sinon, aucun $k$ ne donnerait 1, et on s'arrêterait immédiatement.</p>
+
+        <h3>Tableau des valeurs</h3>
+        <table>
+            <tr><th>k</th><th>${a} × k mod ${n}</th></tr>
+            ${rows}
+        </table>
+
+        <h3>Identification</h3>
+        <p>On lit dans le tableau : pour <b>k = ${inv}</b>, on obtient <b>1</b>.</p>
+        <p>Donc $${a} \\times ${inv} \\equiv 1 \\pmod{${n}}$.</p>
+
+        <h3>Conclusion</h3>
+        \\[${a}^{-1} \\equiv ${inv} \\pmod{${n}}\\]
+        <p>Vérification : $${a} \\times ${inv} = ${a * inv} = ${Math.floor(a * inv / n)} \\times ${n} + 1$. ✓</p>
+    `;
+
+    return { title: `Méthode par disjonction de cas — Exemple dynamique`, body };
+}
+
+const ruleGenerators = {
+    'congruence-def': genCongruenceDef,
+    'equiv-relation': genEquivRelation,
+    'operations': genOperations,
+    'div-11': genDiv11,
+    'inv-prime': genInvPrime,
+    'fermat': genFermat,
+    'inv-composite': genInvComposite,
+    'method-disjunction': genMethodDisjunction
+};
+
+/* ==============================================================
+   GESTION DE LA MODALE "EXEMPLE DYNAMIQUE"
+   ============================================================== */
+let currentRuleId = null;
+let ruleHoverTimer = null;
+
+function showRuleModal(ruleId) {
+    const ruleModal = document.getElementById('ruleModal');
+    const ruleModalTitle = document.getElementById('ruleModalTitle');
+    const ruleModalBody = document.getElementById('ruleModalBody');
+    if (!ruleModal || !ruleModalTitle || !ruleModalBody) {
+        console.error("Éléments de la modale règle introuvables.");
+        return;
+    }
+    const gen = ruleGenerators[ruleId];
+    if (!gen) {
+        console.error("Générateur inconnu :", ruleId);
+        return;
+    }
+    currentRuleId = ruleId;
+    const { title, body } = gen();
+    ruleModalTitle.textContent = title;
+    ruleModalBody.innerHTML = body;
+    ruleModal.classList.add('active');
+    if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([ruleModalBody]).catch(e => console.warn('MathJax rule error:', e));
+    }
+}
+
+function closeRuleModal() {
+    const ruleModal = document.getElementById('ruleModal');
+    if (!ruleModal) return;
+    ruleModal.classList.remove('active');
+    currentRuleId = null;
+}
+
+function regenerateRuleModal() {
+    if (currentRuleId) showRuleModal(currentRuleId);
+}
+
+function initRuleModals() {
+    const ruleModal = document.getElementById('ruleModal');
+    const btnFermerRule = document.getElementById('btnFermerRule');
+    const btnRegenerateRule = document.getElementById('btnRegenerateRule');
+
+    if (!ruleModal) {
+        console.error("Modale 'ruleModal' introuvable.");
+        return;
+    }
+
+    document.querySelectorAll('.rule-block').forEach(block => {
+        const ruleId = block.dataset.rule;
+        if (!ruleId) return;
+
+        block.addEventListener('mouseenter', () => {
+            clearTimeout(ruleHoverTimer);
+            ruleHoverTimer = setTimeout(() => {
+                showRuleModal(ruleId);
+            }, 500);
+        });
+
+        block.addEventListener('mouseleave', () => {
+            clearTimeout(ruleHoverTimer);
+        });
+
+        block.addEventListener('click', () => {
+            clearTimeout(ruleHoverTimer);
+            showRuleModal(ruleId);
+        });
+    });
+
+    if (btnFermerRule) btnFermerRule.addEventListener('click', closeRuleModal);
+    if (btnRegenerateRule) btnRegenerateRule.addEventListener('click', regenerateRuleModal);
+
+    ruleModal.addEventListener('click', e => {
+        if (e.target === ruleModal) closeRuleModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            const m = document.getElementById('ruleModal');
+            if (m && m.classList.contains('active')) closeRuleModal();
+        }
+    });
+}
+
+/* ==============================================================
+   GÉNÉRATION DU PUZZLE
+   ============================================================== */
+function generatePuzzle() {
+    const d1Choices = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+    const primeChoices = [5, 7, 13];
+
+    let d1, p3, p5, n4;
+    for (let t = 0; t < 1000; t++) {
+        d1 = pick(d1Choices);
+        p3 = pick(primeChoices);
+        p5 = pick(primeChoices.filter(p => p !== p3));
+        n4 = pick([6, 8, 10]);
+        if (lcmMany([d1, 11, p3, n4, p5]) > 950) break;
+    }
+
+    let N = null;
+    for (let t = 0; t < 2000; t++) {
+        const cand = 11 * randInt(5, 90);
+        if (cand < 50 || cand > 999) continue;
+        if (gcd(cand, n4) !== 1) continue;
+        if (cand % p3 === 0) continue;
+        if (cand % p5 === 0) continue;
+        N = cand;
+        break;
+    }
+    if (N === null) N = 121;
+
+    const r1 = N % d1;
+    const r3 = N % p3;
+    const r4 = N % n4;
+    const r5 = N % p5;
+
+    const a3 = modInv(r3, p3);
+    const a4 = modInv(r4, n4);
+    const a5 = randInt(2, p5 - 1);
+    const b5 = (a5 * r5) % p5;
+
+    return { N, d1, r1, p3, r3, a3, n4, r4, a4, p5, r5, a5, b5 };
+}
+
+function candidatesAfter(v, upto) {
+    const result = [];
+    for (let m = 50; m <= 999; m++) {
+        if (upto >= 1 && m % v.d1 !== v.r1) continue;
+        if (upto >= 2 && m % 11 !== 0) continue;
+        if (upto >= 3 && m % v.p3 !== v.r3) continue;
+        if (upto >= 4 && m % v.n4 !== v.r4) continue;
+        if (upto >= 5 && m % v.p5 !== v.r5) continue;
+        result.push(m);
+    }
+    return result;
+}
+
+function formatCandidates(arr) {
+    if (arr.length === 0) return '(aucun)';
+    if (arr.length <= 30) return arr.join(', ');
+    return arr.slice(0, 30).join(', ') + `, … (${arr.length} au total)`;
+}
+
+function applyValues(v) {
+    document.getElementById('d1-dial-d').textContent = v.d1;
+    document.getElementById('d1-d').textContent = v.d1;
+    document.getElementById('d1-d2').textContent = v.d1;
+    document.getElementById('d1-r').textContent = v.r1;
+    document.getElementById('d1-r2').textContent = v.r1;
+
+    const base1 = randInt(2, 5) * v.d1 + v.r1;
+    const nums1 = [0, 1, 2, 3, 4, 5].map(i => base1 + i * v.d1);
+    const q1 = (nums1[0] - v.r1) / v.d1;
+    document.getElementById('d1-list').innerHTML = '\\( ' + nums1.join(',\\; ') + ' \\)';
+
+    const first = nums1[0];
+    document.getElementById('d1-form').innerHTML =
+        `\\(${first} = ${v.d1} \\times ${q1} + ${v.r1} \\quad \\Rightarrow \\quad ${first} \\equiv ${v.r1} \\pmod{${v.d1}}\\)`;
+    document.getElementById('d1-prose').innerHTML =
+        `Tous les nombres de la lettre vérifient la même congruence : \\(\\equiv ${v.r1} \\pmod{${v.d1}}\\). ` +
+        `Le numéro <span class="important">\\(N\\)</span> du voleur doit donc satisfaire ` +
+        `\\(N \\equiv ${v.r1} \\pmod{${v.d1}}\\).`;
+
+    const c1 = candidatesAfter(v, 1);
+    document.getElementById('d1-count').textContent = c1.length + ' candidat' + (c1.length > 1 ? 's' : '');
+    document.getElementById('d1-candidates').textContent = formatCandidates(c1);
+
+    const c2 = candidatesAfter(v, 2);
+    document.getElementById('d2-count').textContent = c2.length + ' candidat' + (c2.length > 1 ? 's' : '');
+    document.getElementById('d2-candidates').textContent = formatCandidates(c2);
+
+    document.getElementById('d3-p-title').textContent = v.p3;
+    document.getElementById('d3-p-text').textContent = v.p3;
+    document.getElementById('d3-p-text2').textContent = v.p3;
+    document.getElementById('d3-p-count').textContent = v.p3;
+    document.getElementById('d3-a3-text').textContent = v.a3;
+    document.getElementById('d3-a3-inline2').textContent = v.a3;
+
+    document.getElementById('d3-eq1').innerHTML =
+        `\\(N \\times ${v.a3} \\equiv 1 \\pmod{${v.p3}}\\)`;
+    document.getElementById('d3-eq2').innerHTML =
+        `\\(N \\equiv ${v.r3} \\pmod{${v.p3}}\\)`;
+
+    let invHtml = '';
+    for (let k = 1; k < v.p3; k++) {
+        const i = modInv(k, v.p3);
+        const prod = k * i;
+        const prodStr = prod === 1 ? '1' : `${prod}`;
+        const suffix = prod === 1 ? '' : ` \\equiv 1 \\pmod{${v.p3}}`;
+        invHtml += `<li>\\(${k}^{-1} \\equiv ${i}\\) car \\(${k} \\times ${i} = ${prodStr}${suffix}\\).</li>`;
+    }
+    document.getElementById('d3-list').innerHTML = invHtml;
+
+    const c3 = candidatesAfter(v, 3);
+    document.getElementById('d3-count').textContent = c3.length + ' candidat' + (c3.length > 1 ? 's' : '');
+    document.getElementById('d3-candidates').textContent = formatCandidates(c3);
+
+    document.getElementById('d4-n-title').textContent = v.n4;
+    document.getElementById('d4-n-text1').textContent = v.n4;
+    document.getElementById('d4-n-text2').textContent = v.n4;
+    document.getElementById('d4-n-text3').textContent = v.n4;
+    document.getElementById('d4-n-text4').textContent = v.n4;
+    document.getElementById('d4-n-text5').textContent = v.n4;
+    document.getElementById('d4-n-inline').textContent = v.n4;
+    document.getElementById('d4-n-inline2').textContent = v.n4;
+    document.getElementById('d4-n-count').textContent = v.n4;
+    document.getElementById('d4-a4-text').textContent = v.a4;
+
+    document.getElementById('d4-eq1').innerHTML =
+        `\\(N \\times ${v.a4} \\equiv 1 \\pmod{${v.n4}}\\)`;
+    document.getElementById('d4-eq2').innerHTML =
+        `\\(N \\equiv ${v.r4} \\pmod{${v.n4}}\\)`;
+
+    const coprimes = [], nonCoprimes = [];
+    for (let k = 1; k < v.n4; k++) {
+        if (gcd(k, v.n4) === 1) coprimes.push(k);
+        else nonCoprimes.push(k);
+    }
+    document.getElementById('d4-coprimes').innerHTML = '\\( ' + coprimes.join(',\\; ') + ' \\)';
+    document.getElementById('d4-noncoprimes').innerHTML = '\\( ' + nonCoprimes.join(',\\; ') + ' \\)';
+
+    let inv4Html = '';
+    coprimes.forEach(k => {
+        const i = modInv(k, v.n4);
+        if (i !== null) {
+            const prod = k * i;
+            inv4Html += `<li>\\(${k}^{-1} \\equiv ${i}\\) (car \\(${k} \\times ${i} = ${prod} \\equiv ${prod % v.n4} \\pmod{${v.n4}}\\)).</li>`;
+        }
+    });
+    document.getElementById('d4-list').innerHTML = inv4Html;
+
+    const odds = [];
+    for (let k = 1; k < v.n4; k++) if (k % 2 === 1) odds.push(k);
+    const bOdd = pick(odds);
+    document.getElementById('d4-method-text').innerHTML =
+        `Gauss explique la <span class="important">disjonction de cas</span> souvent nécessaire modulo un nombre composé : ` +
+        `par exemple \\(2x \\equiv ${bOdd} \\pmod{${v.n4}}\\). Or \\(2x\\) est toujours pair, ` +
+        `donc ne peut jamais être congru à \\(${bOdd}\\) (impair) : l'équation n'a pas de solution. ` +
+        `C'est pourquoi la donnée \\(\\gcd(N, ${v.n4}) = 1\\) est indispensable.`;
+
+    const c4 = candidatesAfter(v, 4);
+    document.getElementById('d4-count').textContent = c4.length + ' candidat' + (c4.length > 1 ? 's' : '');
+    document.getElementById('d4-candidates').textContent = formatCandidates(c4);
+
+    const inv5 = modInv(v.a5, v.p5);
+    document.getElementById('d5-eq').innerHTML =
+        `\\(${v.a5} \\times x \\equiv ${v.b5} \\pmod{${v.p5}}\\)`;
+
+    document.getElementById('d5-inv-text').innerHTML =
+        `Gauss pose \\(x = N\\), le numéro de la maison. Comme \\(${v.p5}\\) est premier, ` +
+        `\\(${v.a5}\\) admet un inverse modulo \\(${v.p5}\\). ` +
+        `En testant les valeurs, Lemaître trouve que ` +
+        `\\(${v.a5} \\times ${inv5} = ${v.a5 * inv5} \\equiv 1 \\pmod{${v.p5}}\\).`;
+
+    document.getElementById('d5-sol-inline').innerHTML =
+        `\\(x \\equiv ${v.r5} \\pmod{${v.p5}}\\)`;
+
+    document.getElementById('d5-sol').innerHTML =
+        `\\(x \\equiv ${inv5} \\times ${v.b5} \\equiv ${v.r5} \\pmod{${v.p5}}\\)`;
+
+    document.getElementById('d5-address-text').innerHTML =
+        `Avec cette dernière congruence \\(N \\equiv ${v.r5} \\pmod{${v.p5}}\\), ` +
+        `la liste des candidats fond à <span class="important">un seul numéro</span> : ` +
+        `\\(N = ${v.N}\\). Le voleur est démasqué.`;
+
+    const c5 = candidatesAfter(v, 5);
+    document.getElementById('d5-count').textContent = c5.length + ' candidat unique';
+    document.getElementById('d5-candidates').textContent = c5.join(', ');
+
+    const names = ['Vermeer', 'Rothko', 'Kahlo', 'Basquiat', 'Hokusai', 'Klimt', 'Matisse', 'Miró', 'Picasso', 'Dali'];
+    const culpritName = names[v.N % names.length];
+    document.getElementById('final-address').textContent = `numéro ${v.N}`;
+    document.getElementById('culprit-name').textContent = culpritName;
+
+    dessinerClasses(v.d1, v.r1);
+}
+
+/* ==============================================================
+   CANVAS
+   ============================================================== */
+function dessinerClasses(nbClasses, coupable) {
+    const canvas = document.getElementById('canvasClasses');
+    if (!canvas) { console.error("Canvas introuvable."); return; }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { console.error("Contexte 2D indisponible."); return; }
+
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2 + 10;
+    const rayon = 70;
+
+    let fontSize, labelFactor, markerR, markerRing;
+    if      (nbClasses <= 6)  { fontSize = 14; labelFactor = 0.68; markerR = 4; markerRing = 8; }
+    else if (nbClasses <= 10) { fontSize = 12; labelFactor = 0.65; markerR = 4; markerRing = 8; }
+    else if (nbClasses <= 14) { fontSize = 10; labelFactor = 0.62; markerR = 3; markerRing = 7; }
+    else if (nbClasses <= 17) { fontSize = 9;  labelFactor = 0.58; markerR = 3; markerRing = 6; }
+    else                      { fontSize = 8;  labelFactor = 0.55; markerR = 2; markerRing = 5; }
+
+    ctx.clearRect(0, 0, W, H);
+
+    const gradient = ctx.createRadialGradient(cx, cy, rayon * 0.3, cx, cy, rayon * 1.6);
+    gradient.addColorStop(0, 'rgba(80,85,100,0.06)');
+    gradient.addColorStop(1, 'rgba(80,85,100,0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rayon * 1.6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, rayon, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#4a4e5a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    for (let i = 0; i < nbClasses; i++) {
+        const a0 = (i * 2 * Math.PI) / nbClasses - Math.PI / 2;
+        const a1 = ((i + 1) * 2 * Math.PI) / nbClasses - Math.PI / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, rayon, a0, a1);
+        ctx.closePath();
+        ctx.fillStyle = (i % 2 === 0) ? '#f5f6fa' : '#e8eaf0';
+        ctx.fill();
+        ctx.strokeStyle = '#b6bac4';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        const am = (a0 + a1) / 2;
+        const lx = cx + (rayon * labelFactor) * Math.cos(am);
+        const ly = cy + (rayon * labelFactor) * Math.sin(am);
+        const isCulprit = (i === coupable);
+        ctx.fillStyle = isCulprit ? '#0d0f16' : '#4a4e5a';
+        ctx.font = (isCulprit ? 'bold ' : '') + fontSize + 'px "Share Tech Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(i.toString(), lx, ly);
+
+        if (isCulprit) {
+            const mx = cx + (rayon * 1.14) * Math.cos(am);
+            const my = cy + (rayon * 1.14) * Math.sin(am);
+            ctx.beginPath();
+            ctx.arc(mx, my, markerR, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0d0f16';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(mx, my, markerRing, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#0d0f16';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+
+    ctx.fillStyle = '#4a4e5a';
+    ctx.font = '11px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(`// SIGNAL — CLASSES DE CONGRUENCE MODULO ${nbClasses}`, cx, 20);
+}
+
+/* ==============================================================
+   MATHJAX
+   ============================================================== */
+function mathJaxReady() {
+    return new Promise(resolve => {
+        const check = () => {
+            if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(resolve).catch(resolve);
+            } else {
+                setTimeout(check, 40);
+            }
+        };
+        check();
+        setTimeout(resolve, 6000);
+    });
+}
+
+/* ==============================================================
+   NAVIGATION
+   ============================================================== */
+let currentPage = 0;
+let allPages = [];
+
+function showPage(index) {
+    if (!allPages.length) allPages = Array.from(document.querySelectorAll('.page'));
+    if (index < 0 || index >= allPages.length) return;
+    allPages.forEach((p, i) => p.classList.toggle('active', i === index));
+    currentPage = index;
+    const hudPage = document.getElementById('hudPage');
+    if (hudPage) hudPage.textContent = `${index + 1} / ${allPages.length}`;
+    const fill = document.getElementById('scrollFill');
+    if (fill) fill.style.width = `${((index + 1) / allPages.length) * 100}%`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initNavigation() {
+    allPages = Array.from(document.querySelectorAll('.page'));
+    document.querySelectorAll('.nav a').forEach(a => {
+        a.addEventListener('click', e => {
+            const href = a.getAttribute('href') || '';
+            const m = href.match(/#partie(\d+)/);
+            if (m) { e.preventDefault(); showPage(parseInt(m[1], 10) - 1); }
+        });
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') showPage(Math.min(currentPage + 1, allPages.length - 1));
+        else if (e.key === 'ArrowLeft') showPage(Math.max(currentPage - 1, 0));
+    });
+}
+
+/* ==============================================================
+   MODALE LICENCE
+   ============================================================== */
+function ouvrirModalLicence() {
+    const modal = document.getElementById('modalLicence');
+    if (!modal) return;
+    modal.classList.add('active');
+    const btn = document.getElementById('btnFermerLicence');
+    if (btn) btn.focus();
+}
+function fermerModalLicence() {
+    const modal = document.getElementById('modalLicence');
+    if (!modal) return;
+    modal.classList.remove('active');
+    const btn = document.getElementById('btnLicence');
+    if (btn) btn.focus();
+}
+
+/* ==============================================================
+   HORLOGE HUD
+   ============================================================== */
+function initHudClock() {
+    const el = document.getElementById('hudTime');
+    if (!el) return;
+    const start = Date.now();
+    const pad = n => String(n).padStart(2, '0');
+    const tick = () => {
+        const t = Math.floor((Date.now() - start) / 1000);
+        el.textContent = `${pad(Math.floor(t / 3600))}:${pad(Math.floor((t % 3600) / 60))}:${pad(t % 60)}`;
+    };
+    tick();
+    setInterval(tick, 1000);
+}
+
+/* ==============================================================
+   INITIALISATION
+   ============================================================== */
+window.addEventListener('load', async () => {
+    try {
+        await mathJaxReady();
+        const v = generatePuzzle();
+        applyValues(v);
+        if (window.MathJax && MathJax.typesetPromise) await MathJax.typesetPromise();
+
+        document.body.classList.add('loaded');
+        initNavigation();
+        initRuleModals();
+        showPage(0);
+        initHudClock();
+
+        const btnLicence = document.getElementById('btnLicence');
+        if (btnLicence) btnLicence.addEventListener('click', ouvrirModalLicence);
+        const btnFermer = document.getElementById('btnFermerLicence');
+        if (btnFermer) btnFermer.addEventListener('click', fermerModalLicence);
+        const modal = document.getElementById('modalLicence');
+        if (modal) modal.addEventListener('click', e => { if (e.target === modal) fermerModalLicence(); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                const m = document.getElementById('modalLicence');
+                if (m && m.classList.contains('active')) fermerModalLicence();
+            }
+        });
+
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
+    } catch (err) {
+        console.error('Erreur init :', err);
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
+        document.body.classList.add('loaded');
+    }
+});
+
+window.addEventListener('resize', () => {
+    const canvas = document.getElementById('canvasClasses');
+    if (!canvas) return;
+    const d = parseInt(document.getElementById('d1-d')?.textContent || '12', 10);
+    const r = parseInt(document.getElementById('d1-r')?.textContent || '1', 10);
+    if (!isNaN(d) && !isNaN(r)) dessinerClasses(d, r);
+});
+</script>
+
+</body>
+</html>

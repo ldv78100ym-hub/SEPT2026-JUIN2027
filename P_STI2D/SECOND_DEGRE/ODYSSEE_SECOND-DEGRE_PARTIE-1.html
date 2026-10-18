@@ -203,8 +203,6 @@ footer .footer-actions{display:flex;justify-content:center;gap:10px;
 .correction-only .graph-card{display:none !important}
 
 /* ---------- Ambiances de fond : camaïeux clairs et discrets ---------- */
-/* Exercice = camaïeu gris-bleu · Correction = camaïeu sable chaud ·
-   Remédiation = camaïeu vert d'eau */
 body{transition:background .45s ease}
 body.flow-exercise{background:linear-gradient(180deg,#F3F6FA 0%,#EBF0F5 100%)}
 body.flow-correction{background:linear-gradient(180deg,#FBF6EC 0%,#F3EBD9 100%)}
@@ -288,6 +286,7 @@ body.flow-remediation{background:linear-gradient(180deg,#F0F6F1 0%,#E7F1EA 100%)
           <option value="2">Niveau 2 — Forme canonique</option>
           <option value="3">Niveau 3 — Symétrie et coefficients</option>
           <option value="4">Niveau 4 — Système 3×3</option>
+          <option value="5">Niveau 5 — Fractions irréductibles (très difficile)</option>
         </select></div>
     </div>
     <div class="row" style="margin-top:16px">
@@ -457,6 +456,98 @@ function polyStr(a, b, c, v){
   return s;
 }
 function polyTex(a, b, c, v){ return polyStr(a, b, c, v); }
+
+/* --- Helpers fractions (niveau 5) --- */
+function gcdF(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  while (b){ var t = b; b = a % b; a = t; }
+  return a;
+}
+function frac(n, d){
+  if (d === 0) throw new Error('denominateur nul');
+  if (d < 0){ n = -n; d = -d; }
+  var g = gcdF(n, d) || 1;
+  return { n: n/g, d: d/g, val: (n/g)/(d/g) };
+}
+function fracAdd(x, y){ return frac(x.n*y.d + y.n*x.d, x.d*y.d); }
+function fracMul(x, y){ return frac(x.n*y.n, x.d*y.d); }
+function fracNeg(x){ return { n: -x.n, d: x.d, val: -x.val }; }
+function fracEq(x, y){ return x.n*y.d === y.n*x.d; }
+function fracTex(x){
+  if (x.n === 0) return '0';
+  if (x.d === 1) return String(x.n);
+  if (x.n < 0) return '-\\dfrac{' + (-x.n) + '}{' + x.d + '}';
+  return '\\dfrac{' + x.n + '}{' + x.d + '}';
+}
+function fracStr(x){
+  if (x.n === 0) return '0';
+  if (x.d === 1) return String(x.n);
+  if (x.n < 0) return '-' + (-x.n) + '/' + x.d;
+  return x.n + '/' + x.d;
+}
+function polyTexFrac(a, b, c, v){
+  v = v || 'x';
+  var s = '';
+  var aAbs = {n: Math.abs(a.n), d: a.d};
+  if (aAbs.n === aAbs.d) s += (a.n < 0 ? '-' : '') + v + '^2';
+  else s += (a.n < 0 ? '-' : '') + fracTex(aAbs) + v + '^2';
+  if (b.n !== 0){
+    var bAbs = {n: Math.abs(b.n), d: b.d};
+    var bStr = (bAbs.n === bAbs.d) ? '' : fracTex(bAbs);
+    s += (b.n > 0 ? '+' : '-') + bStr + v;
+  }
+  if (c.n !== 0){
+    var cAbs = {n: Math.abs(c.n), d: c.d};
+    s += (c.n > 0 ? '+' : '-') + fracTex(cAbs);
+  }
+  return s;
+}
+function polyStrFrac(a, b, c, v){
+  v = v || 'x';
+  var s = '';
+  var aAbs = {n: Math.abs(a.n), d: a.d};
+  if (aAbs.n === aAbs.d) s += (a.n < 0 ? '-' : '') + v + '^2';
+  else s += (a.n < 0 ? '-' : '') + fracStr(aAbs) + v + '^2';
+  if (b.n !== 0){
+    var bAbs = {n: Math.abs(b.n), d: b.d};
+    var bStr = (bAbs.n === bAbs.d) ? '' : fracStr(bAbs);
+    s += (b.n > 0 ? '+' : '-') + bStr + v;
+  }
+  if (c.n !== 0){
+    var cAbs = {n: Math.abs(c.n), d: c.d};
+    s += (c.n > 0 ? '+' : '-') + fracStr(cAbs);
+  }
+  return s;
+}
+function canonicalTex(a, alpha, beta){
+  var aStr;
+  if (a === 1) aStr = '';
+  else if (a === -1) aStr = '-';
+  else aStr = String(a);
+  var shift;
+  if (alpha === 0) shift = 'x';
+  else if (alpha > 0) shift = 'x-' + alpha;
+  else shift = 'x+' + (-alpha);
+  var result = aStr + '(' + shift + ')^2';
+  if (beta > 0) result += '+' + beta;
+  else if (beta < 0) result += String(beta);
+  return result;
+}
+function canonicalTexFrac(a, alpha, beta){
+  var aStr;
+  if (fracEq(a, frac(1,1))) aStr = '';
+  else if (fracEq(a, frac(-1,1))) aStr = '-';
+  else aStr = fracTex(a);
+  var shift;
+  if (alpha.n === 0) shift = 'x';
+  else if (alpha.n > 0) shift = 'x-' + fracTex(alpha);
+  else shift = 'x+' + fracTex({n: -alpha.n, d: alpha.d, val: -alpha.val});
+  var result = aStr + '(' + shift + ')^2';
+  if (beta.n > 0) result += '+' + fracTex(beta);
+  else if (beta.n < 0) result += '-' + fracTex({n: -beta.n, d: beta.d, val: -beta.val});
+  return result;
+}
+
 function el(tag, cls, html){
   var n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -694,6 +785,8 @@ function rappel(level){
   if (level === 1) return base + L`<p>Le signe de $a$ donne l'orientation : $a>0$ vers le haut, $a<0$ vers le bas.</p>`;
   if (level === 2) return base + L`<p><strong>Forme canonique :</strong> $a(x-\alpha)^2+\beta$.</p>`;
   if (level === 3) return base + L`<p>Deux points de même ordonnée : $x_S=\dfrac{x_1+x_2}{2}$ et $b=-2a\,x_S$.</p>`;
+  if (level === 5) return base + L`<p><strong>Fractions irréductibles :</strong> on donne les coefficients sous la forme $\dfrac{n}{d}$ avec $d>0$ et $\gcd(|n|,d)=1$.</p>
+    <p><strong>Forme canonique :</strong> $a(x-\alpha)^2+\beta$.</p>`;
   return base + L`<p>Trois points : $f(0)=c$, puis substitution / combinaison.</p>`;
 }
 
@@ -786,11 +879,11 @@ function genLevel2(rng, scen){
     ],
     calc: makeCalcWorkshop(
       [L`$\alpha = -\dfrac{b}{2a} = ${alpha}$`, L`$\beta = f(\alpha) = f(${alpha})$`, L`$= ${beta}$`],
-      L`$f(x) = ${a}(x-(${alpha}))^2+(${beta})$`,
+      L`$f(x) = ${canonicalTex(a, alpha, beta)}$`,
       [L`$\alpha = ${beta}$`, L`$\beta = ${-beta}$`, L`$\alpha = ${-alpha}$`]
     ),
     solution: L`<p>Le sommet est $(\alpha;\beta)$ avec $\alpha=-\dfrac{b}{2a}=${alpha}$ et $\beta=f(\alpha)=${beta}$.</p>
-      <div class="final"><strong>Finalement</strong>, $\alpha=${alpha}$ et $\beta=${beta}$, donc $f(x)=${a}(x-(${alpha}))^2+(${beta})$.</div>`
+      <div class="final"><strong>Finalement</strong>, $\alpha=${alpha}$ et $\beta=${beta}$, donc $f(x)=${canonicalTex(a, alpha, beta)}$.</div>`
   });
 
   qs.push({
@@ -931,13 +1024,97 @@ function genLevel4(rng, scen){
       [L`$\alpha = ${beta}$`, L`$\beta = ${-beta}$`]
     ),
     solution: L`<p>$\alpha=-\dfrac{b}{2a}=${alpha}$ et $\beta=f(\alpha)=${beta}$.</p>
-      <div class="final"><strong>Finalement</strong>, $f(x)=${a}(x-(${alpha}))^2+(${beta})$ et le sommet est $(${alpha}\,;\,${beta})$.</div>`
+      <div class="final"><strong>Finalement</strong>, $f(x)=${canonicalTex(a, alpha, beta)}$ et le sommet est $(${alpha}\,;\,${beta})$.</div>`
   });
 
   return { params:p, questions:qs, scen:scen };
 }
 
-var GENERATORS = {1:genLevel1, 2:genLevel2, 3:genLevel3, 4:genLevel4};
+/* ---------- Niveau 5 : fractions irréductibles ---------- */
+function genFracParam(rng, minD, maxD, maxN){
+  var d = rint(rng, minD, maxD);
+  var choices = [];
+  for (var n = -maxN; n <= maxN; n++){
+    if (n === 0) continue;
+    if (gcdF(n, d) === 1) choices.push(n);
+  }
+  var n = choices.length ? pickFrom(rng, choices) : 1;
+  return frac(n, d);
+}
+
+function genLevel5(rng, scen){
+  var v = scen.v;
+  var a = genFracParam(rng, 2, 4, 3);
+  var alpha = genFracParam(rng, 2, 4, 3);
+  var beta = genFracParam(rng, 2, 5, 5);
+  // b = -2*a*alpha ; c = beta + a*alpha^2
+  var b = fracMul(fracNeg(frac(2,1)), fracMul(a, alpha));
+  var c = fracAdd(beta, fracMul(a, fracMul(alpha, alpha)));
+
+  var qs = [];
+  var aStr = fracTex(a), bStr = fracTex(b), cStr = fracTex(c);
+  var alphaStr = fracTex(alpha), betaStr = fracTex(beta);
+
+  qs.push({
+    title:'Question 1 — Les coefficients fractionnaires',
+    statement: L`<p>On modélise ${scen.name} par la fonction $f$ définie sur $\mathbb{R}$ par :</p>
+      <div class="formula">$f(${v}) = ${polyTexFrac(a,b,c,v)}$</div>
+      <p>Identifie les coefficients $a$, $b$ et $c$ (sous forme de fractions irréductibles).</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:a.val,param:'a'},
+      {label:L`$b=$`,kind:'num',expected:b.val,param:'b'},
+      {label:L`$c=$`,kind:'num',expected:c.val,param:'c'}
+    ],
+    calc: null,
+    solution: L`<p>On compare terme à terme avec $ax^2+bx+c$ :</p>
+      <p>le coefficient de $x^2$ est $a=${aStr}$ ; celui de $x$ est $b=${bStr}$ ; le terme constant est $c=${cStr}$.</p>
+      <div class="final"><strong>Finalement</strong>, $a=${aStr}$, $b=${bStr}$ et $c=${cStr}$.</div>`
+  });
+
+  qs.push({
+    title:'Question 2 — La forme canonique',
+    statement: L`<p>On sait que la forme canonique s'écrit $a(x-\alpha)^2+\beta$.</p>
+      <p>Détermine les fractions irréductibles $\alpha$ et $\beta$.</p>`,
+    fields:[
+      {label:L`$\alpha=$`,kind:'num',expected:alpha.val,param:'alpha'},
+      {label:L`$\beta=$`,kind:'num',expected:beta.val,param:'beta'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$\alpha = -\dfrac{b}{2a}$`, L`$= ${alphaStr}$`,
+       L`$\beta = f(\alpha)$`, L`$= ${betaStr}$`],
+      L`$\alpha=${alphaStr}$, $\beta=${betaStr}$`,
+      [L`$\alpha = ${betaStr}$`, L`$\beta = ${fracTex(fracNeg(beta))}$`]
+    ),
+    solution: L`<p>On calcule $\alpha=-\dfrac{b}{2a}=${alphaStr}$.</p>
+      <p>Puis $\beta=f(\alpha)=${betaStr}$.</p>
+      <div class="final"><strong>Finalement</strong>, $\alpha=${alphaStr}$ et $\beta=${betaStr}$, donc $f(x)=${canonicalTexFrac(a, alpha, beta)}$.</div>`
+  });
+
+  qs.push({
+    title:'Question 3 — Nature de l\'extremum',
+    statement: L`<p>Le sommet $S$ de la parabole est un point particulier.</p>
+      <p>Précise la nature de l'ordonnée de $S$, puis donne sa valeur (fraction irréductible).</p>`,
+    fields:[
+      {label:L`Nature`,kind:'select',options:['ordonnée minimale','ordonnée maximale'],
+        expected: a.val > 0 ? 'ordonnée minimale' : 'ordonnée maximale'},
+      {label:L`Valeur`,kind:'num',expected:beta.val,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>Ici $a=${aStr}$, donc $a${a.val>0?'>0':'<0'}$. L'ordonnée du sommet est donc ${a.val>0?'minimale':'maximale'}, égale à $f(\alpha)=${betaStr}$.</p>
+      <div class="final"><strong>Finalement</strong>, l'ordonnée du sommet est ${a.val>0?'minimale':'maximale'} et vaut $${betaStr}$.</div>`
+  });
+
+  return {
+    params: {
+      a: a.val, b: b.val, c: c.val, alpha: alpha.val, beta: beta.val,
+      fracs: { a:a, b:b, c:c, alpha:alpha, beta:beta }
+    },
+    questions: qs,
+    scen: scen
+  };
+}
+
+var GENERATORS = {1:genLevel1, 2:genLevel2, 3:genLevel3, 4:genLevel4, 5:genLevel5};
 function generateLevel(level, seed){
   var rng = mulberry32(seed >>> 0);
   var scen = pickFrom(rng, SCENARIOS);
@@ -957,25 +1134,21 @@ var App = {
 
 /* ============================================================
    7. ATELIERS — construction de l'état
-   ------------------------------------------------------------
-   MODIF : les distracteurs sont désormais indiscernables des
-   clés (mêmes jetons, même comportement). Le flag `placed`
-   n'est plus utilisé pour les filtrer.
    ============================================================ */
 function buildWorkshopState(qid, ws){
   var items = []; var uid = 0;
   var seen = {};
 
-  // Clés (une seule copie, réutilisable à l'infini)
+  // Clés : une seule copie dans la réserve, réutilisable à l'infini
   ws.canonical.forEach(function(t){
     if (seen[t]) return;
     seen[t] = true;
     items.push({id:'k'+(uid++), label:t, kind:'key'});
   });
 
-  // Distracteurs — présentés et comportant exactement comme les clés
+  // Distracteurs : présentés et comportant exactement comme les clés
   var usedDistractors = {};
-  var nd = [3,5,7,10][App.level - 1];
+  var nd = [3,5,7,10,14][App.level - 1];
   var guard = 0;
   var drng = mulberry32(((App.seed ^ 0xCAFEBABE) + items.length + stringHash(qid)) >>> 0);
   while (Object.keys(usedDistractors).length < nd && guard++ < 300){
@@ -1014,7 +1187,6 @@ function renderWorkshop(st){
   }
 
   var pool = el('div','pool'); pool.dataset.qid = st.qid;
-  // Tous les jetons restent visibles en permanence (clés ET distracteurs)
   st.items.forEach(function(it){
     var cls = 'chip';
     if (it.label === 'Finalement') cls += ' final-keyword';
@@ -1094,7 +1266,6 @@ function renderWorkshop(st){
   addLine.addEventListener('click', function(){st.lines.push([]); renderWorkshop(st);});
   wrap.appendChild(addLine);
 
-  // Compteur neutre : uniquement le total, sans révéler la répartition
   counter.textContent = st.items.length + ' jeton(s) disponibles · réutilisables à volonté';
 
   pool.addEventListener('dragover', function(ev){ev.preventDefault(); pool.classList.add('over');});
@@ -1109,9 +1280,6 @@ function renderWorkshop(st){
 
 /* ============================================================
    9. DROP / CLIC / DÉPLACEMENT
-   ------------------------------------------------------------
-   MODIF : plus aucune distinction clé/distracteur. Tous les
-   jetons sont réutilisables et restent dans la réserve.
    ============================================================ */
 function handleDrop(st, payload, targetLine){
   if (!payload) return;
@@ -1133,7 +1301,6 @@ function handleDrop(st, payload, targetLine){
       if (!st.lines[targetLine]) st.lines[targetLine] = [];
       st.lines[targetLine].push(id2);
     }
-    // targetLine < 0 : retour à la réserve ; plus rien à « dé-placer »
   }
   st.selected = null;
   renderWorkshop(st);
@@ -1207,7 +1374,7 @@ function renderExercises(){
   App.workshops = [];
   App.calcWorkshops = [];
   var qs = App.data.questions;
-  var nd = [3,5,7,10][App.level - 1];
+  var nd = [3,5,7,10,14][App.level - 1];
 
   qs.forEach(function(q, qi){
     var drng = mulberry32(((App.seed ^ 0xCAFEBABE) + qi * 977) >>> 0);
@@ -1441,12 +1608,18 @@ function drawGraph(canvas, p, known){
     ctx.fillStyle = '#3C6E71';
     ctx.beginPath(); ctx.arc(vx,vy,5,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#0D0D0D'; ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'left';
-    ctx.fillText('S(' + fmt(alpha) + ' ; ' + fmt(beta) + ')', vx+8, vy-8);
+    var vLabel;
+    if (p.fracs) vLabel = 'S(' + fracStr(p.fracs.alpha) + ' ; ' + fracStr(p.fracs.beta) + ')';
+    else vLabel = 'S(' + fmt(alpha) + ' ; ' + fmt(beta) + ')';
+    ctx.fillText(vLabel, vx+8, vy-8);
   }
 
   ctx.fillStyle = '#4D4D4D'; ctx.font = 'bold 13px Segoe UI'; ctx.textAlign = 'left';
   if (showParabola){
-    ctx.fillText('f(x) = ' + polyStr(a,b,c,'x'), 46, 20);
+    var fStr;
+    if (p.fracs) fStr = 'f(x) = ' + polyStrFrac(p.fracs.a, p.fracs.b, p.fracs.c, 'x');
+    else fStr = 'f(x) = ' + polyStr(a,b,c,'x');
+    ctx.fillText(fStr, 46, 20);
   } else {
     ctx.fillText('Le graphe se dessine à mesure que tu réponds…', 46, 20);
   }
@@ -1604,14 +1777,6 @@ function pathHtml(path){
 
 /* ============================================================
    12. FLUX D'AFFICHAGE (menu vertical) + REMÉDIATION
-   ------------------------------------------------------------
-   Le bouton « Vérifier mes réponses » ouvre un menu vertical
-   avec « Mes réponses » et « La correction » : chaque entrée
-   affiche uniquement la partie qui la concerne.
-   En vue correction, le bouton devient « Lecture de la
-   correction terminée » ; après clic, « Remédiation » apparaît
-   dans le menu. La remédiation est gérée comme un nouvel
-   exercice (mêmes boutons, même menu).
    ============================================================ */
 function newFlowPhase(id, chain){
   return {id:id, chain:chain || 0, verified:false, view:'answers', correctionRead:false};
@@ -1733,7 +1898,7 @@ function buildRemediationContent(chain){
     noteTxt = 'Traite cette remédiation comme un nouvel exercice.';
   }
   box.appendChild(el('p',null,noteTxt));
-  if (App.results && App.results.score >= 80 && App.level < 4){
+  if (App.results && App.results.score >= 80 && App.level < 5){
     var bl = el('button','btn ghost','Passer au niveau supérieur');
     bl.addEventListener('click', function(){ changeLevel(App.level + 1); });
     box.appendChild(bl);
@@ -2069,7 +2234,7 @@ function init(){
   });
   var btnNext = document.getElementById('btn-next-level');
   if (btnNext) btnNext.addEventListener('click', function(){
-    if (App.level < 4) changeLevel(App.level + 1);
+    if (App.level < 5) changeLevel(App.level + 1);
     else alert('Vous êtes déjà au niveau maximal.');
   });
   var btnRegen = document.getElementById('btn-regen');

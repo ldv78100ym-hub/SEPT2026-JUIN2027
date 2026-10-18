@@ -45,11 +45,19 @@ window.MathJax = {
   --gray:#808080; --silver:#B3B3B3; --smoke:#D9D9D9;
   --paper:#F4F4F4; --card:#FFFFFF; --accent:#3C6E71;
   --ok:#1F7A4D; --warn:#B8860B; --bad:#A4243B;
+  --bg-correction:#E8F1F2;
+  --bg-remediation:#FAF5E8;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  background:var(--paper); color:var(--charcoal); line-height:1.55; font-size:15px;}
+  background:var(--paper); color:var(--charcoal); line-height:1.55; font-size:15px;
+  transition: background-color .5s ease;}
+
+body.mode-correction,
+body.mode-done{ background: var(--bg-correction); }
+body.mode-remediation{ background: var(--bg-remediation); }
+
 header{background:var(--ink); color:#fff; padding:22px 26px;
   border-bottom:4px solid var(--slate);}
 header h1{margin:0;font-size:1.5rem;letter-spacing:.4px}
@@ -66,6 +74,7 @@ label{font-size:.9rem}
 input,select{font:inherit;padding:7px 9px;border:1px solid var(--silver);
   border-radius:8px;background:#fff;color:var(--charcoal);}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+input[readonly],select[readonly]{background:#f0f0f0;color:#555;cursor:not-allowed;}
 .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
 .field-block{display:flex;flex-direction:column;gap:4px}
 .btn{font:inherit;cursor:pointer;border:none;border-radius:10px;
@@ -108,6 +117,8 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 .workshop{border:1px solid var(--smoke);border-radius:12px;padding:14px;
   background:#fbfbfb;margin-top:14px;}
 .workshop.calc{background:#f7f4fb;border-color:#e0d6ec}
+body.mode-correction .workshop,
+body.mode-done .workshop{pointer-events:none;opacity:.85;}
 .ws-head{display:flex;justify-content:space-between;align-items:center;
   gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .ws-title{font-weight:700;font-size:.92rem;color:var(--ink)}
@@ -135,7 +146,6 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 .chip.final-keyword{font-weight:800;color:var(--ok);border-color:var(--ok);
   background:#e8f6ee;}
 .chip.final-keyword.selected{background:var(--ok);color:#fff}
-/* Badge discret indiquant combien de fois le jeton a été placé dans les lignes */
 .chip[data-count]::after{
   content:' ×' attr(data-count);
   font-size:.7em;opacity:.55;font-weight:700;margin-left:2px;
@@ -181,7 +191,24 @@ footer{text-align:center;font-size:.78rem;color:var(--gray);padding:20px}
   padding:12px 18px;display:flex;justify-content:center;gap:10px;
   margin-top:20px;z-index:10;box-shadow:0 -2px 10px rgba(0,0,0,.05);}
 
-/* --- Bouton mentions légales + modale --- */
+.mode-menu{
+  position:fixed;right:16px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:8px;
+  padding:12px;background:rgba(255,255,255,.96);
+  border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.16);
+  z-index:100;min-width:180px;border:1px solid var(--smoke);
+}
+.mode-btn{padding:10px 14px;border:1px solid var(--silver);background:#fff;
+  color:var(--slate);border-radius:8px;cursor:pointer;font:inherit;
+  font-size:.88rem;text-align:left;transition:all .2s;}
+.mode-btn:hover{background:var(--smoke);color:var(--ink);}
+.mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
+.mode-btn.hidden{display:none;}
+@media (max-width:900px){
+  .mode-menu{right:6px;min-width:auto;padding:8px;}
+  .mode-btn{font-size:.8rem;padding:8px 10px;}
+}
+
 .legal-btn{display:block;margin:10px auto 30px;padding:9px 22px;border-radius:22px;
   border:1px solid var(--silver);background:#fff;color:var(--slate);cursor:pointer;
   font:inherit;font-size:.85rem;transition:background .2s,color .2s;}
@@ -204,7 +231,7 @@ footer{text-align:center;font-size:.78rem;color:var(--gray);padding:20px}
 </style>
 </head>
 
-<body>
+<body class="mode-initial">
 <div id="error-banner"></div>
 
 <header>
@@ -234,6 +261,7 @@ footer{text-align:center;font-size:.78rem;color:var(--gray);padding:20px}
           <option value="2">Niveau 2 — Synthèse canonique</option>
           <option value="3">Niveau 3 — Canonique ↔ développée</option>
           <option value="4">Niveau 4 — Composition et inverse</option>
+          <option value="5">Niveau 5 — Fractions irréductibles (très difficile)</option>
         </select></div>
     </div>
     <div class="row" style="margin-top:16px">
@@ -271,6 +299,12 @@ footer{text-align:center;font-size:.78rem;color:var(--gray);padding:20px}
 
   <footer>L'Odyssée du second degré · Partie 2 · document autonome · sauvegarde chiffrée locale</footer>
 </main>
+
+<div id="mode-menu" class="mode-menu hidden">
+  <button class="mode-btn" data-mode="answers" id="mode-btn-answers" type="button">📝 Mes réponses</button>
+  <button class="mode-btn" data-mode="correction" id="mode-btn-correction" type="button">✓ La correction</button>
+  <button class="mode-btn hidden" data-mode="remediation" id="mode-btn-remediation" type="button">🔧 Remédiation</button>
+</div>
 
 <button id="legal-btn" class="legal-btn" type="button">⚖️ Mentions légales</button>
 
@@ -351,6 +385,20 @@ function fmt(n){
   if (Number.isInteger(n)) return String(n);
   return String(Math.round(n * 1000) / 1000).replace('.', ',');
 }
+
+/* --- Helpers de signe (exigence [3]) --- */
+function plusNum(v){
+  if (v === 0) return '';
+  if (v > 0) return '+' + v;
+  return String(v);
+}
+function minusNum(v){ return plusNum(-v); }
+function plusTerm(v, suffix){
+  suffix = suffix || '';
+  if (v === 0) return '';
+  return (v > 0 ? '+' : '-') + Math.abs(v) + suffix;
+}
+
 function polyStr(a, b, c, v){
   v = v || 'x';
   var s = '';
@@ -365,16 +413,121 @@ function polyStr(a, b, c, v){
   return s;
 }
 function polyTex(a, b, c, v){ return polyStr(a, b, c, v); }
+
 function canonTex(a, alpha, beta, v){
   v = v || 'x';
   var s = '';
-  if (a === 1) s += '(' + v + '-' + alpha + ')^2';
-  else if (a === -1) s += '-(' + v + '-' + alpha + ')^2';
-  else s += a + '(' + v + '-' + alpha + ')^2';
-  if (beta > 0) s += '+' + beta;
-  else if (beta < 0) s += '' + beta;
+  var inner;
+  if (alpha === 0) inner = v;
+  else if (alpha > 0) inner = v + '-' + alpha;
+  else inner = v + '+' + Math.abs(alpha);
+  if (a === 1) s += '(' + inner + ')^2';
+  else if (a === -1) s += '-(' + inner + ')^2';
+  else s += a + '(' + inner + ')^2';
+  s += plusNum(beta);
   return s;
 }
+
+/* --- Helpers de fractions irréductibles (exigence [5]) --- */
+function gcd(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  while (b){ var t = b; b = a % b; a = t; }
+  return a;
+}
+function fr(n, d){
+  if (d === 0) throw new Error('Division par zéro');
+  if (d < 0){ n = -n; d = -d; }
+  var g = gcd(n, d) || 1;
+  return { n: n / g, d: d / g };
+}
+function frAdd(x, y){ return fr(x.n * y.d + y.n * x.d, x.d * y.d); }
+function frSub(x, y){ return fr(x.n * y.d - y.n * x.d, x.d * y.d); }
+function frMul(x, y){ return fr(x.n * y.n, x.d * y.d); }
+function frNeg(x){ return { n: -x.n, d: x.d }; }
+
+function frTex(x){
+  if (x.d === 1) return String(x.n);
+  if (x.n < 0) return '-\\dfrac{' + Math.abs(x.n) + '}{' + x.d + '}';
+  return '\\dfrac{' + x.n + '}{' + x.d + '}';
+}
+function frTexUnsigned(x){
+  if (x.d === 1) return String(x.n);
+  return '\\dfrac{' + x.n + '}{' + x.d + '}';
+}
+function frPlain(x){
+  if (x.d === 1) return String(x.n);
+  return x.n + '/' + x.d;
+}
+function frRandom(rng, maxNum, maxDen){
+  var n, d, tries = 0;
+  do {
+    n = rint(rng, -maxNum, maxNum);
+    d = rint(rng, 1, maxDen);
+    tries++;
+  } while ((n === 0 || gcd(n, d) !== 1) && tries < 40);
+  if (n === 0){ n = 1; d = 1; }
+  return fr(n, d);
+}
+
+function frPlusTerm(v, suffix){
+  if (v.n === 0) return '';
+  var abs = { n: Math.abs(v.n), d: v.d };
+  var sign = v.n > 0 ? '+' : '-';
+  return sign + frTexUnsigned(abs) + (suffix || '');
+}
+function frMinusTerm(v, suffix){ return frPlusTerm(frNeg(v), suffix); }
+
+function frPolyStr(a, b, c, v){
+  v = v || 'x';
+  var s = '';
+  if (a.n === 1 && a.d === 1) s += v + '^2';
+  else if (a.n === -1 && a.d === 1) s += '-' + v + '^2';
+  else s += frTex(a) + v + '^2';
+  if (b.n !== 0){
+    var absB = { n: Math.abs(b.n), d: b.d };
+    var bStr = (absB.n === 1 && absB.d === 1) ? v : frTexUnsigned(absB) + v;
+    s += (b.n > 0 ? '+' : '-') + bStr;
+  }
+  if (c.n !== 0){
+    var absC = { n: Math.abs(c.n), d: c.d };
+    s += (c.n > 0 ? '+' : '-') + frTexUnsigned(absC);
+  }
+  return s;
+}
+function frCanonTex(a, alpha, beta, v){
+  v = v || 'x';
+  var inner;
+  if (alpha.n === 0) inner = v;
+  else if (alpha.n > 0) inner = v + '-' + frTex(alpha);
+  else inner = v + '+' + frTexUnsigned({ n: Math.abs(alpha.n), d: alpha.d });
+  var s;
+  if (a.n === 1 && a.d === 1) s = '(' + inner + ')^2';
+  else if (a.n === -1 && a.d === 1) s = '-(' + inner + ')^2';
+  else s = frTex(a) + '(' + inner + ')^2';
+  if (beta.n !== 0){
+    var absBeta = { n: Math.abs(beta.n), d: beta.d };
+    s += (beta.n > 0 ? '+' : '-') + frTexUnsigned(absBeta);
+  }
+  return s;
+}
+function frPlainPoly(a, b, c, v){
+  v = v || 'x';
+  var s = '';
+  if (a.n === 1 && a.d === 1) s += v + '²';
+  else if (a.n === -1 && a.d === 1) s += '-' + v + '²';
+  else s += frPlain(a) + v + '²';
+  if (b.n !== 0){
+    var absB = { n: Math.abs(b.n), d: b.d };
+    var bStr = (absB.n === 1 && absB.d === 1) ? v : frPlain(absB) + v;
+    s += (b.n > 0 ? '+' : '-') + bStr;
+  }
+  if (c.n !== 0){
+    var absC = { n: Math.abs(c.n), d: c.d };
+    s += (c.n > 0 ? '+' : '-') + frPlain(absC);
+  }
+  return s;
+}
+
 function el(tag, cls, html){
   var n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -410,7 +563,7 @@ function typeset(target){
 }
 
 /* ============================================================
-   1. TOKENIZER — clés dérivées de la solution
+   1. TOKENIZER
    ============================================================ */
 function tokenizeSolution(html){
   var mathBlocks = [];
@@ -463,8 +616,11 @@ function generateDistractors(canonTokens, count, rng){
     pool.push(t);
   };
 
+  // Pool générique élargi pour couvrir les niveaux exigeant plus de distracteurs
   ['donc','or','car','ainsi','toutefois','cependant','pourtant','néanmoins',
-   'en effet','remarquons','considérons','notons','on vérifie'
+   'en effet','remarquons','considérons','notons','on vérifie',
+   'ensuite','puis','enfin','d\'où','par suite','de plus','en outre',
+   'calculons','déterminons','identifions','on obtient','on trouve'
   ].forEach(pushIfNew);
 
   canonTokens.forEach(function(t){
@@ -556,7 +712,7 @@ var SCENARIOS = [
 ];
 
 /* ============================================================
-   5. RAPPELS DE COURS (adaptés par niveau)
+   5. RAPPELS DE COURS
    ============================================================ */
 function rappel(level){
   var base = L`<p><strong>Référence :</strong> la parabole $y = x^2$ a son sommet en $(0\,;\,0)$.</p>
@@ -568,8 +724,11 @@ function rappel(level){
   if (level === 2) return base + L`<p>Lire directement $a$, $\alpha$, $\beta$ sur la forme canonique.</p>`;
   if (level === 3) return base + L`<p><strong>Développement :</strong> $a(x-\alpha)^2+\beta = ax^2 - 2a\alpha x + a\alpha^2 + \beta$, d'où $b=-2a\alpha$ et $c=a\alpha^2+\beta$.</p>
     <p><strong>Canonique depuis développée :</strong> $\alpha=-\dfrac{b}{2a}$, $\beta=f(\alpha)$.</p>`;
-  return base + L`<p><strong>Depuis le sommet :</strong> $a = \dfrac{y_0-\beta}{(x_0-\alpha)^2}$.</p>
+  if (level === 4) return base + L`<p><strong>Depuis le sommet :</strong> $a = \dfrac{y_0-\beta}{(x_0-\alpha)^2}$.</p>
     <p><strong>Sans développement :</strong> $b = -2a\alpha$, $c = a\alpha^2+\beta$.</p>`;
+  return base + L`<p><strong>Fractions irréductibles :</strong> une fraction $\dfrac{n}{d}$ est irréductible si $\gcd(|n|, d)=1$ et $d>0$. Si $n<0$, on écrit $-\dfrac{|n|}{d}$.</p>
+    <p><strong>Addition :</strong> $\dfrac{a}{b}+\dfrac{c}{d} = \dfrac{ad+bc}{bd}$ ; <strong>multiplication :</strong> $\dfrac{a}{b}\times\dfrac{c}{d} = \dfrac{ac}{bd}$.</p>
+    <p><strong>Signe :</strong> si $\beta<0$, on écrit $+\beta$ sous la forme $-\left|\beta\right|$.</p>`;
 }
 
 /* ============================================================
@@ -586,8 +745,6 @@ function baseParams(rng){
 
 function genLevel1(rng, scen){
   var p = baseParams(rng);
-  var a = p.a, alpha = p.alpha, beta = p.beta;
-
   var a1 = pickFrom(rng, [2, 3, 0.5]);
   var qs = [];
   qs.push({
@@ -602,7 +759,7 @@ function genLevel1(rng, scen){
       {label:L`$y_S=$`,kind:'num',expected:0,param:'beta'}
     ],
     calc: null,
-    solution: L`<p>On compare l'expression à la forme de référence $y = x^2$.</p>
+    solution: L`<p>On compare à la forme de référence $y = x^2$.</p>
       <p>La transformation est un étirement de facteur $a = ${fmt(a1)}$.</p>
       <p>Le sommet reste à l'origine.</p>
       <div class="final"><strong>Finalement</strong>, $a = ${fmt(a1)}$ et le sommet est $(0\,;\,0)$.</div>`
@@ -613,7 +770,7 @@ function genLevel1(rng, scen){
     title:'Question 2 — Translation verticale',
     statement: L`<p>On part encore de $y = x^2$.</p>
       <p>Après application d'une transformation, ${scen.name} est modélisé par :</p>
-      <div class="formula">$f(${scen.v}) = ${scen.v}^2 ${beta2>0?'+':''}${beta2}$</div>
+      <div class="formula">$f(${scen.v}) = ${scen.v}^2${plusNum(beta2)}$</div>
       <p>Quelle valeur a été ajoutée (translation verticale) ? Donne les coordonnées du sommet.</p>`,
     fields:[
       {label:L`$\beta=$`,kind:'num',expected:beta2,param:'beta'},
@@ -628,11 +785,12 @@ function genLevel1(rng, scen){
   });
 
   var alpha3 = pickFrom(rng, [-3,-2,-1,1,2,3]);
+  var innerTerm = (alpha3 > 0) ? scen.v + '-' + alpha3 : scen.v + '+' + Math.abs(alpha3);
   qs.push({
     title:'Question 3 — Translation horizontale',
     statement: L`<p>On part encore de $y = x^2$.</p>
       <p>Après application d'une transformation, ${scen.name} est modélisé par :</p>
-      <div class="formula">$f(${scen.v}) = (${scen.v} ${alpha3>0?'-':'+'} ${Math.abs(alpha3)})^2$</div>
+      <div class="formula">$f(${scen.v}) = (${innerTerm})^2$</div>
       <p>Quelle valeur de $\alpha$ a été appliquée ? Donne les coordonnées du sommet.</p>`,
     fields:[
       {label:L`$\alpha=$`,kind:'num',expected:alpha3,param:'alpha'},
@@ -654,7 +812,7 @@ function genLevel1(rng, scen){
    ============================================================ */
 function genLevel2(rng, scen){
   var p = baseParams(rng);
-  var a = p.a, b = p.b, c = p.c, alpha = p.alpha, beta = p.beta;
+  var a = p.a, alpha = p.alpha, beta = p.beta;
   var qs = [];
 
   qs.push({
@@ -745,7 +903,7 @@ function genLevel3(rng, scen){
     ],
     calc: makeCalcWorkshop(
       [L`$\alpha = -\dfrac{b}{2a} = -\dfrac{${b}}{2\times ${a}} = ${alpha}$`,
-       L`$\beta = f(\alpha) = ${a}\times ${alpha}^2 + ${b}\times ${alpha} + ${c} = ${beta}$`],
+       L`$\beta = f(\alpha) = ${a}\times (${alpha})^2${plusTerm(b, '\\times (' + alpha + ')')}${plusTerm(c)} = ${beta}$`],
       L`$f(x) = ${canonTex(a, alpha, beta, 'x')}$`,
       [L`$\alpha = ${-alpha}$`, L`$\beta = ${-beta}$`, L`$\alpha = ${beta}$`]
     ),
@@ -797,9 +955,9 @@ function genLevel4(rng, scen){
       {label:L`$\beta=$`,kind:'num',expected:beta,param:'beta'}
     ],
     calc: makeCalcWorkshop(
-      [L`$f(x_1) = f(x_2) \Rightarrow \alpha = \dfrac{${x1}+${x2}}{2} = ${alpha}$`,
+      [L`$f(x_1) = f(x_2) \Rightarrow \alpha = \dfrac{${x1}${plusNum(x2)}}{2} = ${alpha}$`,
        L`$\beta = f(\alpha) = ${y1}$`,
-       L`$a = \dfrac{f(${x0})-\beta}{(${x0}-\alpha)^2} = \dfrac{${y0}-${beta}}{(${x0}-${alpha})^2} = ${a}$`],
+       L`$a = \dfrac{f(${x0})-\beta}{(${x0}-\alpha)^2} = \dfrac{${y0}${minusNum(beta)}}{(${x0}${minusNum(alpha)})^2} = ${a}$`],
       L`$f(x) = ${canonTex(a, alpha, beta, 'x')}$`,
       [L`$\alpha = ${x1}$`, L`$\beta = ${-beta}$`, L`$a = ${-a}$`, L`$\alpha = ${beta}$`]
     ),
@@ -820,11 +978,11 @@ function genLevel4(rng, scen){
     ],
     calc: makeCalcWorkshop(
       [L`$\alpha = ${alpha}, \beta = ${beta}$`,
-       L`$a = \dfrac{${y0}-${beta}}{(${x0}-${alpha})^2} = ${a}$`,
-       L`$b = -2a\alpha = -2\times ${a}\times ${alpha} = ${b}$`,
-       L`$c = a\alpha^2+\beta = ${a}\times ${alpha}^2 + ${beta} = ${c}$`],
+       L`$a = \dfrac{${y0}${minusNum(beta)}}{(${x0}${minusNum(alpha)})^2} = ${a}$`,
+       L`$b = -2a\alpha = -2\times ${a}\times (${alpha}) = ${b}$`,
+       L`$c = a\alpha^2+\beta = ${a}\times (${alpha})^2${plusTerm(beta)} = ${c}$`],
       L`$f(x) = ${polyTex(a,b,c,'x')}$`,
-      [L`$a = ${-a}$`, L`$b = ${-b}$`, L`$c = ${-c}$`, L`$b = ${-2*a*alpha*-1}$`]
+      [L`$a = ${-a}$`, L`$b = ${-b}$`, L`$c = ${-c}$`]
     ),
     solution: L`<p>Le sommet donne $\alpha = ${alpha}$ et $\beta = ${beta}$.</p>
       <p>Le point $M(${x0}\,;\,${y0})$ donne $a = \dfrac{y_0-\beta}{(x_0-\alpha)^2} = ${a}$.</p>
@@ -835,27 +993,107 @@ function genLevel4(rng, scen){
   qs.push({
     title:'Question 3 — Sans développer',
     statement: L`<p>On donne $f(x) = ${canonTex(a, alpha, beta, 'x')}$.</p>
-      <p>Sans développer, utilise les formules $b = -2a\alpha$ et $c = a\alpha^2+\beta$ pour donner directement les coefficients $b$ et $c$ de la forme développée.</p>`,
+      <p>Sans développer, utilise les formules $b = -2a\alpha$ et $c = a\alpha^2+\beta$ pour donner directement $b$ et $c$.</p>`,
     fields:[
       {label:L`$b=$`,kind:'num',expected:b,param:'b'},
       {label:L`$c=$`,kind:'num',expected:c,param:'c'}
     ],
     calc: makeCalcWorkshop(
-      [L`$b = -2a\alpha = -2\times ${a}\times ${alpha} = ${b}$`,
-       L`$c = a\alpha^2+\beta = ${a}\times ${alpha}^2 + ${beta} = ${c}$`],
+      [L`$b = -2a\alpha = -2\times ${a}\times (${alpha}) = ${b}$`,
+       L`$c = a\alpha^2+\beta = ${a}\times (${alpha})^2${plusTerm(beta)} = ${c}$`],
       L`$f(x) = ${polyTex(a,b,c,'x')}$`,
       [L`$b = ${-b}$`, L`$c = ${-c}$`, L`$b = ${2*a*alpha}$`]
     ),
     solution: L`<p>On applique les formules :</p>
-      <p>$b = -2a\alpha = -2\times ${a}\times ${alpha} = ${b}$.</p>
-      <p>$c = a\alpha^2+\beta = ${a}\times ${alpha}^2 + ${beta} = ${c}$.</p>
+      <p>$b = -2a\alpha = -2\times ${a}\times (${alpha}) = ${b}$.</p>
+      <p>$c = a\alpha^2+\beta = ${a}\times (${alpha})^2${plusNum(beta)} = ${c}$.</p>
       <div class="final"><strong>Finalement</strong>, $b = ${b}$ et $c = ${c}$.</div>`
   });
 
   return { params:p, questions:qs, scen:scen };
 }
 
-var GENERATORS = {1:genLevel1, 2:genLevel2, 3:genLevel3, 4:genLevel4};
+/* ============================================================
+   10. GÉNÉRATEURS — NIVEAU 5 (fractions irréductibles)
+   ============================================================ */
+function genLevel5(rng, scen){
+  var aFr = frRandom(rng, 5, 4);
+  var alphaFr = frRandom(rng, 4, 3);
+  var betaFr = frRandom(rng, 6, 4);
+
+  var bFr = frNeg(frMul(fr(2,1), frMul(aFr, alphaFr)));
+  var cFr = frAdd(frMul(aFr, frMul(alphaFr, alphaFr)), betaFr);
+
+  var aNum = aFr.n / aFr.d;
+  var bNum = bFr.n / bFr.d;
+  var cNum = cFr.n / cFr.d;
+  var alphaNum = alphaFr.n / alphaFr.d;
+  var betaNum = betaFr.n / betaFr.d;
+
+  var qs = [];
+
+  qs.push({
+    title:'Question 1 — Lire la forme canonique (fractions)',
+    statement: L`<p>${scen.name} est modélisé par la fonction :</p>
+      <div class="formula">$f(${scen.v}) = ${frCanonTex(aFr, alphaFr, betaFr, scen.v)}$</div>
+      <p>Identifie $a$, $\alpha$ et $\beta$ sous forme de fractions irréductibles.</p>`,
+    fields:[
+      {label:L`$a=$`,kind:'num',expected:aNum,param:'a'},
+      {label:L`$\alpha=$`,kind:'num',expected:alphaNum,param:'alpha'},
+      {label:L`$\beta=$`,kind:'num',expected:betaNum,param:'beta'}
+    ],
+    calc: null,
+    solution: L`<p>On lit sur la forme canonique $a(x-\alpha)^2+\beta$.</p>
+      <div class="final"><strong>Finalement</strong>, $a = ${frTex(aFr)}$, $\alpha = ${frTex(alphaFr)}$ et $\beta = ${frTex(betaFr)}$.</div>`
+  });
+
+  qs.push({
+    title:'Question 2 — Sommet et nature',
+    statement: L`<p>Toujours avec $f(x) = ${frCanonTex(aFr, alphaFr, betaFr, 'x')}$.</p>
+      <p>Donne les coordonnées du sommet et la nature de l'extremum.</p>`,
+    fields:[
+      {label:L`$x_S=$`,kind:'num',expected:alphaNum,param:'alpha'},
+      {label:L`$y_S=$`,kind:'num',expected:betaNum,param:'beta'},
+      {label:L`Nature`,kind:'select',options:['ordonnée minimale','ordonnée maximale'],
+        expected: aFr.n > 0 ? 'ordonnée minimale' : 'ordonnée maximale'}
+    ],
+    calc: null,
+    solution: L`<p>Le sommet est $(\alpha\,;\,\beta) = \left(${frTex(alphaFr)}\,;\,${frTex(betaFr)}\right)$.</p>
+      <p>Ici $a = ${frTex(aFr)}${aFr.n > 0 ? ' > 0' : ' < 0'}$, donc l'extremum est ${aFr.n > 0 ? 'un minimum' : 'un maximum'}.</p>
+      <div class="final"><strong>Finalement</strong>, le sommet est $\left(${frTex(alphaFr)}\,;\,${frTex(betaFr)}\right)$ et l'extremum est ${aFr.n > 0 ? 'un minimum' : 'un maximum'}.</div>`
+  });
+
+  qs.push({
+    title:'Question 3 — Développer (fractions)',
+    statement: L`<p>On considère $f(x) = ${frCanonTex(aFr, alphaFr, betaFr, 'x')}$.</p>
+      <p>Développe pour obtenir $f(x) = ax^2 + bx + c$ et donne $b$ et $c$ sous forme de fractions irréductibles.</p>`,
+    fields:[
+      {label:L`$b=$`,kind:'num',expected:bNum,param:'b'},
+      {label:L`$c=$`,kind:'num',expected:cNum,param:'c'}
+    ],
+    calc: makeCalcWorkshop(
+      [L`$b = -2a\alpha = -2\times ${frTex(aFr)}\times ${frTex(alphaFr)} = ${frTex(bFr)}$`,
+       L`$c = a\alpha^2+\beta = ${frTex(aFr)}\times \left(${frTex(alphaFr)}\right)^2${frPlusTerm(betaFr)} = ${frTex(cFr)}$`],
+      L`$f(x) = ${frPolyStr(aFr, bFr, cFr, 'x')}$`,
+      [L`$b = ${frTex(frNeg(bFr))}$`,
+       L`$c = ${frTex(frNeg(cFr))}$`,
+       L`$b = ${frTex(frMul(aFr, alphaFr))}$`]
+    ),
+    solution: L`<p>On développe :</p>
+      <p>$b = -2a\alpha = -2 \times ${frTex(aFr)} \times ${frTex(alphaFr)} = ${frTex(bFr)}$.</p>
+      <p>$c = a\alpha^2 + \beta = ${frTex(cFr)}$.</p>
+      <div class="final"><strong>Finalement</strong>, $b = ${frTex(bFr)}$ et $c = ${frTex(cFr)}$.</div>`
+  });
+
+  return {
+    params: { a:aNum, b:bNum, c:cNum, alpha:alphaNum, beta:betaNum },
+    fractions: { a:aFr, b:bFr, c:cFr, alpha:alphaFr, beta:betaFr },
+    questions: qs,
+    scen: scen
+  };
+}
+
+var GENERATORS = {1:genLevel1, 2:genLevel2, 3:genLevel3, 4:genLevel4, 5:genLevel5};
 function generateLevel(level, seed){
   var rng = mulberry32(seed >>> 0);
   var scen = pickFrom(rng, SCENARIOS);
@@ -863,32 +1101,25 @@ function generateLevel(level, seed){
 }
 
 /* ============================================================
-   10. ÉTAT GLOBAL
+   11. ÉTAT GLOBAL
    ============================================================ */
 var App = {
   student:{nom:'',prenom:'',classe:'',date:''},
   seed:0, level:1, data:null,
   workshops:[], calcWorkshops:[],
-  results:null, dirty:false, saveTimer:null
+  results:null, dirty:false, saveTimer:null,
+  mode:'initial',
+  correctionDone:false
 };
 
 /* ============================================================
-   11. ATELIERS — état, rendu, interactions
-   ------------------------------------------------------------
-   Nouveau modèle :
-   * Chaque libellé distinct n'apparaît qu'UNE seule fois dans le pool
-     (clé utile OU distracteur confondus).
-   * Le même jeton peut être glissé/cliqué autant de fois que l'élève
-     le souhaite pour être inséré dans les lignes de rédaction.
-   * Les distracteurs sont visuellement identiques aux clés utiles :
-     même bordure, même couleur, aucune classe CSS distinctive.
+   12. ATELIERS
    ============================================================ */
 function buildWorkshopState(qid, ws){
   var seen = {};
   var items = [];
   var uid = 0;
 
-  // Une seule copie par libellé utile
   ws.canonical.forEach(function(t){
     if (!seen[t]){
       seen[t] = true;
@@ -896,12 +1127,11 @@ function buildWorkshopState(qid, ws){
     }
   });
 
-  // Distracteurs uniques (nombre paramétré par le niveau)
   var usedDistractors = {};
-  var nd = [3,5,7,10][App.level - 1];
+  var nd = [3,5,7,10,8][App.level - 1];
   var guard = 0;
   var drng = mulberry32(((App.seed ^ 0xCAFEBABE) + items.length + stringHash(qid)) >>> 0);
-  while (Object.keys(usedDistractors).length < nd && guard++ < 300){
+  while (Object.keys(usedDistractors).length < nd && guard++ < 400){
     var d = pickFrom(drng, ws.distractors);
     if (!d || seen[d] || usedDistractors[d]) continue;
     usedDistractors[d] = true;
@@ -912,16 +1142,11 @@ function buildWorkshopState(qid, ws){
   shuffleInPlace(items, shuffleRng);
 
   return {
-    qid: qid,
-    ws: ws,
-    items: items,          // jetons uniques disponibles
-    lines: [[]],           // lignes de rédaction : ids pouvant être répétés
-    selected: null,
-    note: null
+    qid: qid, ws: ws, items: items,
+    lines: [[]], selected: null, note: null
   };
 }
 
-// Compteur d'utilisations d'un jeton dans les lignes
 function countUses(st, itemId){
   var n = 0;
   st.lines.forEach(function(line){
@@ -942,7 +1167,6 @@ function renderWorkshop(st){
   var counter = el('div','ws-counter'); head.appendChild(counter);
   wrap.appendChild(head);
 
-  // ---- Pool : toujours visible, chaque jeton est réutilisable ----
   var pool = el('div','pool'); pool.dataset.qid = st.qid;
   st.items.forEach(function(it){
     var uses = countUses(st, it.id);
@@ -962,7 +1186,6 @@ function renderWorkshop(st){
   });
   wrap.appendChild(pool);
 
-  // ---- Lignes de rédaction (les jetons peuvent s'y répéter) ----
   var linesBox = el('div','lines');
   st.lines.forEach(function(line, li){
     var ln = el('div','line');
@@ -1009,7 +1232,6 @@ function renderWorkshop(st){
   });
   wrap.appendChild(linesBox);
 
-  // ---- Barre d'outils de la sélection ----
   var tb = el('div','toolbar');
   function mk(label, title, fn){
     var b = el('button',null,label); b.title = title;
@@ -1027,7 +1249,6 @@ function renderWorkshop(st){
   addLine.addEventListener('click', function(){ st.lines.push([]); renderWorkshop(st); });
   wrap.appendChild(addLine);
 
-  // ---- Compteur d'état ----
   var nKeys = st.items.filter(function(i){ return i.kind === 'key'; }).length;
   var nDistr = st.items.filter(function(i){ return i.kind === 'distractor'; }).length;
   var optSet = {};
@@ -1050,9 +1271,7 @@ function renderWorkshop(st){
 function handleDrop(st, payload, targetLine){
   if (!payload) return;
   var parts = payload.split(':');
-
   if (parts[0] === 'pool'){
-    // Le jeton reste dans le pool ; on crée une nouvelle instance dans la ligne
     var id = parts[1];
     var it = st.items.find(function(x){ return x.id === id; });
     if (!it) return;
@@ -1069,7 +1288,6 @@ function handleDrop(st, payload, targetLine){
       if (!st.lines[targetLine]) st.lines[targetLine] = [];
       st.lines[targetLine].push(id2);
     }
-    // targetLine < 0 : retour au pool — rien à faire, le chip y est déjà
   }
   st.selected = null;
   renderWorkshop(st);
@@ -1135,7 +1353,7 @@ function clearLine(st, li){
 }
 
 /* ============================================================
-   12. RENDU DES QUESTIONS
+   13. RENDU DES QUESTIONS
    ============================================================ */
 function renderExercises(){
   var box = document.getElementById('exercises');
@@ -1143,7 +1361,7 @@ function renderExercises(){
   App.workshops = [];
   App.calcWorkshops = [];
   var qs = App.data.questions;
-  var nd = [3,5,7,10][App.level - 1];
+  var nd = [3,5,7,10,8][App.level - 1];
 
   qs.forEach(function(q, qi){
     var drng = mulberry32(((App.seed ^ 0xCAFEBABE) + qi * 977) >>> 0);
@@ -1178,7 +1396,8 @@ function renderExercises(){
         inp.classList.add('wide');
       } else {
         inp = el('input'); inp.type = 'text';
-        inp.setAttribute('inputmode','decimal'); inp.placeholder = '?';
+        inp.setAttribute('inputmode','decimal');
+        inp.placeholder = App.level === 5 ? 'ex: 3/4 ou -5/2' : '?';
       }
       inp.id = qid + '_f' + fi;
       inp.dataset.qid = qid; inp.dataset.fi = fi;
@@ -1214,8 +1433,6 @@ function renderExercises(){
 
   renderGraphSection(box);
   typeset(box);
-  var vbar = document.getElementById('verify-bar');
-  if (vbar) vbar.classList.remove('hidden');
 }
 
 function renderGraphSection(box){
@@ -1296,7 +1513,6 @@ function drawGraph(canvas, p, known){
 
   var xMin = Math.min(-4, alpha - 2);
   var xMax = Math.max(4, alpha + 2);
-
   var yVals = [beta, 0, xMin*xMin, xMax*xMax,
                a*xMin*xMin + b*xMin + c, a*xMax*xMax + b*xMax + c];
   var yMin = Math.min.apply(null, yVals);
@@ -1337,22 +1553,6 @@ function drawGraph(canvas, p, known){
   ctx.beginPath(); ctx.moveTo(40,y0); ctx.lineTo(W-20,y0); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(x0,30); ctx.lineTo(x0,H-30); ctx.stroke();
 
-  if (showGrid){
-    ctx.fillStyle = '#808080'; ctx.font = '11px Segoe UI';
-    ctx.textAlign = 'center';
-    var xs;
-    for (xs = Math.ceil(xMin/stepX)*stepX; xs <= xMax; xs += stepX){
-      if (Math.abs(xs) < 1e-9) continue;
-      ctx.fillText(String(Math.round(xs*100)/100).replace('.',','), mapX(xs), y0+14);
-    }
-    ctx.textAlign = 'right';
-    var ys;
-    for (ys = Math.ceil(yMin/stepY)*stepY; ys <= yMax; ys += stepY){
-      if (Math.abs(ys) < 1e-9) continue;
-      ctx.fillText(String(Math.round(ys*100)/100).replace('.',','), x0-6, mapY(ys)+4);
-    }
-  }
-
   if (showRef){
     ctx.strokeStyle = '#cccccc';
     ctx.lineWidth = 1.5;
@@ -1367,10 +1567,6 @@ function drawGraph(canvas, p, known){
     }
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = '#999999';
-    ctx.font = 'italic 11px Segoe UI';
-    ctx.textAlign = 'right';
-    ctx.fillText('y = x²', W - 30, mapY(Math.min(yMax, (xMax-0.5)*(xMax-0.5))) + 12);
   }
 
   if (showAxis){
@@ -1378,29 +1574,6 @@ function drawGraph(canvas, p, known){
     ctx.strokeStyle = '#C0392B'; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(mapX(alpha),30); ctx.lineTo(mapX(alpha),H-30); ctx.stroke();
     ctx.setLineDash([]);
-  }
-
-  if (showVertex && (Math.abs(alpha) > 0.01 || Math.abs(beta) > 0.01)){
-    var ox = mapX(0), oy = mapY(0);
-    var vx0 = mapX(alpha), vy0 = mapY(beta);
-    if (Math.abs(vx0 - ox) > 3 || Math.abs(vy0 - oy) > 3){
-      ctx.strokeStyle = '#3C6E71';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5, 3]);
-      ctx.beginPath();
-      ctx.moveTo(ox, oy);
-      ctx.lineTo(vx0, vy0);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      var ang = Math.atan2(vy0 - oy, vx0 - ox);
-      var al = 9;
-      ctx.beginPath();
-      ctx.moveTo(vx0, vy0);
-      ctx.lineTo(vx0 - al*Math.cos(ang - Math.PI/6), vy0 - al*Math.sin(ang - Math.PI/6));
-      ctx.moveTo(vx0, vy0);
-      ctx.lineTo(vx0 - al*Math.cos(ang + Math.PI/6), vy0 - al*Math.sin(ang + Math.PI/6));
-      ctx.stroke();
-    }
   }
 
   if (showParabola){
@@ -1426,7 +1599,13 @@ function drawGraph(canvas, p, known){
 
   ctx.fillStyle = '#4D4D4D'; ctx.font = 'bold 13px Segoe UI'; ctx.textAlign = 'left';
   if (showParabola){
-    ctx.fillText('f(x) = ' + polyStr(a,b,c,'x'), 46, 20);
+    var label;
+    if (App.data.fractions){
+      label = 'f(x) = ' + frPlainPoly(App.data.fractions.a, App.data.fractions.b, App.data.fractions.c, 'x');
+    } else {
+      label = 'f(x) = ' + polyStr(a,b,c,'x');
+    }
+    ctx.fillText(label, 46, 20);
   } else {
     ctx.fillText('Le graphe se dessine à mesure que tu réponds…', 46, 20);
   }
@@ -1443,7 +1622,72 @@ function niceStep(raw){
 }
 
 /* ============================================================
-   13. VÉRIFICATION
+   14. GESTION DES MODES (exigences [1] & [2])
+   ============================================================ */
+function setMode(mode){
+  App.mode = mode;
+  document.body.classList.remove('mode-initial','mode-answers','mode-correction','mode-done','mode-remediation');
+  document.body.classList.add('mode-' + mode);
+
+  var exercises = document.getElementById('exercises');
+  var remediation = document.getElementById('remediation');
+  var modeMenu = document.getElementById('mode-menu');
+  var verifyBar = document.getElementById('verify-bar');
+
+  if (mode === 'remediation'){
+    exercises.classList.add('hidden');
+    remediation.classList.remove('hidden');
+  } else {
+    exercises.classList.remove('hidden');
+    remediation.classList.add('hidden');
+  }
+
+  var showCorrections = (mode === 'correction' || mode === 'done');
+  document.querySelectorAll('.correction').forEach(function(c){
+    c.classList.toggle('hidden', !showCorrections);
+  });
+
+  var inputs = exercises.querySelectorAll('input, select');
+  inputs.forEach(function(inp){
+    if (showCorrections) inp.setAttribute('readonly','readonly');
+    else inp.removeAttribute('readonly');
+  });
+
+  if (mode === 'initial'){
+    modeMenu.classList.add('hidden');
+    verifyBar.classList.remove('hidden');
+    verifyBar.innerHTML = '<button class="btn primary" id="btn-verify-bottom" type="button">Vérifier mes réponses</button>';
+  } else {
+    modeMenu.classList.remove('hidden');
+    modeMenu.querySelectorAll('.mode-btn').forEach(function(btn){
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    if (mode === 'correction'){
+      verifyBar.classList.remove('hidden');
+      verifyBar.innerHTML = '<button class="btn primary" id="btn-correction-done" type="button">Lecture de la correction terminée</button>';
+    } else {
+      verifyBar.classList.add('hidden');
+    }
+  }
+
+  if (showCorrections) setTimeout(function(){ typeset(); }, 120);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function triggerVerify(){
+  if (!App.data || !App.workshops.length){ alert('Aucun exercice chargé.'); return; }
+  verifyAll();
+  setMode('answers');
+}
+
+function onCorrectionDone(){
+  App.correctionDone = true;
+  document.getElementById('mode-btn-remediation').classList.remove('hidden');
+  setMode('done');
+}
+
+/* ============================================================
+   15. VÉRIFICATION
    ============================================================ */
 function verifyAll(){
   if (!App.data || !App.workshops.length){ alert('Aucun exercice chargé.'); return; }
@@ -1488,7 +1732,6 @@ function verifyAll(){
       wsFlat:wsFlat, calcFlat:calcFlat, st:st, calcSt:calcSt});
 
     var corr = document.getElementById('corr-' + st.qid);
-    corr.classList.remove('hidden');
     corr.innerHTML = '';
 
     var allOk = qOk === q.fields.length;
@@ -1543,9 +1786,9 @@ function renderAtelierResult(st, recog, note, flat){
       repeat('☆', Math.max(0, 5-stars)) + '</span> ' + fmt(note) + '/20';
     box.appendChild(v2);
     var conseil;
-    if (note >= 18) conseil = 'Rédaction optimale : rien à redire, continue ainsi.';
+    if (note >= 18) conseil = 'Rédaction optimale : rien à redire.';
     else if (note >= 14) conseil = 'Rédaction valide mais perfectible : quelques mots facultatifs manquent.';
-    else if (note >= 10) conseil = 'Rédaction acceptable : reprends le rappel de cours et soigne l\'enchaînement.';
+    else if (note >= 10) conseil = 'Rédaction acceptable : reprends le rappel et soigne l\'enchaînement.';
     else conseil = 'Rédaction incomplète : refais l\'atelier avec le rappel sous les yeux.';
     box.appendChild(el('p', null, conseil));
   } else {
@@ -1581,23 +1824,29 @@ function pathHtml(path){
 }
 
 /* ============================================================
-   14. REMÉDIATION
+   16. REMÉDIATION
    ============================================================ */
 function renderRemediation(score, details){
   var box = document.getElementById('remediation');
   box.innerHTML = '';
+
   if (score >= 80){
-    box.classList.remove('hidden');
     box.appendChild(el('h2',null,'Excellent travail'));
-    box.appendChild(el('p',null,'Score de ' + score + ' % : tu maîtrises les métamorphoses de ce niveau. Passe au niveau ' + Math.min(4, App.level + 1) + '.'));
-    var b = el('button','btn primary', App.level < 4 ? 'Passer au niveau supérieur' : 'Revoir le niveau 4');
-    b.addEventListener('click', function(){ if (App.level < 4) changeLevel(App.level + 1); });
+    box.appendChild(el('p',null,'Score de ' + score + ' % : tu maîtrises ce niveau.'));
+    var b = el('button','btn primary', App.level < 5 ? 'Passer au niveau supérieur' : 'Revoir ce niveau');
+    b.addEventListener('click', function(){ changeLevel(App.level < 5 ? App.level + 1 : 5); });
     box.appendChild(b);
     typeset(box);
     return;
   }
-  if (score >= 60){ box.classList.add('hidden'); return; }
-  box.classList.remove('hidden');
+
+  if (score >= 60){
+    box.appendChild(el('h2',null,'Remédiation'));
+    box.appendChild(el('p',null,'Score de ' + score + ' % : pas de remédiation ciblée nécessaire.'));
+    typeset(box);
+    return;
+  }
+
   box.appendChild(el('h2',null,'Remédiation ciblée'));
   var weak = details.filter(function(d){
     return !d.wsRecog || (d.calcSt && !d.calcRecog) || d.qOk < d.q.fields.length;
@@ -1625,7 +1874,9 @@ function renderRemediation(score, details){
     q.fields.forEach(function(f){
       var fb = el('div','field');
       fb.appendChild(el('span','fl', f.label));
-      var inp = el('input'); inp.type = 'text'; inp.placeholder = '?'; inp.style.width = '110px';
+      var inp = el('input'); inp.type = 'text';
+      inp.placeholder = App.level === 5 ? 'ex: 3/4' : '?';
+      inp.style.width = '110px';
       fb.appendChild(inp); fields.appendChild(fb);
     });
     sec.appendChild(fields);
@@ -1641,7 +1892,7 @@ function renderRemediation(score, details){
 }
 
 /* ============================================================
-   15. NIVEAU / RÉGÉNÉRATION
+   17. NIVEAU / RÉGÉNÉRATION
    ============================================================ */
 function changeLevel(level){
   App.level = level;
@@ -1650,16 +1901,18 @@ function changeLevel(level){
   App.data = generateLevel(level, App.seed);
   App.workshops = []; App.calcWorkshops = [];
   document.getElementById('exercises').innerHTML = '';
-  document.getElementById('remediation').classList.add('hidden');
   document.getElementById('dash-level').textContent = level;
   document.getElementById('dash-seed').textContent = App.seed;
   document.getElementById('dash-score').textContent = '—';
+  App.correctionDone = false;
+  document.getElementById('mode-btn-remediation').classList.add('hidden');
   renderExercises();
+  setMode('initial');
   App.dirty = true; scheduleSave();
 }
 
 /* ============================================================
-   16. SAUVEGARDE CHIFFRÉE
+   18. SAUVEGARDE CHIFFRÉE
    ============================================================ */
 var CRYPTO_KEY = 'cle_secrete_odyssee_2024';
 function toB64(bytes){
@@ -1748,7 +2001,7 @@ function downloadSave(){
 }
 
 /* ============================================================
-   17. DÉMARRAGE
+   19. DÉMARRAGE
    ============================================================ */
 function normalizeStudent(){
   var nom = (document.getElementById('in-nom').value || '').trim().toUpperCase();
@@ -1780,9 +2033,11 @@ function start(){
     document.getElementById('dash-seed').textContent = App.seed;
     document.getElementById('dash-score').textContent = '—';
 
+    App.correctionDone = false;
+    document.getElementById('mode-btn-remediation').classList.add('hidden');
     renderExercises();
+    setMode('initial');
     App.dirty = true; saveNow();
-    window.scrollTo({top:0, behavior:'smooth'});
   } catch(err){
     console.error('[P2] erreur dans start()', err);
     alert('Erreur au démarrage :\n' + err.message +
@@ -1804,7 +2059,7 @@ function tryLoad(){
 }
 
 /* ============================================================
-   18. INIT
+   20. INIT
    ============================================================ */
 function init(){
   var btnStart = document.getElementById('btn-start');
@@ -1815,13 +2070,33 @@ function init(){
   btnStart.addEventListener('click', start);
   var btnLoad = document.getElementById('btn-load');
   if (btnLoad) btnLoad.addEventListener('click', tryLoad);
+
   var btnVerify = document.getElementById('btn-verify');
-  if (btnVerify) btnVerify.addEventListener('click', verifyAll);
-  var btnVerifyBottom = document.getElementById('btn-verify-bottom');
-  if (btnVerifyBottom) btnVerifyBottom.addEventListener('click', verifyAll);
+  if (btnVerify) btnVerify.addEventListener('click', triggerVerify);
+
+  var verifyBar = document.getElementById('verify-bar');
+  if (verifyBar){
+    verifyBar.addEventListener('click', function(e){
+      var t = e.target;
+      if (t.id === 'btn-verify-bottom') triggerVerify();
+      else if (t.id === 'btn-correction-done') onCorrectionDone();
+    });
+  }
+
+  var modeAnswers = document.getElementById('mode-btn-answers');
+  var modeCorrection = document.getElementById('mode-btn-correction');
+  var modeRemediation = document.getElementById('mode-btn-remediation');
+  if (modeAnswers) modeAnswers.addEventListener('click', function(){ setMode('answers'); });
+  if (modeCorrection) modeCorrection.addEventListener('click', function(){
+    // Re-vérifie avant d'afficher la correction (les réponses peuvent avoir changé en mode "answers")
+    if (App.mode === 'answers') verifyAll();
+    setMode('correction');
+  });
+  if (modeRemediation) modeRemediation.addEventListener('click', function(){ setMode('remediation'); });
+
   var btnNext = document.getElementById('btn-next-level');
   if (btnNext) btnNext.addEventListener('click', function(){
-    if (App.level < 4) changeLevel(App.level + 1);
+    if (App.level < 5) changeLevel(App.level + 1);
     else alert('Vous êtes déjà au niveau maximal.');
   });
   var btnRegen = document.getElementById('btn-regen');
@@ -1830,10 +2105,12 @@ function init(){
     App.data = generateLevel(App.level, App.seed);
     App.workshops = []; App.calcWorkshops = [];
     document.getElementById('exercises').innerHTML = '';
-    document.getElementById('remediation').classList.add('hidden');
     document.getElementById('dash-seed').textContent = App.seed;
     document.getElementById('dash-score').textContent = '—';
+    App.correctionDone = false;
+    document.getElementById('mode-btn-remediation').classList.add('hidden');
     renderExercises();
+    setMode('initial');
     App.dirty = true; scheduleSave();
   });
   var btnDownload = document.getElementById('btn-download');

@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Odyssée des Fractions</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  svg: { fontCache: 'global' },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  startup: {
+    typeset: false,
+    ready: () => {
+      MathJax.startup.defaultReady();
+      window.mathJaxReady = true;
+      if (window.contentReady && !window.typesetDone) {
+        window.typesetDone = true;
+        MathJax.typesetPromise([document.body]).catch(function (e) { console.error(e); });
+      }
+    }
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<style>
+  :root{
+    --ink:#2c1810;
+    --paper:#ffffff;
+    --gold:#c9a227;
+    --gold-dark:#8b6914;
+    --burgundy:#5c1a1a;
+    --purple:#4a1d5c;
+    --ruby:#8b1a1a;
+    --parchment:#f4e8c1;
+    --parchment-dark:#d4c088;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background: radial-gradient(ellipse at 50% 0%, #2d0f3d 0%, #1a0a26 40%, #0a0510 100%);
+    color:var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height:1.65;
+    font-size:17px;
+    min-height:100vh;
+  }
+
+  .app{ display:flex; min-height:100vh; }
+
+  .sidebar{
+    width: 290px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #2d0f3d 0%, #1a0a26 100%);
+    border-right: 2px solid var(--gold-dark);
+    color: var(--parchment);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 4px 0 30px rgba(201, 162, 39, 0.3);
+    z-index: 100;
+  }
+  .sidebar-brand{
+    padding: 18px 22px;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    color: var(--gold);
+    text-shadow: 0 0 10px rgba(201, 162, 39, 0.7);
+    border-bottom: 1px solid rgba(201, 162, 39, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .menu-toggle{
+    display: none;
+    background: transparent;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    box-shadow: none;
+  }
+  .sidebar-nav{ flex: 1; padding: 8px 0; }
+  .sidebar-nav a{
+    display: block;
+    padding: 11px 22px;
+    color: var(--parchment);
+    text-decoration: none;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .sidebar-nav a:hover{
+    background: rgba(201, 162, 39, 0.15);
+    border-left-color: var(--gold);
+    color: #fff;
+  }
+  .sidebar-nav a.active{
+    background: linear-gradient(90deg, rgba(201, 162, 39, 0.4), rgba(201, 162, 39, 0.03));
+    border-left-color: var(--gold);
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 215, 100, 0.8);
+  }
+  .sidebar-footer{
+    padding: 14px 22px;
+    border-top: 1px solid rgba(201, 162, 39, 0.3);
+  }
+  .sidebar-footer button{
+    width: 100%;
+    font-size: 0.82rem;
+    padding: 8px 14px;
+  }
+
+  .content{
+    flex: 1;
+    min-width: 0;
+    padding: 30px;
+  }
+  .wrap{
+    max-width: 920px;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 0 30px 60px;
+    box-shadow:
+      0 0 0 1px var(--gold-dark),
+      0 0 40px rgba(201, 162, 39, 0.35),
+      0 0 100px rgba(74, 29, 92, 0.4);
+  }
+
+  @media (max-width: 900px){
+    .app{ flex-direction: column; }
+    .sidebar{
+      width: 100%;
+      height: auto;
+      position: static;
+      overflow: visible;
+    }
+    .sidebar-nav, .sidebar-footer{ display: none; }
+    .sidebar.open .sidebar-nav,
+    .sidebar.open .sidebar-footer{ display: block; }
+    .menu-toggle{ display: inline-flex; }
+    .content{ padding: 16px; }
+  }
+
+  h1,h2,h3,h4{
+    font-family:'Trebuchet MS', Verdana, sans-serif;
+    letter-spacing:.01em;
+    line-height:1.25;
+  }
+  h1{
+    font-size:2.3rem;
+    margin:.4em 0 .2em;
+    color:var(--burgundy);
+    text-shadow: 0 0 20px rgba(201, 162, 39, 0.6), 0 2px 0 rgba(244, 232, 193, 0.8);
+  }
+  h2{
+    font-size:1.6rem;
+    margin:0 0 18px;
+    padding-bottom:8px;
+    border-bottom:2px solid var(--gold-dark);
+    color:var(--burgundy);
+    text-shadow:0 0 10px rgba(201, 162, 39, 0.4);
+  }
+  h3{ font-size:1.18rem; margin:26px 0 10px; color:var(--purple); }
+  p{ margin:.7em 0; }
+  .subtitle{ font-size:1.1rem; color:var(--purple); font-style:italic; }
+  .badge{
+    display:inline-block;
+    border:1px solid var(--gold-dark);
+    background:linear-gradient(135deg, #f4e8c1, #e8d8a0);
+    color:var(--burgundy);
+    padding:3px 12px;
+    border-radius:999px;
+    font-family:Verdana, sans-serif;
+    font-size:.78rem;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    box-shadow:0 0 12px rgba(201, 162, 39, 0.5);
+  }
+
+  .chapter{ display: none; padding: 30px 0 20px; }
+  .chapter.active{ display: block; animation: chapterFade 0.4s ease; }
+  @keyframes chapterFade{
+    from{ opacity: 0; transform: translateY(6px); }
+    to  { opacity: 1; transform: translateY(0); }
+  }
+
+  .grimoire{
+    position: relative;
+    z-index: 0;
+    margin: 46px 0;
+    padding: 34px 38px 32px 60px;
+    border: 3px solid transparent;
+    border-radius: 6px;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255, 215, 100, 0.15), transparent 60%),
+      radial-gradient(circle at 85% 90%, rgba(92, 26, 26, 0.12), transparent 60%),
+      radial-gradient(circle at 50% 50%, #f4e8c1 0%, #e8d8a0 40%, #d4c088 85%, #b8a470 100%);
+    background-clip: padding-box;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    break-inside: avoid;
+    box-shadow:
+      inset 0 0 60px rgba(139, 105, 20, 0.35),
+      inset 0 0 20px rgba(92, 26, 26, 0.15),
+      0 0 25px rgba(201, 162, 39, 0.4),
+      0 0 60px rgba(92, 26, 26, 0.2);
+    animation: grimoireGlow 5s ease-in-out infinite alternate;
+  }
+  .grimoire::before{
+    content:"";
+    position:absolute;
+    inset:-3px;
+    border-radius:6px;
+    padding:3px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--burgundy), var(--gold), var(--purple), var(--gold-dark));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events:none;
+    animation: borderShimmer 6s linear infinite;
+  }
+  @keyframes borderShimmer{
+    0%   { filter: hue-rotate(0deg) brightness(1); }
+    50%  { filter: hue-rotate(-15deg) brightness(1.15); }
+    100% { filter: hue-rotate(0deg) brightness(1); }
+  }
+  @keyframes grimoireGlow{
+    from{
+      box-shadow:
+        inset 0 0 60px rgba(139, 105, 20, 0.35),
+        inset 0 0 20px rgba(92, 26, 26, 0.15),
+        0 0 25px rgba(201, 162, 39, 0.4),
+        0 0 60px rgba(92, 26, 26, 0.2);
+    }
+    to{
+      box-shadow:
+        inset 0 0 80px rgba(139, 105, 20, 0.5),
+        inset 0 0 30px rgba(92, 26, 26, 0.25),
+        0 0 40px rgba(201, 162, 39, 0.65),
+        0 0 90px rgba(74, 29, 92, 0.35);
+    }
+  }
+  .grimoire::after{
+    content: "✦";
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    color: var(--gold-dark);
+    font-size: 1.4rem;
+    text-shadow: 0 0 8px rgba(255, 215, 100, 0.9), 0 0 16px rgba(201, 162, 39, 0.7);
+    animation: sparkle 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes sparkle{
+    0%,100%{ opacity:.6; transform:scale(1) rotate(0deg); }
+    50%    { opacity:1;  transform:scale(1.2) rotate(15deg); }
+  }
+  .grimoire h3{
+    margin: 0 0 20px;
+    padding-bottom: 10px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-variant: small-caps;
+    font-size: 1.22rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    color: var(--burgundy);
+    text-shadow: 0 0 12px rgba(255, 215, 100, 0.6), 0 1px 0 rgba(244, 232, 193, 0.9);
+    border-bottom: 3px double var(--gold-dark);
+  }
+  .grimoire > h3:first-of-type + p::first-letter,
+  .grimoire .lettrine::first-letter{
+    float: left;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 3.2em;
+    line-height: .82;
+    padding: 6px 10px 0 0;
+    font-weight: 700;
+    color: var(--burgundy);
+    text-shadow: 0 0 10px rgba(255, 215, 100, 0.7), 1px 1px 0 rgba(92, 26, 26, 0.35);
+  }
+  .grimoire p, .grimoire li{
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 245, 210, 0.7);
+  }
+  .grimoire ul, .grimoire ol{
+    margin: .8em 0 .8em 1.1em;
+    padding-left: .6em;
+  }
+  .grimoire li{ margin: .4em 0; padding-left: .1em; }
+  .grimoire li::marker{ color: var(--gold-dark); }
+  .grimoire mjx-container{ color: var(--ink); }
+
+  .piege{
+    background: linear-gradient(135deg, #f4e4e4 0%, #eed4d4 100%);
+    border: 1px dashed var(--burgundy);
+    padding:12px 18px;
+    margin:18px 0;
+    border-radius:6px;
+    color:var(--burgundy);
+    box-shadow: inset 0 0 12px rgba(92, 26, 26, 0.15);
+  }
+  .exemple{
+    background: linear-gradient(135deg, #eaf4ee 0%, #d4e8dc 100%);
+    border: 1px solid var(--gold-dark);
+    padding:12px 18px;
+    margin:18px 0;
+    border-radius:6px;
+    box-shadow: 0 0 12px rgba(201, 162, 39, 0.25);
+  }
+  .note{ font-size:.92rem; color:var(--purple); }
+
+  canvas{
+    width:100%;
+    height:auto;
+    display:block;
+    background:#faf6e8;
+    border:1px solid var(--gold-dark);
+    border-radius:6px;
+    margin:12px 0 8px;
+    box-shadow:0 0 15px rgba(201, 162, 39, 0.3);
+  }
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    align-items:center;
+    margin:10px 0 6px;
+    font-family:Verdana, sans-serif;
+    font-size:.9rem;
+  }
+  .controls label{ display:flex; gap:8px; align-items:center; }
+  input[type="range"]{ accent-color: var(--burgundy); width:150px; }
+  button{
+    font:inherit;
+    font-family:Verdana, sans-serif;
+    font-size:.9rem;
+    background: linear-gradient(135deg, var(--burgundy), var(--purple));
+    color:#fff;
+    border:1px solid var(--gold-dark);
+    padding:9px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow:0 0 12px rgba(201, 162, 39, 0.4);
+  }
+  button:hover{
+    background: linear-gradient(135deg, var(--purple), var(--burgundy));
+    box-shadow:0 0 20px rgba(201, 162, 39, 0.7);
+  }
+  button:active{ transform:translateY(1px); }
+  button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+  button.ghost{
+    background: linear-gradient(135deg, #f4e8c1, #e8d8a0);
+    color:var(--burgundy);
+    border:1px solid var(--gold-dark);
+  }
+  button.ghost:hover{
+    background: linear-gradient(135deg, #fff5d1, #f0e0b0);
+  }
+  .readout{
+    font-family:Verdana, sans-serif;
+    font-weight:bold;
+    border:1px solid var(--gold-dark);
+    background:linear-gradient(135deg, #faf6e8, #f0e8d0);
+    color:var(--burgundy);
+    padding:3px 10px;
+    border-radius:4px;
+    box-shadow:0 0 8px rgba(201, 162, 39, 0.35);
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+    font-size:.95rem;
+    background:linear-gradient(180deg, #faf6e8, #f0e8d0);
+  }
+  th,td{
+    border:1px solid var(--gold-dark);
+    padding:8px 10px;
+    text-align:left;
+    vertical-align:top;
+  }
+  th{
+    background:linear-gradient(180deg, var(--parchment-dark), #c9b878);
+    color:var(--burgundy);
+    font-family:Verdana, sans-serif;
+    font-size:.88rem;
+  }
+
+  .quiz fieldset{
+    border:1px solid var(--gold-dark);
+    border-radius:6px;
+    padding:12px 16px;
+    margin:16px 0;
+    background:linear-gradient(135deg, #faf6e8, #f0e8d0);
+    box-shadow:0 0 10px rgba(201, 162, 39, 0.25);
+  }
+  .quiz legend{
+    font-family:Verdana, sans-serif;
+    font-size:.9rem;
+    padding:0 8px;
+    font-weight:bold;
+    color:var(--burgundy);
+  }
+  .quiz label{ display:block; padding:4px 0; cursor:pointer; }
+  .quiz .feedback{
+    margin-top:8px;
+    font-family:Verdana, sans-serif;
+    font-size:.88rem;
+    min-height:1.2em;
+    color:var(--burgundy);
+  }
+  fieldset.correct{
+    background:linear-gradient(135deg, #eaf4ee, #cfe6d8);
+    border-color:#1a4c3a;
+  }
+  fieldset.incorrect{
+    background:linear-gradient(135deg, #f4e4e4, #e8cccc);
+    border-style:dashed;
+    border-color:var(--burgundy);
+  }
+  #quizResult{
+    font-family:Verdana, sans-serif;
+    font-weight:bold;
+    font-size:1.05rem;
+    margin-top:12px;
+    color:var(--burgundy);
+    text-shadow:0 0 8px rgba(201, 162, 39, 0.5);
+  }
+
+  .diff-badge{
+    display:inline-block;
+    padding:3px 12px;
+    border-radius:999px;
+    font-family: Verdana, sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: bold;
+    border: 1px solid;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  .diff-easy{
+    background: linear-gradient(135deg, #f4e8c1, #e8d8a0);
+    color: #5a3a0a;
+    border-color: #c9a227;
+  }
+  .diff-medium{
+    background: linear-gradient(135deg, #e8c88a, #d4a860);
+    color: #5c3a0a;
+    border-color: #8b6914;
+  }
+  .diff-hard{
+    background: linear-gradient(135deg, #d4a0a0, #b87878);
+    color: #5c0a0a;
+    border-color: #8b1a1a;
+  }
+
+  .exercice{
+    margin: 16px 0;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(139, 105, 20, 0.5);
+    border-radius: 6px;
+    box-shadow: inset 0 0 12px rgba(201, 162, 39, 0.15);
+  }
+  .ex-enonce{
+    margin-bottom: 12px;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .ex-enonce strong{
+    color: var(--burgundy);
+    font-family: 'Trebuchet MS', sans-serif;
+    margin-right: 6px;
+  }
+  .ex-reveal{
+    background: linear-gradient(135deg, var(--burgundy), var(--purple));
+    color: #fff;
+    border: 1px solid var(--gold-dark);
+    padding: 7px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: Verdana, sans-serif;
+    font-size: .85rem;
+    letter-spacing: 0.02em;
+    box-shadow: 0 0 10px rgba(201, 162, 39, 0.4);
+    transition: all 0.2s ease;
+  }
+  .ex-reveal:hover{
+    background: linear-gradient(135deg, var(--purple), var(--burgundy));
+    box-shadow: 0 0 18px rgba(201, 162, 39, 0.7);
+  }
+  .ex-solution{
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: rgba(244, 232, 193, 0.5);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 6px 6px 0;
+    font-size: .95rem;
+    line-height: 1.75;
+  }
+  .ex-solution[hidden]{ display: none !important; }
+
+  dialog{
+    border:2px solid var(--gold-dark);
+    border-radius:8px;
+    max-width:640px;
+    width:calc(100% - 40px);
+    padding:0;
+    background:linear-gradient(135deg, #f4e8c1, #e8d8a0);
+    color:var(--ink);
+    box-shadow:0 0 60px rgba(201, 162, 39, 0.6);
+  }
+  dialog::backdrop{ background:rgba(26, 10, 38, 0.75); }
+  .dialog-inner{ padding:22px 26px 26px; }
+  .dialog-inner h3{ margin-top:0; color:var(--burgundy); }
+  .dialog-inner ul{ padding-left:22px; }
+  .dialog-inner li{ margin:.5em 0; }
+  .dialog-close{ margin-top:16px; }
+
+  @media print{
+    body{ background:#fff; font-size:11.5pt; }
+    .sidebar{ display: none !important; }
+    .content{ padding: 0; }
+    .wrap{ box-shadow:none; max-width:none; padding:0; }
+    .chapter{ display: block !important; page-break-before: always; break-before: page; }
+    .chapter:first-of-type{ page-break-before: auto; break-before: auto; }
+    .no-print{ display: none !important; }
+    .grimoire{
+      border: 1.5px solid var(--gold-dark);
+      background: #f7eed4;
+      padding: 18px 20px 18px 34px;
+      margin: 18px 0;
+      box-shadow: none;
+      animation: none;
+    }
+    .grimoire::before, .grimoire::after{ display: none; }
+    canvas{ border:1px solid #999; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span>✦ Odyssée</span>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a data-chapter="cover" class="active">Accueil</a>
+      <a data-chapter="ch1">Chapitre 1 — La porte aux panneaux</a>
+      <a data-chapter="ch2">Chapitre 2 — Les jumeaux du miroir</a>
+      <a data-chapter="ch3">Chapitre 3 — Le banquet des dénominateurs</a>
+      <a data-chapter="ch4">Chapitre 4 — La chambre des tapisseries</a>
+      <a data-chapter="ch5">Chapitre 5 — Le puits sans fond</a>
+      <a data-chapter="ch6">Chapitre 6 — Le verdict de la bibliothèque</a>
+      <a data-chapter="exercices">Exercices progressifs</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="licenseBtn" type="button" class="ghost">⚖️ Licence &amp; droits</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="wrap">
+
+      <section class="chapter active" data-chapter="cover">
+        <p class="badge" id="genreBadge">Genre : …</p>
+        <h1>L'Odyssée des Fractions</h1>
+        <p class="subtitle">Un récit d'aventure mathématique en six chapitres</p>
+        <p id="openingLine">…</p>
+        <div class="grimoire" id="coverGrimoire"></div>
+        <div class="exemple">
+          <strong>Mode d'emploi.</strong> Utilise le sommaire à gauche pour choisir
+          un chapitre. Un seul chapitre s'affiche à la fois. Lis l'histoire, observe
+          l'animation, puis refais le calcul à la main. Les encadrés
+          <em>« Le grimoire »</em> donnent les définitions et les formules. Les
+          encadrés <em>« Piège »</em> signalent les erreurs classiques. Le chapitre
+          final propose un quiz, et la dernière section regroupe des exercices
+          progressifs.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="ch1">
+        <h2>Chapitre 1 — La porte aux panneaux</h2>
+        <div id="ch1-story"></div>
+        <div class="grimoire" id="ch1-grimoire"></div>
+        <h3>Observer la fraction</h3>
+        <p>
+          Déplace les curseurs : la barre se partage en autant de parts que le
+          dénominateur l'indique, et le numérateur indique combien de parts sont prises.
+        </p>
+        <canvas id="canvasFraction" width="640" height="240"></canvas>
+        <div class="controls">
+          <label>Numérateur <input type="range" id="fracNum" min="0" max="12" value="3"></label>
+          <label>Dénominateur <input type="range" id="fracDen" min="1" max="12" value="4"></label>
+          <span class="readout" id="fracReadout">3/4</span>
+        </div>
+        <div class="exemple" id="ch1-exemple"></div>
+        <div class="piege">
+          <strong>Piège.</strong> Le dénominateur ne peut jamais être nul :
+          $\dfrac{5}{0}$ n'existe pas. On ne partage pas en zéro part.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="ch2">
+        <h2>Chapitre 2 — Les jumeaux du miroir</h2>
+        <div id="ch2-story"></div>
+        <div class="grimoire" id="ch2-grimoire"></div>
+        <h3>Comparer deux fractions</h3>
+        <div class="grimoire" id="ch2-grimoire2"></div>
+        <div class="piege">
+          <strong>Piège.</strong> On ne simplifie jamais en ajoutant ou en retirant
+          un même nombre au numérateur et au dénominateur :
+          \[
+            \dfrac{2+1}{3+1}=\dfrac{3}{4}
+            \quad\text{n'a rien à voir avec}\quad
+            \dfrac{2}{3}.
+          \]
+          Seules la multiplication et la division par un même nombre non nul
+          conservent la valeur.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="ch3">
+        <h2>Chapitre 3 — Le banquet des dénominateurs</h2>
+        <div id="ch3-story"></div>
+        <div class="grimoire" id="ch3-grimoire"></div>
+        <h3>Voir l'addition en animation</h3>
+        <p>
+          Clique sur le bouton : les deux barres sont d'abord découpées au même
+          dénominateur, puis réunies.
+        </p>
+        <canvas id="canvasAddition" width="640" height="260"></canvas>
+        <div class="controls">
+          <button id="addPlay" type="button">Lancer l'animation</button>
+        </div>
+        <div class="piege">
+          <strong>Piège classique.</strong> On n'additionne jamais les dénominateurs :
+          \[
+            \dfrac{1}{2}+\dfrac{1}{3} \neq \dfrac{2}{5}.
+          \]
+          Les dénominateurs indiquent la taille des parts ; ils ne s'additionnent pas.
+        </div>
+        <div class="exemple">
+          <strong>À retenir.</strong> Pour additionner ou soustraire, il faut des parts
+          de même taille. C'est tout le secret du dénominateur commun.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="ch4">
+        <h2>Chapitre 4 — La chambre des tapisseries</h2>
+        <div id="ch4-story"></div>
+        <div class="grimoire" id="ch4-grimoire"></div>
+        <h3>Voir la multiplication en animation</h3>
+        <p>
+          La zone hachurée horizontalement représente la fraction de hauteur ;
+          la zone hachurée verticalement, la fraction de largeur.
+          Leur intersection est le produit.
+        </p>
+        <canvas id="canvasMultiplication" width="640" height="360"></canvas>
+        <div class="controls">
+          <button id="mulPlay" type="button">Lancer l'animation</button>
+        </div>
+        <div class="piege">
+          <strong>Piège.</strong> Multiplier par une fraction inférieure à $1$ rend le
+          résultat plus petit.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="ch5">
+        <h2>Chapitre 5 — Le puits sans fond</h2>
+        <div id="ch5-story"></div>
+        <div class="grimoire" id="ch5-grimoire"></div>
+        <h3>Voir la division en animation</h3>
+        <p>
+          La barre est divisée en petites doses. On compte combien de doses sont
+          contenues dans la fraction versée.
+        </p>
+        <canvas id="canvasDivision" width="640" height="220"></canvas>
+        <div class="controls">
+          <button id="divPlay" type="button">Lancer l'animation</button>
+        </div>
+        <div class="piege">
+          <strong>Piège.</strong> Diviser par $0$ est impossible, et $0$ n'a pas
+          d'inverse. En revanche, diviser par une fraction plus petite que $1$ donne
+          un résultat plus grand.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="ch6">
+        <h2>Chapitre 6 — Le verdict de la bibliothèque</h2>
+        <div id="ch6-story"></div>
+        <div class="grimoire" id="ch6-grimoire"></div>
+
+        <h3>Tableau récapitulatif</h3>
+        <table>
+          <thead>
+            <tr><th>Opération</th><th>Règle</th><th>Exemple</th></tr>
+          </thead>
+          <tbody id="ch6-table"></tbody>
+        </table>
+
+        <h3>L'épreuve finale</h3>
+        <p class="note">
+          Cinq questions. Choisis une réponse par question, puis clique sur
+          « Vérifier mes réponses ».
+        </p>
+        <div class="quiz" id="quizContainer"></div>
+        <button id="quizCheck" type="button">Vérifier mes réponses</button>
+        <p id="quizResult" aria-live="polite"></p>
+
+        <div class="exemple">
+          <strong>Bravo !</strong> Tu as traversé le manoir des fractions. Continue
+          avec les exercices progressifs dans le sommaire pour consolider tout ça.
+        </div>
+      </section>
+
+      <section class="chapter" data-chapter="exercices">
+        <h2>Exercices progressifs</h2>
+        <p>
+          Trois niveaux de difficulté croissante. Essaie chaque exercice sur papier
+          avant de révéler la solution pas à pas.
+        </p>
+
+        <div class="grimoire">
+          <h3>Niveau 1 — <span class="diff-badge diff-easy">Facile</span></h3>
+          <div id="ex-n1"></div>
+        </div>
+
+        <div class="grimoire">
+          <h3>Niveau 2 — <span class="diff-badge diff-medium">Moyen</span></h3>
+          <div id="ex-n2"></div>
+        </div>
+
+        <div class="grimoire">
+          <h3>Niveau 3 — <span class="diff-badge diff-hard">Difficile</span></h3>
+          <div id="ex-n3"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<dialog id="licenseDialog" aria-labelledby="licenseTitle">
+  <div class="dialog-inner">
+    <h3 id="licenseTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h3>
+    <p>
+      <strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) — octobre 2026
+    </p>
+    <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+    <p>
+      Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+      (« L'Odyssée des Fractions ») sont la propriété intellectuelle exclusive de
+      l'auteur, Yann Merdy.
+    </p>
+    <p><strong>Conditions :</strong></p>
+    <ul>
+      <li>
+        <strong>Utilisation Privée et Éducative (Autorisée) :</strong> vous êtes
+        autorisé·e à utiliser, copier, modifier et distribuer ce code et son
+        contenu uniquement à des fins personnelles, éducatives et non lucratives.
+      </li>
+      <li>
+        <strong>Utilisation Commerciale (Interdite) :</strong> toute utilisation,
+        distribution, intégration ou reproduction du code ou du contenu (total ou
+        partiel) à des fins commerciales, lucratives ou professionnelles est
+        strictement interdite sans un accord écrit préalable et explicite de
+        l'auteur.
+      </li>
+      <li>
+        <strong>Attribution :</strong> toute reproduction ou modification doit
+        conserver la mention de l'auteur originale (Yann Merdy) et la présente
+        notice de droits d'auteur.
+      </li>
+    </ul>
+    <p>
+      Pour toute demande d'utilisation commerciale ou de licence spécifique,
+      veuillez contacter l'auteur à l'adresse indiquée ci-dessus.
+    </p>
+    <button id="licenseClose" type="button" class="dialog-close">Fermer</button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  const MIN_VAL = 1;
+  const MAX_VAL = 150;
+
+  const clamp = v => {
+    const n = Math.round(Number(v));
+    if (!isFinite(n)) return MIN_VAL;
+    if (n < MIN_VAL) return MIN_VAL;
+    if (n > MAX_VAL) return MAX_VAL;
+    return n;
+  };
+  const rnd = (a, b) => {
+    const lo = clamp(Math.min(a, b));
+    const hi = clamp(Math.max(a, b));
+    return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+  };
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  const lcm = (a, b) => Math.abs(a * b) / gcd(a, b);
+
+  const simpFrac = (n, d) => {
+    let N = clamp(n), Dn = clamp(d);
+    if (Dn === 0) Dn = 1;
+    const g = gcd(N, Dn) || 1;
+    N = clamp(N / g);
+    Dn = clamp(Dn / g);
+    while (Dn > MAX_VAL) {
+      const gg = gcd(N, Dn) || 1;
+      if (gg === 1) { Dn = MAX_VAL; break; }
+      N = N / gg; Dn = Dn / gg;
+    }
+    if (N < MIN_VAL) N = MIN_VAL;
+    if (Dn < MIN_VAL) Dn = MIN_VAL;
+    return { n: N, d: Dn };
+  };
+  const rndFrac = (minD, maxD) => {
+    const d = rnd(Math.max(minD, 2), Math.min(maxD, MAX_VAL));
+    return { n: rnd(1, d - 1), d };
+  };
+
+  const fL = f => `\\dfrac{${f.n}}{${f.d}}`;
+  const fM = f => `$${fL(f)}$`;
+  const fT = f => `${f.n}/${f.d}`;
+  const frWords = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf','vingt','vingt et un','vingt-deux','vingt-trois','vingt-quatre','vingt-cinq','vingt-six','vingt-sept','vingt-huit','vingt-neuf','trente'];
+  const toFr = n => frWords[n] !== undefined ? frWords[n] : String(n);
+  const ordinalSuffix = d => {
+    const m = { 1:'', 2:'demis', 3:'tiers', 4:'quarts', 5:'cinquièmes', 6:'sixièmes', 7:'septièmes', 8:'huitièmes', 9:'neuvièmes', 10:'dixièmes', 11:'onzièmes', 12:'douzièmes', 13:'treizièmes', 14:'quatorzièmes', 15:'quinzièmes', 16:'seizièmes', 17:'dix-septièmes', 18:'dix-huitièmes', 19:'dix-neuvièmes', 20:'vingtièmes' };
+    return m[d] || (toFr(d) + 'ièmes');
+  };
+  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  const el = id => document.getElementById(id);
+
+  /* =========================================================
+     VALEURS ALÉATOIRES
+     ========================================================= */
+  const D = {};
+
+  D.c1 = rndFrac(2, 9);
+
+  D.c2 = { base: rndFrac(2, 5), k: rnd(2, 4) };
+  D.c2.mult = { n: clamp(D.c2.base.n * D.c2.k), d: clamp(D.c2.base.d * D.c2.k) };
+
+  D.c2simp = { base: rndFrac(2, 6), g: rnd(2, 6) };
+  D.c2simp.num = clamp(D.c2simp.base.n * D.c2simp.g);
+  D.c2simp.den = clamp(D.c2simp.base.d * D.c2simp.g);
+
+  (function () {
+    let f1, f2, tries = 0;
+    do { f1 = rndFrac(3, 8); f2 = rndFrac(3, 8); tries++; }
+    while ((f1.d === f2.d || f1.n * f2.d === f2.n * f1.d) && tries < 40);
+    D.c2cmp = { f1, f2 };
+  })();
+
+  (function () {
+    const f1 = rndFrac(2, 6);
+    let f2;
+    do { f2 = rndFrac(2, 6); } while (f2.d === f1.d);
+    const L = clamp(lcm(f1.d, f2.d));
+    D.c3 = {
+      f1, f2, L,
+      n1: clamp(f1.n * L / f1.d),
+      n2: clamp(f2.n * L / f2.d)
+    };
+    D.c3.sum = simpFrac(D.c3.n1 + D.c3.n2, L);
+  })();
+
+  (function () {
+    let f1, f2, tries = 0;
+    do { f1 = rndFrac(3, 8); f2 = rndFrac(3, 8); tries++; }
+    while ((f1.d === f2.d || f1.n * f2.d <= f2.n * f1.d) && tries < 60);
+    const L = clamp(lcm(f1.d, f2.d));
+    D.c3sub = {
+      f1, f2, L,
+      n1: clamp(f1.n * L / f1.d),
+      n2: clamp(f2.n * L / f2.d)
+    };
+    D.c3sub.diff = simpFrac(D.c3sub.n1 - D.c3sub.n2, L);
+  })();
+
+  D.c4 = { f1: rndFrac(2, 5), f2: rndFrac(2, 5) };
+  D.c4.prod = { n: clamp(D.c4.f1.n * D.c4.f2.n), d: clamp(D.c4.f1.d * D.c4.f2.d) };
+  D.c4.simpl = simpFrac(D.c4.prod.n, D.c4.prod.d);
+
+  (function () {
+    const f1 = rndFrac(2, 6);
+    const k = rnd(1, 3);
+    const f2 = { n: 1, d: clamp(f1.d * k) };
+    D.c5 = { f1, k, f2, result: clamp(f1.n * k) };
+  })();
+
+  (function () {
+    const f1 = rndFrac(2, 6);
+    let f2, f3;
+    do { f2 = rndFrac(2, 6); } while (f2.d === f1.d);
+    do { f3 = rndFrac(2, 6); } while (f3.d === f2.d);
+    const prod = { n: f2.n * f3.n, d: f2.d * f3.d };
+    const prodS = simpFrac(prod.n, prod.d);
+    const L = clamp(lcm(f1.d, prodS.d));
+    const n1 = clamp(f1.n * L / f1.d);
+    const n2 = clamp(prodS.n * L / prodS.d);
+    D.c6 = { f1, f2, f3, prod: prodS, L, n1, n2, sum: simpFrac(n1 + n2, L) };
+  })();
+
+  D.quiz = (function () {
+    const qs = [];
+    (function () {
+      const f1 = rndFrac(2, 6);
+      let f2;
+      do { f2 = rndFrac(2, 6); } while (f2.d === f1.d);
+      const L = clamp(lcm(f1.d, f2.d));
+      const n = clamp(f1.n * L / f1.d + f2.n * L / f2.d);
+      const correct = simpFrac(n, L);
+      const wrongA = simpFrac(f1.n + f2.n, f1.d + f2.d);
+      const wrongB = simpFrac(n, L + 1);
+      const opts = shuffle([{ l: fL(correct), ok: true }, { l: fL(wrongA), ok: false }, { l: fL(wrongB), ok: false }]);
+      qs.push({ legend: `Calculer $${fL(f1)} + ${fL(f2)}$`, opts, answer: fT(correct) });
+    })();
+    (function () {
+      const f1 = rndFrac(2, 6); const f2 = rndFrac(2, 6);
+      const prod = simpFrac(f1.n * f2.n, f1.d * f2.d);
+      const wrongA = simpFrac(f1.n + f2.n, f1.d + f2.d);
+      const wrongB = simpFrac(f1.n * f2.d, f1.d * f2.n);
+      const opts = shuffle([{ l: fL(prod), ok: true }, { l: fL(wrongA), ok: false }, { l: fL(wrongB), ok: false }]);
+      qs.push({ legend: `Calculer $${fL(f1)} \\times ${fL(f2)}$`, opts, answer: fT(prod) });
+    })();
+    (function () {
+      const f1 = rndFrac(2, 6); const f2 = rndFrac(2, 6);
+      const q = simpFrac(f1.n * f2.d, f1.d * f2.n);
+      const wrongA = simpFrac(f1.n * f2.n, f1.d * f2.d);
+      const wrongB = simpFrac(f1.n + f2.d, f1.d + f2.n);
+      const opts = shuffle([{ l: fL(q), ok: true }, { l: fL(wrongA), ok: false }, { l: fL(wrongB), ok: false }]);
+      qs.push({ legend: `Calculer $${fL(f1)} \\div ${fL(f2)}$`, opts, answer: fT(q) });
+    })();
+    (function () {
+      const base = rndFrac(2, 6); const g = rnd(2, 6);
+      const num = clamp(base.n * g), den = clamp(base.d * g);
+      const correct = simpFrac(num, den);
+      const wrongA = simpFrac(num, den + 2);
+      const wrongB = simpFrac(base.n + 1, base.d);
+      const opts = shuffle([{ l: fL(correct), ok: true }, { l: fL(wrongA), ok: false }, { l: fL(wrongB), ok: false }]);
+      qs.push({ legend: `Simplifier $${fL({ n: num, d: den })}$`, opts, answer: fT(correct) });
+    })();
+    (function () {
+      let f1, f2, tries = 0;
+      do { f1 = rndFrac(3, 8); f2 = rndFrac(3, 8); tries++; }
+      while ((f1.d === f2.d || f1.n * f2.d === f2.n * f1.d) && tries < 40);
+      const cmp = f1.n * f2.d - f2.n * f1.d;
+      const correctSym = cmp > 0 ? '>' : '<';
+      const wrongSym = cmp > 0 ? '<' : '>';
+      const opts = shuffle([
+        { l: `$${fL(f1)} ${correctSym} ${fL(f2)}$`, ok: true },
+        { l: `$${fL(f1)} ${wrongSym} ${fL(f2)}$`, ok: false },
+        { l: `$${fL(f1)} = ${fL(f2)}$`, ok: false }
+      ]);
+      qs.push({ legend: `Comparer $${fL(f1)}$ et $${fL(f2)}$`, opts, answer: `${fT(f1)} ${correctSym} ${fT(f2)}` });
+    })();
+    return qs;
+  })();
+
+  /* =========================================================
+     EXERCICES
+     ========================================================= */
+  D.exercises = (function () {
+    const ex = { n1: [], n2: [], n3: [] };
+
+    /* NIVEAU 1 */
+    (function () {
+      const d = rnd(4, 10);
+      const n1 = rnd(1, Math.max(1, d - 2));
+      const n2 = rnd(1, Math.max(1, d - n1 - 1));
+      const sum = n1 + n2;
+      let sol = `On additionne les numérateurs et on garde le dénominateur :<br>`;
+      sol += `$\\dfrac{${n1}}{${d}} + \\dfrac{${n2}}{${d}} = \\dfrac{${n1}+${n2}}{${d}} = \\dfrac{${sum}}{${d}}`;
+      if (sum === d) sol += ` = 1`;
+      else {
+        const s = simpFrac(sum, d);
+        if (s.n !== sum || s.d !== d) sol += ` = ${fL(s)}`;
+      }
+      sol += `$`;
+      ex.n1.push({ id: '1.1', enonce: `Calculer $\\dfrac{${n1}}{${d}} + \\dfrac{${n2}}{${d}}$.`, solution: sol });
+    })();
+
+    (function () {
+      const d = rnd(4, 10);
+      const n1 = rnd(2, d - 1);
+      const n2 = rnd(1, n1 - 1);
+      const diff = n1 - n2;
+      let sol = `On soustrait les numérateurs et on garde le dénominateur :<br>`;
+      sol += `$\\dfrac{${n1}}{${d}} - \\dfrac{${n2}}{${d}} = \\dfrac{${n1}-${n2}}{${d}} = \\dfrac{${diff}}{${d}}`;
+      const s = simpFrac(diff, d);
+      if (s.n !== diff || s.d !== d) sol += ` = ${fL(s)}`;
+      sol += `$`;
+      ex.n1.push({ id: '1.2', enonce: `Calculer $\\dfrac{${n1}}{${d}} - \\dfrac{${n2}}{${d}}$.`, solution: sol });
+    })();
+
+    (function () {
+      const a = rnd(1, 5), b = rnd(2, 6);
+      const c = rnd(1, 5), d = rnd(2, 6);
+      const num = a * c, den = b * d;
+      const s = simpFrac(num, den);
+      let sol = `On multiplie numérateurs entre eux et dénominateurs entre eux :<br>`;
+      sol += `$\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}} = \\dfrac{${a}\\times ${c}}{${b}\\times ${d}} = \\dfrac{${num}}{${den}}`;
+      if (s.n !== num || s.d !== den) sol += ` = ${fL(s)}`;
+      sol += `$`;
+      ex.n1.push({ id: '1.3', enonce: `Calculer $\\dfrac{${a}}{${b}} \\times \\dfrac{${c}}{${d}}$.`, solution: sol });
+    })();
+
+    /* NIVEAU 2 */
+    (function () {
+      const b = rnd(2, 5);
+      let d, tries = 0;
+      do { d = rnd(2, 5); tries++; } while ((d === b || gcd(b, d) !== 1) && tries < 30);
+      const n1 = rnd(1, b - 1);
+      const n2 = rnd(1, d - 1);
+      const L = b * d;
+      const num1 = n1 * d, num2 = n2 * b;
+      const sumNum = num1 + num2;
+      const s = simpFrac(sumNum, L);
+      let sol = `On réduit au même dénominateur $${L} = ${b} \\times ${d}$ :<br>`;
+      sol += `$\\dfrac{${n1}}{${b}} = \\dfrac{${n1}\\times ${d}}{${L}} = \\dfrac{${num1}}{${L}}$ et $\\dfrac{${n2}}{${d}} = \\dfrac{${n2}\\times ${b}}{${L}} = \\dfrac{${num2}}{${L}}$<br>`;
+      sol += `Donc $\\dfrac{${n1}}{${b}} + \\dfrac{${n2}}{${d}} = \\dfrac{${num1}}{${L}} + \\dfrac{${num2}}{${L}} = \\dfrac{${sumNum}}{${L}}`;
+      if (s.n !== sumNum || s.d !== L) sol += ` = ${fL(s)}`;
+      sol += `$`;
+      ex.n2.push({ id: '2.1', enonce: `Calculer $\\dfrac{${n1}}{${b}} + \\dfrac{${n2}}{${d}}$.`, solution: sol });
+    })();
+
+    (function () {
+      let nn, dd, tries = 0;
+      do { nn = rnd(2, 5); dd = rnd(nn + 1, 9); tries++; }
+      while (gcd(nn, dd) !== 1 && tries < 40);
+      if (gcd(nn, dd) !== 1) { nn = 2; dd = 3; }
+      const g = rnd(2, 5);
+      const num = nn * g, den = dd * g;
+      let sol = `On cherche le PGCD de $${num}$ et $${den}$. C'est $${g}$.<br>`;
+      sol += `$\\dfrac{${num}}{${den}} = \\dfrac{${num} \\div ${g}}{${den} \\div ${g}} = \\dfrac{${nn}}{${dd}}$`;
+      ex.n2.push({ id: '2.2', enonce: `Simplifier $\\dfrac{${num}}{${den}}$.`, solution: sol });
+    })();
+
+    (function () {
+      let a, b, c, d, tries = 0;
+      do {
+        b = rnd(2, 6); d = rnd(2, 6);
+        a = rnd(1, b - 1); c = rnd(1, d - 1);
+        tries++;
+      } while ((b === d || a * d === c * b) && tries < 40);
+      const c1 = a * d, c2 = c * b;
+      const sym = c1 > c2 ? '>' : '<';
+      const L = b * d;
+      let sol = `On met au même dénominateur ($${L} = ${b} \\times ${d}$) :<br>`;
+      sol += `$\\dfrac{${a}}{${b}} = \\dfrac{${a} \\times ${d}}{${L}} = \\dfrac{${a * d}}{${L}}$ et $\\dfrac{${c}}{${d}} = \\dfrac{${c} \\times ${b}}{${L}} = \\dfrac{${c * b}}{${L}}$<br>`;
+      sol += `Comme $${a * d} ${sym} ${c * b}$, on en déduit que $\\dfrac{${a}}{${b}} ${sym} \\dfrac{${c}}{${d}}$`;
+      ex.n2.push({ id: '2.3', enonce: `Comparer $\\dfrac{${a}}{${b}}$ et $\\dfrac{${c}}{${d}}$.`, solution: sol });
+    })();
+
+    /* NIVEAU 3 */
+    (function () {
+      const b = rnd(2, 5);
+      let d, f, tries = 0;
+      do { d = rnd(2, 5); tries++; } while (d === b && tries < 20);
+      do { f = rnd(2, 5); tries++; } while (f === d && tries < 40);
+      const a = rnd(1, b - 1);
+      const c = rnd(1, d - 1);
+      const e = rnd(1, f - 1);
+      const prodNum = c * e, prodDen = d * f;
+      const prodS = simpFrac(prodNum, prodDen);
+      const L = clamp(lcm(b, prodS.d));
+      const n1 = clamp(a * L / b);
+      const n2 = clamp(prodS.n * L / prodS.d);
+      const sumNum = n1 + n2;
+      const result = simpFrac(sumNum, L);
+      let sol = `Priorité à la multiplication :<br>`;
+      sol += `$\\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}} = \\dfrac{${c}\\times ${e}}{${d}\\times ${f}} = \\dfrac{${prodNum}}{${prodDen}}${(prodS.n !== prodNum || prodS.d !== prodDen) ? ' = ' + fL(prodS) : ''}$<br>`;
+      sol += `Puis l'addition, au dénominateur $${L}$ :<br>`;
+      sol += `$\\dfrac{${a}}{${b}} + ${fL(prodS)} = \\dfrac{${n1}}{${L}} + \\dfrac{${n2}}{${L}} = \\dfrac{${sumNum}}{${L}}`;
+      if (result.n !== sumNum || result.d !== L) sol += ` = ${fL(result)}`;
+      sol += `$`;
+      ex.n3.push({ id: '3.1', enonce: `Calculer $\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} \\times \\dfrac{${e}}{${f}}$.`, solution: sol });
+    })();
+
+    (function () {
+      const a = rnd(1, 5), b = rnd(2, 6);
+      const c = rnd(1, 5), d = rnd(2, 6);
+      const num = a * d, den = b * c;
+      const s = simpFrac(num, den);
+      let sol = `Diviser par $\\dfrac{${c}}{${d}}$ revient à multiplier par son inverse $\\dfrac{${d}}{${c}}$ :<br>`;
+      sol += `$\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}} = \\dfrac{${a}}{${b}} \\times \\dfrac{${d}}{${c}} = \\dfrac{${a}\\times ${d}}{${b}\\times ${c}} = \\dfrac{${num}}{${den}}`;
+      if (s.n !== num || s.d !== den) sol += ` = ${fL(s)}`;
+      sol += `$`;
+      ex.n3.push({ id: '3.2', enonce: `Calculer $\\dfrac{${a}}{${b}} \\div \\dfrac{${c}}{${d}}$.`, solution: sol });
+    })();
+
+    (function () {
+      const b = rnd(2, 5);
+      let d, tries = 0;
+      do { d = rnd(2, 5); tries++; } while (d === b && tries < 20);
+      const a = rnd(1, b - 1);
+      const c = rnd(1, d - 1);
+      const L1 = clamp(lcm(b, d));
+      const n1 = clamp(a * L1 / b);
+      const n2 = clamp(c * L1 / d);
+      const sumS = simpFrac(n1 + n2, L1);
+      const e = rnd(1, 5), f = rnd(2, 6);
+      const num = sumS.n * f, den = sumS.d * e;
+      const result = simpFrac(num, den);
+      let sol = `On calcule d'abord l'expression entre parenthèses :<br>`;
+      sol += `$\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}} = \\dfrac{${n1}}{${L1}} + \\dfrac{${n2}}{${L1}} = \\dfrac{${n1 + n2}}{${L1}} = ${fL(sumS)}$<br>`;
+      sol += `Puis on divise par $\\dfrac{${e}}{${f}}$ (multiplier par $\\dfrac{${f}}{${e}}$) :<br>`;
+      sol += `$${fL(sumS)} \\div \\dfrac{${e}}{${f}} = ${fL(sumS)} \\times \\dfrac{${f}}{${e}} = \\dfrac{${num}}{${den}}`;
+      if (result.n !== num || result.d !== den) sol += ` = ${fL(result)}`;
+      sol += `$`;
+      ex.n3.push({ id: '3.3', enonce: `Calculer $\\left(\\dfrac{${a}}{${b}} + \\dfrac{${c}}{${d}}\\right) \\div \\dfrac{${e}}{${f}}$.`, solution: sol });
+    })();
+
+    return ex;
+  })();
+
+  /* =========================================================
+     NAVIGATION
+     ========================================================= */
+  (function () {
+    const chapters = document.querySelectorAll('.chapter');
+    const links = document.querySelectorAll('.sidebar-nav a');
+    const sidebar = el('sidebar');
+    const menuToggle = el('menuToggle');
+
+    function showChapter(id) {
+      chapters.forEach(ch => ch.classList.toggle('active', ch.dataset.chapter === id));
+      links.forEach(a => a.classList.toggle('active', a.dataset.chapter === id));
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      if (window.MathJax && MathJax.typesetPromise) {
+        const active = document.querySelector('.chapter.active');
+        if (active) MathJax.typesetPromise([active]).catch(() => {});
+      }
+    }
+
+    links.forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        showChapter(a.dataset.chapter);
+        if (sidebar) sidebar.classList.remove('open');
+      });
+    });
+
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener('click', e => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
+      });
+    }
+
+    showChapter('cover');
+    window.showChapter = showChapter;
+  })();
+
+  /* =========================================================
+     GENRE + OUVERTURE
+     ========================================================= */
+  const genres = ['Fantastique', 'Policier', 'Conte', 'Fantaisie', 'Fiction', 'Aventure', 'Merveilleux', 'Épique'];
+  const openings = [
+    "Ce soir-là, la pluie tombait sur le manoir comme une pluie de chiffres.",
+    "Le portail grinça, et le premier chiffre apparut dans la brume.",
+    "Personne ne savait ce qui se cachait derrière la porte aux panneaux.",
+    "La lettre ne contenait qu'une phrase : « Les fractions ouvrent les portes. »",
+    "Au bout de l'allée, le manoir comptait ses fenêtres comme on compte des parts."
+  ];
+  if (el('genreBadge')) el('genreBadge').textContent = 'Genre : ' + genres[rnd(0, genres.length - 1)];
+  if (el('openingLine')) el('openingLine').textContent = openings[rnd(0, openings.length - 1)];
+
+  /* =========================================================
+     COUVERTURE
+     ========================================================= */
+  el('coverGrimoire').innerHTML = `
+    <h3>Bienvenue, voyageuse, voyageur</h3>
+    <p>
+      Tu tiens entre les mains le carnet d'Alix, une jeune apprentie qui a franchi
+      la porte d'un manoir étrange. Dans chaque salle, une énigme de fractions
+      garde un trésor. Pour avancer, il faudra comprendre, calculer, simplifier,
+      additionner, soustraire, multiplier et diviser.
+    </p>
+    <p>
+      Rien n'est laissé au hasard : chaque chapitre s'affiche seul, chaque règle
+      est écrite noir sur blanc, et chaque animation te montre ce qui se passe
+      vraiment.
+    </p>
+  `;
+
+  /* =========================================================
+     CHAPITRE 1
+     ========================================================= */
+  (function () {
+    const f = D.c1;
+    const q = clamp(f.d * 5);
+    const r = clamp(5 * f.n);
+    el('ch1-story').innerHTML = `
+      <p>
+        Alix poussa le portail. Devant elle se dressait une porte immense, divisée en
+        ${toFr(f.d)} panneaux parfaitement égaux. Sur le heurtoir, une inscription :
+        <em>« Pour entrer, pousse ${toFr(f.n)} panneaux sur ${toFr(f.d)}. »</em>
+      </p>
+      <p>
+        Alix compta et poussa ${toFr(f.n)} panneaux sur les ${toFr(f.d)}.
+        La porte s'ouvrit dans un grincement. Elle venait d'utiliser,
+        sans le savoir, la fraction ${fM(f)}.
+      </p>
+    `;
+    el('ch1-grimoire').innerHTML = `
+      <h3>Le grimoire — Qu'est-ce qu'une fraction ?</h3>
+      <p>
+        Une fraction s'écrit $\\dfrac{a}{b}$, où $a$ et $b$ sont des entiers et
+        $b \\neq 0$.
+      </p>
+      <ul>
+        <li>$a$ est le <strong>numérateur</strong> : le nombre de parts prises.</li>
+        <li>$b$ est le <strong>dénominateur</strong> : le nombre de parts égales dans l'unité.</li>
+      </ul>
+      <p>
+        $\\dfrac{a}{b}$ signifie donc « $a$ parts sur $b$ parts égales ». C'est aussi
+        le quotient de $a$ par $b$ :
+        \\[ \\dfrac{a}{b} = a \\div b. \\]
+      </p>
+      <p>
+        Exemple : ${fM(f)} se lit « ${toFr(f.n)} ${ordinalSuffix(f.d)} ».
+      </p>
+    `;
+    el('ch1-exemple').innerHTML = `
+      <strong>Fraction d'une quantité.</strong> Prendre ${fM(f)} de ${q},
+      c'est partager ${q} en ${toFr(f.d)} parts égales puis en prendre ${toFr(f.n)} :
+      \\[
+        ${fL(f)}\\times ${q} = (${q} \\div ${f.d})\\times ${f.n} = ${5}\\times ${f.n} = ${r}.
+      \\]
+    `;
+    el('fracNum').value = String(f.n);
+    el('fracDen').value = String(f.d);
+  })();
+
+  /* =========================================================
+     CHAPITRE 2
+     ========================================================= */
+  (function () {
+    const base = D.c2.base, k = D.c2.k, mult = D.c2.mult;
+    el('ch2-story').innerHTML = `
+      <p>
+        Dans le couloir, deux portraits se faisaient face. Sur l'un, un homme
+        découpé en ${toFr(base.d)} morceaux, dont ${toFr(base.n)} étaient peints. Sur l'autre,
+        le même homme découpé en ${toFr(mult.d)} morceaux, dont ${toFr(mult.n)} étaient peints.
+        Alix recula de trois pas : les deux visages se superposaient exactement.
+      </p>
+      <p>
+        <em>« ${toFr(mult.n)} ${ordinalSuffix(mult.d)} ou ${toFr(base.n)} ${ordinalSuffix(base.d)}, c'est la même personne »</em>,
+        murmura une voix dans le miroir.
+      </p>
+    `;
+    el('ch2-grimoire').innerHTML = `
+      <h3>Le grimoire — Fractions égales</h3>
+      <p>
+        On ne change pas la valeur d'une fraction quand on multiplie (ou divise)
+        son numérateur <strong>et</strong> son dénominateur par un même nombre non nul :
+        \\[
+          \\dfrac{a}{b}=\\dfrac{a\\times k}{b\\times k}
+          \\qquad\\text{et}\\qquad
+          \\dfrac{a}{b}=\\dfrac{a\\div k}{b\\div k}.
+        \\]
+      </p>
+      <p>
+        Exemple : ${fM(base)} = $\\dfrac{${base.n}\\times ${k}}{${base.d}\\times ${k}}$ = ${fM(mult)}.
+      </p>
+      <h3>Simplifier une fraction</h3>
+      <p>
+        Simplifier, c'est diviser numérateur et dénominateur par un diviseur
+        commun. On s'arrête quand la fraction est <strong>irréductible</strong>,
+        c'est-à-dire quand $\\operatorname{PGCD}(a,b)=1$.
+      </p>
+      <p>
+        Exemple :
+        \\[
+          \\dfrac{${D.c2simp.num}}{${D.c2simp.den}}
+          = \\dfrac{${D.c2simp.num}\\div ${D.c2simp.g}}{${D.c2simp.den}\\div ${D.c2simp.g}}
+          = ${fL(D.c2simp.base)}.
+        \\]
+        Ici, $\\operatorname{PGCD}(${D.c2simp.num},${D.c2simp.den})=${D.c2simp.g}$.
+      </p>
+    `;
+
+    const cmp = D.c2cmp;
+    const c1 = cmp.f1.n * cmp.f2.d;
+    const c2 = cmp.f2.n * cmp.f1.d;
+    const L = clamp(lcm(cmp.f1.d, cmp.f2.d));
+    const a1 = clamp(cmp.f1.n * L / cmp.f1.d);
+    const a2 = clamp(cmp.f2.n * L / cmp.f2.d);
+    const symTex = c1 > c2 ? '\\gt' : '\\lt';
+    el('ch2-grimoire2').innerHTML = `
+      <h3>Le grimoire — Comparer deux fractions</h3>
+      <ul>
+        <li>
+          <strong>Même dénominateur :</strong> on compare les numérateurs.
+          \\[\\dfrac{${cmp.f1.d + 2}}{${cmp.f1.d}} \\gt \\dfrac{${Math.max(1, cmp.f1.d - 1)}}{${cmp.f1.d}}.\\]
+        </li>
+        <li>
+          <strong>Même numérateur :</strong> plus le dénominateur est petit, plus la fraction est grande.
+          \\[\\dfrac{${cmp.f1.n + 1}}{${cmp.f1.d + 3}} \\gt \\dfrac{${cmp.f1.n + 1}}{${cmp.f1.d + 5}}.\\]
+        </li>
+        <li>
+          <strong>Dénominateurs différents :</strong> réduire au même dénominateur ou comparer les produits en croix.
+        </li>
+        <li>
+          <strong>Par rapport à 1 :</strong> si $a \\lt b$ alors $\\dfrac{a}{b} \\lt 1$ ;
+          si $a=b$ alors $\\dfrac{a}{b}=1$ ; si $a \\gt b$ alors $\\dfrac{a}{b} \\gt 1$.
+        </li>
+      </ul>
+      <p>
+        Exemple : comparons ${fM(cmp.f1)} et ${fM(cmp.f2)}.
+        \\[
+          ${fL(cmp.f1)}=\\dfrac{${a1}}{${L}},
+          \\qquad
+          ${fL(cmp.f2)}=\\dfrac{${a2}}{${L}},
+          \\qquad
+          \\dfrac{${Math.min(a1, a2)}}{${L}} \\lt \\dfrac{${Math.max(a1, a2)}}{${L}},
+        \\]
+        donc $${fL(cmp.f1)} ${symTex} ${fL(cmp.f2)}$.
+      </p>
+    `;
+  })();
+
+  /* =========================================================
+     CHAPITRE 3
+     ========================================================= */
+  (function () {
+    const c = D.c3;
+    el('ch3-story').innerHTML = `
+      <p>
+        La grande salle sentait le pain chaud. Sur la table, deux plats : l'un
+        contenait ${fM(c.f1)} d'un gâteau, l'autre ${fM(c.f2)} d'un gâteau identique.
+        Une plaque annonçait : <em>« Pour ouvrir la porte suivante, réunis les deux
+        parts en une seule fraction. »</em>
+      </p>
+      <p>
+        Alix comprit qu'il fallait additionner ${fM(c.f1)} et ${fM(c.f2)},
+        mais les parts n'avaient pas la même taille. Elle découpa alors chaque
+        gâteau en ${toFr(c.L)} parts égales.
+      </p>
+    `;
+    el('ch3-grimoire').innerHTML = `
+      <h3>Le grimoire — Addition et soustraction</h3>
+      <p>
+        <strong>Même dénominateur :</strong> on additionne (ou soustrait) les
+        numérateurs et on garde le dénominateur.
+        \\[
+          \\dfrac{a}{b}+\\dfrac{c}{b}=\\dfrac{a+c}{b},
+          \\qquad
+          \\dfrac{a}{b}-\\dfrac{c}{b}=\\dfrac{a-c}{b}.
+        \\]
+      </p>
+      <p class="lettrine">
+        <strong>Dénominateurs différents :</strong> on réduit d'abord les
+        fractions au même dénominateur, puis on applique la règle précédente.
+      </p>
+      <p>
+        Exemple :
+        \\[
+          ${fL(c.f1)}+${fL(c.f2)}
+          = \\dfrac{${c.n1}}{${c.L}}+\\dfrac{${c.n2}}{${c.L}}
+          = \\dfrac{${c.n1 + c.n2}}{${c.L}}
+          = ${fL(c.sum)}.
+        \\]
+      </p>
+      <p>
+        Autre exemple :
+        \\[
+          ${fL(D.c3sub.f1)}-${fL(D.c3sub.f2)}
+          = \\dfrac{${D.c3sub.n1}}{${D.c3sub.L}}-\\dfrac{${D.c3sub.n2}}{${D.c3sub.L}}
+          = \\dfrac{${D.c3sub.n1 - D.c3sub.n2}}{${D.c3sub.L}}
+          = ${fL(D.c3sub.diff)}.
+        \\]
+      </p>
+    `;
+  })();
+
+  /* =========================================================
+     CHAPITRE 4
+     ========================================================= */
+  (function () {
+    const c = D.c4;
+    const totalCases = clamp(c.f1.d * c.f2.d);
+    const totalFill = clamp(c.f1.n * c.f2.n);
+    const q = clamp(c.f1.d * 5);
+    const r = clamp(c.f1.n * 5);
+    el('ch4-story').innerHTML = `
+      <p>
+        La chambre était tapissée d'un motif rectangulaire. Alix devait recouvrir
+        ${fM(c.f1)} de la hauteur, puis ${fM(c.f2)} de la largeur de cette zone.
+        Une étiquette indiquait : <em>« La surface doublement recouverte est la clé. »</em>
+      </p>
+      <p>
+        En traçant la grille, elle vit apparaître ${toFr(totalCases)} petits rectangles.
+        ${toFr(totalFill)} étaient recouverts deux fois. La clé était donc
+        $\\dfrac{${totalFill}}{${totalCases}}$, c'est-à-dire ${fM(c.simpl)}.
+      </p>
+    `;
+    el('ch4-grimoire').innerHTML = `
+      <h3>Le grimoire — Multiplication</h3>
+      <p>
+        On multiplie les numérateurs entre eux et les dénominateurs entre eux :
+        \\[
+          \\dfrac{a}{b}\\times\\dfrac{c}{d} = \\dfrac{a\\times c}{b\\times d}.
+        \\]
+      </p>
+      <p>
+        Exemple :
+        \\[
+          ${fL(c.f1)}\\times${fL(c.f2)}
+          = \\dfrac{${c.f1.n}\\times ${c.f2.n}}{${c.f1.d}\\times ${c.f2.d}}
+          = \\dfrac{${c.prod.n}}{${c.prod.d}}
+          = ${fL(c.simpl)}.
+        \\]
+      </p>
+      <p>
+        Prendre une fraction <em>de</em> quelque chose, c'est multiplier :
+        ${fM(c.f1)} de $${q}$ s'écrit $${fL(c.f1)}\\times ${q} = ${r}$.
+      </p>
+      <p>
+        L'<strong>inverse</strong> de $\\dfrac{a}{b}$ (avec $a\\neq 0$ et $b\\neq 0$)
+        est $\\dfrac{b}{a}$, et l'on a $\\dfrac{a}{b}\\times\\dfrac{b}{a}=1$.
+      </p>
+    `;
+  })();
+
+  /* =========================================================
+     CHAPITRE 5
+     ========================================================= */
+  (function () {
+    const c = D.c5;
+    el('ch5-story').innerHTML = `
+      <p>
+        Au centre de la cour, un puits. Alix y versa ${fM(c.f1)} de litre d'eau,
+        puis puisa avec une petite dose de ${fM(c.f2)} de litre.
+        Combien de doses pouvait-elle remplir ? Elle les compta :
+        ${Array.from({length: c.result}, (_, i) => toFr(i + 1)).join(', ')}.
+      </p>
+      <p>
+        <em>« Diviser, c'est se demander combien de fois une quantité tient dans une autre »</em>,
+        dit la voix du puits.
+      </p>
+    `;
+    el('ch5-grimoire').innerHTML = `
+      <h3>Le grimoire — Division</h3>
+      <p>
+        Diviser par une fraction, c'est multiplier par son inverse :
+        \\[
+          \\dfrac{a}{b}\\div\\dfrac{c}{d}
+          = \\dfrac{a}{b}\\times\\dfrac{d}{c}
+          = \\dfrac{a\\times d}{b\\times c},
+        \\]
+        avec $c\\neq 0$.
+      </p>
+      <p>
+        Exemple :
+        \\[
+          ${fL(c.f1)}\\div${fL(c.f2)}
+          = ${fL(c.f1)}\\times\\dfrac{${c.f2.d}}{${c.f2.n}}
+          = \\dfrac{${c.f1.n}\\times ${c.f2.d}}{${c.f1.d}\\times ${c.f2.n}}
+          = ${c.result}.
+        \\]
+      </p>
+      <p>
+        <strong>Inverse et opposé.</strong> L'inverse de $\\dfrac{a}{b}$ est
+        $\\dfrac{b}{a}$ ; l'opposé de $\\dfrac{a}{b}$ est $-\\dfrac{a}{b}$.
+      </p>
+    `;
+  })();
+
+  /* =========================================================
+     CHAPITRE 6
+     ========================================================= */
+  (function () {
+    const c = D.c6;
+    el('ch6-story').innerHTML = `
+      <p>
+        La dernière porte s'ouvrit sur une bibliothèque circulaire. Au centre, un
+        lutrin portait une opération mêlant plusieurs fractions. Alix respira :
+        elle savait maintenant que les fractions obéissent aux mêmes priorités que
+        les nombres ordinaires.
+      </p>
+    `;
+    el('ch6-grimoire').innerHTML = `
+      <h3>Le grimoire — Mélanger les opérations</h3>
+      <p>Les priorités sont les mêmes que pour les nombres :</p>
+      <ol>
+        <li>les parenthèses ;</li>
+        <li>les multiplications et les divisions, de gauche à droite ;</li>
+        <li>les additions et les soustractions, de gauche à droite.</li>
+      </ol>
+      <p>
+        Exemple :
+        \\[
+          ${fL(c.f1)}+${fL(c.f2)}\\times${fL(c.f3)}
+          = ${fL(c.f1)}+\\dfrac{${c.f2.n}\\times ${c.f3.n}}{${c.f2.d}\\times ${c.f3.d}}
+          = ${fL(c.f1)}+${fL(c.prod)}
+          = \\dfrac{${c.n1}}{${c.L}}+\\dfrac{${c.n2}}{${c.L}}
+          = \\dfrac{${c.n1 + c.n2}}{${c.L}}
+          = ${fL(c.sum)}.
+        \\]
+      </p>
+    `;
+
+    const cmp = D.c2cmp;
+    const symCmp = cmp.f1.n * cmp.f2.d > cmp.f2.n * cmp.f1.d ? '\\gt' : '\\lt';
+    el('ch6-table').innerHTML = `
+      <tr>
+        <td>Addition / soustraction</td>
+        <td>Même dénominateur : on agit sur les numérateurs.</td>
+        <td>$${fL(D.c3.f1)}+${fL(D.c3.f2)}=${fL(D.c3.sum)}$</td>
+      </tr>
+      <tr>
+        <td>Multiplication</td>
+        <td>Numérateurs entre eux, dénominateurs entre eux.</td>
+        <td>$${fL(D.c4.f1)}\\times${fL(D.c4.f2)}=${fL(D.c4.simpl)}$</td>
+      </tr>
+      <tr>
+        <td>Division</td>
+        <td>Multiplier par l'inverse.</td>
+        <td>$${fL(D.c5.f1)}\\div${fL(D.c5.f2)}=${D.c5.result}$</td>
+      </tr>
+      <tr>
+        <td>Simplification</td>
+        <td>Diviser haut et bas par un même nombre non nul.</td>
+        <td>$${fL({n: D.c2simp.num, d: D.c2simp.den})}=${fL(D.c2simp.base)}$</td>
+      </tr>
+      <tr>
+        <td>Comparaison</td>
+        <td>Réduire au même dénominateur ou comparer les produits en croix.</td>
+        <td>$${fL(cmp.f1)} ${symCmp} ${fL(cmp.f2)}$</td>
+      </tr>
+    `;
+  })();
+
+  /* =========================================================
+     QUIZ (génération DOM)
+     ========================================================= */
+  (function () {
+    const cont = el('quizContainer');
+    let html = '';
+    D.quiz.forEach((q, i) => {
+      html += `<fieldset data-qi="${i}">
+        <legend>Question ${i + 1} — ${q.legend}</legend>`;
+      q.opts.forEach((opt, j) => {
+        html += `<label><input type="radio" name="q${i}" value="${j}"> $${opt.l}$</label>`;
+      });
+      html += `<div class="feedback"></div></fieldset>`;
+    });
+    cont.innerHTML = html;
+  })();
+
+  /* =========================================================
+     EXERCICES (génération DOM + bouton révéler)
+     ========================================================= */
+  (function () {
+    ['n1', 'n2', 'n3'].forEach(lvl => {
+      const cont = el('ex-' + lvl);
+      let html = '';
+      D.exercises[lvl].forEach((ex, i) => {
+        const solId = `sol-${lvl}-${i}`;
+        html += `<div class="exercice">
+          <div class="ex-enonce"><strong>Exercice ${ex.id}.</strong> ${ex.enonce}</div>
+          <button type="button" class="ex-reveal" data-target="${solId}">Révéler la solution</button>
+          <div class="ex-solution" id="${solId}" hidden>${ex.solution}</div>
+        </div>`;
+      });
+      cont.innerHTML = html;
+    });
+
+    document.querySelectorAll('.ex-reveal').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const target = document.getElementById(this.dataset.target);
+        if (!target) return;
+        const isHidden = target.hasAttribute('hidden');
+        if (isHidden) {
+          target.removeAttribute('hidden');
+          this.textContent = 'Masquer la solution';
+        } else {
+          target.setAttribute('hidden', '');
+          this.textContent = 'Révéler la solution';
+        }
+        if (window.MathJax && MathJax.typesetPromise) {
+          MathJax.typesetPromise([target]).catch(() => {});
+        }
+      });
+    });
+  })();
+
+  /* =========================================================
+     ANIMATION 1 : barre de fraction interactive
+     ========================================================= */
+  (function () {
+    const canvas = el('canvasFraction');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const numInput = el('fracNum');
+    const denInput = el('fracDen');
+    const readout = el('fracReadout');
+
+    function drawFraction() {
+      let den = clamp(parseInt(denInput.value, 10));
+      let num = clamp(parseInt(numInput.value, 10));
+      if (num > den) { num = den; numInput.value = String(den); }
+      if (num < 0) { num = 0; numInput.value = '0'; }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#2c1810';
+      ctx.font = 'bold 18px Verdana, sans-serif';
+      ctx.fillText('Représentation de la fraction', 30, 32);
+
+      const x = 30, y = 60, w = 580, h = 90;
+      for (let i = 0; i < den; i++) {
+        const partW = w / den;
+        ctx.fillStyle = (i < num) ? '#8b1a1a' : '#faf6e8';
+        ctx.fillRect(x + i * partW, y, partW, h);
+      }
+      ctx.strokeStyle = '#8b6914';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      for (let i = 1; i < den; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i * w / den, y);
+        ctx.lineTo(x + i * w / den, y + h);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#2c1810';
+      ctx.font = '16px Verdana, sans-serif';
+      ctx.fillText(num + ' part' + (num > 1 ? 's' : '') + ' sur ' + den, x, y + h + 32);
+      ctx.font = 'bold 26px Georgia, serif';
+      ctx.fillStyle = '#5c1a1a';
+      ctx.fillText(num + '/' + den, x, y + h + 76);
+      if (readout) readout.textContent = num + '/' + den;
+    }
+
+    numInput.addEventListener('input', drawFraction);
+    denInput.addEventListener('input', drawFraction);
+    drawFraction();
+  })();
+
+  /* =========================================================
+     ANIMATION 2 : addition
+     ========================================================= */
+  (function () {
+    const canvas = el('canvasAddition');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const btn = el('addPlay');
+    let runId = 0;
+
+    const f1 = D.c3.f1, f2 = D.c3.f2, L = D.c3.L;
+    const n1 = D.c3.n1, n2 = D.c3.n2;
+    const sum = D.c3.sum;
+
+    function drawBar(x, y, w, h, den, fill, alpha, label) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      for (let i = 0; i < den; i++) {
+        const pw = w / den;
+        ctx.fillStyle = (i < fill) ? '#8b1a1a' : '#faf6e8';
+        ctx.fillRect(x + i * pw, y, pw, h);
+      }
+      ctx.strokeStyle = '#8b6914';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      for (let i = 1; i < den; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i * w / den, y);
+        ctx.lineTo(x + i * w / den, y + h);
+        ctx.stroke();
+      }
+      if (label) {
+        ctx.fillStyle = '#2c1810';
+        ctx.font = '15px Verdana, sans-serif';
+        ctx.fillText(label, x, y - 12);
+      }
+      ctx.restore();
+    }
+
+    function base() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#2c1810';
+      ctx.font = 'bold 17px Verdana, sans-serif';
+      ctx.fillText('Addition : ' + fT(f1) + ' + ' + fT(f2), 24, 30);
+    }
+    function step0(p) {
+      base();
+      drawBar(40, 70, 240, 70, f1.d, f1.n, p, fT(f1));
+      drawBar(340, 70, 240, 70, f2.d, f2.n, p, fT(f2));
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = '15px Verdana, sans-serif';
+      ctx.fillText('Deux parts de tailles différentes…', 40, 185);
+    }
+    function step1(p) {
+      base();
+      drawBar(40, 70, 240, 70, L, n1, p, fT(f1) + ' = ' + n1 + '/' + L);
+      drawBar(340, 70, 240, 70, L, n2, p, fT(f2) + ' = ' + n2 + '/' + L);
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = '15px Verdana, sans-serif';
+      ctx.fillText('On découpe chaque barre en ' + L + ' parts.', 40, 185);
+    }
+    function step2(p) {
+      base();
+      const x = 40, y = 70, w = 540, h = 80;
+      for (let i = 0; i < L; i++) {
+        const pw = w / L;
+        let fill = '#faf6e8';
+        if (i < n1) fill = '#8b1a1a';
+        else if (i < n1 + n2 && p > (i - n1) / n2) fill = '#5c1a1a';
+        ctx.fillStyle = fill;
+        ctx.fillRect(x + i * pw, y, pw, h);
+      }
+      ctx.strokeStyle = '#8b6914';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+      for (let i = 1; i < L; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i * w / L, y);
+        ctx.lineTo(x + i * w / L, y + h);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#2c1810';
+      ctx.font = '16px Verdana, sans-serif';
+      ctx.fillText(n1 + '/' + L, x + w * (n1 / L) / 2 - 20, y - 12);
+      ctx.fillText('+ ' + n2 + '/' + L, x + w * (n1 / L) + w * (n2 / L) / 2 - 25, y - 12);
+      ctx.fillText('= ' + (n1 + n2) + '/' + L, x + w / 2 - 30, y + h + 32);
+    }
+    function step3() {
+      base();
+      const x = 40, y = 70, w = 540, h = 80;
+      drawBar(x, y, w, h, L, n1 + n2, 1, '');
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = 'bold 22px Georgia, serif';
+      ctx.fillText(fT(f1) + ' + ' + fT(f2) + ' = ' + fT(sum), x, y + h + 70);
+    }
+
+    const sequence = [
+      { duration: 700, draw: step0 },
+      { duration: 900, draw: step1 },
+      { duration: 1000, draw: step2 },
+      { duration: 500, draw: step3 }
+    ];
+
+    function play() {
+      const myRun = ++runId;
+      let index = 0;
+      function next() {
+        if (myRun !== runId || index >= sequence.length) return;
+        const step = sequence[index++];
+        const start = performance.now();
+        function frame(now) {
+          if (myRun !== runId) return;
+          const p = Math.min(1, (now - start) / step.duration);
+          step.draw(p);
+          if (p < 1) requestAnimationFrame(frame);
+          else setTimeout(next, 300);
+        }
+        requestAnimationFrame(frame);
+      }
+      next();
+    }
+
+    btn.addEventListener('click', play);
+    step0(1);
+  })();
+
+  /* =========================================================
+     ANIMATION 3 : multiplication
+     ========================================================= */
+  (function () {
+    const canvas = el('canvasMultiplication');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const btn = el('mulPlay');
+    let runId = 0;
+
+    const c = D.c4;
+    const X = 30, Y = 50, S = 240;
+    const ROWS = c.f1.d, COLS = c.f2.d;
+
+    function base() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#2c1810';
+      ctx.font = 'bold 17px Verdana, sans-serif';
+      ctx.fillText('Multiplication : ' + fT(c.f1) + ' × ' + fT(c.f2), 24, 28);
+    }
+    function grid(alphaRows, alphaCols) {
+      ctx.save();
+      ctx.globalAlpha = alphaRows;
+      ctx.fillStyle = '#c9a227';
+      ctx.fillRect(X, Y, S, S * c.f1.n / c.f1.d);
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = alphaCols;
+      ctx.fillStyle = 'rgba(74, 29, 92, 0.55)';
+      ctx.fillRect(X, Y, S * c.f2.n / c.f2.d, S);
+      ctx.restore();
+      ctx.strokeStyle = '#8b6914';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i <= ROWS; i++) {
+        ctx.beginPath();
+        ctx.moveTo(X, Y + i * S / ROWS);
+        ctx.lineTo(X + S, Y + i * S / ROWS);
+        ctx.stroke();
+      }
+      for (let j = 0; j <= COLS; j++) {
+        ctx.beginPath();
+        ctx.moveTo(X + j * S / COLS, Y);
+        ctx.lineTo(X + j * S / COLS, Y + S);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(X, Y, S, S);
+    }
+    function step0() {
+      base();
+      grid(0, 0);
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = '15px Verdana, sans-serif';
+      ctx.fillText('On prend ' + fT(c.f1) + ' de la hauteur…', X, Y + S + 42);
+    }
+    function step1(p) {
+      base();
+      grid(p, 0);
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = '15px Verdana, sans-serif';
+      ctx.fillText('… puis ' + fT(c.f2) + ' de la largeur.', X, Y + S + 42);
+    }
+    function step2(p) {
+      base();
+      grid(1, 1);
+      const cw = S / COLS, ch = S / ROWS;
+      let k = 0;
+      const total = c.f1.n * c.f2.n;
+      for (let r = 0; r < c.f1.n; r++) {
+        for (let col = 0; col < c.f2.n; col++) {
+          if (p > k / total) {
+            ctx.strokeStyle = '#5c1a1a';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(X + col * cw + 2, Y + r * ch + 2, cw - 4, ch - 4);
+          }
+          k++;
+        }
+      }
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = 'bold 20px Georgia, serif';
+      ctx.fillText(fT(c.f1) + ' × ' + fT(c.f2), X + S + 40, Y + 100);
+      ctx.fillText('= ' + c.prod.n + '/' + c.prod.d, X + S + 40, Y + 135);
+      ctx.fillText('= ' + fT(c.simpl), X + S + 40, Y + 170);
+      ctx.fillStyle = '#2c1810';
+      ctx.font = '14px Verdana, sans-serif';
+      ctx.fillText(total + ' cases sur ' + (ROWS * COLS), X + S + 40, Y + 205);
+      ctx.fillText('sont recouvertes deux fois.', X + S + 40, Y + 225);
+    }
+
+    const sequence = [
+      { duration: 700, draw: step0 },
+      { duration: 900, draw: step1 },
+      { duration: 1200, draw: step2 }
+    ];
+
+    function play() {
+      const myRun = ++runId;
+      let index = 0;
+      function next() {
+        if (myRun !== runId || index >= sequence.length) return;
+        const step = sequence[index++];
+        const start = performance.now();
+        function frame(now) {
+          if (myRun !== runId) return;
+          const p = Math.min(1, (now - start) / step.duration);
+          step.draw(p);
+          if (p < 1) requestAnimationFrame(frame);
+          else setTimeout(next, 300);
+        }
+        requestAnimationFrame(frame);
+      }
+      next();
+    }
+
+    btn.addEventListener('click', play);
+    step0();
+  })();
+
+  /* =========================================================
+     ANIMATION 4 : division
+     ========================================================= */
+  (function () {
+    const canvas = el('canvasDivision');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const btn = el('divPlay');
+    let runId = 0;
+
+    const c = D.c5;
+    const X = 60, Y = 70, W = 480, H = 70;
+
+    function base() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#2c1810';
+      ctx.font = 'bold 17px Verdana, sans-serif';
+      ctx.fillText('Division : ' + fT(c.f1) + ' ÷ ' + fT(c.f2), 24, 30);
+      ctx.fillStyle = '#5c1a1a';
+      ctx.font = '14px Verdana, sans-serif';
+      ctx.fillText('Chaque dose fait ' + fT(c.f2) + ' L.', 24, 52);
+    }
+    function draw(count) {
+      base();
+      for (let i = 0; i < c.f2.d; i++) {
+        const pw = W / c.f2.d;
+        ctx.fillStyle = (i < c.f1.n * c.f2.d / c.f1.d) ? '#8b1a1a' : '#faf6e8';
+        ctx.fillRect(X + i * pw, Y, pw, H);
+      }
+      ctx.strokeStyle = '#8b6914';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(X, Y, W, H);
+      for (let i = 1; i < c.f2.d; i++) {
+        ctx.beginPath();
+        ctx.moveTo(X + i * W / c.f2.d, Y);
+        ctx.lineTo(X + i * W / c.f2.d, Y + H);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#2c1810';
+      ctx.font = '16px Verdana, sans-serif';
+      ctx.fillText(fT(c.f1), X + W * (c.f1.n / c.f1.d) / 2 - 12, Y - 12);
+      for (let i = 0; i < c.result; i++) {
+        if (i >= count) break;
+        const cx = X + i * W / c.f2.d + W / (2 * c.f2.d);
+        ctx.strokeStyle = '#5c1a1a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 18, Y + H + 16);
+        ctx.lineTo(cx - 18, Y + H + 32);
+        ctx.lineTo(cx + 18, Y + H + 32);
+        ctx.lineTo(cx + 18, Y + H + 16);
+        ctx.stroke();
+        ctx.fillStyle = '#5c1a1a';
+        ctx.font = 'bold 16px Verdana, sans-serif';
+        ctx.fillText(String(i + 1), cx - 4, Y + H + 56);
+      }
+      if (count >= c.result) {
+        ctx.fillStyle = '#5c1a1a';
+        ctx.font = 'bold 22px Georgia, serif';
+        ctx.fillText(fT(c.f1) + ' ÷ ' + fT(c.f2) + ' = ' + c.result, X, 190);
+      }
+    }
+
+    function play() {
+      const myRun = ++runId;
+      const start = performance.now();
+      const duration = 1500;
+      function frame(now) {
+        if (myRun !== runId) return;
+        const p = Math.min(1, (now - start) / duration);
+        const count = Math.floor(p * (c.result + 0.999));
+        draw(count);
+        if (p < 1) requestAnimationFrame(frame);
+        else draw(c.result);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    btn.addEventListener('click', play);
+    draw(0);
+  })();
+
+  /* =========================================================
+     QUIZ : correction
+     ========================================================= */
+  (function () {
+    const btn = el('quizCheck');
+    if (!btn) return;
+    const result = el('quizResult');
+
+    btn.addEventListener('click', function () {
+      const fieldsets = document.querySelectorAll('.quiz fieldset');
+      let score = 0, total = 0;
+
+      fieldsets.forEach(function (fs) {
+        total++;
+        const qi = parseInt(fs.dataset.qi, 10);
+        const q = D.quiz[qi];
+        const chosen = fs.querySelector('input[type="radio"]:checked');
+        const feedback = fs.querySelector('.feedback');
+        fs.classList.remove('correct', 'incorrect');
+
+        if (chosen && q.opts[parseInt(chosen.value, 10)].ok) {
+          score++;
+          fs.classList.add('correct');
+          if (feedback) feedback.textContent = '✓ Exact.';
+        } else {
+          fs.classList.add('incorrect');
+          if (feedback) feedback.textContent = '✗ À revoir. Bonne réponse : ' + q.answer + '.';
+        }
+      });
+
+      if (result) result.textContent = 'Score : ' + score + ' / ' + total;
+    });
+  })();
+
+  /* =========================================================
+     MODALE LICENCE
+     ========================================================= */
+  (function () {
+    const dialog = el('licenseDialog');
+    const openBtn = el('licenseBtn');
+    const closeBtn = el('licenseClose');
+    if (!dialog || !openBtn || !closeBtn) return;
+
+    openBtn.addEventListener('click', function () {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', 'open');
+    });
+    closeBtn.addEventListener('click', function () {
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
+    });
+    dialog.addEventListener('click', function (event) {
+      if (event.target === dialog) {
+        if (typeof dialog.close === 'function') dialog.close();
+        else dialog.removeAttribute('open');
+      }
+    });
+  })();
+
+  /* =========================================================
+     TYPESET MATHJAX
+     ========================================================= */
+  window.contentReady = true;
+  (function tryTypeset() {
+    if (window.mathJaxReady && !window.typesetDone) {
+      window.typesetDone = true;
+      MathJax.typesetPromise([document.body]).catch(function (e) { console.error(e); });
+    } else if (!window.typesetDone) {
+      setTimeout(tryTypeset, 100);
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>

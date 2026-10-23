@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Synthèse pédagogique interactive : statistiques descriptives, échantillonnage (IF/IC) et probabilités — Terminale, option Mathématiques complémentaires.">
+<meta name="color-scheme" content="light dark">
+<title>Statistiques &amp; Probabilités — Synthèse interactive (Terminale MC)</title>
+
+<!-- MathJax 3 : rendu LaTeX principal (dès qu'une connexion au CDN est disponible). -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' },
+  options: { enableMenu: false, skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'template'] },
+  startup: { typeset: true }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* ==========================================================
+   1. DESIGN TOKENS
+   ========================================================== */
+:root {
+  --font-ui: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-math: "Cambria Math", "Latin Modern Math", Georgia, serif;
+
+  --bg: #f2f5fa;
+  --bg-panel: #ffffff;
+  --bg-soft: #eaf0f8;
+  --bg-code: #eef3fa;
+
+  --ink: #17233c;
+  --ink-soft: #4b5b76;
+  --ink-faint: #7d8ca6;
+
+  --line: #d9e2ef;
+  --line-strong: #b9c9de;
+
+  --brand: #0d4d8d;
+  --brand-strong: #093a6b;
+  --brand-soft: #e2eefb;
+  --brand-ink: #ffffff;
+
+  --stat: #1c64b0;  --stat-soft: #e7f1fb;  --stat-line: #4a90d9;
+  --prob: #1e7a44;  --prob-soft: #e7f5ec;  --prob-line: #3da95f;
+  --tool: #b06a10;  --tool-soft: #fbf1de;  --tool-line: #d68910;
+  --ifc: #b5651d;   --icc: #1f7a3a;
+
+  --ok: #1a7f37;   --ok-soft: #e5f6ec;
+  --bad: #c0392b;  --bad-soft: #fdecea;
+  --warn: #96660a; --warn-soft: #fff3d3;
+
+  --shadow-1: 0 1px 3px rgba(15, 35, 65, 0.10);
+  --shadow-2: 0 6px 22px rgba(15, 35, 65, 0.13);
+  --shadow-3: 0 22px 60px rgba(5, 20, 45, 0.35);
+
+  --radius: 12px;
+  --radius-s: 8px;
+  --side-w: 275px;
+  --topbar-h: 54px;
+}
+
+[data-theme="dark"] {
+  --bg: #0d1524;
+  --bg-panel: #15233c;
+  --bg-soft: #1a2b48;
+  --bg-code: #1c2d4a;
+
+  --ink: #e9eef8;
+  --ink-soft: #b6c4da;
+  --ink-faint: #8397b5;
+
+  --line: #2a3c5c;
+  --line-strong: #3d5178;
+
+  --brand: #5aa2ee;
+  --brand-strong: #bcdcfb;
+  --brand-soft: #122844;
+  --brand-ink: #0b1526;
+
+  --stat: #6db1f2;  --stat-soft: #14283f;  --stat-line: #4a90d9;
+  --prob: #58c28a;  --prob-soft: #11291c;  --prob-line: #3da95f;
+  --tool: #edb558;  --tool-soft: #2d2210;  --tool-line: #d68910;
+  --ifc: #e0925b;   --icc: #58c28a;
+
+  --ok: #4cc38a;   --ok-soft: #0e2b1c;
+  --bad: #ff8377;  --bad-soft: #3a1613;
+  --warn: #e6bd6b; --warn-soft: #33260c;
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 8px 26px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 22px 70px rgba(0, 0, 0, 0.65);
+}
+
+/* ==========================================================
+   2. BASE
+   ========================================================== */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.55;
+  background: var(--bg);
+  color: var(--ink);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+body.no-scroll { overflow: hidden; }
+
+h1, h2, h3, h4 { line-height: 1.25; color: var(--ink); margin: 0; }
+p { margin: 0 0 0.8em; }
+p:last-child { margin-bottom: 0; }
+a { color: var(--brand); }
+em { color: inherit; }
+
+:focus-visible { outline: 3px solid var(--stat-line); outline-offset: 2px; border-radius: 4px; }
+
+.skip-link {
+  position: fixed; top: -60px; left: 12px; z-index: 20000;
+  background: var(--brand); color: #fff; padding: 10px 16px;
+  border-radius: 0 0 10px 10px; font-weight: 600; text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
+
+::selection { background: rgba(74, 144, 217, 0.28); }
+
+button { font-family: inherit; font-size: inherit; color: inherit; }
+
+/* ==========================================================
+   3. SIDEBAR
+   ========================================================== */
+.sidebar {
+  position: fixed; inset: 0 auto 0 0; width: var(--side-w); z-index: 900;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #0a2038 0%, #0d2c4d 100%);
+  color: #dce9f7;
+  box-shadow: 2px 0 14px rgba(0, 0, 0, 0.25);
+}
+.sidebar__brand {
+  display: flex; gap: 12px; align-items: center;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+.sidebar__logo {
+  flex: 0 0 42px; height: 42px; display: grid; place-items: center;
+  background: linear-gradient(135deg, #10508f, #4a90d9);
+  border-radius: 11px; font-size: 22px; font-weight: 700; color: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+.sidebar__brand strong { font-size: 15px; letter-spacing: 0.2px; line-height: 1.2; display: block; }
+.sidebar__brand span:last-child { font-size: 11.5px; color: #9dbcd9; }
+
+.nav { padding: 14px 0 6px; overflow-y: auto; flex: 1; }
+.nav__list { list-style: none; margin: 0; padding: 0; counter-reset: volet; }
+.nav__link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  color: #c6d8ea; text-decoration: none; font-size: 14.5px;
+  border-left: 4px solid transparent;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.nav__link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.nav__link.is-active {
+  background: linear-gradient(90deg, rgba(74, 144, 217, 0.28), rgba(74, 144, 217, 0.05));
+  color: #fff; border-left-color: #ffcc33; font-weight: 600;
+}
+.nav__ico { font-size: 17px; width: 22px; text-align: center; flex: none; }
+.nav__num {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11.5px; font-weight: 700;
+  background: rgba(255, 255, 255, 0.10); color: #a9c4de;
+}
+.nav__link.is-active .nav__num { background: #ffcc33; color: #14283f; }
+
+.sidebar__search { padding: 12px 16px; border-top: 1px solid rgba(255, 255, 255, 0.09); position: relative; }
+.sidebar__search input {
+  width: 100%; padding: 9px 12px 9px 34px;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9px; color: #eaf2fb; font-size: 13.5px;
+}
+.sidebar__search input::placeholder { color: #8aa8c6; }
+.sidebar__search input:focus { background: rgba(255, 255, 255, 0.13); outline: none; border-color: #4a90d9; }
+.search-ico { position: absolute; left: 28px; top: 24px; font-size: 13px; opacity: 0.75; pointer-events: none; }
+
+.search-results {
+  position: absolute; left: 12px; right: 12px; bottom: calc(100% + -6px);
+  background: var(--bg-panel); color: var(--ink);
+  border-radius: 10px; box-shadow: var(--shadow-3);
+  max-height: 320px; overflow-y: auto; display: none; z-index: 950;
+}
+.search-results.is-open { display: block; }
+.search-results button {
+  display: flex; width: 100%; align-items: center; gap: 8px; text-align: left;
+  background: none; border: 0; padding: 10px 12px; cursor: pointer;
+  font-size: 13.5px; border-bottom: 1px solid var(--line);
+}
+.search-results button:last-child { border-bottom: 0; border-radius: 0 0 10px 10px; }
+.search-results button:first-child { border-radius: 10px 10px 0 0; }
+.search-results button:hover { background: var(--brand-soft); }
+.search-results .sr-badge {
+  flex: none; font-size: 10.5px; padding: 2px 7px; border-radius: 99px;
+  background: var(--bg-soft); color: var(--ink-soft); font-weight: 600;
+}
+.search-results .sr-empty { padding: 12px; font-size: 13px; color: var(--ink-faint); cursor: default; }
+.search-results .sr-empty:hover { background: none; }
+
+.sidebar__foot { padding: 14px 20px 16px; font-size: 11.5px; color: #8faecc; line-height: 1.5; border-top: 1px solid rgba(255, 255, 255, 0.09); }
+.sidebar__foot kbd {
+  background: rgba(255,255,255,0.12); border-radius: 4px; padding: 1px 5px;
+  font-family: inherit; font-size: 10.5px;
+}
+
+/* ==========================================================
+   4. TOPBAR
+   ========================================================== */
+.topbar {
+  position: fixed; top: 0; right: 0; left: var(--side-w); z-index: 800;
+  height: var(--topbar-h);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 18px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar__title { font-size: 14px; font-weight: 600; color: var(--ink-soft); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar__actions { display: flex; gap: 8px; align-items: center; }
+.icon-btn {
+  height: 36px; min-width: 36px; padding: 0 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  background: var(--bg-panel); border: 1px solid var(--line-strong);
+  border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 600;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.icon-btn:hover { background: var(--brand-soft); border-color: var(--brand); }
+.icon-btn:active { transform: scale(0.96); }
+.icon-btn[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.icon-btn:disabled { opacity: 0.4; cursor: default; }
+#btn-menu { display: none; }
+
+/* ==========================================================
+   5. MAIN / HERO / PROGRESS
+   ========================================================== */
+.main { margin-left: var(--side-w); padding: calc(var(--topbar-h) + 22px) 36px 90px; }
+
+.hero {
+  background:
+    radial-gradient(900px 300px at 85% -60%, rgba(74, 144, 217, 0.35), transparent 60%),
+    linear-gradient(140deg, #0d2c4d 0%, #0d4d8d 62%, #1c64b0 100%);
+  color: #eaf3fc;
+  border-radius: 18px;
+  padding: 34px 38px 30px;
+  margin-bottom: 26px;
+  box-shadow: var(--shadow-2);
+  position: relative; overflow: hidden;
+}
+.hero::after {
+  content: "∑ π √ ∩ ∪ ∈ p f n N";
+  position: absolute; right: 22px; bottom: -8px;
+  font-family: var(--font-math); font-style: italic; font-size: 78px;
+  color: rgba(255, 255, 255, 0.07); pointer-events: none; white-space: nowrap;
+}
+.hero__kicker { margin: 0 0 10px; font-size: 12.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #9fc8ec; }
+.hero h1 { font-size: 33px; color: #ffffff; margin-bottom: 12px; }
+.hero__lead { max-width: 720px; font-size: 15.5px; color: #cfe1f2; margin-bottom: 18px; }
+.hero__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #e8f2fc; border-radius: 99px; padding: 5px 13px; font-size: 12.5px; font-weight: 600;
+}
+.chip--action { cursor: pointer; transition: background 0.15s; }
+.chip--action:hover { background: rgba(255, 255, 255, 0.24); }
+
+.progress { position: fixed; top: var(--topbar-h); left: var(--side-w); right: 0; height: 3px; z-index: 850; background: transparent; pointer-events: none; }
+.progress__bar { height: 100%; width: 0; background: linear-gradient(90deg, #4a90d9, #ffcc33); transition: width 0.1s linear; }
+
+/* ==========================================================
+   6. PANELS & HEADINGS
+   ========================================================== */
+.panel { display: none; animation: panelIn 0.35s ease; }
+.panel.is-active { display: block; }
+@keyframes panelIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.panel-title {
+  font-size: 24px; color: var(--brand); margin: 4px 0 6px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--line-strong);
+}
+.panel-desc { color: var(--ink-soft); margin: 0 0 26px; font-style: italic; max-width: 860px; }
+h3.section {
+  font-size: 19px; color: var(--ink); margin: 38px 0 14px;
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--bg-soft); border-left: 5px solid var(--stat-line);
+}
+h3.section--prob { border-left-color: var(--prob-line); }
+h3.section--tool { border-left-color: var(--tool-line); }
+h4.subsection { font-size: 16px; color: var(--brand-strong); margin: 26px 0 10px; }
+.intro-text { background: var(--brand-soft); padding: 14px 18px; border-radius: 10px; border-left: 4px solid var(--stat-line); margin: 0 0 18px; }
+
+.flash { animation: flashAnim 1.8s ease; }
+@keyframes flashAnim {
+  0% { box-shadow: 0 0 0 0 rgba(255, 204, 51, 0); }
+  18% { box-shadow: 0 0 0 6px rgba(255, 204, 51, 0.55); }
+  100% { box-shadow: 0 0 0 10px rgba(255, 204, 51, 0); }
+}
+
+/* ==========================================================
+   7. CARDS, BOXES, LISTS
+   ========================================================== */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin: 16px 0 26px; }
+.def-card {
+  background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow-1); position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+}
+.def-card[data-tpl] { cursor: pointer; }
+.def-card[data-tpl]:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: var(--stat-line); }
+.def-card__ico { font-size: 22px; margin-bottom: 8px; display: block; }
+.def-card h4 { font-size: 15.5px; margin-bottom: 6px; color: var(--brand-strong); }
+.def-card p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+.def-card p em { color: var(--ink-faint); }
+.def-card .card-chip {
+  position: absolute; top: 12px; right: 12px; font-size: 10.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+}
+.def-card__foot { margin-top: 10px; font-size: 11.5px; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
+
+.duo-card {
+  background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-1); padding: 20px 22px; flex: 1 1 320px;
+  border-top: 4px solid var(--ifc);
+}
+.duo-card--ic { border-top-color: var(--icc); }
+.duo-card h4 { font-size: 17px; margin-bottom: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.duo-card .tagline { font-size: 12.5px; font-style: italic; color: var(--ink-faint); margin-bottom: 12px; }
+.duo-rows { list-style: none; padding: 0; margin: 0; }
+.duo-rows li { display: flex; gap: 10px; font-size: 14px; padding: 7px 0; border-top: 1px dashed var(--line); }
+.duo-rows li strong { flex: none; min-width: 108px; color: var(--brand-strong); font-size: 13px; }
+.badge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+  background: var(--bg-soft); color: var(--ink-soft); border: 1px solid var(--line-strong);
+}
+.badge--if { background: #fdf0e3; color: #8a4b0f; border-color: #e0a46b; }
+.badge--ic { background: #e8f6ec; color: #175c30; border-color: #7ec79a; }
+[data-theme="dark"] .badge--if { background: #33200d; color: #e0a46b; }
+[data-theme="dark"] .badge--ic { background: #0f2b1a; color: #7ec79a; }
+
+ul.content-list { padding-left: 24px; margin: 12px 0 22px; }
+ul.content-list li { margin-bottom: 10px; }
+ol.content-list { padding-left: 24px; margin: 12px 0 22px; }
+ol.content-list li { margin-bottom: 10px; }
+
+.notation-box {
+  border: 2px solid var(--stat-line); border-radius: var(--radius);
+  padding: 18px 22px; background: var(--bg-panel); margin: 18px 0 26px;
+  box-shadow: var(--shadow-1);
+}
+.notation-box > h4 { margin-top: 0; color: var(--brand); font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.notation-box ul { margin: 10px 0; padding-left: 22px; }
+.notation-box li { margin-bottom: 8px; }
+.warn {
+  background: var(--warn-soft); border-left: 4px solid #d9a514;
+  padding: 11px 14px; border-radius: 6px; margin-top: 12px; font-size: 13.5px;
+}
+.warn strong { color: var(--warn); }
+
+figure.duo { margin: 20px 0 28px; background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow-1); }
+figure.duo svg { width: 100%; height: auto; display: block; }
+figure.duo figcaption { text-align: center; font-size: 12.5px; color: var(--ink-faint); margin-top: 8px; font-style: italic; }
+
+.venn-row { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin: 24px 0; }
+.venn-box { text-align: center; background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 16px 12px; box-shadow: var(--shadow-1); flex: 1 1 300px; max-width: 430px; }
+.venn-box canvas { border-radius: 8px; background: var(--bg-soft); max-width: 100%; height: auto; }
+.venn-box .caption { margin-top: 10px; font-weight: 600; color: var(--brand); font-size: 14.5px; }
+
+/* ==========================================================
+   8. TABLES
+   ========================================================== */
+.tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow-1); background: var(--bg-panel); margin: 14px 0 30px; }
+table.tbl { border-collapse: collapse; width: 100%; font-size: 13.8px; min-width: 620px; }
+table.tbl th {
+  background: var(--brand); color: #fff; padding: 12px 14px;
+  text-align: left; font-weight: 600; font-size: 12.8px; position: sticky; top: 0;
+}
+table.tbl th.if-col { background: #a05a17; }
+table.tbl th.ic-col { background: #1c6f36; }
+table.tbl td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.tbl tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg-soft) 55%, transparent); }
+table.tbl tbody tr:last-child td { border-bottom: 0; }
+table.tbl td:first-child { font-weight: 600; color: var(--brand-strong); background: var(--bg-soft); }
+table.tbl.proba th { background: #14632b; }
+table.tbl.proba td:first-child { background: var(--prob-soft); color: #14532d; }
+[data-theme="dark"] table.tbl.proba td:first-child { color: #7ddba5; }
+table.tbl caption { caption-side: top; text-align: left; padding: 12px 14px; font-weight: 700; color: var(--brand-strong); font-size: 15px; }
+
+/* ==========================================================
+   9. DIAGRAMS (mindmap / graphe)
+   ========================================================== */
+.diagram-scroll {
+  position: relative; width: 100%; height: 68vh; min-height: 420px;
+  overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px;
+  background:
+    linear-gradient(rgba(100, 130, 170, 0.06) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgba(100, 130, 170, 0.06) 1px, transparent 1px) 0 0 / 28px 28px,
+    var(--bg-soft);
+  cursor: grab; user-select: none; -webkit-user-select: none;
+  touch-action: pan-y; box-shadow: inset 0 0 40px rgba(20, 45, 80, 0.05);
+}
+.diagram-scroll.is-panning { cursor: grabbing; }
+.diagram-zoom { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.diagram { position: relative; }
+.diagram canvas.layer { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+.node {
+  position: absolute; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 8px 10px; border-radius: 10px;
+  font-size: 13.5px; line-height: 1.28; cursor: grab;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+  transition: box-shadow 0.15s, filter 0.15s;
+  box-shadow: var(--shadow-1); z-index: 2;
+}
+.node:hover { filter: brightness(1.04); box-shadow: var(--shadow-2); z-index: 5; }
+.node.is-dragging { z-index: 1000; cursor: grabbing; box-shadow: var(--shadow-3); }
+.node mjx-container { pointer-events: none; }
+.node[data-tpl] { outline: 2px dashed transparent; outline-offset: 2px; }
+.node[data-tpl]:focus-visible { outline-color: var(--tool-line); }
+
+.node--core { background: linear-gradient(140deg, #0d2c4d, #1664ab); color: #fff; font-size: 17px; font-weight: 700; border: 3px solid #092038; box-shadow: 0 6px 18px rgba(13, 77, 141, 0.45); }
+.node--hub { font-weight: 700; font-size: 15px; border-width: 2px; }
+.node--hub-stat { background: var(--stat-soft); color: var(--stat); border: 2px solid var(--stat-line); }
+.node--hub-prob { background: var(--prob-soft); color: var(--prob); border: 2px solid var(--prob-line); }
+.node--hub-tool { background: var(--tool-soft); color: var(--tool); border: 2px solid var(--tool-line); }
+.node--stat { background: color-mix(in srgb, var(--stat-soft) 65%, #fff 10%); color: #12456f; border: 1.5px solid var(--stat-line); }
+.node--prob { background: color-mix(in srgb, var(--prob-soft) 65%, #fff 10%); color: #135a30; border: 1.5px solid var(--prob-line); }
+[data-theme="dark"] .node--stat { color: #9fcdf7; }
+[data-theme="dark"] .node--prob { color: #93d9b4; }
+.node--if { background: var(--tool-soft); color: var(--ifc); border: 2px solid #d68910; font-weight: 700; font-size: 13.5px; }
+.node--if-sub, .node--ic-sub { background: color-mix(in srgb, var(--tool-soft) 60%, #fff 8%); color: #7c440d; border: 1.5px solid #e0a800; font-size: 12.8px; }
+[data-theme="dark"] .node--if-sub, [data-theme="dark"] .node--ic-sub { color: #eec27f; }
+.node--ic { background: var(--prob-soft); color: var(--icc); border: 2px solid var(--prob-line); font-weight: 700; font-size: 13.5px; }
+.node--gstat { background: var(--stat-soft); color: var(--stat); border: 2px solid var(--stat-line); font-size: 13px; }
+.node--gprob { background: var(--prob-soft); color: var(--prob); border: 2px solid var(--prob-line); font-size: 13px; }
+.node--gtool { background: var(--tool-soft); color: var(--tool); border: 2px solid var(--tool-line); font-size: 13px; font-weight: 600; }
+
+.diagram-toolbar {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  margin: 14px 0 8px; font-size: 13px; color: var(--ink-soft);
+}
+.diagram-hint { font-style: italic; }
+.diagram-hint strong { color: var(--brand); font-style: normal; }
+.toolbar-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.btn {
+  background: var(--bg-panel); border: 1px solid var(--line-strong); color: var(--brand);
+  padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover { background: var(--brand-soft); border-color: var(--brand); }
+.btn:active { transform: scale(0.97); }
+.btn--zoom-lvl { min-width: 54px; text-align: center; cursor: default; font-variant-numeric: tabular-nums; }
+.btn--zoom-lvl:hover { background: var(--bg-panel); border-color: var(--line-strong); }
+
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); margin-top: 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend span::before { content: ""; width: 15px; height: 15px; border-radius: 5px; display: inline-block; }
+.legend .l-stat::before { background: var(--stat-soft); border: 2px solid var(--stat-line); }
+.legend .l-prob::before { background: var(--prob-soft); border: 2px solid var(--prob-line); }
+.legend .l-tool::before { background: var(--tool-soft); border: 2px solid var(--tool-line); }
+
+/* Tooltip fiche */
+.tooltip {
+  position: fixed; z-index: 9500; pointer-events: none;
+  background: var(--ink); color: var(--bg);
+  padding: 8px 12px; border-radius: 9px; font-size: 13px;
+  box-shadow: var(--shadow-2); max-width: 280px;
+  opacity: 0; transform: translateY(4px); transition: opacity 0.15s, transform 0.15s;
+}
+.tooltip.is-visible { opacity: 1; transform: none; }
+.tooltip strong { display: block; font-size: 13.5px; }
+.tooltip span { font-size: 11.5px; opacity: 0.75; }
+
+/* ==========================================================
+   10. MODALE FICHE
+   ========================================================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(4, 16, 34, 0.6);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; padding: 18px;
+}
+.modal-overlay.is-open { display: flex; }
+.modal-dialog {
+  background: var(--bg-panel); border: 1px solid var(--line);
+  border-radius: 16px; max-width: 740px; width: 100%; max-height: 84vh;
+  overflow-y: auto; padding: 28px 32px 22px; box-shadow: var(--shadow-3);
+  position: relative; animation: modalIn 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+.modal-title { color: var(--brand); font-size: 21px; border-bottom: 2px solid var(--line-strong); padding: 0 34px 12px 0; margin-bottom: 14px; line-height: 1.3; }
+.modal-content { font-size: 14.8px; line-height: 1.68; color: var(--ink); }
+.modal-content p { margin: 0 0 12px; }
+.modal-content strong { color: var(--brand-strong); }
+.modal-content em { color: var(--ifc); }
+.modal-content ul, .modal-content ol { padding-left: 22px; margin: 8px 0 12px; }
+.modal-content li { margin-bottom: 6px; }
+.modal-content .formula {
+  background: var(--brand-soft); border-left: 4px solid var(--stat-line);
+  padding: 10px 14px; border-radius: 6px; margin: 14px 0; text-align: center; overflow-x: auto;
+}
+.modal-content .note {
+  background: var(--warn-soft); border-left: 4px solid #d9a514;
+  padding: 10px 14px; border-radius: 6px; margin: 12px 0; font-size: 13.6px;
+}
+.modal-content .note strong { color: var(--warn); }
+.modal-close {
+  position: absolute; top: 14px; right: 14px; width: 36px; height: 36px;
+  border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg-soft);
+  color: var(--ink-soft); font-size: 20px; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; transition: background 0.15s, transform 0.15s;
+}
+.modal-close:hover { background: var(--brand-soft); transform: rotate(90deg); }
+.modal-footer { margin-top: 18px; text-align: right; border-top: 1px solid var(--line); padding-top: 14px; }
+.btn--primary {
+  padding: 9px 24px; border-radius: 9px; border: 1px solid var(--brand);
+  background: var(--brand); color: var(--brand-ink); font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: filter 0.15s;
+}
+.btn--primary:hover { filter: brightness(1.12); }
+
+/* ==========================================================
+   11. SIMULATEUR
+   ========================================================== */
+.sim { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-2); overflow: hidden; }
+.sim__tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); background: var(--bg-soft); }
+.sim__tab {
+  flex: 1; padding: 14px 10px; border: 0; background: none; cursor: pointer;
+  font-size: 14.5px; font-weight: 600; color: var(--ink-soft);
+  border-bottom: 3px solid transparent; transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.sim__tab + .sim__tab { border-left: 1px solid var(--line); }
+.sim__tab:hover { color: var(--brand); }
+.sim__tab.is-active { color: var(--brand); background: var(--bg-panel); border-bottom-color: var(--brand); }
+.sim__body { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; }
+.sim__controls { padding: 20px 22px; border-right: 1px solid var(--line); background: linear-gradient(180deg, var(--bg-soft), transparent 60%); }
+.sim__group { border: 0; margin: 0; padding: 0; }
+.sim__group legend { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); margin-bottom: 14px; padding: 0; }
+.ctl { margin-bottom: 18px; }
+.ctl label { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; color: var(--ink-soft); margin-bottom: 6px; gap: 8px; }
+.ctl label output { font-weight: 700; color: var(--brand); font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+input[type="range"] { width: 100%; accent-color: var(--brand); cursor: pointer; height: 26px; margin: 0; }
+.sim__conditions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.cond-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.3px; font-weight: 600; padding: 4px 11px; border-radius: 99px;
+  background: var(--bg-soft); color: var(--ink-faint); border: 1px solid var(--line);
+}
+.cond-chip.is-ok { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+.cond-chip.is-ko { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+
+.sim__view { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+.numline { position: relative; padding: 30px 10px 34px; }
+.numline__track {
+  position: relative; height: 14px; border-radius: 99px;
+  background: linear-gradient(90deg, var(--bg-soft), var(--bg-code), var(--bg-soft));
+  border: 1px solid var(--line-strong);
+}
+.numline__band {
+  position: absolute; top: -1px; height: 14px;
+  background: linear-gradient(180deg, rgba(74, 144, 217, 0.55), rgba(74, 144, 217, 0.3));
+  border: 1px solid var(--stat-line); border-radius: 99px;
+  transition: left 0.12s ease, width 0.12s ease;
+}
+.numline__mark { position: absolute; top: -13px; bottom: -13px; width: 3px; transition: left 0.12s ease; }
+.numline__mark--theory { background: repeating-linear-gradient(180deg, var(--brand) 0 6px, transparent 6px 10px); }
+.numline__mark--obs { background: var(--ifc); width: 3px; }
+.numline__mark .mk-label {
+  position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  background: var(--bg-panel); border: 1px solid var(--line); padding: 1px 7px; border-radius: 6px;
+}
+.numline__mark--theory .mk-label { color: var(--brand); }
+.numline__mark--obs .mk-label { color: var(--ifc); top: 26px; }
+.numline__ticks { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-faint); margin-top: 20px; font-variant-numeric: tabular-nums; }
+.sim__result { display: flex; flex-direction: column; gap: 12px; }
+.sim__formula {
+  font-family: var(--font-math); font-size: 17px; text-align: center;
+  background: var(--bg-soft); border-radius: 10px; padding: 12px 14px;
+  border: 1px dashed var(--line-strong); font-variant-numeric: tabular-nums;
+}
+.verdict { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; font-size: 14.5px; line-height: 1.5; border: 1px solid; }
+.verdict.is-ok { background: var(--ok-soft); border-color: var(--ok); }
+.verdict.is-bad { background: var(--bad-soft); border-color: var(--bad); }
+.verdict .v-ico { font-size: 20px; flex: none; }
+.verdict strong { display: block; margin-bottom: 2px; }
+.sim__meta { font-size: 12.5px; color: var(--ink-faint); font-style: italic; }
+
+/* ==========================================================
+   12. QUIZ
+   ========================================================== */
+.quiz { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-2); padding: 26px 30px; max-width: 860px; }
+.quiz__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.quiz__dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.q-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--bg-soft); border: 1.5px solid var(--line-strong); transition: all 0.2s; }
+.q-dot.is-ok { background: var(--ok); border-color: var(--ok); }
+.q-dot.is-bad { background: var(--bad); border-color: var(--bad); }
+.q-dot.is-current { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 30%, transparent); }
+.quiz__score { font-weight: 700; color: var(--brand); font-size: 15px; }
+.quiz__q { font-size: 17px; font-weight: 600; margin: 6px 0 18px; line-height: 1.45; }
+.quiz__opts { display: grid; gap: 10px; }
+.q-opt {
+  text-align: left; padding: 13px 16px; border-radius: 11px; cursor: pointer;
+  background: var(--bg-soft); border: 1.5px solid var(--line-strong);
+  font-size: 14.5px; display: flex; gap: 12px; align-items: baseline;
+  transition: background 0.14s, border-color 0.14s, transform 0.1s;
+}
+.q-opt:hover:not(:disabled) { background: var(--brand-soft); border-color: var(--brand); transform: translateX(3px); }
+.q-opt:disabled { cursor: default; opacity: 0.75; }
+.q-opt .q-key { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--bg-panel); border: 1px solid var(--line-strong); font-weight: 700; font-size: 12.5px; }
+.q-opt.is-correct { background: var(--ok-soft); border-color: var(--ok); opacity: 1; }
+.q-opt.is-correct .q-key { background: var(--ok); color: #fff; border-color: var(--ok); }
+.q-opt.is-wrong { background: var(--bad-soft); border-color: var(--bad); opacity: 1; }
+.q-opt.is-wrong .q-key { background: var(--bad); color: #fff; border-color: var(--bad); }
+.quiz__feedback { margin-top: 16px; padding: 14px 16px; border-radius: 11px; background: var(--bg-soft); border: 1px solid var(--line-strong); font-size: 14px; line-height: 1.55; display: none; }
+.quiz__feedback.is-visible { display: block; animation: panelIn 0.3s ease; }
+.quiz__feedback .fb-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.quiz__feedback .fb-title.is-ok { color: var(--ok); }
+.quiz__feedback .fb-title.is-bad { color: var(--bad); }
+.quiz__actions { margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; }
+.quiz__end { text-align: center; padding: 26px 0 10px; }
+.quiz__end .score-line { font-size: 44px; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; }
+.quiz__end p { color: var(--ink-soft); margin: 8px 0 20px; }
+
+/* ==========================================================
+   13. MATH FALLBACK (sans CDN) + MathJax
+   ========================================================== */
+.mf { font-family: var(--font-math); white-space: nowrap; }
+.mf-block { display: block; text-align: center; margin: 0.4em 0; white-space: normal; font-size: 1.12em; }
+.mf-v { font-style: italic; }
+.mf-txt { font-style: normal; }
+.mf-cal { font-family: "Segoe Script", "Brush Script MT", cursive; }
+.mf-op { font-style: normal; }
+.mf-sp { display: inline-block; width: 0.28em; }
+.mf-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: -0.55em; margin: 0 0.15em; text-align: center; }
+.mf-frac .mf-num { padding: 0 0.25em 0.08em; border-bottom: 1.3px solid currentColor; line-height: 1.15; }
+.mf-frac .mf-den { padding: 0.08em 0.25em 0; line-height: 1.15; }
+.mf-sqrt { white-space: nowrap; }
+.mf-sqrt .mf-radicand { border-top: 1.3px solid currentColor; padding: 0 0.2em; margin-left: -1px; }
+.mf-over { border-top: 1.4px solid currentColor; padding: 0 0.1em; }
+.mf-unk { color: var(--bad); }
+sub.mf-sub, sup.mf-sup { font-size: 0.72em; }
+mjx-container { margin: 0 0.12em !important; }
+mjx-container[jax="CHTML"][display="true"], mjx-container[jax="SVG"][display="true"] {
+  display: block; margin: 0.5em 0 !important; text-align: center;
+}
+
+/* ==========================================================
+   14. FOOTER, DIVERS
+   ========================================================== */
+.footer { margin-top: 54px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-faint); display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.back-top {
+  position: fixed; right: 22px; bottom: 22px; z-index: 950;
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong);
+  background: var(--bg-panel); color: var(--brand); font-size: 18px; cursor: pointer;
+  box-shadow: var(--shadow-2); opacity: 0; pointer-events: none; transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.back-top.is-visible { opacity: 1; pointer-events: auto; transform: none; }
+
+.backdrop { position: fixed; inset: 0; background: rgba(4, 16, 34, 0.55); z-index: 890; }
+kbd.kbd {
+  background: var(--bg-soft); border: 1px solid var(--line-strong); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 6px; font-size: 11px; font-family: inherit;
+}
+.dot-info {
+  display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--brand); color: #fff; font-size: 11px; font-style: italic; font-family: Georgia, serif;
+  vertical-align: -3px; margin-left: 2px;
+}
+
+/* ==========================================================
+   15. RESPONSIVE
+   ========================================================== */
+@media (max-width: 1060px) {
+  .sim__body { grid-template-columns: 1fr; }
+  .sim__controls { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 900px) {
+  :root { --side-w: 0px; }
+  .sidebar {
+    width: min(300px, 86vw); transform: translateX(-102%);
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  body.side-open .sidebar { transform: none; }
+  .topbar { left: 0; }
+  .progress { left: 0; }
+  #btn-menu { display: inline-flex; }
+  .main { margin-left: 0; padding: calc(var(--topbar-h) + 14px) 16px 70px; }
+  .hero { padding: 24px 22px; border-radius: 14px; }
+  .hero h1 { font-size: 25px; }
+  .diagram-scroll { height: 58vh; min-height: 340px; }
+  .modal-dialog { padding: 22px 18px 16px; }
+  .quiz { padding: 20px 16px; }
+  .venn-row { gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+}
+
+/* ==========================================================
+   16. IMPRESSION
+   ========================================================== */
+@media print {
+  :root { --side-w: 0px; }
+  .sidebar, .topbar, .progress, .diagram-toolbar, .back-top, .backdrop,
+  .sim__tabs, .sidebar__search, .quiz__actions, .hero__chips { display: none !important; }
+  .main { margin: 0; padding: 0; }
+  body { background: #fff; }
+  .panel { display: block !important; }
+  .panel + .panel { page-break-before: always; }
+  .panel-title { border-bottom: 2px solid #999; }
+  .hero { color: #000; background: none; box-shadow: none; border: 1px solid #999; }
+  .hero h1, .hero__kicker, .hero__lead { color: #000; }
+  .diagram-scroll { height: auto !important; overflow: visible !important; border: 1px solid #bbb; }
+  .diagram-zoom { transform: none !important; }
+  .diagram { zoom: 0.42; }
+  .diagram-scroll { zoom: 0.9; }
+  a[href]:after { content: ""; }
+  .def-card, .duo-card, .quiz, .sim, .notation-box, .tbl-wrap, .venn-box, figure.duo { break-inside: avoid; }
+}
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Aller au contenu principal</a>
+<div class="backdrop" id="backdrop" hidden></div>
+<noscript><p style="padding:16px;font-weight:600">Ce document interactif nécessite JavaScript.</p></noscript>
+
+<aside class="sidebar" id="sidebar" aria-label="Sommaire du document">
+  <div class="sidebar__brand">
+    <span class="sidebar__logo" aria-hidden="true">Σ</span>
+    <div><strong>Statistiques<br>&amp; Probabilités</strong><span>Terminale · Maths complémentaires</span></div>
+  </div>
+
+  <nav class="nav" aria-label="Volets">
+    <ol class="nav__list">
+      <li><a class="nav__link is-active" href="#volet-cours" data-panel="volet-cours"><span class="nav__ico" aria-hidden="true">📖</span><span class="nav__num">1</span><span class="nav__label">Le cours en fiches</span></a></li>
+      <li><a class="nav__link" href="#volet-tableaux" data-panel="volet-tableaux"><span class="nav__ico" aria-hidden="true">📊</span><span class="nav__num">2</span><span class="nav__label">Tableaux de synthèse</span></a></li>
+      <li><a class="nav__link" href="#volet-carte" data-panel="volet-carte"><span class="nav__ico" aria-hidden="true">🧠</span><span class="nav__num">3</span><span class="nav__label">Carte mentale</span></a></li>
+      <li><a class="nav__link" href="#volet-graphe" data-panel="volet-graphe"><span class="nav__ico" aria-hidden="true">🔗</span><span class="nav__num">4</span><span class="nav__label">Graphe de connaissances</span></a></li>
+      <li><a class="nav__link" href="#volet-simulateur" data-panel="volet-simulateur"><span class="nav__ico" aria-hidden="true">🧪</span><span class="nav__num">5</span><span class="nav__label">Simulateur IF / IC</span></a></li>
+      <li><a class="nav__link" href="#volet-quiz" data-panel="volet-quiz"><span class="nav__ico" aria-hidden="true">✏️</span><span class="nav__num">6</span><span class="nav__label">Quiz d'auto-évaluation</span></a></li>
+    </ol>
+  </nav>
+
+  <div class="sidebar__search">
+    <span class="search-ico" aria-hidden="true">🔍</span>
+    <input type="search" id="search-input" placeholder="Rechercher une notion…" aria-label="Rechercher une notion" autocomplete="off" spellcheck="false">
+    <div class="search-results" id="search-results" role="listbox" aria-label="Résultats de recherche"></div>
+  </div>
+
+  <div class="sidebar__foot">
+    Astuces : <kbd class="kbd">1</kbd>–<kbd class="kbd">6</kbd> pour changer de volet ·
+    <kbd class="kbd">Échap</kbd> pour fermer une fiche ·
+    clic sur une notion pour ouvrir sa fiche.
+  </div>
+</aside>
+
+<div class="topbar">
+  <button class="icon-btn" id="btn-menu" aria-label="Ouvrir le sommaire">☰</button>
+  <span class="topbar__title">Synthèse interactive · Statistiques &amp; Probabilités</span>
+  <div class="topbar__actions">
+    <button class="icon-btn" id="font-minus" aria-label="Réduire la taille du texte">A−</button>
+    <button class="icon-btn" id="font-plus" aria-label="Augmenter la taille du texte">A+</button>
+    <button class="icon-btn" id="btn-print" aria-label="Imprimer ou exporter en PDF" title="Imprimer / PDF">⎙</button>
+    <button class="icon-btn" id="btn-theme" aria-label="Basculer entre thème clair et sombre" aria-pressed="false">🌙</button>
+  </div>
+</div>
+
+<main id="main" class="main">
+
+<header class="hero">
+  <p class="hero__kicker">Terminale générale · Option Mathématiques complémentaires</p>
+  <h1>Statistiques &amp; Probabilités<br>la synthèse interactive</h1>
+  <p class="hero__lead">Le même contenu sous six formats : fiches de cours, tableaux, carte mentale, graphe de connaissances, simulateur et quiz. Chaque notion cliquable ouvre une fiche détaillée avec exemples, formules et pièges à éviter.</p>
+  <div class="hero__chips">
+    <span class="chip">🧭 6 volets</span>
+    <span class="chip">🗂️ 26 fiches</span>
+    <span class="chip">🧪 Simulateur</span>
+    <span class="chip">✏️ Quiz 10 questions</span>
+    <span class="chip">🌙 Thème clair / sombre</span>
+    <button class="chip chip--action" data-goto="volet-simulateur">🧪 Essayer le simulateur</button>
+    <button class="chip chip--action" data-goto="volet-quiz">✏️ Se tester</button>
+  </div>
+</header>
+
+<div class="progress" aria-hidden="true"><div class="progress__bar" id="progress-bar"></div></div>
+
+<!-- ============================================================
+     VOLET 1 — COURS EN FICHES
+     ============================================================ -->
+<section id="volet-cours" class="panel is-active" aria-labelledby="titre-cours">
+  <h2 class="panel-title" id="titre-cours">Volet 1 · Le cours en fiches</h2>
+  <p class="panel-desc">Définitions, interprétations et illustrations. Les cartes et les schémas marqués d'une pastille <span class="dot-info">i</span> s'ouvrent en fiche détaillée d'un simple clic.</p>
+
+  <h3 class="section">A · Statistiques descriptives — ce que j'observe</h3>
+  <p class="intro-text">Les statistiques descriptives organisent les <strong>données observées</strong>. Le fil rouge de ce cours : un forum de jeu compte \(10\,000\) membres ; on y prélève un échantillon de \(500\) membres pour étudier la faction qu'ils choisissent (Alliance ou Horde).</p>
+
+  <div class="card-grid">
+    <article class="def-card" id="def-population" data-tpl="tpl-population" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🌍</span>
+      <h4>Population \(\left(\mathcal{P}\right)\)</h4>
+      <p>Ensemble de <strong>tous</strong> les individus concernés par l'étude.</p>
+      <p><em>Ex. : les \(10\,000\) membres du forum.</em></p>
+      <p class="def-card__foot"><span class="dot-info" aria-hidden="true">i</span> Fiche détaillée</p>
+    </article>
+    <article class="def-card" id="def-individu" data-tpl="tpl-individu" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🧑</span>
+      <h4>Individu</h4>
+      <p>Un élément de la population.</p>
+      <p><em>Ex. : le joueur « DarkVador59 ».</em></p>
+      <p class="def-card__foot"><span class="dot-info" aria-hidden="true">i</span> Fiche détaillée</p>
+    </article>
+    <article class="def-card" id="def-echantillon" data-tpl="tpl-echantillon" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🎲</span>
+      <h4>Échantillon \(\left(n\right)\)</h4>
+      <p>Sous-ensemble de la population, prélevé au hasard.</p>
+      <p><em>Ex. : \(500\) membres tirés au sort.</em></p>
+      <p class="def-card__foot"><span class="dot-info" aria-hidden="true">i</span> Fiche détaillée</p>
+    </article>
+    <article class="def-card" id="def-caractere" data-tpl="tpl-caractere" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🏷️</span>
+      <h4>Caractère / Modalité</h4>
+      <p>Ce que l'on étudie sur chaque individu, et ses valeurs possibles.</p>
+      <p><em>Ex. : la faction → Alliance, Horde.</em></p>
+      <p class="def-card__foot"><span class="dot-info" aria-hidden="true">i</span> Fiche détaillée</p>
+    </article>
+    <article class="def-card" id="def-effectif" data-tpl="tpl-effectif" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🔢</span>
+      <h4>Effectifs \(N_A\) et \(n_A\)</h4>
+      <p>Nombre d'individus portant la modalité \(A\), dans la population ou dans l'échantillon.</p>
+      <p><em>Ex. : \(N_A = 3\,000\), \(n_A = 160\).</em></p>
+      <p class="def-card__foot"><span class="dot-info" aria-hidden="true">i</span> Fiche détaillée</p>
+    </article>
+    <article class="def-card" id="def-frequence" data-tpl="tpl-frequence" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">📐</span>
+      <h4>Proportion \(p\) / Fréquence \(f\)</h4>
+      <p>Part des individus portant la modalité \(A\) :
+        \(p = \dfrac{N_A}{N}\) dans la population, \(f = \dfrac{n_A}{n}\) dans l'échantillon.</p>
+      <p><em>Théorie contre observation.</em></p>
+      <p class="def-card__foot"><span class="dot-info" aria-hidden="true">i</span> Fiche détaillée</p>
+    </article>
+  </div>
+
+  <div class="notation-box" id="boite-notations">
+    <h4>📐 Boîte à notations — la nomenclature du cours</h4>
+    <ul>
+      <li>\(N\) : <strong>taille de la population</strong> (nombre total d'individus de la population).</li>
+      <li>\(n\) : <strong>taille de l'échantillon</strong> (nombre total d'individus prélevés).</li>
+      <li>Pour une modalité \(A\) — la lettre \(A\) est une <em>étiquette</em> (« aime le fromage », « vote oui »), pas un nombre — on ajoute un indice :
+        <ul>
+          <li>\(N_A\) : nombre d'individus <strong>de la population</strong> portant \(A\) ;</li>
+          <li>\(n_A\) : nombre d'individus <strong>de l'échantillon</strong> portant \(A\).</li>
+        </ul>
+      </li>
+      <li>D'où les deux quotients à connaître par cœur :
+        \[ p = \dfrac{N_A}{N} \quad\text{(proportion, population)} \qquad\qquad f = \dfrac{n_A}{n} \quad\text{(fréquence, échantillon)} \]
+      </li>
+      <li><strong>Exemple complet.</strong> Population : \(N = 10\,000\), \(N_A = 3\,000\) (Alliance), donc \(p = \dfrac{3\,000}{10\,000} = 0{,}3\).
+        Échantillon : \(n = 500\), \(n_A = 160\), donc \(f = \dfrac{160}{500} = 0{,}32\).</li>
+    </ul>
+    <div class="warn"><strong>À retenir :</strong> on n'écrit jamais \(\dfrac{n}{N}\) pour désigner la proportion d'une modalité ! Ce quotient compare la taille de l'échantillon à celle de la population : ce n'est pas une proportion. Tout effectif de modalité porte un indice : \(n_A\), \(n_i\), \(N_A\)…</div>
+  </div>
+
+  <h3 class="section section--tool">B · Échantillonnage — le duel IF contre IC</h3>
+  <p class="intro-text">L'échantillonnage est le <strong>pont</strong> entre les statistiques (ce que je vois : \(f\)) et les probabilités (ce que je modélise : \(p\)). Deux outils, deux sens de lecture — c'est le fameux « chassé-croisé » :</p>
+
+  <figure class="duo">
+    <svg viewBox="0 0 760 250" role="img" aria-label="Chassé-croisé de l'échantillonnage : l'intervalle de fluctuation va de la population vers l'échantillon pour vérifier ; l'intervalle de confiance va de l'échantillon vers la population pour estimer.">
+      <defs>
+        <marker id="arrIf" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" fill="#b5651d"></path>
+        </marker>
+        <marker id="arrIc" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+          <path d="M1,1 L11,6 L1,11 z" fill="#1f7a3a"></path>
+        </marker>
+      </defs>
+      <rect x="45" y="80" width="230" height="92" rx="14" fill="none" stroke="#4a90d9" stroke-width="2.5"></rect>
+      <text x="160" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#1c64b0">Population</text>
+      <text x="160" y="142" text-anchor="middle" font-size="13" fill="#4b5b76">N individus · proportion p</text>
+      <text x="160" y="160" text-anchor="middle" font-size="12" font-style="italic" fill="#7d8ca6">ce que je modélise</text>
+
+      <rect x="485" y="80" width="230" height="92" rx="14" fill="none" stroke="#3da95f" stroke-width="2.5"></rect>
+      <text x="600" y="118" text-anchor="middle" font-size="17" font-weight="700" fill="#1e7a44">Échantillon</text>
+      <text x="600" y="142" text-anchor="middle" font-size="13" fill="#4b5b76">n individus · fréquence f</text>
+      <text x="600" y="160" text-anchor="middle" font-size="12" font-style="italic" fill="#7d8ca6">ce que j'observe</text>
+
+      <path d="M285,98 C360,58 420,58 475,96" fill="none" stroke="#b5651d" stroke-width="2.5" marker-end="url(#arrIf)"></path>
+      <text x="380" y="52" text-anchor="middle" font-size="14.5" font-weight="700" fill="#b5651d">IF · vérifier</text>
+      <text x="380" y="70" text-anchor="middle" font-size="12" fill="#8a4b0f">p est connu → f est-il normal ?</text>
+
+      <path d="M475,158 C420,198 360,198 285,160" fill="none" stroke="#1f7a3a" stroke-width="2.5" marker-end="url(#arrIc)"></path>
+      <text x="380" y="212" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1f7a3a">IC · estimer</text>
+      <text x="380" y="230" text-anchor="middle" font-size="12" fill="#1a5c2c">f est observé → où se cache p ?</text>
+    </svg>
+    <figcaption>Le « chassé-croisé » de l'échantillonnage : IF de la population vers l'échantillon, IC de l'échantillon vers la population.</figcaption>
+  </figure>
+
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin: 0 0 22px;">
+    <article class="duo-card">
+      <h4>🎯 Intervalle de Fluctuation <span class="badge badge--if">p connu</span></h4>
+      <p class="tagline">Le « détecteur de mensonges » — Population → Échantillon</p>
+      <ul class="duo-rows">
+        <li><strong>Quand ?</strong><span>Quand la proportion théorique \(p\) est <strong>connue</strong> (un dé équilibré a \(p = \dfrac{1}{6}\) de faire un 6) et qu'on veut vérifier si un échantillon est normal ou suspect.</span></li>
+        <li><strong>Comment ?</strong><span>Si \(f \in IF\), l'échantillon est « normal » (écart dû au hasard). Si \(f \notin IF\), il est « anormal » : on rejette l'hypothèse, avec un risque d'erreur de 5 %.</span></li>
+        <li><strong>Pourquoi ?</strong><span><strong>Prendre une décision</strong> : valider ou rejeter une affirmation, tester si un jeu est truqué, si un candidat a triché.</span></li>
+        <li><strong>Formule</strong><span>\(\left[p - \dfrac{1}{\sqrt{n}}\ ;\ p + \dfrac{1}{\sqrt{n}}\right]\) — centrée sur la théorie \(p\).</span></li>
+      </ul>
+      <p class="def-card__foot" style="margin-top:10px;"><span class="dot-info" aria-hidden="true">i</span> <button class="btn" data-tpl="tpl-if" aria-haspopup="dialog">Ouvrir la fiche IF</button></p>
+    </article>
+    <article class="duo-card duo-card--ic">
+      <h4>📏 Intervalle de Confiance <span class="badge badge--ic">p inconnu</span></h4>
+      <p class="tagline">L'« estimateur de réalité » — Échantillon → Population</p>
+      <ul class="duo-rows">
+        <li><strong>Quand ?</strong><span>Quand la proportion \(p\) de la population est <strong>inconnue</strong> (quelle est la vraie proportion de Français qui aiment le fromage ?) et qu'on veut l'estimer à partir d'un échantillon.</span></li>
+        <li><strong>Comment ?</strong><span>On ne dit pas « \(p\) est dans cet intervalle », mais « on est confiant à 95 % que \(p\) se trouve dans cet intervalle ».</span></li>
+        <li><strong>Pourquoi ?</strong><span><strong>Estimer</strong> une valeur inconnue : sondages électoraux, enquêtes d'opinion, contrôle qualité.</span></li>
+        <li><strong>Formule</strong><span>\(\left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right]\) — centrée sur l'observation \(f\).</span></li>
+      </ul>
+      <p class="def-card__foot" style="margin-top:10px;"><span class="dot-info" aria-hidden="true">i</span> <button class="btn" data-tpl="tpl-ic" aria-haspopup="dialog">Ouvrir la fiche IC</button></p>
+    </article>
+  </div>
+
+  <h4 class="subsection">Les 4 pièges à éviter (pour ne plus jamais les confondre)</h4>
+  <ol class="content-list">
+    <li><strong>Sens de lecture :</strong> l'IF va de la <em>Population</em> vers l'<em>Échantillon</em>. L'IC va de l'<em>Échantillon</em> vers la <em>Population</em>.</li>
+    <li><strong>Ce que je connais au départ :</strong> pour l'IF, je connais \(p\) ; pour l'IC, je connais \(f\).</li>
+    <li><strong>Ce que je cherche :</strong> l'IF sert à <strong>valider / rejeter</strong> ; l'IC sert à <strong>estimer</strong>.</li>
+    <li><strong>Formules (approximatives) :</strong> IF centrée sur \(p\) : \(\left[p - \dfrac{1}{\sqrt{n}}\ ;\ p + \dfrac{1}{\sqrt{n}}\right]\) ; IC centrée sur \(f\) : \(\left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right]\). Ici \(n\) désigne toujours la <strong>taille de l'échantillon</strong>, jamais un effectif de modalité.</li>
+  </ol>
+
+  <h3 class="section section--prob">C · Vocabulaire des probabilités — ce que je modélise</h3>
+  <p class="intro-text">Les probabilités modélisent l'incertitude. L'exemple filé : l'ouverture d'une <em>loot box</em>.</p>
+
+  <div class="card-grid">
+    <article class="def-card" data-tpl="tpl-experience" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🎲</span>
+      <h4>Expérience aléatoire</h4>
+      <p>Expérience aux résultats imprévisibles… mais dont on connaît toutes les issues possibles.</p>
+      <p><em>Ex. : ouvrir une loot box.</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-univers" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🌌</span>
+      <h4>Issue / Univers \(\left(\Omega\right)\)</h4>
+      <p>Un résultat possible / l'ensemble de toutes les issues.</p>
+      <p><em>Ex. : \(\Omega = \left\{1\ ;\ 2\ ;\ 3\ ;\ 4\ ;\ 5\ ;\ 6\right\}\) pour un dé.</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-probabilite" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🎯</span>
+      <h4>Probabilité \(P\left(A\right)\)</h4>
+      <p>Fonction qui associe à chaque événement un nombre dans \(\left[0\ ;\ 1\right]\).</p>
+      <p><em>Mesure la chance que \(A\) se réalise.</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-evenement" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🧩</span>
+      <h4>Événement / Élémentaire</h4>
+      <p>Sous-ensemble de \(\Omega\) / événement réduit à une seule issue (singleton).</p>
+      <p><em>Ex. : « obtenir un pair » \(= \left\{2\ ;\ 4\ ;\ 6\right\}\).</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-reunion" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🔗</span>
+      <h4>Réunion \(A \cup B\) / Intersection \(A \cap B\)</h4>
+      <p>« \(A\) ou \(B\) » / « \(A\) et \(B\) » — les deux opérations sur les événements.</p>
+      <p><em>Voir les diagrammes de Venn ci-dessous.</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-complement" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🔄</span>
+      <h4>Événement contraire \(\bar{A}\)</h4>
+      <p>« Non \(A\) » : l'événement qui se réalise quand \(A\) ne se réalise pas.</p>
+      <p><em>\(P\left(\bar{A}\right) = 1 - P\left(A\right)\).</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-conditionnelle" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">❓</span>
+      <h4>Probabilité conditionnelle</h4>
+      <p>\(P_B\left(A\right)\) : probabilité de \(A\) <strong>sachant que</strong> \(B\) est déjà réalisé.</p>
+      <p><em>On restreint l'univers à \(B\).</em></p>
+    </article>
+    <article class="def-card" data-tpl="tpl-probas" tabindex="0" role="button" aria-haspopup="dialog">
+      <span class="def-card__ico" aria-hidden="true">🌳</span>
+      <h4>Loi de probabilité</h4>
+      <p>Répartition des probabilités sur \(\Omega\) : la « recette » du hasard.</p>
+      <p><em>La somme des probabilités des issues vaut 1.</em></p>
+    </article>
+  </div>
+
+  <h4 class="subsection">Illustrations : opérations sur les événements</h4>
+  <div class="venn-row">
+    <div class="venn-box">
+      <canvas id="venn-union" width="380" height="240" aria-label="Diagramme de Venn : réunion de A et B, zone colorée"></canvas>
+      <div class="caption">Réunion \(\left(A \cup B\right)\) — « A ou B »</div>
+    </div>
+    <div class="venn-box">
+      <canvas id="venn-inter" width="380" height="240" aria-label="Diagramme de Venn : intersection de A et B, seule la zone commune est colorée"></canvas>
+      <div class="caption">Intersection \(\left(A \cap B\right)\) — « A et B »</div>
+    </div>
+    <div class="venn-box">
+      <canvas id="venn-comp" width="380" height="240" aria-label="Diagramme de Venn : événement contraire de A, tout sauf A est coloré"></canvas>
+      <div class="caption">Contraire \(\left(\bar{A}\right)\) — « non A »</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLET 2 — TABLEAUX
+     ============================================================ -->
+<section id="volet-tableaux" class="panel" aria-labelledby="titre-tableaux">
+  <h2 class="panel-title" id="titre-tableaux">Volet 2 · Tableaux de synthèse</h2>
+  <p class="panel-desc">Tout le cours en un coup d'œil : nomenclature, duel IF/IC, statistiques descriptives, probabilités et marge d'erreur.</p>
+
+  <h3 class="section">Nomenclature &amp; notations</h3>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <caption>Boîte à notations — qui est qui ?</caption>
+      <thead><tr><th>Notion</th><th>Définition</th><th>Notation</th></tr></thead>
+      <tbody>
+        <tr><td>Population</td><td>Ensemble de tous les individus étudiés</td><td>\(\mathcal{P}\)</td></tr>
+        <tr><td>Individu</td><td>Un élément de la population</td><td>—</td></tr>
+        <tr><td>Échantillon</td><td>Sous-ensemble de la population</td><td>taille \(n\)</td></tr>
+        <tr><td>Taille de la population</td><td>Nombre total d'individus dans la population</td><td>\(N\)</td></tr>
+        <tr><td>Taille de l'échantillon</td><td>Nombre total d'individus prélevés</td><td>\(n\)</td></tr>
+        <tr><td>Effectif de la modalité \(A\) (population)</td><td>Nombre d'individus de la population portant \(A\)</td><td>\(N_A\)</td></tr>
+        <tr><td>Effectif de la modalité \(A\) (échantillon)</td><td>Nombre d'individus de l'échantillon portant \(A\)</td><td>\(n_A\)</td></tr>
+        <tr><td>Proportion (population)</td><td>Effectif de la modalité ÷ taille de la population</td><td>\(p = \dfrac{N_A}{N}\)</td></tr>
+        <tr><td>Fréquence (échantillon)</td><td>Effectif de la modalité ÷ taille de l'échantillon</td><td>\(f = \dfrac{n_A}{n}\)</td></tr>
+        <tr><td>Marge d'erreur</td><td>Demi-largeur de l'intervalle ; diminue quand \(n\) augmente</td><td>\(\approx \dfrac{1}{\sqrt{n}}\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="section section--tool">Le duel : Intervalle de Fluctuation (IF) vs Intervalle de Confiance (IC)</h3>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr><th>Critère</th><th class="if-col">Intervalle de Fluctuation (IF)</th><th class="ic-col">Intervalle de Confiance (IC)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Quand l'utiliser ?</td><td>On <strong>connaît</strong> la proportion théorique \(p\) de la population.</td><td>On <strong>ne connaît pas</strong> \(p\). On a seulement un échantillon.</td></tr>
+        <tr><td>Ce que l'on connaît</td><td>La population (ex. : taux de pile d'une pièce truquée \(p = 0{,}3\)).</td><td>L'échantillon (ex. : sur 100 lancers, 40 faces, \(f = 0{,}4\)).</td></tr>
+        <tr><td>Ce que l'on cherche</td><td>À vérifier si l'échantillon est normal… ou suspect.</td><td>À estimer la vraie proportion \(p\) de la population.</td></tr>
+        <tr><td>Pourquoi l'utiliser ?</td><td><strong>Prendre une décision</strong> (valider / rejeter une hypothèse).</td><td><strong>Estimer</strong> une réalité inconnue (sondage).</td></tr>
+        <tr><td>Sens de lecture</td><td>Population → Échantillon (de la théorie vers l'observation).</td><td>Échantillon → Population (de l'observation vers la théorie).</td></tr>
+        <tr><td>Centre de l'intervalle</td><td>Centré sur \(p\) (la théorie).</td><td>Centré sur \(f\) (l'observation).</td></tr>
+        <tr><td>Interprétation</td><td>Si \(f \in IF\) : échantillon normal (écart dû au hasard). Si \(f \notin IF\) : on rejette l'hypothèse.</td><td>On est confiant à 95 % que \(p\) se trouve dans l'intervalle.</td></tr>
+        <tr><td>Formule (approx.)</td><td>\(\left[p - \dfrac{1}{\sqrt{n}}\ ;\ p + \dfrac{1}{\sqrt{n}}\right]\)</td><td>\(\left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right]\)</td></tr>
+        <tr><td>Conditions d'application</td><td>\(n \geq 25\) et \(0{,}2 \leq p \leq 0{,}8\) ; seuil 95 % (risque 5 %).</td><td>\(n \geq 30\) et \(0{,}2 \leq f \leq 0{,}8\) ; confiance 95 %.</td></tr>
+        <tr><td>Exemple mental</td><td>« Ce dé est-il truqué ? »</td><td>« Combien de Français aiment le fromage ? »</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="section">Statistiques descriptives — récapitulatif</h3>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <caption>Population contre échantillon : qui observe quoi ?</caption>
+      <thead><tr><th>Objet</th><th>Dans la population</th><th>Dans l'échantillon</th></tr></thead>
+      <tbody>
+        <tr><td>Taille</td><td>\(N\)</td><td>\(n\)</td></tr>
+        <tr><td>Effectif de la modalité \(A\)</td><td>\(N_A\)</td><td>\(n_A\)</td></tr>
+        <tr><td>Part de la modalité \(A\)</td><td>\(p = \dfrac{N_A}{N}\) (proportion théorique)</td><td>\(f = \dfrac{n_A}{n}\) (fréquence observée)</td></tr>
+        <tr><td>Statut</td><td>Modèle (probabilités)</td><td>Observation (statistiques)</td></tr>
+        <tr><td>Exemple (forum)</td><td>\(N = 10\,000\), \(N_A = 3\,000\), \(p = 0{,}3\)</td><td>\(n = 500\), \(n_A = 160\), \(f = 0{,}32\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="section section--prob">Probabilités — récapitulatif</h3>
+  <div class="tbl-wrap">
+    <table class="tbl proba">
+      <thead><tr><th>Notion</th><th>Définition</th><th>Notation</th></tr></thead>
+      <tbody>
+        <tr><td>Expérience aléatoire</td><td>Expérience aux résultats imprévisibles, issues connues</td><td>—</td></tr>
+        <tr><td>Univers</td><td>Ensemble des issues possibles</td><td>\(\Omega\)</td></tr>
+        <tr><td>Probabilité</td><td>Fonction à valeurs dans \(\left[0\ ;\ 1\right]\)</td><td>\(P\left(A\right)\)</td></tr>
+        <tr><td>Loi de probabilité</td><td>Répartition des probabilités sur \(\Omega\)</td><td>—</td></tr>
+        <tr><td>Événement</td><td>Sous-ensemble de \(\Omega\)</td><td>\(A, B\)</td></tr>
+        <tr><td>Événement contraire</td><td>« Non \(A\) », réalisé quand \(A\) échoue</td><td>\(\bar{A}\), \(P\left(\bar{A}\right) = 1 - P\left(A\right)\)</td></tr>
+        <tr><td>Réunion / Intersection</td><td>\(A\) ou \(B\) / \(A\) et \(B\)</td><td>\(A \cup B\) / \(A \cap B\)</td></tr>
+        <tr><td>Probabilité conditionnelle</td><td>Probabilité de \(A\) sachant \(B\)</td><td>\(P_B\left(A\right)\) ou \(P\left(A \mid B\right)\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="section section--tool">Marge d'erreur : la précision coûte des individus</h3>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <caption>Plus l'échantillon est grand, plus la fourchette est resserrée — mais le gain s'essouffle.</caption>
+      <thead><tr><th>Taille \(n\)</th><th>Marge \(\approx \dfrac{1}{\sqrt{n}}\)</th><th>Lecture</th><th>Sondage équivalent</th></tr></thead>
+      <tbody>
+        <tr><td>\(100\)</td><td>\(0{,}10\)</td><td>± 10 points</td><td> micro-trottoir</td></tr>
+        <tr><td>\(1\,000\)</td><td>\(\approx 0{,}032\)</td><td>± 3 points</td><td> sondage standard</td></tr>
+        <tr><td>\(2\,500\)</td><td>\(0{,}020\)</td><td>± 2 points</td><td> sondage premium</td></tr>
+        <tr><td>\(10\,000\)</td><td>\(0{,}010\)</td><td>± 1 point</td><td> précision rarement rentable</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="panel-desc" style="font-style:normal; font-size: 13.5px;">C'est pour cela que les instituts interrogent environ 1 000 à 2 000 personnes : au-delà, multiplier \(n\) par 4 ne divise la marge que par 2. Testez-le en direct dans le <a href="#volet-simulateur" data-panel="volet-simulateur">simulateur</a>.</p>
+</section>
+
+<!-- ============================================================
+     VOLET 3 — CARTE MENTALE
+     ============================================================ -->
+<section id="volet-carte" class="panel" aria-labelledby="titre-carte">
+  <h2 class="panel-title" id="titre-carte">Volet 3 · Carte mentale</h2>
+  <p class="panel-desc">Carte radiale : statistiques à gauche, probabilités à droite, échantillonnage au centre du bas. <strong>Cliquez sur une étiquette</strong> pour ouvrir sa fiche détaillée ; glissez-la pour la déplacer ; glissez le fond pour déplacer la vue.</p>
+
+  <div class="diagram-toolbar">
+    <span class="diagram-hint"><strong>🖱️ Interaction</strong> · clic = fiche · glisser nœud = déplacer · glisser fond = panorama · molette = zoom · double-clic nœud = remettre en place</span>
+    <div class="toolbar-actions">
+      <button class="btn" data-zoom="mindmap" data-factor="0.8" aria-label="Zoom arrière">−</button>
+      <span class="btn btn--zoom-lvl" id="mindmap-zoom-lvl" aria-live="off">100 %</span>
+      <button class="btn" data-zoom="mindmap" data-factor="1.25" aria-label="Zoom avant">+</button>
+      <button class="btn" data-fit="mindmap">⤢ Ajuster</button>
+      <button class="btn" data-reset="mindmap">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="diagram-scroll" id="mindmap-scroll">
+    <div class="diagram-zoom" id="mindmap-zoom">
+      <div class="diagram" id="mindmap" style="width:1600px; height:1420px;">
+        <canvas class="layer" id="mindmap-canvas" width="1600" height="1420"></canvas>
+
+        <div class="node node--core" id="mm-center" data-tpl="tpl-synthese" tabindex="0" role="button" aria-haspopup="dialog" style="left:660px; top:640px; width:280px; height:120px;">Synthèse<br>Statistiques &amp;<br>Probabilités</div>
+
+        <div class="node node--hub node--hub-stat" id="mm-stat-hub" data-tpl="tpl-stats" tabindex="0" role="button" aria-haspopup="dialog" style="left:190px; top:185px; width:180px; height:70px;">Statistiques</div>
+        <div class="node node--stat" id="mm-stat-1" data-tpl="tpl-population" tabindex="0" role="button" aria-haspopup="dialog" style="left:40px; top:50px; width:180px; height:60px;">Population \(\left(N, p\right)\)</div>
+        <div class="node node--stat" id="mm-stat-2" data-tpl="tpl-individu" tabindex="0" role="button" aria-haspopup="dialog" style="left:40px; top:140px; width:180px; height:50px;">Individu</div>
+        <div class="node node--stat" id="mm-stat-3" data-tpl="tpl-echantillon" tabindex="0" role="button" aria-haspopup="dialog" style="left:40px; top:220px; width:180px; height:50px;">Échantillon \(\left(n\right)\)</div>
+        <div class="node node--stat" id="mm-stat-4" data-tpl="tpl-caractere" tabindex="0" role="button" aria-haspopup="dialog" style="left:40px; top:300px; width:180px; height:60px;">Caractère / Modalité</div>
+        <div class="node node--stat" id="mm-stat-5" data-tpl="tpl-frequence" tabindex="0" role="button" aria-haspopup="dialog" style="left:40px; top:390px; width:180px; height:60px;">Fréquence \(f = \dfrac{n_A}{n}\)</div>
+
+        <div class="node node--hub node--hub-prob" id="mm-prob-hub" data-tpl="tpl-probas" tabindex="0" role="button" aria-haspopup="dialog" style="left:1230px; top:185px; width:180px; height:70px;">Probabilités</div>
+        <div class="node node--prob" id="mm-prob-1" data-tpl="tpl-experience" tabindex="0" role="button" aria-haspopup="dialog" style="left:1380px; top:50px; width:180px; height:60px;">Expérience aléatoire</div>
+        <div class="node node--prob" id="mm-prob-2" data-tpl="tpl-univers" tabindex="0" role="button" aria-haspopup="dialog" style="left:1380px; top:140px; width:180px; height:50px;">Univers \(\left(\Omega\right)\)</div>
+        <div class="node node--prob" id="mm-prob-3" data-tpl="tpl-probabilite" tabindex="0" role="button" aria-haspopup="dialog" style="left:1380px; top:220px; width:180px; height:60px;">Probabilité \(P\left(A\right)\)</div>
+        <div class="node node--prob" id="mm-prob-4" data-tpl="tpl-evenement" tabindex="0" role="button" aria-haspopup="dialog" style="left:1380px; top:310px; width:180px; height:60px;">Événement / Élémentaire</div>
+        <div class="node node--prob" id="mm-prob-5" data-tpl="tpl-reunion" tabindex="0" role="button" aria-haspopup="dialog" style="left:1380px; top:400px; width:180px; height:60px;">Réunion / Intersection</div>
+
+        <div class="node node--hub node--hub-tool" id="mm-samp-hub" data-tpl="tpl-echantillonnage" tabindex="0" role="button" aria-haspopup="dialog" style="left:690px; top:915px; width:220px; height:70px;">Échantillonnage</div>
+
+        <div class="node node--if" id="mm-if-hub" data-tpl="tpl-if" tabindex="0" role="button" aria-haspopup="dialog" style="left:300px; top:1065px; width:200px; height:70px;">Intervalle de Fluctuation (IF)</div>
+        <div class="node node--if-sub" id="mm-if-1" data-tpl="tpl-if-quand" tabindex="0" role="button" aria-haspopup="dialog" style="left:50px; top:1160px; width:220px; height:60px;">Quand ? On connaît \(p\).</div>
+        <div class="node node--if-sub" id="mm-if-2" data-tpl="tpl-if-but" tabindex="0" role="button" aria-haspopup="dialog" style="left:50px; top:1240px; width:220px; height:60px;">But ? Vérifier / Décider.</div>
+        <div class="node node--if-sub" id="mm-if-3" data-tpl="tpl-if-interp" tabindex="0" role="button" aria-haspopup="dialog" style="left:50px; top:1320px; width:220px; height:60px;">Interprétation : \(f \in IF\) ? Normal.</div>
+
+        <div class="node node--ic" id="mm-ic-hub" data-tpl="tpl-ic" tabindex="0" role="button" aria-haspopup="dialog" style="left:1100px; top:1065px; width:200px; height:70px;">Intervalle de Confiance (IC)</div>
+        <div class="node node--ic-sub" id="mm-ic-1" data-tpl="tpl-ic-quand" tabindex="0" role="button" aria-haspopup="dialog" style="left:1330px; top:1160px; width:220px; height:60px;">Quand ? On connaît \(f\).</div>
+        <div class="node node--ic-sub" id="mm-ic-2" data-tpl="tpl-ic-but" tabindex="0" role="button" aria-haspopup="dialog" style="left:1330px; top:1240px; width:220px; height:60px;">But ? Estimer \(p\).</div>
+        <div class="node node--ic-sub" id="mm-ic-3" data-tpl="tpl-ic-interp" tabindex="0" role="button" aria-haspopup="dialog" style="left:1330px; top:1320px; width:220px; height:60px;">Confiance 95 % que \(p\) y soit.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="l-stat">Statistiques descriptives</span>
+    <span class="l-prob">Probabilités</span>
+    <span class="l-tool">Échantillonnage (IF / IC)</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLET 4 — GRAPHE DE CONNAISSANCES
+     ============================================================ -->
+<section id="volet-graphe" class="panel" aria-labelledby="titre-graphe">
+  <h2 class="panel-title" id="titre-graphe">Volet 4 · Graphe de connaissances</h2>
+  <p class="panel-desc">Le « chassé-croisé » de l'échantillonnage, vu comme un réseau de dépendances. <strong>Cliquez sur une étiquette</strong> pour ouvrir sa fiche.</p>
+
+  <ul class="content-list">
+    <li>L'<strong>Intervalle de Fluctuation (IF)</strong> part de la <strong>Population</strong> (on connaît \(p\)) vers l'<strong>Échantillon</strong> (on observe \(f\)) pour <strong>vérifier</strong> une hypothèse.</li>
+    <li>L'<strong>Intervalle de Confiance (IC)</strong> part de l'<strong>Échantillon</strong> (on connaît \(f\)) vers la <strong>Population</strong> (on cherche \(p\)) pour <strong>estimer</strong> une réalité.</li>
+  </ul>
+
+  <div class="diagram-toolbar">
+    <span class="diagram-hint"><strong>🖱️ Interaction</strong> · clic = fiche · glisser nœud = déplacer · glisser fond = panorama · molette = zoom</span>
+    <div class="toolbar-actions">
+      <button class="btn" data-zoom="graphmap" data-factor="0.8" aria-label="Zoom arrière">−</button>
+      <span class="btn btn--zoom-lvl" id="graphmap-zoom-lvl" aria-live="off">100 %</span>
+      <button class="btn" data-zoom="graphmap" data-factor="1.25" aria-label="Zoom avant">+</button>
+      <button class="btn" data-fit="graphmap">⤢ Ajuster</button>
+      <button class="btn" data-reset="graphmap">↺ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="diagram-scroll" id="graphmap-scroll">
+    <div class="diagram-zoom" id="graphmap-zoom">
+      <div class="diagram" id="graphmap" style="width:1400px; height:1200px;">
+        <canvas class="layer" id="graphmap-canvas" width="1400" height="1200"></canvas>
+
+        <div class="node node--gstat" id="gr-pop" data-tpl="tpl-population" tabindex="0" role="button" aria-haspopup="dialog" style="left:590px; top:50px; width:220px; height:60px;">Population \(\left(N,\ p\right)\)</div>
+        <div class="node node--gstat" id="gr-ind" data-tpl="tpl-individu" tabindex="0" role="button" aria-haspopup="dialog" style="left:140px; top:50px; width:120px; height:60px;">Individu</div>
+        <div class="node node--gstat" id="gr-ech" data-tpl="tpl-echantillon" tabindex="0" role="button" aria-haspopup="dialog" style="left:610px; top:220px; width:180px; height:60px;">Échantillon \(\left(n\right)\)</div>
+        <div class="node node--gstat" id="gr-freq" data-tpl="tpl-frequence" tabindex="0" role="button" aria-haspopup="dialog" style="left:1040px; top:220px; width:220px; height:60px;">Fréquence observée \(f = \dfrac{n_A}{n}\)</div>
+        <div class="node node--gstat" id="gr-car" data-tpl="tpl-caractere" tabindex="0" role="button" aria-haspopup="dialog" style="left:110px; top:220px; width:180px; height:60px;">Caractère / Modalité</div>
+
+        <div class="node node--gtool" id="gr-if" data-tpl="tpl-if" tabindex="0" role="button" aria-haspopup="dialog" style="left:250px; top:430px; width:200px; height:80px;"><strong>Intervalle de Fluctuation (IF)</strong><br>Centré sur \(p\)</div>
+        <div class="node node--gtool" id="gr-ic" data-tpl="tpl-ic" tabindex="0" role="button" aria-haspopup="dialog" style="left:950px; top:430px; width:200px; height:80px;"><strong>Intervalle de Confiance (IC)</strong><br>Centré sur \(f\)</div>
+        <div class="node node--gtool" id="gr-marge" data-tpl="tpl-marge" tabindex="0" role="button" aria-haspopup="dialog" style="left:620px; top:610px; width:160px; height:60px;">Marge d'erreur</div>
+
+        <div class="node node--gprob" id="gr-exp" data-tpl="tpl-experience" tabindex="0" role="button" aria-haspopup="dialog" style="left:600px; top:770px; width:200px; height:60px;">Expérience aléatoire</div>
+        <div class="node node--gprob" id="gr-uni" data-tpl="tpl-univers" tabindex="0" role="button" aria-haspopup="dialog" style="left:630px; top:890px; width:140px; height:60px;">Univers \(\left(\Omega\right)\)</div>
+        <div class="node node--gprob" id="gr-evt" data-tpl="tpl-evenement" tabindex="0" role="button" aria-haspopup="dialog" style="left:630px; top:1010px; width:140px; height:60px;">Événement</div>
+        <div class="node node--gprob" id="gr-probA" data-tpl="tpl-probabilite" tabindex="0" role="button" aria-haspopup="dialog" style="left:260px; top:1010px; width:180px; height:60px;">Probabilité \(P\left(A\right)\)</div>
+        <div class="node node--gprob" id="gr-cond" data-tpl="tpl-conditionnelle" tabindex="0" role="button" aria-haspopup="dialog" style="left:950px; top:1010px; width:200px; height:60px;">Prob. conditionnelle</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="l-stat">Statistiques descriptives</span>
+    <span class="l-tool">Échantillonnage (IF / IC)</span>
+    <span class="l-prob">Probabilités</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLET 5 — SIMULATEUR IF / IC
+     ============================================================ -->
+<section id="volet-simulateur" class="panel" aria-labelledby="titre-simulateur">
+  <h2 class="panel-title" id="titre-simulateur">Volet 5 · Simulateur IF / IC</h2>
+  <p class="panel-desc">Faites varier \(p\), \(f\) et \(n\) et regardez les intervalles se déformer en direct : le meilleur moyen de <em>ressentir</em> la marge d'erreur \(\dfrac{1}{\sqrt{n}}\).</p>
+
+  <div class="sim">
+    <div class="sim__tabs" role="tablist" aria-label="Mode du simulateur">
+      <button class="sim__tab is-active" id="tab-if" role="tab" aria-selected="true" aria-controls="sim-body">🎯 Tester une hypothèse — Intervalle de Fluctuation</button>
+      <button class="sim__tab" id="tab-ic" role="tab" aria-selected="false" aria-controls="sim-body">📏 Estimer une proportion — Intervalle de Confiance</button>
+    </div>
+
+    <div class="sim__body" id="sim-body" role="tabpanel">
+      <div class="sim__controls">
+        <fieldset class="sim__group" id="sim-if-controls">
+          <legend>Données du test</legend>
+          <div class="ctl">
+            <label for="if-p">Proportion théorique <span>\(p\)</span> <output id="if-p-out" for="if-p">0,50</output></label>
+            <input type="range" id="if-p" min="0.05" max="0.95" step="0.01" value="0.50">
+          </div>
+          <div class="ctl">
+            <label for="if-n">Taille de l'échantillon <span>\(n\)</span> <output id="if-n-out" for="if-n">100</output></label>
+            <input type="range" id="if-n" min="25" max="2000" step="25" value="100">
+          </div>
+          <div class="ctl">
+            <label for="if-f">Fréquence observée <span>\(f\)</span> <output id="if-f-out" for="if-f">0,62</output></label>
+            <input type="range" id="if-f" min="0" max="1" step="0.01" value="0.62">
+          </div>
+          <div class="sim__conditions" id="if-conds"></div>
+        </fieldset>
+
+        <fieldset class="sim__group" id="sim-ic-controls" hidden>
+          <legend>Données de l'estimation</legend>
+          <div class="ctl">
+            <label for="ic-f">Fréquence observée <span>\(f\)</span> <output id="ic-f-out" for="ic-f">0,32</output></label>
+            <input type="range" id="ic-f" min="0" max="1" step="0.01" value="0.32">
+          </div>
+          <div class="ctl">
+            <label for="ic-n">Taille de l'échantillon <span>\(n\)</span> <output id="ic-n-out" for="ic-n">500</output></label>
+            <input type="range" id="ic-n" min="30" max="2000" step="10" value="500">
+          </div>
+          <div class="sim__conditions" id="ic-conds"></div>
+        </fieldset>
+
+        <p class="sim__meta" style="margin-top:14px;">Le simulateur applique les formules approchées du programme : IF \(= \left[p - \dfrac{1}{\sqrt{n}}\ ;\ p + \dfrac{1}{\sqrt{n}}\right]\) et IC \(= \left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right]\).</p>
+      </div>
+
+      <div class="sim__view">
+        <div class="numline" aria-hidden="true">
+          <div class="numline__track">
+            <div class="numline__band" id="sim-band"></div>
+            <div class="numline__mark numline__mark--theory" id="sim-mark-theory"><span class="mk-label" id="sim-theory-label">p</span></div>
+            <div class="numline__mark numline__mark--obs" id="sim-mark-obs"><span class="mk-label" id="sim-obs-label">f</span></div>
+          </div>
+          <div class="numline__ticks"><span>0</span><span>0,25</span><span>0,5</span><span>0,75</span><span>1</span></div>
+        </div>
+        <div class="sim__result" id="sim-result" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLET 6 — QUIZ
+     ============================================================ -->
+<section id="volet-quiz" class="panel" aria-labelledby="titre-quiz">
+  <h2 class="panel-title" id="titre-quiz">Volet 6 · Quiz d'auto-évaluation</h2>
+  <p class="panel-desc">10 questions couvrant la nomenclature, le duel IF/IC et les probabilités. Réponse immédiate, explication et renvoi vers la fiche correspondante.</p>
+
+  <div class="quiz" id="quiz" aria-live="polite"></div>
+</section>
+
+<footer class="footer">
+  <span>Terminale générale · Option Mathématiques complémentaires — synthèse interactive. Formules rendues par MathJax 3 (repli local si le CDN est indisponible).</span>
+  <span>Franchement testable : vérifiez que \(f \in IF\) avant de rejeter un échantillon. 😉</span>
+</footer>
+</main>
+
+<!-- ============================================================
+     MODALE FICHE
+     ============================================================ -->
+<div class="modal-overlay" id="modal-overlay" aria-hidden="true">
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="modal-close" id="modal-close-x" aria-label="Fermer la fiche">×</button>
+    <h2 id="modal-title" class="modal-title"></h2>
+    <div id="modal-content" class="modal-content"></div>
+    <div class="modal-footer">
+      <button class="btn--primary" id="modal-close-btn">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" role="status" aria-hidden="true"></div>
+<button class="back-top" id="back-top" aria-label="Revenir en haut de la page">↑</button>
+
+<!-- ============================================================
+     FICHES PÉDAGOGIQUES (templates, inertes jusqu'à l'ouverture)
+     Le LaTeX y est écrit littéralement : aucun échappement JavaScript.
+     ============================================================ -->
+<template id="tpl-synthese" data-title="Synthèse : statistiques, échantillonnage et probabilités">
+  <p>Cette carte relie les <strong>trois grandes familles</strong> de notions au programme de Terminale (option Mathématiques Complémentaires) :</p>
+  <ul>
+    <li><strong>Statistiques descriptives</strong> : décrire une population à partir de données observées (proportions, fréquences).</li>
+    <li><strong>Échantillonnage</strong> : passer d'un échantillon à la population — ou l'inverse — avec un contrôle du risque d'erreur (IF, IC).</li>
+    <li><strong>Probabilités</strong> : modéliser l'incertitude (univers, événements, probabilité conditionnelle).</li>
+  </ul>
+  <p>Le fil conducteur : une <strong>fréquence observée</strong> \(f\) sur un échantillon permet de <strong>vérifier</strong> une proportion \(p\) (si elle est connue) ou de l'<strong>estimer</strong> (si elle est inconnue).</p>
+</template>
+
+<template id="tpl-stats" data-title="Branche statistiques">
+  <p>La statistique descriptive organise et résume les données observées sur une population ou un échantillon.</p>
+  <p>On y trouve : la <strong>population</strong> \(\left(N\right)\), l'<strong>échantillon</strong> \(\left(n\right)\), les <strong>individus</strong>, les <strong>caractères</strong> et <strong>modalités</strong>, et les <strong>fréquences</strong> \(f\).</p>
+  <div class="note"><strong>Attention :</strong> ne pas confondre \(n\) (taille de l'échantillon) et \(n_A\) (effectif d'une modalité dans l'échantillon).</div>
+</template>
+
+<template id="tpl-probas" data-title="Branche probabilités">
+  <p>Les probabilités modélisent le hasard. Elles reposent sur trois objets fondamentaux :</p>
+  <ul>
+    <li>l'<strong>expérience aléatoire</strong> ;</li>
+    <li>l'<strong>univers</strong> \(\Omega\) (toutes les issues possibles) ;</li>
+    <li>une <strong>probabilité</strong> \(P\) sur \(\Omega\), qui associe à chaque événement \(A\) un nombre entre 0 et 1.</li>
+  </ul>
+  <p>On y ajoute les opérations sur les événements (réunion, intersection, contraire) et la probabilité conditionnelle \(P_B\left(A\right)\).</p>
+</template>
+
+<template id="tpl-population" data-title="Population (N, p)">
+  <p>La <strong>population</strong> est l'ensemble de tous les individus concernés par l'étude.</p>
+  <p>On note :</p>
+  <ul>
+    <li>\(N\) : la <strong>taille</strong> de la population (nombre total d'individus) ;</li>
+    <li>\(p\) : la <strong>proportion théorique</strong> d'une modalité dans cette population.</li>
+  </ul>
+  <div class="formula">\[ p = \dfrac{N_A}{N} \]</div>
+  <p>où \(N_A\) est le nombre d'individus de la population qui possèdent la modalité \(A\).</p>
+  <div class="note"><strong>Remarque :</strong> en pratique, \(p\) est souvent <em>inconnue</em> — c'est ce que l'on cherche à estimer via un sondage. \(N\) est en revanche généralement connu, au moins en ordre de grandeur.</div>
+  <p><em>Exemple :</em> une population de \(10\,000\) membres dont \(3\,000\) ont choisi l'Alliance : \(N = 10\,000\), \(N_A = 3\,000\), donc \(p = \dfrac{3\,000}{10\,000} = 0{,}3\).</p>
+</template>
+
+<template id="tpl-individu" data-title="Individu">
+  <p>Un <strong>individu</strong> est un élément de la population. C'est l'objet de base sur lequel on observe le caractère étudié.</p>
+  <p>Chaque individu porte une <strong>modalité</strong> du caractère étudié. Par exemple :</p>
+  <ul>
+    <li>le joueur « DarkVador59 » est un individu ;</li>
+    <li>sa faction (Alliance ou Horde) est sa modalité.</li>
+  </ul>
+</template>
+
+<template id="tpl-echantillon" data-title="Échantillon (n)">
+  <p>Un <strong>échantillon</strong> est un sous-ensemble de la population, obtenu par tirage au sort (idéalement aléatoire, avec ou sans remise).</p>
+  <p>On note \(n\) sa <strong>taille</strong> : le nombre d'individus prélevés.</p>
+  <p>L'échantillon sert à :</p>
+  <ul>
+    <li><strong>observer</strong> une fréquence \(f\) d'une modalité ;</li>
+    <li><strong>vérifier</strong> une hypothèse sur \(p\) (Intervalle de Fluctuation) ;</li>
+    <li><strong>estimer</strong> \(p\) quand elle est inconnue (Intervalle de Confiance).</li>
+  </ul>
+  <div class="note"><strong>Important :</strong> \(n\) désigne <em>toujours</em> la taille de l'échantillon. Pour un effectif de modalité dans l'échantillon, on écrit \(n_A\) (avec un indice).</div>
+</template>
+
+<template id="tpl-caractere" data-title="Caractère / Modalité">
+  <p>Le <strong>caractère</strong> est ce que l'on étudie sur chaque individu. Une <strong>modalité</strong> est une valeur possible du caractère.</p>
+  <ul>
+    <li><strong>Caractère qualitatif</strong> : valeurs non numériques (ex. : la faction choisie → Alliance, Horde).</li>
+    <li><strong>Caractère quantitatif</strong> : valeurs numériques (ex. : l'âge, le nombre d'heures de jeu).</li>
+  </ul>
+  <p>Une <em>modalité</em> est une catégorie du caractère qualitatif (ex. : « Alliance »).</p>
+</template>
+
+<template id="tpl-effectif" data-title="Effectifs : N_A et n_A">
+  <p>L'<strong>effectif</strong> d'une modalité \(A\) est le <strong>nombre d'individus</strong> qui la portent :</p>
+  <ul>
+    <li>\(N_A\) : dans la <strong>population</strong> ;</li>
+    <li>\(n_A\) : dans l'<strong>échantillon</strong>.</li>
+  </ul>
+  <div class="formula">\[ N_A \text{ (population)} \qquad\qquad n_A \text{ (échantillon)} \]</div>
+  <p><em>Exemple :</em> dans le forum, \(N_A = 3\,000\) membres jouent Alliance ; dans l'échantillon de \(n = 500\) membres, \(n_A = 160\) jouent Alliance.</p>
+  <div class="note"><strong>Piège de notation :</strong> l'indice est obligatoire ! Sans indice, \(N\) et \(n\) désignent des <em>tailles</em> (totaux), jamais des effectifs de modalité.</div>
+</template>
+
+<template id="tpl-frequence" data-title="Fréquence f = n_A / n">
+  <p>La <strong>fréquence observée</strong> \(f\) d'une modalité \(A\) dans un échantillon est :</p>
+  <div class="formula">\[ f = \dfrac{n_A}{n} \]</div>
+  <p>où :</p>
+  <ul>
+    <li>\(n_A\) est le nombre d'individus de l'échantillon portant la modalité \(A\) ;</li>
+    <li>\(n\) est la taille totale de l'échantillon.</li>
+  </ul>
+  <p>La fréquence \(f\) est un nombre entre 0 et 1. C'est une <strong>observation</strong> sur l'échantillon, à ne pas confondre avec \(p\), la proportion théorique dans la population.</p>
+  <div class="note"><strong>Piège fréquent :</strong> on n'écrit <em>jamais</em> \(f = \dfrac{n}{N}\) ! La lettre \(n\) désigne la taille de l'échantillon, pas un effectif de modalité. Pour un effectif de modalité, on utilise toujours un indice : \(n_A\), \(n_i\), \(N_A\), \(\ldots\)</div>
+</template>
+
+<template id="tpl-experience" data-title="Expérience aléatoire">
+  <p>Une <strong>expérience aléatoire</strong> est une expérience dont on connaît toutes les issues possibles, mais dont on ne peut pas prévoir le résultat avant de la réaliser.</p>
+  <p><em>Exemples :</em></p>
+  <ul>
+    <li>lancer un dé à six faces ;</li>
+    <li>ouvrir une loot box ;</li>
+    <li>tirer un individu au sort dans une population.</li>
+  </ul>
+  <p>L'ensemble des issues possibles forme l'<strong>univers</strong> \(\Omega\).</p>
+</template>
+
+<template id="tpl-univers" data-title="Univers (Ω)">
+  <p>L'<strong>univers</strong>, noté \(\Omega\) (oméga), est l'ensemble de toutes les issues possibles d'une expérience aléatoire.</p>
+  <p><em>Exemple :</em> pour un dé à six faces, \(\Omega = \left\{1\ ;\ 2\ ;\ 3\ ;\ 4\ ;\ 5\ ;\ 6\right\}\).</p>
+  <p>Une <strong>issue</strong> est un élément de \(\Omega\) (ex. : « obtenir 3 »). Un <strong>événement</strong> est un sous-ensemble de \(\Omega\).</p>
+</template>
+
+<template id="tpl-probabilite" data-title="Probabilité P(A)">
+  <p>Une <strong>probabilité</strong> est une fonction \(P\) qui associe à chaque événement \(A \subset \Omega\) un nombre réel dans \(\left[0\ ;\ 1\right]\) mesurant la chance que \(A\) se réalise.</p>
+  <p>Propriétés fondamentales :</p>
+  <ul>
+    <li>\(P\left(\Omega\right) = 1\) (événement certain) ;</li>
+    <li>\(P\left(\varnothing\right) = 0\) (événement impossible) ;</li>
+    <li>la somme des probabilités des issues de \(\Omega\) vaut 1.</li>
+  </ul>
+  <p>Pour deux événements \(A\) et \(B\) :</p>
+  <div class="formula">\[ P\left(A \cup B\right) = P\left(A\right) + P\left(B\right) - P\left(A \cap B\right) \]</div>
+</template>
+
+<template id="tpl-evenement" data-title="Événement / Événement élémentaire">
+  <p>Un <strong>événement</strong> est un sous-ensemble de l'univers \(\Omega\). Il est réalisé si l'issue obtenue appartient à cet ensemble.</p>
+  <p>Un <strong>événement élémentaire</strong> est un événement réduit à une seule issue (un singleton).</p>
+  <p><em>Exemples</em> avec un dé :</p>
+  <ul>
+    <li>« obtenir un nombre pair » \(= \left\{2\ ;\ 4\ ;\ 6\right\}\) est un événement ;</li>
+    <li>« obtenir 3 » \(= \left\{3\right\}\) est un événement élémentaire.</li>
+  </ul>
+</template>
+
+<template id="tpl-reunion" data-title="Réunion / Intersection">
+  <p>Pour deux événements \(A\) et \(B\) de \(\Omega\) :</p>
+  <ul>
+    <li>la <strong>réunion</strong> \(A \cup B\) (« \(A\) ou \(B\) ») est l'ensemble des issues appartenant à \(A\), à \(B\) ou aux deux ;</li>
+    <li>l'<strong>intersection</strong> \(A \cap B\) (« \(A\) et \(B\) ») est l'ensemble des issues appartenant à la fois à \(A\) et à \(B\).</li>
+  </ul>
+  <p>Probabilités :</p>
+  <div class="formula">\[ P\left(A \cup B\right) = P\left(A\right) + P\left(B\right) - P\left(A \cap B\right) \]</div>
+  <p>Si \(A\) et \(B\) sont <strong>incompatibles</strong> (\(A \cap B = \varnothing\)), alors \(P\left(A \cup B\right) = P\left(A\right) + P\left(B\right)\).</p>
+</template>
+
+<template id="tpl-complement" data-title="Événement contraire (Ā)">
+  <p>L'<strong>événement contraire</strong> de \(A\), noté \(\bar{A}\), est l'ensemble des issues de \(\Omega\) qui <em>ne</em> sont <em>pas</em> dans \(A\). Il se réalise exactement quand \(A\) échoue.</p>
+  <div class="formula">\[ P\left(\bar{A}\right) = 1 - P\left(A\right) \]</div>
+  <p><em>Exemple :</em> si \(A\) = « obtenir un nombre pair » avec un dé (\(P\left(A\right) = 0{,}5\)), alors \(\bar{A}\) = « obtenir un nombre impair » et \(P\left(\bar{A}\right) = 1 - 0{,}5 = 0{,}5\).</p>
+  <p>Astuce : quand un événement est compliqué à compter directement, on calcule souvent la probabilité de son contraire, puis on soustrait.</p>
+</template>
+
+<template id="tpl-echantillonnage" data-title="Échantillonnage">
+  <p>L'<strong>échantillonnage</strong> regroupe les méthodes qui consistent à prélever un échantillon dans une population et à en tirer des conclusions sur cette population.</p>
+  <p>C'est le <strong>pont</strong> entre :</p>
+  <ul>
+    <li>les <strong>statistiques descriptives</strong> (ce que je vois sur l'échantillon) ;</li>
+    <li>les <strong>probabilités</strong> (le modèle théorique qui décrit la population).</li>
+  </ul>
+  <p>Deux outils complémentaires :</p>
+  <ul>
+    <li>l'<strong>Intervalle de Fluctuation</strong> (IF) : de \(p\) vers \(f\) — <em>vérifier</em> ;</li>
+    <li>l'<strong>Intervalle de Confiance</strong> (IC) : de \(f\) vers \(p\) — <em>estimer</em>.</li>
+  </ul>
+</template>
+
+<template id="tpl-if" data-title="Intervalle de Fluctuation (IF)">
+  <p>Pour un échantillon de taille \(n\), l'<strong>intervalle de fluctuation</strong> au seuil de 95 % est l'intervalle centré sur \(p\) qui contient la fréquence observée \(f\) avec une probabilité d'au moins 0,95.</p>
+  <div class="formula">\[ IF = \left[p - \dfrac{1}{\sqrt{n}}\ ;\ p + \dfrac{1}{\sqrt{n}}\right] \]</div>
+  <p><strong>Usage :</strong> décider si un échantillon observé est « normal » (compatible avec \(p\)) ou « anormal » (incompatible, donc suspect).</p>
+  <div class="note"><strong>Conditions d'application :</strong> \(n \geq 25\) et \(0{,}2 \leq p \leq 0{,}8\). Le seuil de 95 % correspond à un risque d'erreur de 5 % quand on rejette l'hypothèse.</div>
+</template>
+
+<template id="tpl-if-quand" data-title="IF — Quand l'utiliser ?">
+  <p>On utilise l'<strong>intervalle de fluctuation</strong> quand la proportion \(p\) de la population est <strong>connue</strong> (ou supposée connue) et que l'on veut tester si un échantillon observé est cohérent avec cette valeur.</p>
+  <p><em>Exemples de situations :</em></p>
+  <ul>
+    <li>vérifier qu'un dé n'est pas truqué (\(p = \dfrac{1}{6}\) pour chaque face) ;</li>
+    <li>tester si un candidat a triché à un examen ;</li>
+    <li>vérifier la conformité d'un lot de production (\(p\) = taux de défaut attendu).</li>
+  </ul>
+  <p>On part de la <strong>théorie</strong> (population) et on regarde si l'<strong>observation</strong> (échantillon) est compatible.</p>
+</template>
+
+<template id="tpl-if-but" data-title="IF — Pourquoi l'utiliser ?">
+  <p>L'IF sert à <strong>prendre une décision</strong> :</p>
+  <ul>
+    <li><strong>Valider</strong> une hypothèse : si \(f \in IF\), l'écart entre \(f\) et \(p\) est compatible avec les fluctuations d'échantillonnage ;</li>
+    <li><strong>Rejeter</strong> une hypothèse : si \(f \notin IF\), l'écart est trop important pour être dû au hasard — on rejette l'hypothèse, avec un risque d'erreur de 5 %.</li>
+  </ul>
+  <p>C'est un <strong>test statistique</strong> simplifié, basé sur l'intervalle de fluctuation asymptotique.</p>
+</template>
+
+<template id="tpl-if-interp" data-title="IF — Interprétation">
+  <p>Après calcul de l'intervalle de fluctuation \(IF = \left[p - \dfrac{1}{\sqrt{n}}\ ;\ p + \dfrac{1}{\sqrt{n}}\right]\) :</p>
+  <ul>
+    <li>Si la fréquence observée \(f\) appartient à \(IF\) : l'échantillon est considéré comme <strong>normal</strong>. La différence entre \(f\) et \(p\) s'explique par le hasard de l'échantillonnage.</li>
+    <li>Si \(f\) n'appartient pas à \(IF\) : l'échantillon est <strong>anormal</strong>. On <strong>rejette l'hypothèse</strong> selon laquelle la proportion vaut \(p\), au risque (5 %) de se tromper.</li>
+  </ul>
+  <div class="note"><strong>Attention :</strong> « rejeter » ne veut pas dire « prouver que c'est faux ». C'est une décision statistique, prise avec un risque d'erreur contrôlé.</div>
+</template>
+
+<template id="tpl-ic" data-title="Intervalle de Confiance (IC)">
+  <p>L'<strong>intervalle de confiance</strong> au niveau de 95 % pour une proportion \(p\) inconnue, calculé à partir d'un échantillon de taille \(n\) et de fréquence observée \(f\), est :</p>
+  <div class="formula">\[ IC = \left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right] \]</div>
+  <p><strong>Usage :</strong> estimer la proportion \(p\) dans la population (sondages, enquêtes d'opinion).</p>
+  <div class="note"><strong>Interprétation :</strong> on dit qu'on a une confiance de 95 % que la vraie proportion \(p\) appartienne à cet intervalle. Plus précisément : <em>95 % des échantillons</em> de taille \(n\) produiraient un intervalle contenant \(p\). Condition d'application : \(n \geq 30\).</div>
+  <p><strong>Marge d'erreur :</strong> la demi-largeur de l'IC vaut environ \(\dfrac{1}{\sqrt{n}}\). Elle diminue quand \(n\) augmente.</p>
+</template>
+
+<template id="tpl-ic-quand" data-title="IC — Quand l'utiliser ?">
+  <p>On utilise l'<strong>intervalle de confiance</strong> quand la proportion \(p\) de la population est <strong>inconnue</strong> et qu'on dispose d'un échantillon avec une fréquence observée \(f\).</p>
+  <p><em>Exemples de situations :</em></p>
+  <ul>
+    <li>estimer la proportion de Français qui aiment le fromage (sondage sur 1 000 personnes) ;</li>
+    <li>estimer l'intention de vote pour un candidat ;</li>
+    <li>estimer la proportion de pièces défectueuses dans un lot.</li>
+  </ul>
+  <p>On part de l'<strong>observation</strong> (échantillon) et on remonte vers la <strong>population</strong>.</p>
+</template>
+
+<template id="tpl-ic-but" data-title="IC — Pourquoi l'utiliser ?">
+  <p>L'IC sert à <strong>estimer</strong> une proportion inconnue \(p\) dans la population.</p>
+  <p>Au lieu de donner une valeur unique (par exemple \(f = 0{,}32\)), on donne une <strong>fourchette</strong> \(\left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right]\) qui contient \(p\) avec une confiance de 95 %.</p>
+  <p>C'est la base des sondages : la fameuse « marge d'erreur » annoncée (par exemple « ± 2,5 points ») correspond à \(\dfrac{1}{\sqrt{n}}\) pour \(n \approx 1\,600\).</p>
+</template>
+
+<template id="tpl-ic-interp" data-title="IC — Interprétation">
+  <p>Soit \(IC = \left[f - \dfrac{1}{\sqrt{n}}\ ;\ f + \dfrac{1}{\sqrt{n}}\right]\) calculé sur un échantillon de taille \(n\). On dit :</p>
+  <ul>
+    <li>« On est confiant à 95 % que la vraie proportion \(p\) de la population se trouve dans \(IC\). »</li>
+    <li>Ou : « Si l'on répétait un grand nombre de fois l'échantillonnage, environ 95 % des intervalles calculés contiendraient \(p\). »</li>
+  </ul>
+  <div class="note"><strong>Piège classique :</strong> on ne dit pas « \(p\) a 95 % de chance d'être dans \(IC\) ». La proportion \(p\) est une valeur <em>fixe</em> (non aléatoire) : c'est l'intervalle, calculé à partir d'un échantillon aléatoire, qui varie. Une fois calculé, soit \(p\) y est, soit il n'y est pas — mais on ne peut pas le savoir.</div>
+</template>
+
+<template id="tpl-marge" data-title="Marge d'erreur">
+  <p>La <strong>marge d'erreur</strong> est la demi-largeur de l'intervalle de fluctuation ou de confiance. Elle vaut approximativement :</p>
+  <div class="formula">\[ \text{marge} \approx \dfrac{1}{\sqrt{n}} \]</div>
+  <p>Elle <strong>diminue</strong> quand la taille \(n\) de l'échantillon <strong>augmente</strong> : plus l'échantillon est grand, plus l'estimation est précise.</p>
+  <p><em>Exemples :</em></p>
+  <ul>
+    <li>\(n = 100\) : marge \(\approx 0{,}10\) (10 points) ;</li>
+    <li>\(n = 1\,000\) : marge \(\approx 0{,}032\) (environ 3 points) ;</li>
+    <li>\(n = 2\,500\) : marge \(\approx 0{,}020\) (2 points).</li>
+  </ul>
+  <p>C'est pour cela que les instituts de sondage interrogent environ 1 000 à 2 000 personnes : au-delà, le gain de précision devient marginal.</p>
+</template>
+
+<template id="tpl-conditionnelle" data-title="Probabilité conditionnelle">
+  <p>La <strong>probabilité conditionnelle</strong> de \(A\) sachant \(B\), notée \(P_B\left(A\right)\) ou \(P\left(A \mid B\right)\), mesure la probabilité que \(A\) se réalise <em>sachant que</em> \(B\) est déjà réalisé.</p>
+  <div class="formula">\[ P_B\left(A\right) = \dfrac{P\left(A \cap B\right)}{P\left(B\right)} \qquad \text{(si } P\left(B\right) > 0\text{)} \]</div>
+  <p>Autrement dit, on restreint l'univers à \(B\) : on ne considère que les issues où \(B\) est réalisé, et on regarde la part de celles où \(A\) se réalise aussi.</p>
+  <p><em>Exemple :</em> on sait que le joueur a choisi l'Alliance (événement \(B\)). Quelle est la probabilité qu'il soit niveau maximum (événement \(A\)) ? C'est \(P_B\left(A\right)\).</p>
+  <p><strong>Formule des probabilités composées :</strong> \(P\left(A \cap B\right) = P_B\left(A\right) \cdot P\left(B\right)\), souvent utilisée pour calculer la probabilité d'une intersection.</p>
+</template>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==========================================================
+     UTILITAIRES
+     ========================================================== */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function fmt(x, dec) {
+    var v = Math.round(x * Math.pow(10, dec)) / Math.pow(10, dec);
+    return String(v).replace('.', ',');
+  }
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888888';
+  }
+  function hexA(hex, a) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+  function store(key, val) {
+    try {
+      if (arguments.length === 1) return window.localStorage.getItem(key);
+      window.localStorage.setItem(key, val);
+    } catch (e) { return null; }
+  }
+
+  /* ==========================================================
+     MATHS : MATHJAX 3 + MOTEUR DE REPLI LOCAL
+     MathJax est chargé via CDN ; s'il est indisponible
+     (hors-ligne, CSP…), un mini-moteur TeX prend le relais.
+     ========================================================== */
+  var TEX_SYMBOLS = {
+    cup: '∪', cap: '∩', Omega: 'Ω', omega: 'ω', varnothing: '∅', in: '∈', notin: '∉',
+    subset: '⊂', subseteq: '⊆', geq: '≥', leq: '≤', approx: '≈', equiv: '≡',
+    ldots: '…', cdots: '⋯', cdot: '·', times: '×', div: '÷', pm: '±',
+    mid: '|', quad: '\u2003', qquad: '\u2003\u2003', Rightarrow: '⇒', rightarrow: '→',
+    leftrightarrow: '↔', iff: '⇔', forall: '∀', exists: '∃', neq: '≠', propto: '∝'
+  };
+
+  function texToHtml(src) {
+    var i = 0, n = src.length;
+
+    function escHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function charHtml(c) {
+      if (/[a-z]/.test(c)) return '<i class="mf-v">' + c + '</i>';
+      if (c === '-') return '<span class="mf-op">−</span>';
+      if (c === '+' || c === '=' || c === '<' || c === '>' || c === '/') return '<span class="mf-op">' + escHtml(c) + '</span>';
+      if (c === '*') return '<span class="mf-op">∗</span>';
+      return escHtml(c);
+    }
+    function skipSpaces() { while (i < n && src.charAt(i) === ' ') i++; }
+    function readGroupRaw() {
+      skipSpaces();
+      if (src.charAt(i) !== '{') { var c = src.charAt(i) || ''; i++; return c; }
+      i++;
+      var depth = 1, out = '';
+      while (i < n && depth > 0) {
+        var ch = src.charAt(i);
+        if (ch === '{') { depth++; out += '{'; }
+        else if (ch === '}') { depth--; if (depth === 0) { i++; break; } out += '}'; }
+        else out += ch;
+        i++;
+      }
+      return out;
+    }
+    function readGroup() {
+      skipSpaces();
+      if (src.charAt(i) === '{') { i++; var h = parse(true); if (src.charAt(i) === '}') i++; return h; }
+      if (src.charAt(i) === '\\') return readCommand();
+      var c = src.charAt(i) || ''; i++;
+      return charHtml(c);
+    }
+    function readCommand() {
+      i++;
+      var m = /^[a-zA-Z]+/.exec(src.slice(i)), name;
+      if (m) { name = m[0]; i += m[0].length; } else { name = src.charAt(i) || ''; i++; }
+      switch (name) {
+        case 'dfrac': case 'frac': case 'tfrac':
+          var a = readGroup(), b = readGroup();
+          return '<span class="mf-frac"><span class="mf-num">' + a + '</span><span class="mf-den">' + b + '</span></span>';
+        case 'sqrt':
+          return '<span class="mf-sqrt"><span class="mf-rad">√</span><span class="mf-radicand">' + readGroup() + '</span></span>';
+        case 'text': case 'mathrm': case 'textrm':
+          return '<span class="mf-txt">' + escHtml(readGroupRaw()) + '</span>';
+        case 'mathcal':
+          return '<span class="mf-cal">' + escHtml(readGroupRaw()) + '</span>';
+        case 'bar': case 'overline':
+          return '<span class="mf-over">' + readGroup() + '</span>';
+        case 'left': case 'right':
+          skipSpaces();
+          var ch = src.charAt(i);
+          if (ch === '\\') {
+            i++;
+            var mm = /^[a-zA-Z]+|./.exec(src.slice(i));
+            var nm = mm ? mm[0] : '';
+            i += nm.length;
+            if (nm === '{' || nm === 'lbrace') ch = '{';
+            else if (nm === '}' || nm === 'rbrace') ch = '}';
+            else if (nm === 'langle') ch = '⟨';
+            else if (nm === 'rangle') ch = '⟩';
+            else if (nm === 'vert' || nm === 'lvert' || nm === 'rvert' || nm === '|') ch = '|';
+            else ch = nm;
+          } else { i++; }
+          return '<span class="mf-op">' + escHtml(ch) + '</span>';
+        case ',': case ';': case ' ': case ':':
+          return '<span class="mf-sp"></span>';
+        default:
+          if (Object.prototype.hasOwnProperty.call(TEX_SYMBOLS, name)) return '<span class="mf-op">' + TEX_SYMBOLS[name] + '</span>';
+          if (name === '{' || name === '}') return escHtml(name);
+          return '<span class="mf-unk">\\' + escHtml(name) + '</span>';
+      }
+    }
+    function parse(inGroup) {
+      var html = '';
+      while (i < n) {
+        var c = src.charAt(i);
+        if (inGroup && c === '}') return html;
+        if (c === '{') { i++; html += parse(true); if (src.charAt(i) === '}') i++; continue; }
+        if (c === '}') { i++; continue; }
+        if (c === '\\') { html += readCommand(); continue; }
+        if (c === '^' || c === '_') {
+          i++;
+          var a = readGroup();
+          html += (c === '^' ? '<sup class="mf-sup">' : '<sub class="mf-sub">') + a + '</' + (c === '^' ? 'sup>' : 'sub>');
+          continue;
+        }
+        if (c === ' ') { i++; html += ' '; continue; }
+        html += charHtml(c); i++;
+      }
+      return html;
+    }
+    return parse(false);
+  }
+
+  var MATH_RE = /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/g;
+  var SKIP_TAGS = { SCRIPT: 1, STYLE: 1, CODE: 1, PRE: 1, TEXTAREA: 1, TEMPLATE: 1 };
+
+  function mathFallback(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        if (!node.parentElement || SKIP_TAGS[node.parentElement.tagName]) return NodeFilter.FILTER_REJECT;
+        return /\\[\(\[]/.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    var nodes = [], cur;
+    while ((cur = walker.nextNode())) nodes.push(cur);
+    nodes.forEach(function (node) {
+      var text = node.nodeValue;
+      if (!/\\[\(\[]/.test(text)) return;
+      var span = document.createElement('span');
+      span.innerHTML = text.replace(MATH_RE, function (m, disp, inl) {
+        if (disp !== undefined) return '<span class="mf mf-block">' + texToHtml(disp.replace(/^\s+|\s+$/g, '')) + '</span>';
+        return '<span class="mf mf-inline">' + texToHtml(inl) + '</span>';
+      });
+      if (node.parentNode) node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  function mathAvailable() {
+    return !!(window.MathJax && typeof window.MathJax.typesetPromise === 'function');
+  }
+  function ensureMath(el) {
+    if (mathAvailable()) {
+      try { window.MathJax.typesetPromise([el]).catch(function () {}); return; } catch (e) { /* retombe ci-dessous */ }
+    }
+    mathFallback(el);
+  }
+  setTimeout(function () {
+    if (!mathAvailable() && !document.body.getAttribute('data-mf')) {
+      mathFallback(document.body);
+      document.body.setAttribute('data-mf', '1');
+    }
+  }, 1800);
+
+  /* ==========================================================
+     THÈME & TAILLE
+     ========================================================== */
+  var themeBtn = $('#btn-theme');
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+    themeBtn.setAttribute('aria-pressed', String(t === 'dark'));
+    store('sp-theme', t);
+    redrawAll();
+  }
+  function initTheme() {
+    var saved = store('sp-theme');
+    var prefersDark = false;
+    try { prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) {}
+    setTheme(saved || (prefersDark ? 'dark' : 'light'));
+    themeBtn.addEventListener('click', function () {
+      setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+  }
+
+  var ZOOM_STEPS = [0.85, 1, 1.15, 1.3];
+  function initFont() {
+    var saved = parseFloat(store('sp-zoom'));
+    var idx = ZOOM_STEPS.indexOf(saved) >= 0 ? ZOOM_STEPS.indexOf(saved) : 1;
+    var apply = function () {
+      document.body.style.zoom = ZOOM_STEPS[idx];
+      store('sp-zoom', String(ZOOM_STEPS[idx]));
+      $('#font-minus').disabled = idx === 0;
+      $('#font-plus').disabled = idx === ZOOM_STEPS.length - 1;
+    };
+    apply();
+    $('#font-minus').addEventListener('click', function () { idx = Math.max(0, idx - 1); apply(); });
+    $('#font-plus').addEventListener('click', function () { idx = Math.min(ZOOM_STEPS.length - 1, idx + 1); apply(); });
+  }
+
+  /* ==========================================================
+     NAVIGATION PAR VOLETS
+     ========================================================== */
+  var PANELS = ['volet-cours', 'volet-tableaux', 'volet-carte', 'volet-graphe', 'volet-simulateur', 'volet-quiz'];
+  var currentPanel = null;
+
+  function showPanel(id, push) {
+    if (PANELS.indexOf(id) < 0) id = 'volet-cours';
+    currentPanel = id;
+    PANELS.forEach(function (pid) {
+      var panel = document.getElementById(pid);
+      if (panel) panel.classList.toggle('is-active', pid === id);
+    });
+    $$('.nav__link').forEach(function (l) {
+      l.classList.toggle('is-active', l.getAttribute('data-panel') === id);
+    });
+    if (push !== false) {
+      try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    }
+    closeSide();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    requestAnimationFrame(function () {
+      if (id === 'volet-carte') { fitDiagram('mindmap'); drawMindmap(); }
+      if (id === 'volet-graphe') { fitDiagram('graphmap'); drawGraph(); }
+      if (id === 'volet-cours') drawVenns();
+      if (id === 'volet-simulateur') updateSim();
+    });
+  }
+
+  function initRouting() {
+    document.addEventListener('click', function (e) {
+      var goto = e.target.closest('[data-goto]');
+      if (goto) { e.preventDefault(); showPanel(goto.getAttribute('data-goto')); return; }
+      var link = e.target.closest('a[data-panel]');
+      if (link) { e.preventDefault(); showPanel(link.getAttribute('data-panel')); return; }
+      var nav = e.target.closest('.nav__link');
+      if (nav) { e.preventDefault(); showPanel(nav.getAttribute('data-panel')); }
+    });
+    window.addEventListener('hashchange', function () {
+      showPanel((location.hash || '').replace('#', ''), false);
+    });
+    showPanel((location.hash || '').replace('#', ''), false);
+    document.addEventListener('keydown', function (e) {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (/^[1-6]$/.test(e.key)) showPanel(PANELS[parseInt(e.key, 10) - 1]);
+    });
+  }
+
+  /* ==========================================================
+     SIDEBAR MOBILE
+     ========================================================== */
+  function closeSide() {
+    document.body.classList.remove('side-open');
+    var b = $('#backdrop');
+    if (b) b.setAttribute('hidden', '');
+  }
+  function initSidebarMobile() {
+    $('#btn-menu').addEventListener('click', function () {
+      var open = document.body.classList.toggle('side-open');
+      var b = $('#backdrop');
+      if (b) { if (open) b.removeAttribute('hidden'); else b.setAttribute('hidden', ''); }
+    });
+    $('#backdrop').addEventListener('click', closeSide);
+  }
+
+  /* ==========================================================
+     PROGRESSION, RETOUR EN HAUT, IMPRESSION
+     ========================================================== */
+  function initChrome() {
+    var bar = $('#progress-bar');
+    window.addEventListener('scroll', function () {
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      var p = h > 0 ? clamp(window.scrollY / h, 0, 1) : 0;
+      if (bar) bar.style.width = (p * 100).toFixed(1) + '%';
+      var bt = $('#back-top');
+      if (bt) bt.classList.toggle('is-visible', window.scrollY > 600);
+    }, { passive: true });
+    $('#back-top').addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    $('#btn-print').addEventListener('click', function () { window.print(); });
+  }
+
+  /* ==========================================================
+     MODALE FICHE
+     ========================================================== */
+  var overlay = $('#modal-overlay');
+  var modalTitle = $('#modal-title');
+  var modalContent = $('#modal-content');
+  var lastFocus = null;
+
+  function tplById(id) { return id ? document.getElementById(id) : null; }
+
+  function openModal(tplId) {
+    var tpl = tplById(tplId);
+    if (!tpl) return;
+    lastFocus = document.activeElement;
+    modalTitle.textContent = tpl.getAttribute('data-title') || 'Fiche';
+    modalContent.innerHTML = tpl.innerHTML;
+    ensureMath(modalContent);
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    hideTip();
+    var x = $('#modal-close-x');
+    if (x) x.focus();
+  }
+  function closeModal() {
+    if (!overlay.classList.contains('is-open')) return;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+    modalContent.scrollTop = 0;
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    lastFocus = null;
+  }
+
+  function initModal() {
+    $('#modal-close-x').addEventListener('click', closeModal);
+    $('#modal-close-btn').addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Tab' && overlay.classList.contains('is-open')) {
+        var f = $$('.modal-dialog button, .modal-dialog [href], .modal-dialog input', overlay)
+          .filter(function (el) { return !el.disabled && el.offsetParent !== null; });
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+  }
+
+  /* ==========================================================
+     TOOLTIP + ACTIVATION DES NOTIONS
+     ========================================================== */
+  var tip = $('#tooltip'), tipTimer = null;
+  var canHover = true;
+  try { canHover = !window.matchMedia('(hover: none)').matches; } catch (e) {}
+
+  function showTip(el) {
+    var tpl = tplById(el.getAttribute('data-tpl'));
+    if (!tpl) return;
+    tip.innerHTML = '<strong>' + esc(tpl.getAttribute('data-title')) + '</strong><span>Cliquez pour ouvrir la fiche →</span>';
+    tip.setAttribute('aria-hidden', 'false');
+    tip.classList.add('is-visible');
+    var r = el.getBoundingClientRect();
+    var w = tip.offsetWidth;
+    var x = clamp(r.left + r.width / 2 - w / 2, 8, window.innerWidth - w - 8);
+    var above = r.top > 96;
+    var y = above ? r.top - tip.offsetHeight - 10 : r.bottom + 10;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  }
+  function hideTip() {
+    tip.classList.remove('is-visible');
+    tip.setAttribute('aria-hidden', 'true');
+    clearTimeout(tipTimer);
+  }
+  function bindTip(el) {
+    el.addEventListener('mouseenter', function () {
+      if (!canHover) return;
+      clearTimeout(tipTimer);
+      tipTimer = setTimeout(function () { showTip(el); }, 320);
+    });
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('pointerdown', hideTip);
+  }
+
+  function initNotions() {
+    $$('[data-tpl]').forEach(bindTip);
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-tpl]');
+      if (!el || el.classList.contains('node')) return; /* les nœuds gèrent leur propre clic */
+      openModal(el.getAttribute('data-tpl'));
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var el = e.target.closest ? e.target.closest('[data-tpl][role="button"]') : null;
+      if (el) { e.preventDefault(); openModal(el.getAttribute('data-tpl')); }
+    });
+    window.addEventListener('scroll', hideTip, { passive: true });
+  }
+
+  /* ==========================================================
+     DIAGRAMMES : VUE (PAN + ZOOM), DRAG DE NŒUDS, REDRAW
+     ========================================================== */
+  var DIAGS = {};
+
+  function getDiag(id) { return DIAGS[id]; }
+
+  function applyView(d) {
+    d.zoomEl.style.transform = 'translate(' + d.tx + 'px,' + d.ty + 'px) scale(' + d.s + ')';
+    if (d.lvl) d.lvl.textContent = Math.round(d.s * 100) + ' %';
+  }
+  function clampPan(d) {
+    var cw = d.scroll.clientWidth, ch = d.scroll.clientHeight;
+    var w = d.w * d.s, h = d.h * d.s, MIN = 110;
+    d.tx = clamp(d.tx, MIN - w, cw - MIN);
+    d.ty = clamp(d.ty, MIN - h, ch - MIN);
+  }
+  function fitDiagram(id) {
+    var d = DIAGS[id];
+    if (!d || !d.scroll.clientWidth) return;
+    var cw = d.scroll.clientWidth - 8, ch = d.scroll.clientHeight - 8;
+    d.s = clamp(Math.min(cw / d.w, ch / d.h), 0.08, 1);
+    d.tx = Math.max(0, (cw - d.w * d.s) / 2) + 4;
+    d.ty = Math.max(0, (ch - d.h * d.s) / 2) + 4;
+    clampPan(d);
+    applyView(d);
+  }
+  function zoomAt(d, factor, cx, cy) {
+    var ns = clamp(d.s * factor, 0.08, 4);
+    var k = ns / d.s;
+    d.tx = cx - (cx - d.tx) * k;
+    d.ty = cy - (cy - d.ty) * k;
+    d.s = ns;
+    clampPan(d);
+    applyView(d);
+  }
+
+  function nodeCenter(el) {
+    return { x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop + el.offsetHeight / 2 };
+  }
+
+  var pending = {};
+  function scheduleRedraw(id) {
+    if (pending[id]) return;
+    pending[id] = true;
+    requestAnimationFrame(function () {
+      pending[id] = false;
+      if (id === 'mindmap') drawMindmap();
+      if (id === 'graphmap') drawGraph();
+    });
+  }
+
+  function bindDiagram(id) {
+    var root = document.getElementById(id);
+    if (!root) return;
+    var d = {
+      id: id, root: root,
+      scroll: root.closest('.diagram-scroll'),
+      zoomEl: root.closest('.diagram-zoom'),
+      w: parseFloat(root.style.width) || root.offsetWidth,
+      h: parseFloat(root.style.height) || root.offsetHeight,
+      s: 1, tx: 0, ty: 0,
+      lvl: document.getElementById(id + '-zoom-lvl')
+    };
+    DIAGS[id] = d;
+
+    /* Panorama (glisser le fond) */
+    var pan = null;
+    d.scroll.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.node')) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      pan = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      try { d.scroll.setPointerCapture(e.pointerId); } catch (err) {}
+      d.scroll.classList.add('is-panning');
+      if (e.pointerType === 'mouse') e.preventDefault();
+    });
+    d.scroll.addEventListener('pointermove', function (e) {
+      if (!pan || e.pointerId !== pan.id) return;
+      d.tx += e.clientX - pan.x;
+      d.ty += e.clientY - pan.y;
+      pan.x = e.clientX; pan.y = e.clientY;
+      clampPan(d);
+      applyView(d);
+    });
+    function panEnd(e) {
+      if (pan && e.pointerId === pan.id) { pan = null; d.scroll.classList.remove('is-panning'); }
+    }
+    d.scroll.addEventListener('pointerup', panEnd);
+    d.scroll.addEventListener('pointercancel', panEnd);
+
+    /* Zoom molette */
+    d.scroll.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var r = d.scroll.getBoundingClientRect();
+      var f = e.deltaY < 0 ? 1.13 : 1 / 1.13;
+      zoomAt(d, f, e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
+
+    /* Nœuds : glisser + clic (fiche) + double-clic (remettre en place) */
+    $$('.node', root).forEach(function (node) {
+      var pid = null, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+      node.dataset.homeLeft = node.style.left;
+      node.dataset.homeTop = node.style.top;
+
+      node.addEventListener('dblclick', function () {
+        node.style.left = node.dataset.homeLeft;
+        node.style.top = node.dataset.homeTop;
+        scheduleRedraw(id);
+        closeModal();
+      });
+
+      node.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        pid = e.pointerId;
+        moved = false;
+        sx = e.clientX; sy = e.clientY;
+        ox = parseFloat(node.style.left) || 0;
+        oy = parseFloat(node.style.top) || 0;
+        try { node.setPointerCapture(pid); } catch (err) {}
+        node.classList.add('is-dragging');
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      node.addEventListener('pointermove', function (e) {
+        if (pid === null || e.pointerId !== pid) return;
+        var dx = (e.clientX - sx) / d.s, dy = (e.clientY - sy) / d.s;
+        if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 4) moved = true;
+        node.style.left = clamp(ox + dx, -30, d.w - node.offsetWidth + 30) + 'px';
+        node.style.top = clamp(oy + dy, -30, d.h - node.offsetHeight + 30) + 'px';
+        scheduleRedraw(id);
+      });
+      function nodeEnd(e) {
+        if (pid === null || e.pointerId !== pid) return;
+        pid = null;
+        node.classList.remove('is-dragging');
+        if (!moved && node.getAttribute('data-tpl')) openModal(node.getAttribute('data-tpl'));
+      }
+      node.addEventListener('pointerup', nodeEnd);
+      node.addEventListener('pointercancel', nodeEnd);
+    });
+  }
+
+  function resetDiagram(id) {
+    var d = DIAGS[id];
+    if (!d) return;
+    $$('.node', d.root).forEach(function (n) {
+      n.style.left = n.dataset.homeLeft;
+      n.style.top = n.dataset.homeTop;
+    });
+    fitDiagram(id);
+    scheduleRedraw(id);
+  }
+
+  function initDiagrams() {
+    bindDiagram('mindmap');
+    bindDiagram('graphmap');
+    document.addEventListener('click', function (e) {
+      var zb = e.target.closest('[data-zoom]');
+      if (zb) {
+        var d = DIAGS[zb.getAttribute('data-zoom')];
+        if (d) zoomAt(d, parseFloat(zb.getAttribute('data-factor')), d.scroll.clientWidth / 2, d.scroll.clientHeight / 2);
+        return;
+      }
+      var fb = e.target.closest('[data-fit]');
+      if (fb) { fitDiagram(fb.getAttribute('data-fit')); return; }
+      var rb = e.target.closest('[data-reset]');
+      if (rb) resetDiagram(rb.getAttribute('data-reset'));
+    });
+    var rt;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () {
+        ['mindmap', 'graphmap'].forEach(function (id) {
+          var d = DIAGS[id];
+          if (d && d.root.offsetParent) fitDiagram(id);
+        });
+      }, 180);
+    });
+  }
+
+  function prepareCanvas(canvas, w, h) {
+    var RES = Math.min(1.75, (window.devicePixelRatio || 1) * 1.4);
+    canvas.width = Math.round(w * RES);
+    canvas.height = Math.round(h * RES);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(RES, 0, 0, RES, 0, 0);
+    return ctx;
+  }
+
+  /* ---------- Carte mentale : courbes ---------- */
+  function drawMindmap() {
+    var root = document.getElementById('mindmap');
+    if (!root || !root.offsetParent) return;
+    var ctx = prepareCanvas(document.getElementById('mindmap-canvas'), 1600, 1420);
+    ctx.clearRect(0, 0, 1600, 1420);
+    var statC = cssVar('--stat-line'), probC = cssVar('--prob-line'),
+        toolC = cssVar('--tool-line'), ifC = cssVar('--ifc'), icC = cssVar('--icc');
+
+    function connect(idA, idB, color, width, bend) {
+      var a = document.getElementById(idA), b = document.getElementById(idB);
+      if (!a || !b) return;
+      var p1 = nodeCenter(a), p2 = nodeCenter(b);
+      var mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+      var dx = p2.x - p1.x, dy = p2.y - p1.y;
+      var len = Math.hypot(dx, dy) || 1;
+      var off = bend || 0.14;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.quadraticCurveTo(mx - (dy / len) * len * off, my + (dx / len) * len * off, p2.x, p2.y);
+      ctx.strokeStyle = hexA(color, 0.75);
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    connect('mm-center', 'mm-stat-hub', statC, 3.5, 0.10);
+    connect('mm-center', 'mm-prob-hub', probC, 3.5, 0.10);
+    connect('mm-center', 'mm-samp-hub', toolC, 3.5, 0.10);
+    ['mm-stat-1', 'mm-stat-2', 'mm-stat-3', 'mm-stat-4', 'mm-stat-5'].forEach(function (id) { connect('mm-stat-hub', id, statC, 2); });
+    ['mm-prob-1', 'mm-prob-2', 'mm-prob-3', 'mm-prob-4', 'mm-prob-5'].forEach(function (id) { connect('mm-prob-hub', id, probC, 2); });
+    connect('mm-samp-hub', 'mm-if-hub', toolC, 2.5, 0.08);
+    connect('mm-samp-hub', 'mm-ic-hub', toolC, 2.5, 0.08);
+    ['mm-if-1', 'mm-if-2', 'mm-if-3'].forEach(function (id) { connect('mm-if-hub', id, ifC, 2); });
+    ['mm-ic-1', 'mm-ic-2', 'mm-ic-3'].forEach(function (id) { connect('mm-ic-hub', id, icC, 2); });
+  }
+
+  /* ---------- Graphe : flèches étiquetées ---------- */
+  function drawGraph() {
+    var root = document.getElementById('graphmap');
+    if (!root || !root.offsetParent) return;
+    var ctx = prepareCanvas(document.getElementById('graphmap-canvas'), 1400, 1200);
+    ctx.clearRect(0, 0, 1400, 1200);
+    var statC = cssVar('--stat-line'), toolC = cssVar('--tool-line'), probC = cssVar('--prob-line');
+    var panelBg = cssVar('--bg-panel');
+
+    function edgePoint(fromEl, toEl) {
+      var from = nodeCenter(fromEl), to = nodeCenter(toEl);
+      var dx = to.x - from.x, dy = to.y - from.y;
+      var w = fromEl.offsetWidth / 2, h = fromEl.offsetHeight / 2;
+      var tX = dx !== 0 ? w / Math.abs(dx) : Infinity;
+      var tY = dy !== 0 ? h / Math.abs(dy) : Infinity;
+      var t = Math.min(tX, tY);
+      return { x: from.x + dx * t, y: from.y + dy * t };
+    }
+
+    function arrow(idA, idB, opts) {
+      opts = opts || {};
+      var color = opts.color || '#555555';
+      var A = document.getElementById(idA), B = document.getElementById(idB);
+      if (!A || !B) return;
+      var start = edgePoint(A, B), end = edgePoint(B, A);
+      var mx = (start.x + end.x) / 2, my = (start.y + end.y) / 2;
+      var dx = end.x - start.x, dy = end.y - start.y;
+      var len = Math.hypot(dx, dy) || 1;
+      var nx = -dy / len, ny = dx / len;
+      var cpx = mx + nx * (opts.curve || 0), cpy = my + ny * (opts.curve || 0);
+
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.quadraticCurveTo(cpx, cpy, end.x, end.y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash(opts.dashed ? [7, 5] : []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      var ang = Math.atan2(end.y - cpy, end.x - cpx);
+      ctx.beginPath();
+      ctx.moveTo(end.x, end.y);
+      ctx.lineTo(end.x - 11 * Math.cos(ang - Math.PI / 7), end.y - 11 * Math.sin(ang - Math.PI / 7));
+      ctx.lineTo(end.x - 11 * Math.cos(ang + Math.PI / 7), end.y - 11 * Math.sin(ang + Math.PI / 7));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      if (opts.label) {
+        var lx = 0.25 * start.x + 0.5 * cpx + 0.25 * end.x;
+        var ly = 0.25 * start.y + 0.5 * cpy + 0.25 * end.y;
+        var offX = nx * 12 * (opts.labelSide || 1);
+        var offY = ny * 12 * (opts.labelSide || 1);
+        ctx.font = '600 13px "Segoe UI", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var tw = ctx.measureText(opts.label).width;
+        ctx.fillStyle = hexA(panelBg, 0.94);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(lx + offX - tw / 2 - 6, ly + offY - 10, tw + 12, 20, 6);
+        else ctx.rect(lx + offX - tw / 2 - 6, ly + offY - 10, tw + 12, 20);
+        ctx.fill();
+        ctx.fillStyle = color;
+        ctx.fillText(opts.label, lx + offX, ly + offY);
+      }
+    }
+
+    arrow('gr-ind', 'gr-ech', { color: statC, label: 'compose' });
+    arrow('gr-ech', 'gr-car', { color: statC, label: 'étudie' });
+    arrow('gr-ech', 'gr-freq', { color: statC, label: 'calcule' });
+    arrow('gr-pop', 'gr-ech', { color: statC, label: 'extrait' });
+    arrow('gr-pop', 'gr-if', { color: toolC, dashed: true, label: 'Vérifier', curve: -80, labelSide: -1 });
+    arrow('gr-if', 'gr-ech', { color: toolC, dashed: true, label: 'Décider', curve: -60, labelSide: -1 });
+    arrow('gr-freq', 'gr-ic', { color: toolC, dashed: true, label: 'Estimer', curve: 60, labelSide: 1 });
+    arrow('gr-ic', 'gr-pop', { color: toolC, dashed: true, label: 'Se fier à 95 %', curve: 80, labelSide: 1 });
+    arrow('gr-if', 'gr-marge', { color: toolC, dashed: true, label: 'définit' });
+    arrow('gr-ic', 'gr-marge', { color: toolC, dashed: true, label: 'définit' });
+    arrow('gr-exp', 'gr-uni', { color: probC, label: 'possède' });
+    arrow('gr-uni', 'gr-evt', { color: probC, label: 'contient' });
+    arrow('gr-uni', 'gr-probA', { color: probC, label: 'muni de' });
+    arrow('gr-evt', 'gr-cond', { color: probC, label: 'sachant' });
+  }
+
+  function redrawAll() {
+    drawVenns();
+    if (document.getElementById('mindmap') && document.getElementById('mindmap').offsetParent) drawMindmap();
+    if (document.getElementById('graphmap') && document.getElementById('graphmap').offsetParent) drawGraph();
+  }
+
+  /* ---------- Diagrammes de Venn ---------- */
+  function drawVenns() {
+    function draw(canvasId, mode) {
+      var canvas = document.getElementById(canvasId);
+      if (!canvas || !canvas.offsetParent) return;
+      var W = 380, H = 240;
+      var ctx = prepareCanvas(canvas, W, H);
+      ctx.clearRect(0, 0, W, H);
+      var cx1 = 140, cy = 120, r = 85, cx2 = 240;
+      var statC = cssVar('--stat-line'), probC = cssVar('--prob-line'), toolC = cssVar('--tool-line'), ink = cssVar('--ink');
+
+      function circle(cx) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); }
+
+      if (mode === 'comp') {
+        ctx.beginPath();
+        ctx.rect(14, 18, W - 28, H - 36);
+        ctx.moveTo(cx1 + r, cy);
+        ctx.arc(cx1, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = hexA(toolC, 0.25);
+        ctx.fill('evenodd');
+      }
+      if (mode === 'union') {
+        circle(cx1); ctx.fillStyle = hexA(statC, 0.45); ctx.fill();
+        circle(cx2); ctx.fillStyle = hexA(probC, 0.45); ctx.fill();
+      }
+      if (mode === 'inter') {
+        circle(cx1); ctx.fillStyle = hexA(statC, 0.16); ctx.fill();
+        circle(cx2); ctx.fillStyle = hexA(probC, 0.16); ctx.fill();
+        ctx.save();
+        circle(cx1); ctx.clip();
+        circle(cx2); ctx.fillStyle = hexA(toolC, 0.5); ctx.fill();
+        ctx.restore();
+      }
+
+      circle(cx1); ctx.strokeStyle = statC; ctx.lineWidth = 2.2; ctx.stroke();
+      circle(cx2); ctx.strokeStyle = probC; ctx.lineWidth = 2.2; ctx.stroke();
+
+      ctx.font = 'bold 21px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = ink;
+      ctx.fillText('A', cx1 - 46, cy);
+      ctx.fillText('B', cx2 + 46, cy);
+      ctx.font = 'bold 15px "Segoe UI", Arial, sans-serif';
+      if (mode === 'inter') ctx.fillText('A ∩ B', (cx1 + cx2) / 2, cy);
+      if (mode === 'union') {
+        ctx.fillStyle = ink;
+        ctx.fillText('A ∪ B', (cx1 + cx2) / 2, cy + 2);
+      }
+      if (mode === 'comp') {
+        ctx.fillText('A ∪ B = Ω ?', (cx1 + cx2) / 2, cy);
+        ctx.fillStyle = hexA(toolC, 1);
+        ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif';
+        ctx.fillText('Ā (tout sauf A)', W / 2, H - 18);
+      }
+    }
+    draw('venn-union', 'union');
+    draw('venn-inter', 'inter');
+    draw('venn-comp', 'comp');
+  }
+
+  /* ==========================================================
+     SIMULATEUR IF / IC
+     ========================================================== */
+  var simMode = 'if';
+  function simVal(id) { return parseFloat(document.getElementById(id).value); }
+  function outVal(id, v, dec) { document.getElementById(id).textContent = fmt(v, dec === undefined ? 2 : dec); }
+  function band(l, r) {
+    var cl = clamp(l, 0, 1), cr = clamp(r, 0, 1);
+    var b = $('#sim-band');
+    b.style.left = (cl * 100) + '%';
+    b.style.width = Math.max(0, (cr - cl) * 100) + '%';
+  }
+  function mark(id, labelId, pos, label) {
+    var m = $(id);
+    m.style.left = 'calc(' + (clamp(pos, 0, 1) * 100) + '% - 1px)';
+    $(labelId).textContent = label;
+  }
+  function condChip(ok, text) {
+    return '<span class="cond-chip ' + (ok ? 'is-ok' : 'is-ko') + '">' + (ok ? '✓' : '✗') + ' ' + text + '</span>';
+  }
+  function pts(m) { var v = m * 100; return '± ' + (v >= 10 ? fmt(v, 1) : fmt(v, v < 1 ? 2 : 1)) + ' points'; }
+
+  function updateSim() {
+    var f, n, m, lo, hi, res = $('#sim-result');
+    var theory = $('#sim-mark-theory'), obs = $('#sim-mark-obs');
+    if (simMode === 'if') {
+      var p = simVal('if-p'); n = simVal('if-n'); f = simVal('if-f');
+      m = 1 / Math.sqrt(n); lo = p - m; hi = p + m;
+      var ok = f >= lo && f <= hi;
+      outVal('if-p-out', p); outVal('if-n-out', n, 0); outVal('if-f-out', f);
+      band(lo, hi);
+      theory.style.display = '';
+      mark('#sim-mark-theory', '#sim-theory-label', p, 'p = ' + fmt(p, 2));
+      mark('#sim-mark-obs', '#sim-obs-label', f, 'f = ' + fmt(f, 2));
+      $('#if-conds').innerHTML =
+        condChip(n >= 25, 'n ≥ 25') + condChip(p >= 0.2 && p <= 0.8, '0,2 ≤ p ≤ 0,8');
+      res.innerHTML =
+        '<div class="sim__formula">IF ≈ [ ' + fmt(lo, 3) + ' ; ' + fmt(hi, 3) + ' ] &nbsp;·&nbsp; marge ' + pts(m) + '</div>' +
+        '<div class="verdict ' + (ok ? 'is-ok' : 'is-bad') + '"><span class="v-ico">' + (ok ? '✅' : '⚠️') + '</span><div>' +
+        (ok
+          ? '<strong>Échantillon compatible.</strong> f = ' + fmt(f, 2) + ' appartient à l\'IF : l\'écart avec p = ' + fmt(p, 2) + ' s\'explique par le hasard — on ne rejette pas l\'hypothèse.'
+          : '<strong>Échantillon suspect.</strong> f = ' + fmt(f, 2) + ' sort de l\'IF : on rejette l\'hypothèse p = ' + fmt(p, 2) + ', au risque d\'erreur de 5 %.') +
+        '</div></div>' +
+        '<p class="sim__meta">Astuce : multipliez n par 4 (' + fmt(n * 4, 0) + ') pour diviser la marge par 2 (' + pts(m / 2) + ').</p>';
+    } else {
+      f = simVal('ic-f'); n = simVal('ic-n');
+      m = 1 / Math.sqrt(n); lo = f - m; hi = f + m;
+      outVal('ic-f-out', f); outVal('ic-n-out', n, 0);
+      band(lo, hi);
+      theory.style.display = 'none';
+      mark('#sim-mark-obs', '#sim-obs-label', f, 'f = ' + fmt(f, 2));
+      $('#ic-conds').innerHTML =
+        condChip(n >= 30, 'n ≥ 30') + condChip(f >= 0.2 && f <= 0.8, '0,2 ≤ f ≤ 0,8');
+      var trunc = lo < 0 || hi > 1;
+      res.innerHTML =
+        '<div class="sim__formula">IC ≈ [ ' + fmt(lo, 3) + ' ; ' + fmt(hi, 3) + ' ]' + (trunc ? ' (tronqué à [ 0 ; 1 ] pour l\'affichage)' : '') + ' &nbsp;·&nbsp; marge ' + pts(m) + '</div>' +
+        '<div class="verdict is-ok"><span class="v-ico">📏</span><div><strong>Estimation.</strong> On est confiant à 95 % que la vraie proportion p de la population se trouve entre ' + fmt(Math.max(0, lo), 3) + ' et ' + fmt(Math.min(1, hi), 3) + '.</div></div>' +
+        '<p class="sim__meta">Pour une marge de ' + pts(m / 2) + ', il faudrait n × 4 = ' + fmt(n * 4, 0) + ' individus : la précision coûte cher.</p>';
+    }
+  }
+
+  function initSim() {
+    $('#tab-if').addEventListener('click', function () { setSimMode('if'); });
+    $('#tab-ic').addEventListener('click', function () { setSimMode('ic'); });
+    ['if-p', 'if-n', 'if-f', 'ic-f', 'ic-n'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', updateSim);
+    });
+    updateSim();
+  }
+  function setSimMode(mode) {
+    simMode = mode;
+    $('#tab-if').classList.toggle('is-active', mode === 'if');
+    $('#tab-ic').classList.toggle('is-active', mode === 'ic');
+    $('#tab-if').setAttribute('aria-selected', String(mode === 'if'));
+    $('#tab-ic').setAttribute('aria-selected', String(mode === 'ic'));
+    $('#sim-if-controls').hidden = mode !== 'if';
+    $('#sim-ic-controls').hidden = mode !== 'ic';
+    updateSim();
+  }
+
+  /* ==========================================================
+     QUIZ
+     ========================================================== */
+  var QUIZ = [
+    {
+      q: 'Une population compte 10 000 membres, dont 3 000 choisissent l\u2019Alliance. Que vaut la proportion p ?',
+      opts: ['0,3', '3 000', '0,03', '3 000 ÷ 500'], ok: 0,
+      why: 'p = N_A / N = 3 000 / 10 000 = 0,3 : effectif de la modalité divisé par la taille de la population.',
+      tpl: 'tpl-population'
+    },
+    {
+      q: 'Dans un échantillon de 500 membres, 160 choisissent l\u2019Alliance. Que vaut la fréquence f ?',
+      opts: ['160', '0,32', '0,5', '500'], ok: 1,
+      why: 'f = n_A / n = 160 / 500 = 0,32 : effectif de la modalité dans l\u2019échantillon, divisé par la taille de l\u2019échantillon.',
+      tpl: 'tpl-frequence'
+    },
+    {
+      q: 'Que désigne la lettre n (sans indice) ?',
+      opts: ['Le nombre d\u2019individus portant la modalité A', 'La taille de la population', 'La taille de l\u2019échantillon', 'La fréquence observée'], ok: 2,
+      why: 'n est la taille de l\u2019échantillon. Un effectif de modalité porte toujours un indice : n_A, n_i, N_A…',
+      tpl: 'tpl-echantillon'
+    },
+    {
+      q: 'Une pièce équilibrée (p = 0,5) est lancée 100 fois : on observe f = 0,62 piles. Quel outil décide si elle est truquée ?',
+      opts: ['L\u2019intervalle de confiance', 'L\u2019intervalle de fluctuation', 'La probabilité conditionnelle', 'La loi de probabilité'], ok: 1,
+      why: 'p est connue et on teste un échantillon : c\u2019est le rôle de l\u2019IF, centré sur p. Ici f = 0,62 sort de [0,4 ; 0,6] : pièce suspecte !',
+      tpl: 'tpl-if'
+    },
+    {
+      q: 'Un institut interroge 1 000 personnes pour estimer une proportion inconnue. Quel outil utilise-t-il ?',
+      opts: ['L\u2019intervalle de fluctuation', 'L\u2019intervalle de confiance', 'L\u2019univers Ω', 'La marge d\u2019erreur'], ok: 1,
+      why: 'p est inconnue, on remonte de l\u2019observation f vers la population : c\u2019est l\u2019IC, centré sur f.',
+      tpl: 'tpl-ic'
+    },
+    {
+      q: 'L\u2019intervalle de fluctuation au seuil de 95 % est centré sur…',
+      opts: ['f', 'p', 'n', '0,95'], ok: 1,
+      why: 'L\u2019IF est centré sur la théorie p. C\u2019est l\u2019IC qui est centré sur l\u2019observation f. Le 95 % est un niveau de confiance, pas un centre.',
+      tpl: 'tpl-if'
+    },
+    {
+      q: 'Au seuil de 95 %, on calcule l\u2019IF et on trouve f ∉ IF. Conclusion ?',
+      opts: ['L\u2019échantillon est normal', 'On rejette l\u2019hypothèse, avec un risque d\u2019erreur de 5 %', 'p est forcément hors de l\u2019IF', 'L\u2019expérience n\u2019est pas aléatoire'], ok: 1,
+      why: 'Un écart trop grand pour être dû au hasard : on rejette l\u2019hypothèse — en acceptant un risque de 5 % de se tromper.',
+      tpl: 'tpl-if-interp'
+    },
+    {
+      q: 'Quelle phrase est correcte pour un IC à 95 % ?',
+      opts: ['« p a 95 % de chances d\u2019être dans l\u2019intervalle »', '« On est confiant à 95 % que p appartient à l\u2019intervalle »', '« 95 % de la population est dans l\u2019intervalle »', '« f appartient à l\u2019intervalle dans 95 % des cas »'], ok: 1,
+      why: 'p est une valeur fixe : c\u2019est l\u2019intervalle qui varierait si l\u2019on répétait l\u2019échantillonnage. Environ 95 % des intervalles calculés contiendraient p.',
+      tpl: 'tpl-ic-interp'
+    },
+    {
+      q: 'La marge d\u2019erreur 1/√n…',
+      opts: ['augmente avec n', 'diminue quand n augmente', 'ne dépend pas de n', 'vaut toujours 5 %'], ok: 1,
+      why: 'La marge diminue comme 1/√n : diviser la marge par 2 exige de multiplier n par 4. La précision coûte cher.',
+      tpl: 'tpl-marge'
+    },
+    {
+      q: 'Que vaut P(A ∪ B) ?',
+      opts: ['P(A) + P(B)', 'P(A) + P(B) − P(A ∩ B)', 'P(A) × P(B)', 'P(A) − P(B)'], ok: 1,
+      why: 'On soustrait l\u2019intersection pour ne pas la compter deux fois. Si A et B sont incompatibles (A ∩ B = ∅), alors P(A ∪ B) = P(A) + P(B).',
+      tpl: 'tpl-reunion'
+    }
+  ];
+  var qi = 0, qScore = 0, qAnswers = [];
+
+  function renderQuiz() {
+    var box = $('#quiz');
+    if (qi >= QUIZ.length) {
+      var msg = qScore === QUIZ.length
+        ? 'Sans faute — le chassé-croisé IF / IC n\u2019a plus de secret pour vous ! 🏆'
+        : qScore >= 8
+          ? 'Très solide ! Encore un ou deux pièges de notation à verrouiller. 💪'
+          : qScore >= 6
+            ? 'Bonne base — revoyez les fiches des questions ratées. 📚'
+            : 'Reprenez le cours en fiches (volet 1) : chaque erreur renvoie à sa fiche. 🌱';
+      box.innerHTML =
+        '<div class="quiz__end">' +
+        '<p style="font-size:15px;font-weight:700;color:var(--ink-soft)">Résultat du quiz</p>' +
+        '<div class="score-line">' + qScore + ' / ' + QUIZ.length + '</div>' +
+        '<p>' + msg + '</p>' +
+        '<button class="btn--primary" id="quiz-restart">↺ Recommencer</button>' +
+        '</div>';
+      $('#quiz-restart').addEventListener('click', function () { qi = 0; qScore = 0; qAnswers = []; renderQuiz(); });
+      return;
+    }
+    var q = QUIZ[qi];
+    var dots = QUIZ.map(function (_, idx) {
+      var cls = 'q-dot';
+      if (qAnswers[idx] === true) cls += ' is-ok';
+      if (qAnswers[idx] === false) cls += ' is-bad';
+      if (idx === qi) cls += ' is-current';
+      return '<span class="' + cls + '" title="Question ' + (idx + 1) + '"></span>';
+    }).join('');
+    var opts = q.opts.map(function (o, idx) {
+      return '<button class="q-opt" data-i="' + idx + '"><span class="q-key">' + 'ABCD'[idx] + '</span><span>' + esc(o) + '</span></button>';
+    }).join('');
+    box.innerHTML =
+      '<div class="quiz__head">' +
+      '<div class="quiz__dots" aria-hidden="true">' + dots + '</div>' +
+      '<span class="quiz__score">Question ' + (qi + 1) + ' / ' + QUIZ.length + ' · Score ' + qScore + '</span>' +
+      '</div>' +
+      '<p class="quiz__q">' + esc(q.q) + '</p>' +
+      '<div class="quiz__opts">' + opts + '</div>' +
+      '<div class="quiz__feedback" id="quiz-feedback"></div>' +
+      '<div class="quiz__actions"><button class="btn--primary" id="quiz-next" style="visibility:hidden">Suivant →</button></div>';
+
+    $$('.q-opt', box).forEach(function (btn) {
+      btn.addEventListener('click', function () { answerQuiz(parseInt(btn.getAttribute('data-i'), 10)); });
+    });
+  }
+
+  function answerQuiz(choice) {
+    var q = QUIZ[qi];
+    var good = choice === q.ok;
+    if (qAnswers[qi] === undefined) {
+      qAnswers[qi] = good;
+      if (good) qScore++;
+    }
+    $$('.q-opt', $('#quiz')).forEach(function (btn) {
+      var i = parseInt(btn.getAttribute('data-i'), 10);
+      btn.disabled = true;
+      if (i === q.ok) btn.classList.add('is-correct');
+      if (i === choice && !good) btn.classList.add('is-wrong');
+    });
+    var fb = $('#quiz-feedback');
+    fb.innerHTML =
+      '<p class="fb-title ' + (good ? 'is-ok' : 'is-bad') + '">' + (good ? '✅ Exact !' : '❌ Raté — la bonne réponse était « ' + esc(q.opts[q.ok]) + ' »') + '</p>' +
+      '<p>' + esc(q.why) + '</p>' +
+      (q.tpl ? '<p style="margin-top:10px"><button class="btn" data-tpl="' + q.tpl + '">📖 Voir la fiche détaillée</button></p>' : '');
+    fb.classList.add('is-visible');
+    var next = $('#quiz-next');
+    next.style.visibility = 'visible';
+    next.textContent = qi === QUIZ.length - 1 ? 'Voir le résultat →' : 'Suivant →';
+    $('.quiz__score').textContent = 'Question ' + (qi + 1) + ' / ' + QUIZ.length + ' · Score ' + qScore;
+    next.onclick = function () { qi++; renderQuiz(); };
+  }
+
+  /* ==========================================================
+     RECHERCHE
+     ========================================================== */
+  var INDEX = [
+    { label: 'Population (N, p)', panel: 'volet-cours', tpl: 'tpl-population' },
+    { label: 'Individu', panel: 'volet-cours', tpl: 'tpl-individu' },
+    { label: 'Échantillon (n)', panel: 'volet-cours', tpl: 'tpl-echantillon' },
+    { label: 'Caractère / Modalité', panel: 'volet-cours', tpl: 'tpl-caractere' },
+    { label: 'Effectif (N_A, n_A)', panel: 'volet-cours', tpl: 'tpl-effectif' },
+    { label: 'Fréquence f = n_A / n', panel: 'volet-cours', tpl: 'tpl-frequence' },
+    { label: 'Boîte à notations (nomenclature)', panel: 'volet-cours', anchor: 'boite-notations' },
+    { label: 'Intervalle de Fluctuation (IF)', panel: 'volet-cours', tpl: 'tpl-if' },
+    { label: 'IF — Quand l\u2019utiliser ?', panel: 'volet-cours', tpl: 'tpl-if-quand' },
+    { label: 'IF — Pourquoi l\u2019utiliser ?', panel: 'volet-cours', tpl: 'tpl-if-but' },
+    { label: 'IF — Interprétation', panel: 'volet-cours', tpl: 'tpl-if-interp' },
+    { label: 'Intervalle de Confiance (IC)', panel: 'volet-cours', tpl: 'tpl-ic' },
+    { label: 'IC — Quand l\u2019utiliser ?', panel: 'volet-cours', tpl: 'tpl-ic-quand' },
+    { label: 'IC — Pourquoi l\u2019utiliser ?', panel: 'volet-cours', tpl: 'tpl-ic-but' },
+    { label: 'IC — Interprétation (piège des 95 %)', panel: 'volet-cours', tpl: 'tpl-ic-interp' },
+    { label: 'Marge d\u2019erreur', panel: 'volet-cours', tpl: 'tpl-marge' },
+    { label: 'Échantillonnage (chassé-croisé)', panel: 'volet-cours', tpl: 'tpl-echantillonnage' },
+    { label: 'Expérience aléatoire', panel: 'volet-cours', tpl: 'tpl-experience' },
+    { label: 'Univers (Ω)', panel: 'volet-cours', tpl: 'tpl-univers' },
+    { label: 'Probabilité P(A)', panel: 'volet-cours', tpl: 'tpl-probabilite' },
+    { label: 'Événement / Élémentaire', panel: 'volet-cours', tpl: 'tpl-evenement' },
+    { label: 'Réunion / Intersection (∪, ∩)', panel: 'volet-cours', tpl: 'tpl-reunion' },
+    { label: 'Événement contraire (Ā)', panel: 'volet-cours', tpl: 'tpl-complement' },
+    { label: 'Probabilité conditionnelle P_B(A)', panel: 'volet-cours', tpl: 'tpl-conditionnelle' },
+    { label: 'Tableau comparatif IF vs IC', panel: 'volet-tableaux' },
+    { label: 'Tableau marge d\u2019erreur', panel: 'volet-tableaux' },
+    { label: 'Carte mentale', panel: 'volet-carte' },
+    { label: 'Graphe de connaissances', panel: 'volet-graphe' },
+    { label: 'Simulateur IF / IC', panel: 'volet-simulateur' },
+    { label: 'Quiz d\u2019auto-évaluation', panel: 'volet-quiz' }
+  ];
+  function norm(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
+  function initSearch() {
+    var input = $('#search-input'), box = $('#search-results');
+    function close() { box.classList.remove('is-open'); }
+    function run() {
+      var q = norm(input.value.trim());
+      if (q.length < 2) { close(); return; }
+      var hits = INDEX.filter(function (e) { return norm(e.label).indexOf(q) >= 0; }).slice(0, 8);
+      box.innerHTML = hits.length
+        ? hits.map(function (e) {
+            return '<button data-panel="' + e.panel + '"' + (e.tpl ? ' data-tpl="' + e.tpl + '"' : '') +
+              (e.anchor ? ' data-anchor="' + e.anchor + '"' : '') + '>' +
+              '<span>' + esc(e.label) + '</span><span class="sr-badge">' + esc(e.panel.replace('volet-', '')) + '</span></button>';
+          }).join('')
+        : '<span class="sr-empty">Aucune notion trouvée.</span>';
+      box.classList.add('is-open');
+    }
+    input.addEventListener('input', run);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var first = $('button', box);
+        if (first) first.click();
+      }
+      if (e.key === 'Escape') { close(); input.blur(); }
+    });
+    box.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-panel]');
+      if (!btn) return;
+      showPanel(btn.getAttribute('data-panel'));
+      /* les fiches (data-tpl) sont ouvertes par la délégation globale */
+      var anchor = btn.getAttribute('data-anchor');
+      if (anchor) {
+        setTimeout(function () {
+          var el = document.getElementById(anchor);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.remove('flash');
+            void el.offsetWidth;
+            el.classList.add('flash');
+          }
+        }, 120);
+      }
+      close();
+      input.value = '';
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.sidebar__search')) close();
+    });
+  }
+
+  /* ==========================================================
+     INIT
+     ========================================================== */
+  function init() {
+    initTheme();
+    initFont();
+    initDiagrams();
+    initRouting();
+    initSidebarMobile();
+    initChrome();
+    initModal();
+    initNotions();
+    initSim();
+    renderQuiz();
+    initSearch();
+    drawVenns();
+    /* Quand MathJax est prêt, les fiches et formules sont déjà rendues ;
+       on re-dessine les canevas par sécurité (tailles des nœuds fixes). */
+    if (mathAvailable()) {
+      window.MathJax.startup.promise.then(function () { redrawAll(); }).catch(function () {});
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

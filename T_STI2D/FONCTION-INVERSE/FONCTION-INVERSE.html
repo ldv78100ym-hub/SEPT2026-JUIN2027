@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La fonction inverse — Cours interactif</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(','\\)'], ['$','$']],
+    displayMath: [['\\[','\\]'], ['$$','$$']]
+  },
+  svg: { fontCache: 'global' },
+  startup: {
+    pageReady: function () {
+      return MathJax.startup.defaultPageReady().then(function () {
+        if (window.__renderAllTables) window.__renderAllTables();
+      });
+    }
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#f4efe6; --panel:#fffdf9; --accent:#d97a1a; --brown:#7a4a12;
+  --dark:#1a1a1a; --sb:#1e1e2e; --sbact:#d4a843;
+  --pc:#b41e1e; --pcbg:#fff0f0; --cp:#1e50a0; --cpbg:#ebf2fc;
+  --me:#1e823c; --mebg:#ebfaf0; --pi:#dc6e14; --pibg:#fff5e6;
+  --ra:#7832a0; --rabg:#f5eefc; --ex:#3c3c3c; --exbg:#f8f8f8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--dark); font-size:14px; line-height:1.5;
+  min-height:100vh; overflow-x:hidden;
+}
+/* SIDEBAR */
+.sidebar{
+  position:fixed; top:0; left:0; width:220px; height:100vh;
+  background:var(--sb); color:#fff; padding:20px 10px; z-index:100;
+  display:flex; flex-direction:column; gap:6px; overflow-y:auto;
+}
+.sidebar h1{
+  font-size:1.05rem; margin:0 0 18px; color:var(--sbact);
+  text-align:center; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.1);
+  letter-spacing:0.5px;
+}
+.sidebar button{
+  display:flex; align-items:center; gap:10px;
+  width:100%; padding:11px 14px; background:transparent;
+  border:1px solid rgba(255,255,255,0.08); color:#ccc;
+  text-align:left; border-radius:8px; cursor:pointer;
+  font-size:0.9rem; font-family:inherit; transition:all 0.18s;
+}
+.sidebar button:hover{background:rgba(255,255,255,0.06); color:#fff}
+.sidebar button.active{
+  background:linear-gradient(135deg,#d4a843,#b8861f); color:#1a1a1a;
+  border-color:var(--sbact); font-weight:600;
+}
+.sidebar button .num{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:50%;
+  background:rgba(255,255,255,0.15); font-weight:700; font-size:0.82rem;
+  flex-shrink:0;
+}
+.sidebar button.active .num{background:rgba(0,0,0,0.22); color:#fff}
+/* MAIN */
+main{margin-left:220px; padding:22px 30px 40px; max-width:calc(100vw - 220px)}
+.volet{display:none}
+.volet.active{display:block; animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)}}
+h2{font-size:1.3rem; color:var(--brown); margin:22px 0 12px;
+   border-bottom:2px solid var(--accent); padding-bottom:6px}
+h3{font-size:1.05rem; color:var(--brown); margin:16px 0 8px}
+h4{font-size:0.95rem; color:var(--brown); margin:10px 0 6px}
+p{margin:6px 0}
+ul,ol{margin:6px 0 6px 22px}
+li{margin:3px 0}
+/* CARDS */
+.card{background:var(--panel); border-radius:14px; padding:16px 20px;
+      margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+/* COLOR BOXES */
+.box{border-radius:10px; padding:12px 16px; margin:10px 0; border-left:5px solid}
+.box.parcoeur{background:var(--pcbg); border-color:var(--pc)}
+.box.comprendre{background:var(--cpbg); border-color:var(--cp)}
+.box.methode{background:var(--mebg); border-color:var(--me)}
+.box.piege{background:var(--pibg); border-color:var(--pi)}
+.box.rappel{background:var(--rabg); border-color:var(--ra)}
+.box.exemple{background:var(--exbg); border-color:var(--ex)}
+.box-title{font-weight:700; margin-bottom:6px; font-size:0.88rem;
+           text-transform:uppercase; letter-spacing:0.6px}
+.box.parcoeur .box-title{color:var(--pc)}
+.box.comprendre .box-title{color:var(--cp)}
+.box.methode .box-title{color:var(--me)}
+.box.piege .box-title{color:var(--pi)}
+.box.rappel .box-title{color:var(--ra)}
+.box.exemple .box-title{color:var(--ex)}
+/* DATA TABLES */
+table.data{width:100%; border-collapse:collapse; margin:10px 0; font-size:0.86rem}
+table.data th,table.data td{border:1px solid #ccc; padding:6px 8px; text-align:left; vertical-align:top}
+table.data th{background:var(--brown); color:#fff; font-weight:600}
+table.data tr:nth-child(even) td{background:#f8f6f2}
+table.data.blue th{background:#1e50a0}
+table.data.green th{background:#1e823c}
+table.data.orange th{background:#dc6e14}
+table.data.purple th{background:#7832a0}
+/* TkZ-TAB */
+.tkztab-wrap{position:relative; margin:14px auto; max-width:100%}
+.tkztab-wrap canvas{position:absolute; top:0; left:0}
+.tkztab-label{
+  position:absolute; display:inline-block; white-space:nowrap;
+  font-size:0.9rem; pointer-events:none;
+  transform:translate(-50%,-50%);
+}
+/* MIND MAP / GRAPH CONTAINERS */
+#mindmap-container,#graph-container{
+  position:relative; width:100%; height:78vh; min-height:520px;
+  background:var(--panel); border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05); overflow:hidden;
+  margin-top:12px;
+}
+#mindmap-svg{width:100%; height:100%; display:block; touch-action:none}
+#graph-canvas{width:100%; height:100%; display:block; cursor:grab; touch-action:none}
+#graph-canvas:active{cursor:grabbing}
+.legend{
+  position:absolute; bottom:12px; right:12px; background:rgba(255,253,249,0.95);
+  padding:8px 12px; border-radius:8px; font-size:0.75rem;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1); border:1px solid #e0d5c0;
+}
+.legend span{display:block; margin:2px 0}
+.legend span::before{content:'■'; margin-right:6px; font-size:0.85rem}
+.legend .b1::before{color:#3b82c4}
+.legend .b2::before{color:#d97a1a}
+.legend .b3::before{color:#4caf50}
+/* MINDMAP SVG ELEMENTS */
+.mm-node{cursor:grab; transition:filter 0.15s}
+.mm-node:hover{filter:drop-shadow(0 0 6px rgba(217,122,26,0.6))}
+.mm-node.dragging{cursor:grabbing}
+.mm-center{fill:#c9d8f0; stroke:#1e50a0; stroke-width:2}
+.mm-branch{fill:#d4efd8; stroke:#1e823c; stroke-width:2}
+.mm-leaf{fill:#fde8d4; stroke:#dc6e14; stroke-width:1.5}
+.mm-edge{stroke:#555; stroke-width:1.8; fill:none}
+.mm-edge.leaf-edge{stroke:#dc6e14; stroke-width:1.2; stroke-dasharray:4 3}
+.mm-text{font-family:'Segoe UI',system-ui,sans-serif; font-size:12px;
+         font-weight:600; text-anchor:middle; pointer-events:none; fill:#1a1a1a}
+.mm-text-leaf{font-size:10.5px; font-weight:500}
+/* HOVER MODAL */
+#hover-modal{
+  position:fixed; z-index:1000; background:var(--panel);
+  border:2px solid var(--accent); border-radius:10px; padding:14px 18px;
+  max-width:min(92vw,520px); max-height:88vh; overflow:hidden;
+  box-shadow:0 8px 30px rgba(0,0,0,0.18); display:none;
+  font-size:0.9rem; line-height:1.5; word-break:break-word;
+}
+#hover-modal.visible{display:block}
+#hover-modal h4{color:var(--brown); font-size:1rem; margin-bottom:8px;
+                border-bottom:1px solid #ddd; padding-bottom:5px}
+#hover-modal ul{margin:6px 0 6px 20px; font-size:0.87rem}
+#hover-modal table{font-size:0.82rem; width:100%; margin:6px 0; border-collapse:collapse}
+#hover-modal table td,#hover-modal table th{border:1px solid #ccc; padding:3px 6px}
+#hover-modal table th{background:#eee}
+/* FOOTER */
+footer{
+  margin-left:220px; padding:24px 30px; text-align:center;
+  border-top:1px solid #e0d5c0; background:#f8f6f2;
+}
+footer button{
+  padding:10px 20px; background:var(--brown); color:#fff; border:none;
+  border-radius:8px; cursor:pointer; font-size:0.9rem; font-family:inherit;
+  transition:background 0.18s;
+}
+footer button:hover{background:var(--accent)}
+/* LICENSE MODAL */
+#license-modal{
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65);
+  z-index:2000; align-items:center; justify-content:center; padding:20px;
+}
+#license-modal.open{display:flex}
+#license-modal .content{
+  background:var(--panel); border-radius:14px; max-width:min(92vw,620px);
+  max-height:88vh; padding:24px 28px; overflow-y:auto; position:relative;
+  font-size:0.9rem; line-height:1.5; box-shadow:0 10px 40px rgba(0,0,0,0.3);
+}
+#license-modal h2{font-size:1.1rem; color:var(--brown);
+                  border-bottom:2px solid var(--accent); margin:0 0 12px; padding-bottom:6px}
+#license-modal p{margin:8px 0}
+#license-modal ol{margin:8px 0 8px 22px}
+#license-modal li{margin:6px 0}
+#license-modal .close{
+  position:absolute; top:10px; right:12px; background:none; border:none;
+  font-size:1.4rem; cursor:pointer; color:#666; width:32px; height:32px;
+  border-radius:50%; transition:background 0.15s;
+}
+#license-modal .close:hover{background:#eee}
+/* MATHJAX */
+mjx-container{font-size:1.05em !important}
+mjx-container[display="true"]{font-size:1.1em !important; margin:0.4em 0}
+h1 mjx-container,h2 mjx-container,h3 mjx-container{font-size:1em !important}
+table.data mjx-container{font-size:0.95em !important}
+#hover-modal mjx-container{font-size:1em !important}
+/* RESPONSIVE */
+@media (max-width: 768px){
+  .sidebar{
+    width:100%; height:auto; position:relative; flex-direction:row;
+    padding:8px; overflow-x:auto; flex-wrap:nowrap;
+  }
+  .sidebar h1{display:none}
+  .sidebar button{flex:0 0 auto; width:auto; padding:8px 12px; font-size:0.78rem}
+  .sidebar button .num{display:none}
+  main{margin-left:0; padding:12px}
+  footer{margin-left:0; padding:16px}
+  #mindmap-container,#graph-container{height:65vh; min-height:420px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" aria-label="Navigation principale">
+  <h1>La fonction inverse</h1>
+  <button data-volet="1" class="active" aria-current="page">
+    <span class="num">1</span> Contenu classique
+  </button>
+  <button data-volet="2">
+    <span class="num">2</span> Carte mentale
+  </button>
+  <button data-volet="3">
+    <span class="num">3</span> Tableaux
+  </button>
+  <button data-volet="4">
+    <span class="num">4</span> Graphe
+  </button>
+</nav>
+
+<main>
+
+<!-- ======================================================== -->
+<!-- VOLET 1 : CONTENU CLASSIQUE                              -->
+<!-- ======================================================== -->
+<section id="volet1" class="volet active">
+  <h2>Volet 1 — Présentation classique</h2>
+
+  <article class="card">
+    <h3>Comment lire ce cours ?</h3>
+    <div class="box parcoeur"><div class="box-title">Par cœur</div>Formules, définitions et résultats à mémoriser mot pour mot.</div>
+    <div class="box comprendre"><div class="box-title">À comprendre</div>Idées, interprétations, raisonnements — sans réciter.</div>
+    <div class="box methode"><div class="box-title">Méthode</div>Procédures et techniques à appliquer pas à pas.</div>
+    <div class="box piege"><div class="box-title">Piège</div>Erreurs fréquentes à éviter absolument.</div>
+    <div class="box rappel"><div class="box-title">Rappel</div>Prérequis des années antérieures à revoir si besoin.</div>
+    <div class="box exemple"><div class="box-title">Exemple</div>Illustrations concrètes du cours.</div>
+  </article>
+
+  <article class="card">
+    <h3>1. Rappels de collège et de seconde</h3>
+    <div class="box rappel">
+      <div class="box-title">Définition d'une fonction</div>
+      Une <b>fonction</b> \(f\) associe à chaque réel \(x\) d'un ensemble \(D\) (appelé <em>ensemble de définition</em>) un unique réel \(f(x)\). On note \(f : D \to \mathbb{R}\), \(x \mapsto f(x)\).
+    </div>
+    <div class="box rappel">
+      <div class="box-title">Sens de variation</div>
+      Soit \(f\) définie sur un intervalle \(I\).
+      <ul>
+        <li>\(f\) est <b>croissante</b> sur \(I\) si \(a<b \Rightarrow f(a) \le f(b)\).</li>
+        <li>\(f\) est <b>décroissante</b> sur \(I\) si \(a<b \Rightarrow f(a) \ge f(b)\).</li>
+        <li>« Strictement » : remplacer \(\le\) (resp. \(\ge\)) par \(<\) (resp. \(>\)).</li>
+      </ul>
+    </div>
+    <div class="box comprendre">
+      <div class="box-title">Lien dérivée / variations</div>
+      Si \(f\) est dérivable sur \(I\) : \(f'>0 \Rightarrow f\) strictement croissante ; \(f'<0 \Rightarrow f\) strictement décroissante ; \(f'=0 \Rightarrow f\) constante. La réciproque est vraie aux points où \(f'\) existe.
+    </div>
+    <div class="box rappel">
+      <div class="box-title">Asymptotes</div>
+      \(x=a\) est <b>asymptote verticale</b> si \(\displaystyle\lim_{x\to a} f(x)=\pm\infty\).<br>
+      \(y=b\) est <b>asymptote horizontale</b> si \(\displaystyle\lim_{x\to \pm\infty} f(x)=b\).<br>
+      \(y=mx+p\) est <b>asymptote oblique</b> si \(\displaystyle\lim_{x\to\pm\infty}[f(x)-(mx+p)]=0\).
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>2. Définition de la fonction inverse</h3>
+    <div class="box parcoeur">
+      <div class="box-title">Définition</div>
+      On appelle <b>fonction inverse</b> la fonction
+      \[ f : \mathbb{R}^* \longrightarrow \mathbb{R}, \qquad x \longmapsto f(x)=\dfrac{1}{x}. \]
+      Son ensemble de définition est \(\mathbb{R}^* = \mathbb{R}\setminus\{0\}\).
+    </div>
+    <div class="box parcoeur">
+      <div class="box-title">Parité</div>
+      Pour tout \(x\neq 0\), \(f(-x)=-f(x)\) : la fonction inverse est <b>impaire</b>. Sa courbe (l'hyperbole) est symétrique par rapport à l'origine \(O\).
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>3. Dérivée</h3>
+    <div class="box parcoeur">
+      <div class="box-title">Dérivée de la fonction inverse</div>
+      La fonction inverse est dérivable sur \(\mathbb{R}^*\) et
+      \[ f'(x) = -\dfrac{1}{x^{2}} \quad \text{pour tout } x \neq 0. \]
+    </div>
+    <div class="box methode">
+      <div class="box-title">Deux démonstrations</div>
+      <b>Méthode 1 (règle de puissance).</b> \(f(x)=x^{-1}\) donne \(f'(x)=-1\cdot x^{-2}=-1/x^{2}\).<br><br>
+      <b>Méthode 2 (taux d'accroissement).</b> Pour \(h\neq 0\) :
+      \[ \dfrac{f(x+h)-f(x)}{h} = \dfrac{1}{h}\left(\dfrac{1}{x+h}-\dfrac{1}{x}\right) = \dfrac{-1}{x(x+h)} \xrightarrow[h\to 0]{} -\dfrac{1}{x^{2}}. \]
+    </div>
+    <div class="box parcoeur">
+      <div class="box-title">Généralisation : dérivée de \(1/v\)</div>
+      Si \(v\) est dérivable sur \(I\) et ne s'annule pas sur \(I\) :
+      \[ \left(\dfrac{1}{v}\right)' = -\dfrac{v'}{v^{2}}. \]
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>4. Tableau de variations de la fonction inverse</h3>
+    <div class="box parcoeur">
+      <div class="box-title">Variations</div>
+      Puisque \(f'(x)=-1/x^{2}<0\) sur \(\mathbb{R}^*\), \(f\) est <b>strictement décroissante sur chacun</b> des intervalles \(]-\infty,0[\) et \(]0,+\infty[\).
+    </div>
+    <div id="tkztab-f1"></div>
+    <div class="box piege">
+      <div class="box-title">Piège — Décroissance « globale »</div>
+      \(f\) n'est <b>pas</b> décroissante sur \(\mathbb{R}^*\) tout entier. En effet \(-1<1\) mais \(f(-1)=-1<f(1)=1\), ce qui contredit la décroissance globale.
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>5. Limites et asymptotes</h3>
+    <div class="box parcoeur">
+      <div class="box-title">Limites</div>
+      \[ \lim_{x\to+\infty}\dfrac{1}{x}=0, \quad \lim_{x\to-\infty}\dfrac{1}{x}=0, \quad \lim_{x\to 0^{+}}\dfrac{1}{x}=+\infty, \quad \lim_{x\to 0^{-}}\dfrac{1}{x}=-\infty. \]
+    </div>
+    <div class="box parcoeur">
+      <div class="box-title">Asymptotes de l'hyperbole</div>
+      <ul>
+        <li><b>Asymptote verticale</b> \(x=0\) : \(f(x)\to\pm\infty\) quand \(x\to 0\).</li>
+        <li><b>Asymptote horizontale</b> \(y=0\) : \(\displaystyle\lim_{x\to\pm\infty} f(x)=0\).</li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>6. Application économique : coût moyen et prix unitaire</h3>
+    <div class="box parcoeur">
+      <div class="box-title">Coût moyen</div>
+      Pour \(q>0\) unités produites, le <b>coût total</b> \(C(q)\) se décompose en charges fixes \(C_f>0\) et charges variables \(C_v(q)\). Le <b>coût moyen</b> est
+      \[ CM(q) = \dfrac{C(q)}{q} = \dfrac{C_f}{q} + \dfrac{C_v(q)}{q}. \]
+    </div>
+    <div class="box comprendre">
+      <div class="box-title">Interprétation économique</div>
+      Le terme \(C_f/q\) est exactement une fonction inverse : il <b>décroît</b> quand \(q\) augmente. Les charges fixes sont réparties sur un plus grand nombre d'unités, donc le coût unitaire baisse. C'est l'<b>économie d'échelle</b>.
+    </div>
+    <div class="box exemple">
+      <div class="box-title">Exemple — Modèle linéaire + charges fixes</div>
+      Si \(C_v(q)=c\,q\) avec \(c>0\), alors \(CM(q) = \dfrac{C_f}{q} + c\) : toujours décroissante, d'asymptote horizontale \(y=c\).
+    </div>
+    <div class="box exemple">
+      <div class="box-title">Exemple — Rendements décroissants</div>
+      Si \(C_v(q)=c\,q+\dfrac{d}{q}\), alors \(CM(q) = \dfrac{C_f+d}{q} + c\) : décroissante, d'asymptote horizontale \(y=c\).
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>7. Combinaison avec les polynômes</h3>
+    <div class="box comprendre">
+      <div class="box-title">Fonctions de la forme \(ax+b+\dfrac{c}{x}\)</div>
+      On considère \(f(x)=ax+b+\dfrac{c}{x}\), \(a\neq 0\), \(c\neq 0\), définie sur \(\mathbb{R}^*\) : c'est la somme d'une fonction affine et d'une fonction inverse. C'est le prototype des fonctions homographiques généralisées, fréquentes en économie.
+    </div>
+    <div class="box parcoeur">
+      <div class="box-title">Dérivée et asymptote oblique</div>
+      \[ f'(x) = a-\dfrac{c}{x^{2}} = \dfrac{ax^{2}-c}{x^{2}}. \]
+      Le signe de \(f'(x)\) est celui du numérateur \(ax^{2}-c\) (dénominateur \(x^{2}>0\)).
+      <ul>
+        <li>Si \(ac \le 0\) : pas de racine réelle, \(f'\) garde un signe constant.</li>
+        <li>Si \(ac > 0\) : deux racines \(x_1=-\sqrt{c/a}\) et \(x_2=+\sqrt{c/a}\).</li>
+      </ul>
+      De plus \(\displaystyle\lim_{x\to\pm\infty}\left[f(x)-(ax+b)\right]=0\) : la droite \(y=ax+b\) est <b>asymptote oblique</b> à la courbe.
+    </div>
+    <div class="box exemple">
+      <div class="box-title">Étude complète de \(f(x) = x + \dfrac{1}{x}\)</div>
+      \[ f'(x)=1-\dfrac{1}{x^{2}} = \dfrac{x^{2}-1}{x^{2}} = \dfrac{(x-1)(x+1)}{x^{2}}. \]
+    </div>
+    <div id="tkztab-f2"></div>
+    <div class="box exemple">
+      <div class="box-title">Suite de l'étude</div>
+      Asymptote oblique \(y=x\) en \(\pm\infty\) ; asymptote verticale \(x=0\).
+    </div>
+  </article>
+</section>
+
+<!-- ======================================================== -->
+<!-- VOLET 2 : CARTE MENTALE                                  -->
+<!-- ======================================================== -->
+<section id="volet2" class="volet">
+  <h2>Volet 2 — Carte mentale interactive</h2>
+  <p style="margin-bottom:6px;color:#555;font-size:0.9rem">
+    Survolez une feuille pour afficher son contenu détaillé. Glissez-déposez les nœuds pour réorganiser la carte ; les branches suivent automatiquement.
+  </p>
+  <div id="mindmap-container">
+    <svg id="mindmap-svg" viewBox="0 0 1000 850" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend">
+      <span class="b1">Concept central</span>
+      <span class="b3">Branche</span>
+      <span class="b2">Feuille</span>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== -->
+<!-- VOLET 3 : TABLEAUX                                       -->
+<!-- ======================================================== -->
+<section id="volet3" class="volet">
+  <h2>Volet 3 — Tableaux à plusieurs entrées</h2>
+
+  <article class="card">
+    <h3>Tableau 1 — Récapitulatif des notions</h3>
+    <table class="data">
+      <tr><th>Notion</th><th>Contenu</th><th>Niveau</th></tr>
+      <tr><td>Fonction</td><td>Relation \(x \mapsto f(x)\)</td><td>Collège</td></tr>
+      <tr><td>Domaine</td><td>Ensemble des \(x\) où \(f\) existe</td><td>Seconde</td></tr>
+      <tr><td>Variation</td><td>Croissance / décroissance sur un intervalle</td><td>Seconde</td></tr>
+      <tr><td>Dérivée</td><td>\(f'(x)=\lim_{h\to0}\dfrac{f(x+h)-f(x)}{h}\)</td><td>Première</td></tr>
+      <tr><td>Asymptote</td><td>Droite dont la courbe s'approche indéfiniment</td><td>Première</td></tr>
+      <tr><td>Fonction inverse</td><td>\(f(x)=1/x\), définie sur \(\mathbb{R}^*\)</td><td>Seconde / Première</td></tr>
+      <tr><td>Dérivée de \(1/x\)</td><td>\(f'(x)=-1/x^{2}\)</td><td>Première</td></tr>
+      <tr><td>Coût moyen</td><td>\(CM(q)=C(q)/q\)</td><td>Première STMG / Générale</td></tr>
+      <tr><td>\(ax+b+c/x\)</td><td>Combinaison affine + inverse</td><td>Première / Terminale</td></tr>
+    </table>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 2 — Domaine et parité</h3>
+    <table class="data blue">
+      <tr><th>Fonction</th><th>Expression</th><th>\(\mathcal{D}_f\)</th><th>Parité</th></tr>
+      <tr><td>Inverse</td><td>\(1/x\)</td><td>\(\mathbb{R}^*\)</td><td>Impaire</td></tr>
+      <tr><td>Inverse décalée</td><td>\(1/(x-a)\)</td><td>\(\mathbb{R}\setminus\{a\}\)</td><td>Aucune (sauf \(a=0\))</td></tr>
+      <tr><td>Affine + inverse</td><td>\(ax+b+c/x\)</td><td>\(\mathbb{R}^*\)</td><td>Aucune</td></tr>
+      <tr><td>Homographique</td><td>\(\dfrac{ax+b}{cx+d}\)</td><td>\(\mathbb{R}\setminus\{-d/c\}\)</td><td>Aucune (sauf cas)</td></tr>
+      <tr><td>Inverse carré</td><td>\(1/x^{2}\)</td><td>\(\mathbb{R}^*\)</td><td>Paire</td></tr>
+    </table>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 3 — Dérivées et signes</h3>
+    <table class="data green">
+      <tr><th>Fonction \(f\)</th><th>Dérivée \(f'\)</th><th>Signe de \(f'\)</th><th>Variation</th></tr>
+      <tr><td>\(1/x\)</td><td>\(-1/x^{2}\)</td><td>Toujours \(<0\) sur \(\mathbb{R}^*\)</td><td>Décroissante sur chaque intervalle</td></tr>
+      <tr><td>\(-1/x\)</td><td>\(1/x^{2}\)</td><td>Toujours \(>0\) sur \(\mathbb{R}^*\)</td><td>Croissante sur chaque intervalle</td></tr>
+      <tr><td>\(x+1/x\)</td><td>\(1-1/x^{2}\)</td><td>\(-\) sur \(]-1,0[\cup]0,1[\), \(+\) ailleurs</td><td>Croissante, décroissante | décroissante, croissante</td></tr>
+      <tr><td>\(2x+3+5/x\)</td><td>\(2-5/x^{2}\)</td><td>\(-\) entre \(-\sqrt{5/2}\) et \(\sqrt{5/2}\)</td><td>Croissante, décroissante | décroissante, croissante</td></tr>
+      <tr><td>\(ax+b+c/x\)</td><td>\(a-c/x^{2}\)</td><td>Signe de \(ax^{2}-c\)</td><td>Dépend du signe de \(ac\)</td></tr>
+    </table>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 4 — Limites et asymptotes</h3>
+    <table class="data orange">
+      <tr><th>Limite</th><th>Résultat</th><th>Conséquence géométrique</th></tr>
+      <tr><td>\(\displaystyle\lim_{x\to+\infty} 1/x\)</td><td>\(0^{+}\)</td><td>Asymptote horizontale \(y=0\) (côté \(+\))</td></tr>
+      <tr><td>\(\displaystyle\lim_{x\to-\infty} 1/x\)</td><td>\(0^{-}\)</td><td>Asymptote horizontale \(y=0\) (côté \(-\))</td></tr>
+      <tr><td>\(\displaystyle\lim_{x\to 0^{+}} 1/x\)</td><td>\(+\infty\)</td><td>Asymptote verticale \(x=0\) (côté \(+\))</td></tr>
+      <tr><td>\(\displaystyle\lim_{x\to 0^{-}} 1/x\)</td><td>\(-\infty\)</td><td>Asymptote verticale \(x=0\) (côté \(-\))</td></tr>
+      <tr><td>\(\displaystyle\lim_{x\to\pm\infty}\left[f(x)-(ax+b)\right]\)</td><td>\(0\)</td><td>Asymptote oblique \(y=ax+b\)</td></tr>
+    </table>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 5 — Application économique</h3>
+    <p>Avec \(C_f=1000\) € et \(c=2\) €/unité : \(CM(q)=1000/q+2\).</p>
+    <table class="data">
+      <tr><th>\(q\) (unités)</th><th>1</th><th>5</th><th>10</th><th>50</th><th>100</th><th>1000</th></tr>
+      <tr><td>\(C_f/q\) (€)</td><td>1000</td><td>200</td><td>100</td><td>20</td><td>10</td><td>1</td></tr>
+      <tr><td>\(CM(q)\) (€)</td><td>1002</td><td>202</td><td>102</td><td>22</td><td>12</td><td>3</td></tr>
+    </table>
+    <p><b>Lecture.</b> \(q\) augmente \(\Rightarrow C_f/q \to 0\) et \(CM(q) \to c = 2\) : c'est l'asymptote horizontale \(y=2\).</p>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 6 — Comparaison de fonctions usuelles</h3>
+    <table class="data purple">
+      <tr><th>Fonction</th><th>Domaine</th><th>Dérivée</th><th>Variation</th><th>Asymptotes</th></tr>
+      <tr><td>\(x\)</td><td>\(\mathbb{R}\)</td><td>\(1\)</td><td>Croissante</td><td>aucune</td></tr>
+      <tr><td>\(x^{2}\)</td><td>\(\mathbb{R}\)</td><td>\(2x\)</td><td>Décroissante puis croissante</td><td>aucune</td></tr>
+      <tr><td>\(1/x\)</td><td>\(\mathbb{R}^*\)</td><td>\(-1/x^{2}\)</td><td>Décroissante sur chaque intervalle</td><td>\(x=0\), \(y=0\)</td></tr>
+      <tr><td>\(\sqrt{x}\)</td><td>\([0,+\infty[\)</td><td>\(1/(2\sqrt{x})\)</td><td>Croissante</td><td>aucune</td></tr>
+      <tr><td>\(x+1/x\)</td><td>\(\mathbb{R}^*\)</td><td>\(1-1/x^{2}\)</td><td>Croissante, décroissante | décroissante, croissante</td><td>\(x=0\), \(y=x\)</td></tr>
+    </table>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 7 — Variations de la fonction inverse</h3>
+    <div id="tkztab-f1b"></div>
+  </article>
+
+  <article class="card">
+    <h3>Tableau 8 — Variations de \(f(x)=x+\dfrac{1}{x}\)</h3>
+    <div id="tkztab-f2b"></div>
+    <div class="box exemple" style="margin-top:14px">
+      <div class="box-title">Lecture</div>
+      \(f\) présente un maximum local \(-2\) en \(x=-1\), un minimum local \(2\) en \(x=1\), une asymptote verticale \(x=0\), et une asymptote oblique \(y=x\).
+    </div>
+  </article>
+</section>
+
+<!-- ======================================================== -->
+<!-- VOLET 4 : GRAPHE INTERACTIF                              -->
+<!-- ======================================================== -->
+<section id="volet4" class="volet">
+  <h2>Volet 4 — Graphe des interactions</h2>
+  <p style="margin-bottom:6px;color:#555;font-size:0.9rem">
+    Survolez un nœud pour afficher sa description détaillée. Les nœuds non liés s'atténuent. Glissez-déposez pour réorganiser le graphe.
+  </p>
+  <div id="graph-container">
+    <canvas id="graph-canvas"></canvas>
+    <div class="legend">
+      <span class="b1">Concept / courbe</span>
+      <span class="b3">Notion mathématique</span>
+      <span class="b2">Application</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <button id="license-btn">⚖️ Droits d'auteur &amp; licence</button>
+</footer>
+
+<!-- ===== HOVER MODAL ===== -->
+<div id="hover-modal" role="tooltip" aria-hidden="true"></div>
+
+<!-- ===== LICENSE MODAL ===== -->
+<div id="license-modal" role="dialog" aria-modal="true" aria-labelledby="license-title">
+  <div class="content">
+    <button class="close" aria-label="Fermer">✕</button>
+    <h2 id="license-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p><b>Auteur :</b> Yann Merdy (yann.merdy@gmail.com) — octobre 2026</p>
+    <p><b>Licence d'Utilisation Non Commerciale</b></p>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« la Fonction Inverse ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <p><b>Conditions :</b></p>
+    <ol>
+      <li><b>Utilisation Privée et Éducative (Autorisée) :</b> vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+      <li><b>Utilisation Commerciale (Interdite) :</b> toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+      <li><b>Attribution :</b> toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+    </ol>
+    <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function setTextWithBreaks(el, text){
+  el.innerHTML = '';
+  const parts = text.split(/([.:])/);
+  for (let i = 0; i < parts.length; i++){
+    el.appendChild(document.createTextNode(parts[i]));
+    if (parts[i] === '.' || parts[i] === ':'){
+      // Not used: we want to keep punctuation inline but allow wrap
+    }
+  }
+}
+
+function normalizeTex(s){
+  return s.replace(/\\frac/g, '\\dfrac');
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const navButtons = document.querySelectorAll('.sidebar button');
+const volets = document.querySelectorAll('.volet');
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navButtons.forEach(b => { b.classList.remove('active'); b.removeAttribute('aria-current'); });
+    btn.classList.add('active');
+    btn.setAttribute('aria-current','page');
+    volets.forEach(v => v.classList.remove('active'));
+    document.getElementById('volet' + btn.dataset.volet).classList.add('active');
+    if (btn.dataset.volet === '4' && window.__resizeGraph) window.__resizeGraph();
+  });
+});
+
+/* ============================================================
+   HOVER MODAL (persistance de survol)
+   ============================================================ */
+const hoverModal = document.getElementById('hover-modal');
+let hoverTimer = null, graceTimer = null;
+
+function cancelHide(){ if (graceTimer){ clearTimeout(graceTimer); graceTimer = null; } }
+function scheduleHide(){
+  cancelHide();
+  graceTimer = setTimeout(() => {
+    hoverModal.classList.remove('visible');
+    hoverModal.setAttribute('aria-hidden','true');
+  }, 120);
+}
+
+function positionAndShow(trigger, buildContent){
+  cancelHide();
+  hoverModal.innerHTML = '';
+  buildContent(hoverModal);
+  hoverModal.classList.add('visible');
+  hoverModal.setAttribute('aria-hidden','false');
+  if (window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([hoverModal]).catch(() => {});
+  }
+  // Position
+  const r = trigger.getBoundingClientRect();
+  const mw = Math.min(window.innerWidth * 0.92, 520);
+  const mh = Math.min(window.innerHeight * 0.88, hoverModal.offsetHeight || 400);
+  let left = r.right + 15;
+  let top  = r.top - 10;
+  if (left + mw > window.innerWidth - 10) left = r.left - mw - 15;
+  if (left < 10) left = 10;
+  if (top + mh > window.innerHeight - 10) top = window.innerHeight - mh - 10;
+  if (top < 10) top = 10;
+  hoverModal.style.left = left + 'px';
+  hoverModal.style.top  = top + 'px';
+}
+
+hoverModal.addEventListener('mouseenter', cancelHide);
+hoverModal.addEventListener('mouseleave', scheduleHide);
+
+/* ============================================================
+   DONNÉES DE LA CARTE MENTALE
+   ============================================================ */
+const mindmapData = {
+  center: {
+    title: "Fonction inverse",
+    x: 500, y: 425,
+    desc: "f(x) = 1/x, définie sur ℝ*. Impaire. Décroissante sur ]-∞,0[ et sur ]0,+∞[. Dérivée f'(x) = -1/x². Asymptotes x = 0 et y = 0."
+  },
+  branches: [
+    { id:'DEF', label:"Définition", angle: 90,
+      desc: "f(x) = 1/x, définie sur ℝ* = ℝ\\{0}.",
+      leaves: [
+        { id:'Ld1', label:"f(x)=1/x", short:"f(x)=1/x",
+          content:"<h4>Expression</h4><p>Pour tout \\(x\\neq 0\\), \\(f(x)=\\dfrac{1}{x}\\).</p><p>Exemples : \\(f(2)=0{,}5\\) ; \\(f(-4)=-0{,}25\\).</p>" },
+        { id:'Ld2', label:"D_f = ℝ*", short:"D = ℝ*",
+          content:"<h4>Domaine de définition</h4><p>\\(\\mathcal{D}_f = \\mathbb{R}^* = \\mathbb{R}\\setminus\\{0\\} = \\left]-\\infty,0\\right[\\cup\\left]0,+\\infty\\right[\\)</p><p>La valeur \\(x=0\\) est exclue car la division par zéro est impossible.</p>" },
+        { id:'Ld3', label:"Impaire", short:"Impaire",
+          content:"<h4>Parité</h4><p>Pour tout \\(x\\neq 0\\) : \\(f(-x) = -f(x)\\).</p><p>La courbe est symétrique par rapport à l'origine \\(O\\).</p>" }
+      ]},
+    { id:'DER', label:"Dérivée", angle: 30,
+      desc: "f'(x) = -1/x², strictement négative sur ℝ*.",
+      leaves: [
+        { id:'Lr1', label:"f'(x)=-1/x²", short:"f'(x) = -1/x²",
+          content:"<h4>Dérivée</h4><p>\\(f'(x) = -\\dfrac{1}{x^{2}}\\) pour tout \\(x\\neq 0\\).</p><p>Formule de puissance : \\((x^{n})' = n\\,x^{n-1}\\) avec \\(n=-1\\).</p>" },
+        { id:'Lr2', label:"Signe < 0", short:"f' < 0",
+          content:"<h4>Signe</h4><p>\\(x^{2} > 0\\) pour tout \\(x\\neq 0\\), donc \\(-1/x^{2} < 0\\).</p><p>La dérivée est toujours strictement négative sur chaque intervalle du domaine.</p>" },
+        { id:'Lr3', label:"(1/v)' = -v'/v²", short:"(1/v)' = -v'/v²",
+          content:"<h4>Généralisation</h4><p>Si \\(v\\) est dérivable et ne s'annule pas :</p><p>\\[\\left(\\dfrac{1}{v}\\right)' = -\\dfrac{v'}{v^{2}}\\]</p>" }
+      ]},
+    { id:'VAR', label:"Variations", angle: -30,
+      desc: "Décroissante sur ]-∞,0[ et sur ]0,+∞[.",
+      leaves: [
+        { id:'Lv1', label:"↘ sur ]-∞,0[", short:"↘ sur ]-∞,0[",
+          content:"<h4>Décroissance sur ]-∞,0[</h4><p>\\(f'\\) est strictement négative sur \\(\\left]-\\infty,0\\right[\\) donc \\(f\\) est strictement décroissante sur cet intervalle.</p>" },
+        { id:'Lv2', label:"↘ sur ]0,+∞[", short:"↘ sur ]0,+∞[",
+          content:"<h4>Décroissance sur ]0,+∞[</h4><p>\\(f'\\) est strictement négative sur \\(\\left]0,+\\infty\\right[\\) donc \\(f\\) est strictement décroissante sur cet intervalle.</p>" },
+        { id:'Lv3', label:"Pas globalement", short:"Pas globalement",
+          content:"<h4>Attention</h4><p>\\(f\\) n'est PAS décroissante sur \\(\\mathbb{R}^*\\) tout entier :</p><p>\\(-1 < 1\\) mais \\(f(-1) = -1 < f(1) = 1\\).</p>" }
+      ]},
+    { id:'ASY', label:"Asymptotes", angle: -90,
+      desc: "x = 0 (verticale) et y = 0 (horizontale).",
+      leaves: [
+        { id:'La1', label:"x = 0 verticale", short:"x = 0",
+          content:"<h4>Asymptote verticale</h4><p>\\(x=0\\) : \\(\\displaystyle\\lim_{x\\to 0^{+}} f(x) = +\\infty\\) et \\(\\displaystyle\\lim_{x\\to 0^{-}} f(x) = -\\infty\\).</p>" },
+        { id:'La2', label:"y = 0 horizontale", short:"y = 0",
+          content:"<h4>Asymptote horizontale</h4><p>\\(y=0\\) : \\(\\displaystyle\\lim_{x\\to\\pm\\infty} f(x) = 0\\).</p><p>C'est l'axe des abscisses.</p>" },
+        { id:'La3', label:"Pas d'oblique", short:"Pas d'oblique",
+          content:"<h4>Cas général</h4><p>Pour \\(f(x) = ax+b+\\dfrac{c}{x}\\), on obtient une asymptote oblique d'équation \\(y = ax+b\\).</p><p>Pour la fonction inverse simple, il n'y a pas d'asymptote oblique.</p>" }
+      ]},
+    { id:'ECO', label:"Économie", angle: -150,
+      desc: "Coût moyen, prix unitaire.",
+      leaves: [
+        { id:'Le1', label:"Coût moyen", short:"Coût moyen",
+          content:"<h4>Coût moyen</h4><p>Pour \\(q>0\\) unités : \\(CM(q) = \\dfrac{C(q)}{q}\\).</p><p>Décomposition : \\(CM(q) = \\dfrac{C_f}{q} + \\dfrac{C_v(q)}{q}\\).</p>" },
+        { id:'Le2', label:"Prix unitaire", short:"Prix unitaire",
+          content:"<h4>Prix unitaire</h4><p>Terme en \\(1/q\\) fréquent en économie : lorsque les charges fixes \\(C_f\\) se répartissent sur \\(q\\) unités, le coût unitaire contient un terme \\(C_f/q\\).</p>" },
+        { id:'Le3', label:"Économie d'échelle", short:"Éco. d'échelle",
+          content:"<h4>Économie d'échelle</h4><p>Quand \\(q\\) augmente, \\(C_f/q \\to 0\\), donc \\(CM(q)\\) diminue : les charges fixes sont amorties sur plus d'unités.</p>" }
+      ]},
+    { id:'POL', label:"Polynômes", angle: 150,
+      desc: "Fonctions de la forme ax+b+c/x.",
+      leaves: [
+        { id:'Lp1', label:"ax+b+c/x", short:"ax+b+c/x",
+          content:"<h4>Fonctions \\(ax+b+\\dfrac{c}{x}\\)</h4><p>Somme d'une fonction affine \\((ax+b)\\) et d'une fonction inverse \\((c/x)\\).</p><p>Définie sur \\(\\mathbb{R}^*\\) (avec \\(a\\neq 0\\), \\(c\\neq 0\\)).</p>" },
+        { id:'Lp2', label:"f' = a - c/x²", short:"f' = a - c/x²",
+          content:"<h4>Dérivée</h4><p>\\[f'(x) = a-\\dfrac{c}{x^{2}} = \\dfrac{ax^{2}-c}{x^{2}}\\]</p><p>Signe = signe de \\(ax^{2}-c\\).</p>" },
+        { id:'Lp3', label:"Asymptote oblique", short:"Asymptote oblique",
+          content:"<h4>Asymptote oblique</h4><p>La droite \\(y = ax+b\\) est asymptote oblique à la courbe de \\(f\\) en \\(\\pm\\infty\\).</p>" }
+      ]}
+  ]
+};
+
+/* ============================================================
+   RENDU DE LA CARTE MENTALE (SVG)
+   ============================================================ */
+const mmNS = 'http://www.w3.org/2000/svg';
+const mmSvg = document.getElementById('mindmap-svg');
+const mmState = { nodes: {}, edges: [] };
+let mmDrag = null;
+
+function mmAngleToPos(cx, cy, r, angleDeg){
+  const a = angleDeg * Math.PI / 180;
+  return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) };
+}
+
+function buildMindmap(){
+  while (mmSvg.firstChild) mmSvg.removeChild(mmSvg.firstChild);
+  mmState.nodes = {};
+  mmState.edges = [];
+
+  const c = mindmapData.center;
+  mmState.nodes.center = { x: c.x, y: c.y, data: c, kind: 'center' };
+
+  const branchRadius = 200;
+  const leafRadius = 330;
+
+  mindmapData.branches.forEach(br => {
+    const bpos = mmAngleToPos(c.x, c.y, branchRadius, br.angle);
+    mmState.nodes[br.id] = { x: bpos.x, y: bpos.y, data: br, kind: 'branch', parent: 'center' };
+    mmState.edges.push({ from: 'center', to: br.id, kind: 'branch' });
+
+    const leafAngles = [br.angle - 15, br.angle, br.angle + 15];
+    br.leaves.forEach((lf, i) => {
+      const lpos = mmAngleToPos(c.x, c.y, leafRadius, leafAngles[i]);
+      mmState.nodes[lf.id] = { x: lpos.x, y: lpos.y, data: lf, kind: 'leaf', parent: br.id };
+      mmState.edges.push({ from: br.id, to: lf.id, kind: 'leaf' });
+    });
+  });
+
+  // Create SVG groups for edges first (so nodes are on top)
+  const gEdges = document.createElementNS(mmNS, 'g');
+  gEdges.setAttribute('id', 'mm-edges');
+  mmSvg.appendChild(gEdges);
+
+  const gNodes = document.createElementNS(mmNS, 'g');
+  gNodes.setAttribute('id', 'mm-nodes');
+  mmSvg.appendChild(gNodes);
+
+  mmState.edges.forEach(e => {
+    const line = document.createElementNS(mmNS, 'line');
+    line.setAttribute('class', 'mm-edge' + (e.kind === 'leaf' ? ' leaf-edge' : ''));
+    line.dataset.from = e.from;
+    line.dataset.to = e.to;
+    gEdges.appendChild(line);
+  });
+
+  Object.entries(mmState.nodes).forEach(([id, n]) => {
+    const g = document.createElementNS(mmNS, 'g');
+    g.setAttribute('class', 'mm-node');
+    g.dataset.id = id;
+    g.style.cursor = 'grab';
+
+    let shape, text;
+    if (n.kind === 'center'){
+      const circle = document.createElementNS(mmNS, 'circle');
+      circle.setAttribute('class', 'mm-center');
+      circle.setAttribute('r', 55);
+      g.appendChild(circle);
+      text = document.createElementNS(mmNS, 'text');
+      text.setAttribute('class', 'mm-text');
+      text.setAttribute('y', -8);
+      text.textContent = 'Fonction';
+      g.appendChild(text);
+      const t2 = document.createElementNS(mmNS, 'text');
+      t2.setAttribute('class', 'mm-text');
+      t2.setAttribute('y', 8);
+      t2.textContent = 'inverse';
+      g.appendChild(t2);
+      const t3 = document.createElementNS(mmNS, 'text');
+      t3.setAttribute('class', 'mm-text');
+      t3.setAttribute('y', 26);
+      t3.setAttribute('font-size', '11');
+      t3.textContent = '1/x';
+      g.appendChild(t3);
+    } else if (n.kind === 'branch'){
+      const rect = document.createElementNS(mmNS, 'rect');
+      rect.setAttribute('class', 'mm-branch');
+      rect.setAttribute('x', -65);
+      rect.setAttribute('y', -18);
+      rect.setAttribute('width', 130);
+      rect.setAttribute('height', 36);
+      rect.setAttribute('rx', 8);
+      g.appendChild(rect);
+      text = document.createElementNS(mmNS, 'text');
+      text.setAttribute('class', 'mm-text');
+      text.setAttribute('y', 4);
+      text.textContent = n.data.label;
+      g.appendChild(text);
+    } else {
+      const rect = document.createElementNS(mmNS, 'rect');
+      rect.setAttribute('class', 'mm-leaf');
+      rect.setAttribute('x', -55);
+      rect.setAttribute('y', -14);
+      rect.setAttribute('width', 110);
+      rect.setAttribute('height', 28);
+      rect.setAttribute('rx', 6);
+      g.appendChild(rect);
+      text = document.createElementNS(mmNS, 'text');
+      text.setAttribute('class', 'mm-text mm-text-leaf');
+      text.setAttribute('y', 4);
+      text.textContent = n.data.short || n.data.label;
+      g.appendChild(text);
+    }
+
+    gNodes.appendChild(g);
+
+    // Hover modal
+    g.addEventListener('mouseenter', () => {
+      if (mmDrag) return;
+      const isLeaf = n.kind === 'leaf';
+      const title = isLeaf ? n.data.label : (n.kind === 'branch' ? n.data.label : 'Fonction inverse');
+      positionAndShow(g, el => {
+        el.innerHTML = '';
+        if (isLeaf){
+          const wrap = document.createElement('div');
+          wrap.innerHTML = n.data.content;
+          el.appendChild(wrap);
+        } else if (n.kind === 'branch'){
+          const h = document.createElement('h4');
+          h.textContent = title;
+          el.appendChild(h);
+          const p = document.createElement('p');
+          p.textContent = n.data.desc;
+          el.appendChild(p);
+          const ul = document.createElement('ul');
+          n.data.leaves.forEach(lf => {
+            const li = document.createElement('li');
+            li.textContent = lf.label;
+            ul.appendChild(li);
+          });
+          el.appendChild(ul);
+        } else {
+          const h = document.createElement('h4');
+          h.textContent = 'Fonction inverse';
+          el.appendChild(h);
+          const p = document.createElement('p');
+          p.textContent = n.data.desc;
+          el.appendChild(p);
+        }
+      });
+    });
+    g.addEventListener('mouseleave', scheduleHide);
+
+    // Drag
+    g.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      mmDrag = { id: id, pointerId: e.pointerId, moved: false };
+      g.setPointerCapture(e.pointerId);
+      g.style.cursor = 'grabbing';
+    });
+    g.addEventListener('pointermove', e => {
+      if (!mmDrag || mmDrag.id !== id) return;
+      mmDrag.moved = true;
+      const pt = mmSvg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      const p = pt.matrixTransform(mmSvg.getScreenCTM().inverse());
+      mmState.nodes[id].x = p.x;
+      mmState.nodes[id].y = p.y;
+      // If it's a branch, move its leaves along
+      if (n.kind === 'branch'){
+        const dx = p.x - mmState.nodes[id].x;
+        const dy = p.y - mmState.nodes[id].y;
+        // nothing — just moved branch
+      }
+      renderMindmap();
+    });
+    g.addEventListener('pointerup', e => {
+      if (mmDrag && mmDrag.id === id){
+        try { g.releasePointerCapture(mmDrag.pointerId); } catch(_){}
+      }
+      if (mmDrag) mmDrag = null;
+      g.style.cursor = 'grab';
+    });
+    g.addEventListener('pointercancel', () => { mmDrag = null; g.style.cursor = 'grab'; });
+  });
+
+  renderMindmap();
+}
+
+function renderMindmap(){
+  // Edges
+  document.querySelectorAll('#mm-edges line').forEach(line => {
+    const from = mmState.nodes[line.dataset.from];
+    const to = mmState.nodes[line.dataset.to];
+    if (!from || !to) return;
+    line.setAttribute('x1', from.x);
+    line.setAttribute('y1', from.y);
+    line.setAttribute('x2', to.x);
+    line.setAttribute('y2', to.y);
+  });
+  // Nodes
+  document.querySelectorAll('#mm-nodes .mm-node').forEach(g => {
+    const n = mmState.nodes[g.dataset.id];
+    if (!n) return;
+    g.setAttribute('transform', `translate(${n.x},${n.y})`);
+  });
+}
+
+/* ============================================================
+   GRAPHE INTERACTIF (Canvas + forces)
+   ============================================================ */
+const graphNodes = [
+  { id:'FI',  label:'Fonction inverse', x: 0, y: 0, color:'#3b82c4', type:'concept',
+    desc:'f(x) = 1/x, définie sur ℝ* = ]-∞,0[∪]0,+∞[. Impaire, décroissante sur chaque intervalle. Dérivée f\'(x) = -1/x². Asymptotes x = 0 et y = 0.' },
+  { id:'DEF', label:'Définition / domaine', x: 0, y: -260, color:'#4caf50', type:'math',
+    desc:'Domaine ℝ*. Parité : f(-x) = -f(x) (impaire). Courbe : hyperbole symétrique par rapport à l\'origine.' },
+  { id:'DER', label:'Dérivée', x: 300, y: -160, color:'#4caf50', type:'math',
+    desc:'f\'(x) = -1/x², strictement négative sur ℝ*. Formule générale : (1/v)\' = -v\'/v².' },
+  { id:'VAR', label:'Variations', x: 340, y: 0, color:'#4caf50', type:'math',
+    desc:'Strictement décroissante sur ]-∞,0[ et sur ]0,+∞[. Pas globalement décroissante sur ℝ*.' },
+  { id:'ASY', label:'Asymptotes', x: 300, y: 160, color:'#4caf50', type:'math',
+    desc:'Asymptote verticale x = 0. Asymptote horizontale y = 0. Pour ax+b+c/x : asymptote oblique y = ax+b.' },
+  { id:'COU', label:'Hyperbole', x: 0, y: 260, color:'#3b82c4', type:'concept',
+    desc:'Courbe de la fonction inverse. Deux branches symétriques par rapport à O. Asymptotes x = 0 et y = 0.' },
+  { id:'ECO', label:'Économie', x: -300, y: 160, color:'#d97a1a', type:'app',
+    desc:'Coût moyen CM(q) = C_f/q + c. Prix unitaire avec terme en 1/q. Économie d\'échelle : CM baisse quand q augmente.' },
+  { id:'POL', label:'Polynômes', x: -300, y: -160, color:'#d97a1a', type:'app',
+    desc:'Fonctions ax+b+c/x. Dérivée f\'(x) = a - c/x². Asymptote oblique y = ax+b. Cas remarquable : x + 1/x.' }
+];
+
+const graphLinks = [
+  { from:'DEF', to:'DER',  label:'permet' },
+  { from:'DER', to:'VAR',  label:'signe' },
+  { from:'VAR', to:'COU',  label:'allure' },
+  { from:'ASY', to:'COU',  label:'branches' },
+  { from:'DEF', to:'ASY',  label:'limites' },
+  { from:'FI',  to:'ECO',  label:'modélise' },
+  { from:'FI',  to:'POL',  label:'se combine' },
+  { from:'POL', to:'DER',  label:'dérivation' },
+  { from:'ECO', to:'VAR',  label:'étude' },
+  { from:'POL', to:'ASY',  label:'oblique' },
+  { from:'DEF', to:'FI',   label:'applique' }
+];
+
+const graphCanvas = document.getElementById('graph-canvas');
+const gctx = graphCanvas.getContext('2d');
+let gW = 0, gH = 0, gScale = 1, gCx = 0, gCy = 0;
+let gHoverNode = null, gDragNode = null, gDragStart = null;
+let gAnimationId = null;
+
+const gPositions = {}; // id -> {x, y} in "layout units"
+
+function initGraphPositions(){
+  graphNodes.forEach(n => { gPositions[n.id] = { x: n.x, y: n.y, vx: 0, vy: 0 }; });
+}
+
+function resizeGraphCanvas(){
+  const cont = document.getElementById('graph-container');
+  const rect = cont.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  gW = rect.width; gH = rect.height;
+  graphCanvas.width = gW * dpr;
+  graphCanvas.height = gH * dpr;
+  graphCanvas.style.width = gW + 'px';
+  graphCanvas.style.height = gH + 'px';
+  gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Compute scale to fit ~1000x800 layout in canvas
+  gScale = Math.min(gW / 1000, gH / 800) * 0.82;
+  gCx = gW / 2; gCy = gH / 2;
+}
+
+function layoutToScreen(x, y){
+  return { sx: gCx + x * gScale, sy: gCy + y * gScale };
+}
+function screenToLayout(sx, sy){
+  return { x: (sx - gCx) / gScale, y: (sy - gCy) / gScale };
+}
+
+function stepForces(){
+  const repulsion = 60000;
+  const springK = 0.008;
+  const springLen = 200;
+  const damping = 0.82;
+  const anchorK = 0.012;
+  const anchorTargets = {};
+  graphNodes.forEach(n => { anchorTargets[n.id] = { x: n.x, y: n.y }; });
+
+  // Repulsion between all pairs
+  for (let i = 0; i < graphNodes.length; i++){
+    for (let j = i + 1; j < graphNodes.length; j++){
+      const a = graphNodes[i], b = graphNodes[j];
+      const pa = gPositions[a.id], pb = gPositions[b.id];
+      let dx = pa.x - pb.x, dy = pa.y - pb.y;
+      let d2 = dx*dx + dy*dy;
+      if (d2 < 1) d2 = 1;
+      const d = Math.sqrt(d2);
+      const f = repulsion / d2;
+      const fx = f * dx / d, fy = f * dy / d;
+      pa.vx += fx; pa.vy += fy;
+      pb.vx -= fx; pb.vy -= fy;
+    }
+  }
+  // Springs along links
+  graphLinks.forEach(l => {
+    const pa = gPositions[l.from], pb = gPositions[l.to];
+    if (!pa || !pb) return;
+    const dx = pb.x - pa.x, dy = pb.y - pa.y;
+    const d = Math.sqrt(dx*dx + dy*dy) || 1;
+    const diff = (d - springLen) * springK;
+    const fx = diff * dx / d, fy = diff * dy / d;
+    pa.vx += fx; pa.vy += fy;
+    pb.vx -= fx; pb.vy -= fy;
+  });
+  // Anchors + damping
+  graphNodes.forEach(n => {
+    const p = gPositions[n.id];
+    const t = anchorTargets[n.id];
+    p.vx += (t.x - p.x) * anchorK;
+    p.vy += (t.y - p.y) * anchorK;
+    p.vx *= damping; p.vy *= damping;
+    p.x += p.vx; p.y += p.vy;
+  });
+}
+
+function drawGraph(){
+  gctx.clearRect(0, 0, gW, gH);
+  // Links
+  graphLinks.forEach(l => {
+    const pa = gPositions[l.from], pb = gPositions[l.to];
+    if (!pa || !pb) return;
+    const A = layoutToScreen(pa.x, pa.y);
+    const B = layoutToScreen(pb.x, pb.y);
+    const hovered = gHoverNode && (l.from === gHoverNode || l.to === gHoverNode);
+    gctx.strokeStyle = hovered ? '#d97a1a' : 'rgba(120,80,40,0.35)';
+    gctx.lineWidth = hovered ? 2.5 : 1.3;
+    gctx.beginPath();
+    gctx.moveTo(A.sx, A.sy);
+    gctx.lineTo(B.sx, B.sy);
+    gctx.stroke();
+    // Label
+    const mx = (A.sx + B.sx) / 2, my = (A.sy + B.sy) / 2;
+    gctx.fillStyle = hovered ? '#7a4a12' : 'rgba(80,60,40,0.75)';
+    gctx.font = '11px Segoe UI, system-ui, sans-serif';
+    gctx.textAlign = 'center';
+    gctx.textBaseline = 'middle';
+    const tw = gctx.measureText(l.label).width;
+    gctx.fillStyle = 'rgba(255,253,249,0.92)';
+    gctx.fillRect(mx - tw/2 - 3, my - 8, tw + 6, 15);
+    gctx.fillStyle = hovered ? '#7a4a12' : 'rgba(80,60,40,0.8)';
+    gctx.fillText(l.label, mx, my);
+  });
+
+  // Nodes
+  graphNodes.forEach(n => {
+    const p = gPositions[n.id];
+    const P = layoutToScreen(p.x, p.y);
+    const isHover = gHoverNode === n.id;
+    const isLinked = gHoverNode && (gHoverNode === n.id || graphLinks.some(l => (l.from === gHoverNode && l.to === n.id) || (l.to === gHoverNode && l.from === n.id)));
+    const opacity = gHoverNode ? (isLinked ? 1 : 0.35) : 1;
+
+    gctx.globalAlpha = opacity;
+    const radius = isHover ? 44 : 38;
+    // Shadow
+    gctx.beginPath();
+    gctx.arc(P.sx, P.sy, radius, 0, Math.PI * 2);
+    gctx.fillStyle = n.color;
+    gctx.fill();
+    gctx.lineWidth = 2;
+    gctx.strokeStyle = isHover ? '#7a4a12' : 'rgba(0,0,0,0.2)';
+    gctx.stroke();
+    // Label
+    gctx.fillStyle = '#fff';
+    gctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    gctx.textAlign = 'center';
+    gctx.textBaseline = 'middle';
+    const words = n.label.split(' ');
+    // Simple wrap
+    const lines = [];
+    let line = '';
+    words.forEach(w => {
+      const test = line ? line + ' ' + w : w;
+      if (gctx.measureText(test).width > radius * 1.7){
+        if (line) lines.push(line);
+        line = w;
+      } else line = test;
+    });
+    if (line) lines.push(line);
+    const lh = 13;
+    const totalH = lines.length * lh;
+    lines.forEach((ln, i) => {
+      gctx.fillText(ln, P.sx, P.sy - totalH/2 + lh/2 + i * lh);
+    });
+    gctx.globalAlpha = 1;
+  });
+}
+
+function graphLoop(){
+  if (document.getElementById('volet4').classList.contains('active')){
+    stepForces();
+    drawGraph();
+  }
+  gAnimationId = requestAnimationFrame(graphLoop);
+}
+
+function findNodeAt(sx, sy){
+  for (const n of graphNodes){
+    const p = gPositions[n.id];
+    const P = layoutToScreen(p.x, p.y);
+    const dx = sx - P.sx, dy = sy - P.sy;
+    if (dx*dx + dy*dy < 42*42) return n;
+  }
+  return null;
+}
+
+function getCanvasPointer(e){
+  const r = graphCanvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function bindGraphEvents(){
+  graphCanvas.addEventListener('mousemove', e => {
+    if (gDragNode){
+      const pt = getCanvasPointer(e);
+      const lp = screenToLayout(pt.x, pt.y);
+      gPositions[gDragNode.id].x = lp.x;
+      gPositions[gDragNode.id].y = lp.y;
+      gPositions[gDragNode.id].vx = 0;
+      gPositions[gDragNode.id].vy = 0;
+      return;
+    }
+    const pt = getCanvasPointer(e);
+    const node = findNodeAt(pt.x, pt.y);
+    if (node && (!gHoverNode || gHoverNode !== node.id)){
+      gHoverNode = node.id;
+      // Show modal
+      positionAndShow(graphCanvas, el => {
+        el.innerHTML = '';
+        const h = document.createElement('h4');
+        h.textContent = node.label;
+        el.appendChild(h);
+        const p = document.createElement('p');
+        setTextWithBreaks(p, node.desc);
+        el.appendChild(p);
+        // Connections
+        const conns = graphLinks.filter(l => l.from === node.id || l.to === node.id);
+        if (conns.length){
+          const h2 = document.createElement('h4');
+          h2.textContent = 'Connexions';
+          h2.style.marginTop = '8px';
+          h2.style.fontSize = '0.92rem';
+          el.appendChild(h2);
+          const ul = document.createElement('ul');
+          conns.forEach(c => {
+            const other = c.from === node.id ? c.to : c.from;
+            const otherNode = graphNodes.find(n => n.id === other);
+            const li = document.createElement('li');
+            li.textContent = c.label + ' → ' + (otherNode ? otherNode.label : other);
+            ul.appendChild(li);
+          });
+          el.appendChild(ul);
+        }
+        if (window.MathJax && MathJax.typesetPromise){
+          MathJax.typesetPromise([el]).catch(() => {});
+        }
+      });
+    } else if (!node && gHoverNode){
+      // Keep modal open; only start grace timer
+      scheduleHide();
+      gHoverNode = null;
+    }
+  });
+  graphCanvas.addEventListener('mouseleave', () => {
+    if (!gDragNode){
+      gHoverNode = null;
+      scheduleHide();
+    }
+  });
+  graphCanvas.addEventListener('mousedown', e => {
+    const pt = getCanvasPointer(e);
+    const node = findNodeAt(pt.x, pt.y);
+    if (node){
+      gDragNode = node;
+      gDragStart = { x: e.clientX, y: e.clientY };
+      graphCanvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('mouseup', () => {
+    if (gDragNode){
+      gDragNode = null;
+      graphCanvas.style.cursor = 'grab';
+    }
+  });
+  // Touch
+  graphCanvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1){
+      const t = e.touches[0];
+      const rect = graphCanvas.getBoundingClientRect();
+      const pt = { x: t.clientX - rect.left, y: t.clientY - rect.top };
+      const node = findNodeAt(pt.x, pt.y);
+      if (node){
+        gDragNode = node;
+        graphCanvas.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
+  graphCanvas.addEventListener('touchmove', e => {
+    if (gDragNode && e.touches.length === 1){
+      const t = e.touches[0];
+      const rect = graphCanvas.getBoundingClientRect();
+      const pt = { x: t.clientX - rect.left, y: t.clientY - rect.top };
+      const lp = screenToLayout(pt.x, pt.y);
+      gPositions[gDragNode.id].x = lp.x;
+      gPositions[gDragNode.id].y = lp.y;
+      gPositions[gDragNode.id].vx = 0;
+      gPositions[gDragNode.id].vy = 0;
+      e.preventDefault();
+    }
+  }, { passive: false });
+  graphCanvas.addEventListener('touchend', () => {
+    gDragNode = null;
+    graphCanvas.style.cursor = 'grab';
+  });
+
+  // Resize
+  const ro = new ResizeObserver(() => {
+    resizeGraphCanvas();
+    drawGraph();
+  });
+  ro.observe(document.getElementById('graph-container'));
+}
+
+/* ============================================================
+   RENDU DES TABLEAUX tkz-tab (Canvas + MathJax)
+   ============================================================ */
+function renderVariationTable(spec){
+  const N = spec.xValues.length;
+  const labelW = 55;
+  const W = spec.W || 90;
+  const padding = 20;
+  const totalW = labelW + (N-1) * W + padding;
+  const rowH = [30, 32, 68];
+  const totalH = rowH[0] + rowH[1] + rowH[2];
+  const yTop0 = 0, yTop1 = rowH[0], yTop2 = rowH[0] + rowH[1], yBot = totalH;
+  const yVarTop = yTop2 + 8, yVarBot = yBot - 8;
+  const ySign = (yTop1 + yTop2) / 2;
+  const yHeader = (yTop0 + yTop1) / 2;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'tkztab-wrap';
+  wrap.style.width = totalW + 'px';
+  wrap.style.height = totalH + 'px';
+
+  const canvas = document.createElement('canvas');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = totalW * dpr;
+  canvas.height = totalH * dpr;
+  canvas.style.width = totalW + 'px';
+  canvas.style.height = totalH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Horizontal lines
+  [yTop0, yTop1, yTop2, yBot].forEach(y => {
+    ctx.beginPath();
+    ctx.moveTo(labelW, y);
+    ctx.lineTo(labelW + (N-1)*W, y);
+    ctx.stroke();
+  });
+
+  // Vertical lines at each x-value
+  for (let i = 0; i < N; i++){
+    const x = labelW + i * W;
+    ctx.beginPath();
+    ctx.moveTo(x, yTop0);
+    ctx.lineTo(x, yBot);
+    ctx.stroke();
+  }
+
+  // Right edge (last x-value line already drawn, but let's add a margin line)
+  // Actually right edge IS the last x-value line.
+
+  wrap.appendChild(canvas);
+
+  // Build label list
+  const labels = [];
+
+  // Row labels
+  ['x', "f'(x)", 'f'].forEach((lab, i) => {
+    const y = i === 0 ? yHeader : i === 1 ? ySign : (yTop2 + yBot) / 2;
+    labels.push({ x: labelW/2, y: y, content: '\\(' + lab + '\\)' });
+  });
+
+  // X-value labels
+  for (let i = 0; i < N; i++){
+    const x = labelW + i * W;
+    let xAdj = x, align = 'center';
+    if (i === 0) xAdj = x + 6;
+    if (i === N-1) xAdj = x - 6;
+    labels.push({ x: xAdj, y: yHeader, content: '\\(' + spec.xValues[i] + '\\)' });
+  }
+
+  // Sign markers at x-values
+  for (let i = 0; i < N; i++){
+    const mark = spec.signMarks[i];
+    const x = labelW + i * W;
+    if (mark === 'd'){
+      ctx.beginPath();
+      ctx.moveTo(x - 2, yTop1 + 4);
+      ctx.lineTo(x - 2, yTop2 - 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + 2, yTop1 + 4);
+      ctx.lineTo(x + 2, yTop2 - 4);
+      ctx.stroke();
+    } else if (mark){
+      labels.push({ x: x, y: ySign, content: '\\(' + mark + '\\)' });
+    }
+  }
+
+  // Sign intervals
+  for (let i = 0; i < N-1; i++){
+    const sign = spec.signIntervals[i];
+    if (sign){
+      labels.push({ x: labelW + (i + 0.5) * W, y: ySign, content: '\\(' + sign + '\\)' });
+    }
+  }
+
+  // Arrows
+  for (let i = 0; i < N-1; i++){
+    const dir = spec.arrowDirs[i];
+    if (!dir) continue;
+    let x1 = labelW + i * W + 5;
+    let x2 = labelW + (i + 1) * W - 5;
+    if (spec.signMarks[i] === 'd') x1 += 8;
+    if (spec.signMarks[i+1] === 'd') x2 -= 8;
+    let y1, y2;
+    if (dir === 'up'){ y1 = yVarBot; y2 = yVarTop; }
+    else { y1 = yVarTop; y2 = yVarBot; }
+    // Line
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    // Arrowhead
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const hLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - hLen * Math.cos(angle - Math.PI/7), y2 - hLen * Math.sin(angle - Math.PI/7));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - hLen * Math.cos(angle + Math.PI/7), y2 - hLen * Math.sin(angle + Math.PI/7));
+    ctx.stroke();
+  }
+
+  // Values in variation
+  spec.values.forEach(v => {
+    const x = labelW + v.pos * W;
+    if (v.marker === 'd'){
+      ctx.beginPath();
+      ctx.moveTo(x - 2, yVarTop + 4);
+      ctx.lineTo(x - 2, yVarBot - 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + 2, yVarTop + 4);
+      ctx.lineTo(x + 2, yVarBot - 4);
+      ctx.stroke();
+    } else {
+      let y = (yVarTop + yVarBot) / 2;
+      if (v.position === 'top') y = yVarTop + 6;
+      if (v.position === 'bottom') y = yVarBot - 6;
+      let xAdj = x;
+      if (v.pos === 0) xAdj = x + 8;
+      if (v.pos === N-1) xAdj = x - 8;
+      labels.push({ x: xAdj, y: y, content: '\\(' + v.value + '\\)' });
+    }
+  });
+
+  // Append label spans
+  labels.forEach(l => {
+    const span = document.createElement('span');
+    span.className = 'tkztab-label';
+    span.style.left = l.x + 'px';
+    span.style.top = l.y + 'px';
+    span.innerHTML = l.content;
+    wrap.appendChild(span);
+  });
+
+  return wrap;
+}
+
+function buildTables(){
+  // Table 1/x
+  const spec1 = {
+    xValues: ['-\\infty', '0', '+\\infty'],
+    signMarks: ['', 'd', ''],
+    signIntervals: ['-', '-'],
+    arrowDirs: ['down', 'down'],
+    values: [
+      { pos: 0, value: '0', position: 'top' },
+      { pos: 1, marker: 'd' },
+      { pos: 2, value: '0', position: 'bottom' }
+    ],
+    W: 120
+  };
+  // Table x + 1/x
+  const spec2 = {
+    xValues: ['-\\infty', '-1', '0', '1', '+\\infty'],
+    signMarks: ['', '0', 'd', '0', ''],
+    signIntervals: ['+', '-', '-', '+'],
+    arrowDirs: ['up', 'down', 'down', 'up'],
+    values: [
+      { pos: 0, value: '-\\infty', position: 'bottom' },
+      { pos: 1, value: '-2', position: 'top' },
+      { pos: 2, marker: 'd' },
+      { pos: 3, value: '2', position: 'bottom' },
+      { pos: 4, value: '+\\infty', position: 'top' }
+    ],
+    W: 80
+  };
+
+  const targets = [
+    { containerId: 'tkztab-f1', spec: spec1 },
+    { containerId: 'tkztab-f2', spec: spec2 },
+    { containerId: 'tkztab-f1b', spec: spec1 },
+    { containerId: 'tkztab-f2b', spec: spec2 }
+  ];
+
+  targets.forEach(({containerId, spec}) => {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    const tbl = renderVariationTable(spec);
+    c.appendChild(tbl);
+  });
+}
+
+// Global hook
+window.__renderAllTables = function(){
+  if (window.__tablesBuilt) return;
+  window.__tablesBuilt = true;
+  buildTables();
+  if (window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise().catch(() => {});
+  }
+};
+
+/* ============================================================
+   LICENCE MODAL
+   ============================================================ */
+const licenseBtn = document.getElementById('license-btn');
+const licenseModal = document.getElementById('license-modal');
+const licenseClose = licenseModal.querySelector('.close');
+let licenseTrigger = null;
+
+function openLicense(){
+  licenseTrigger = document.activeElement;
+  licenseModal.classList.add('open');
+  licenseClose.focus();
+}
+function closeLicense(){
+  licenseModal.classList.remove('open');
+  if (licenseTrigger) licenseTrigger.focus();
+}
+licenseBtn.addEventListener('click', openLicense);
+licenseClose.addEventListener('click', closeLicense);
+licenseModal.addEventListener('click', e => {
+  if (e.target === licenseModal) closeLicense();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && licenseModal.classList.contains('open')) closeLicense();
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  buildMindmap();
+  initGraphPositions();
+  resizeGraphCanvas();
+  bindGraphEvents();
+  window.__resizeGraph = () => { resizeGraphCanvas(); drawGraph(); };
+  graphLoop();
+
+  // Fallback: build tables after a delay if MathJax startup didn't trigger
+  setTimeout(() => {
+    if (!window.__tablesBuilt) window.__renderAllTables();
+  }, 1500);
+});
+</script>
+</body>
+</html>

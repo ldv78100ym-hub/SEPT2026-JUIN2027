@@ -539,7 +539,7 @@ table.data mjx-container{font-size:0.95em !important}
     <h2 id="license-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
     <p><b>Auteur :</b> Yann Merdy (yann.merdy@gmail.com) — octobre 2026</p>
     <p><b>Licence d'Utilisation Non Commerciale</b></p>
-    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« la Fonction Inverse ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« la Carte Joker ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
     <p><b>Conditions :</b></p>
     <ol>
       <li><b>Utilisation Privée et Éducative (Autorisée) :</b> vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
@@ -554,19 +554,38 @@ table.data mjx-container{font-size:0.95em !important}
 /* ============================================================
    UTILITAIRES
    ============================================================ */
+
+/* setTextWithBreaks :
+   - Préserve les expressions LaTeX \(...\) (elles ne sont pas coupées)
+   - Insère un <br> après chaque "." et ":" rencontré hors LaTeX
+   - Supprime un éventuel <br> final
+   - Affecte le résultat à innerHTML (MathJax rendra les formules) */
 function setTextWithBreaks(el, text){
-  el.innerHTML = '';
-  const parts = text.split(/([.:])/);
-  for (let i = 0; i < parts.length; i++){
-    el.appendChild(document.createTextNode(parts[i]));
-    if (parts[i] === '.' || parts[i] === ':'){
-      // Not used: we want to keep punctuation inline but allow wrap
+  let result = '';
+  let depth = 0;
+  let i = 0;
+  while (i < text.length){
+    if (text[i] === '\\' && i + 1 < text.length && text[i+1] === '('){
+      depth++;
+      result += '\\(';
+      i += 2;
+    } else if (text[i] === '\\' && i + 1 < text.length && text[i+1] === ')' && depth > 0){
+      depth--;
+      result += '\\)';
+      i += 2;
+    } else {
+      const ch = text[i];
+      result += ch;
+      if (depth === 0 && (ch === '.' || ch === ':')){
+        result += '<br>';
+      }
+      i++;
     }
   }
-}
-
-function normalizeTex(s){
-  return s.replace(/\\frac/g, '\\dfrac');
+  while (result.endsWith('<br>')){
+    result = result.slice(0, -4);
+  }
+  el.innerHTML = result;
 }
 
 /* ============================================================
@@ -589,7 +608,7 @@ navButtons.forEach(btn => {
    HOVER MODAL (persistance de survol)
    ============================================================ */
 const hoverModal = document.getElementById('hover-modal');
-let hoverTimer = null, graceTimer = null;
+let graceTimer = null;
 
 function cancelHide(){ if (graceTimer){ clearTimeout(graceTimer); graceTimer = null; } }
 function scheduleHide(){
@@ -609,7 +628,6 @@ function positionAndShow(trigger, buildContent){
   if (window.MathJax && MathJax.typesetPromise){
     MathJax.typesetPromise([hoverModal]).catch(() => {});
   }
-  // Position
   const r = trigger.getBoundingClientRect();
   const mw = Math.min(window.innerWidth * 0.92, 520);
   const mh = Math.min(window.innerHeight * 0.88, hoverModal.offsetHeight || 400);
@@ -633,11 +651,11 @@ const mindmapData = {
   center: {
     title: "Fonction inverse",
     x: 500, y: 425,
-    desc: "f(x) = 1/x, définie sur ℝ*. Impaire. Décroissante sur ]-∞,0[ et sur ]0,+∞[. Dérivée f'(x) = -1/x². Asymptotes x = 0 et y = 0."
+    desc: "Fonction \\(f(x) = \\dfrac{1}{x}\\), définie sur \\(\\mathbb{R}^*\\). Impaire. Décroissante sur \\(\\left]-\\infty,0\\right[\\) et sur \\(\\left]0,+\\infty\\right[\\). Dérivée \\(f'(x) = -\\dfrac{1}{x^{2}}\\). Asymptotes \\(x = 0\\) et \\(y = 0\\)."
   },
   branches: [
     { id:'DEF', label:"Définition", angle: 90,
-      desc: "f(x) = 1/x, définie sur ℝ* = ℝ\\{0}.",
+      desc: "\\(f(x) = \\dfrac{1}{x}\\), définie sur \\(\\mathbb{R}^* = \\mathbb{R}\\setminus\\{0\\}\\).",
       leaves: [
         { id:'Ld1', label:"f(x)=1/x", short:"f(x)=1/x",
           content:"<h4>Expression</h4><p>Pour tout \\(x\\neq 0\\), \\(f(x)=\\dfrac{1}{x}\\).</p><p>Exemples : \\(f(2)=0{,}5\\) ; \\(f(-4)=-0{,}25\\).</p>" },
@@ -647,7 +665,7 @@ const mindmapData = {
           content:"<h4>Parité</h4><p>Pour tout \\(x\\neq 0\\) : \\(f(-x) = -f(x)\\).</p><p>La courbe est symétrique par rapport à l'origine \\(O\\).</p>" }
       ]},
     { id:'DER', label:"Dérivée", angle: 30,
-      desc: "f'(x) = -1/x², strictement négative sur ℝ*.",
+      desc: "\\(f'(x) = -\\dfrac{1}{x^{2}}\\), strictement négative sur \\(\\mathbb{R}^*\\).",
       leaves: [
         { id:'Lr1', label:"f'(x)=-1/x²", short:"f'(x) = -1/x²",
           content:"<h4>Dérivée</h4><p>\\(f'(x) = -\\dfrac{1}{x^{2}}\\) pour tout \\(x\\neq 0\\).</p><p>Formule de puissance : \\((x^{n})' = n\\,x^{n-1}\\) avec \\(n=-1\\).</p>" },
@@ -657,17 +675,17 @@ const mindmapData = {
           content:"<h4>Généralisation</h4><p>Si \\(v\\) est dérivable et ne s'annule pas :</p><p>\\[\\left(\\dfrac{1}{v}\\right)' = -\\dfrac{v'}{v^{2}}\\]</p>" }
       ]},
     { id:'VAR', label:"Variations", angle: -30,
-      desc: "Décroissante sur ]-∞,0[ et sur ]0,+∞[.",
+      desc: "Décroissante sur \\(\\left]-\\infty,0\\right[\\) et sur \\(\\left]0,+\\infty\\right[\\).",
       leaves: [
         { id:'Lv1', label:"↘ sur ]-∞,0[", short:"↘ sur ]-∞,0[",
-          content:"<h4>Décroissance sur ]-∞,0[</h4><p>\\(f'\\) est strictement négative sur \\(\\left]-\\infty,0\\right[\\) donc \\(f\\) est strictement décroissante sur cet intervalle.</p>" },
+          content:"<h4>Décroissance sur \\(\\left]-\\infty,0\\right[\\)</h4><p>\\(f'\\) est strictement négative sur \\(\\left]-\\infty,0\\right[\\) donc \\(f\\) est strictement décroissante sur cet intervalle.</p>" },
         { id:'Lv2', label:"↘ sur ]0,+∞[", short:"↘ sur ]0,+∞[",
-          content:"<h4>Décroissance sur ]0,+∞[</h4><p>\\(f'\\) est strictement négative sur \\(\\left]0,+\\infty\\right[\\) donc \\(f\\) est strictement décroissante sur cet intervalle.</p>" },
+          content:"<h4>Décroissance sur \\(\\left]0,+\\infty\\right[\\)</h4><p>\\(f'\\) est strictement négative sur \\(\\left]0,+\\infty\\right[\\) donc \\(f\\) est strictement décroissante sur cet intervalle.</p>" },
         { id:'Lv3', label:"Pas globalement", short:"Pas globalement",
           content:"<h4>Attention</h4><p>\\(f\\) n'est PAS décroissante sur \\(\\mathbb{R}^*\\) tout entier :</p><p>\\(-1 < 1\\) mais \\(f(-1) = -1 < f(1) = 1\\).</p>" }
       ]},
     { id:'ASY', label:"Asymptotes", angle: -90,
-      desc: "x = 0 (verticale) et y = 0 (horizontale).",
+      desc: "\\(x = 0\\) (verticale) et \\(y = 0\\) (horizontale).",
       leaves: [
         { id:'La1', label:"x = 0 verticale", short:"x = 0",
           content:"<h4>Asymptote verticale</h4><p>\\(x=0\\) : \\(\\displaystyle\\lim_{x\\to 0^{+}} f(x) = +\\infty\\) et \\(\\displaystyle\\lim_{x\\to 0^{-}} f(x) = -\\infty\\).</p>" },
@@ -682,17 +700,17 @@ const mindmapData = {
         { id:'Le1', label:"Coût moyen", short:"Coût moyen",
           content:"<h4>Coût moyen</h4><p>Pour \\(q>0\\) unités : \\(CM(q) = \\dfrac{C(q)}{q}\\).</p><p>Décomposition : \\(CM(q) = \\dfrac{C_f}{q} + \\dfrac{C_v(q)}{q}\\).</p>" },
         { id:'Le2', label:"Prix unitaire", short:"Prix unitaire",
-          content:"<h4>Prix unitaire</h4><p>Terme en \\(1/q\\) fréquent en économie : lorsque les charges fixes \\(C_f\\) se répartissent sur \\(q\\) unités, le coût unitaire contient un terme \\(C_f/q\\).</p>" },
+          content:"<h4>Prix unitaire</h4><p>Terme en \\(\\dfrac{1}{q}\\) fréquent en économie. Lorsque les charges fixes \\(C_f\\) se répartissent sur \\(q\\) unités, le coût unitaire contient un terme \\(\\dfrac{C_f}{q}\\).</p>" },
         { id:'Le3', label:"Économie d'échelle", short:"Éco. d'échelle",
-          content:"<h4>Économie d'échelle</h4><p>Quand \\(q\\) augmente, \\(C_f/q \\to 0\\), donc \\(CM(q)\\) diminue : les charges fixes sont amorties sur plus d'unités.</p>" }
+          content:"<h4>Économie d'échelle</h4><p>Quand \\(q\\) augmente, \\(\\dfrac{C_f}{q} \\to 0\\), donc \\(CM(q)\\) diminue : les charges fixes sont amorties sur plus d'unités.</p>" }
       ]},
     { id:'POL', label:"Polynômes", angle: 150,
-      desc: "Fonctions de la forme ax+b+c/x.",
+      desc: "Fonctions de la forme \\(ax + b + \\dfrac{c}{x}\\).",
       leaves: [
         { id:'Lp1', label:"ax+b+c/x", short:"ax+b+c/x",
-          content:"<h4>Fonctions \\(ax+b+\\dfrac{c}{x}\\)</h4><p>Somme d'une fonction affine \\((ax+b)\\) et d'une fonction inverse \\((c/x)\\).</p><p>Définie sur \\(\\mathbb{R}^*\\) (avec \\(a\\neq 0\\), \\(c\\neq 0\\)).</p>" },
+          content:"<h4>Fonctions \\(ax+b+\\dfrac{c}{x}\\)</h4><p>Somme d'une fonction affine \\(\\left(ax+b\\right)\\) et d'une fonction inverse \\(\\left(\\dfrac{c}{x}\\right)\\).</p><p>Définie sur \\(\\mathbb{R}^*\\) avec \\(a\\neq 0\\) et \\(c\\neq 0\\).</p>" },
         { id:'Lp2', label:"f' = a - c/x²", short:"f' = a - c/x²",
-          content:"<h4>Dérivée</h4><p>\\[f'(x) = a-\\dfrac{c}{x^{2}} = \\dfrac{ax^{2}-c}{x^{2}}\\]</p><p>Signe = signe de \\(ax^{2}-c\\).</p>" },
+          content:"<h4>Dérivée</h4><p>\\[f'(x) = a-\\dfrac{c}{x^{2}} = \\dfrac{ax^{2}-c}{x^{2}}\\]</p><p>Signe égal au signe de \\(ax^{2}-c\\).</p>" },
         { id:'Lp3', label:"Asymptote oblique", short:"Asymptote oblique",
           content:"<h4>Asymptote oblique</h4><p>La droite \\(y = ax+b\\) est asymptote oblique à la courbe de \\(f\\) en \\(\\pm\\infty\\).</p>" }
       ]}
@@ -736,7 +754,6 @@ function buildMindmap(){
     });
   });
 
-  // Create SVG groups for edges first (so nodes are on top)
   const gEdges = document.createElementNS(mmNS, 'g');
   gEdges.setAttribute('id', 'mm-edges');
   mmSvg.appendChild(gEdges);
@@ -759,7 +776,7 @@ function buildMindmap(){
     g.dataset.id = id;
     g.style.cursor = 'grab';
 
-    let shape, text;
+    let text;
     if (n.kind === 'center'){
       const circle = document.createElementNS(mmNS, 'circle');
       circle.setAttribute('class', 'mm-center');
@@ -813,7 +830,7 @@ function buildMindmap(){
 
     gNodes.appendChild(g);
 
-    // Hover modal
+    /* Hover modal */
     g.addEventListener('mouseenter', () => {
       if (mmDrag) return;
       const isLeaf = n.kind === 'leaf';
@@ -829,12 +846,17 @@ function buildMindmap(){
           h.textContent = title;
           el.appendChild(h);
           const p = document.createElement('p');
-          p.textContent = n.data.desc;
+          setTextWithBreaks(p, n.data.desc);
           el.appendChild(p);
           const ul = document.createElement('ul');
           n.data.leaves.forEach(lf => {
             const li = document.createElement('li');
-            li.textContent = lf.label;
+            const match = lf.content.match(/<h4>(.*?)<\/h4>/);
+            if (match){
+              li.innerHTML = match[1];
+            } else {
+              li.textContent = lf.label;
+            }
             ul.appendChild(li);
           });
           el.appendChild(ul);
@@ -843,14 +865,14 @@ function buildMindmap(){
           h.textContent = 'Fonction inverse';
           el.appendChild(h);
           const p = document.createElement('p');
-          p.textContent = n.data.desc;
+          setTextWithBreaks(p, n.data.desc);
           el.appendChild(p);
         }
       });
     });
     g.addEventListener('mouseleave', scheduleHide);
 
-    // Drag
+    /* Drag */
     g.addEventListener('pointerdown', e => {
       e.preventDefault();
       mmDrag = { id: id, pointerId: e.pointerId, moved: false };
@@ -865,12 +887,6 @@ function buildMindmap(){
       const p = pt.matrixTransform(mmSvg.getScreenCTM().inverse());
       mmState.nodes[id].x = p.x;
       mmState.nodes[id].y = p.y;
-      // If it's a branch, move its leaves along
-      if (n.kind === 'branch'){
-        const dx = p.x - mmState.nodes[id].x;
-        const dy = p.y - mmState.nodes[id].y;
-        // nothing — just moved branch
-      }
       renderMindmap();
     });
     g.addEventListener('pointerup', e => {
@@ -887,7 +903,6 @@ function buildMindmap(){
 }
 
 function renderMindmap(){
-  // Edges
   document.querySelectorAll('#mm-edges line').forEach(line => {
     const from = mmState.nodes[line.dataset.from];
     const to = mmState.nodes[line.dataset.to];
@@ -897,7 +912,6 @@ function renderMindmap(){
     line.setAttribute('x2', to.x);
     line.setAttribute('y2', to.y);
   });
-  // Nodes
   document.querySelectorAll('#mm-nodes .mm-node').forEach(g => {
     const n = mmState.nodes[g.dataset.id];
     if (!n) return;
@@ -910,21 +924,21 @@ function renderMindmap(){
    ============================================================ */
 const graphNodes = [
   { id:'FI',  label:'Fonction inverse', x: 0, y: 0, color:'#3b82c4', type:'concept',
-    desc:'f(x) = 1/x, définie sur ℝ* = ]-∞,0[∪]0,+∞[. Impaire, décroissante sur chaque intervalle. Dérivée f\'(x) = -1/x². Asymptotes x = 0 et y = 0.' },
+    desc:"\\(f(x) = \\dfrac{1}{x}\\), définie sur \\(\\mathbb{R}^* = \\left]-\\infty,0\\right[\\cup\\left]0,+\\infty\\right[\\). Impaire, décroissante sur chaque intervalle. Dérivée \\(f'(x) = -\\dfrac{1}{x^{2}}\\). Asymptotes \\(x = 0\\) et \\(y = 0\\)." },
   { id:'DEF', label:'Définition / domaine', x: 0, y: -260, color:'#4caf50', type:'math',
-    desc:'Domaine ℝ*. Parité : f(-x) = -f(x) (impaire). Courbe : hyperbole symétrique par rapport à l\'origine.' },
+    desc:"Domaine \\(\\mathbb{R}^*\\). La fonction est impaire (\\(f(-x) = -f(x)\\)). Sa courbe est une hyperbole symétrique par rapport à l'origine \\(O\\)." },
   { id:'DER', label:'Dérivée', x: 300, y: -160, color:'#4caf50', type:'math',
-    desc:'f\'(x) = -1/x², strictement négative sur ℝ*. Formule générale : (1/v)\' = -v\'/v².' },
+    desc:"\\(f'(x) = -\\dfrac{1}{x^{2}}\\), strictement négative sur \\(\\mathbb{R}^*\\). Formule générale \\(\\left(\\dfrac{1}{v}\\right)' = -\\dfrac{v'}{v^{2}}\\)." },
   { id:'VAR', label:'Variations', x: 340, y: 0, color:'#4caf50', type:'math',
-    desc:'Strictement décroissante sur ]-∞,0[ et sur ]0,+∞[. Pas globalement décroissante sur ℝ*.' },
+    desc:"Strictement décroissante sur \\(\\left]-\\infty,0\\right[\\) et sur \\(\\left]0,+\\infty\\right[\\). Pas globalement décroissante sur \\(\\mathbb{R}^*\\)." },
   { id:'ASY', label:'Asymptotes', x: 300, y: 160, color:'#4caf50', type:'math',
-    desc:'Asymptote verticale x = 0. Asymptote horizontale y = 0. Pour ax+b+c/x : asymptote oblique y = ax+b.' },
+    desc:"Asymptote verticale \\(x = 0\\). Asymptote horizontale \\(y = 0\\). Pour \\(ax + b + \\dfrac{c}{x}\\), asymptote oblique \\(y = ax + b\\)." },
   { id:'COU', label:'Hyperbole', x: 0, y: 260, color:'#3b82c4', type:'concept',
-    desc:'Courbe de la fonction inverse. Deux branches symétriques par rapport à O. Asymptotes x = 0 et y = 0.' },
+    desc:"Courbe de la fonction inverse. Deux branches symétriques par rapport à \\(O\\). Asymptotes \\(x = 0\\) et \\(y = 0\\)." },
   { id:'ECO', label:'Économie', x: -300, y: 160, color:'#d97a1a', type:'app',
-    desc:'Coût moyen CM(q) = C_f/q + c. Prix unitaire avec terme en 1/q. Économie d\'échelle : CM baisse quand q augmente.' },
+    desc:"Coût moyen \\(CM(q) = \\dfrac{C_f}{q} + c\\). Prix unitaire avec terme en \\(\\dfrac{1}{q}\\). Économie d'échelle, car \\(CM(q)\\) diminue quand \\(q\\) augmente." },
   { id:'POL', label:'Polynômes', x: -300, y: -160, color:'#d97a1a', type:'app',
-    desc:'Fonctions ax+b+c/x. Dérivée f\'(x) = a - c/x². Asymptote oblique y = ax+b. Cas remarquable : x + 1/x.' }
+    desc:"Fonctions \\(ax + b + \\dfrac{c}{x}\\). Dérivée \\(f'(x) = a - \\dfrac{c}{x^{2}}\\). Asymptote oblique \\(y = ax + b\\). Cas remarquable \\(x + \\dfrac{1}{x}\\)." }
 ];
 
 const graphLinks = [
@@ -944,10 +958,10 @@ const graphLinks = [
 const graphCanvas = document.getElementById('graph-canvas');
 const gctx = graphCanvas.getContext('2d');
 let gW = 0, gH = 0, gScale = 1, gCx = 0, gCy = 0;
-let gHoverNode = null, gDragNode = null, gDragStart = null;
+let gHoverNode = null, gDragNode = null;
 let gAnimationId = null;
 
-const gPositions = {}; // id -> {x, y} in "layout units"
+const gPositions = {};
 
 function initGraphPositions(){
   graphNodes.forEach(n => { gPositions[n.id] = { x: n.x, y: n.y, vx: 0, vy: 0 }; });
@@ -963,7 +977,6 @@ function resizeGraphCanvas(){
   graphCanvas.style.width = gW + 'px';
   graphCanvas.style.height = gH + 'px';
   gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  // Compute scale to fit ~1000x800 layout in canvas
   gScale = Math.min(gW / 1000, gH / 800) * 0.82;
   gCx = gW / 2; gCy = gH / 2;
 }
@@ -984,7 +997,6 @@ function stepForces(){
   const anchorTargets = {};
   graphNodes.forEach(n => { anchorTargets[n.id] = { x: n.x, y: n.y }; });
 
-  // Repulsion between all pairs
   for (let i = 0; i < graphNodes.length; i++){
     for (let j = i + 1; j < graphNodes.length; j++){
       const a = graphNodes[i], b = graphNodes[j];
@@ -999,7 +1011,6 @@ function stepForces(){
       pb.vx -= fx; pb.vy -= fy;
     }
   }
-  // Springs along links
   graphLinks.forEach(l => {
     const pa = gPositions[l.from], pb = gPositions[l.to];
     if (!pa || !pb) return;
@@ -1010,7 +1021,6 @@ function stepForces(){
     pa.vx += fx; pa.vy += fy;
     pb.vx -= fx; pb.vy -= fy;
   });
-  // Anchors + damping
   graphNodes.forEach(n => {
     const p = gPositions[n.id];
     const t = anchorTargets[n.id];
@@ -1023,7 +1033,6 @@ function stepForces(){
 
 function drawGraph(){
   gctx.clearRect(0, 0, gW, gH);
-  // Links
   graphLinks.forEach(l => {
     const pa = gPositions[l.from], pb = gPositions[l.to];
     if (!pa || !pb) return;
@@ -1036,9 +1045,7 @@ function drawGraph(){
     gctx.moveTo(A.sx, A.sy);
     gctx.lineTo(B.sx, B.sy);
     gctx.stroke();
-    // Label
     const mx = (A.sx + B.sx) / 2, my = (A.sy + B.sy) / 2;
-    gctx.fillStyle = hovered ? '#7a4a12' : 'rgba(80,60,40,0.75)';
     gctx.font = '11px Segoe UI, system-ui, sans-serif';
     gctx.textAlign = 'center';
     gctx.textBaseline = 'middle';
@@ -1049,7 +1056,6 @@ function drawGraph(){
     gctx.fillText(l.label, mx, my);
   });
 
-  // Nodes
   graphNodes.forEach(n => {
     const p = gPositions[n.id];
     const P = layoutToScreen(p.x, p.y);
@@ -1059,7 +1065,6 @@ function drawGraph(){
 
     gctx.globalAlpha = opacity;
     const radius = isHover ? 44 : 38;
-    // Shadow
     gctx.beginPath();
     gctx.arc(P.sx, P.sy, radius, 0, Math.PI * 2);
     gctx.fillStyle = n.color;
@@ -1067,13 +1072,11 @@ function drawGraph(){
     gctx.lineWidth = 2;
     gctx.strokeStyle = isHover ? '#7a4a12' : 'rgba(0,0,0,0.2)';
     gctx.stroke();
-    // Label
     gctx.fillStyle = '#fff';
     gctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
     gctx.textAlign = 'center';
     gctx.textBaseline = 'middle';
     const words = n.label.split(' ');
-    // Simple wrap
     const lines = [];
     let line = '';
     words.forEach(w => {
@@ -1131,7 +1134,6 @@ function bindGraphEvents(){
     const node = findNodeAt(pt.x, pt.y);
     if (node && (!gHoverNode || gHoverNode !== node.id)){
       gHoverNode = node.id;
-      // Show modal
       positionAndShow(graphCanvas, el => {
         el.innerHTML = '';
         const h = document.createElement('h4');
@@ -1140,7 +1142,6 @@ function bindGraphEvents(){
         const p = document.createElement('p');
         setTextWithBreaks(p, node.desc);
         el.appendChild(p);
-        // Connections
         const conns = graphLinks.filter(l => l.from === node.id || l.to === node.id);
         if (conns.length){
           const h2 = document.createElement('h4');
@@ -1158,12 +1159,8 @@ function bindGraphEvents(){
           });
           el.appendChild(ul);
         }
-        if (window.MathJax && MathJax.typesetPromise){
-          MathJax.typesetPromise([el]).catch(() => {});
-        }
       });
     } else if (!node && gHoverNode){
-      // Keep modal open; only start grace timer
       scheduleHide();
       gHoverNode = null;
     }
@@ -1179,7 +1176,6 @@ function bindGraphEvents(){
     const node = findNodeAt(pt.x, pt.y);
     if (node){
       gDragNode = node;
-      gDragStart = { x: e.clientX, y: e.clientY };
       graphCanvas.style.cursor = 'grabbing';
       e.preventDefault();
     }
@@ -1190,7 +1186,6 @@ function bindGraphEvents(){
       graphCanvas.style.cursor = 'grab';
     }
   });
-  // Touch
   graphCanvas.addEventListener('touchstart', e => {
     if (e.touches.length === 1){
       const t = e.touches[0];
@@ -1222,7 +1217,6 @@ function bindGraphEvents(){
     graphCanvas.style.cursor = 'grab';
   });
 
-  // Resize
   const ro = new ResizeObserver(() => {
     resizeGraphCanvas();
     drawGraph();
@@ -1264,7 +1258,6 @@ function renderVariationTable(spec){
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  // Horizontal lines
   [yTop0, yTop1, yTop2, yBot].forEach(y => {
     ctx.beginPath();
     ctx.moveTo(labelW, y);
@@ -1272,7 +1265,6 @@ function renderVariationTable(spec){
     ctx.stroke();
   });
 
-  // Vertical lines at each x-value
   for (let i = 0; i < N; i++){
     const x = labelW + i * W;
     ctx.beginPath();
@@ -1281,30 +1273,23 @@ function renderVariationTable(spec){
     ctx.stroke();
   }
 
-  // Right edge (last x-value line already drawn, but let's add a margin line)
-  // Actually right edge IS the last x-value line.
-
   wrap.appendChild(canvas);
 
-  // Build label list
   const labels = [];
 
-  // Row labels
   ['x', "f'(x)", 'f'].forEach((lab, i) => {
     const y = i === 0 ? yHeader : i === 1 ? ySign : (yTop2 + yBot) / 2;
     labels.push({ x: labelW/2, y: y, content: '\\(' + lab + '\\)' });
   });
 
-  // X-value labels
   for (let i = 0; i < N; i++){
     const x = labelW + i * W;
-    let xAdj = x, align = 'center';
+    let xAdj = x;
     if (i === 0) xAdj = x + 6;
     if (i === N-1) xAdj = x - 6;
     labels.push({ x: xAdj, y: yHeader, content: '\\(' + spec.xValues[i] + '\\)' });
   }
 
-  // Sign markers at x-values
   for (let i = 0; i < N; i++){
     const mark = spec.signMarks[i];
     const x = labelW + i * W;
@@ -1322,7 +1307,6 @@ function renderVariationTable(spec){
     }
   }
 
-  // Sign intervals
   for (let i = 0; i < N-1; i++){
     const sign = spec.signIntervals[i];
     if (sign){
@@ -1330,7 +1314,6 @@ function renderVariationTable(spec){
     }
   }
 
-  // Arrows
   for (let i = 0; i < N-1; i++){
     const dir = spec.arrowDirs[i];
     if (!dir) continue;
@@ -1341,12 +1324,10 @@ function renderVariationTable(spec){
     let y1, y2;
     if (dir === 'up'){ y1 = yVarBot; y2 = yVarTop; }
     else { y1 = yVarTop; y2 = yVarBot; }
-    // Line
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
-    // Arrowhead
     const angle = Math.atan2(y2 - y1, x2 - x1);
     const hLen = 8;
     ctx.beginPath();
@@ -1357,7 +1338,6 @@ function renderVariationTable(spec){
     ctx.stroke();
   }
 
-  // Values in variation
   spec.values.forEach(v => {
     const x = labelW + v.pos * W;
     if (v.marker === 'd'){
@@ -1380,7 +1360,6 @@ function renderVariationTable(spec){
     }
   });
 
-  // Append label spans
   labels.forEach(l => {
     const span = document.createElement('span');
     span.className = 'tkztab-label';
@@ -1394,7 +1373,6 @@ function renderVariationTable(spec){
 }
 
 function buildTables(){
-  // Table 1/x
   const spec1 = {
     xValues: ['-\\infty', '0', '+\\infty'],
     signMarks: ['', 'd', ''],
@@ -1407,7 +1385,6 @@ function buildTables(){
     ],
     W: 120
   };
-  // Table x + 1/x
   const spec2 = {
     xValues: ['-\\infty', '-1', '0', '1', '+\\infty'],
     signMarks: ['', '0', 'd', '0', ''],
@@ -1438,7 +1415,6 @@ function buildTables(){
   });
 }
 
-// Global hook
 window.__renderAllTables = function(){
   if (window.__tablesBuilt) return;
   window.__tablesBuilt = true;
@@ -1485,7 +1461,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.__resizeGraph = () => { resizeGraphCanvas(); drawGraph(); };
   graphLoop();
 
-  // Fallback: build tables after a delay if MathJax startup didn't trigger
   setTimeout(() => {
     if (!window.__tablesBuilt) window.__renderAllTables();
   }, 1500);

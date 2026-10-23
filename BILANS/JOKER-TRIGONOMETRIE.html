@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte Joker — Trigonométrie</title>
+
+<!-- ============ MATHJAX 3 ============ -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']]
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* ============================================================
+   VARIABLES & RESET
+   ============================================================ */
+:root{
+  --bg:        #f4efe6;
+  --panel:     #fffdf9;
+  --ink:       #2b2b2b;
+  --muted:     #6b6257;
+  --gold:      #b8860b;
+  --orange:    #d97a1a;
+  --orange-d:  #a85a10;
+  --line:      #e2d6c3;
+  --line-soft: #efe7d8;
+  --shadow:    0 6px 24px rgba(90, 68, 25, .10);
+  --shadow-sm: 0 2px 10px rgba(90, 68, 25, .07);
+  --radius:    14px;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  background:
+     radial-gradient(circle at 12% 8%, #fff8ec 0%, transparent 45%),
+     radial-gradient(circle at 88% 92%, #f8efdd 0%, transparent 45%),
+     var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============================================================
+   CONTRÔLE STRICT DE LA TAILLE DES FORMULES MATHJAX
+   ============================================================ */
+mjx-container {
+  font-size: 1.05em !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+mjx-container[display="true"] {
+  font-size: 1.1em !important;
+  margin: 0.4em 0 !important;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+h1 mjx-container, h2 mjx-container, h3 mjx-container {
+  font-size: 1em !important;
+}
+table.data mjx-container {
+  font-size: 0.95em !important;
+}
+.note mjx-container {
+  font-size: 1em !important;
+}
+
+/* ============================================================
+   MENU VERTICAL
+   ============================================================ */
+.sidebar{
+  position:fixed; inset:0 auto 0 0; width:240px;
+  background:linear-gradient(170deg,#332d26 0%, #241f1a 55%, #1b1713 100%);
+  color:#f0e6d6;
+  padding:22px 14px 28px;
+  overflow-y:auto;
+  box-shadow:5px 0 26px rgba(0,0,0,.20);
+  z-index:100;
+}
+.sidebar .brand{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding-bottom:16px; margin-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.sidebar .brand .crown{ width:56px; height:auto; }
+.sidebar .brand h1{
+  font-size:.88rem; margin:0; letter-spacing:.10em;
+  text-transform:uppercase; color:#f3d9a8; font-weight:600;
+}
+.sidebar .brand p{
+  margin:0; font-size:.66rem; letter-spacing:.16em;
+  text-transform:uppercase; color:#9a8b76;
+}
+.nav-btn{
+  display:flex; align-items:center; gap:11px;
+  width:100%; padding:11px 12px; margin-bottom:7px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  color:#dfd3c1; font:inherit; font-size:.86rem; text-align:left;
+  cursor:pointer; transition:.20s ease;
+}
+.nav-btn .num{
+  display:grid; place-items:center;
+  width:24px; height:24px; flex:0 0 24px;
+  border-radius:7px; font-size:.74rem; font-weight:700;
+  background:rgba(217,122,26,.18); color:#f0a94e;
+  transition:.20s ease;
+}
+.nav-btn:hover{ background:rgba(255,255,255,.08); color:#fff; transform:translateX(2px); }
+.nav-btn.active{
+  background:linear-gradient(95deg, rgba(217,122,26,.30), rgba(217,122,26,.10));
+  border-color:rgba(240,169,78,.55);
+  color:#fff;
+  box-shadow:0 0 0 1px rgba(240,169,78,.18) inset;
+}
+.nav-btn.active .num{ background:var(--orange); color:#fff; }
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+main{
+  margin-left:240px;
+  padding:24px 30px 70px;
+  min-height:100vh;
+}
+.panel{ display:none; animation:fade .30s ease both; }
+.panel.active{ display:block; }
+@keyframes fade{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+.wrap{ max-width:1100px; margin:0 auto; }
+.wrap-wide{ max-width:1400px; margin:0 auto; }
+
+/* ---- Cartes / sections ---- */
+article.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  padding:18px 22px 22px;
+  margin-bottom:18px;
+}
+article.card > h2{
+  margin:0 0 14px;
+  font-size:1.05rem;
+  color:#7a4a12;
+  letter-spacing:.01em;
+  padding-bottom:8px;
+  border-bottom:2px solid var(--line-soft);
+  display:flex; align-items:center; gap:9px;
+  flex-wrap:wrap;
+}
+article.card > h2 .badge{
+  display:grid; place-items:center;
+  width:24px; height:24px; border-radius:7px;
+  background:linear-gradient(140deg,#e79a3d,#c96b12);
+  color:#fff; font-size:.74rem; font-weight:700;
+  box-shadow:0 3px 8px rgba(201,107,18,.30);
+  flex:0 0 24px;
+}
+h3{ font-size:.95rem; color:#8a5a18; margin:16px 0 8px; }
+
+/* ---- Notes / encadrés ---- */
+.note{
+  background:linear-gradient(160deg,#fffbf2,#fdf4e3);
+  border:1px solid #eddcc0;
+  border-left:4px solid var(--orange);
+  border-radius:10px;
+  padding:12px 14px;
+  margin:10px 0;
+}
+.note h3{ margin-top:0; margin-bottom:6px; font-size:.92rem; }
+.note p{ margin:4px 0; }
+.note.blue{ border-left-color:#2a7f9e; background:linear-gradient(160deg,#f4fafd,#eaf4f9); border-color:#c8e2ee;}
+.note.blue h3{ color:#1d6d8a; }
+.note.green{ border-left-color:#1e8449; background:linear-gradient(160deg,#f4fbf6,#e9f7ee); border-color:#c6e6d2;}
+.note.green h3{ color:#166b3a; }
+
+.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.three-col{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+@media (max-width:900px){ .two-col,.three-col{ grid-template-columns:1fr; } }
+
+ul.clean{ margin:6px 0; padding-left:19px; }
+ul.clean li{ margin:3px 0; }
+ol.clean{ margin:6px 0; padding-left:20px; }
+ol.clean li{ margin:3px 0; }
+
+/* ---- Tableaux ---- */
+table.data{
+  border-collapse:collapse;
+  width:100%;
+  margin:10px 0;
+  font-size:.86rem;
+  background:#fff;
+  border-radius:9px;
+  overflow:hidden;
+  box-shadow:0 1px 0 var(--line);
+}
+table.data th, table.data td{
+  border:1px solid var(--line);
+  padding:6px 9px;
+  text-align:center;
+  vertical-align:middle;
+}
+table.data thead th{
+  background:linear-gradient(#fdf3e2,#f7e7cd);
+  color:#7a4a12;
+  font-weight:600;
+  letter-spacing:.02em;
+}
+table.data tbody tr:nth-child(even){ background:#fbf7f0; }
+table.data tbody tr:hover{ background:#fdf0d9; }
+table.data td.left{ text-align:left; }
+table.data th.left{ text-align:left; }
+.table-scroll{ overflow-x:auto; }
+
+/* ============================================================
+   FIGURES — CORRECTION DU DÉBORDEMENT DES FORMULES
+   ============================================================ */
+figure{
+  margin:16px auto;
+  padding:10px;
+  background:linear-gradient(160deg,#fffdf8,#fbf5e9);
+  border:1px solid var(--line-soft);
+  border-radius:10px;
+  max-width:460px;
+}
+
+figure > svg,
+figure > div > svg{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+figcaption{
+  text-align:center; font-size:.78rem; color:var(--muted);
+  margin-top:6px; font-style:italic;
+}
+
+figcaption mjx-container{
+  font-size:0.95em !important;
+}
+figcaption mjx-container svg,
+figcaption > svg{
+  width:auto !important;
+  height:auto !important;
+  max-width:100%;
+  display:inline-block;
+  vertical-align:middle;
+}
+
+/* ============================================================
+   HERO — CARTE JOKER
+   ============================================================ */
+.hero{
+  display:flex; align-items:center; gap:26px;
+  flex-wrap:wrap;
+  padding:18px 22px;
+  margin-bottom:18px;
+  border-radius:var(--radius);
+  background:linear-gradient(135deg,#3a342d,#2a2521 55%,#211d19);
+  box-shadow:var(--shadow);
+  border:1px solid #4a4139;
+}
+.joker-card{
+  position:relative;
+  width:160px; height:160px; flex:0 0 160px;
+  border-radius:50%;
+  background:radial-gradient(circle at 34% 26%, #b9b7b4, #8f8d8a 58%, #77746f 100%);
+  box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 0 3px #c9c6c1, inset 0 0 0 10px #93918d;
+  display:grid; place-items:center;
+  overflow:hidden;
+}
+.joker-card::after{
+  content:""; position:absolute; inset:14px;
+  border:1.5px dashed rgba(255,255,255,.55);
+  border-radius:50%;
+}
+.joker-card .inner{
+  position:relative; z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.joker-card .crown{ width:80px; height:auto; }
+.joker-card .bang{ width:14px; height:38px; margin-top:2px; }
+.joker-card .lines{
+  text-align:center; line-height:1.05; margin-top:4px;
+}
+.joker-card .l1{
+  font-family:Georgia, "Times New Roman", serif;
+  font-size:.95rem; color:#e8842a; letter-spacing:.02em;
+}
+.joker-card .l2{
+  font-family:Georgia, "Times New Roman", serif;
+  font-size:1.0rem; color:#2f2f2f; letter-spacing:.01em;
+}
+.hero-text h1{
+  margin:0 0 6px; font-size:1.45rem; color:#f5e7ce; letter-spacing:.01em;
+}
+.hero-text h1 span{ color:#f0a94e; }
+.hero-text p{ margin:0; color:#c3b7a6; max-width:620px; font-size:.88rem; }
+.hero-text .pills{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.pill{
+  font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+  padding:4px 10px; border-radius:999px;
+  background:rgba(240,169,78,.15); color:#f0b96c;
+  border:1px solid rgba(240,169,78,.35);
+}
+
+/* ============================================================
+   VOLET 2 — CARTE MENTALE
+   ============================================================ */
+#mindmap-container{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  padding:10px;
+  overflow:auto;
+  position:relative;
+}
+#mindmap{ display:block; width:100%; height:auto; min-width:900px; }
+.mm-legend{
+  display:flex; gap:14px; flex-wrap:wrap;
+  margin:12px 4px 0; font-size:.78rem; color:var(--muted);
+}
+.mm-legend span{ display:inline-flex; align-items:center; gap:6px; }
+.mm-legend i{ width:12px; height:12px; border-radius:4px; display:inline-block; }
+
+.mm-node { cursor: pointer; }
+.mm-node:hover > rect { filter: brightness(0.94); }
+.mm-node > text { pointer-events: none; }
+
+/* ---- Modale flottante de la carte mentale ---- */
+#mindmap-modal{
+  position:fixed;
+  z-index:200;
+  pointer-events:none;
+  background:#fffdf9;
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:0 12px 36px rgba(90,68,25,.25);
+  padding:13px 15px;
+  max-width:360px;
+  max-height:70vh;
+  overflow-y:auto;
+  font-size:12.5px;
+  line-height:1.5;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .15s ease, transform .15s ease;
+}
+#mindmap-modal.visible{ opacity:1; transform:none; }
+#mindmap-modal h4{
+  margin:0 0 7px;
+  font-size:13.5px;
+  color:#7a4a12;
+  letter-spacing:.01em;
+  padding-bottom:5px;
+  border-bottom:1px solid var(--line-soft);
+}
+
+/* ============================================================
+   VOLET 4 — GRAPHE (CANVAS)
+   ============================================================ */
+#graph-wrap{
+  position:relative;
+  background:linear-gradient(160deg,#fffdf8,#f8f2e7);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+}
+#graph-canvas{
+  display:block;
+  width:100%;
+  height:640px;
+  cursor:crosshair;
+  touch-action:none;
+  user-select:none;
+}
+.graph-hint{
+  position:absolute; left:14px; bottom:12px;
+  font-size:.74rem; color:#94897a; background:rgba(255,255,255,.82);
+  padding:4px 11px; border-radius:999px; border:1px solid var(--line-soft);
+  pointer-events:none;
+  z-index:5;
+}
+
+/* ---- Modale flottante du graphe ---- */
+#graph-modal{
+  position:absolute;
+  z-index:10;
+  pointer-events:none;
+  background:#fffdf9;
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(90,68,25,.20);
+  padding:11px 13px;
+  max-width:340px;
+  max-height:70vh;
+  overflow-y:auto;
+  font-size:12.5px;
+  line-height:1.5;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .15s ease, transform .15s ease;
+}
+#graph-modal.visible{ opacity:1; transform:none; }
+#graph-modal h4{
+  margin:0 0 5px;
+  font-size:13.5px;
+  color:#7a4a12;
+  letter-spacing:.01em;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--line-soft);
+}
+#graph-modal #gm-desc{
+  margin:0 0 8px;
+  color:#4a4a4a;
+  font-size:12.5px;
+}
+#gm-links{ display:flex; flex-direction:column; gap:4px; margin-top:6px; padding-top:6px; border-top:1px dashed var(--line-soft); }
+#gm-links .gm-link{
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; color:#3a3a3a;
+}
+#gm-links .dot{
+  width:8px; height:8px; border-radius:50%; flex:0 0 8px;
+}
+#gm-links .rel{
+  color:#8a7a62; font-style:italic; font-size:11px;
+}
+
+/* ============================================================
+   STYLE COMMUN POUR LES CONTENUS RICHES (modales)
+   ============================================================ */
+.rich-content{
+  font-size:12.5px;
+  line-height:1.5;
+  color:#3a3a3a;
+}
+.rich-content p{ margin:5px 0; }
+.rich-content ul{ margin:4px 0; padding-left:18px; }
+.rich-content li{ margin:2px 0; }
+.rich-content strong{ color:#7a4a12; }
+.rich-content em{ color:#a85a10; }
+.rich-content .formula{
+  display:block;
+  text-align:center;
+  background:#fffaf0;
+  border:1px dashed #e2cba4;
+  border-radius:6px;
+  padding:5px 9px;
+  margin:7px 0;
+  font-family:"Cambria Math", "Latin Modern Math", Georgia, serif;
+  font-size:13px;
+  color:#5a3a10;
+}
+.rich-content table.mini{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11.5px;
+  margin:6px 0;
+}
+.rich-content table.mini th,
+.rich-content table.mini td{
+  border:1px solid var(--line);
+  padding:3px 5px;
+  text-align:center;
+}
+.rich-content table.mini th{
+  background:#fdf3e2;
+  color:#7a4a12;
+  font-weight:600;
+}
+.rich-content .tip{
+  background:#f4fbf6;
+  border-left:3px solid #1e8449;
+  border-radius:5px;
+  padding:6px 9px;
+  margin:6px 0;
+  font-size:12px;
+}
+
+/* ============================================================
+   DIVERS
+   ============================================================ */
+.formula-box{
+  text-align:center; background:#fffaf0;
+  border:1px dashed #e2cba4; border-radius:9px;
+  padding:8px 10px; margin:10px 0;
+  font-size:.96em;
+  overflow-x:auto;
+}
+hr.soft{ border:none; border-top:1px dashed var(--line); margin:20px 0; }
+
+/* ---- Responsive ---- */
+@media (max-width:920px){
+  .sidebar{ position:relative; width:100%; inset:auto; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px; }
+  .sidebar .brand{ flex:1 1 100%; flex-direction:row; justify-content:center; padding-bottom:8px; margin-bottom:4px; }
+  .nav-btn{ flex:1 1 44%; margin-bottom:0; }
+  main{ margin-left:0; padding:16px 14px 60px; }
+  .hero{ flex-direction:column; text-align:center; }
+  #graph-canvas{ height:520px; }
+  #mindmap-modal, #graph-modal{ max-width:85vw; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     MENU VERTICAL
+     ============================================================ -->
+<nav class="sidebar">
+  <div class="brand">
+    <svg class="crown" viewBox="0 0 110 66" aria-hidden="true">
+      <path d="M8 60 L3 22 L30 42 L55 8 L80 42 L107 22 L102 60 Z" fill="#e07b1a"/>
+      <circle cx="3"  cy="18" r="6" fill="#4a4a4a"/>
+      <circle cx="55" cy="6"  r="6" fill="#4a4a4a"/>
+      <circle cx="107" cy="18" r="6" fill="#4a4a4a"/>
+    </svg>
+    <h1>Carte Joker</h1>
+    <p>Trigonométrie</p>
+  </div>
+
+  <button class="nav-btn active" data-target="panel-classique">
+    <span class="num">1</span> Contenu classique
+  </button>
+  <button class="nav-btn" data-target="panel-mindmap">
+    <span class="num">2</span> Carte mentale
+  </button>
+  <button class="nav-btn" data-target="panel-tableaux">
+    <span class="num">3</span> Tableaux
+  </button>
+  <button class="nav-btn" data-target="panel-graphe">
+    <span class="num">4</span> Graphe
+  </button>
+</nav>
+
+<main>
+
+<!-- ============================================================
+     VOLET 1 — CONTENU CLASSIQUE
+     ============================================================ -->
+<section id="panel-classique" class="panel active">
+<div class="wrap">
+
+  <div class="hero">
+    <div class="joker-card">
+      <div class="inner">
+        <svg class="crown" viewBox="0 0 110 66" aria-hidden="true">
+          <path d="M8 60 L3 22 L30 42 L55 8 L80 42 L107 22 L102 60 Z" fill="#e07b1a"/>
+          <circle cx="3"  cy="18" r="6" fill="#4a4a4a"/>
+          <circle cx="55" cy="6"  r="6" fill="#4a4a4a"/>
+          <circle cx="107" cy="18" r="6" fill="#4a4a4a"/>
+        </svg>
+        <svg class="bang" viewBox="0 0 20 60" aria-hidden="true">
+          <rect x="6" y="0" width="8" height="42" rx="4" fill="#e6e4e1"/>
+          <circle cx="10" cy="54" r="5" fill="#e6e4e1"/>
+        </svg>
+        <div class="lines">
+          <div class="l1">Carte&nbsp;&nbsp;Joker</div>
+          <div class="l2">Trigonométrie</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-text">
+      <h1>Carte Joker <span>— Trigonométrie</span></h1>
+      <p>Toutes les informations essentielles : cercle trigonométrique, radian, valeurs remarquables,
+         périodicité, parité, symétries, équations trigonométriques et signaux sinusoïdaux.</p>
+      <div class="pills">
+        <span class="pill">Cercle &amp; Radian</span>
+        <span class="pill">Valeurs remarquables</span>
+        <span class="pill">Symétries</span>
+        <span class="pill">Équations</span>
+        <span class="pill">Physique-Chimie</span>
+      </div>
+    </div>
+  </div>
+
+  <article class="card">
+    <h2><span class="badge">1</span> Cercle Trigonométrique &amp; Radian</h2>
+
+    <div class="two-col">
+      <div class="note">
+        <h3>Cercle trigonométrique</h3>
+        <ul class="clean" style="margin-bottom:0;">
+          <li>Rayon \(R = 1\)</li>
+          <li>Centre \((0,\,0)\)</li>
+          <li>Orienté dans le sens direct (anti-horaire)</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>Le Radian (rad)</h3>
+        <p style="margin:0;">Un radian est la mesure d'un angle au centre qui intercepte, sur le cercle,
+           un arc dont la longueur est égale au rayon de ce cercle.</p>
+      </div>
+    </div>
+
+    <figure>
+      <svg viewBox="-1.55 -1.55 3.1 3.1" role="img" aria-label="Cercle trigonométrique">
+        <line x1="-1.42" y1="0" x2="1.42" y2="0" stroke="#4a4a4a" stroke-width="0.012"/>
+        <line x1="0" y1="-1.42" x2="0" y2="1.42" stroke="#4a4a4a" stroke-width="0.012"/>
+        <polygon points="1.42,0 1.34,0.035 1.34,-0.035" fill="#4a4a4a"/>
+        <polygon points="0,1.42 0.035,1.34 -0.035,1.34" fill="#4a4a4a"/>
+        <circle cx="0" cy="0" r="1" fill="none" stroke="#1a3fbf" stroke-width="0.016"/>
+        <line x1="0" y1="0" x2="0.766" y2="-0.643" stroke="#d81e1e" stroke-width="0.014"/>
+        <line x1="0.766" y1="-0.643" x2="0.766" y2="0" stroke="#7a7a7a" stroke-width="0.010" stroke-dasharray="0.05 0.035"/>
+        <line x1="0.766" y1="-0.643" x2="0" y2="-0.643" stroke="#7a7a7a" stroke-width="0.010" stroke-dasharray="0.05 0.035"/>
+        <path d="M 1 0 A 1 1 0 0 0 0.766 -0.643" fill="none" stroke="#1a3fbf" stroke-width="0.026"/>
+        <path d="M 0.24 0 A 0.24 0.24 0 0 0 0.1838 -0.1539" fill="none" stroke="#d97a1a" stroke-width="0.013"/>
+        <circle cx="0.766" cy="-0.643" r="0.045" fill="#d81e1e"/>
+        <circle cx="0" cy="0" r="0.030" fill="#222"/>
+        <text x="0.075" y="-0.55" font-size="0.13" fill="#1a3fbf" font-weight="600">1</text>
+        <text x="0.245" y="-0.115" font-size="0.115" fill="#a85a10" font-style="italic">θ</text>
+        <text x="0.80" y="-0.72" font-size="0.125" fill="#c01010" font-style="italic">M(θ)</text>
+        <text x="0.30" y="-1.05" font-size="0.115" fill="#333">sin(θ)</text>
+        <text x="0.50" y="0.20" font-size="0.115" fill="#333">cos(θ)</text>
+        <text x="0.80" y="0.16" font-size="0.115" fill="#555">cos(θ)</text>
+        <text x="-0.36" y="0.16" font-size="0.115" fill="#333">O</text>
+        <text x="1.02" y="-0.42" font-size="0.115" fill="#1a3fbf">Arc</text>
+      </svg>
+      <figcaption>Cercle trigonométrique : rayon \(R=1\), centre \(O(0;0)\), sens direct (anti-horaire).</figcaption>
+    </figure>
+
+    <div class="note">
+      <h3>Conversions et Mesure Principale</h3>
+      <div class="formula-box">
+        \[
+          \textbf{Proportionnalité :}\quad
+          \frac{\text{Angle en degrés}}{180}
+          \;=\;
+          \frac{\text{Angle en radians}}{\pi}
+        \]
+      </div>
+      <p><strong>Mesure principale :</strong> angle unique appartenant à l'intervalle \(]-\pi\,;\,\pi]\).</p>
+      <p style="margin-bottom:0;"><em>Astuce :</em> ajouter ou soustraire \(2\pi\) (un tour complet)
+         jusqu'à entrer dans l'intervalle.</p>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2><span class="badge">2</span> Valeurs remarquables, Périodicité, Parité</h2>
+
+    <h3>Tableau des valeurs remarquables</h3>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr>
+            <th class="left">\(\theta\) (rad)</th>
+            <th>\(0\)</th><th>\(\pi/6\)</th><th>\(\pi/4\)</th><th>\(\pi/3\)</th><th>\(\pi/2\)</th><th>\(\pi\)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th class="left">\(\cos(\theta)\)</th>
+            <td>\(1\)</td><td>\(\sqrt{3}/2\)</td><td>\(\sqrt{2}/2\)</td><td>\(1/2\)</td><td>\(0\)</td><td>\(-1\)</td>
+          </tr>
+          <tr>
+            <th class="left">\(\sin(\theta)\)</th>
+            <td>\(0\)</td><td>\(1/2\)</td><td>\(\sqrt{2}/2\)</td><td>\(\sqrt{3}/2\)</td><td>\(1\)</td><td>\(0\)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="two-col">
+      <div class="note blue">
+        <h3>Périodicité</h3>
+        \[ \cos(\theta + 2\pi) = \cos(\theta) \]
+        \[ \sin(\theta + 2\pi) = \sin(\theta) \]
+        <p style="margin-bottom:0;">Les fonctions sont \(2\pi\)-périodiques.</p>
+      </div>
+
+      <div class="note green">
+        <h3>Parité et Symétries</h3>
+        <ul class="clean" style="margin-bottom:0;">
+          <li>\(\cos(-\theta) = \cos(\theta)\) : <strong>fonction paire</strong>
+              (courbe symétrique par rapport à l'axe des ordonnées).</li>
+          <li>\(\sin(-\theta) = -\sin(\theta)\) : <strong>fonction impaire</strong>
+              (courbe symétrique par rapport à l'origine du repère).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      <h3>Relation fondamentale</h3>
+      <div class="formula-box" style="margin:6px 0 0;">
+        \[ \cos^{2}(\theta) + \sin^{2}(\theta) = 1 \]
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2><span class="badge">3</span> Relations à retenir (symétries)</h2>
+
+    <figure style="max-width:440px;">
+      <svg viewBox="-1.5 -1.5 3 3" role="img" aria-label="Symétries sur le cercle trigonométrique">
+        <line x1="-1.35" y1="0" x2="1.35" y2="0" stroke="#4a4a4a" stroke-width="0.012"/>
+        <line x1="0" y1="-1.35" x2="0" y2="1.35" stroke="#4a4a4a" stroke-width="0.012"/>
+        <polygon points="1.35,0 1.27,0.033 1.27,-0.033" fill="#4a4a4a"/>
+        <polygon points="0,1.35 0.033,1.27 -0.033,1.27" fill="#4a4a4a"/>
+        <circle cx="0" cy="0" r="1" fill="none" stroke="#1a3fbf" stroke-width="0.016"/>
+        <line x1="-0.866" y1="-0.5" x2="0.866" y2="-0.5" stroke="#9a9a9a" stroke-width="0.008" stroke-dasharray="0.05 0.035"/>
+        <line x1="-0.866" y1="0.5"  x2="0.866" y2="0.5"  stroke="#9a9a9a" stroke-width="0.008" stroke-dasharray="0.05 0.035"/>
+        <line x1="0.866" y1="-0.5" x2="0.866" y2="0.5" stroke="#9a9a9a" stroke-width="0.008" stroke-dasharray="0.05 0.035"/>
+        <line x1="-0.866" y1="-0.5" x2="-0.866" y2="0.5" stroke="#9a9a9a" stroke-width="0.008" stroke-dasharray="0.05 0.035"/>
+        <line x1="0" y1="0" x2="0.866" y2="-0.5"  stroke="#d81e1e" stroke-width="0.013"/>
+        <line x1="0" y1="0" x2="-0.866" y2="-0.5" stroke="#8e1a1a" stroke-width="0.013"/>
+        <line x1="0" y1="0" x2="-0.866" y2="0.5"  stroke="#1e8449" stroke-width="0.013"/>
+        <line x1="0" y1="0" x2="0.866" y2="0.5"   stroke="#b8860b" stroke-width="0.013"/>
+        <line x1="0" y1="0" x2="0.5" y2="-0.866"  stroke="#1a3fbf" stroke-width="0.011"/>
+        <line x1="0" y1="0" x2="-0.5" y2="-0.866" stroke="#22b8cf" stroke-width="0.011"/>
+        <circle cx="0.866" cy="-0.5"  r="0.042" fill="#d81e1e"/>
+        <circle cx="-0.866" cy="-0.5" r="0.042" fill="#8e1a1a"/>
+        <circle cx="-0.866" cy="0.5"  r="0.042" fill="#1e8449"/>
+        <circle cx="0.866" cy="0.5"   r="0.042" fill="#b8860b"/>
+        <circle cx="0.5" cy="-0.866"  r="0.040" fill="#1a3fbf"/>
+        <circle cx="-0.5" cy="-0.866" r="0.040" fill="#22b8cf"/>
+        <text x="1.02" y="-0.46" font-size="0.125" fill="#d81e1e" font-style="italic">x</text>
+        <text x="-1.32" y="-0.46" font-size="0.12" fill="#8e1a1a" font-style="italic">π − θ</text>
+        <text x="-1.32" y="0.66" font-size="0.12" fill="#1e8449" font-style="italic">π + θ</text>
+        <text x="0.98" y="0.66" font-size="0.12" fill="#b8860b" font-style="italic">−θ</text>
+        <text x="0.42" y="-1.05" font-size="0.115" fill="#1a3fbf" font-style="italic">π/2 − θ</text>
+        <text x="-0.95" y="-1.05" font-size="0.115" fill="#22b8cf" font-style="italic">π/2 + θ</text>
+        <text x="-0.07" y="-1.22" font-size="0.115" fill="#333">sin</text>
+        <text x="1.20" y="0.18" font-size="0.115" fill="#333">cos</text>
+      </svg>
+      <figcaption>Les six points remarquables associés à un angle \(\theta\) sur le cercle trigonométrique.</figcaption>
+    </figure>
+
+    <div class="two-col">
+      <div class="note">
+        <h3>Axe horizontal (Cosinus)</h3>
+        <ul class="clean" style="margin-bottom:0;">
+          <li>\(\cos(-\theta) = \cos(\theta)\)</li>
+          <li>\(\sin(-\theta) = -\sin(\theta)\)</li>
+          <li>\(\cos(\pi - \theta) = -\cos(\theta)\)</li>
+          <li>\(\sin(\pi - \theta) = \sin(\theta)\)</li>
+          <li>\(\cos(\pi + \theta) = -\cos(\theta)\)</li>
+          <li>\(\sin(\pi + \theta) = -\sin(\theta)\)</li>
+        </ul>
+      </div>
+      <div class="note blue">
+        <h3>Quart de tour (Croisement)</h3>
+        <ul class="clean" style="margin-bottom:0;">
+          <li>\(\cos\!\left(\dfrac{\pi}{2} - \theta\right) = \sin(\theta)\)</li>
+          <li>\(\sin\!\left(\dfrac{\pi}{2} - \theta\right) = \cos(\theta)\)</li>
+          <li>\(\cos\!\left(\dfrac{\pi}{2} + \theta\right) = -\sin(\theta)\)</li>
+          <li>\(\sin\!\left(\dfrac{\pi}{2} + \theta\right) = \cos(\theta)\)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Transformations et Coordonnées</h3>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Angle</th>
+            <th>Transformation du plan</th>
+            <th>Effet sur \((x\,;\,y)\)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>\(-\theta\)</td><td>Symétrie axiale d'axe \((Ox)\)</td><td>\((x\,;\,-y)\)</td></tr>
+          <tr><td>\(\pi - \theta\)</td><td>Symétrie axiale d'axe \((Oy)\)</td><td>\((-x\,;\,y)\)</td></tr>
+          <tr><td>\(\pi + \theta\)</td><td>Symétrie centrale de centre \(O\)</td><td>\((-x\,;\,-y)\)</td></tr>
+          <tr><td>\(\dfrac{\pi}{2} - \theta\)</td><td>Symétrie d'axe \(y = x\) (bissectrice)</td><td>\((y\,;\,x)\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2><span class="badge">4</span> Équations trigonométriques</h2>
+
+    <div class="two-col">
+      <figure style="margin:0;max-width:100%;">
+        <svg viewBox="-1.45 -1.45 2.9 2.9" role="img" aria-label="Résolution de cos x = a">
+          <line x1="-1.32" y1="0" x2="1.32" y2="0" stroke="#4a4a4a" stroke-width="0.012"/>
+          <line x1="0" y1="-1.32" x2="0" y2="1.32" stroke="#4a4a4a" stroke-width="0.012"/>
+          <circle cx="0" cy="0" r="1" fill="none" stroke="#1a3fbf" stroke-width="0.016"/>
+          <line x1="0.6" y1="-0.8" x2="0.6" y2="0.8" stroke="#d81e1e" stroke-width="0.011" stroke-dasharray="0.05 0.035"/>
+          <line x1="0" y1="0" x2="0.6" y2="-0.8" stroke="#d97a1a" stroke-width="0.013"/>
+          <line x1="0" y1="0" x2="0.6" y2="0.8"  stroke="#d97a1a" stroke-width="0.013"/>
+          <circle cx="0.6" cy="-0.8" r="0.045" fill="#d97a1a"/>
+          <circle cx="0.6" cy="0.8"  r="0.045" fill="#d97a1a"/>
+          <text x="0.66" y="-0.84" font-size="0.125" fill="#a85a10" font-style="italic">x₁ = α</text>
+          <text x="0.66" y="0.90" font-size="0.125" fill="#a85a10" font-style="italic">x₂ = −α</text>
+          <text x="0.47" y="0.15" font-size="0.115" fill="#333" font-style="italic">a</text>
+          <text x="1.10" y="0.15" font-size="0.115" fill="#333">cos</text>
+          <text x="-0.08" y="-1.12" font-size="0.115" fill="#333">sin</text>
+        </svg>
+        <figcaption>\(\cos x = a\)</figcaption>
+      </figure>
+
+      <figure style="margin:0;max-width:100%;">
+        <svg viewBox="-1.45 -1.45 2.9 2.9" role="img" aria-label="Résolution de sin x = a">
+          <line x1="-1.32" y1="0" x2="1.32" y2="0" stroke="#4a4a4a" stroke-width="0.012"/>
+          <line x1="0" y1="-1.32" x2="0" y2="1.32" stroke="#4a4a4a" stroke-width="0.012"/>
+          <circle cx="0" cy="0" r="1" fill="none" stroke="#1a3fbf" stroke-width="0.016"/>
+          <line x1="-0.8" y1="-0.6" x2="0.8" y2="-0.6" stroke="#d81e1e" stroke-width="0.011" stroke-dasharray="0.05 0.035"/>
+          <line x1="0" y1="0" x2="0.8" y2="-0.6"  stroke="#d97a1a" stroke-width="0.013"/>
+          <line x1="0" y1="0" x2="-0.8" y2="-0.6" stroke="#d97a1a" stroke-width="0.013"/>
+          <circle cx="0.8" cy="-0.6"  r="0.045" fill="#d97a1a"/>
+          <circle cx="-0.8" cy="-0.6" r="0.045" fill="#d97a1a"/>
+          <text x="0.86" y="-0.64" font-size="0.125" fill="#a85a10" font-style="italic">x₁ = α</text>
+          <text x="-1.38" y="-0.70" font-size="0.125" fill="#a85a10" font-style="italic">x₂ = π − α</text>
+          <text x="-0.13" y="-0.68" font-size="0.115" fill="#333" font-style="italic">a</text>
+          <text x="1.10" y="0.15" font-size="0.115" fill="#333">cos</text>
+          <text x="-0.08" y="-1.12" font-size="0.115" fill="#333">sin</text>
+        </svg>
+        <figcaption>\(\sin x = a\)</figcaption>
+      </figure>
+    </div>
+
+    <div class="two-col" style="margin-top:14px;">
+      <div class="note">
+        <h3>\(\cos x = a\)</h3>
+        <p style="margin-bottom:4px;"><strong>Solutions sur \(\mathbb{R}\) :</strong></p>
+        \[ x = \alpha + k2\pi \]
+        \[ x = -\alpha + k2\pi \]
+        <p style="margin-bottom:0;">(avec \(k \in \mathbb{Z}\))</p>
+      </div>
+      <div class="note blue">
+        <h3>\(\sin x = a\)</h3>
+        <p style="margin-bottom:4px;"><strong>Solutions sur \(\mathbb{R}\) :</strong></p>
+        \[ x = \alpha + k2\pi \]
+        \[ x = \pi - \alpha + k2\pi \]
+        <p style="margin-bottom:0;">(avec \(k \in \mathbb{Z}\))</p>
+      </div>
+    </div>
+
+    <div class="note green">
+      <h3>Méthodologie</h3>
+      <ol class="clean" style="margin-bottom:0;">
+        <li>Placer la valeur de \(a\) sur l'axe des abscisses (cos) ou des ordonnées (sin).</li>
+        <li>Tracer une droite perpendiculaire à l'axe passant par \(a\).</li>
+        <li>Repérer les points d'intersection avec le cercle trigonométrique.</li>
+        <li>Lire les angles correspondants en tenant compte de l'intervalle demandé.</li>
+      </ol>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2><span class="badge">5</span> Signaux Sinusoïdaux
+      <small style="font-weight:400;color:var(--muted);font-size:.72rem;">— Lien avec la Physique-Chimie</small>
+    </h2>
+
+    <p>Les fonctions du temps s'écrivent sous la forme :</p>
+    <div class="formula-box">
+      \[ f(t) = A\,\cos(\omega t + \varphi) \qquad \text{ou} \qquad f(t) = A\,\sin(\omega t + \varphi) \]
+    </div>
+
+    <div class="two-col">
+      <div class="note">
+        <h3>Amplitude \(A\)</h3>
+        <p style="margin:0;">Valeur maximale du signal \((A > 0)\).</p>
+      </div>
+      <div class="note blue">
+        <h3>Pulsation \(\omega\)</h3>
+        <p style="margin:0;">Liée à la période \(T\) par : \[ T = \frac{2\pi}{\omega} \]</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="note green">
+        <h3>Phase instantanée</h3>
+        <p style="margin:0;">\(\omega t + \varphi\) — exprimée en radians.</p>
+      </div>
+      <div class="note">
+        <h3>Phase à l'origine \(\varphi\)</h3>
+        <p style="margin:0;">Valeur de la phase à \(t = 0\). Permet le décalage temporel.</p>
+      </div>
+    </div>
+
+    <figure style="max-width:660px;max-width:100%;" id="sinusoid-figure">
+      <div id="sinusoid-host"></div>
+      <figcaption>Signal sinusoïdal : amplitude \(A\), période \(T = \dfrac{2\pi}{\omega}\), instant \(t_0\).</figcaption>
+    </figure>
+
+    <div class="note">
+      <h3>Dérivation</h3>
+      <p style="margin:0;">La dérivée de \(f(t) = A\cos(\omega t + \varphi)\) est
+        \[ f'(t) = -A\omega\,\sin(\omega t + \varphi) \]</p>
+    </div>
+  </article>
+
+</div>
+</section>
+
+<!-- ============================================================
+     VOLET 2 — CARTE MENTALE
+     ============================================================ -->
+<section id="panel-mindmap" class="panel">
+  <div class="wrap-wide">
+    <article class="card">
+      <h2><span class="badge">2</span> Carte mentale — Trigonométrie</h2>
+      <p style="margin-top:-4px;color:var(--muted);font-size:.86rem;">
+        Toutes les notions du cours organisées autour du nœud central « Trigonométrie ».
+        <strong>Survolez une feuille pour afficher son contenu détaillé.</strong>
+      </p>
+      <div id="mindmap-container">
+        <svg id="mindmap" role="img" aria-label="Carte mentale de trigonométrie"></svg>
+      </div>
+      <div class="mm-legend">
+        <span><i style="background:#d97a1a"></i> Cercle &amp; Radian</span>
+        <span><i style="background:#c0392b"></i> Valeurs remarquables</span>
+        <span><i style="background:#2a7f9e"></i> Signaux sinusoïdaux</span>
+        <span><i style="background:#7d3c98"></i> Propriétés</span>
+        <span><i style="background:#1e8449"></i> Symétries</span>
+        <span><i style="background:#b7950b"></i> Équations</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLET 3 — TABLEAUX À PLUSIEURS ENTRÉES
+     ============================================================ -->
+<section id="panel-tableaux" class="panel">
+  <div class="wrap">
+    <article class="card">
+      <h2><span class="badge">3</span> Synthèse sous forme de tableaux</h2>
+
+      <h3>Tableau 1 — Cercle trigonométrique, radian &amp; mesure principale</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr><th>Notion</th><th>Définition / Propriété</th><th>Formule / Repère</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left"><strong>Cercle trigonométrique</strong></td>
+              <td class="left">Cercle de rayon \(R = 1\), de centre \((0\,;\,0)\), orienté dans le sens direct (anti-horaire).</td>
+              <td>\(R = 1\) ; \(O(0\,;\,0)\)</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Radian (rad)</strong></td>
+              <td class="left">Mesure d'un angle au centre qui intercepte, sur le cercle, un arc dont la longueur est égale au rayon de ce cercle.</td>
+              <td>longueur d'arc \(= R = 1\)</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Proportionnalité</strong></td>
+              <td class="left">Conversion degrés ↔ radians. Exemples : 180° = π rad, 90° = π/2 rad, 60° = π/3 rad, 45° = π/4 rad, 30° = π/6 rad.</td>
+              <td>\(\dfrac{\text{degrés}}{180} = \dfrac{\text{radians}}{\pi}\)</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Mesure principale</strong></td>
+              <td class="left">Angle unique appartenant à l'intervalle \(]-\pi\,;\,\pi]\).</td>
+              <td>Ajouter / soustraire \(2\pi\) jusqu'à entrer dans l'intervalle</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Astuce</strong></td>
+              <td class="left">Pour ramener un angle dans l'intervalle \(]-\pi\,;\,\pi]\), ajouter ou soustraire \(2\pi\) (un tour complet) autant de fois que nécessaire.</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tableau 2 — Valeurs remarquables</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th class="left">\(\theta\) (rad)</th>
+              <th>\(0\)</th><th>\(\dfrac{\pi}{6}\)</th><th>\(\dfrac{\pi}{4}\)</th>
+              <th>\(\dfrac{\pi}{3}\)</th><th>\(\dfrac{\pi}{2}\)</th><th>\(\pi\)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="left">\(\theta\) (deg)</th>
+              <td>\(0°\)</td><td>\(30°\)</td><td>\(45°\)</td><td>\(60°\)</td><td>\(90°\)</td><td>\(180°\)</td>
+            </tr>
+            <tr>
+              <th class="left">\(\cos(\theta)\)</th>
+              <td>\(1\)</td><td>\(\dfrac{\sqrt{3}}{2}\)</td><td>\(\dfrac{\sqrt{2}}{2}\)</td>
+              <td>\(\dfrac{1}{2}\)</td><td>\(0\)</td><td>\(-1\)</td>
+            </tr>
+            <tr>
+              <th class="left">\(\sin(\theta)\)</th>
+              <td>\(0\)</td><td>\(\dfrac{1}{2}\)</td><td>\(\dfrac{\sqrt{2}}{2}\)</td>
+              <td>\(\dfrac{\sqrt{3}}{2}\)</td><td>\(1\)</td><td>\(0\)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tableau 3 — Périodicité, parité, relation fondamentale</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr><th>Propriété</th><th>Formule(s)</th><th>Interprétation graphique</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left"><strong>Périodicité</strong></td>
+              <td>\(\cos(\theta + 2\pi) = \cos(\theta)\)<br>\(\sin(\theta + 2\pi) = \sin(\theta)\)</td>
+              <td class="left">Les fonctions sont \(2\pi\)-périodiques.</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Parité — cosinus</strong></td>
+              <td>\(\cos(-\theta) = \cos(\theta)\)</td>
+              <td class="left">Fonction <strong>paire</strong> : courbe symétrique par rapport à l'axe des ordonnées.</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Parité — sinus</strong></td>
+              <td>\(\sin(-\theta) = -\sin(\theta)\)</td>
+              <td class="left">Fonction <strong>impaire</strong> : courbe symétrique par rapport à l'origine du repère.</td>
+            </tr>
+            <tr>
+              <td class="left"><strong>Relation fondamentale</strong></td>
+              <td>\(\cos^{2}(\theta) + \sin^{2}(\theta) = 1\)</td>
+              <td class="left">Théorème de Pythagore dans le triangle rectangle inscrit.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tableau 4 — Relations de symétrie (à retenir)</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Angle</th>
+              <th>\(\cos\)</th>
+              <th>\(\sin\)</th>
+              <th>Transformation du plan</th>
+              <th>Effet sur \((x\,;\,y)\)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>\(-\theta\)</td>
+              <td>\(\cos(-\theta) = \cos(\theta)\)</td>
+              <td>\(\sin(-\theta) = -\sin(\theta)\)</td>
+              <td>Symétrie axiale d'axe \((Ox)\)</td>
+              <td>\((x\,;\,-y)\)</td>
+            </tr>
+            <tr>
+              <td>\(\pi - \theta\)</td>
+              <td>\(\cos(\pi - \theta) = -\cos(\theta)\)</td>
+              <td>\(\sin(\pi - \theta) = \sin(\theta)\)</td>
+              <td>Symétrie axiale d'axe \((Oy)\)</td>
+              <td>\((-x\,;\,y)\)</td>
+            </tr>
+            <tr>
+              <td>\(\pi + \theta\)</td>
+              <td>\(\cos(\pi + \theta) = -\cos(\theta)\)</td>
+              <td>\(\sin(\pi + \theta) = -\sin(\theta)\)</td>
+              <td>Symétrie centrale de centre \(O\)</td>
+              <td>\((-x\,;\,-y)\)</td>
+            </tr>
+            <tr>
+              <td>\(\dfrac{\pi}{2} - \theta\)</td>
+              <td>\(\cos\!\left(\dfrac{\pi}{2} - \theta\right) = \sin(\theta)\)</td>
+              <td>\(\sin\!\left(\dfrac{\pi}{2} - \theta\right) = \cos(\theta)\)</td>
+              <td>Symétrie d'axe \(y = x\) (bissectrice)</td>
+              <td>\((y\,;\,x)\)</td>
+            </tr>
+            <tr>
+              <td>\(\dfrac{\pi}{2} + \theta\)</td>
+              <td>\(\cos\!\left(\dfrac{\pi}{2} + \theta\right) = -\sin(\theta)\)</td>
+              <td>\(\sin\!\left(\dfrac{\pi}{2} + \theta\right) = \cos(\theta)\)</td>
+              <td>Quart de tour (croisement)</td>
+              <td>\((-y\,;\,x)\)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tableau 5 — Équations trigonométriques</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr><th>Équation</th><th>Solutions sur \(\mathbb{R}\)</th><th>Condition</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>\(\cos x = a\)</td>
+              <td>\(x = \alpha + k2\pi\) &nbsp;ou&nbsp; \(x = -\alpha + k2\pi\)</td>
+              <td>\(k \in \mathbb{Z}\)</td>
+            </tr>
+            <tr>
+              <td>\(\sin x = a\)</td>
+              <td>\(x = \alpha + k2\pi\) &nbsp;ou&nbsp; \(x = \pi - \alpha + k2\pi\)</td>
+              <td>\(k \in \mathbb{Z}\)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note green">
+        <h3>Méthodologie de résolution</h3>
+        <ol class="clean" style="margin-bottom:0;">
+          <li>Placer la valeur de \(a\) sur l'axe des abscisses (cos) ou des ordonnées (sin).</li>
+          <li>Tracer une droite perpendiculaire à l'axe passant par \(a\).</li>
+          <li>Repérer les points d'intersection avec le cercle trigonométrique.</li>
+          <li>Lire les angles correspondants en tenant compte de l'intervalle demandé.</li>
+        </ol>
+      </div>
+
+      <h3>Tableau 6 — Signaux sinusoïdaux (Physique-Chimie)</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr><th>Grandeur</th><th>Symbole</th><th>Définition / Relation</th><th>Unité</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left">Amplitude</td><td>\(A\)</td>
+              <td class="left">Valeur maximale du signal \((A > 0)\)</td><td>selon la grandeur</td>
+            </tr>
+            <tr>
+              <td class="left">Pulsation</td><td>\(\omega\)</td>
+              <td class="left">Liée à la période \(T\) par \(T = \dfrac{2\pi}{\omega}\)</td><td>rad·s\(^{-1}\)</td>
+            </tr>
+            <tr>
+              <td class="left">Période</td><td>\(T\)</td>
+              <td class="left">\(T = \dfrac{2\pi}{\omega}\)</td><td>s</td>
+            </tr>
+            <tr>
+              <td class="left">Phase instantanée</td><td>\(\omega t + \varphi\)</td>
+              <td class="left">Exprimée en radians</td><td>rad</td>
+            </tr>
+            <tr>
+              <td class="left">Phase à l'origine</td><td>\(\varphi\)</td>
+              <td class="left">Valeur de la phase à \(t = 0\) ; permet le décalage temporel</td><td>rad</td>
+            </tr>
+            <tr>
+              <td class="left">Dérivée</td><td>\(f'(t)\)</td>
+              <td class="left">\(f(t) = A\cos(\omega t + \varphi) \Rightarrow f'(t) = -A\omega\sin(\omega t + \varphi)\)</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="formula-box">
+        \[ f(t) = A\cos(\omega t + \varphi) \qquad \text{ou} \qquad f(t) = A\sin(\omega t + \varphi) \]
+      </div>
+
+    </article>
+  </div>
+</section>
+
+<!-- ============================================================
+     VOLET 4 — GRAPHE
+     ============================================================ -->
+<section id="panel-graphe" class="panel">
+  <div class="wrap-wide">
+    <article class="card">
+      <h2><span class="badge">4</span> Graphe des notions</h2>
+      <p style="margin-top:-4px;color:var(--muted);font-size:.86rem;">
+        Réseau de concepts : survolez un nœud pour afficher ses connexions et son contenu complet,
+        glissez‑le pour réorganiser la carte.
+      </p>
+      <div id="graph-wrap">
+        <canvas id="graph-canvas"></canvas>
+        <div id="graph-modal" aria-hidden="true">
+          <h4 id="gm-title"></h4>
+          <div id="gm-desc"></div>
+          <div id="gm-links"></div>
+        </div>
+        <div class="graph-hint">Survolez un nœud · glissez pour déplacer</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     MODALE FLOTTANTE POUR LA CARTE MENTALE
+     ============================================================ -->
+<div id="mindmap-modal" aria-hidden="true">
+  <h4 id="mm-title"></h4>
+  <div id="mm-body"></div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* ============================================================
+   NAVIGATION ENTRE VOLETS
+   ============================================================ */
+const navButtons = document.querySelectorAll('.nav-btn');
+const panels     = document.querySelectorAll('.panel');
+
+function showPanel(id){
+  panels.forEach(p => p.classList.toggle('active', p.id === id));
+  navButtons.forEach(b => b.classList.toggle('active', b.dataset.target === id));
+
+  if (id === 'panel-mindmap') buildMindMap();
+  if (id === 'panel-graphe')  { resizeGraphCanvas(); startGraphLoop(); }
+  if (id === 'panel-classique') buildSinusoid();
+}
+
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    showPanel(btn.dataset.target);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+/* ============================================================
+   SINUSOÏDE (SVG généré) — VOLET 1
+   ============================================================ */
+function buildSinusoid(){
+  const host = document.getElementById('sinusoid-host');
+  if (!host || host.dataset.done) return;
+  host.dataset.done = '1';
+
+  const W = 700, H = 290;
+  const x0 = 60, x1 = 660;
+  const tMax = 4 * Math.PI;
+  const sx = (t) => x0 + (t / tMax) * (x1 - x0);
+  const cy = 160;
+  const A  = 85;
+
+  let path = '';
+  for (let t = 0; t <= tMax; t += 0.02){
+    const x = sx(t);
+    const y = cy - A * Math.cos(t);
+    path += (path === '' ? 'M ' : 'L ') + x.toFixed(2) + ' ' + y.toFixed(2) + ' ';
+  }
+
+  const xMax1 = sx(0);
+  const xMax2 = sx(2*Math.PI);
+
+  const svg = `
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Signal sinusoïdal">
+    <line x1="${x0}" y1="${cy}" x2="${x1}" y2="${cy}" stroke="#4a4a4a" stroke-width="1.4"/>
+    <polygon points="${x1},${cy} ${x1-10},${cy-4} ${x1-10},${cy+4}" fill="#4a4a4a"/>
+    <line x1="${x0}" y1="30" x2="${x0}" y2="${cy+90}" stroke="#4a4a4a" stroke-width="1.4"/>
+    <polygon points="${x0},30 ${x0-4},40 ${x0+4},40" fill="#4a4a4a"/>
+
+    <path d="${path}" fill="none" stroke="#1a3fbf" stroke-width="2.6"/>
+
+    <line x1="${xMax1}" y1="${cy}" x2="${xMax1}" y2="${cy-A}" stroke="#d81e1e" stroke-width="1.4" stroke-dasharray="5 4"/>
+    <line x1="${xMax1-8}" y1="${cy-A}" x2="${xMax1+8}" y2="${cy-A}" stroke="#d81e1e" stroke-width="1.4"/>
+    <polygon points="${xMax1},${cy} ${xMax1-4},${cy-8} ${xMax1+4},${cy-8}" fill="#d81e1e"/>
+    <polygon points="${xMax1},${cy-A} ${xMax1-4},${cy-A+8} ${xMax1+4},${cy-A+8}" fill="#d81e1e"/>
+    <text x="${xMax1-10}" y="${cy-A/2}" font-size="14" fill="#c01010" text-anchor="end" font-style="italic">A</text>
+
+    <line x1="${xMax1}" y1="${cy-A-24}" x2="${xMax2}" y2="${cy-A-24}" stroke="#d97a1a" stroke-width="1.6"/>
+    <polygon points="${xMax1},${cy-A-24} ${xMax1+10},${cy-A-28} ${xMax1+10},${cy-A-20}" fill="#d97a1a"/>
+    <polygon points="${xMax2},${cy-A-24} ${xMax2-10},${cy-A-28} ${xMax2-10},${cy-A-20}" fill="#d97a1a"/>
+    <text x="${(xMax1+xMax2)/2}" y="${cy-A-32}" font-size="14" fill="#a85a10" text-anchor="middle">T = 2π / ω</text>
+
+    <line x1="${xMax1}" y1="${cy}" x2="${xMax1}" y2="${cy+14}" stroke="#333" stroke-width="1.2"/>
+    <text x="${xMax1}" y="${cy+30}" font-size="13" fill="#333" text-anchor="middle" font-style="italic">t₀</text>
+
+    <text x="${x1-4}" y="${cy-10}" font-size="14" fill="#333" text-anchor="end" font-style="italic">t</text>
+    <text x="${x0-12}" y="26" font-size="14" fill="#333" text-anchor="end" font-style="italic">y</text>
+  </svg>`;
+  host.innerHTML = svg;
+}
+buildSinusoid();
+
+/* ============================================================
+   CONTENU RICHE POUR LA CARTE MENTALE
+   ============================================================ */
+const RICH = {
+  /* --- Cercle & Radian --- */
+  'cercle-1': `<div class="rich-content">
+    <p><strong>Cercle trigonométrique</strong></p>
+    <ul>
+      <li>Rayon : R = 1</li>
+      <li>Centre : O(0 ; 0)</li>
+      <li>Orienté dans le sens direct (anti-horaire)</li>
+    </ul>
+  </div>`,
+  'cercle-2': `<div class="rich-content">
+    <p>Le cercle est orienté dans le <strong>sens direct</strong> (anti-horaire).</p>
+    <p>Les angles positifs sont mesurés dans ce sens.</p>
+  </div>`,
+  'cercle-3': `<div class="rich-content">
+    <p><strong>Définition du radian</strong></p>
+    <p>Un radian est la mesure d'un angle au centre qui intercepte, sur le cercle, un arc dont la longueur est égale au rayon de ce cercle.</p>
+    <div class="formula">1 rad ⇔ arc de longueur R</div>
+  </div>`,
+  'cercle-4': `<div class="rich-content">
+    <p><strong>Proportionnalité (conversion)</strong></p>
+    <div class="formula">Angle en degrés / 180 = Angle en radians / π</div>
+    <p>Exemples :</p>
+    <ul>
+      <li>180° = π rad</li>
+      <li>90° = π/2 rad</li>
+      <li>60° = π/3 rad</li>
+      <li>45° = π/4 rad</li>
+      <li>30° = π/6 rad</li>
+    </ul>
+  </div>`,
+  'cercle-5': `<div class="rich-content">
+    <p><strong>Mesure principale</strong></p>
+    <p>Angle unique appartenant à l'intervalle <strong>]−π ; π]</strong>.</p>
+    <div class="tip"><strong>Astuce :</strong> ajouter ou soustraire 2π (un tour complet) jusqu'à entrer dans l'intervalle.</div>
+  </div>`,
+
+  /* --- Valeurs remarquables --- */
+  'val-1': `<div class="rich-content">
+    <p><strong>Tableau des valeurs remarquables</strong></p>
+    <table class="mini">
+      <tr><th>θ</th><th>0</th><th>π/6</th><th>π/4</th><th>π/3</th><th>π/2</th><th>π</th></tr>
+      <tr><td><strong>cos θ</strong></td><td>1</td><td>√3/2</td><td>√2/2</td><td>1/2</td><td>0</td><td>−1</td></tr>
+      <tr><td><strong>sin θ</strong></td><td>0</td><td>1/2</td><td>√2/2</td><td>√3/2</td><td>1</td><td>0</td></tr>
+    </table>
+    <p>Équivalents en degrés : 0°, 30°, 45°, 60°, 90°, 180°.</p>
+  </div>`,
+  'val-2': `<div class="rich-content">
+    <p><strong>Valeurs de cosinus</strong></p>
+    <div class="formula">cos(0) = 1 ; cos(π/6) = √3/2 ; cos(π/4) = √2/2</div>
+    <div class="formula">cos(π/3) = 1/2 ; cos(π/2) = 0 ; cos(π) = −1</div>
+  </div>`,
+  'val-3': `<div class="rich-content">
+    <p><strong>Valeurs de sinus</strong></p>
+    <div class="formula">sin(0) = 0 ; sin(π/6) = 1/2 ; sin(π/4) = √2/2</div>
+    <div class="formula">sin(π/3) = √3/2 ; sin(π/2) = 1 ; sin(π) = 0</div>
+  </div>`,
+  'val-4': `<div class="rich-content">
+    <p><strong>Relation fondamentale</strong></p>
+    <div class="formula">cos²(θ) + sin²(θ) = 1</div>
+    <p>Théorème de Pythagore dans le triangle rectangle inscrit dans le cercle trigonométrique.</p>
+  </div>`,
+
+  /* --- Signaux sinusoïdaux --- */
+  'sig-1': `<div class="rich-content">
+    <p><strong>Forme générale</strong></p>
+    <div class="formula">f(t) = A cos(ωt + φ)</div>
+    <div class="formula">ou f(t) = A sin(ωt + φ)</div>
+  </div>`,
+  'sig-2': `<div class="rich-content">
+    <p><strong>Amplitude A</strong></p>
+    <p>Valeur maximale du signal (A > 0).</p>
+  </div>`,
+  'sig-3': `<div class="rich-content">
+    <p><strong>Pulsation ω</strong></p>
+    <p>Liée à la période T par :</p>
+    <div class="formula">T = 2π / ω</div>
+  </div>`,
+  'sig-4': `<div class="rich-content">
+    <p><strong>Phase instantanée</strong></p>
+    <div class="formula">ωt + φ (en radians)</div>
+  </div>`,
+  'sig-5': `<div class="rich-content">
+    <p><strong>Phase à l'origine φ</strong></p>
+    <p>Valeur de la phase à t = 0. Permet le décalage temporel.</p>
+  </div>`,
+  'sig-6': `<div class="rich-content">
+    <p><strong>Dérivation</strong></p>
+    <p>La dérivée de f(t) = A cos(ωt + φ) est :</p>
+    <div class="formula">f′(t) = −Aω sin(ωt + φ)</div>
+  </div>`,
+
+  /* --- Propriétés --- */
+  'prop-1': `<div class="rich-content">
+    <p><strong>Périodicité du cosinus</strong></p>
+    <div class="formula">cos(θ + 2π) = cos(θ)</div>
+  </div>`,
+  'prop-2': `<div class="rich-content">
+    <p><strong>Périodicité du sinus</strong></p>
+    <div class="formula">sin(θ + 2π) = sin(θ)</div>
+  </div>`,
+  'prop-3': `<div class="rich-content">
+    <p><strong>Fonctions 2π-périodiques</strong></p>
+    <p>Les fonctions cos et sin sont 2π-périodiques : elles se répètent tous les 2π.</p>
+  </div>`,
+  'prop-4': `<div class="rich-content">
+    <p><strong>Parité du cosinus</strong></p>
+    <div class="formula">cos(−θ) = cos(θ)</div>
+    <p>Fonction <strong>paire</strong> : courbe symétrique par rapport à l'axe des ordonnées.</p>
+  </div>`,
+  'prop-5': `<div class="rich-content">
+    <p><strong>Parité du sinus</strong></p>
+    <div class="formula">sin(−θ) = −sin(θ)</div>
+    <p>Fonction <strong>impaire</strong> : courbe symétrique par rapport à l'origine du repère.</p>
+  </div>`,
+  'prop-6': `<div class="rich-content">
+    <p><strong>Symétrie du cosinus</strong></p>
+    <p>La courbe de cos est symétrique par rapport à l'axe des ordonnées.</p>
+    <div class="formula">cos(−θ) = cos(θ)</div>
+  </div>`,
+  'prop-7': `<div class="rich-content">
+    <p><strong>Symétrie du sinus</strong></p>
+    <p>La courbe de sin est symétrique par rapport à l'origine du repère.</p>
+    <div class="formula">sin(−θ) = −sin(θ)</div>
+  </div>`,
+
+  /* --- Symétries --- */
+  'sym-1': `<div class="rich-content">
+    <p><strong>Symétrie d'axe (Oy)</strong></p>
+    <div class="formula">cos(π − θ) = −cos(θ)</div>
+    <div class="formula">sin(π − θ) = sin(θ)</div>
+  </div>`,
+  'sym-2': `<div class="rich-content">
+    <p><strong>Symétrie centrale de centre O</strong></p>
+    <div class="formula">cos(π + θ) = −cos(θ)</div>
+    <div class="formula">sin(π + θ) = −sin(θ)</div>
+  </div>`,
+  'sym-3': `<div class="rich-content">
+    <p><strong>Symétrie d'axe y = x (quart de tour)</strong></p>
+    <div class="formula">cos(π/2 − θ) = sin(θ)</div>
+    <div class="formula">sin(π/2 − θ) = cos(θ)</div>
+  </div>`,
+  'sym-4': `<div class="rich-content">
+    <p><strong>Quart de tour (croisement)</strong></p>
+    <div class="formula">cos(π/2 + θ) = −sin(θ)</div>
+    <div class="formula">sin(π/2 + θ) = cos(θ)</div>
+  </div>`,
+  'sym-5': `<div class="rich-content">
+    <p><strong>Transformations du plan</strong></p>
+    <ul>
+      <li>−θ → symétrie axiale d'axe (Ox) → (x ; −y)</li>
+      <li>π − θ → symétrie axiale d'axe (Oy) → (−x ; y)</li>
+      <li>π + θ → symétrie centrale de centre O → (−x ; −y)</li>
+      <li>π/2 − θ → symétrie d'axe y = x → (y ; x)</li>
+    </ul>
+  </div>`,
+
+  /* --- Équations --- */
+  'eq-1': `<div class="rich-content">
+    <p><strong>Équation cos x = a</strong></p>
+    <div class="formula">x = α + 2kπ</div>
+    <div class="formula">ou x = −α + 2kπ</div>
+    <p>(avec k ∈ ℤ)</p>
+  </div>`,
+  'eq-2': `<div class="rich-content">
+    <p><strong>Équation cos x = a (seconde branche)</strong></p>
+    <div class="formula">x = −α + 2kπ</div>
+    <p>où α est une solution particulière, k ∈ ℤ.</p>
+  </div>`,
+  'eq-3': `<div class="rich-content">
+    <p><strong>Équation sin x = a</strong></p>
+    <div class="formula">x = α + 2kπ</div>
+    <div class="formula">ou x = π − α + 2kπ</div>
+    <p>(avec k ∈ ℤ)</p>
+  </div>`,
+  'eq-4': `<div class="rich-content">
+    <p><strong>Équation sin x = a (seconde branche)</strong></p>
+    <div class="formula">x = π − α + 2kπ</div>
+    <p>où α est une solution particulière, k ∈ ℤ.</p>
+  </div>`,
+  'eq-5': `<div class="rich-content">
+    <p><strong>Méthodologie de résolution</strong></p>
+    <ol>
+      <li>Placer la valeur de a sur l'axe des abscisses (cos) ou des ordonnées (sin).</li>
+      <li>Tracer une droite perpendiculaire à l'axe passant par a.</li>
+      <li>Repérer les points d'intersection avec le cercle trigonométrique.</li>
+      <li>Lire les angles correspondants en tenant compte de l'intervalle demandé.</li>
+    </ol>
+  </div>`
+};
+
+/* ============================================================
+   CARTE MENTALE (SVG) — VOLET 2
+   ============================================================ */
+const MIND = {
+  root: 'Trigonométrie',
+  branches: [
+    { t:'Cercle & Radian', side:'right', c:'#d97a1a', items:[
+      { short: 'Rayon R = 1, centre (0 ; 0)', id:'cercle-1' },
+      { short: "Orienté dans le sens direct (anti-horaire)", id:'cercle-2' },
+      { short: "1 rad : angle dont l'arc a pour longueur le rayon", id:'cercle-3' },
+      { short: 'Angle en degrés / 180 = Angle en radians / π', id:'cercle-4' },
+      { short: 'Mesure principale ∈ ]−π ; π]', id:'cercle-5' }
+    ]},
+    { t:'Valeurs remarquables', side:'right', c:'#c0392b', items:[
+      { short: 'θ = 0, π/6, π/4, π/3, π/2, π', id:'val-1' },
+      { short: 'cos θ = 1, √3/2, √2/2, 1/2, 0, −1', id:'val-2' },
+      { short: 'sin θ = 0, 1/2, √2/2, √3/2, 1, 0', id:'val-3' },
+      { short: 'Relation fondamentale : cos²θ + sin²θ = 1', id:'val-4' }
+    ]},
+    { t:'Signaux sinusoïdaux', side:'right', c:'#2a7f9e', items:[
+      { short: 'f(t) = A cos(ωt + φ) ou A sin(ωt + φ)', id:'sig-1' },
+      { short: 'Amplitude A : valeur maximale (A > 0)', id:'sig-2' },
+      { short: 'Pulsation ω : T = 2π / ω', id:'sig-3' },
+      { short: 'Phase instantanée ωt + φ (radians)', id:'sig-4' },
+      { short: "Phase à l'origine φ : décalage temporel", id:'sig-5' },
+      { short: "Dérivée : f′(t) = −Aω sin(ωt + φ)", id:'sig-6' }
+    ]},
+    { t:'Propriétés', side:'left', c:'#7d3c98', items:[
+      { short: 'cos(θ + 2π) = cos θ', id:'prop-1' },
+      { short: 'sin(θ + 2π) = sin θ', id:'prop-2' },
+      { short: 'Fonctions 2π-périodiques', id:'prop-3' },
+      { short: 'cos(−θ) = cos θ : fonction paire', id:'prop-4' },
+      { short: 'sin(−θ) = −sin θ : fonction impaire', id:'prop-5' },
+      { short: "cos : courbe symétrique / axe des ordonnées", id:'prop-6' },
+      { short: "sin : courbe symétrique / origine du repère", id:'prop-7' }
+    ]},
+    { t:'Symétries', side:'left', c:'#1e8449', items:[
+      { short: 'cos(π − θ) = −cos θ ; sin(π − θ) = sin θ', id:'sym-1' },
+      { short: 'cos(π + θ) = −cos θ ; sin(π + θ) = −sin θ', id:'sym-2' },
+      { short: 'cos(π/2 − θ) = sin θ ; sin(π/2 − θ) = cos θ', id:'sym-3' },
+      { short: 'cos(π/2 + θ) = −sin θ ; sin(π/2 + θ) = cos θ', id:'sym-4' },
+      { short: '(Ox) → (x ; −y) ; (Oy) → (−x ; y) ; O → (−x ; −y)', id:'sym-5' }
+    ]},
+    { t:'Équations', side:'left', c:'#b7950b', items:[
+      { short: 'cos x = a → x = α + 2kπ', id:'eq-1' },
+      { short: 'ou x = −α + 2kπ (k ∈ ℤ)', id:'eq-2' },
+      { short: 'sin x = a → x = α + 2kπ', id:'eq-3' },
+      { short: 'ou x = π − α + 2kπ (k ∈ ℤ)', id:'eq-4' },
+      { short: 'Méthode : placer a, tracer la perpendiculaire, repérer les intersections, lire les angles', id:'eq-5' }
+    ]}
+  ]
+};
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function wrapText(text, maxChars){
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words){
+    const test = cur ? cur + ' ' + w : w;
+    if (test.length > maxChars && cur){
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = test;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+let mindBuilt = false;
+
+function buildMindMap(){
+  if (mindBuilt) return;
+  mindBuilt = true;
+
+  const svg = document.getElementById('mindmap');
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const W = 1400;
+  const cx = W / 2;
+  const FS = 12.5;
+  const LH = 16;
+
+  const prepared = MIND.branches.map(b => {
+    const items = b.items.map(it => {
+      const lines = wrapText(it.short, 30);
+      return { 
+        lines, 
+        h: Math.max(30, lines.length * LH + 14),
+        short: it.short,
+        id: it.id
+      };
+    });
+    const blockH = items.reduce((s, i) => s + i.h + 8, 0) - 8;
+    return { ...b, items, blockH };
+  });
+
+  const groupBy = side => prepared.filter(b => b.side === side);
+  const totalFor = side =>
+    groupBy(side).reduce((s, b) => s + Math.max(b.blockH, 44) + 30, 0) - 30;
+
+  const H = Math.max(totalFor('right'), totalFor('left'), 520) + 180;
+
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  svg.appendChild(svgEl('rect', { x:0, y:0, width:W, height:H, fill:'#fffdf9' }));
+
+  const rootW = 230, rootH = 66;
+  const rootX = cx - rootW/2, rootY = H/2 - rootH/2;
+
+  const layouts = { right:[], left:[] };
+
+  ['right','left'].forEach(side => {
+    const arr = groupBy(side);
+    const total = totalFor(side);
+    let y = H/2 - total/2;
+
+    arr.forEach(b => {
+      const blockH = Math.max(b.blockH, 44);
+      const centreY = y + blockH/2;
+
+      const branchW = 190, branchH = 44;
+      const branchX = (side === 'right') ? cx + 130 : cx - 130 - branchW;
+      const leafW = 236;
+      const leafX = (side === 'right') ? cx + 380 : cx - 380 - leafW;
+
+      layouts[side].push({ b, y, blockH, centreY, branchX, branchH, branchW, leafX, leafW });
+      y += blockH + 30;
+    });
+  });
+
+  const connector = (x1, y1, x2, y2, color) => {
+    const p = svgEl('path', {
+      d: `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,
+      fill:'none', stroke:color, 'stroke-width':2.2, 'stroke-opacity':.55,
+      'stroke-linecap':'round'
+    });
+    svg.appendChild(p);
+  };
+
+  const spine = (x, y1, y2, color) => {
+    svg.appendChild(svgEl('line', {
+      x1:x, y1:y1, x2:x, y2:y2, stroke:color, 'stroke-width':2,
+      'stroke-opacity':.45, 'stroke-linecap':'round'
+    }));
+  };
+
+  ['right','left'].forEach(side => {
+    layouts[side].forEach(L => {
+      const { b, y, centreY, branchX, branchW, branchH, leafX, leafW } = L;
+
+      const rootEdgeX = (side === 'right') ? rootX + rootW : rootX;
+      const branchEdgeX = (side === 'right') ? branchX : branchX + branchW;
+      connector(rootEdgeX, H/2, branchEdgeX, centreY, b.c);
+
+      const spineX = (side === 'right')
+        ? branchX + branchW + 28
+        : branchX - 28;
+
+      let ly = y;
+      const leafCentres = [];
+      b.items.forEach(it => {
+        leafCentres.push(ly + it.h/2);
+        ly += it.h + 8;
+      });
+
+      if (leafCentres.length){
+        spine(spineX, leafCentres[0], leafCentres[leafCentres.length-1], b.c);
+
+        const bEdge = (side === 'right') ? branchX + branchW : branchX;
+        svg.appendChild(svgEl('line', {
+          x1:bEdge, y1:centreY, x2:spineX, y2:centreY,
+          stroke:b.c, 'stroke-width':2.2, 'stroke-opacity':.5, 'stroke-linecap':'round'
+        }));
+
+        leafCentres.forEach(lc => {
+          svg.appendChild(svgEl('line', {
+            x1:spineX, y1:lc, x2: (side==='right' ? leafX : leafX + leafW), y2:lc,
+            stroke:b.c, 'stroke-width':2, 'stroke-opacity':.45, 'stroke-linecap':'round'
+          }));
+        });
+      }
+
+      // Boîte de la branche (sans modale)
+      addBox(svg, branchX, centreY - branchH/2, branchW, branchH, {
+        lines:[b.t], fill: b.c, color:'#ffffff', fs:13.5, sw:0, r:12, bold:true
+      });
+
+      // Boîtes des feuilles (avec modale au survol)
+      let fy = y;
+      b.items.forEach(it => {
+        addBox(svg, leafX, fy, leafW, it.h, {
+          lines: it.lines, fill:'#ffffff', color:'#2b2b2b',
+          stroke: b.c, sw:1.4, r:9, fs: FS,
+          mmData: { title: it.short, rich: RICH[it.id] || '' }
+        });
+        fy += it.h + 8;
+      });
+    });
+  });
+
+  addBox(svg, rootX, rootY, rootW, rootH, {
+    lines:[MIND.root], fill:'#2f2a25', color:'#f5e7ce', fs:20, sw:0, r:18, bold:true
+  });
+}
+
+function addBox(parent, x, y, w, h, opts){
+  const g = svgEl('g', { class: 'mm-node' });
+  
+  const r = opts.r ?? 10;
+  const rect = svgEl('rect', {
+    x, y, width:w, height:h, rx:r, ry:r,
+    fill: opts.fill || '#ffffff',
+    stroke: opts.stroke || 'none',
+    'stroke-width': opts.sw ?? 1.5
+  });
+  g.appendChild(rect);
+
+  const lines = opts.lines || [];
+  const lh = 16;
+  const startY = y + h/2 - (lines.length - 1) * lh / 2;
+
+  const text = svgEl('text', {
+    x: x + w/2,
+    y: startY,
+    'text-anchor': 'middle',
+    'dominant-baseline': 'middle',
+    fill: opts.color || '#2b2b2b',
+    'font-size': opts.fs || 13,
+    'font-family': '"Segoe UI", system-ui, sans-serif',
+    'font-weight': opts.bold ? 600 : 400
+  });
+
+  lines.forEach((ln, i) => {
+    const tspan = svgEl('tspan', { x: x + w/2, dy: i === 0 ? 0 : lh });
+    tspan.textContent = ln;
+    text.appendChild(tspan);
+  });
+  g.appendChild(text);
+
+  parent.appendChild(g);
+
+  // Attacher les événements de survol si données fournies
+  if (opts.mmData) {
+    g.addEventListener('mouseenter', (e) => showMmModal(g, opts.mmData));
+    g.addEventListener('mouseleave', hideMmModal);
+  }
+
+  return g;
+}
+
+/* ============================================================
+   MODALE FLOTTANTE — CARTE MENTALE
+   ============================================================ */
+const mmModal   = document.getElementById('mindmap-modal');
+const mmTitle   = document.getElementById('mm-title');
+const mmBody    = document.getElementById('mm-body');
+let currentMmEl = null;
+
+function showMmModal(el, data){
+  if (!mmModal) return;
+  if (currentMmEl === el && mmModal.classList.contains('visible')) return;
+  currentMmEl = el;
+
+  mmTitle.textContent = data.title || '';
+  mmBody.innerHTML = data.rich || '';
+
+  mmModal.classList.add('visible');
+  mmModal.setAttribute('aria-hidden', 'false');
+
+  // Positionnement basé sur le rect du groupe
+  const rect = el.getBoundingClientRect();
+  const mw = mmModal.offsetWidth;
+  const mh = mmModal.offsetHeight;
+
+  let left = rect.right + 14;
+  let top  = rect.top + rect.height/2 - mh/2;
+
+  if (left + mw > window.innerWidth - 10) {
+    left = rect.left - mw - 14;
+  }
+  if (left < 10) left = 10;
+  if (top < 10) top = 10;
+  if (top + mh > window.innerHeight - 10) top = window.innerHeight - mh - 10;
+
+  mmModal.style.left = left + 'px';
+  mmModal.style.top  = top + 'px';
+}
+
+function hideMmModal(){
+  if (!mmModal) return;
+  currentMmEl = null;
+  mmModal.classList.remove('visible');
+  mmModal.setAttribute('aria-hidden', 'true');
+}
+
+/* ============================================================
+   GRAPHE (CANVAS) — VOLET 4
+   ============================================================ */
+const GRAPH = {
+  nodes: [
+    { id:'cercle', label:'Cercle trigonométrique', g:'A' },
+    { id:'radian', label:'Radian (rad)',           g:'A' },
+    { id:'degres', label:'Degrés',                 g:'A' },
+    { id:'mesure', label:'Mesure principale ]−π;π]', g:'A' },
+
+    { id:'cos',    label:'cos(θ)',                 g:'B' },
+    { id:'sin',    label:'sin(θ)',                 g:'B' },
+    { id:'val',    label:'Valeurs remarquables',   g:'B' },
+    { id:'fond',   label:'cos²θ + sin²θ = 1',      g:'B' },
+    { id:'per',    label:'Périodicité 2π',         g:'B' },
+    { id:'par',    label:'Parité',                 g:'B' },
+    { id:'sym',    label:'Symétries',              g:'B' },
+    { id:'eq',     label:'Équations trigonométriques', g:'B' },
+
+    { id:'sig',    label:'Signaux sinusoïdaux',    g:'C' },
+    { id:'amp',    label:'Amplitude A',            g:'C' },
+    { id:'omega',  label:'Pulsation ω',            g:'C' },
+    { id:'T',      label:'Période T = 2π/ω',       g:'C' },
+    { id:'phi',    label:'Phase à l\'origine φ',   g:'C' },
+    { id:'der',    label:'Dérivée f′(t)',          g:'C' }
+  ],
+  links: [
+    ['cercle','radian','définit'],
+    ['cercle','degres','mesure'],
+    ['radian','degres','conversion'],
+    ['radian','mesure','ramène'],
+    ['degres','mesure','ramène'],
+    ['cercle','cos','projette'],
+    ['cercle','sin','projette'],
+    ['cos','val','table'],
+    ['sin','val','table'],
+    ['cos','fond','vérifie'],
+    ['sin','fond','vérifie'],
+    ['cos','per','période'],
+    ['sin','per','période'],
+    ['cos','par','paire'],
+    ['sin','par','impaire'],
+    ['cos','sym','symétries'],
+    ['sin','sym','symétries'],
+    ['sym','eq','résout'],
+    ['val','eq','résout'],
+    ['cos','sig','modélise'],
+    ['sin','sig','modélise'],
+    ['sig','amp','paramètre'],
+    ['sig','omega','paramètre'],
+    ['omega','T','période'],
+    ['sig','phi','paramètre'],
+    ['sig','der','dérive']
+  ]
+};
+
+/* ============================================================
+   CONTENU RICHE POUR LES MODALES DU GRAPHE
+   ============================================================ */
+const NODE_CONTENT = {
+  cercle: {
+    desc: "Cercle de rayon R = 1, de centre O(0 ; 0), orienté dans le sens direct (anti-horaire).",
+    rich: `<div class="rich-content">
+      <p><strong>Cercle trigonométrique</strong></p>
+      <ul>
+        <li>Rayon : R = 1</li>
+        <li>Centre : O(0 ; 0)</li>
+        <li>Orienté dans le sens direct (anti-horaire)</li>
+      </ul>
+      <div class="formula">R = 1 ; O(0 ; 0)</div>
+    </div>`
+  },
+  radian: {
+    desc: "Un radian est la mesure d'un angle au centre qui intercepte un arc de longueur égale au rayon.",
+    rich: `<div class="rich-content">
+      <p><strong>Radian (rad)</strong></p>
+      <p>Un radian est la mesure d'un angle au centre qui intercepte, sur le cercle, un arc dont la longueur est égale au rayon de ce cercle.</p>
+      <div class="formula">1 rad ⇔ arc de longueur R = 1</div>
+    </div>`
+  },
+  degres: {
+    desc: "Mesure d'angle en degrés. Conversion : degrés/180 = radians/π.",
+    rich: `<div class="rich-content">
+      <p><strong>Degrés et conversion</strong></p>
+      <div class="formula">Angle en degrés / 180 = Angle en radians / π</div>
+      <p>Exemples : 180° = π rad, 90° = π/2 rad, 60° = π/3 rad, 45° = π/4 rad, 30° = π/6 rad.</p>
+    </div>`
+  },
+  mesure: {
+    desc: "Mesure principale : angle unique dans ]−π ; π]. Ajouter ou soustraire 2π jusqu'à entrer dans l'intervalle.",
+    rich: `<div class="rich-content">
+      <p><strong>Mesure principale</strong></p>
+      <p>Angle unique appartenant à l'intervalle <strong>]−π ; π]</strong>.</p>
+      <div class="tip"><strong>Astuce :</strong> ajouter ou soustraire 2π (un tour complet) jusqu'à entrer dans l'intervalle.</div>
+    </div>`
+  },
+  cos: {
+    desc: "Fonction cosinus : paire, 2π-périodique. cos(−θ) = cos(θ).",
+    rich: `<div class="rich-content">
+      <p><strong>Fonction cosinus</strong></p>
+      <ul>
+        <li>Paire : cos(−θ) = cos(θ)</li>
+        <li>2π-périodique : cos(θ + 2π) = cos(θ)</li>
+      </ul>
+      <p><strong>Valeurs remarquables :</strong></p>
+      <div class="formula">cos(0) = 1 ; cos(π/6) = √3/2 ; cos(π/4) = √2/2</div>
+      <div class="formula">cos(π/3) = 1/2 ; cos(π/2) = 0 ; cos(π) = −1</div>
+    </div>`
+  },
+  sin: {
+    desc: "Fonction sinus : impaire, 2π-périodique. sin(−θ) = −sin(θ).",
+    rich: `<div class="rich-content">
+      <p><strong>Fonction sinus</strong></p>
+      <ul>
+        <li>Impaire : sin(−θ) = −sin(θ)</li>
+        <li>2π-périodique : sin(θ + 2π) = sin(θ)</li>
+      </ul>
+      <p><strong>Valeurs remarquables :</strong></p>
+      <div class="formula">sin(0) = 0 ; sin(π/6) = 1/2 ; sin(π/4) = √2/2</div>
+      <div class="formula">sin(π/3) = √3/2 ; sin(π/2) = 1 ; sin(π) = 0</div>
+    </div>`
+  },
+  val: {
+    desc: "Valeurs remarquables de cos et sin pour θ = 0, π/6, π/4, π/3, π/2, π.",
+    rich: `<div class="rich-content">
+      <p><strong>Valeurs remarquables</strong></p>
+      <table class="mini">
+        <tr><th>θ</th><th>0</th><th>π/6</th><th>π/4</th><th>π/3</th><th>π/2</th><th>π</th></tr>
+        <tr><td><strong>cos θ</strong></td><td>1</td><td>√3/2</td><td>√2/2</td><td>1/2</td><td>0</td><td>−1</td></tr>
+        <tr><td><strong>sin θ</strong></td><td>0</td><td>1/2</td><td>√2/2</td><td>√3/2</td><td>1</td><td>0</td></tr>
+      </table>
+      <p>Équivalents en degrés : 0°, 30°, 45°, 60°, 90°, 180°.</p>
+    </div>`
+  },
+  fond: {
+    desc: "Relation fondamentale : cos²θ + sin²θ = 1.",
+    rich: `<div class="rich-content">
+      <p><strong>Relation fondamentale</strong></p>
+      <div class="formula">cos²(θ) + sin²(θ) = 1</div>
+      <p>Théorème de Pythagore dans le triangle rectangle inscrit dans le cercle trigonométrique.</p>
+    </div>`
+  },
+  per: {
+    desc: "Périodicité : cos(θ + 2π) = cos θ et sin(θ + 2π) = sin θ.",
+    rich: `<div class="rich-content">
+      <p><strong>Périodicité</strong></p>
+      <div class="formula">cos(θ + 2π) = cos(θ)</div>
+      <div class="formula">sin(θ + 2π) = sin(θ)</div>
+      <p>Les fonctions cos et sin sont <strong>2π-périodiques</strong>.</p>
+    </div>`
+  },
+  par: {
+    desc: "Parité : cos est paire (axe des ordonnées), sin est impaire (origine).",
+    rich: `<div class="rich-content">
+      <p><strong>Parité</strong></p>
+      <ul>
+        <li><strong>cos</strong> : paire → cos(−θ) = cos(θ). Courbe symétrique par rapport à l'axe des ordonnées.</li>
+        <li><strong>sin</strong> : impaire → sin(−θ) = −sin(θ). Courbe symétrique par rapport à l'origine du repère.</li>
+      </ul>
+    </div>`
+  },
+  sym: {
+    desc: "Relations de symétrie : −θ, π − θ, π + θ, π/2 − θ, π/2 + θ.",
+    rich: `<div class="rich-content">
+      <p><strong>Relations de symétrie</strong></p>
+      <table class="mini">
+        <tr><th>Angle</th><th>cos</th><th>sin</th></tr>
+        <tr><td>−θ</td><td>cos θ</td><td>−sin θ</td></tr>
+        <tr><td>π − θ</td><td>−cos θ</td><td>sin θ</td></tr>
+        <tr><td>π + θ</td><td>−cos θ</td><td>−sin θ</td></tr>
+        <tr><td>π/2 − θ</td><td>sin θ</td><td>cos θ</td></tr>
+        <tr><td>π/2 + θ</td><td>−sin θ</td><td>cos θ</td></tr>
+      </table>
+      <p><strong>Transformations :</strong> −θ → (Ox) → (x ; −y) ; π − θ → (Oy) → (−x ; y) ; π + θ → O → (−x ; −y) ; π/2 − θ → y = x → (y ; x).</p>
+    </div>`
+  },
+  eq: {
+    desc: "Équations trigonométriques : cos x = a et sin x = a, solutions sur ℝ.",
+    rich: `<div class="rich-content">
+      <p><strong>Équations trigonométriques</strong></p>
+      <p><strong>cos x = a :</strong></p>
+      <div class="formula">x = α + 2kπ ou x = −α + 2kπ (k ∈ ℤ)</div>
+      <p><strong>sin x = a :</strong></p>
+      <div class="formula">x = α + 2kπ ou x = π − α + 2kπ (k ∈ ℤ)</div>
+      <p><strong>Méthode :</strong> placer a sur l'axe (cos → abscisses, sin → ordonnées), tracer la perpendiculaire, repérer les intersections avec le cercle, lire les angles selon l'intervalle demandé.</p>
+    </div>`
+  },
+  sig: {
+    desc: "Signaux sinusoïdaux : f(t) = A cos(ωt + φ) ou A sin(ωt + φ).",
+    rich: `<div class="rich-content">
+      <p><strong>Signaux sinusoïdaux</strong></p>
+      <div class="formula">f(t) = A cos(ωt + φ)</div>
+      <div class="formula">ou f(t) = A sin(ωt + φ)</div>
+      <ul>
+        <li><strong>Amplitude A</strong> : valeur maximale du signal (A > 0)</li>
+        <li><strong>Pulsation ω</strong> : T = 2π/ω</li>
+        <li><strong>Phase instantanée</strong> : ωt + φ (radians)</li>
+        <li><strong>Phase à l'origine φ</strong> : valeur à t = 0 ; décalage temporel</li>
+        <li><strong>Dérivée</strong> : f′(t) = −Aω sin(ωt + φ)</li>
+      </ul>
+    </div>`
+  },
+  amp: {
+    desc: "Amplitude A : valeur maximale du signal (A > 0).",
+    rich: `<div class="rich-content">
+      <p><strong>Amplitude A</strong></p>
+      <p>Valeur maximale du signal sinusoïdal (A > 0).</p>
+    </div>`
+  },
+  omega: {
+    desc: "Pulsation ω : liée à la période par T = 2π/ω.",
+    rich: `<div class="rich-content">
+      <p><strong>Pulsation ω</strong></p>
+      <div class="formula">T = 2π / ω</div>
+      <p>La pulsation est liée à la période T du signal.</p>
+    </div>`
+  },
+  T: {
+    desc: "Période T = 2π/ω.",
+    rich: `<div class="rich-content">
+      <p><strong>Période T</strong></p>
+      <div class="formula">T = 2π / ω</div>
+    </div>`
+  },
+  phi: {
+    desc: "Phase à l'origine φ : valeur de la phase à t = 0 ; décalage temporel.",
+    rich: `<div class="rich-content">
+      <p><strong>Phase à l'origine φ</strong></p>
+      <p>Valeur de la phase à t = 0. Permet le décalage temporel du signal.</p>
+    </div>`
+  },
+  der: {
+    desc: "Dérivée : f(t) = A cos(ωt + φ) ⇒ f′(t) = −Aω sin(ωt + φ).",
+    rich: `<div class="rich-content">
+      <p><strong>Dérivée</strong></p>
+      <p>La dérivée de f(t) = A cos(ωt + φ) est :</p>
+      <div class="formula">f′(t) = −Aω sin(ωt + φ)</div>
+    </div>`
+  }
+};
+
+const GROUP_COLORS = {
+  A: { fill:'#fdf0dd', stroke:'#d97a1a', text:'#8a4a0c' },
+  B: { fill:'#eef6fb', stroke:'#2a7f9e', text:'#1a5f78' },
+  C: { fill:'#eefaf1', stroke:'#1e8449', text:'#166b3a' }
+};
+
+let gNodes = [], gLinks = [], gCtx = null, gCanvas = null, gW = 0, gH = 0, gDpr = 1;
+let gHover = null, gRunning = false, gInit = false;
+let dragNode = null, dragOffset = { x:0, y:0 };
+
+/* ---- Éléments de la modale du graphe ---- */
+const gm        = document.getElementById('graph-modal');
+const gmTitle   = document.getElementById('gm-title');
+const gmDesc    = document.getElementById('gm-desc');
+const gmLinks   = document.getElementById('gm-links');
+
+function hideModal(){
+  if (!gm) return;
+  gm.classList.remove('visible');
+  gm.setAttribute('aria-hidden', 'true');
+}
+
+function positionModal(n){
+  if (!gm) return;
+  const mw = gm.offsetWidth, mh = gm.offsetHeight;
+  let left = n.x + n.w/2 + 14;
+  let top  = n.y - mh/2;
+
+  if (left + mw > gW - 8) left = n.x - n.w/2 - mw - 14;
+  if (left < 8) left = 8;
+  if (top < 8) top = 8;
+  if (top + mh > gH - 8) top = gH - mh - 8;
+
+  gm.style.left = left + 'px';
+  gm.style.top  = top + 'px';
+}
+
+/* ============================================================
+   FONCTION POUR INSÉRER DES SAUTS DE LIGNE APRÈS . ET :
+   ============================================================ */
+function setTextWithBreaks(element, text) {
+  element.innerHTML = '';
+  if (!text) return;
+  
+  const parts = text.split(/([.:])/);
+  
+  parts.forEach((part, index) => {
+    if (part === '.' || part === ':') {
+      element.appendChild(document.createTextNode(part));
+      if (index < parts.length - 1) {
+        element.appendChild(document.createElement('br'));
+      }
+    } else if (part !== '') {
+      element.appendChild(document.createTextNode(part));
+    }
+  });
+}
+
+function showModal(n){
+  if (!gm || !n) return;
+
+  gmTitle.textContent = n.label;
+  
+  const content = NODE_CONTENT[n.id];
+  if (content && content.rich) {
+    gmDesc.innerHTML = content.rich;
+  } else if (content && content.desc) {
+    setTextWithBreaks(gmDesc, content.desc);
+  } else {
+    gmDesc.innerHTML = '';
+  }
+
+  gmLinks.innerHTML = '';
+  const neighbours = [];
+  gLinks.forEach(l => {
+    if (l.a === n)      neighbours.push({ node:l.b, rel:l.rel });
+    else if (l.b === n) neighbours.push({ node:l.a, rel:l.rel });
+  });
+
+  if (!neighbours.length){
+    const empty = document.createElement('span');
+    empty.style.cssText = 'color:#9a8b76;font-size:11.5px;';
+    empty.textContent = 'Aucune connexion';
+    gmLinks.appendChild(empty);
+  } else {
+    neighbours.forEach(({ node, rel }) => {
+      const row = document.createElement('div');
+      row.className = 'gm-link';
+
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = GROUP_COLORS[node.g].stroke;
+
+      const label = document.createElement('span');
+      label.textContent = node.label;
+
+      const relSpan = document.createElement('span');
+      relSpan.className = 'rel';
+      relSpan.textContent = ' (' + rel + ')';
+
+      row.appendChild(dot);
+      row.appendChild(label);
+      row.appendChild(relSpan);
+      gmLinks.appendChild(row);
+    });
+  }
+
+  gm.classList.add('visible');
+  gm.setAttribute('aria-hidden', 'false');
+  positionModal(n);
+}
+
+/* ---- Dimensionnement ---- */
+function resizeGraphCanvas(){
+  gCanvas = document.getElementById('graph-canvas');
+  if (!gCanvas) return;
+
+  const rect = gCanvas.getBoundingClientRect();
+  gDpr = window.devicePixelRatio || 1;
+  gW = Math.max(rect.width, 320);
+  gH = Math.max(rect.height, 320);
+
+  gCanvas.width  = Math.round(gW * gDpr);
+  gCanvas.height = Math.round(gH * gDpr);
+
+  gCtx = gCanvas.getContext('2d');
+  gCtx.setTransform(gDpr, 0, 0, gDpr, 0, 0);
+
+  if (gInit) {
+    gNodes.forEach(n => {
+      n.x = Math.min(Math.max(n.x, n.w/2 + 8), gW - n.w/2 - 8);
+      n.y = Math.min(Math.max(n.y, n.h/2 + 8), gH - n.h/2 - 8);
+    });
+    hideModal();
+  }
+}
+
+/* ---- Initialisation ---- */
+function initGraph(){
+  if (gInit) return;
+  gInit = true;
+
+  const anchors = {
+    A: { x: 0.20, y: 0.30 },
+    B: { x: 0.50, y: 0.72 },
+    C: { x: 0.82, y: 0.30 }
+  };
+
+  gCtx = gCanvas.getContext('2d');
+  gCtx.font = '600 13px "Segoe UI", system-ui, sans-serif';
+
+  gNodes = GRAPH.nodes.map((n, i) => {
+    const tw = gCtx.measureText(n.label).width;
+    const w = Math.max(90, tw + 26);
+    const h = 32;
+    const a = anchors[n.g];
+    const ang = (i / GRAPH.nodes.length) * Math.PI * 2;
+    return {
+      ...n,
+      w, h, r: (w + h) / 4,
+      x: a.x * gW + Math.cos(ang) * 70,
+      y: a.y * gH + Math.sin(ang) * 70,
+      vx: 0, vy: 0, fx: 0, fy: 0,
+      ax: a.x, ay: a.y,
+      pinned: false
+    };
+  });
+
+  const map = {};
+  gNodes.forEach(n => map[n.id] = n);
+
+  gLinks = GRAPH.links.map(([a, b, rel]) => ({ a: map[a], b: map[b], rel: rel || '' }));
+}
+
+/* ---- Physique ---- */
+function stepPhysics(){
+  const cx = gW / 2, cy = gH / 2;
+
+  gNodes.forEach(n => { n.fx = 0; n.fy = 0; });
+
+  for (let i = 0; i < gNodes.length; i++){
+    for (let j = i + 1; j < gNodes.length; j++){
+      const a = gNodes[i], b = gNodes[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d = Math.hypot(dx, dy) || 0.01;
+      const minD = (a.w + b.w) / 2 * 0.78 + 10;
+
+      if (d < minD){
+        const f = (minD - d) * 0.55;
+        const ux = dx / d, uy = dy / d;
+        a.fx -= ux * f; a.fy -= uy * f;
+        b.fx += ux * f; b.fy += uy * f;
+      }
+    }
+  }
+
+  gLinks.forEach(l => {
+    const a = l.a, b = l.b;
+    let dx = b.x - a.x, dy = b.y - a.y;
+    let d = Math.hypot(dx, dy) || 0.01;
+    const L = 165;
+    const f = (d - L) * 0.012;
+    const ux = dx / d, uy = dy / d;
+    a.fx += ux * f * 10; a.fy += uy * f * 10;
+    b.fx -= ux * f * 10; b.fy -= uy * f * 10;
+  });
+
+  gNodes.forEach(n => {
+    n.fx += (n.ax * gW - n.x) * 0.020;
+    n.fy += (n.ay * gH - n.y) * 0.020;
+    n.fx += (cx - n.x) * 0.0015;
+    n.fy += (cy - n.y) * 0.0015;
+  });
+
+  gNodes.forEach(n => {
+    if (n.pinned){
+      n.vx = 0; n.vy = 0;
+      return;
+    }
+    n.vx = (n.vx + n.fx * 0.9) * 0.82;
+    n.vy = (n.vy + n.fy * 0.9) * 0.82;
+    n.x += n.vx;
+    n.y += n.vy;
+
+    const padX = n.w / 2 + 8;
+    const padY = n.h / 2 + 8;
+    if (n.x < padX)       { n.x = padX;       n.vx *= -0.4; }
+    if (n.x > gW - padX)  { n.x = gW - padX;  n.vx *= -0.4; }
+    if (n.y < padY)       { n.y = padY;       n.vy *= -0.4; }
+    if (n.y > gH - padY)  { n.y = gH - padY;  n.vy *= -0.4; }
+  });
+}
+
+/* ---- Dessin ---- */
+function roundRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x,     y + h, r);
+  ctx.arcTo(x,     y + h, x,     y,     r);
+  ctx.arcTo(x,     y,     x + w, y,     r);
+  ctx.closePath();
+}
+
+function drawGraph(){
+  if (!gCtx) return;
+  gCtx.clearRect(0, 0, gW, gH);
+
+  gLinks.forEach(l => {
+    const active = gHover && (l.a === gHover || l.b === gHover);
+    gCtx.beginPath();
+    gCtx.moveTo(l.a.x, l.a.y);
+    gCtx.lineTo(l.b.x, l.b.y);
+    gCtx.strokeStyle = active ? 'rgba(217,122,26,.85)' : 'rgba(150,135,110,.28)';
+    gCtx.lineWidth   = active ? 2.6 : 1.3;
+    gCtx.stroke();
+  });
+
+  gNodes.forEach(n => {
+    const c = GROUP_COLORS[n.g];
+    const isHover = (n === gHover);
+    const related = gHover && gLinks.some(l =>
+      (l.a === gHover && l.b === n) || (l.b === gHover && l.a === n));
+    const dim = gHover && !isHover && !related;
+
+    const x = n.x - n.w / 2;
+    const y = n.y - n.h / 2;
+
+    gCtx.save();
+    gCtx.globalAlpha = dim ? 0.35 : 1;
+
+    gCtx.shadowColor = 'rgba(90,68,25,.18)';
+    gCtx.shadowBlur = isHover ? 16 : 8;
+    gCtx.shadowOffsetY = 2;
+
+    roundRectPath(gCtx, x, y, n.w, n.h, 10);
+    gCtx.fillStyle = isHover ? c.stroke : c.fill;
+    gCtx.fill();
+
+    gCtx.shadowColor = 'transparent';
+    gCtx.lineWidth = isHover ? 2.4 : 1.4;
+    gCtx.strokeStyle = c.stroke;
+    gCtx.stroke();
+
+    gCtx.fillStyle = isHover ? '#ffffff' : c.text;
+    gCtx.font = '600 13px "Segoe UI", system-ui, sans-serif';
+    gCtx.textAlign = 'center';
+    gCtx.textBaseline = 'middle';
+    gCtx.fillText(n.label, n.x, n.y + 0.5);
+
+    gCtx.restore();
+  });
+}
+
+/* ---- Boucle ---- */
+function graphTick(){
+  if (!gRunning) return;
+  stepPhysics();
+  stepPhysics();
+  drawGraph();
+  requestAnimationFrame(graphTick);
+}
+
+function startGraphLoop(){
+  if (!gCanvas) resizeGraphCanvas();
+  initGraph();
+  if (!gRunning){
+    gRunning = true;
+    requestAnimationFrame(graphTick);
+  }
+}
+
+/* ---- Test de survol ---- */
+function hitTest(mx, my){
+  for (let i = gNodes.length - 1; i >= 0; i--){
+    const n = gNodes[i];
+    if (Math.abs(mx - n.x) <= n.w/2 && Math.abs(my - n.y) <= n.h/2) return n;
+  }
+  return null;
+}
+
+/* ---- Interaction souris / tactile ---- */
+function canvasPos(e){
+  const rect = gCanvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  gCanvas = document.getElementById('graph-canvas');
+  if (!gCanvas) return;
+
+  gCanvas.addEventListener('pointerdown', e => {
+    if (!gInit) return;
+    const { x, y } = canvasPos(e);
+    const n = hitTest(x, y);
+    if (n){
+      dragNode = n;
+      dragOffset.x = n.x - x;
+      dragOffset.y = n.y - y;
+      n.pinned = true;
+      n.vx = 0; n.vy = 0;
+      hideModal();
+      gHover = n;
+      try { gCanvas.setPointerCapture(e.pointerId); } catch(_) {}
+      gCanvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+
+  gCanvas.addEventListener('pointermove', e => {
+    if (!gInit) return;
+    const { x, y } = canvasPos(e);
+
+    if (dragNode){
+      dragNode.x = Math.min(Math.max(x + dragOffset.x, dragNode.w/2 + 8), gW - dragNode.w/2 - 8);
+      dragNode.y = Math.min(Math.max(y + dragOffset.y, dragNode.h/2 + 8), gH - dragNode.h/2 - 8);
+      return;
+    }
+
+    const n = hitTest(x, y);
+    gHover = n;
+    gCanvas.style.cursor = n ? 'grab' : 'crosshair';
+
+    if (n) showModal(n);
+    else   hideModal();
+  });
+
+  function endDrag(e){
+    if (dragNode){
+      dragNode.pinned = false;
+      dragNode = null;
+      try { gCanvas.releasePointerCapture(e.pointerId); } catch(_) {}
+      gCanvas.style.cursor = 'crosshair';
+      const { x, y } = canvasPos(e);
+      const n = hitTest(x, y);
+      gHover = n;
+      if (n) showModal(n);
+      else   hideModal();
+    }
+  }
+
+  gCanvas.addEventListener('pointerup', endDrag);
+  gCanvas.addEventListener('pointercancel', endDrag);
+
+  gCanvas.addEventListener('pointerleave', () => {
+    if (!dragNode){
+      gHover = null;
+      hideModal();
+    }
+  });
+});
+
+/* ---- Redimensionnement ---- */
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const graphPanel = document.getElementById('panel-graphe');
+    if (graphPanel && graphPanel.classList.contains('active')){
+      resizeGraphCanvas();
+    }
+  }, 180);
+});
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => { try { buildMindMap(); } catch(e){ console.warn(e); } }, 400);
+  // Masquer la modale de la carte mentale au clic n'importe où
+  document.addEventListener('click', () => { if (mmModal) hideMmModal(); });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2939 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte Joker — Dérivation</title>
+
+<!-- ===================== CONFIGURATION MATHJAX ===================== -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath:  [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    svg: { fontCache: 'global' },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js"></script>
+
+<style>
+/* ===================== VARIABLES & BASE ===================== */
+:root{
+  --bg:#f4efe6;
+  --panel:#fffdf9;
+  --ink:#33291f;
+  --muted:#7b6a57;
+  --orange:#d97a1a;
+  --brown:#7a4a12;
+  --line:#e6dbc9;
+  --blue:#2b4b9b;
+  --red:#c0392b;
+  --green:#2e7d5b;
+  --violet:#6b3fa0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+#app{display:flex;min-height:100vh}
+
+/* ===================== SIDEBAR ===================== */
+#sidebar{
+  position:fixed; top:0; left:0; width:222px; height:100vh;
+  background:linear-gradient(180deg,#2c251d 0%,#1d1813 100%);
+  padding:18px 14px;
+  display:flex; flex-direction:column; gap:9px;
+  box-shadow:3px 0 18px rgba(40,25,10,.22);
+  z-index:60;
+}
+#sidebar .brand{
+  font-size:.70rem; letter-spacing:.18em; text-transform:uppercase;
+  color:#c9a26b; text-align:center; margin-bottom:2px;
+}
+#sidebar h1{
+  font-size:.95rem; margin:0 0 12px; text-align:center;
+  font-weight:600; color:#fff6e9; letter-spacing:.02em;
+}
+#sidebar h1 span{color:var(--orange)}
+.navbtn{
+  display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.09);
+  color:#eadfce; border-radius:12px;
+  padding:10px 12px; font-size:.85rem;
+  cursor:pointer; text-align:left; font-family:inherit;
+  transition:transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.navbtn .num{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:50%;
+  background:rgba(217,122,26,.28); color:#f2b872;
+  font-size:.74rem; font-weight:700; flex:0 0 auto;
+}
+.navbtn:hover{background:rgba(217,122,26,.16); transform:translateX(2px)}
+.navbtn.active{
+  background:linear-gradient(90deg, rgba(217,122,26,.34), rgba(217,122,26,.06));
+  border-color:rgba(217,122,26,.75);
+  color:#ffd9a6;
+  box-shadow:inset 0 0 0 1px rgba(217,122,26,.22);
+}
+.navbtn.active .num{background:var(--orange); color:#2c251d}
+#sidebar .foot{
+  margin-top:auto; font-size:.68rem; color:#8a7a66; text-align:center; line-height:1.35;
+}
+
+/* ===================== MAIN ===================== */
+main{margin-left:222px; padding:22px 26px 70px; max-width:1180px; width:100%}
+.panel{display:none; animation:fade .22s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px 18px;
+  margin:0 0 16px;
+  box-shadow:0 6px 18px rgba(122,74,18,.07);
+}
+.card > h2{
+  font-size:1.05rem; margin:0 0 10px; color:var(--brown);
+  display:flex; align-items:center; gap:9px; line-height:1.25;
+}
+.card > h2 .badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:24px; height:24px; padding:0 6px; border-radius:8px;
+  background:linear-gradient(160deg,var(--orange),#b8600f);
+  color:#fff; font-size:.72rem; font-weight:700; flex:0 0 auto;
+}
+h3{font-size:.95rem; margin:16px 0 6px; color:var(--brown)}
+h3:first-of-type{margin-top:6px}
+p{margin:.45em 0}
+ul{margin:.4em 0 .5em 1.15em; padding:0}
+li{margin:.22em 0}
+strong{color:#4b3a28}
+
+.formula{
+  background:#fbf5ea; border-left:3px solid var(--orange);
+  border-radius:10px; padding:8px 12px; margin:10px 0;
+  overflow-x:auto;
+}
+.note{
+  font-size:.92rem; background:#fdf6e9; border:1px dashed #e5c99b;
+  border-radius:10px; padding:8px 12px; margin:10px 0; color:#5b4732;
+}
+.note.warn{background:#fdf0ec; border-color:#e8b7a8; color:#7a3a2a}
+.tag{
+  display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; background:var(--orange);
+  border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:1px;
+}
+
+/* ===================== TABLEAUX ===================== */
+table.data{
+  width:100%; border-collapse:collapse; font-size:.86rem; margin:10px 0;
+}
+table.data th, table.data td{
+  border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top;
+}
+table.data th{background:#f3e8d7; color:var(--brown); font-weight:600}
+table.data tr:nth-child(even) td{background:#fcf9f3}
+table.data td.c, table.data th.c{text-align:center}
+
+/* Zone de dessin des tableaux tkz-tab (Canvas) */
+.tkz-canvas-wrap{
+  display:flex; justify-content:center; align-items:center;
+  width:100%; margin:12px 0;
+  background:#fffdf9; border:1px solid var(--line); border-radius:10px;
+  padding:6px;
+}
+.tkz-canvas-wrap canvas{max-width:100%; height:auto; display:block}
+
+/* ===================== FIGURES / SVG ===================== */
+figure{margin:14px 0; text-align:center}
+figcaption{font-size:.9rem; color:var(--muted); margin-top:6px; overflow-x:auto}
+svg.diagram{max-width:100%; height:auto; display:block; margin:0 auto}
+.figrow{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; align-items:flex-start}
+.figrow figure{flex:0 1 auto; margin:0; min-width:0}
+.plot-slot{display:inline-block; max-width:100%}
+.lg{font-weight:600}
+.lg.b{color:#2b4b9b}
+.lg.r{color:#c0392b}
+.lg.g{color:#2e7d5b}
+.lg.o{color:#d97a1a}
+.lg.v{color:#6b3fa0}
+
+/* ===================== CODE ===================== */
+pre{
+  background:#2c251d; color:#f2e7d5; border-radius:10px;
+  padding:11px 13px; font-size:.79rem; line-height:1.5;
+  overflow-x:auto; margin:10px 0;
+}
+pre code{font-family:ui-monospace, Consolas, "Courier New", monospace}
+code.inline{
+  font-family:ui-monospace, Consolas, monospace; font-size:.85em;
+  background:#f1e7d6; border-radius:5px; padding:1px 5px; color:#7a4a12;
+}
+
+/* ===================== CONTRÔLE STRICT MATHJAX ===================== */
+mjx-container                  { font-size: 1.05em !important; }
+mjx-container[display="true"]  { font-size: 1.1em  !important; margin: 0.4em 0; }
+h1 mjx-container,
+h2 mjx-container,
+h3 mjx-container               { font-size: 1em    !important; }
+table.data mjx-container       { font-size: 0.95em !important; }
+figcaption mjx-container       { font-size: 0.95em !important; }
+figcaption mjx-container svg,
+figcaption > svg               { width:auto !important; height:auto !important;
+                                 max-width:100%; display:inline-block; }
+
+/* ===================== MODALE FLOTTANTE ===================== */
+#modal{
+  position:fixed; left:0; top:0; z-index:300;
+  width:340px; max-width:min(92vw, 520px);
+  background:#fffdf9; border:1px solid #e0c9a4;
+  border-radius:14px; padding:12px 14px;
+  box-shadow:0 16px 44px rgba(60,40,15,.28);
+  opacity:0; pointer-events:none; transition:opacity .12s ease;
+  font-size:.85rem; color:var(--ink);
+  max-height:88vh; overflow:hidden;
+}
+#modal.visible{opacity:1; pointer-events:auto}
+#modal h4{
+  margin:0 0 7px; font-size:.9rem; color:var(--brown);
+  border-bottom:1px solid var(--line); padding-bottom:5px; line-height:1.3;
+}
+#modal .mdesc{color:#4a3c2e; overflow-x:hidden; word-break:break-word}
+#modal .mmath{margin-top:6px; overflow-x:hidden}
+#modal .mextra{margin-top:8px; overflow-x:hidden}
+#modal .mextra table.data{font-size:.78rem; margin:6px 0}
+#modal .mextra pre{font-size:.7rem; padding:8px; overflow-x:hidden; white-space:pre-wrap; word-break:break-word}
+#modal .mextra svg.diagram{margin:4px auto}
+#modal .mconn{
+  margin-top:9px; font-size:.76rem; color:var(--muted);
+  border-top:1px dashed var(--line); padding-top:7px;
+}
+#modal .mconn b{color:var(--brown)}
+
+/* ===================== CARTE MENTALE ===================== */
+#mindmap-wrap{width:100%; overflow-x:auto; padding:4px 0}
+#mindmap{display:block; margin:0 auto; max-width:100%; height:auto; min-width:700px}
+#mindmap .leaf{cursor:pointer}
+#mindmap .leaf rect{transition:filter .15s ease}
+#mindmap .leaf:hover rect{filter:brightness(1.12) drop-shadow(0 3px 8px rgba(122,74,18,.28))}
+.mm-legend{
+  display:flex; flex-wrap:wrap; gap:8px 18px; justify-content:center;
+  margin-top:12px; font-size:.8rem; color:var(--muted);
+}
+.mm-legend span{display:inline-flex; align-items:center; gap:6px}
+.mm-legend i{width:12px; height:12px; border-radius:4px; display:inline-block}
+
+/* ===================== GRAPHE ===================== */
+.canvas-wrap{
+  position:relative; width:100%; border-radius:12px; overflow:hidden;
+  background:#fbf7ef; border:1px solid var(--line);
+}
+#graph{display:block; touch-action:none; cursor:grab}
+#graph.grabbing{cursor:grabbing}
+.hint{font-size:.82rem; color:var(--muted); margin:0 0 10px}
+.legend{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:10px; font-size:.8rem; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:12px; height:12px; border-radius:50%; display:inline-block}
+
+/* ===================== FOOTER & MODALE LÉGALE ===================== */
+.site-footer{
+  margin-top: 24px;
+  padding: 16px 0 8px;
+  text-align: center;
+}
+.legal-trigger{
+  background: #fffdf9;
+  border: 1px solid var(--line);
+  color: var(--brown);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: .85rem;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(122,74,18,.08);
+  transition: background .16s ease, border-color .16s ease;
+}
+.legal-trigger:hover{
+  background: #fdf6e9;
+  border-color: var(--orange);
+}
+.legal-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+}
+.legal-modal.open{
+  display: block;
+}
+.legal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 22, 15, 0.55);
+}
+.legal-content{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 520px);
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fffdf9;
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  box-shadow: 0 20px 60px rgba(40,25,10,.35);
+  font-size: .9rem;
+  line-height: 1.5;
+  color: var(--ink);
+  word-break: break-word;
+}
+.legal-close{
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 1;
+  padding: 4px;
+}
+.legal-close:hover{color: var(--red)}
+.legal-content h2{
+  font-size: 1.05rem;
+  margin: 0 0 10px;
+  color: var(--brown);
+  padding-right: 24px;
+}
+.legal-content .legal-meta{
+  font-size: .85rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.legal-content .legal-subtitle{
+  font-weight: 600;
+  color: var(--brown);
+  margin: 10px 0 6px;
+}
+.legal-content .legal-text{
+  margin: .4em 0;
+}
+.legal-content .legal-list{
+  margin: .4em 0 .6em 1.2em;
+  padding: 0;
+}
+.legal-content .legal-list li{
+  margin: .4em 0;
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 860px){
+  #app{flex-direction:column}
+  #sidebar{
+    position:static; width:100%; height:auto; flex-direction:row; flex-wrap:wrap;
+    align-items:center; gap:8px; padding:10px 12px;
+  }
+  #sidebar .brand, #sidebar h1, #sidebar .foot{display:none}
+  .navbtn{flex:1 1 44%; font-size:.78rem; padding:8px 10px}
+  main{margin-left:0; padding:14px 14px 60px}
+  #modal{width:300px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== MENU VERTICAL FIXE ===================== -->
+  <nav id="sidebar">
+    <div class="brand">Carte Joker</div>
+    <h1>Dérivation<span> · </span>1ʳᵉ</h1>
+
+    <button class="navbtn active" data-target="panel-content">
+      <span class="num">1</span> Contenu classique
+    </button>
+    <button class="navbtn" data-target="panel-mindmap">
+      <span class="num">2</span> Carte mentale
+    </button>
+    <button class="navbtn" data-target="panel-tables">
+      <span class="num">3</span> Tableaux
+    </button>
+    <button class="navbtn" data-target="panel-graph">
+      <span class="num">4</span> Graphe
+    </button>
+
+    <div class="foot">Survolez nœuds<br>et feuilles pour<br>les fiches détaillées</div>
+  </nav>
+
+  <!-- ===================== MAIN ===================== -->
+  <main>
+
+    <!-- ============================================================
+         VOLET 1 — CONTENU CLASSIQUE
+    ============================================================= -->
+    <section id="panel-content" class="panel active">
+
+      <!-- ---------- 1. Nombre dérivé et tangente ---------- -->
+      <article class="card">
+        <h2><span class="badge">1</span> Nombre dérivé et tangente</h2>
+
+        <h3>Le taux de variation</h3>
+        <p>
+          Pour une fonction \(f\) définie sur un intervalle contenant \(a\) et \(a+h\)
+          (avec \(h \neq 0\)), le <strong>taux de variation</strong> entre \(a\) et \(a+h\) est :
+        </p>
+        <div class="formula">
+          \[ \tau(h)=\frac{f(a+h)-f(a)}{h} \]
+        </div>
+        <p>
+          Graphiquement, ce quotient est la <strong>pente (ou coefficient directeur) de la sécante</strong>
+          à la courbe de \(f\) passant par les points d'abscisses \(a\) et \(a+h\).
+        </p>
+
+        <h3>Le nombre dérivé</h3>
+        <p>
+          On fait tendre \(h\) vers \(0\). Si le taux de variation admet une limite finie,
+          cette limite est le <strong>nombre dérivé</strong> de \(f\) en \(a\), noté \(f'(a)\) :
+        </p>
+        <div class="formula">
+          \[ f'(a)=\lim_{h\to 0}\frac{f(a+h)-f(a)}{h} \]
+        </div>
+        <p>
+          \(f'(a)\) est le <strong>coefficient directeur de la tangente</strong>
+          à la courbe de \(f\) au point d'abscisse \(a\).
+        </p>
+
+        <h3>Équation de la tangente</h3>
+        <div class="formula">
+          \[ y=f'(a)(x-a)+f(a) \]
+        </div>
+
+        <figure>
+          <svg class="diagram" viewBox="0 0 760 230" width="760" height="230" role="img"
+               aria-label="Chaîne logique : taux de variation, nombre dérivé, équation de la tangente">
+            <defs>
+              <marker id="arw-chain" markerWidth="10" markerHeight="10" refX="8" refY="3"
+                      orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L8,3 L0,6 z" fill="#b8600f"/>
+              </marker>
+            </defs>
+
+            <rect x="14" y="30" width="240" height="94" rx="13"
+                  fill="#fdf6e9" stroke="#d97a1a" stroke-width="1.6"/>
+            <text x="134" y="56" text-anchor="middle" font-size="13" fill="#7a4a12"
+                  font-family="Segoe UI, sans-serif" font-weight="700">Taux de variation</text>
+            <text x="134" y="82" text-anchor="middle" font-size="13" fill="#4b3a28"
+                  font-family="Segoe UI, sans-serif">[ f(a+h) − f(a) ] / h</text>
+            <text x="134" y="104" text-anchor="middle" font-size="11.5" fill="#7b6a57"
+                  font-family="Segoe UI, sans-serif">pente de la sécante</text>
+
+            <line x1="258" y1="77" x2="312" y2="77" stroke="#b8600f" stroke-width="2"
+                  marker-end="url(#arw-chain)"/>
+            <text x="285" y="68" text-anchor="middle" font-size="10" fill="#b8600f"
+                  font-family="Segoe UI, sans-serif">h → 0</text>
+
+            <rect x="320" y="18" width="258" height="118" rx="13"
+                  fill="#fdf6e9" stroke="#d97a1a" stroke-width="1.6"/>
+            <text x="449" y="44" text-anchor="middle" font-size="13" fill="#7a4a12"
+                  font-family="Segoe UI, sans-serif" font-weight="700">Nombre dérivé f ′(a)</text>
+            <text x="449" y="70" text-anchor="middle" font-size="11.5" fill="#4b3a28"
+                  font-family="Segoe UI, sans-serif">limite du taux quand h → 0</text>
+            <text x="449" y="94" text-anchor="middle" font-size="11.5" fill="#7b6a57"
+                  font-family="Segoe UI, sans-serif">coefficient directeur</text>
+            <text x="449" y="116" text-anchor="middle" font-size="11.5" fill="#7b6a57"
+                  font-family="Segoe UI, sans-serif">de la tangente</text>
+
+            <line x1="449" y1="140" x2="449" y2="168" stroke="#b8600f" stroke-width="2"
+                  marker-end="url(#arw-chain)"/>
+
+            <rect x="336" y="176" width="226" height="48" rx="13"
+                  fill="#fdf6e9" stroke="#d97a1a" stroke-width="1.6"/>
+            <text x="449" y="196" text-anchor="middle" font-size="12" fill="#7a4a12"
+                  font-family="Segoe UI, sans-serif" font-weight="700">Équation de la tangente</text>
+            <text x="449" y="214" text-anchor="middle" font-size="12.5" fill="#4b3a28"
+                  font-family="Segoe UI, sans-serif">y = f ′(a)(x − a) + f(a)</text>
+          </svg>
+          <figcaption>Du taux de variation au nombre dérivé, puis à l'équation de la tangente.</figcaption>
+        </figure>
+      </article>
+
+      <!-- ---------- 2. Interprétation du signe ---------- -->
+      <article class="card">
+        <h2><span class="badge">2</span> Interprétation du signe de \(f'(a)\)</h2>
+
+        <p>Les trois situations possibles, illustrées sur la même courbe \(f(x)=x^{2}\) en trois points différents :</p>
+
+        <div class="figrow">
+          <figure>
+            <div class="plot-slot" data-plot="signZero"></div>
+            <figcaption>
+              Pente nulle : \(f'(a)=0\)<br>
+              <span class="lg o">point</span> en \(a=0\), <span class="lg r">tangente</span> horizontale
+            </figcaption>
+          </figure>
+          <figure>
+            <div class="plot-slot" data-plot="signPos"></div>
+            <figcaption>
+              Pente positive : \(f'(a)=2{,}6>0\)<br>
+              <span class="lg o">point</span> en \(a=1{,}3\), <span class="lg r">tangente</span> oblique montante
+            </figcaption>
+          </figure>
+          <figure>
+            <div class="plot-slot" data-plot="signNeg"></div>
+            <figcaption>
+              Pente négative : \(f'(a)=-2{,}6<0\)<br>
+              <span class="lg o">point</span> en \(a=-1{,}3\), <span class="lg r">tangente</span> oblique descendante
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="note">
+          <span class="tag">Lecture</span>
+          <strong>\(f'(a) > 0\)</strong> : la fonction croît en \(a\) (vitesse positive). —
+          <strong>\(f'(a) < 0\)</strong> : la fonction décroît en \(a\) (vitesse négative). —
+          <strong>\(f'(a) = 0\)</strong> : tangente horizontale, extremum possible.
+        </div>
+
+        <div class="note">
+          <span class="tag">Applications</span>
+          En <strong>physique</strong> : vitesse instantanée. —
+          En <strong>économie</strong> : coût marginal.
+        </div>
+      </article>
+
+      <!-- ---------- 3. Fonction dérivée ---------- -->
+      <article class="card">
+        <h2><span class="badge">3</span> Fonction dérivée \(f'\)</h2>
+
+        <p>
+          Lorsque \(f\) est dérivable sur un intervalle \(I\), on définit la
+          <strong>fonction dérivée</strong> \(f'\) qui à tout réel \(x\) de \(I\)
+          associe le nombre dérivé \(f'(x)\).
+        </p>
+        <p>
+          Pour lever toute ambiguïté, <strong>les deux courbes sont représentées
+          séparément</strong> : à gauche la fonction \(f\) et sa tangente
+          au point d'abscisse \(a\) ; à droite la fonction dérivée \(f'\) et le point
+          de même abscisse. La <strong>pente de la tangente</strong> à \(f\) en \(a\)
+          est exactement l'<strong>ordonnée</strong> du point correspondant sur \(f'\).
+        </p>
+
+        <div class="figrow">
+          <figure>
+            <div class="plot-slot" data-plot="carreF"></div>
+            <figcaption>
+              <span class="lg b">\(f(x)=x^{2}\)</span> et
+              <span class="lg o">tangente en \(x=1\)</span><br>
+              pente de la tangente : \(2\)
+            </figcaption>
+          </figure>
+          <figure>
+            <div class="plot-slot" data-plot="carrePrime"></div>
+            <figcaption>
+              <span class="lg r">\(f'(x)=2x\)</span><br>
+              ordonnée en \(x=1\) : \(f'(1)=2\)
+            </figcaption>
+          </figure>
+          <figure>
+            <div class="plot-slot" data-plot="cubeF"></div>
+            <figcaption>
+              <span class="lg b">\(f(x)=x^{3}\)</span> et
+              <span class="lg o">tangente en \(x=1\)</span><br>
+              pente de la tangente : \(3\)
+            </figcaption>
+          </figure>
+          <figure>
+            <div class="plot-slot" data-plot="cubePrime"></div>
+            <figcaption>
+              <span class="lg r">\(f'(x)=3x^{2}\)</span><br>
+              ordonnée en \(x=1\) : \(f'(1)=3\)
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="note warn">
+          <span class="tag">Piège évité</span>
+          Superposer \(f\) et \(f'\) sur un même repère peut être trompeur.
+          Pour \(f(x)=x^{2}\) au point \(a=1\), la tangente à la parabole et la droite
+          \(y=2x\) se trouvent être <strong>parallèles</strong> (les deux ont pour
+          coefficient directeur \(2\)). Ce n'est <strong>pas une erreur</strong> :
+          la pente de la tangente vaut \(f'(1)=2\) et la droite \(f'\) a elle aussi
+          pour coefficient directeur \(f''(1)=2\). C'est une <em>coïncidence
+          numérique</em> propre à cet exemple. Les deux objets sont de nature
+          différente : la tangente est une droite géométrique, la courbe de \(f'\)
+          est le graphe d'une fonction. On les lit donc sur des graphiques distincts.
+        </div>
+
+        <div class="note">
+          <span class="tag">À noter</span>
+          En \(0\), la tangente à la courbe de \(x^{3}\) est horizontale (\(f'(0)=0\))
+          mais la fonction reste strictement croissante : un nombre dérivé nul
+          <em>n'implique pas</em> forcément un extremum.
+        </div>
+      </article>
+
+      <!-- ---------- 4. Fonctions de référence étendues ---------- -->
+      <article class="card">
+        <h2><span class="badge">4</span> Dérivées des fonctions de référence étendues</h2>
+
+        <p>
+          Au-delà des polynômes, il faut connaître les dérivées des fonctions
+          trigonométriques, du logarithme et de l'exponentielle.
+        </p>
+
+        <table class="data">
+          <thead>
+            <tr><th>Fonction \(f(x)\)</th><th>Dérivée \(f'(x)\)</th><th>Dérivable sur</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(\sin x\)</td><td>\(\cos x\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(\cos x\)</td><td>\(-\sin x\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(\ln x\)</td><td>\(\dfrac{1}{x}\)</td><td>\(]0,+\infty[\)</td></tr>
+            <tr><td>\(e^{x}\)</td><td>\(e^{x}\)</td><td>\(\mathbb{R}\)</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note warn">
+          <span class="tag">Attention</span>
+          La dérivée de \(\cos\) est <strong>\(-\sin\)</strong> (le signe « moins » est capital).
+          La fonction \(\ln\) n'est définie que sur \(]0,+\infty[\), et sa dérivée
+          \(\dfrac{1}{x}\) y est définie aussi.
+        </div>
+
+        <div class="note">
+          <span class="tag">Propriété</span>
+          La fonction exponentielle est la seule (à coefficient multiplicatif près)
+          à être égale à sa propre dérivée : \((e^{x})'=e^{x}\).
+          De plus \(e^{x}>0\) pour tout réel \(x\) : la fonction exponentielle est
+          strictement croissante sur \(\mathbb{R}\).
+        </div>
+
+        <h3>Illustration : sinus et cosinus</h3>
+        <figure>
+          <div class="plot-slot" data-plot="sinCos"></div>
+          <figcaption>
+            <span class="lg b">\(f(x)=\sin x\)</span> et
+            <span class="lg r">\(f'(x)=\cos x\)</span> —
+            lorsque \(\sin\) atteint un sommet, \(\cos\) s'annule.
+          </figcaption>
+        </figure>
+
+        <h3>Illustration : logarithme népérien</h3>
+        <figure>
+          <div class="plot-slot" data-plot="lnInv"></div>
+          <figcaption>
+            <span class="lg b">\(f(x)=\ln x\)</span> et
+            <span class="lg r">\(f'(x)=\dfrac{1}{x}\)</span> —
+            la dérivée est toujours strictement positive sur \(]0,+\infty[\).
+          </figcaption>
+        </figure>
+
+        <h3>Illustration : exponentielle</h3>
+        <figure>
+          <div class="plot-slot" data-plot="exp"></div>
+          <figcaption>
+            <span class="lg b">\(f(x)=e^{x}\)</span> et sa
+            <span class="lg r">tangente en \(0\)</span> d'équation \(y=x+1\) :
+            la pente vaut \(e^{0}=1=f'(0)\).
+          </figcaption>
+        </figure>
+      </article>
+
+      <!-- ---------- 5. Opérations sur les dérivées ---------- -->
+      <article class="card">
+        <h2><span class="badge">5</span> Opérations sur les dérivées</h2>
+
+        <p>Soient \(u\) et \(v\) deux fonctions dérivables, et \(k\) une constante réelle.</p>
+
+        <div class="formula">
+          \[ (u+v)'=u'+v' \qquad (k\,u)'=k\,u' \]
+          \[ (u\,v)'=u'v+u\,v' \]
+          \[ \left(\frac{u}{v}\right)'=\frac{u'v-u\,v'}{v^{2}} \qquad \left(\frac{1}{v}\right)'=-\frac{v'}{v^{2}} \]
+          \[ (u^{n})'=n\,u'\,u^{n-1} \]
+          \[ (\ln u)'=\frac{u'}{u} \qquad (e^{u})'=u'\,e^{u} \]
+        </div>
+
+        <div class="note">
+          <span class="tag">Conditions</span>
+          Pour un quotient, il faut \(v \neq 0\). Pour \(\ln u\), il faut \(u>0\).
+          Pour \(u^{n}\), on suppose \(u\) dérivable et \(n\in\mathbb{Z}\).
+        </div>
+
+        <h3>Exemples de calcul</h3>
+        <table class="data">
+          <thead>
+            <tr><th>Fonction</th><th>Dérivée</th><th>Règle utilisée</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(f(x)=x\ln x\)</td><td>\(f'(x)=\ln x+1\)</td><td>produit</td></tr>
+            <tr><td>\(g(x)=\dfrac{x}{x+1}\)</td><td>\(g'(x)=\dfrac{1}{(x+1)^{2}}\)</td><td>quotient</td></tr>
+            <tr><td>\(h(x)=\dfrac{1}{x^{2}+1}\)</td><td>\(h'(x)=\dfrac{-2x}{(x^{2}+1)^{2}}\)</td><td>inverse</td></tr>
+            <tr><td>\(k(x)=(x^{2}+1)^{3}\)</td><td>\(k'(x)=6x(x^{2}+1)^{2}\)</td><td>puissance</td></tr>
+            <tr><td>\(m(x)=e^{x^{2}}\)</td><td>\(m'(x)=2x\,e^{x^{2}}\)</td><td>\(e^{u}\)</td></tr>
+            <tr><td>\(n(x)=\ln(x^{2}+1)\)</td><td>\(n'(x)=\dfrac{2x}{x^{2}+1}\)</td><td>\(\ln u\)</td></tr>
+          </tbody>
+        </table>
+
+        <p>Détail du premier exemple, avec \(u=x\) et \(v=\ln x\) :</p>
+        <div class="formula">
+          \[ (x\ln x)' = (x)'\ln x + x(\ln x)' = 1\cdot\ln x + x\cdot\frac{1}{x} = \ln x + 1 \]
+        </div>
+      </article>
+
+      <!-- ---------- 6. Composées trigonométriques ---------- -->
+      <article class="card">
+        <h2><span class="badge">6</span> Dérivées composées : \(\sin(ax+b)\) et \(\cos(ax+b)\)</h2>
+
+        <p>
+          Ce sont des cas particuliers de \((u)'\) avec \(u(x)=ax+b\), donc \(u'(x)=a\) :
+        </p>
+
+        <div class="formula">
+          \[ \big(\sin(ax+b)\big)' = a\cos(ax+b) \]
+          \[ \big(\cos(ax+b)\big) ' = -a\sin(ax+b) \]
+        </div>
+
+        <table class="data">
+          <thead><tr><th>Fonction</th><th>Dérivée</th><th>Exemple</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>\(\sin(ax+b)\)</td>
+              <td>\(a\cos(ax+b)\)</td>
+              <td>\(\big(\sin(2x+1)\big)'=2\cos(2x+1)\)</td>
+            </tr>
+            <tr>
+              <td>\(\cos(ax+b)\)</td>
+              <td>\(-a\sin(ax+b)\)</td>
+              <td>\(\big(\cos(3x-1)\big)'=-3\sin(3x-1)\)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <figure>
+          <div class="plot-slot" data-plot="compo"></div>
+          <figcaption>
+            <span class="lg b">\(f(x)=\sin(2x+1)\)</span> et
+            <span class="lg r">\(f'(x)=2\cos(2x+1)\)</span> —
+            l'amplitude de la dérivée est multipliée par \(a=2\).
+          </figcaption>
+        </figure>
+      </article>
+
+      <!-- ---------- 7. Dérivée et sens de variation ---------- -->
+      <article class="card">
+        <h2><span class="badge">7</span> Dérivée et sens de variation</h2>
+
+        <p>Sur un intervalle \(I\) où \(f\) est dérivable, le signe de \(f'\) donne le sens de variation de \(f\) :</p>
+
+        <table class="data">
+          <thead>
+            <tr><th>Signe de \(f'\) sur \(I\)</th><th>Variation de \(f\) sur \(I\)</th><th>Réciproque</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>\(f'(x) \geq 0\)</td>
+              <td>\(f\) est croissante sur \(I\)</td>
+              <td>si \(f\) croissante alors \(f'(x) \geq 0\)</td>
+            </tr>
+            <tr>
+              <td>\(f'(x) \leq 0\)</td>
+              <td>\(f\) est décroissante sur \(I\)</td>
+              <td>si \(f\) décroissante alors \(f'(x) \leq 0\)</td>
+            </tr>
+            <tr>
+              <td>\(f'(x) = 0\)</td>
+              <td>\(f\) est constante sur \(I\)</td>
+              <td>si \(f\) constante alors \(f'(x) = 0\)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Tableau de variation type</h3>
+        <div class="tkz-canvas-wrap" data-tkz="variationType"></div>
+        <p style="text-align:center;font-size:.9rem;color:var(--muted);margin-top:4px;">
+          Minimum en \(x_{0}\) lorsque \(f'\) passe de \(-\) à \(+\)
+        </p>
+
+        <div class="note">
+          <span class="tag">Extremum local</span>
+          Si \(f'(x)\) s'annule <strong>en changeant de signe</strong>, alors \(f\) admet un
+          extremum local (maximum ou minimum) au point considéré.
+        </div>
+      </article>
+
+      <!-- ---------- 8. Exemple guidé avec ln ---------- -->
+      <article class="card">
+        <h2><span class="badge">8</span> Exemple guidé : \(f(x)=x\ln x\) sur \(]0,+\infty[\)</h2>
+
+        <p><strong>Étape 1 — dérivée.</strong> On applique la règle du produit \((uv)'=u'v+uv'\) avec \(u=x\) et \(v=\ln x\) :</p>
+        <div class="formula">
+          \[ f'(x)=1\cdot\ln x+x\cdot\frac{1}{x}=\ln x+1 \]
+        </div>
+
+        <p><strong>Étape 2 — signe.</strong></p>
+        <div class="formula">
+          \[ f'(x)>0 \iff \ln x>-1 \iff x>e^{-1}=\frac{1}{e} \]
+          \[ f'(x)<0 \iff 0<x<\frac{1}{e} \]
+        </div>
+
+        <p><strong>Étape 3 — tableau de variation.</strong></p>
+        <div class="tkz-canvas-wrap" data-tkz="variationXlnx"></div>
+        <p style="text-align:center;font-size:.9rem;color:var(--muted);margin-top:4px;">
+          Minimum global atteint en \(x=\frac{1}{e}\), de valeur \(-\frac{1}{e}\)
+        </p>
+
+        <p><strong>Étape 4 — extremum.</strong> \(f\!\left(\frac{1}{e}\right)=\frac{1}{e}\ln\!\left(\frac{1}{e}\right)=\frac{1}{e}\times(-1)=-\frac{1}{e}\).</p>
+
+        <figure>
+          <div class="plot-slot" data-plot="xlnx"></div>
+          <figcaption>
+            Courbe de <span class="lg b">\(f(x)=x\ln x\)</span> sur \(]0,+\infty[\) —
+            <span class="lg o">minimum</span> en \(\left(\frac{1}{e},-\frac{1}{e}\right)\)
+          </figcaption>
+        </figure>
+      </article>
+
+      <!-- ---------- 9. Méthode & exemple polynôme ---------- -->
+      <article class="card">
+        <h2><span class="badge">9</span> Méthode d'étude et exemple complet</h2>
+
+        <h3>Les 4 étapes</h3>
+        <ul>
+          <li><strong>1.</strong> Calculer \(f'(x)\).</li>
+          <li><strong>2.</strong> Étudier le signe de \(f'(x)\).</li>
+          <li><strong>3.</strong> Dresser le tableau de variation de \(f\).</li>
+          <li><strong>4.</strong> Calculer les extremums.</li>
+        </ul>
+
+        <h3>Exemple : \(f(x)=x^{3}-3x^{2}+2\)</h3>
+        <div class="formula">
+          \[ f'(x)=3x^{2}-6x=3x(x-2) \]
+          \[ \text{Signe de } f'(x) : \; + \text{ sur } ]-\infty,0[, \; - \text{ sur } ]0,2[, \; + \text{ sur } ]2,+\infty[ \]
+        </div>
+
+        <div class="tkz-canvas-wrap" data-tkz="variationCube"></div>
+        <p style="text-align:center;font-size:.9rem;color:var(--muted);margin-top:4px;">
+          Maximum local \(f(0)=2\), minimum local \(f(2)=-2\)
+        </p>
+
+        <figure>
+          <div class="plot-slot" data-plot="exempleCube"></div>
+          <figcaption>
+            <span class="lg b">\(f(x)=x^{3}-3x^{2}+2\)</span> —
+            <span class="lg o">maximum</span> en \((0,2)\) et
+            <span class="lg o">minimum</span> en \((2,-2)\)
+          </figcaption>
+        </figure>
+      </article>
+
+      <!-- ---------- 10. Algorithmique ---------- -->
+      <article class="card">
+        <h2><span class="badge">10</span> Algorithmique — Dérivation</h2>
+
+        <h3>Calcul approché du nombre dérivé</h3>
+        <p>
+          On utilise le taux de variation avec un \(h\) très petit :
+        </p>
+        <div class="formula">
+          \[ f'(a) \approx \frac{f(a+h)-f(a)}{h} \]
+        </div>
+
+        <h3>Algorithme Python</h3>
+<pre><code>def nombre_derive(f, a, h=1e-5):
+    return (f(a+h) - f(a)) / h
+
+# Exemple : f(x) = x^2, a = 2
+def f(x):
+    return x**2
+
+print(nombre_derive(f, 2))   # ≈ 4
+</code></pre>
+        <div class="note warn">
+          <span class="tag">Remarque</span>
+          Avec \(f(x)=x^{2}\) et \(a=2\), on obtient bien
+          \(f'(2)=4\) (soit \(\approx 4{,}0000\ldots\) avec \(h=10^{-5}\)).
+        </div>
+
+        <h3>Boucle pour un tableau de dérivées</h3>
+<pre><code>def table_derivee(f, liste_x, h=1e-5):
+    for x in liste_x:
+        print(f"f'({x}) = {nombre_derive(f, x, h)}")
+</code></pre>
+        <p>
+          Cette boucle parcourt une liste d'abscisses et affiche, pour chacune,
+          une valeur approchée du nombre dérivé.
+        </p>
+      </article>
+
+      <!-- ---------- 11. Synthèse ---------- -->
+      <article class="card">
+        <h2><span class="badge">11</span> Synthèse &amp; à retenir</h2>
+
+        <table class="data">
+          <thead><tr><th>Concept</th><th>Signification</th></tr></thead>
+          <tbody>
+            <tr><td>\(f'(a)\)</td><td>Coefficient directeur de la tangente en \(a\)</td></tr>
+            <tr><td>\(f'(x) > 0\)</td><td>\(f\) croissante</td></tr>
+            <tr><td>\(f'(x) < 0\)</td><td>\(f\) décroissante</td></tr>
+            <tr><td>\(f'(x) = 0\)</td><td>Tangente horizontale, extremum possible</td></tr>
+            <tr><td>\((uv)'\), \((u/v)'\), \((u^{n})'\)</td><td>Produit, quotient, puissance</td></tr>
+            <tr><td>\((\ln u)'\), \((e^{u})'\)</td><td>Logarithme et exponentielle composés</td></tr>
+          </tbody>
+        </table>
+
+        <h3>À retenir</h3>
+        <ul>
+          <li>En première technologique, on se limite aux <strong>polynômes de degré ≤ 3</strong>.</li>
+          <li>La dérivée permet d'obtenir facilement le <strong>tableau de variation</strong>.</li>
+          <li>La notion de <strong>limite</strong> est intuitive, pas de définition formelle.</li>
+        </ul>
+      </article>
+    </section>
+
+    <!-- ============================================================
+         VOLET 2 — CARTE MENTALE
+    ============================================================= -->
+    <section id="panel-mindmap" class="panel">
+      <article class="card">
+        <h2><span class="badge">2</span> Carte mentale — Dérivation</h2>
+        <p class="hint">
+          Survolez une <strong>feuille</strong> (les boîtes claires) pour afficher
+          une fiche détaillée avec formules et courbe.
+        </p>
+        <div id="mindmap-wrap">
+          <svg id="mindmap" viewBox="0 0 1400 1100" role="img"
+               aria-label="Carte mentale de la dérivation"></svg>
+        </div>
+        <div class="mm-legend" id="mm-legend"></div>
+      </article>
+    </section>
+
+    <!-- ============================================================
+         VOLET 3 — TABLEAUX
+    ============================================================= -->
+    <section id="panel-tables" class="panel">
+
+      <!-- 3.1 -->
+      <article class="card">
+        <h2><span class="badge">3.1</span> Notions de base</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Notion</th><th>Formule / définition</th><th>Interprétation</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Taux de variation</td>
+              <td>\(\dfrac{f(a+h)-f(a)}{h}\)</td>
+              <td>Pente de la sécante passant par les points d'abscisses \(a\) et \(a+h\)</td>
+            </tr>
+            <tr>
+              <td>Nombre dérivé \(f'(a)\)</td>
+              <td>\(\displaystyle\lim_{h\to 0}\frac{f(a+h)-f(a)}{h}\)</td>
+              <td>Coefficient directeur de la tangente en \(a\)</td>
+            </tr>
+            <tr>
+              <td>Équation de la tangente</td>
+              <td>\(y=f'(a)(x-a)+f(a)\)</td>
+              <td>Droite tangente à la courbe au point d'abscisse \(a\)</td>
+            </tr>
+            <tr>
+              <td>Fonction dérivée \(f'\)</td>
+              <td>\(x \mapsto f'(x)\)</td>
+              <td>Définie sur les intervalles où \(f\) est dérivable</td>
+            </tr>
+            <tr>
+              <td>Extremum local</td>
+              <td>\(f'\) s'annule en changeant de signe</td>
+              <td>Maximum ou minimum local de \(f\)</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.2 -->
+      <article class="card">
+        <h2><span class="badge">3.2</span> Dérivées des fonctions usuelles</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Fonction \(f(x)\)</th><th>Dérivée \(f'(x)\)</th><th>Dérivable sur</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(k\) (constante)</td><td>\(0\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(x^{n}\), \(n \in \mathbb{Z}\)</td><td>\(n\,x^{n-1}\)</td><td>selon \(n\)</td></tr>
+            <tr><td>\(ax+b\)</td><td>\(a\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(ax^{2}+bx+c\)</td><td>\(2ax+b\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(ax^{3}+bx^{2}+cx+d\)</td><td>\(3ax^{2}+2bx+c\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(a(x-\alpha)^{2}+\beta\)</td><td>\(2a(x-\alpha)\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(\sin x\)</td><td>\(\cos x\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(\cos x\)</td><td>\(-\sin x\)</td><td>\(\mathbb{R}\)</td></tr>
+            <tr><td>\(\ln x\)</td><td>\(\dfrac{1}{x}\)</td><td>\(]0,+\infty[\)</td></tr>
+            <tr><td>\(e^{x}\)</td><td>\(e^{x}\)</td><td>\(\mathbb{R}\)</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.3 -->
+      <article class="card">
+        <h2><span class="badge">3.3</span> Opérations sur les dérivées</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Opération</th><th>Formule</th><th>Condition</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Somme</td><td>\((u+v)' = u'+v'\)</td><td>\(u\), \(v\) dérivables</td></tr>
+            <tr><td>Multiplication par une constante</td><td>\((k\,u)' = k\,u'\)</td><td>\(k \in \mathbb{R}\)</td></tr>
+            <tr><td>Produit</td><td>\((u\,v)' = u'v + u\,v'\)</td><td>\(u\), \(v\) dérivables</td></tr>
+            <tr><td>Quotient</td><td>\(\left(\dfrac{u}{v}\right)' = \dfrac{u'v-u\,v'}{v^{2}}\)</td><td>\(v \neq 0\)</td></tr>
+            <tr><td>Inverse</td><td>\(\left(\dfrac{1}{v}\right)' = -\dfrac{v'}{v^{2}}\)</td><td>\(v \neq 0\)</td></tr>
+            <tr><td>Puissance</td><td>\((u^{n})' = n\,u'\,u^{n-1}\)</td><td>\(n \in \mathbb{Z}\), \(u\) dérivable</td></tr>
+            <tr><td>Logarithme composé</td><td>\((\ln u)' = \dfrac{u'}{u}\)</td><td>\(u > 0\)</td></tr>
+            <tr><td>Exponentielle composée</td><td>\((e^{u})' = u'\,e^{u}\)</td><td>\(u\) dérivable</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.4 -->
+      <article class="card">
+        <h2><span class="badge">3.4</span> Composées trigonométriques</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Fonction \(f(x)\)</th><th>Dérivée \(f'(x)\)</th><th>Exemple</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>\(\sin(ax+b)\)</td>
+              <td>\(a\cos(ax+b)\)</td>
+              <td>\(\big(\sin(2x+1)\big)' = 2\cos(2x+1)\)</td>
+            </tr>
+            <tr>
+              <td>\(\cos(ax+b)\)</td>
+              <td>\(-a\sin(ax+b)\)</td>
+              <td>\(\big(\cos(3x-1)\big)' = -3\sin(3x-1)\)</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          <span class="tag">Méthode</span>
+          On pose \(u(x)=ax+b\), donc \(u'(x)=a\), puis on applique
+          la formule de dérivation des composées.
+        </div>
+      </article>
+
+      <!-- 3.5 -->
+      <article class="card">
+        <h2><span class="badge">3.5</span> Exemples de calcul</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Fonction \(f(x)\)</th><th>Dérivée \(f'(x)\)</th><th>Règle utilisée</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(3x^{2}-5x+2\)</td><td>\(6x-5\)</td><td>somme terme à terme</td></tr>
+            <tr><td>\(2x^{3}-x^{2}+4\)</td><td>\(6x^{2}-2x\)</td><td>somme terme à terme</td></tr>
+            <tr><td>\(x\ln x\)</td><td>\(\ln x+1\)</td><td>produit</td></tr>
+            <tr><td>\(\dfrac{x}{x+1}\)</td><td>\(\dfrac{1}{(x+1)^{2}}\)</td><td>quotient</td></tr>
+            <tr><td>\(\dfrac{1}{x^{2}+1}\)</td><td>\(\dfrac{-2x}{(x^{2}+1)^{2}}\)</td><td>inverse</td></tr>
+            <tr><td>\((x^{2}+1)^{3}\)</td><td>\(6x(x^{2}+1)^{2}\)</td><td>puissance</td></tr>
+            <tr><td>\(e^{x^{2}}\)</td><td>\(2x\,e^{x^{2}}\)</td><td>\(e^{u}\)</td></tr>
+            <tr><td>\(\ln(x^{2}+1)\)</td><td>\(\dfrac{2x}{x^{2}+1}\)</td><td>\(\ln u\)</td></tr>
+            <tr><td>\(\sin(2x+1)\)</td><td>\(2\cos(2x+1)\)</td><td>composée \(\sin\)</td></tr>
+            <tr><td>\(\cos(3x-1)\)</td><td>\(-3\sin(3x-1)\)</td><td>composée \(\cos\)</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.6 -->
+      <article class="card">
+        <h2><span class="badge">3.6</span> Signe de \(f'\) et sens de variation</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Signe de \(f'(a)\)</th><th>Comportement de \(f\) en \(a\)</th><th>Allure de la tangente</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(f'(a) > 0\)</td><td>\(f\) croissante (vitesse positive)</td><td>Oblique montante</td></tr>
+            <tr><td>\(f'(a) < 0\)</td><td>\(f\) décroissante (vitesse négative)</td><td>Oblique descendante</td></tr>
+            <tr><td>\(f'(a) = 0\)</td><td>Extremum possible</td><td>Horizontale</td></tr>
+          </tbody>
+        </table>
+
+        <table class="data">
+          <thead>
+            <tr><th>Signe de \(f'\) sur \(I\)</th><th>Variation de \(f\) sur \(I\)</th><th>Réciproque</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(f'(x) \geq 0\)</td><td>croissante</td><td>si \(f\) croissante alors \(f'(x) \geq 0\)</td></tr>
+            <tr><td>\(f'(x) \leq 0\)</td><td>décroissante</td><td>si \(f\) décroissante alors \(f'(x) \leq 0\)</td></tr>
+            <tr><td>\(f'(x) = 0\)</td><td>constante</td><td>si \(f\) constante alors \(f'(x) = 0\)</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.7 -->
+      <article class="card">
+        <h2><span class="badge">3.7</span> Exemples chiffrés — tableaux de signes et de variations</h2>
+
+        <h3>\(f(x)=x^{3}-3x^{2}+2\)</h3>
+        <p>Tableau de signes de \(f'(x)=3x(x-2)\) :</p>
+        <div class="tkz-canvas-wrap" data-tkz="signeCube"></div>
+
+        <p>Tableau de variation de \(f\) :</p>
+        <div class="tkz-canvas-wrap" data-tkz="variationCube"></div>
+
+        <h3>\(f(x)=x\ln x\) sur \(]0,+\infty[\)</h3>
+        <p>Tableau de signes de \(f'(x)=\ln x+1\) :</p>
+        <div class="tkz-canvas-wrap" data-tkz="signeXlnx"></div>
+
+        <p>Tableau de variation de \(f\) :</p>
+        <div class="tkz-canvas-wrap" data-tkz="variationXlnx"></div>
+      </article>
+
+      <!-- 3.8 -->
+      <article class="card">
+        <h2><span class="badge">3.8</span> Algorithmique</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Élément</th><th>Contenu</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Calcul approché</td>
+              <td>\(f'(a) \approx \dfrac{f(a+h)-f(a)}{h}\) avec \(h\) très petit (\(h=10^{-5}\))</td>
+            </tr>
+            <tr>
+              <td>Fonction Python</td>
+              <td><code class="inline">def nombre_derive(f, a, h=1e-5): return (f(a+h) - f(a)) / h</code></td>
+            </tr>
+            <tr>
+              <td>Exemple</td>
+              <td>\(f(x)=x^{2}\), \(a=2\) : on obtient \(\approx 4\)</td>
+            </tr>
+            <tr>
+              <td>Tableau de valeurs</td>
+              <td>Boucle <code class="inline">for x in liste_x</code> affichant <code class="inline">f'(x)</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.9 -->
+      <article class="card">
+        <h2><span class="badge">3.9</span> Méthodologie en 4 étapes</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Étape</th><th>Action</th><th>Outil</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Calculer \(f'(x)\)</td><td>Dérivées usuelles + opérations</td></tr>
+            <tr><td>2</td><td>Étudier le signe de \(f'(x)\)</td><td>Factorisation, tableau de signes</td></tr>
+            <tr><td>3</td><td>Dresser le tableau de variation de \(f\)</td><td>Signe de \(f'\) \(\Rightarrow\) flèches</td></tr>
+            <tr><td>4</td><td>Calculer les extremums</td><td>Valeurs de \(f\) aux points où \(f'=0\)</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <!-- 3.10 -->
+      <article class="card">
+        <h2><span class="badge">3.10</span> Tableau récapitulatif final</h2>
+        <table class="data">
+          <thead>
+            <tr><th>Concept</th><th>Signification</th><th>À retenir</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>\(f'(a)\)</td><td>Coefficient directeur de la tangente en \(a\)</td><td>Limite du taux de variation</td></tr>
+            <tr><td>\(f'(x) > 0\)</td><td>\(f\) croissante</td><td>Vitesse positive</td></tr>
+            <tr><td>\(f'(x) < 0\)</td><td>\(f\) décroissante</td><td>Vitesse négative</td></tr>
+            <tr><td>\(f'(x) = 0\)</td><td>Tangente horizontale, extremum possible</td><td>Changement de signe requis</td></tr>
+            <tr><td>\((u\,v)'\)</td><td>Produit</td><td>\(u'v+u\,v'\)</td></tr>
+            <tr><td>\((u/v)'\)</td><td>Quotient</td><td>\(\frac{u'v-u\,v'}{v^{2}}\)</td></tr>
+            <tr><td>\((u^{n})'\)</td><td>Puissance</td><td>\(n\,u'\,u^{n-1}\)</td></tr>
+            <tr><td>\((\ln u)'\), \((e^{u})'\)</td><td>Composées</td><td>\(\frac{u'}{u}\) et \(u'e^{u}\)</td></tr>
+            <tr><td>\(\sin(ax+b)\), \(\cos(ax+b)\)</td><td>Composées trigonométriques</td><td>\(a\cos(ax+b)\), \(-a\sin(ax+b)\)</td></tr>
+            <tr><td>Applications</td><td>Physique : vitesse instantanée ; économie : coût marginal</td><td>Interprétation concrète</td></tr>
+            <tr><td>Limites du programme</td><td>Polynômes de degré ≤ 3</td><td>Limite intuitive, sans définition formelle</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+
+    <!-- ============================================================
+         VOLET 4 — GRAPHE INTERACTIF
+    ============================================================= -->
+    <section id="panel-graph" class="panel">
+      <article class="card">
+        <h2><span class="badge">4</span> Graphe interactif des notions</h2>
+        <p class="hint">
+          <strong>Survolez</strong> un nœud pour afficher sa fiche détaillée et mettre en évidence
+          ses connexions. <strong>Glissez-déposez</strong> les nœuds pour réorganiser le graphe
+          (souris et tactile).
+        </p>
+        <div class="canvas-wrap">
+          <canvas id="graph"></canvas>
+        </div>
+        <div class="legend" id="graph-legend"></div>
+      </article>
+    </section>
+
+    <!-- ===================== PIED DE PAGE ===================== -->
+    <footer class="site-footer">
+      <button id="legal-trigger" class="legal-trigger" type="button">⚖️ Droits d'auteur & licence</button>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===================== MODALE PARTAGÉE ===================== -->
+<div id="modal" role="tooltip" aria-live="polite">
+  <h4 id="modal-title"></h4>
+  <div class="mdesc" id="modal-desc"></div>
+  <div class="mmath" id="modal-math"></div>
+  <div class="mextra" id="modal-extra"></div>
+  <div class="mconn" id="modal-conn"></div>
+</div>
+
+<!-- ===================== MODALE LÉGALE ===================== -->
+<div id="legal-modal" class="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-title" aria-hidden="true">
+  <div class="legal-backdrop" data-close-legal></div>
+  <div class="legal-content" role="document">
+    <button id="legal-close" class="legal-close" aria-label="Fermer">✕</button>
+    <h2 id="legal-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p class="legal-meta">Auteur : Yann Merdy (yann.merdy@gmail.com) — octobre 2026</p>
+    <p class="legal-subtitle">Licence d'Utilisation Non Commerciale</p>
+    <p class="legal-text" data-legal-text>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« Carte Joker — Dérivation ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <p class="legal-text" data-legal-text>Conditions :</p>
+    <ol class="legal-list">
+      <li data-legal-text>Utilisation Privée et Éducative (Autorisée) : vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+      <li data-legal-text>Utilisation Commerciale (Interdite) : toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+      <li data-legal-text>Attribution : toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+    </ol>
+    <p class="legal-text" data-legal-text>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   CARTE JOKER — DÉRIVATION
+   - Graphiques SVG calculés.
+   - Tableaux de signes et de variations dessinés sur Canvas par JS,
+     avec une seule ligne de contenu utile et des flèches de variation.
+   - Modale flottante à survol persistant.
+============================================================================ */
+(function () {
+  'use strict';
+
+  /* ==========================================================================
+     1. UTILITAIRES
+  ========================================================================== */
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function setTextWithBreaks(el, text) {
+    el.innerHTML = '';
+    var parts = String(text == null ? '' : text).split(/([.:])/);
+    var buf = '';
+    for (var i = 0; i < parts.length; i++) {
+      buf += parts[i];
+      if (parts[i] === '.' || parts[i] === ':') {
+        el.appendChild(document.createTextNode(buf));
+        el.appendChild(document.createElement('br'));
+        buf = '';
+      }
+    }
+    if (buf) el.appendChild(document.createTextNode(buf));
+    while (el.lastChild && el.lastChild.nodeName === 'BR') el.removeChild(el.lastChild);
+  }
+
+  function typeset(el) {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise(el ? [el] : undefined).catch(function () {});
+    }
+  }
+
+  function memo(fn) {
+    var cache;
+    return function () {
+      if (cache === undefined) cache = fn();
+      return cache;
+    };
+  }
+
+  /* ==========================================================================
+     2. TABLEAUX SUR CANVAS — rendu fidèle tkz-tab
+     - Les valeurs de x sont aux positions x_i = labelW + i * intervalW.
+     - Les intervalles sont entre x_i et x_{i+1}.
+     - Pour les tableaux de signes, les signes sont centrés dans les intervalles,
+       les zéros et doubles barres sont aux positions x_i.
+     - Pour les tableaux de variations, les valeurs sont aux positions x_i,
+       les flèches relient les points (x_i, y_i) à (x_{i+1}, y_{i+1}).
+  ========================================================================== */
+
+  function drawTkzTable(container, spec) {
+    container.innerHTML = '';
+
+    var N = spec.colonnes.length;
+    var labelW = 60;
+    var intW = 90;
+    var headerH = 36;
+    var rowH = 64;
+    var padRight = 24;
+    var totalW = labelW + (N - 1) * intW + padRight;
+    var totalH = headerH + rowH + 12;
+
+    var canvas = document.createElement('canvas');
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = totalW * dpr;
+    canvas.height = totalH * dpr;
+    canvas.style.width = totalW + 'px';
+    canvas.style.height = totalH + 'px';
+    canvas.style.display = 'block';
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var ink = '#33291f';
+    var grid = '#8a7a66';
+    var soft = '#e6dbc9';
+    var arrowCol = '#b8600f';
+
+    ctx.fillStyle = '#fffdf9';
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    function xPos(i) { return labelW + i * intW; }
+    function midPos(i) { return labelW + (i + 0.5) * intW; }
+
+    // Traits horizontaux
+    ctx.strokeStyle = grid;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, headerH);
+    ctx.lineTo(totalW - padRight + 10, headerH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, headerH + rowH);
+    ctx.lineTo(totalW - padRight + 10, headerH + rowH);
+    ctx.stroke();
+
+    // Double barre verticale séparant la colonne des libellés
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(labelW - 2, 0);
+    ctx.lineTo(labelW - 2, headerH + rowH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(labelW + 2, 0);
+    ctx.lineTo(labelW + 2, headerH + rowH);
+    ctx.stroke();
+
+    // Traits verticaux internes aux valeurs de x
+    ctx.strokeStyle = soft;
+    ctx.lineWidth = 1;
+    for (var i = 1; i <= N - 2; i++) {
+      var x = xPos(i);
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, headerH + rowH);
+      ctx.stroke();
+    }
+
+    // Overlay pour les formules MathJax
+    var overlay = document.createElement('div');
+    overlay.style.position = 'absolute';
+    overlay.style.left = '0';
+    overlay.style.top = '0';
+    overlay.style.width = totalW + 'px';
+    overlay.style.height = totalH + 'px';
+    overlay.style.pointerEvents = 'none';
+
+    function addLabel(html, cx, cy) {
+      var el = document.createElement('div');
+      el.style.position = 'absolute';
+      el.style.left = cx + 'px';
+      el.style.top = cy + 'px';
+      el.style.transform = 'translate(-50%, -50%)';
+      el.style.fontSize = '14px';
+      el.style.color = ink;
+      el.style.whiteSpace = 'nowrap';
+      el.innerHTML = html;
+      overlay.appendChild(el);
+      return el;
+    }
+
+    // Ligne x
+    addLabel('\\(x\\)', labelW / 2, headerH / 2);
+    for (var j = 0; j < N; j++) {
+      addLabel(spec.colonnes[j].tex, xPos(j), headerH / 2);
+    }
+
+    // Libellé de la ligne de contenu
+    addLabel(spec.ligne.label, labelW / 2, headerH + rowH / 2);
+
+    if (spec.ligne.type === 'sign') {
+      var currentX = 0;
+      spec.ligne.values.forEach(function (val) {
+        if (val.k === '+' || val.k === '-') {
+          var mx = midPos(currentX);
+          addLabel('\\(\\mathbf{' + val.k + '}\\)', mx, headerH + rowH / 2);
+          currentX++;
+        } else if (val.k === 'z') {
+          var zx = xPos(currentX);
+          addLabel('\\(0\\)', zx, headerH + rowH / 2);
+          // pas d'incrément
+        } else if (val.k === 'd') {
+          if (currentX === 0) {
+            // La double barre du bord gauche est déjà dessinée par la colonne des libellés
+          } else {
+            var dx = xPos(currentX);
+            var y1 = headerH + 10;
+            var y2 = headerH + rowH - 10;
+            // Effacer le trait vertical simple à cet endroit
+            ctx.fillStyle = '#fffdf9';
+            ctx.fillRect(dx - 6, y1, 12, y2 - y1);
+            // Dessiner la double barre
+            ctx.strokeStyle = ink;
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(dx - 2, y1);
+            ctx.lineTo(dx - 2, y2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(dx + 2, y1);
+            ctx.lineTo(dx + 2, y2);
+            ctx.stroke();
+          }
+          // pas d'incrément
+        }
+      });
+    } else if (spec.ligne.type === 'var') {
+      var topY = headerH + 16;
+      var botY = headerH + rowH - 16;
+      var pts = [];
+      for (var k = 0; k < N; k++) {
+        var v = spec.ligne.values[k];
+        var y = (v.k === '+') ? topY : botY;
+        pts.push({ x: xPos(k), y: y, tex: v.tex });
+        addLabel(v.tex, xPos(k), y);
+      }
+      // Flèches entre points consécutifs
+      for (var m = 0; m < N - 1; m++) {
+        var p0 = pts[m];
+        var p1 = pts[m + 1];
+        var dx = p1.x - p0.x;
+        var dy = p1.y - p0.y;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        if (len < 1e-6) continue;
+        var ux = dx / len;
+        var uy = dy / len;
+        var off = 22;
+        var startX = p0.x + ux * off;
+        var startY = p0.y + uy * off;
+        var endX = p1.x - ux * off;
+        var endY = p1.y - uy * off;
+
+        ctx.strokeStyle = arrowCol;
+        ctx.lineWidth = 1.8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Pointe de flèche
+        var headLen = 8;
+        var headWidth = 5;
+        var bx = endX - ux * headLen;
+        var by = endY - uy * headLen;
+        var px = -uy;
+        var py = ux;
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(bx + px * headWidth, by + py * headWidth);
+        ctx.lineTo(bx - px * headWidth, by - py * headWidth);
+        ctx.closePath();
+        ctx.fillStyle = arrowCol;
+        ctx.fill();
+      }
+    }
+
+    var wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'inline-block';
+    wrapper.appendChild(canvas);
+    wrapper.appendChild(overlay);
+    container.appendChild(wrapper);
+
+    typeset(overlay);
+  }
+
+  /* ==========================================================================
+     3. SPÉCIFICATIONS DES TABLEAUX
+  ========================================================================== */
+
+  var TKZ_SPECS = {
+
+    variationType: {
+      colonnes: [
+        { tex: '\\(-\\infty\\)' },
+        { tex: '\\(x_0\\)' },
+        { tex: '\\(+\\infty\\)' }
+      ],
+      ligne: {
+        type: 'var',
+        label: '\\(f(x)\\)',
+        values: [
+          { k: '+', tex: '\\(+\\infty\\)' },
+          { k: '-', tex: '\\(f(x_0)\\)' },
+          { k: '+', tex: '\\(+\\infty\\)' }
+        ]
+      }
+    },
+
+    signeCube: {
+      colonnes: [
+        { tex: '\\(-\\infty\\)' },
+        { tex: '\\(0\\)' },
+        { tex: '\\(2\\)' },
+        { tex: '\\(+\\infty\\)' }
+      ],
+      ligne: {
+        type: 'sign',
+        label: '\\(f\'(x)\\)',
+        values: [
+          { k: '+' }, { k: 'z' }, { k: '-' }, { k: 'z' }, { k: '+' }
+        ]
+      }
+    },
+
+    variationCube: {
+      colonnes: [
+        { tex: '\\(-\\infty\\)' },
+        { tex: '\\(0\\)' },
+        { tex: '\\(2\\)' },
+        { tex: '\\(+\\infty\\)' }
+      ],
+      ligne: {
+        type: 'var',
+        label: '\\(f(x)\\)',
+        values: [
+          { k: '-', tex: '\\(-\\infty\\)' },
+          { k: '+', tex: '\\(2\\)' },
+          { k: '-', tex: '\\(-2\\)' },
+          { k: '+', tex: '\\(+\\infty\\)' }
+        ]
+      }
+    },
+
+    signeXlnx: {
+      colonnes: [
+        { tex: '\\(0\\)' },
+        { tex: '\\(\\frac{1}{e}\\)' },
+        { tex: '\\(+\\infty\\)' }
+      ],
+      ligne: {
+        type: 'sign',
+        label: '\\(f\'(x)\\)',
+        values: [
+          { k: 'd' }, { k: '-' }, { k: 'z' }, { k: '+' }
+        ]
+      }
+    },
+
+    variationXlnx: {
+      colonnes: [
+        { tex: '\\(0\\)' },
+        { tex: '\\(\\frac{1}{e}\\)' },
+        { tex: '\\(+\\infty\\)' }
+      ],
+      ligne: {
+        type: 'var',
+        label: '\\(f(x)\\)',
+        values: [
+          { k: '+', tex: '\\(0\\)' },
+          { k: '-', tex: '\\(-\\frac{1}{e}\\)' },
+          { k: '+', tex: '\\(+\\infty\\)' }
+        ]
+      }
+    }
+  };
+
+  function renderAllTkzTables() {
+    var slots = document.querySelectorAll('.tkz-canvas-wrap[data-tkz]');
+    for (var i = 0; i < slots.length; i++) {
+      var key = slots[i].getAttribute('data-tkz');
+      var spec = TKZ_SPECS[key];
+      if (spec) drawTkzTable(slots[i], spec);
+    }
+  }
+
+  /* ==========================================================================
+     4. MOTEUR DE TRACÉ MATHÉMATIQUE (SVG)
+  ========================================================================== */
+
+  var __plotUid = 0;
+
+  function niceStep(range, target) {
+    if (!(range > 0)) return 1;
+    var raw = range / target;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var n = raw / mag;
+    var s;
+    if (n < 1.5) s = 1;
+    else if (n < 3) s = 2;
+    else if (n < 7) s = 5;
+    else s = 10;
+    return s * mag;
+  }
+
+  function tickFmt(v) {
+    if (Math.abs(v) < 1e-9) return '0';
+    var a = Math.abs(v), s;
+    if (a >= 10) s = v.toFixed(0);
+    else if (a >= 1) s = v.toFixed(1);
+    else s = v.toFixed(2);
+    s = s.replace(/0+$/, '').replace(/\.$/, '');
+    return s.replace('.', ',');
+  }
+
+  function numericSlope(f, a) {
+    var h = 1e-5 * Math.max(1, Math.abs(a));
+    var y1 = f(a + h), y0 = f(a - h);
+    if (!isFinite(y1) || !isFinite(y0)) return NaN;
+    return (y1 - y0) / (2 * h);
+  }
+
+  function buildPlot(cfg) {
+    var uid = 'pl' + (++__plotUid);
+    var W = cfg.width || 300, H = cfg.height || 200;
+    var padL = cfg.padL != null ? cfg.padL : 34;
+    var padR = cfg.padR != null ? cfg.padR : 16;
+    var padT = cfg.padT != null ? cfg.padT : 14;
+    var padB = cfg.padB != null ? cfg.padB : 26;
+    var plotW = W - padL - padR;
+    var plotH = H - padT - padB;
+    var xmin = cfg.xmin, xmax = cfg.xmax;
+    var N = cfg.samples || 900;
+
+    var curves = cfg.curves || [{ f: cfg.f, color: cfg.color || '#2b4b9b' }];
+    var i, j, c;
+
+    for (i = 0; i < curves.length; i++) {
+      c = curves[i];
+      c.pts = [];
+      for (j = 0; j <= N; j++) {
+        var x = xmin + (xmax - xmin) * j / N;
+        var y = NaN;
+        try { y = c.f(x); } catch (e) { y = NaN; }
+        if (typeof y !== 'number' || !isFinite(y) || Math.abs(y) > 1e9) y = NaN;
+        c.pts.push([x, y]);
+      }
+    }
+
+    var ymin = cfg.ymin, ymax = cfg.ymax;
+    if (ymin == null || ymax == null) {
+      var vals = [];
+      for (i = 0; i < curves.length; i++) {
+        for (j = 0; j < curves[i].pts.length; j++) {
+          var v = curves[i].pts[j][1];
+          if (isFinite(v) && Math.abs(v) < 1e4) vals.push(v);
+        }
+      }
+      var lo = vals.length ? Math.min.apply(null, vals) : -1;
+      var hi = vals.length ? Math.max.apply(null, vals) : 1;
+      if (!isFinite(lo) || !isFinite(hi)) { lo = -1; hi = 1; }
+      if (hi - lo < 1e-6) hi = lo + 1;
+      var m = (hi - lo) * 0.12;
+      if (ymin == null) ymin = lo - m;
+      if (ymax == null) ymax = hi + m;
+    }
+
+    function X(x) { return padL + (x - xmin) / (xmax - xmin) * plotW; }
+    function Y(y) { return padT + (ymax - y) / (ymax - ymin) * plotH; }
+
+    var sx = niceStep(xmax - xmin, 6);
+    var sy = niceStep(ymax - ymin, 5);
+    var grid = '', xticks = '', yticks = '';
+    var t, px, py;
+
+    for (t = Math.ceil(xmin / sx - 1e-9) * sx; t <= xmax + 1e-9; t += sx) {
+      if (Math.abs(t) < 1e-9) continue;
+      px = X(t);
+      grid += '<line x1="' + px.toFixed(1) + '" y1="' + padT + '" x2="' + px.toFixed(1) +
+              '" y2="' + (padT + plotH) + '" stroke="#f0e7d8" stroke-width="1"/>';
+      xticks += '<text x="' + px.toFixed(1) + '" y="' + (padT + plotH + 13) +
+                '" text-anchor="middle" font-size="8.5" fill="#8a7a66" ' +
+                'font-family="Segoe UI, sans-serif">' + tickFmt(t) + '</text>';
+    }
+    for (t = Math.ceil(ymin / sy - 1e-9) * sy; t <= ymax + 1e-9; t += sy) {
+      if (Math.abs(t) < 1e-9) continue;
+      py = Y(t);
+      grid += '<line x1="' + padL + '" y1="' + py.toFixed(1) + '" x2="' + (padL + plotW) +
+              '" y2="' + py.toFixed(1) + '" stroke="#f0e7d8" stroke-width="1"/>';
+      yticks += '<text x="' + (padL - 5) + '" y="' + (py + 3).toFixed(1) +
+                '" text-anchor="end" font-size="8.5" fill="#8a7a66" ' +
+                'font-family="Segoe UI, sans-serif">' + tickFmt(t) + '</text>';
+    }
+
+    var y0 = (ymin < 0 && ymax > 0) ? Y(0) : (ymin >= 0 ? padT + plotH : padT);
+    var x0 = (xmin < 0 && xmax > 0) ? X(0) : (xmin >= 0 ? padL : padL + plotW);
+
+    var axes =
+      '<line x1="' + padL + '" y1="' + y0.toFixed(1) + '" x2="' + (padL + plotW) +
+        '" y2="' + y0.toFixed(1) + '" stroke="#4b3a28" stroke-width="1.2" ' +
+        'marker-end="url(#' + uid + '-arr)"/>' +
+      '<line x1="' + x0.toFixed(1) + '" y1="' + (padT + plotH) + '" x2="' + x0.toFixed(1) +
+        '" y2="' + padT + '" stroke="#4b3a28" stroke-width="1.2" ' +
+        'marker-end="url(#' + uid + '-arr)"/>' +
+      '<text x="' + (padL + plotW - 8) + '" y="' + (y0 - 6).toFixed(1) +
+        '" font-size="10" fill="#4b3a28" font-style="italic" ' +
+        'font-family="Segoe UI, sans-serif">x</text>' +
+      '<text x="' + (x0 + 7).toFixed(1) + '" y="' + (padT + 11) +
+        '" font-size="10" fill="#4b3a28" font-style="italic" ' +
+        'font-family="Segoe UI, sans-serif">y</text>';
+
+    var paths = '';
+    for (i = 0; i < curves.length; i++) {
+      c = curves[i];
+      var d = '', pen = false, prevPy = null;
+      for (j = 0; j < c.pts.length; j++) {
+        var xx = c.pts[j][0], yy = c.pts[j][1];
+        if (!isFinite(yy)) { pen = false; prevPy = null; continue; }
+        var cx = X(xx), cy = Y(yy);
+        if (cy < -3000) cy = -3000;
+        if (cy > H + 3000) cy = H + 3000;
+        if (!pen) {
+          d += 'M' + cx.toFixed(1) + ' ' + cy.toFixed(1);
+          pen = true;
+        } else if (prevPy !== null && Math.abs(cy - prevPy) > plotH * 1.5) {
+          d += 'M' + cx.toFixed(1) + ' ' + cy.toFixed(1);
+        } else {
+          d += 'L' + cx.toFixed(1) + ' ' + cy.toFixed(1);
+        }
+        prevPy = cy;
+      }
+      if (d) {
+        paths += '<path d="' + d + '" fill="none" stroke="' + (c.color || '#2b4b9b') +
+                 '" stroke-width="' + (c.width || 2) + '"' +
+                 (c.dash ? ' stroke-dasharray="' + c.dash + '"' : '') +
+                 ' clip-path="url(#' + uid + '-clip)" stroke-linejoin="round" ' +
+                 'stroke-linecap="round"/>';
+      }
+    }
+
+    var tans = '';
+    (cfg.tangents || []).forEach(function (tg) {
+      var fRef = tg.f || curves[0].f;
+      var a = tg.a;
+      var slope = (tg.slope != null) ? tg.slope : numericSlope(fRef, a);
+      var fa = fRef(a);
+      if (!isFinite(slope) || !isFinite(fa)) return;
+      var y1 = fa + slope * (xmin - a);
+      var y2 = fa + slope * (xmax - a);
+      if (!isFinite(y1) || !isFinite(y2)) return;
+      tans += '<line x1="' + X(xmin).toFixed(1) + '" y1="' + Y(y1).toFixed(1) +
+              '" x2="' + X(xmax).toFixed(1) + '" y2="' + Y(y2).toFixed(1) +
+              '" stroke="' + (tg.color || '#c0392b') + '" stroke-width="1.7" ' +
+              'clip-path="url(#' + uid + '-clip)"/>';
+    });
+
+    var dots = '';
+    (cfg.points || []).forEach(function (p) {
+      var fy = (p.y != null) ? p.y : curves[0].f(p.x);
+      if (!isFinite(fy)) return;
+      var cxp = X(p.x), cyp = Y(fy);
+
+      if (p.guide) {
+        var ax0 = X(0), ay0 = Y(0);
+        dots +=
+          '<line x1="' + cxp.toFixed(1) + '" y1="' + cyp.toFixed(1) +
+            '" x2="' + ax0.toFixed(1) + '" y2="' + cyp.toFixed(1) +
+            '" stroke="#c9a26b" stroke-width="1" stroke-dasharray="3 3" ' +
+            'clip-path="url(#' + uid + '-clip)"/>' +
+          '<line x1="' + cxp.toFixed(1) + '" y1="' + cyp.toFixed(1) +
+            '" x2="' + cxp.toFixed(1) + '" y2="' + ay0.toFixed(1) +
+            '" stroke="#c9a26b" stroke-width="1" stroke-dasharray="3 3" ' +
+            'clip-path="url(#' + uid + '-clip)"/>';
+      }
+
+      dots += '<circle cx="' + cxp.toFixed(1) + '" cy="' + cyp.toFixed(1) +
+              '" r="3.6" fill="' + (p.color || '#d97a1a') + '" stroke="#fffdf9" stroke-width="1.2"/>';
+      if (p.label) {
+        dots += '<text x="' + (cxp + (p.dx || 7)).toFixed(1) + '" y="' +
+                (cyp + (p.dy || -7)).toFixed(1) + '" font-size="9" fill="#7a4a12" ' +
+                'font-family="Segoe UI, sans-serif" font-weight="700">' + esc(p.label) + '</text>';
+      }
+    });
+
+    return '<svg class="diagram" viewBox="0 0 ' + W + ' ' + H + '" width="' + W +
+           '" height="' + H + '" role="img" aria-label="' + esc(cfg.title || 'graphique') + '">' +
+             '<defs>' +
+               '<clipPath id="' + uid + '-clip"><rect x="' + padL + '" y="' + padT +
+                 '" width="' + plotW + '" height="' + plotH + '"/></clipPath>' +
+               '<marker id="' + uid + '-arr" markerWidth="9" markerHeight="9" refX="7.5" ' +
+                 'refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 z" fill="#4b3a28"/></marker>' +
+             '</defs>' +
+             '<rect x="' + padL + '" y="' + padT + '" width="' + plotW + '" height="' + plotH +
+               '" fill="#fffdf9"/>' +
+             grid + axes + tans + paths + dots + xticks + yticks +
+           '</svg>';
+  }
+
+  /* ==========================================================================
+     5. JEU DE GRAPHIQUES
+  ========================================================================== */
+
+  var PLOTS = {
+
+    signZero: memo(function () {
+      return buildPlot({
+        width: 250, height: 190, title: 'Pente nulle',
+        xmin: -2.3, xmax: 2.3, ymin: -1.5, ymax: 5.2,
+        curves: [{ f: function (x) { return x * x; }, color: '#2b4b9b' }],
+        tangents: [{ a: 0, slope: 0, color: '#c0392b' }],
+        points: [{ x: 0, y: 0, color: '#d97a1a' }]
+      });
+    }),
+
+    signPos: memo(function () {
+      return buildPlot({
+        width: 250, height: 190, title: 'Pente positive',
+        xmin: -2.3, xmax: 2.3, ymin: -1.5, ymax: 5.2,
+        curves: [{ f: function (x) { return x * x; }, color: '#2b4b9b' }],
+        tangents: [{ a: 1.3, slope: 2.6, color: '#c0392b' }],
+        points: [{ x: 1.3, y: 1.69, color: '#d97a1a' }]
+      });
+    }),
+
+    signNeg: memo(function () {
+      return buildPlot({
+        width: 250, height: 190, title: 'Pente négative',
+        xmin: -2.3, xmax: 2.3, ymin: -1.5, ymax: 5.2,
+        curves: [{ f: function (x) { return x * x; }, color: '#2b4b9b' }],
+        tangents: [{ a: -1.3, slope: -2.6, color: '#c0392b' }],
+        points: [{ x: -1.3, y: 1.69, color: '#d97a1a' }]
+      });
+    }),
+
+    carreF: memo(function () {
+      return buildPlot({
+        width: 300, height: 240, title: 'f(x)=x carré et sa tangente en 1',
+        xmin: -2.2, xmax: 2.2, ymin: -1.4, ymax: 5.4,
+        curves: [{ f: function (x) { return x * x; }, color: '#2b4b9b' }],
+        tangents: [{ a: 1, slope: 2, color: '#d97a1a' }],
+        points: [{ x: 1, y: 1, color: '#d97a1a' }]
+      });
+    }),
+
+    carrePrime: memo(function () {
+      return buildPlot({
+        width: 300, height: 240, title: "f'(x)=2x et f'(1)=2",
+        xmin: -2.2, xmax: 2.2, ymin: -5.0, ymax: 5.0,
+        curves: [{ f: function (x) { return 2 * x; }, color: '#c0392b' }],
+        points: [{ x: 1, y: 2, color: '#c0392b', guide: true }]
+      });
+    }),
+
+    cubeF: memo(function () {
+      return buildPlot({
+        width: 300, height: 240, title: 'f(x)=x cube et sa tangente en 1',
+        xmin: -1.7, xmax: 1.7, ymin: -5.6, ymax: 5.6,
+        curves: [{ f: function (x) { return x * x * x; }, color: '#2b4b9b' }],
+        tangents: [{ a: 1, slope: 3, color: '#d97a1a' }],
+        points: [{ x: 1, y: 1, color: '#d97a1a' }]
+      });
+    }),
+
+    cubePrime: memo(function () {
+      return buildPlot({
+        width: 300, height: 240, title: "f'(x)=3x carré et f'(1)=3",
+        xmin: -1.7, xmax: 1.7, ymin: -1.0, ymax: 9.4,
+        curves: [{ f: function (x) { return 3 * x * x; }, color: '#c0392b' }],
+        points: [{ x: 1, y: 3, color: '#c0392b', guide: true }]
+      });
+    }),
+
+    sinCos: memo(function () {
+      return buildPlot({
+        width: 620, height: 220, title: 'sinus et cosinus',
+        xmin: -6.6, xmax: 6.6, ymin: -1.75, ymax: 1.75,
+        samples: 1400,
+        curves: [
+          { f: Math.sin, color: '#2b4b9b' },
+          { f: Math.cos, color: '#c0392b' }
+        ],
+        points: [{ x: 0, y: 0, color: '#2b4b9b' },
+                 { x: 0, y: 1, color: '#c0392b' }]
+      });
+    }),
+
+    lnInv: memo(function () {
+      return buildPlot({
+        width: 620, height: 220, title: 'logarithme et inverse',
+        xmin: -0.9, xmax: 5.2, ymin: -2.6, ymax: 3.4,
+        samples: 2000,
+        curves: [
+          { f: function (x) { return Math.log(x); }, color: '#2b4b9b' },
+          { f: function (x) { return 1 / x; }, color: '#c0392b' }
+        ],
+        points: [{ x: 1, y: 0, color: '#2b4b9b' },
+                 { x: 1, y: 1, color: '#c0392b' }]
+      });
+    }),
+
+    exp: memo(function () {
+      return buildPlot({
+        width: 620, height: 230, title: 'exponentielle et tangente en 0',
+        xmin: -3.2, xmax: 1.9, ymin: -0.8, ymax: 5.4,
+        curves: [{ f: Math.exp, color: '#2b4b9b' }],
+        tangents: [{ a: 0, slope: 1, color: '#c0392b' }],
+        points: [{ x: 0, y: 1, color: '#d97a1a', label: 'e⁰ = 1', dx: 8, dy: -8 }]
+      });
+    }),
+
+    compo: memo(function () {
+      return buildPlot({
+        width: 620, height: 230, title: 'sin(2x+1) et sa dérivée',
+        xmin: -3.6, xmax: 3.6, ymin: -3.1, ymax: 3.1,
+        samples: 1400,
+        curves: [
+          { f: function (x) { return Math.sin(2 * x + 1); }, color: '#2b4b9b' },
+          { f: function (x) { return 2 * Math.cos(2 * x + 1); }, color: '#c0392b' }
+        ]
+      });
+    }),
+
+    xlnx: memo(function () {
+      return buildPlot({
+        width: 620, height: 250, title: 'x ln x',
+        xmin: -0.15, xmax: 3.2, ymin: -0.9, ymax: 2.8,
+        samples: 1400,
+        curves: [{ f: function (x) { return x > 0 ? x * Math.log(x) : NaN; }, color: '#2b4b9b' }],
+        points: [{
+          x: 1 / Math.E, y: -1 / Math.E, color: '#d97a1a',
+          label: 'min', dx: 8, dy: 14
+        }]
+      });
+    }),
+
+    exempleCube: memo(function () {
+      return buildPlot({
+        width: 560, height: 290, title: 'x cube moins 3 x carré plus 2',
+        xmin: -1.8, xmax: 3.6, ymin: -3.6, ymax: 5.8,
+        curves: [{
+          f: function (x) { return x * x * x - 3 * x * x + 2; },
+          color: '#2b4b9b'
+        }],
+        points: [
+          { x: 0, y: 2, color: '#d97a1a', label: 'Max', dx: -30, dy: -8 },
+          { x: 2, y: -2, color: '#d97a1a', label: 'Min', dx: 8, dy: 16 }
+        ]
+      });
+    })
+  };
+
+  var slots = document.querySelectorAll('[data-plot]');
+  for (var si = 0; si < slots.length; si++) {
+    var key = slots[si].getAttribute('data-plot');
+    if (PLOTS[key]) slots[si].innerHTML = PLOTS[key]();
+  }
+
+  var MINI = {
+    sin: memo(function () {
+      return buildPlot({
+        width: 260, height: 170, xmin: -6.6, xmax: 6.6, ymin: -1.7, ymax: 1.7,
+        samples: 1200,
+        curves: [{ f: Math.sin, color: '#2b4b9b' }, { f: Math.cos, color: '#c0392b' }]
+      });
+    }),
+    cos: memo(function () {
+      return buildPlot({
+        width: 260, height: 170, xmin: -6.6, xmax: 6.6, ymin: -1.7, ymax: 1.7,
+        samples: 1200,
+        curves: [{ f: Math.cos, color: '#2b4b9b' },
+                 { f: function (x) { return -Math.sin(x); }, color: '#c0392b' }]
+      });
+    }),
+    ln: memo(function () {
+      return buildPlot({
+        width: 260, height: 170, xmin: -0.9, xmax: 4.6, ymin: -2.6, ymax: 3.2,
+        samples: 1400,
+        curves: [{ f: function (x) { return Math.log(x); }, color: '#2b4b9b' },
+                 { f: function (x) { return 1 / x; }, color: '#c0392b' }]
+      });
+    }),
+    exp: memo(function () {
+      return buildPlot({
+        width: 260, height: 170, xmin: -3.2, xmax: 1.9, ymin: -0.8, ymax: 5.4,
+        curves: [{ f: Math.exp, color: '#2b4b9b' }],
+        tangents: [{ a: 0, slope: 1, color: '#c0392b' }]
+      });
+    }),
+    compo: memo(function () {
+      return buildPlot({
+        width: 260, height: 170, xmin: -3.6, xmax: 3.6, ymin: -3.1, ymax: 3.1,
+        samples: 1200,
+        curves: [{ f: function (x) { return Math.sin(2 * x + 1); }, color: '#2b4b9b' },
+                 { f: function (x) { return 2 * Math.cos(2 * x + 1); }, color: '#c0392b' }]
+      });
+    }),
+    xlnx: memo(function () {
+      return buildPlot({
+        width: 260, height: 170, xmin: -0.15, xmax: 3.2, ymin: -0.9, ymax: 2.8,
+        samples: 1200,
+        curves: [{ f: function (x) { return x > 0 ? x * Math.log(x) : NaN; }, color: '#2b4b9b' }],
+        points: [{ x: 1 / Math.E, y: -1 / Math.E, color: '#d97a1a' }]
+      });
+    })
+  };
+
+  /* ==========================================================================
+     6. NAVIGATION
+  ========================================================================== */
+  var navBtns = document.querySelectorAll('.navbtn');
+  var panels  = document.querySelectorAll('.panel');
+
+  for (var nb = 0; nb < navBtns.length; nb++) {
+    navBtns[nb].addEventListener('click', function () {
+      for (var a = 0; a < navBtns.length; a++) navBtns[a].classList.remove('active');
+      for (var b = 0; b < panels.length; b++) panels[b].classList.remove('active');
+      this.classList.add('active');
+      var target = document.getElementById(this.dataset.target);
+      if (target) target.classList.add('active');
+      if (this.dataset.target === 'panel-graph') resizeCanvas();
+    });
+  }
+
+  /* ==========================================================================
+     7. MODALE FLOTTANTE
+  ========================================================================== */
+  var modal      = document.getElementById('modal');
+  var modalTitle = document.getElementById('modal-title');
+  var modalDesc  = document.getElementById('modal-desc');
+  var modalMath  = document.getElementById('modal-math');
+  var modalExtra = document.getElementById('modal-extra');
+  var modalConn  = document.getElementById('modal-conn');
+  var currentKey = null;
+
+  var closeTimer = null;
+  var activeTarget = null;
+
+  function cancelCloseTimer() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  }
+
+  function startCloseTimer() {
+    cancelCloseTimer();
+    closeTimer = setTimeout(function () {
+      hideModal();
+      closeTimer = null;
+    }, 120);
+  }
+
+  function showModal(data, x, y, key) {
+    cancelCloseTimer();
+    if (key !== currentKey) {
+      currentKey = key;
+      modalTitle.textContent = data.title || '';
+      setTextWithBreaks(modalDesc, data.desc || '');
+      modalMath.innerHTML = data.math || '';
+
+      var extraHTML = data.extra || '';
+      if (data.plot) extraHTML += data.plot();
+      if (extraHTML) {
+        modalExtra.innerHTML = extraHTML;
+        modalExtra.style.display = 'block';
+      } else {
+        modalExtra.innerHTML = '';
+        modalExtra.style.display = 'none';
+      }
+
+      if (data.conns && data.conns.length) {
+        modalConn.innerHTML = '<b>Connexions :</b> ' +
+          data.conns.map(function (c) { return esc(c); }).join(' · ');
+        modalConn.style.display = 'block';
+      } else {
+        modalConn.innerHTML = '';
+        modalConn.style.display = 'none';
+      }
+      typeset(modal);
+    }
+    placeModal(x, y);
+    modal.classList.add('visible');
+  }
+
+  function placeModal(x, y) {
+    var mw = modal.offsetWidth || 340;
+    var mh = modal.offsetHeight || 160;
+    var left = x + 18, top = y + 18;
+    if (left + mw > window.innerWidth - 10) left = x - mw - 18;
+    if (left < 10) left = 10;
+    if (top + mh > window.innerHeight - 10) top = window.innerHeight - mh - 10;
+    if (top < 10) top = 10;
+    modal.style.left = left + 'px';
+    modal.style.top = top + 'px';
+  }
+
+  function hideModal() {
+    modal.classList.remove('visible');
+    currentKey = null;
+    activeTarget = null;
+  }
+
+  modal.addEventListener('mouseenter', function () {
+    cancelCloseTimer();
+  });
+  modal.addEventListener('mouseleave', function () {
+    startCloseTimer();
+  });
+
+  /* ==========================================================================
+     8. CARTE MENTALE
+  ========================================================================== */
+  var MAP = [
+    {
+      label: 'Nombre dérivé\n& tangente', color: '#d97a1a', side: 'left', y: 160,
+      leaves: [
+        {
+          label: 'Taux de variation',
+          title: 'Taux de variation',
+          desc: 'Le taux de variation de f entre a et a+h mesure la pente de la droite sécante qui coupe la courbe en ces deux points. Il sert de point de départ à toute la notion de dérivée.',
+          math: '\\[ \\tau(h)=\\frac{f(a+h)-f(a)}{h} \\]'
+        },
+        {
+          label: "Nombre dérivé f ′(a)",
+          title: "Nombre dérivé f ′(a)",
+          desc: "Le nombre dérivé est la limite du taux de variation quand h tend vers 0. Il représente le coefficient directeur de la tangente à la courbe au point d'abscisse a.",
+          math: "\\[ f'(a)=\\lim_{h\\to 0}\\frac{f(a+h)-f(a)}{h} \\]"
+        },
+        {
+          label: 'Équation de la tangente',
+          title: 'Équation de la tangente',
+          desc: "La tangente à la courbe de f au point d'abscisse a est la droite passant par ce point et de coefficient directeur f ′(a). Son équation est donnée ci-dessous.",
+          math: "\\[ y = f'(a)(x-a)+f(a) \\]"
+        }
+      ]
+    },
+    {
+      label: 'Signe de f ′\n& variations', color: '#c0392b', side: 'left', y: 430,
+      leaves: [
+        {
+          label: "f ′(a) > 0",
+          title: "f ′(a) > 0",
+          desc: "La fonction est croissante en a : la vitesse est positive. La tangente est oblique montante.",
+          math: "\\[ f'(a) > 0 \\;\\Longrightarrow\\; f \\text{ croissante en } a \\]"
+        },
+        {
+          label: "f ′(a) < 0",
+          title: "f ′(a) < 0",
+          desc: "La fonction est décroissante en a : la vitesse est négative. La tangente est oblique descendante.",
+          math: "\\[ f'(a) < 0 \\;\\Longrightarrow\\; f \\text{ décroissante en } a \\]"
+        },
+        {
+          label: "f ′(a) = 0",
+          title: "f ′(a) = 0",
+          desc: "La tangente est horizontale. Un extremum est possible en a, mais pas certain : il faut un changement de signe.",
+          math: "\\[ f'(a) = 0 \\;\\Longrightarrow\\; \\text{tangente horizontale} \\]"
+        },
+        {
+          label: 'Extremum local',
+          title: 'Extremum local',
+          desc: "Si la dérivée s'annule en changeant de signe, alors la fonction admet un extremum local : maximum si l'on passe de plus à moins, minimum si l'on passe de moins à plus.",
+          math: "\\[ f' \\text{ s'annule en changeant de signe} \\Rightarrow \\text{extremum} \\]"
+        }
+      ]
+    },
+    {
+      label: 'ln, eᵘ\n& composées', color: '#2e7d5b', side: 'left', y: 720,
+      leaves: [
+        {
+          label: '(ln u)′ = u′ / u',
+          title: 'Dérivée du logarithme composé',
+          desc: "On dérive l'intérieur u, puis on divise par u. La formule exige u strictement positif sur l'intervalle d'étude.",
+          math: "\\[ (\\ln u)' = \\frac{u'}{u} \\]",
+          plot: MINI.ln
+        },
+        {
+          label: '(eᵘ)′ = u′ eᵘ',
+          title: "Dérivée de l'exponentielle composée",
+          desc: "On multiplie la dérivée de l'intérieur par l'exponentielle elle-même.",
+          math: "\\[ (e^{u})' = u'\\,e^{u} \\]",
+          plot: MINI.exp
+        },
+        {
+          label: 'x ↦ sin(ax+b)',
+          title: 'Dérivée de sin(ax+b)',
+          desc: "L'intérieur u(x)=ax+b a pour dérivée a. La dérivée est donc a fois le cosinus de la même expression.",
+          math: "\\[ \\big(\\sin(ax+b)\\big)' = a\\cos(ax+b) \\]",
+          plot: MINI.compo
+        },
+        {
+          label: 'x ↦ cos(ax+b)',
+          title: 'Dérivée de cos(ax+b)',
+          desc: "Attention au double signe négatif : la dérivée du cosinus est moins le sinus, et l'intérieur apporte le facteur a.",
+          math: "\\[ \\big(\\cos(ax+b)\\big)' = -a\\sin(ax+b) \\]",
+          plot: MINI.cos
+        }
+      ]
+    },
+    {
+      label: 'Méthode\n& algorithmique', color: '#6b3fa0', side: 'left', y: 965,
+      leaves: [
+        {
+          label: 'Calcul approché',
+          title: 'Calcul approché du nombre dérivé',
+          desc: "On approche le nombre dérivé par un taux de variation avec un pas h très petit. Plus h est petit, meilleure est l'approximation.",
+          math: "\\[ f'(a) \\approx \\frac{f(a+h)-f(a)}{h}, \\quad h=10^{-5} \\]"
+        },
+        {
+          label: 'Python',
+          title: 'Algorithme Python',
+          desc: "La fonction ci-dessous renvoie une valeur approchée du nombre dérivé. La seconde construit un tableau de valeurs.",
+          math: '',
+          extra:
+            '<pre><code>def nombre_derive(f, a, h=1e-5):\n' +
+            '    return (f(a+h) - f(a)) / h\n\n' +
+            'def table_derivee(f, liste_x, h=1e-5):\n' +
+            '    for x in liste_x:\n' +
+            '        print(f"f\'({x}) = {nombre_derive(f, x, h)}")</code></pre>'
+        },
+        {
+          label: 'Méthode 4 étapes',
+          title: 'Méthode d’étude',
+          desc: "1. Calculer f ′(x). 2. Étudier le signe de f ′(x). 3. Dresser le tableau de variation de f. 4. Calculer les extremums.",
+          math: ''
+        },
+        {
+          label: 'Exemple guidé x ln x',
+          title: 'Exemple guidé : f(x)=x ln x',
+          desc: "On dérive avec la règle du produit, on résout ln x + 1 > 0, puis on conclut : minimum en x = 1/e, de valeur -1/e.",
+          math: "\\[ f'(x)=\\ln x+1 \\]\\[ f'(x)=0 \\iff x=e^{-1} \\]",
+          plot: MINI.xlnx
+        }
+      ]
+    },
+    {
+      label: 'Fonctions\nusuelles', color: '#2b4b9b', side: 'right', y: 250,
+      leaves: [
+        {
+          label: 'k → 0',
+          title: 'Dérivée d’une constante',
+          desc: "Une fonction constante ne varie pas : sa dérivée est nulle sur tout intervalle.",
+          math: "\\[ f(x)=k \\;\\Longrightarrow\\; f'(x)=0 \\]"
+        },
+        {
+          label: 'xⁿ → n xⁿ⁻¹',
+          title: 'Dérivée d’une puissance',
+          desc: "Pour tout entier n, on abaisse l'exposant d'une unité et on multiplie par l'ancien exposant.",
+          math: "\\[ (x^{n})' = n\\,x^{n-1} \\]"
+        },
+        {
+          label: 'ax+b → a',
+          title: 'Dérivée d’une fonction affine',
+          desc: "La dérivée d'une fonction affine est constante et égale à son coefficient directeur.",
+          math: "\\[ f(x)=ax+b \\;\\Longrightarrow\\; f'(x)=a \\]"
+        },
+        {
+          label: 'sin x → cos x',
+          title: 'Dérivée du sinus',
+          desc: "La dérivée de sinus est cosinus. Sur le graphique, la courbe rouge est la dérivée de la courbe bleue.",
+          math: "\\[ (\\sin x)' = \\cos x \\]",
+          plot: MINI.sin
+        },
+        {
+          label: 'cos x → −sin x',
+          title: 'Dérivée du cosinus',
+          desc: "La dérivée de cosinus est moins sinus. Le signe négatif est indispensable : la fonction cosinus décroît là où sinus est positive.",
+          math: "\\[ (\\cos x)' = -\\sin x \\]",
+          plot: MINI.cos
+        },
+        {
+          label: 'ln x → 1/x',
+          title: 'Dérivée du logarithme népérien',
+          desc: "La fonction logarithme n'est définie que sur les réels strictement positifs. Sa dérivée y est toujours strictement positive.",
+          math: "\\[ (\\ln x)' = \\frac{1}{x} \\quad (x>0) \\]",
+          plot: MINI.ln
+        },
+        {
+          label: 'eˣ → eˣ',
+          title: 'Dérivée de l’exponentielle',
+          desc: "La fonction exponentielle est sa propre dérivée. La tangente en 0 a pour équation y = x + 1, donc une pente de 1.",
+          math: "\\[ (e^{x})' = e^{x} \\]",
+          plot: MINI.exp
+        }
+      ]
+    },
+    {
+      label: 'Somme, produit\n& quotient', color: '#7a4a12', side: 'right', y: 560,
+      leaves: [
+        {
+          label: '(u+v)′ = u′+v′',
+          title: 'Dérivée d’une somme',
+          desc: "La dérivée d'une somme est la somme des dérivées. On dérive donc terme à terme.",
+          math: "\\[ (u+v)' = u' + v' \\]"
+        },
+        {
+          label: '(k u)′ = k u′',
+          title: 'Multiplication par une constante',
+          desc: "On peut sortir une constante multiplicative devant la dérivée.",
+          math: "\\[ (k\\,u)' = k\\,u' \\quad (k \\text{ constante}) \\]"
+        },
+        {
+          label: '(u v)′ = u′v + u v′',
+          title: 'Dérivée d’un produit',
+          desc: "On dérive le premier facteur en laissant le second, puis on ajoute le premier facteur multiplié par la dérivée du second. Exemple : (x ln x)′ = ln x + 1.",
+          math: "\\[ (u\\,v)' = u'v + u\\,v' \\]"
+        },
+        {
+          label: '(u/v)′ = (u′v−uv′)/v²',
+          title: 'Dérivée d’un quotient',
+          desc: "On dérive le numérateur fois le dénominateur, moins le numérateur fois la dérivée du dénominateur, le tout divisé par le carré du dénominateur.",
+          math: "\\[ \\left(\\frac{u}{v}\\right)' = \\frac{u'v-u\\,v'}{v^{2}} \\quad (v\\neq 0) \\]"
+        }
+      ]
+    },
+    {
+      label: 'Inverse\n& puissance', color: '#a85f10', side: 'right', y: 835,
+      leaves: [
+        {
+          label: '(1/v)′ = −v′/v²',
+          title: 'Dérivée de l’inverse',
+          desc: "C'est un cas particulier du quotient avec u = 1. La dérivée est l'opposé de la dérivée de v divisée par le carré de v.",
+          math: "\\[ \\left(\\frac{1}{v}\\right)' = -\\frac{v'}{v^{2}} \\quad (v\\neq 0) \\]"
+        },
+        {
+          label: '(uⁿ)′ = n u′ uⁿ⁻¹',
+          title: 'Dérivée d’une puissance composée',
+          desc: "On descend l'exposant, on multiplie par la dérivée de l'intérieur, puis on remonte l'exposant d'une unité. Exemple : (x²+1)³ donne 6x(x²+1)².",
+          math: "\\[ (u^{n})' = n\\,u'\\,u^{n-1} \\]"
+        },
+        {
+          label: 'Applications',
+          title: 'Applications concrètes',
+          desc: "En physique, le nombre dérivé donne la vitesse instantanée d'un mobile. En économie, il donne le coût marginal, c'est-à-dire le coût de production d'une unité supplémentaire.",
+          math: "\\[ v(t) = s'(t) \\qquad C_m(q) = C'(q) \\]"
+        }
+      ]
+    }
+  ];
+
+  var mmSvg = document.getElementById('mindmap');
+  var mmLegend = document.getElementById('mm-legend');
+
+  function buildMindMap() {
+    var CENTER = { x: 700, y: 550 };
+    var branchX = { left: 430, right: 970 };
+    var leafX = { left: 208, right: 1192 };
+    var links = [], nodes = [], leafStore = {}, counter = 0;
+
+    MAP.forEach(function (branch) {
+      var bx = branchX[branch.side];
+      var by = branch.y;
+      var k = branch.leaves.length;
+      var step = 46;
+
+      var dxc = bx - CENTER.x;
+      links.push(
+        '<path d="M' + CENTER.x + ' ' + CENTER.y +
+        ' C ' + (CENTER.x + dxc * 0.5) + ' ' + CENTER.y + ', ' +
+        (bx - dxc * 0.4) + ' ' + by + ', ' + bx + ' ' + by +
+        '" fill="none" stroke="#d9c8ad" stroke-width="2.4"/>'
+      );
+
+      branch.leaves.forEach(function (leaf, li) {
+        var id = 'leaf' + (counter++);
+        leafStore[id] = leaf;
+
+        var ly = by + (li - (k - 1) / 2) * step;
+        var lx = leafX[branch.side];
+        var dx = lx - bx;
+
+        links.push(
+          '<path d="M' + bx + ' ' + by +
+          ' C ' + (bx + dx * 0.45) + ' ' + by + ', ' +
+          (lx - dx * 0.35) + ' ' + ly + ', ' + lx + ' ' + ly +
+          '" fill="none" stroke="' + branch.color + '" stroke-opacity="0.45" stroke-width="1.6"/>'
+        );
+
+        var w = Math.min(204, Math.max(112, leaf.label.length * 6.5 + 26));
+        var h = 30;
+
+        nodes.push(
+          '<g class="leaf" data-leaf="' + id + '">' +
+            '<rect x="' + (lx - w / 2) + '" y="' + (ly - h / 2) + '" width="' + w +
+              '" height="' + h + '" rx="9" fill="#fffdf9" stroke="' + branch.color +
+              '" stroke-width="1.5"/>' +
+            '<text x="' + lx + '" y="' + (ly + 4.2) + '" text-anchor="middle" ' +
+              'font-size="11.5" fill="#4b3a28" font-family="Segoe UI, sans-serif">' +
+              esc(leaf.label) + '</text>' +
+          '</g>'
+        );
+      });
+
+      var lines = branch.label.split('\n');
+      var bw = Math.max(126, Math.max.apply(null, lines.map(function (l) { return l.length; })) * 7.4 + 28);
+      var bh = 18 + lines.length * 15;
+      var tspans = lines.map(function (l, i) {
+        var yy = by - (lines.length - 1) * 7.5 + i * 15 + 4.5;
+        return '<tspan x="' + bx + '" y="' + yy + '">' + esc(l) + '</tspan>';
+      }).join('');
+
+      nodes.push(
+        '<g class="branch">' +
+          '<rect x="' + (bx - bw / 2) + '" y="' + (by - bh / 2) + '" width="' + bw +
+            '" height="' + bh + '" rx="12" fill="' + branch.color + '" opacity="0.95"/>' +
+          '<text text-anchor="middle" font-size="12" font-weight="600" fill="#fffdf9" ' +
+            'font-family="Segoe UI, sans-serif">' + tspans + '</text>' +
+        '</g>'
+      );
+    });
+
+    var centerNode =
+      '<g class="center-node">' +
+        '<rect x="' + (CENTER.x - 112) + '" y="' + (CENTER.y - 34) + '" width="224" ' +
+          'height="68" rx="16" fill="#2c251d" stroke="#d97a1a" stroke-width="2.4"/>' +
+        '<text x="' + CENTER.x + '" y="' + (CENTER.y - 4) + '" text-anchor="middle" ' +
+          'font-size="16" font-weight="700" fill="#ffd9a6" letter-spacing="1.6" ' +
+          'font-family="Segoe UI, sans-serif">DÉRIVATION</text>' +
+        '<text x="' + CENTER.x + '" y="' + (CENTER.y + 18) + '" text-anchor="middle" ' +
+          'font-size="11" fill="#c9a26b" font-family="Segoe UI, sans-serif">' +
+          'nombre dérivé · tangente · variations</text>' +
+      '</g>';
+
+    mmSvg.innerHTML = links.join('') + nodes.join('') + centerNode;
+
+    mmLegend.innerHTML = MAP.map(function (b) {
+      return '<span><i style="background:' + b.color + '"></i>' +
+             esc(b.label.replace('\n', ' ')) + '</span>';
+    }).join('');
+
+    var leafEls = mmSvg.querySelectorAll('[data-leaf]');
+    for (var i = 0; i < leafEls.length; i++) {
+      (function (g) {
+        var id = g.getAttribute('data-leaf');
+        var data = leafStore[id];
+
+        g.addEventListener('mouseenter', function (ev) {
+          activeTarget = g;
+          cancelCloseTimer();
+          showModal({
+            title: data.title, desc: data.desc, math: data.math,
+            extra: data.extra, plot: data.plot
+          }, ev.clientX, ev.clientY, id);
+        });
+        g.addEventListener('mousemove', function (ev) { placeModal(ev.clientX, ev.clientY); });
+        g.addEventListener('mouseleave', function () {
+          if (activeTarget === g) startCloseTimer();
+        });
+        g.addEventListener('touchstart', function (ev) {
+          var t = ev.touches[0];
+          activeTarget = g;
+          cancelCloseTimer();
+          showModal({
+            title: data.title, desc: data.desc, math: data.math,
+            extra: data.extra, plot: data.plot
+          }, t.clientX, t.clientY, id);
+          ev.preventDefault();
+        }, { passive: false });
+        g.addEventListener('touchend', function () {
+          startCloseTimer();
+        });
+      })(leafEls[i]);
+    }
+  }
+
+  buildMindMap();
+
+  /* ==========================================================================
+     9. GRAPHE INTERACTIF
+  ========================================================================== */
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W = 0, H = 0, dpr = window.devicePixelRatio || 1;
+  var started = false, positionsReady = false;
+
+  var GROUPS = [
+    { name: 'Notions fondamentales', color: '#d97a1a' },
+    { name: 'Règles & formules',     color: '#7a4a12' },
+    { name: 'Applications',          color: '#2e7d5b' }
+  ];
+
+  var NODES = [
+    { id: 'taux', label: 'Taux de variation', g: 0,
+      desc: "Le taux de variation de f entre a et a+h mesure la pente de la sécante. Il est le point de départ de la notion de dérivée.",
+      math: "\\[ \\frac{f(a+h)-f(a)}{h} \\]" },
+    { id: 'limite', label: 'Limite h → 0', g: 0,
+      desc: "On fait tendre h vers 0. Si le taux de variation admet une limite finie, la fonction est dérivable en a.",
+      math: "\\[ h \\to 0 \\]" },
+    { id: 'nbder', label: "Nombre dérivé f ′(a)", g: 0,
+      desc: "Limite du taux de variation quand h tend vers 0. C'est le coefficient directeur de la tangente à la courbe en a.",
+      math: "\\[ f'(a)=\\lim_{h\\to 0}\\frac{f(a+h)-f(a)}{h} \\]" },
+    { id: 'tangente', label: 'Tangente', g: 0,
+      desc: "Droite qui touche la courbe au point d'abscisse a et dont la pente vaut f ′(a).",
+      math: "\\[ y = f'(a)(x-a)+f(a) \\]" },
+    { id: 'foncder', label: 'Fonction dérivée f ′', g: 0,
+      desc: "Application qui, à chaque réel x, associe le nombre dérivé f ′(x), là où la fonction est dérivable.",
+      math: "\\[ x \\mapsto f'(x) \\]" },
+
+    { id: 'poly', label: 'Polynômes', g: 1,
+      desc: "Dérivées des monômes et des polynômes de degré inférieur ou égal à 3, programme de première technologique.",
+      math: "\\[ (x^{n})'=n\\,x^{n-1} \\]\\[ (ax^{3}+bx^{2}+cx+d)'=3ax^{2}+2bx+c \\]" },
+    { id: 'sin', label: 'sin x → cos x', g: 1,
+      desc: "La dérivée de la fonction sinus est la fonction cosinus.",
+      math: "\\[ (\\sin x)'=\\cos x \\]",
+      plot: MINI.sin },
+    { id: 'cos', label: 'cos x → −sin x', g: 1,
+      desc: "La dérivée de la fonction cosinus est l'opposé de la fonction sinus.",
+      math: "\\[ (\\cos x)'=-\\sin x \\]",
+      plot: MINI.cos },
+    { id: 'ln', label: 'ln x → 1/x', g: 1,
+      desc: "Le logarithme népérien est défini sur les réels strictement positifs et sa dérivée est la fonction inverse.",
+      math: "\\[ (\\ln x)'=\\frac{1}{x} \\]",
+      plot: MINI.ln },
+    { id: 'exp', label: 'eˣ → eˣ', g: 1,
+      desc: "La fonction exponentielle est sa propre dérivée. Sa tangente en 0 a pour équation y = x + 1.",
+      math: "\\[ (e^{x})'=e^{x} \\]",
+      plot: MINI.exp },
+    { id: 'somme', label: 'Somme & k·u', g: 1,
+      desc: "La dérivée d'une somme est la somme des dérivées, et une constante multiplicative se sort de la dérivée.",
+      math: "\\[ (u+v)'=u'+v' \\qquad (k\\,u)'=k\\,u' \\]" },
+    { id: 'produit', label: '(u v)′', g: 1,
+      desc: "Dérivée d'un produit : on dérive le premier facteur en gardant le second, puis on ajoute le premier multiplié par la dérivée du second.",
+      math: "\\[ (u\\,v)'=u'v+u\\,v' \\]\\[ (x\\ln x)'=\\ln x+1 \\]" },
+    { id: 'quotient', label: '(u/v)′', g: 1,
+      desc: "Dérivée d'un quotient : la dérivée du numérateur fois le dénominateur, moins le numérateur fois la dérivée du dénominateur, le tout sur le carré du dénominateur.",
+      math: "\\[ \\left(\\frac{u}{v}\\right)'=\\frac{u'v-u\\,v'}{v^{2}} \\]" },
+    { id: 'invpuiss', label: '1/v et uⁿ', g: 1,
+      desc: "La dérivée de l'inverse est l'opposé de la dérivée du dénominateur divisée par son carré. Pour une puissance composée, on descend l'exposant et on multiplie par la dérivée de l'intérieur.",
+      math: "\\[ \\left(\\frac{1}{v}\\right)'=-\\frac{v'}{v^{2}} \\qquad (u^{n})'=n\\,u'\\,u^{n-1} \\]" },
+    { id: 'lnueu', label: 'ln(u) et eᵘ', g: 1,
+      desc: "Pour le logarithme composé, on divise la dérivée de l'intérieur par l'intérieur. Pour l'exponentielle composée, on multiplie la dérivée de l'intérieur par l'exponentielle.",
+      math: "\\[ (\\ln u)'=\\frac{u'}{u} \\qquad (e^{u})'=u'\\,e^{u} \\]" },
+    { id: 'compo', label: 'sin(ax+b), cos(ax+b)', g: 1,
+      desc: "L'intérieur u(x)=ax+b a pour dérivée a. On multiplie donc par a, sans oublier le signe moins pour le cosinus.",
+      math: "\\[ \\big(\\sin(ax+b)\\big)'=a\\cos(ax+b) \\]\\[ \\big(\\cos(ax+b)\\big)'=-a\\sin(ax+b) \\]",
+      plot: MINI.compo },
+
+    { id: 'sens', label: 'Sens de variation', g: 2,
+      desc: "Le signe de la dérivée donne le sens de variation : positive, la fonction croît ; négative, elle décroît ; nulle, elle est constante.",
+      math: "\\[ f'\\geq 0 \\Leftrightarrow f \\text{ croissante} \\]" },
+    { id: 'extremum', label: 'Extremum local', g: 2,
+      desc: "Si la dérivée s'annule en changeant de signe, la fonction admet un maximum ou un minimum local.",
+      math: "\\[ f' \\text{ change de signe} \\Rightarrow \\text{extremum} \\]" },
+    { id: 'vitesse', label: 'Vitesse instantanée', g: 2,
+      desc: "En physique, la dérivée de la position par rapport au temps donne la vitesse instantanée.",
+      math: "\\[ v(t)=s'(t) \\]" },
+    { id: 'cout', label: 'Coût marginal', g: 2,
+      desc: "En économie, la dérivée du coût total donne le coût marginal, c'est-à-dire le coût de production d'une unité supplémentaire.",
+      math: "\\[ C_m(q)=C'(q) \\]" },
+    { id: 'python', label: 'Algorithme Python', g: 2,
+      desc: "On approche numériquement le nombre dérivé par un taux de variation calculé avec un pas très petit.",
+      math: "\\[ f'(a)\\approx \\frac{f(a+h)-f(a)}{h} \\]",
+      extra: '<pre><code>def nombre_derive(f, a, h=1e-5):\n    return (f(a+h) - f(a)) / h</code></pre>' },
+    { id: 'methode', label: 'Méthode 4 étapes', g: 2,
+      desc: "1. Calculer f ′(x). 2. Étudier son signe. 3. Dresser le tableau de variation. 4. Calculer les extremums.",
+      math: "\\[ f' \\to \\text{signe} \\to \\text{variations} \\to \\text{extremums} \\]" }
+  ];
+
+  var LINKS = [
+    { s: 'taux',     t: 'limite',    l: 'h → 0' },
+    { s: 'limite',   t: 'nbder',     l: 'définit' },
+    { s: 'nbder',    t: 'tangente',  l: 'coeff. directeur' },
+    { s: 'nbder',    t: 'foncder',   l: 'x ↦ f ′(x)' },
+    { s: 'foncder',  t: 'poly',      l: 'formules' },
+    { s: 'foncder',  t: 'sin',       l: 'formule' },
+    { s: 'foncder',  t: 'cos',       l: 'formule' },
+    { s: 'foncder',  t: 'ln',        l: 'formule' },
+    { s: 'foncder',  t: 'exp',       l: 'formule' },
+    { s: 'poly',     t: 'somme',     l: 'combine' },
+    { s: 'somme',    t: 'produit',   l: 'règle' },
+    { s: 'produit',  t: 'quotient',  l: 'règle' },
+    { s: 'quotient', t: 'invpuiss',  l: 'cas particulier' },
+    { s: 'ln',       t: 'lnueu',     l: 'compose' },
+    { s: 'exp',      t: 'lnueu',     l: 'compose' },
+    { s: 'sin',      t: 'compo',     l: 'compose' },
+    { s: 'cos',      t: 'compo',     l: 'compose' },
+    { s: 'nbder',    t: 'sens',      l: 'signe de f ′' },
+    { s: 'sens',     t: 'extremum',  l: 'changement de signe' },
+    { s: 'nbder',    t: 'vitesse',   l: 'physique' },
+    { s: 'nbder',    t: 'cout',      l: 'économie' },
+    { s: 'python',   t: 'taux',      l: 'utilise' },
+    { s: 'python',   t: 'nbder',     l: 'approxime' },
+    { s: 'foncder',  t: 'methode',   l: 'étape 1' },
+    { s: 'sens',     t: 'methode',   l: 'étapes 2-3' },
+    { s: 'methode',  t: 'extremum',  l: 'étape 4' }
+  ];
+
+  var nodeById = {};
+  NODES.forEach(function (n) {
+    nodeById[n.id] = n;
+    n.x = 0; n.y = 0; n.vx = 0; n.vy = 0; n.fixed = false;
+  });
+
+  document.getElementById('graph-legend').innerHTML = GROUPS.map(function (g) {
+    return '<span><i style="background:' + g.color + '"></i>' + esc(g.name) + '</span>';
+  }).join('');
+
+  var centroids = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }];
+
+  function initPositions() {
+    centroids[0] = { x: W * 0.24, y: H * 0.26 };
+    centroids[1] = { x: W * 0.76, y: H * 0.28 };
+    centroids[2] = { x: W * 0.50, y: H * 0.78 };
+
+    NODES.forEach(function (n) {
+      var c = centroids[n.g];
+      n.x = c.x + (Math.random() - 0.5) * 190;
+      n.y = c.y + (Math.random() - 0.5) * 170;
+      n.vx = 0; n.vy = 0;
+    });
+  }
+
+  function resizeCanvas() {
+    if (!canvas) return;
+    var wrap = canvas.parentElement;
+    var rect = wrap.getBoundingClientRect();
+    var w = Math.max(320, Math.floor(rect.width));
+    var h = 620;
+
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    W = w; H = h;
+
+    if (!positionsReady) {
+      initPositions();
+      positionsReady = true;
+    } else {
+      NODES.forEach(function (n) {
+        n.x = Math.min(Math.max(n.x, 44), W - 44);
+        n.y = Math.min(Math.max(n.y, 44), H - 44);
+      });
+    }
+
+    if (!started) {
+      started = true;
+      requestAnimationFrame(loop);
+    }
+  }
+
+  function simulate() {
+    var i, j, a, b, dx, dy, d2, d, f, fx, fy;
+
+    for (i = 0; i < NODES.length; i++) {
+      a = NODES[i];
+      for (j = i + 1; j < NODES.length; j++) {
+        b = NODES[j];
+        dx = b.x - a.x;
+        dy = b.y - a.y;
+        d2 = dx * dx + dy * dy + 0.01;
+        d = Math.sqrt(d2);
+        if (d < 320) {
+          f = 4600 / d2;
+          if (f > 3) f = 3;
+          fx = (dx / d) * f;
+          fy = (dy / d) * f;
+          a.vx -= fx; a.vy -= fy;
+          b.vx += fx; b.vy += fy;
+        }
+      }
+    }
+
+    LINKS.forEach(function (lk) {
+      var s = nodeById[lk.s], t = nodeById[lk.t];
+      if (!s || !t) return;
+      dx = t.x - s.x;
+      dy = t.y - s.y;
+      d = Math.sqrt(dx * dx + dy * dy) + 0.01;
+      f = (d - 132) * 0.015;
+      fx = (dx / d) * f;
+      fy = (dy / d) * f;
+      s.vx += fx; s.vy += fy;
+      t.vx -= fx; t.vy -= fy;
+    });
+
+    NODES.forEach(function (n) {
+      var c = centroids[n.g];
+      n.vx += (c.x - n.x) * 0.0060;
+      n.vy += (c.y - n.y) * 0.0060;
+      n.vx += (W / 2 - n.x) * 0.0012;
+      n.vy += (H / 2 - n.y) * 0.0012;
+    });
+
+    NODES.forEach(function (n) {
+      if (n.fixed) { n.vx = 0; n.vy = 0; return; }
+      n.vx *= 0.86;
+      n.vy *= 0.86;
+      var sp = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (sp > 7) { n.vx = n.vx / sp * 7; n.vy = n.vy / sp * 7; }
+      n.x += n.vx;
+      n.y += n.vy;
+      var m = 46;
+      if (n.x < m) { n.x = m; n.vx *= -0.4; }
+      if (n.x > W - m) { n.x = W - m; n.vx *= -0.4; }
+      if (n.y < m) { n.y = m; n.vy *= -0.4; }
+      if (n.y > H - m) { n.y = H - m; n.vy *= -0.4; }
+    });
+  }
+
+  var hovered = null, dragNode = null;
+  var R = 22;
+
+  function neighborIds(id) {
+    var set = {};
+    LINKS.forEach(function (lk) {
+      if (lk.s === id) set[lk.t] = true;
+      if (lk.t === id) set[lk.s] = true;
+    });
+    return set;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    LINKS.forEach(function (lk) {
+      var a = nodeById[lk.s], b = nodeById[lk.t];
+      if (!a || !b) return;
+      var active = hovered && (lk.s === hovered.id || lk.t === hovered.id);
+
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = active ? '#d97a1a' : 'rgba(122,74,18,0.18)';
+      ctx.lineWidth = active ? 2.6 : 1.2;
+      ctx.stroke();
+
+      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      ctx.font = (active ? '600 ' : '') + '9px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      var tw = ctx.measureText(lk.l).width;
+      ctx.fillStyle = active ? 'rgba(253,246,233,0.97)' : 'rgba(251,247,239,0.84)';
+      ctx.fillRect(mx - tw / 2 - 3, my - 7, tw + 6, 14);
+      ctx.fillStyle = active ? '#a85f10' : 'rgba(122,74,18,0.55)';
+      ctx.fillText(lk.l, mx, my);
+    });
+
+    var neigh = hovered ? neighborIds(hovered.id) : null;
+
+    NODES.forEach(function (n) {
+      var isHover = hovered && hovered.id === n.id;
+      var isNeigh = neigh && neigh[n.id];
+      var dim = hovered && !isHover && !isNeigh;
+
+      ctx.globalAlpha = dim ? 0.35 : 1;
+
+      var color = GROUPS[n.g].color;
+
+      if (isHover) {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, R + 8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(217,122,26,0.16)';
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = isHover ? 3 : 2;
+      ctx.strokeStyle = isHover ? '#ffd9a6' : '#fffdf9';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,253,249,0.85)';
+      ctx.fill();
+
+      ctx.font = '600 9.5px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = 'rgba(251,247,239,0.92)';
+      ctx.strokeText(n.label, n.x, n.y + R + 13);
+      ctx.fillStyle = '#4a3c2e';
+      ctx.fillText(n.label, n.x, n.y + R + 13);
+
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function loop() {
+    simulate();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function findNode(x, y) {
+    for (var i = NODES.length - 1; i >= 0; i--) {
+      var n = NODES[i];
+      var dx = x - n.x, dy = y - n.y;
+      if (dx * dx + dy * dy <= (R + 6) * (R + 6)) return n;
+    }
+    return null;
+  }
+
+  function pointerPos(ev) {
+    var rect = canvas.getBoundingClientRect();
+    return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+  }
+
+  canvas.addEventListener('pointerdown', function (ev) {
+    var p = pointerPos(ev);
+    var n = findNode(p.x, p.y);
+    if (n) {
+      dragNode = n;
+      n.fixed = true;
+      n.dragOffX = n.x - p.x;
+      n.dragOffY = n.y - p.y;
+      canvas.classList.add('grabbing');
+      if (canvas.setPointerCapture) canvas.setPointerCapture(ev.pointerId);
+      hideModal();
+      ev.preventDefault();
+    }
+  });
+
+  canvas.addEventListener('pointermove', function (ev) {
+    var p = pointerPos(ev);
+
+    if (dragNode) {
+      dragNode.x = p.x + dragNode.dragOffX;
+      dragNode.y = p.y + dragNode.dragOffY;
+      dragNode.vx = 0;
+      dragNode.vy = 0;
+      return;
+    }
+
+    var n = findNode(p.x, p.y);
+    if (n !== hovered) {
+      hovered = n;
+      if (!n) {
+        startCloseTimer();
+      } else {
+        cancelCloseTimer();
+      }
+    }
+
+    if (n) {
+      var conns = [];
+      LINKS.forEach(function (lk) {
+        if (lk.s === n.id) conns.push(nodeById[lk.t].label + ' (' + lk.l + ')');
+        if (lk.t === n.id) conns.push(nodeById[lk.s].label + ' (' + lk.l + ')');
+      });
+      showModal({
+        title: n.label,
+        desc: n.desc,
+        math: n.math,
+        extra: n.extra,
+        plot: n.plot,
+        conns: conns
+      }, ev.clientX, ev.clientY, 'node-' + n.id);
+    }
+  });
+
+  function endDrag(ev) {
+    if (dragNode) {
+      dragNode.fixed = false;
+      dragNode = null;
+      canvas.classList.remove('grabbing');
+      if (ev && canvas.releasePointerCapture && ev.pointerId !== undefined) {
+        try { canvas.releasePointerCapture(ev.pointerId); } catch (e) {}
+      }
+    }
+  }
+
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', function () {
+    if (!dragNode) {
+      hovered = null;
+      startCloseTimer();
+    }
+  });
+
+  window.addEventListener('resize', function () {
+    if (document.getElementById('panel-graph').classList.contains('active')) resizeCanvas();
+  });
+
+  if (document.getElementById('panel-graph').classList.contains('active')) resizeCanvas();
+
+  /* ==========================================================================
+     10. INITIALISATION DES TABLEAUX
+  ========================================================================== */
+  function bootTkz() {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      renderAllTkzTables();
+    } else {
+      setTimeout(bootTkz, 100);
+    }
+  }
+  bootTkz();
+
+  /* ==========================================================================
+     11. MODALE LÉGALE
+  ========================================================================== */
+  var legalModal = document.getElementById('legal-modal');
+  var legalTrigger = document.getElementById('legal-trigger');
+  var legalClose = document.getElementById('legal-close');
+  var legalBackdrop = legalModal.querySelector('.legal-backdrop');
+  var legalLastFocus = null;
+
+  function openLegalModal() {
+    legalLastFocus = document.activeElement;
+    // Appliquer les sauts de ligne après . et : dans chaque texte
+    legalModal.querySelectorAll('[data-legal-text]').forEach(function (el) {
+      setTextWithBreaks(el, el.textContent);
+    });
+    legalModal.classList.add('open');
+    legalModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    legalClose.focus();
+  }
+
+  function closeLegalModal() {
+    legalModal.classList.remove('open');
+    legalModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (legalLastFocus && legalLastFocus.focus) legalLastFocus.focus();
+  }
+
+  legalTrigger.addEventListener('click', openLegalModal);
+  legalClose.addEventListener('click', closeLegalModal);
+  legalBackdrop.addEventListener('click', closeLegalModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && legalModal.classList.contains('open')) {
+      closeLegalModal();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

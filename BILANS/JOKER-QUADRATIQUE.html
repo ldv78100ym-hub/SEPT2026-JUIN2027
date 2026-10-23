@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Second degré — Carte Joker</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+:root {
+  --cream: #f4efe6;
+  --panel: #fffdf9;
+  --orange: #d97a1a;
+  --brown: #7a4a12;
+  --ink: #2b2118;
+  --muted: #6b5a48;
+  --line: #e5dccd;
+  --gold: #c8962c;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+body { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 210px;
+  height: 100vh;
+  background: #2b2118;
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  box-shadow: 4px 0 20px rgba(0,0,0,.15);
+}
+.sidebar h1 {
+  color: var(--gold);
+  font-size: 0.95rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin: 0 0 14px 6px;
+  font-weight: 600;
+}
+.sidebar button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.08);
+  color: #e8dfd2;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all .22s ease;
+}
+.sidebar button .num {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  color: #f0e8db;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sidebar button:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(216,168,80,.4);
+}
+.sidebar button.active {
+  background: linear-gradient(135deg, rgba(216,168,80,.18), rgba(216,168,80,.06));
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.sidebar button.active .num {
+  background: var(--gold);
+  color: #2b2118;
+}
+
+/* Main */
+main {
+  margin-left: 210px;
+  flex: 1;
+  padding: 28px 34px 60px;
+  max-width: 1150px;
+}
+.volet { display: none; animation: fadeIn .3s ease; }
+.volet.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cards */
+.card {
+  background: var(--panel);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(80,50,20,.07), 0 1px 3px rgba(80,50,20,.04);
+  padding: 22px 26px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+}
+.card h2 {
+  font-size: 1.05rem;
+  color: var(--brown);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(216,168,80,.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card h2 .badge {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.card h3 {
+  font-size: 0.95rem;
+  color: var(--orange);
+  margin: 16px 0 8px;
+}
+.card p { margin: 0 0 8px; }
+.card ul { margin: 6px 0; padding-left: 22px; }
+.card li { margin-bottom: 4px; }
+
+/* Tables */
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  margin: 12px 0;
+}
+table.data th, table.data td {
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+table.data th {
+  background: #fbf3e6;
+  color: var(--brown);
+  font-weight: 600;
+}
+table.data tr:nth-child(even) td { background: #fdfaf4; }
+
+/* Formula boxes */
+.formula {
+  background: #fbf3e6;
+  border-left: 4px solid var(--orange);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  font-size: 1rem;
+}
+
+.note {
+  font-size: 0.92rem;
+  background: #f8f1e5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  color: var(--muted);
+}
+
+/* Figure */
+figure {
+  margin: 14px 0;
+  text-align: center;
+}
+figcaption {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* MathJax sizes */
+mjx-container { font-size: 1.05em !important; }
+mjx-container[display="true"] { font-size: 1.1em !important; margin: 0.4em 0; }
+h1 mjx-container, h2 mjx-container, h3 mjx-container { font-size: 1em !important; }
+table.data mjx-container { font-size: 0.95em !important; }
+figcaption mjx-container { font-size: 0.95em !important; }
+figcaption mjx-container svg,
+figcaption > svg { width: auto !important; height: auto !important; max-width: 100%; display: inline-block; }
+
+/* Mind map container */
+#mindmap-wrap {
+  background: var(--panel);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+#mindmap-svg { width: 100%; height: 640px; display: block; }
+
+/* Graph container */
+#graph-wrap {
+  background: var(--panel);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 8px;
+  position: relative;
+}
+#graph-canvas {
+  width: 100%;
+  height: 640px;
+  display: block;
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: none;
+}
+#graph-canvas:active { cursor: grabbing; }
+
+/* Modal */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(60,40,20,.22), 0 4px 12px rgba(60,40,20,.12);
+  padding: 14px 16px;
+  max-width: min(92vw, 520px);
+  max-height: 88vh;
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+  word-break: break-word;
+}
+.modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal .modal-title {
+  font-weight: 700;
+  color: var(--brown);
+  font-size: 0.98rem;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.modal .modal-body {
+  max-height: calc(88vh - 60px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 0.88rem;
+}
+.modal .modal-body p { margin: 0 0 4px; }
+.modal .modal-body mjx-container { font-size: 1em !important; }
+.modal .modal-body .formula { padding: 6px 10px; margin: 6px 0; font-size: 0.95em; }
+.modal .modal-body table.data { font-size: 0.82rem; margin: 6px 0; }
+.modal .modal-body table.data th,
+.modal .modal-body table.data td { padding: 4px 6px; }
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+.legend .item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+}
+.legend .swatch {
+  width: 14px; height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Footer + legal modal */
+.site-footer {
+  margin-top: 30px;
+  padding: 18px 0 6px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+.legal-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--brown);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: .86rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(80,50,20,.06);
+  transition: all .2s ease;
+}
+.legal-button:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+  transform: translateY(-1px);
+}
+.legal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43,33,24,.45);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.legal-overlay.active { display: flex; }
+.legal-dialog {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(40,25,10,.35);
+  width: min(92vw, 640px);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.legal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.legal-header h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  color: var(--brown);
+  line-height: 1.35;
+}
+.legal-close {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fffdf9;
+  color: var(--brown);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.legal-close:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.legal-body {
+  padding: 14px 18px 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: break-word;
+}
+.legal-body p { margin: 0 0 8px; }
+.legal-body .legal-author { font-weight: 600; color: var(--brown); }
+.legal-body .legal-subtitle { font-weight: 700; margin-top: 12px; color: var(--brown); }
+.legal-body ol { margin: 6px 0 10px 20px; padding: 0; }
+.legal-body li { margin-bottom: 8px; }
+
+/* Mobile */
+@media (max-width: 760px) {
+  body { flex-direction: column; }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: 10px;
+    overflow-x: auto;
+    gap: 6px;
+  }
+  .sidebar h1 { display: none; }
+  .sidebar button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .sidebar button .num { width: 20px; height: 20px; font-size: 0.7rem; }
+  main {
+    margin-left: 0;
+    padding: 18px 14px 50px;
+  }
+  .card { padding: 16px; }
+  #mindmap-svg, #graph-canvas { height: 480px; }
+}
+
+/* SVG table styles */
+svg .table-label {
+  font-family: "Cambria", "Georgia", serif;
+  font-style: italic;
+  font-size: 15px;
+  fill: #2b2118;
+}
+svg .table-value {
+  font-family: "Cambria", "Georgia", serif;
+  font-size: 15px;
+  fill: #2b2118;
+}
+svg .table-sign {
+  font-family: "Cambria", "Georgia", serif;
+  font-size: 17px;
+  fill: #2b2118;
+}
+
+/* Figure grid */
+.figure-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 14px 0;
+}
+.figure-item {
+  text-align: center;
+  flex: 0 1 auto;
+}
+.figure-item figcaption {
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h1>Second degré</h1>
+  <button data-target="volet-1" class="active"><span class="num">1</span> Contenu classique</button>
+  <button data-target="volet-2"><span class="num">2</span> Carte mentale</button>
+  <button data-target="volet-3"><span class="num">3</span> Tableaux</button>
+  <button data-target="volet-4"><span class="num">4</span> Graphe</button>
+</nav>
+
+<main>
+  <!-- ================= VOLET 1 ================= -->
+  <section id="volet-1" class="volet active">
+    <article class="card">
+      <h2><span class="badge">1</span> Définition et forme développée</h2>
+      <p>Une fonction polynôme du second degré est une fonction \(f\) définie sur \(\mathbb{R}\) par :</p>
+      <div class="formula">\[ f(x) = ax^2 + bx + c \]</div>
+      <p>où \(a\), \(b\), \(c\) sont des nombres réels et \(a \neq 0\).</p>
+      <p>Cette écriture est appelée <strong>forme développée</strong>. Elle est utile pour les calculs directs (évaluation, dérivation, somme de fonctions).</p>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">2</span> Rôle des coefficients \(a\), \(b\), \(c\)</h2>
+      <h3>Coefficient \(a\) : orientation et ouverture</h3>
+      <ul>
+        <li>\(a > 0\) : les branches de la parabole sont orientées vers le haut.</li>
+        <li>\(a < 0\) : les branches sont orientées vers le bas.</li>
+        <li>\(|a| > 1\) : les branches sont resserrées (la parabole est plus « étroite »).</li>
+        <li>\(|a| < 1\) : les branches sont écartées (la parabole est plus « large »).</li>
+      </ul>
+      <div class="figure-row" id="fig-a-role"></div>
+
+      <h3>Coefficient \(b\) : coefficient directeur de la tangente en \(x = 0\)</h3>
+      <p>La tangente à la parabole au point d’abscisse \(0\) a pour équation \(y = bx + c\). Son coefficient directeur est \(b\). Autrement dit, \(f'(0) = b\).</p>
+      <div class="figure-row" id="fig-b-tangent"></div>
+
+      <h3>Coefficient \(c\) : ordonnée à l’origine</h3>
+      <p>Le point d’intersection de la parabole avec l’axe des ordonnées est \((0, c)\). On a \(f(0) = c\).</p>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">3</span> Forme canonique et sommet</h2>
+      <p>Toute fonction polynôme du second degré peut s’écrire sous la forme canonique :</p>
+      <div class="formula">\[ f(x) = a(x - \alpha)^2 + \beta \]</div>
+      <p>où :</p>
+      <div class="formula">\[ \alpha = -\dfrac{b}{2a}, \qquad \beta = f(\alpha) \]</div>
+      <p>Le point \(S(\alpha, \beta)\) est le <strong>sommet</strong> de la parabole. C’est le point où la fonction atteint son extremum :</p>
+      <ul>
+        <li>Si \(a > 0\), \(\beta\) est le <strong>minimum</strong> de \(f\) sur \(\mathbb{R}\).</li>
+        <li>Si \(a < 0\), \(\beta\) est le <strong>maximum</strong> de \(f\) sur \(\mathbb{R}\).</li>
+      </ul>
+      <div class="figure-row" id="fig-sommet"></div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">4</span> Variations</h2>
+      <p>Le sens de variation de \(f\) se lit sur la forme canonique :</p>
+      <ul>
+        <li>Si \(a > 0\) : \(f\) est décroissante sur \(]-\infty, \alpha]\), puis croissante sur \([\alpha, +\infty[\).</li>
+        <li>Si \(a < 0\) : \(f\) est croissante sur \(]-\infty, \alpha]\), puis décroissante sur \([\alpha, +\infty[\).</li>
+      </ul>
+      <div class="figure-row" id="fig-variations"></div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">5</span> Forme factorisée et racines</h2>
+      <p>Lorsque le trinôme possède deux racines réelles \(x_1\) et \(x_2\) (c’est-à-dire deux solutions de l’équation \(f(x) = 0\)), on peut écrire :</p>
+      <div class="formula">\[ f(x) = a(x - x_1)(x - x_2) \]</div>
+      <p>On a alors :</p>
+      <div class="formula">\[ f(x_1) = 0 \quad \text{et} \quad f(x_2) = 0 \]</div>
+      <p>L’abscisse du sommet est la moyenne des racines :</p>
+      <div class="formula">\[ \alpha = \dfrac{x_1 + x_2}{2} \]</div>
+      <div class="figure-row" id="fig-racines"></div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">6</span> Résolution de \(X^2 = k\)</h2>
+      <p>La résolution de l’équation \(X^2 = k\) (où \(k\) est un réel) dépend du signe de \(k\) :</p>
+      <ul>
+        <li>Si \(k < 0\) : aucune solution réelle (un carré est toujours positif ou nul).</li>
+        <li>Si \(k = 0\) : une seule solution, \(X = 0\).</li>
+        <li>Si \(k > 0\) : deux solutions, \(X = -\sqrt{k}\) et \(X = \sqrt{k}\).</li>
+      </ul>
+      <div class="figure-row" id="fig-x2-k"></div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">7</span> Résolution de \(f(x) = k\)</h2>
+      <p>Pour résoudre \(f(x) = k\), on peut adapter la méthode selon la valeur de \(k\) :</p>
+      <h3>Cas \(k = 0\)</h3>
+      <ul>
+        <li>Avec la forme développée : se ramener à la forme canonique puis résoudre \((x - \alpha)^2 = -\beta / a\).</li>
+        <li>Avec la forme factorisée : utiliser l’équation produit \(a(x - x_1)(x - x_2) = 0\), d’où \(x = x_1\) ou \(x = x_2\).</li>
+      </ul>
+      <h3>Cas \(k = c\)</h3>
+      <ul>
+        <li>Avec la forme développée : factoriser \(f(x) - c\), puis résoudre.</li>
+        <li>Avec la forme factorisée : développer puis résoudre \(x(ax + b) = 0\).</li>
+      </ul>
+      <h3>Autres cas</h3>
+      <p>Se ramener à la forme canonique puis résoudre \((x - \alpha)^2 = \dfrac{k - \beta}{a}\).</p>
+      <div class="note">
+        <strong>Exemple concret.</strong> Pour \(f(x) = 2x^2 - 4x + 1\) et \(k = 1\) (cas \(k = c\)) :<br>
+        \(f(x) - 1 = 2x^2 - 4x = 2x(x - 2) = 0\), donc \(x = 0\) ou \(x = 2\).
+      </div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">8</span> Signe du trinôme</h2>
+      <p>Le signe de \(f(x)\) dépend du signe de \(a\) et de l’existence de racines (ou du signe de \(\beta\)) :</p>
+      <ul>
+        <li>Si \(a > 0\) et \(\beta > 0\) : \(f(x) > 0\) pour tout \(x\).</li>
+        <li>Si \(a > 0\) et \(\beta = 0\) : \(f(x) \geqslant 0\), avec \(f(x_0) = 0\).</li>
+        <li>Si \(a > 0\) et \(\beta < 0\) : \(f(x) > 0\) à l’extérieur des racines, \(f(x) < 0\) entre les racines.</li>
+        <li>Si \(a < 0\) et \(\beta < 0\) : \(f(x) < 0\) pour tout \(x\).</li>
+        <li>Si \(a < 0\) et \(\beta = 0\) : \(f(x) \leqslant 0\), avec \(f(x_0) = 0\).</li>
+        <li>Si \(a < 0\) et \(\beta > 0\) : \(f(x) < 0\) à l’extérieur des racines, \(f(x) > 0\) entre les racines.</li>
+      </ul>
+      <p>Les tableaux de signes correspondants sont présentés dans le volet 3.</p>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">9</span> Synthèse des trois formes</h2>
+      <table class="data">
+        <tr>
+          <th>Forme</th>
+          <th>Expression</th>
+          <th>Utilité principale</th>
+        </tr>
+        <tr>
+          <td>Développée</td>
+          <td>\(ax^2 + bx + c\)</td>
+          <td>Calculs directs, évaluation</td>
+        </tr>
+        <tr>
+          <td>Canonique</td>
+          <td>\(a(x - \alpha)^2 + \beta\)</td>
+          <td>Sommet, variations, extremum</td>
+        </tr>
+        <tr>
+          <td>Factorisée</td>
+          <td>\(a(x - x_1)(x - x_2)\)</td>
+          <td>Racines, signe</td>
+        </tr>
+      </table>
+      <div class="note">
+        <strong>À retenir.</strong><br>
+        — La forme canonique donne directement le sommet \((\alpha, \beta)\).<br>
+        — La forme factorisée donne les racines et permet le tableau de signes.<br>
+        — Pour passer de la forme développée à la forme canonique, on détermine les coordonnées du sommet de la parabole.<br>
+        — Pour résoudre \(f(x) = 0\), on cherche les racines évidentes ou on utilise la forme canonique.
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= VOLET 2 ================= -->
+  <section id="volet-2" class="volet">
+    <div id="mindmap-wrap">
+      <svg id="mindmap-svg" viewBox="0 0 820 640"></svg>
+    </div>
+    <div class="legend" id="mindmap-legend"></div>
+  </section>
+
+  <!-- ================= VOLET 3 ================= -->
+  <section id="volet-3" class="volet">
+    <article class="card">
+      <h2><span class="badge">1</span> Tableau des formes du trinôme</h2>
+      <table class="data">
+        <tr>
+          <th>Forme</th>
+          <th>Écriture</th>
+          <th>Ce qu’on y lit directement</th>
+          <th>Passage</th>
+        </tr>
+        <tr>
+          <td>Développée</td>
+          <td>\(ax^2 + bx + c\)</td>
+          <td>Ordonnée à l’origine : \(c\)</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Canonique</td>
+          <td>\(a(x - \alpha)^2 + \beta\)</td>
+          <td>Sommet \((\alpha, \beta)\), extremum</td>
+          <td>\(\alpha = -\dfrac{b}{2a}\), \(\beta = f(\alpha)\)</td>
+        </tr>
+        <tr>
+          <td>Factorisée</td>
+          <td>\(a(x - x_1)(x - x_2)\)</td>
+          <td>Racines \(x_1\) et \(x_2\)</td>
+          <td>\(x_1, x_2\) racines de \(f(x) = 0\)</td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">2</span> Rôle des coefficients</h2>
+      <table class="data">
+        <tr>
+          <th>Coefficient</th>
+          <th>Rôle géométrique</th>
+          <th>Conséquence</th>
+        </tr>
+        <tr>
+          <td>\(a\)</td>
+          <td>Orientation et ouverture</td>
+          <td>\(a > 0\) : branches vers le haut ; \(a < 0\) : branches vers le bas.<br>\(|a| > 1\) : branches resserrées ; \(|a| < 1\) : branches écartées.</td>
+        </tr>
+        <tr>
+          <td>\(b\)</td>
+          <td>Coefficient directeur de la tangente en \(x = 0\)</td>
+          <td>\(f'(0) = b\) ; tangente : \(y = bx + c\).</td>
+        </tr>
+        <tr>
+          <td>\(c\)</td>
+          <td>Ordonnée à l’origine</td>
+          <td>\(f(0) = c\) ; point \((0, c)\).</td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">3</span> Tableaux de variations</h2>
+      <div class="figure-row" id="table-variations"></div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">4</span> Tableaux de signes</h2>
+      <div class="figure-row" id="table-signes"></div>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">5</span> Résolution de \(X^2 = k\)</h2>
+      <table class="data">
+        <tr>
+          <th>Valeur de \(k\)</th>
+          <th>Solutions de \(X^2 = k\)</th>
+          <th>Interprétation graphique</th>
+        </tr>
+        <tr>
+          <td>\(k < 0\)</td>
+          <td>Aucune solution réelle</td>
+          <td>La droite \(y = k\) ne coupe pas la parabole \(y = X^2\).</td>
+        </tr>
+        <tr>
+          <td>\(k = 0\)</td>
+          <td>\(X = 0\)</td>
+          <td>La droite \(y = 0\) est tangente à la parabole en \(O\).</td>
+        </tr>
+        <tr>
+          <td>\(k > 0\)</td>
+          <td>\(X = -\sqrt{k}\) ou \(X = \sqrt{k}\)</td>
+          <td>La droite \(y = k\) coupe la parabole en deux points.</td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">6</span> Résolution de \(f(x) = k\)</h2>
+      <table class="data">
+        <tr>
+          <th>Cas</th>
+          <th>Méthode avec la forme développée</th>
+          <th>Méthode avec la forme factorisée</th>
+        </tr>
+        <tr>
+          <td>\(k = 0\)</td>
+          <td>Se ramener à la forme canonique puis résoudre \((x - \alpha)^2 = -\beta / a\).</td>
+          <td>Équation produit : \(x = x_1\) ou \(x = x_2\).</td>
+        </tr>
+        <tr>
+          <td>\(k = c\)</td>
+          <td>Factoriser \(f(x) - c\) puis résoudre.</td>
+          <td>Développer puis résoudre \(x(ax + b) = 0\).</td>
+        </tr>
+        <tr>
+          <td>Autres cas</td>
+          <td>Se ramener à la forme canonique puis résoudre \((x - \alpha)^2 = \dfrac{k - \beta}{a}\).</td>
+          <td>Développer puis factoriser, ou utiliser la forme canonique.</td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">7</span> Tableau récapitulatif</h2>
+      <table class="data">
+        <tr>
+          <th>Notion</th>
+          <th>Formule / Propriété</th>
+        </tr>
+        <tr>
+          <td>Forme développée</td>
+          <td>\(f(x) = ax^2 + bx + c\), \(a \neq 0\)</td>
+        </tr>
+        <tr>
+          <td>Abscisse du sommet</td>
+          <td>\(\alpha = -\dfrac{b}{2a}\)</td>
+        </tr>
+        <tr>
+          <td>Ordonnée du sommet</td>
+          <td>\(\beta = f(\alpha)\)</td>
+        </tr>
+        <tr>
+          <td>Forme canonique</td>
+          <td>\(f(x) = a(x - \alpha)^2 + \beta\)</td>
+        </tr>
+        <tr>
+          <td>Extremum</td>
+          <td>Minimum \(\beta\) si \(a > 0\) ; maximum \(\beta\) si \(a < 0\)</td>
+        </tr>
+        <tr>
+          <td>Moyenne des racines</td>
+          <td>\(\alpha = \dfrac{x_1 + x_2}{2}\)</td>
+        </tr>
+        <tr>
+          <td>Forme factorisée</td>
+          <td>\(f(x) = a(x - x_1)(x - x_2)\)</td>
+        </tr>
+        <tr>
+          <td>Tangente en \(x = 0\)</td>
+          <td>\(y = bx + c\)</td>
+        </tr>
+        <tr>
+          <td>Ordonnée à l’origine</td>
+          <td>\(f(0) = c\)</td>
+        </tr>
+      </table>
+    </article>
+  </section>
+
+  <!-- ================= VOLET 4 ================= -->
+  <section id="volet-4" class="volet">
+    <div id="graph-wrap">
+      <canvas id="graph-canvas"></canvas>
+    </div>
+    <div class="legend" id="graph-legend"></div>
+  </section>
+
+  <footer class="site-footer">
+    <button type="button" class="legal-button" id="legal-open" aria-haspopup="dialog">
+      ⚖️ Droits d'auteur & licence
+    </button>
+  </footer>
+</main>
+
+<!-- MODALE DE SURVOL -->
+<div class="modal" id="modal">
+  <div class="modal-title" id="modal-title"></div>
+  <div class="modal-body" id="modal-body"></div>
+</div>
+
+<!-- MODALE LÉGALE -->
+<div class="legal-overlay" id="legal-overlay" aria-hidden="true">
+  <div class="legal-dialog" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+    <div class="legal-header">
+      <h2 id="legal-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+      <button type="button" class="legal-close" id="legal-close" aria-label="Fermer la fenêtre des droits d'auteur">✕</button>
+    </div>
+    <div class="legal-body" id="legal-body"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+document.querySelectorAll('.sidebar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.volet').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+    if (btn.dataset.target === 'volet-4') graph.resize();
+  });
+});
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+/** Sauts de ligne après . et : (sauf fin de chaîne) — pour texte brut */
+function setTextWithBreaks(el, text) {
+  el.innerHTML = '';
+  const parts = text.split(/([.:])/);
+  parts.forEach((part, i) => {
+    el.appendChild(document.createTextNode(part));
+    if ((part === '.' || part === ':') && i < parts.length - 1 && parts[i + 1].trim() !== '') {
+      el.appendChild(document.createElement('br'));
+    }
+  });
+}
+
+/** Texte enrichi : conserve $...$ pour MathJax, insère des <br> après . et :
+    et convertit les séquences littérales \n en sauts de ligne. */
+function setRichText(el, text) {
+  el.innerHTML = '';
+  text = text.replace(/\\frac/g, '\\dfrac');
+  const segments = text.split(/(\$[^$]+\$)/);
+  segments.forEach(seg => {
+    if (seg.startsWith('$') && seg.endsWith('$') && seg.length > 2) {
+      el.appendChild(document.createTextNode(seg));
+    } else {
+      const parts = seg.split(/(\\n|[.:])/);
+      parts.forEach((part, i) => {
+        if (part === '\\n') {
+          el.appendChild(document.createElement('br'));
+        } else if (part === '.' || part === ':') {
+          el.appendChild(document.createTextNode(part));
+          if (i < parts.length - 1 && parts[i + 1].trim() !== '') {
+            el.appendChild(document.createElement('br'));
+          }
+        } else if (part !== '') {
+          el.appendChild(document.createTextNode(part));
+        }
+      });
+    }
+  });
+}
+
+/* ============================================================
+   MODALE — SURVOL PERSISTANT
+   ============================================================ */
+const modalEl = document.getElementById('modal');
+const modalTitleEl = document.getElementById('modal-title');
+const modalBodyEl = document.getElementById('modal-body');
+let modalHideTimer = null;
+
+function positionModal(anchorRect) {
+  const M = modalEl;
+  M.style.visibility = 'hidden';
+  M.style.display = 'block';
+  M.style.left = '0px';
+  M.style.top = '0px';
+  const mw = M.offsetWidth, mh = M.offsetHeight;
+  let left = anchorRect.right + 16;
+  let top = anchorRect.top + anchorRect.height / 2 - mh / 2;
+  if (left + mw > window.innerWidth - 10) left = anchorRect.left - mw - 16;
+  if (left < 10) left = 10;
+  if (top < 10) top = 10;
+  if (top + mh > window.innerHeight - 10) top = window.innerHeight - mh - 10;
+  M.style.left = left + 'px';
+  M.style.top = top + 'px';
+  M.style.visibility = 'visible';
+}
+
+function showModalFor(anchorRect, title, richContent) {
+  clearTimeout(modalHideTimer);
+  modalTitleEl.textContent = title;
+  modalBodyEl.innerHTML = '';
+  richContent(modalBodyEl);
+  modalEl.classList.add('visible');
+  positionModal(anchorRect);
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([modalBodyEl]).then(() => positionModal(anchorRect)).catch(() => {});
+  }
+}
+
+function scheduleHideModal() {
+  clearTimeout(modalHideTimer);
+  modalHideTimer = setTimeout(() => {
+    modalEl.classList.remove('visible');
+  }, 130);
+}
+
+modalEl.addEventListener('mouseenter', () => clearTimeout(modalHideTimer));
+modalEl.addEventListener('mouseleave', scheduleHideModal);
+
+/* ============================================================
+   MODALE LÉGALE — CLIC / FERMETURE EXPLICITE
+   ============================================================ */
+const legalContent = {
+  author: "Auteur : Yann Merdy (yann.merdy@gmail.com) — octobre 2026",
+  subtitle: "Licence d'Utilisation Non Commerciale",
+  intro: "Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« Second degré — Carte Joker ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.",
+  conditionsTitle: "Conditions :",
+  conditions: [
+    "Utilisation Privée et Éducative (Autorisée) : vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.",
+    "Utilisation Commerciale (Interdite) : toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.",
+    "Attribution : toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur."
+  ],
+  contact: "Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus."
+};
+
+function buildLegalContent() {
+  const body = document.getElementById('legal-body');
+  body.innerHTML = '';
+
+  const pAuthor = document.createElement('p');
+  pAuthor.className = 'legal-author';
+  setTextWithBreaks(pAuthor, legalContent.author);
+  body.appendChild(pAuthor);
+
+  const pSub = document.createElement('p');
+  pSub.className = 'legal-subtitle';
+  setTextWithBreaks(pSub, legalContent.subtitle);
+  body.appendChild(pSub);
+
+  const pIntro = document.createElement('p');
+  setTextWithBreaks(pIntro, legalContent.intro);
+  body.appendChild(pIntro);
+
+  const pConditions = document.createElement('p');
+  pConditions.className = 'legal-subtitle';
+  setTextWithBreaks(pConditions, legalContent.conditionsTitle);
+  body.appendChild(pConditions);
+
+  const ol = document.createElement('ol');
+  legalContent.conditions.forEach(text => {
+    const li = document.createElement('li');
+    setTextWithBreaks(li, text);
+    ol.appendChild(li);
+  });
+  body.appendChild(ol);
+
+  const pContact = document.createElement('p');
+  setTextWithBreaks(pContact, legalContent.contact);
+  body.appendChild(pContact);
+}
+
+const legalOverlay = document.getElementById('legal-overlay');
+const legalOpen = document.getElementById('legal-open');
+const legalClose = document.getElementById('legal-close');
+let legalLastFocus = null;
+
+function openLegal() {
+  legalLastFocus = document.activeElement;
+  legalOverlay.classList.add('active');
+  legalOverlay.setAttribute('aria-hidden', 'false');
+  setTimeout(() => legalClose.focus(), 0);
+}
+
+function closeLegal() {
+  legalOverlay.classList.remove('active');
+  legalOverlay.setAttribute('aria-hidden', 'true');
+  if (legalLastFocus && typeof legalLastFocus.focus === 'function') {
+    legalLastFocus.focus();
+  }
+}
+
+legalOpen.addEventListener('click', openLegal);
+legalClose.addEventListener('click', closeLegal);
+legalOverlay.addEventListener('click', (e) => {
+  if (e.target === legalOverlay) closeLegal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && legalOverlay.classList.contains('active')) {
+    closeLegal();
+  }
+});
+
+buildLegalContent();
+
+/* ============================================================
+   TEXTE MATH DANS SVG (indices, exposants simples)
+   ============================================================ */
+function appendMathText(el, text) {
+  const parts = text.split(/(_[^\s_]+)/);
+  for (const part of parts) {
+    if (!part) continue;
+    if (part.startsWith('_')) {
+      const sub = svgEl('tspan', {
+        'baseline-shift': 'sub',
+        'font-size': '0.72em'
+      });
+      sub.textContent = part.substring(1);
+      el.appendChild(sub);
+    } else {
+      const t = svgEl('tspan');
+      t.textContent = part;
+      el.appendChild(t);
+    }
+  }
+}
+
+/* ============================================================
+   TABLEAUX DE SIGNES — RENDU SVG TYPE tkz-tab
+   ============================================================ */
+function drawSignTable(container, xLabels, row, title) {
+  const n = xLabels.length;
+  const rowLen = row.length;
+  const alternating = (rowLen === 2 * n - 3);
+  const allMid = (rowLen === n - 1);
+
+  const labelW = 70;
+  const padL = 18;
+  const padR = 18;
+  const W = 80 * (n - 1);
+  const headerH = 42;
+  const rowH = 50;
+  const totalW = labelW + W + padL + padR;
+  const totalH = headerH + rowH + 20;
+
+  const wrap = document.createElement('figure');
+  wrap.className = 'figure-item';
+  if (title) {
+    const cap = document.createElement('figcaption');
+    cap.textContent = title;
+    wrap.appendChild(cap);
+  }
+
+  const svg = svgEl('svg', {
+    viewBox: `0 0 ${totalW} ${totalH}`,
+    style: 'display:block; margin: 0 auto; max-width:100%; height:auto; width:100%;'
+  });
+
+  svg.appendChild(svgEl('rect', {
+    x: 0.75, y: 0.75, width: totalW - 1.5, height: totalH - 1.5,
+    fill: '#fffdf9', stroke: '#2b2118', 'stroke-width': 1.1
+  }));
+
+  svg.appendChild(svgEl('line', {
+    x1: labelW, y1: 0, x2: labelW, y2: totalH,
+    stroke: '#2b2118', 'stroke-width': 1.1
+  }));
+
+  svg.appendChild(svgEl('line', {
+    x1: 0, y1: headerH, x2: totalW, y2: headerH,
+    stroke: '#2b2118', 'stroke-width': 1.1
+  }));
+  svg.appendChild(svgEl('line', {
+    x1: 0, y1: headerH + 3, x2: totalW, y2: headerH + 3,
+    stroke: '#2b2118', 'stroke-width': 0.7
+  }));
+
+  const xLab = svgEl('text', {
+    x: labelW / 2, y: headerH / 2 + 5,
+    'text-anchor': 'middle',
+    class: 'table-label'
+  });
+  xLab.textContent = 'x';
+  svg.appendChild(xLab);
+
+  const fLab = svgEl('text', {
+    x: labelW / 2, y: headerH + rowH / 2 + 6,
+    'text-anchor': 'middle',
+    class: 'table-label'
+  });
+  fLab.textContent = 'f(x)';
+  svg.appendChild(fLab);
+
+  const x0 = labelW + padL;
+  const step = W / (n - 1);
+
+  for (let i = 0; i < n; i++) {
+    const cx = x0 + i * step;
+    const t = svgEl('text', {
+      x: cx, y: headerH / 2 + 5,
+      'text-anchor': 'middle',
+      class: 'table-value'
+    });
+    appendMathText(t, xLabels[i]);
+    svg.appendChild(t);
+  }
+
+  for (let j = 0; j < rowLen; j++) {
+    let cx;
+    if (allMid) {
+      cx = x0 + (j + 0.5) * step;
+    } else {
+      cx = x0 + (j / 2 + 0.5) * step;
+    }
+    const val = row[j];
+    const cy = headerH + rowH / 2 + 6;
+
+    if (val === 'd') {
+      svg.appendChild(svgEl('line', {
+        x1: cx - 2, y1: headerH + 8, x2: cx - 2, y2: totalH - 8,
+        stroke: '#2b2118', 'stroke-width': 0.8
+      }));
+      svg.appendChild(svgEl('line', {
+        x1: cx + 2, y1: headerH + 8, x2: cx + 2, y2: totalH - 8,
+        stroke: '#2b2118', 'stroke-width': 0.8
+      }));
+    } else {
+      const t = svgEl('text', {
+        x: cx, y: cy,
+        'text-anchor': 'middle',
+        class: 'table-sign'
+      });
+      appendMathText(t, val);
+      svg.appendChild(t);
+    }
+  }
+
+  wrap.appendChild(svg);
+  container.appendChild(wrap);
+}
+
+/* ============================================================
+   TABLEAUX DE VARIATIONS — RENDU SVG TYPE tkz-tab
+   ============================================================ */
+function drawVarTable(container, type, xLabels, startVal, extremumVal, endVal, title) {
+  const n = xLabels.length;
+  const labelW = 70;
+  const padL = 18;
+  const padR = 18;
+  const W = 80 * (n - 1);
+  const headerH = 42;
+  const rowH = 90;
+  const totalW = labelW + W + padL + padR;
+  const totalH = headerH + rowH + 20;
+
+  const wrap = document.createElement('figure');
+  wrap.className = 'figure-item';
+  if (title) {
+    const cap = document.createElement('figcaption');
+    cap.textContent = title;
+    wrap.appendChild(cap);
+  }
+
+  const svg = svgEl('svg', {
+    viewBox: `0 0 ${totalW} ${totalH}`,
+    style: 'display:block; margin: 0 auto; max-width:100%; height:auto; width:100%;'
+  });
+
+  const defs = svgEl('defs');
+  const marker = svgEl('marker', {
+    id: 'arrow-' + type + '-' + Math.random().toString(36).slice(2, 8),
+    markerWidth: '7', markerHeight: '7', refX: '6', refY: '3.5', orient: 'auto'
+  });
+  marker.appendChild(svgEl('polygon', {
+    points: '0 0, 7 3.5, 0 7', fill: '#2b2118'
+  }));
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+  const markerId = marker.getAttribute('id');
+
+  svg.appendChild(svgEl('rect', {
+    x: 0.75, y: 0.75, width: totalW - 1.5, height: totalH - 1.5,
+    fill: '#fffdf9', stroke: '#2b2118', 'stroke-width': 1.1
+  }));
+
+  svg.appendChild(svgEl('line', {
+    x1: labelW, y1: 0, x2: labelW, y2: totalH,
+    stroke: '#2b2118', 'stroke-width': 1.1
+  }));
+
+  svg.appendChild(svgEl('line', {
+    x1: 0, y1: headerH, x2: totalW, y2: headerH,
+    stroke: '#2b2118', 'stroke-width': 1.1
+  }));
+  svg.appendChild(svgEl('line', {
+    x1: 0, y1: headerH + 3, x2: totalW, y2: headerH + 3,
+    stroke: '#2b2118', 'stroke-width': 0.7
+  }));
+
+  const xLab = svgEl('text', {
+    x: labelW / 2, y: headerH / 2 + 5,
+    'text-anchor': 'middle', class: 'table-label'
+  });
+  xLab.textContent = 'x';
+  svg.appendChild(xLab);
+
+  const fLab = svgEl('text', {
+    x: labelW / 2, y: headerH + rowH / 2 + 6,
+    'text-anchor': 'middle', class: 'table-label'
+  });
+  fLab.textContent = 'f(x)';
+  svg.appendChild(fLab);
+
+  const x0 = labelW + padL;
+  const step = W / (n - 1);
+  const xs = [];
+  for (let i = 0; i < n; i++) xs.push(x0 + i * step);
+
+  for (let i = 0; i < n; i++) {
+    const t = svgEl('text', {
+      x: xs[i], y: headerH / 2 + 5,
+      'text-anchor': 'middle', class: 'table-value'
+    });
+    appendMathText(t, xLabels[i]);
+    svg.appendChild(t);
+  }
+
+  const yTop = headerH + 16;
+  const yBot = headerH + rowH - 20;
+
+  if (type === 'min') {
+    const t1 = svgEl('text', { x: xs[0], y: yTop + 4, 'text-anchor': 'middle', class: 'table-sign' });
+    appendMathText(t1, startVal); svg.appendChild(t1);
+
+    const t2 = svgEl('text', { x: xs[1], y: yBot + 18, 'text-anchor': 'middle', class: 'table-sign' });
+    appendMathText(t2, extremumVal); svg.appendChild(t2);
+
+    const t3 = svgEl('text', { x: xs[2], y: yTop + 4, 'text-anchor': 'middle', class: 'table-sign' });
+    appendMathText(t3, endVal); svg.appendChild(t3);
+
+    svg.appendChild(svgEl('line', {
+      x1: xs[0] + 22, y1: yTop + 10,
+      x2: xs[1] - 8, y2: yBot - 6,
+      stroke: '#2b2118', 'stroke-width': 1.3,
+      'marker-end': `url(#${markerId})`
+    }));
+    svg.appendChild(svgEl('line', {
+      x1: xs[1] + 8, y1: yBot - 6,
+      x2: xs[2] - 22, y2: yTop + 10,
+      stroke: '#2b2118', 'stroke-width': 1.3,
+      'marker-end': `url(#${markerId})`
+    }));
+  } else {
+    const t1 = svgEl('text', { x: xs[0], y: yBot + 4, 'text-anchor': 'middle', class: 'table-sign' });
+    appendMathText(t1, startVal); svg.appendChild(t1);
+
+    const t2 = svgEl('text', { x: xs[1], y: yTop + 12, 'text-anchor': 'middle', class: 'table-sign' });
+    appendMathText(t2, extremumVal); svg.appendChild(t2);
+
+    const t3 = svgEl('text', { x: xs[2], y: yBot + 4, 'text-anchor': 'middle', class: 'table-sign' });
+    appendMathText(t3, endVal); svg.appendChild(t3);
+
+    svg.appendChild(svgEl('line', {
+      x1: xs[0] + 22, y1: yBot - 10,
+      x2: xs[1] - 8, y2: yTop + 22,
+      stroke: '#2b2118', 'stroke-width': 1.3,
+      'marker-end': `url(#${markerId})`
+    }));
+    svg.appendChild(svgEl('line', {
+      x1: xs[1] + 8, y1: yTop + 22,
+      x2: xs[2] - 22, y2: yBot - 10,
+      stroke: '#2b2118', 'stroke-width': 1.3,
+      'marker-end': `url(#${markerId})`
+    }));
+  }
+
+  wrap.appendChild(svg);
+  container.appendChild(wrap);
+}
+
+/* ============================================================
+   FIGURES DE PARABOLES (SVG précis)
+   ============================================================ */
+function makeMiniParabola(a, label, opts = {}) {
+  const W = 160, H = 140;
+  const ox = W / 2, oy = H / 2 + (a > 0 ? 15 : -15);
+  const sx = opts.sx || 28;
+  const sy = opts.sy || 22;
+  const xmin = -2.2, xmax = 2.2;
+
+  const fig = document.createElement('figure');
+  fig.className = 'figure-item';
+  const svg = svgEl('svg', {
+    viewBox: `0 0 ${W} ${H}`,
+    style: 'width:100%; max-width:160px; height:auto; display:block; margin:0 auto;'
+  });
+
+  svg.appendChild(svgEl('line', { x1: 8, y1: oy, x2: W - 8, y2: oy, stroke: '#444', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('line', { x1: ox, y1: 8, x2: ox, y2: H - 8, stroke: '#444', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('polygon', { points: `${W - 8},${oy} ${W - 14},${oy - 3} ${W - 14},${oy + 3}`, fill: '#444' }));
+  svg.appendChild(svgEl('polygon', { points: `${ox},8 ${ox - 3},14 ${ox + 3},14`, fill: '#444' }));
+
+  let d = '';
+  const N = 120;
+  for (let i = 0; i <= N; i++) {
+    const x = xmin + (xmax - xmin) * i / N;
+    const y = a * x * x;
+    const px = ox + x * sx;
+    const py = oy - y * sy;
+    d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2);
+  }
+  svg.appendChild(svgEl('path', {
+    d, fill: 'none', stroke: '#3a5fcd', 'stroke-width': 2.2, 'stroke-linecap': 'round'
+  }));
+
+  fig.appendChild(svg);
+  const cap = document.createElement('figcaption');
+  cap.innerHTML = label;
+  fig.appendChild(cap);
+  return fig;
+}
+
+function buildContentFigures() {
+  const aRole = document.getElementById('fig-a-role');
+  if (aRole) {
+    aRole.appendChild(makeMiniParabola(0.6, '\\(a > 0\\)', { sx: 26, sy: 26 }));
+    aRole.appendChild(makeMiniParabola(-0.6, '\\(a < 0\\)', { sx: 26, sy: 26 }));
+    aRole.appendChild(makeMiniParabola(1.5, '\\(|a| > 1\\) resserrée', { sx: 22, sy: 14 }));
+    aRole.appendChild(makeMiniParabola(0.35, '\\(|a| < 1\\) écartée', { sx: 32, sy: 20 }));
+  }
+
+  const bFig = document.getElementById('fig-b-tangent');
+  if (bFig) {
+    const W = 260, H = 200;
+    const ox = W / 2 - 20, oy = H / 2 + 20;
+    const sx = 35, sy = 30;
+    const svg = svgEl('svg', {
+      viewBox: `0 0 ${W} ${H}`,
+      style: 'width:100%; max-width:260px; height:auto; display:block; margin:0 auto;'
+    });
+    svg.appendChild(svgEl('line', { x1: 10, y1: oy, x2: W - 10, y2: oy, stroke: '#444', 'stroke-width': 1 }));
+    svg.appendChild(svgEl('line', { x1: ox, y1: 10, x2: ox, y2: H - 10, stroke: '#444', 'stroke-width': 1 }));
+    svg.appendChild(svgEl('polygon', { points: `${W - 10},${oy} ${W - 16},${oy - 3} ${W - 16},${oy + 3}`, fill: '#444' }));
+    svg.appendChild(svgEl('polygon', { points: `${ox},10 ${ox - 3},16 ${ox + 3},16`, fill: '#444' }));
+
+    let d = '';
+    const N = 160;
+    for (let i = 0; i <= N; i++) {
+      const x = -3 + 6 * i / N;
+      const y = 0.5 * x * x + x + 1;
+      const px = ox + x * sx;
+      const py = oy - y * sy;
+      d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2);
+    }
+    svg.appendChild(svgEl('path', { d, fill: 'none', stroke: '#3a5fcd', 'stroke-width': 2.2 }));
+
+    const x1t = -3, x2t = 2.5;
+    svg.appendChild(svgEl('line', {
+      x1: ox + x1t * sx, y1: oy - (x1t + 1) * sy,
+      x2: ox + x2t * sx, y2: oy - (x2t + 1) * sy,
+      stroke: '#d97a1a', 'stroke-width': 2, 'stroke-dasharray': '6 4'
+    }));
+
+    svg.appendChild(svgEl('circle', {
+      cx: ox, cy: oy - 1 * sy, r: 4, fill: '#d97a1a'
+    }));
+
+    const fig = document.createElement('figure');
+    fig.className = 'figure-item';
+    fig.appendChild(svg);
+    const cap = document.createElement('figcaption');
+    cap.innerHTML = 'Tangente en \\(x = 0\\) : \\(y = bx + c\\)';
+    fig.appendChild(cap);
+    bFig.appendChild(fig);
+  }
+
+  const sommetFig = document.getElementById('fig-sommet');
+  if (sommetFig) {
+    sommetFig.appendChild(makeMiniParabola(0.7, 'Sommet : minimum', { sx: 26, sy: 26 }));
+    sommetFig.appendChild(makeMiniParabola(-0.7, 'Sommet : maximum', { sx: 26, sy: 26 }));
+  }
+
+  const varFig = document.getElementById('fig-variations');
+  if (varFig) {
+    varFig.appendChild(makeMiniParabola(0.7, '\\(a > 0\\) : décroissante puis croissante', { sx: 26, sy: 26 }));
+    varFig.appendChild(makeMiniParabola(-0.7, '\\(a < 0\\) : croissante puis décroissante', { sx: 26, sy: 26 }));
+  }
+
+  const racFig = document.getElementById('fig-racines');
+  if (racFig) {
+    const W = 280, H = 200;
+    const ox = W / 2, oy = H / 2 + 30;
+    const sx = 45, sy = 35;
+    const svg = svgEl('svg', {
+      viewBox: `0 0 ${W} ${H}`,
+      style: 'width:100%; max-width:280px; height:auto; display:block; margin:0 auto;'
+    });
+    svg.appendChild(svgEl('line', { x1: 10, y1: oy, x2: W - 10, y2: oy, stroke: '#444', 'stroke-width': 1 }));
+    svg.appendChild(svgEl('line', { x1: ox, y1: 10, x2: ox, y2: H - 10, stroke: '#444', 'stroke-width': 1 }));
+    svg.appendChild(svgEl('polygon', { points: `${W - 10},${oy} ${W - 16},${oy - 3} ${W - 16},${oy + 3}`, fill: '#444' }));
+    svg.appendChild(svgEl('polygon', { points: `${ox},10 ${ox - 3},16 ${ox + 3},16`, fill: '#444' }));
+
+    let d = '';
+    const N = 160;
+    for (let i = 0; i <= N; i++) {
+      const x = -1 + 6 * i / N;
+      const y = 0.5 * x * x - 2 * x + 1;
+      const px = ox + x * sx;
+      const py = oy - y * sy;
+      d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2);
+    }
+    svg.appendChild(svgEl('path', { d, fill: 'none', stroke: '#3a5fcd', 'stroke-width': 2.2 }));
+
+    const r1 = 2 - Math.SQRT2, r2 = 2 + Math.SQRT2;
+    svg.appendChild(svgEl('circle', { cx: ox + r1 * sx, cy: oy, r: 4, fill: '#d97a1a' }));
+    svg.appendChild(svgEl('circle', { cx: ox + r2 * sx, cy: oy, r: 4, fill: '#d97a1a' }));
+
+    svg.appendChild(svgEl('line', {
+      x1: ox + 2 * sx, y1: oy - 3.5 * sy,
+      x2: ox + 2 * sx, y2: oy + 1.5 * sy,
+      stroke: '#7a4a12', 'stroke-width': 1.5, 'stroke-dasharray': '5 4'
+    }));
+
+    const lx1 = svgEl('text', { x: ox + r1 * sx, y: oy + 16, 'text-anchor': 'middle', 'font-size': 11, fill: '#2b2118' });
+    lx1.textContent = 'x₁';
+    svg.appendChild(lx1);
+    const lx2 = svgEl('text', { x: ox + r2 * sx, y: oy + 16, 'text-anchor': 'middle', 'font-size': 11, fill: '#2b2118' });
+    lx2.textContent = 'x₂';
+    svg.appendChild(lx2);
+    const la = svgEl('text', { x: ox + 2 * sx + 6, y: oy - 3.5 * sy - 4, 'font-size': 11, fill: '#7a4a12' });
+    la.textContent = 'α';
+    svg.appendChild(la);
+
+    const fig = document.createElement('figure');
+    fig.className = 'figure-item';
+    fig.appendChild(svg);
+    const cap = document.createElement('figcaption');
+    cap.innerHTML = 'Racines \\(x_1, x_2\\) et abscisse du sommet \\(\\alpha = \\dfrac{x_1 + x_2}{2}\\)';
+    fig.appendChild(cap);
+    racFig.appendChild(fig);
+  }
+
+  const x2kFig = document.getElementById('fig-x2-k');
+  if (x2kFig) {
+    const cases = [
+      { k: -0.8, label: '\\(k < 0\\) : pas de solution' },
+      { k: 0, label: '\\(k = 0\\) : une solution' },
+      { k: 0.8, label: '\\(k > 0\\) : deux solutions' }
+    ];
+    cases.forEach(c => {
+      const W = 150, H = 140;
+      const ox = W / 2, oy = H / 2 + 10;
+      const sx = 30, sy = 30;
+      const svg = svgEl('svg', {
+        viewBox: `0 0 ${W} ${H}`,
+        style: 'width:100%; max-width:150px; height:auto; display:block; margin:0 auto;'
+      });
+      svg.appendChild(svgEl('line', { x1: 6, y1: oy, x2: W - 6, y2: oy, stroke: '#444', 'stroke-width': 1 }));
+      svg.appendChild(svgEl('line', { x1: ox, y1: 6, x2: ox, y2: H - 6, stroke: '#444', 'stroke-width': 1 }));
+      let d = '';
+      const N = 100;
+      for (let i = 0; i <= N; i++) {
+        const x = -1.8 + 3.6 * i / N;
+        const y = x * x;
+        d += (i === 0 ? 'M' : 'L') + (ox + x * sx).toFixed(1) + ',' + (oy - y * sy).toFixed(1);
+      }
+      svg.appendChild(svgEl('path', { d, fill: 'none', stroke: '#3a5fcd', 'stroke-width': 2 }));
+      svg.appendChild(svgEl('line', {
+        x1: 6, y1: oy - c.k * sy, x2: W - 6, y2: oy - c.k * sy,
+        stroke: '#d97a1a', 'stroke-width': 1.6, 'stroke-dasharray': '5 4'
+      }));
+      if (c.k > 0) {
+        const r = Math.sqrt(c.k);
+        svg.appendChild(svgEl('circle', { cx: ox - r * sx, cy: oy - c.k * sy, r: 3.5, fill: '#d97a1a' }));
+        svg.appendChild(svgEl('circle', { cx: ox + r * sx, cy: oy - c.k * sy, r: 3.5, fill: '#d97a1a' }));
+      } else if (c.k === 0) {
+        svg.appendChild(svgEl('circle', { cx: ox, cy: oy, r: 3.5, fill: '#d97a1a' }));
+      }
+      const ly = svgEl('text', { x: ox + 8, y: 14, 'font-size': 10, fill: '#444' });
+      ly.textContent = 'y';
+      svg.appendChild(ly);
+      const lx = svgEl('text', { x: W - 14, y: oy - 4, 'font-size': 10, fill: '#444' });
+      lx.textContent = 'X';
+      svg.appendChild(lx);
+
+      const fig = document.createElement('figure');
+      fig.className = 'figure-item';
+      fig.appendChild(svg);
+      const cap = document.createElement('figcaption');
+      cap.innerHTML = c.label;
+      fig.appendChild(cap);
+      x2kFig.appendChild(fig);
+    });
+  }
+}
+
+/* ============================================================
+   TABLEAUX DU VOLET 3
+   ============================================================ */
+function buildTables() {
+  const vc = document.getElementById('table-variations');
+  if (vc) {
+    drawVarTable(vc, 'min', ['-∞', 'α', '+∞'], '+∞', 'β', '+∞', 'Tableau de variations (a > 0)');
+    drawVarTable(vc, 'max', ['-∞', 'α', '+∞'], '-∞', 'β', '-∞', 'Tableau de variations (a < 0)');
+  }
+
+  const sc = document.getElementById('table-signes');
+  if (sc) {
+    drawSignTable(sc, ['-∞', '+∞'], ['+'], 'a > 0 et β > 0');
+    drawSignTable(sc, ['-∞', 'x₀', '+∞'], ['+', '0', '+'], 'a > 0 et β = 0');
+    drawSignTable(sc, ['-∞', 'x₁', 'x₂', '+∞'], ['+', '0', '-', '0', '+'], 'a > 0 et β < 0');
+    drawSignTable(sc, ['-∞', '+∞'], ['-'], 'a < 0 et β < 0');
+    drawSignTable(sc, ['-∞', 'x₀', '+∞'], ['-', '0', '-'], 'a < 0 et β = 0');
+    drawSignTable(sc, ['-∞', 'x₁', 'x₂', '+∞'], ['-', '0', '+', '0', '-'], 'a < 0 et β > 0');
+  }
+}
+
+/* ============================================================
+   CARTE MENTALE
+   ============================================================ */
+const mindmapData = {
+  center: 'Second\ndegré',
+  branches: [
+    {
+      label: 'Formes', color: '#d97a1a', angle: -95,
+      leaves: [
+        {
+          label: 'Développée',
+          content: 'Forme : $f(x) = ax^2 + bx + c$ avec $a \\neq 0$.\\nUtilité : calculs directs, évaluation, dérivation.\\nOn y lit directement : l’ordonnée à l’origine $c$.'
+        },
+        {
+          label: 'Canonique',
+          content: 'Forme : $f(x) = a(x - \\alpha)^2 + \\beta$.\\nOn y lit le sommet : $S(\\alpha, \\beta)$.\\n$\\alpha = -\\dfrac{b}{2a}$ et $\\beta = f(\\alpha)$.\\nTrès utile pour les variations et les extremums.'
+        },
+        {
+          label: 'Factorisée',
+          content: 'Forme : $f(x) = a(x - x_1)(x - x_2)$ où $x_1$ et $x_2$ sont les racines.\\nOn y lit directement les racines : $f(x_1) = 0$ et $f(x_2) = 0$.\\nUtile pour le signe du trinôme.'
+        }
+      ]
+    },
+    {
+      label: 'Coefficients', color: '#2a7a4a', angle: -20,
+      leaves: [
+        {
+          label: 'a',
+          content: 'Rôle : orientation et ouverture de la parabole.\\n$a > 0$ : branches vers le haut.\\n$a < 0$ : branches vers le bas.\\n$|a| > 1$ : branches resserrées.\\n$|a| < 1$ : branches écartées.'
+        },
+        {
+          label: 'b',
+          content: 'Rôle : coefficient directeur de la tangente en $x = 0$.\\n$f\'(0) = b$.\\nLa tangente en $0$ a pour équation $y = bx + c$.'
+        },
+        {
+          label: 'c',
+          content: 'Rôle : ordonnée à l’origine.\\n$f(0) = c$.\\nLa parabole coupe l’axe des ordonnées au point $(0, c)$.'
+        }
+      ]
+    },
+    {
+      label: 'Sommet', color: '#7a4a9a', angle: 55,
+      leaves: [
+        {
+          label: 'α, β',
+          content: 'Abscisse : $\\alpha = -\\dfrac{b}{2a}$.\\nOrdonnée : $\\beta = f(\\alpha)$.\\nLe sommet a pour coordonnées $(\\alpha, \\beta)$.\\nC’est le point où la fonction atteint son extremum.'
+        },
+        {
+          label: 'Extremum',
+          content: 'Si $a > 0$ : $\\beta$ est le minimum de $f$ sur $\\mathbb{R}$.\\nSi $a < 0$ : $\\beta$ est le maximum de $f$ sur $\\mathbb{R}$.\\nLa valeur de l’extremum est toujours $\\beta$.'
+        }
+      ]
+    },
+    {
+      label: 'Racines', color: '#c0392b', angle: 130,
+      leaves: [
+        {
+          label: 'x₁, x₂',
+          content: 'Les racines sont les solutions de $f(x) = 0$.\\nLa forme factorisée est $f(x) = a(x - x_1)(x - x_2)$.\\nL’abscisse du sommet est la moyenne des racines : $\\alpha = \\dfrac{x_1 + x_2}{2}$.'
+        },
+        {
+          label: 'Signe',
+          content: 'Le signe de $f(x)$ dépend du signe de $a$ et de l’existence de racines.\\nSi $a > 0$ et deux racines : $f(x) > 0$ à l’extérieur, $f(x) < 0$ entre les racines.\\nSi $a < 0$ et deux racines : le contraire.\\nSans racine : $f(x)$ garde le signe de $a$.'
+        }
+      ]
+    },
+    {
+      label: 'Équations', color: '#1a6a9a', angle: 200,
+      leaves: [
+        {
+          label: 'X² = k',
+          content: 'Si $k < 0$ : aucune solution réelle.\\nSi $k = 0$ : une solution $X = 0$.\\nSi $k > 0$ : deux solutions $X = -\\sqrt{k}$ et $X = \\sqrt{k}$.'
+        },
+        {
+          label: 'f(x) = k',
+          content: 'Cas $k = 0$ : forme canonique ou équation produit.\\nCas $k = c$ : factoriser $f(x) - c$.\\nAutres cas : se ramener à $(x - \\alpha)^2 = \\dfrac{k - \\beta}{a}$.'
+        }
+      ]
+    }
+  ]
+};
+
+function buildMindmap() {
+  const svg = document.getElementById('mindmap-svg');
+  const W = 820, H = 640;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = '';
+
+  const cx = W / 2, cy = H / 2;
+
+  const defs = svgEl('defs');
+  const grad = svgEl('radialGradient', { id: 'centerGrad' });
+  grad.appendChild(svgEl('stop', { offset: '0%', 'stop-color': '#c8962c' }));
+  grad.appendChild(svgEl('stop', { offset: '100%', 'stop-color': '#7a4a12' }));
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+
+  const branchR = 155;
+  const leafR = 155;
+
+  mindmapData.branches.forEach(branch => {
+    const rad = branch.angle * Math.PI / 180;
+    const bx = cx + branchR * Math.cos(rad);
+    const by = cy + branchR * Math.sin(rad);
+
+    svg.appendChild(svgEl('line', {
+      x1: cx, y1: cy, x2: bx, y2: by,
+      stroke: branch.color, 'stroke-width': 3.5, 'stroke-linecap': 'round', opacity: 0.65
+    }));
+
+    const spreads = branch.leaves.length === 1 ? [0]
+      : branch.leaves.length === 2 ? [-20, 20]
+      : [-30, 0, 30];
+
+    branch.leaves.forEach((leaf, li) => {
+      const ang = branch.angle + spreads[li];
+      const lar = ang * Math.PI / 180;
+      const lx = bx + leafR * Math.cos(lar);
+      const ly = by + leafR * Math.sin(lar);
+
+      svg.appendChild(svgEl('line', {
+        x1: bx, y1: by, x2: lx, y2: ly,
+        stroke: branch.color, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.45
+      }));
+
+      const g = svgEl('g', { style: 'cursor:pointer;' });
+      g.appendChild(svgEl('circle', {
+        cx: lx, cy: ly, r: 9, fill: branch.color, stroke: '#fffdf9', 'stroke-width': 2.5
+      }));
+
+      const t = svgEl('text', {
+        x: lx, y: ly + 24, 'text-anchor': 'middle',
+        'font-size': 11, fill: '#2b2118', 'font-weight': 600,
+        style: 'pointer-events:none;'
+      });
+      t.textContent = leaf.label;
+      g.appendChild(t);
+
+      g.addEventListener('mouseenter', () => {
+        clearTimeout(modalHideTimer);
+        const r = g.getBoundingClientRect();
+        const anchor = { left: r.left, right: r.right, top: r.top, height: r.height };
+        showModalFor(anchor, leaf.label, (body) => {
+          const p = document.createElement('p');
+          setRichText(p, leaf.content);
+          body.appendChild(p);
+          if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([body]).catch(() => {});
+        });
+      });
+      g.addEventListener('mouseleave', scheduleHideModal);
+
+      svg.appendChild(g);
+    });
+
+    const bg = svgEl('g');
+    bg.appendChild(svgEl('circle', {
+      cx: bx, cy: by, r: 27, fill: branch.color, stroke: '#fffdf9', 'stroke-width': 3
+    }));
+    const bt = svgEl('text', {
+      x: bx, y: by + 4, 'text-anchor': 'middle',
+      'font-size': 10.5, fill: '#fff', 'font-weight': 700
+    });
+    bt.textContent = branch.label;
+    bg.appendChild(bt);
+    svg.appendChild(bg);
+  });
+
+  svg.appendChild(svgEl('circle', {
+    cx, cy, r: 62, fill: 'url(#centerGrad)', stroke: '#7a4a12', 'stroke-width': 3.5
+  }));
+  const c1 = svgEl('text', {
+    x: cx, y: cy - 4, 'text-anchor': 'middle',
+    'font-size': 16, fill: '#fff', 'font-weight': 700
+  });
+  c1.textContent = 'Second';
+  svg.appendChild(c1);
+  const c2 = svgEl('text', {
+    x: cx, y: cy + 16, 'text-anchor': 'middle',
+    'font-size': 16, fill: '#fff', 'font-weight': 700
+  });
+  c2.textContent = 'degré';
+  svg.appendChild(c2);
+
+  const legend = document.getElementById('mindmap-legend');
+  legend.innerHTML = '';
+  mindmapData.branches.forEach(b => {
+    const d = document.createElement('div');
+    d.className = 'item';
+    d.innerHTML = `<span class="swatch" style="background:${b.color}"></span>${b.label}`;
+    legend.appendChild(d);
+  });
+}
+
+/* ============================================================
+   GRAPHE INTERACTIF
+   ============================================================ */
+const graph = {
+  nodes: [],
+  links: [],
+  canvas: null,
+  ctx: null,
+  w: 0, h: 0,
+  dpr: 1,
+  dragging: null,
+  hovered: null,
+  pointer: { x: 0, y: 0 },
+  running: false,
+
+  init() {
+    this.canvas = document.getElementById('graph-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.buildData();
+    this.resize();
+    this.bindEvents();
+    this.start();
+    this.buildLegend();
+  },
+
+  buildData() {
+    const C = {
+      forme: '#d97a1a',
+      prop: '#2a7a4a',
+      coef: '#1a6a9a',
+      centre: '#c8962c'
+    };
+
+    const defs = [
+      { id: 'centre', label: 'Second degré', cat: 'centre', color: C.centre, r: 30,
+        desc: 'Fonction polynôme du second degré : $f(x) = ax^2 + bx + c$ avec $a \\neq 0$.\\nOn distingue trois formes : développée, canonique, factorisée.\\nLe coefficient $a$ détermine l’orientation et l’ouverture de la parabole.' },
+      { id: 'dev', label: 'Forme développée', cat: 'forme', color: C.forme, r: 22,
+        desc: '$f(x) = ax^2 + bx + c$.\\nOn y lit directement l’ordonnée à l’origine $c$.\\nUtile pour les calculs directs.' },
+      { id: 'can', label: 'Forme canonique', cat: 'forme', color: C.forme, r: 22,
+        desc: '$f(x) = a(x - \\alpha)^2 + \\beta$.\\nOn y lit directement le sommet $(\\alpha, \\beta)$.\\nTrès utile pour les variations.' },
+      { id: 'fac', label: 'Forme factorisée', cat: 'forme', color: C.forme, r: 22,
+        desc: '$f(x) = a(x - x_1)(x - x_2)$.\\nOn y lit directement les racines $x_1$ et $x_2$.\\nUtile pour le signe.' },
+      { id: 'sommet', label: 'Sommet', cat: 'prop', color: C.prop, r: 20,
+        desc: 'Coordonnées : $\\alpha = -\\dfrac{b}{2a}$ et $\\beta = f(\\alpha)$.\\nSi $a > 0$ : minimum.\\nSi $a < 0$ : maximum.' },
+      { id: 'racines', label: 'Racines', cat: 'prop', color: C.prop, r: 20,
+        desc: 'Solutions de $f(x) = 0$.\\nLa forme factorisée donne $x_1$ et $x_2$.\\nLien avec le sommet : $\\alpha = \\dfrac{x_1 + x_2}{2}$.' },
+      { id: 'signe', label: 'Signe', cat: 'prop', color: C.prop, r: 20,
+        desc: 'Le signe dépend de $a$ et des racines.\\nSans racine : signe constant.\\nAvec deux racines : signe alterné.' },
+      { id: 'coefA', label: 'Coefficient a', cat: 'coef', color: C.coef, r: 19,
+        desc: '$a > 0$ : branches vers le haut.\\n$a < 0$ : branches vers le bas.\\n$|a| > 1$ : branches resserrées ; $|a| < 1$ : écartées.' },
+      { id: 'coefB', label: 'Coefficient b', cat: 'coef', color: C.coef, r: 19,
+        desc: '$b = f\'(0)$ : coefficient directeur de la tangente en $x = 0$.\\nTangente : $y = bx + c$.' },
+      { id: 'coefC', label: 'Coefficient c', cat: 'coef', color: C.coef, r: 19,
+        desc: '$f(0) = c$ : ordonnée à l’origine.\\nPoint d’intersection avec l’axe des ordonnées : $(0, c)$.' },
+      { id: 'eqX2', label: 'X² = k', cat: 'prop', color: C.prop, r: 20,
+        desc: 'Si $k < 0$ : pas de solution.\\nSi $k = 0$ : $X = 0$.\\nSi $k > 0$ : $X = \\pm\\sqrt{k}$.' }
+    ];
+
+    const linkDefs = [
+      ['centre', 'dev'], ['centre', 'can'], ['centre', 'fac'],
+      ['centre', 'sommet'], ['centre', 'racines'], ['centre', 'signe'],
+      ['centre', 'coefA'], ['centre', 'coefB'], ['centre', 'coefC'],
+      ['can', 'sommet'], ['fac', 'racines'], ['fac', 'signe'],
+      ['dev', 'coefA'], ['dev', 'coefB'], ['dev', 'coefC'],
+      ['sommet', 'coefA'], ['sommet', 'coefB'],
+      ['signe', 'coefA'], ['signe', 'sommet'],
+      ['eqX2', 'can'], ['eqX2', 'racines'],
+      ['centre', 'eqX2']
+    ];
+
+    this.nodes = defs.map((d, i) => {
+      const angle = (i / defs.length) * Math.PI * 2 - Math.PI / 2;
+      const rad = 180 + (i % 3) * 40;
+      return {
+        ...d,
+        x: 400 + Math.cos(angle) * rad,
+        y: 320 + Math.sin(angle) * rad,
+        vx: 0, vy: 0,
+        fixed: false
+      };
+    });
+
+    this.links = linkDefs.map(([a, b]) => ({
+      source: this.nodes.find(n => n.id === a),
+      target: this.nodes.find(n => n.id === b)
+    })).filter(l => l.source && l.target);
+  },
+
+  buildLegend() {
+    const legend = document.getElementById('graph-legend');
+    legend.innerHTML = '';
+    const cats = [
+      { label: 'Formes', color: '#d97a1a' },
+      { label: 'Propriétés', color: '#2a7a4a' },
+      { label: 'Coefficients', color: '#1a6a9a' }
+    ];
+    cats.forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'item';
+      d.innerHTML = `<span class="swatch" style="background:${c.color}"></span>${c.label}`;
+      legend.appendChild(d);
+    });
+  },
+
+  resize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.parentElement.getBoundingClientRect();
+    const w = rect.width - 16;
+    const h = Math.max(420, window.innerHeight * 0.7);
+    this.dpr = window.devicePixelRatio || 1;
+    this.canvas.width = w * this.dpr;
+    this.canvas.height = h * this.dpr;
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
+    this.w = w;
+    this.h = h;
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.nodes.forEach(n => {
+      if (!n._placed) {
+        n.x = this.w / 2 + (Math.random() - 0.5) * 200;
+        n.y = this.h / 2 + (Math.random() - 0.5) * 200;
+        n._placed = true;
+      }
+    });
+    this.draw();
+  },
+
+  bindEvents() {
+    const c = this.canvas;
+
+    const pointerPos = (e) => {
+      const r = c.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
+    c.addEventListener('pointerdown', (e) => {
+      const p = pointerPos(e);
+      const n = this.findNode(p.x, p.y);
+      if (n) {
+        this.dragging = n;
+        n.fixed = true;
+        n.vx = 0;
+        n.vy = 0;
+        c.setPointerCapture(e.pointerId);
+        c.style.cursor = 'grabbing';
+      }
+    });
+
+    c.addEventListener('pointermove', (e) => {
+      const p = pointerPos(e);
+      this.pointer = p;
+
+      if (this.dragging) {
+        this.dragging.x = p.x;
+        this.dragging.y = p.y;
+        this.dragging.vx = 0;
+        this.dragging.vy = 0;
+      } else {
+        const n = this.findNode(p.x, p.y);
+        if (n) {
+          if (this.hovered !== n) {
+            this.hovered = n;
+            clearTimeout(modalHideTimer);
+            const rect = c.getBoundingClientRect();
+            const anchor = {
+              left: rect.left + n.x - n.r,
+              right: rect.left + n.x + n.r,
+              top: rect.top + n.y - n.r,
+              height: n.r * 2
+            };
+            showModalFor(anchor, n.label, (body) => {
+              const pEl = document.createElement('p');
+              setRichText(pEl, n.desc);
+              body.appendChild(pEl);
+              if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([body]).catch(() => {});
+            });
+          }
+        } else {
+          if (this.hovered) {
+            this.hovered = null;
+            scheduleHideModal();
+          }
+        }
+      }
+    });
+
+    const endDrag = () => {
+      if (this.dragging) {
+        this.dragging.fixed = false;
+        this.dragging = null;
+        c.style.cursor = 'grab';
+      }
+    };
+    c.addEventListener('pointerup', endDrag);
+    c.addEventListener('pointercancel', endDrag);
+
+    c.addEventListener('mouseleave', () => {
+      if (this.hovered) {
+        this.hovered = null;
+        scheduleHideModal();
+      }
+    });
+
+    window.addEventListener('resize', () => this.resize());
+  },
+
+  findNode(x, y) {
+    for (let i = this.nodes.length - 1; i >= 0; i--) {
+      const n = this.nodes[i];
+      const dx = x - n.x, dy = y - n.y;
+      if (dx * dx + dy * dy <= (n.r + 6) ** 2) return n;
+    }
+    return null;
+  },
+
+  start() {
+    if (this.running) return;
+    this.running = true;
+    const step = () => {
+      this.simulate();
+      this.draw();
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  },
+
+  simulate() {
+    const nodes = this.nodes;
+    const cx = this.w / 2, cy = this.h / 2;
+
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        let dx = a.x - b.x, dy = a.y - b.y;
+        let d2 = dx * dx + dy * dy;
+        if (d2 < 1) { d2 = 1; dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
+        const d = Math.sqrt(d2);
+        const force = 5000 / d2;
+        const fx = (dx / d) * force;
+        const fy = (dy / d) * force;
+        a.vx += fx; a.vy += fy;
+        b.vx -= fx; b.vy -= fy;
+      }
+    }
+
+    for (const link of this.links) {
+      const a = link.source, b = link.target;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const rest = 130;
+      const force = (d - rest) * 0.012;
+      const fx = (dx / d) * force;
+      const fy = (dy / d) * force;
+      if (!a.fixed) { a.vx += fx; a.vy += fy; }
+      if (!b.fixed) { b.vx -= fx; b.vy -= fy; }
+    }
+
+    for (const n of nodes) {
+      if (n.fixed) continue;
+      n.vx += (cx - n.x) * 0.0008;
+      n.vy += (cy - n.y) * 0.0008;
+      n.vx *= 0.9;
+      n.vy *= 0.9;
+      n.x += n.vx;
+      n.y += n.vy;
+      const m = n.r + 4;
+      if (n.x < m) { n.x = m; n.vx *= -0.3; }
+      if (n.x > this.w - m) { n.x = this.w - m; n.vx *= -0.3; }
+      if (n.y < m) { n.y = m; n.vy *= -0.3; }
+      if (n.y > this.h - m) { n.y = this.h - m; n.vy *= -0.3; }
+    }
+  },
+
+  draw() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.w, this.h);
+
+    ctx.fillStyle = '#fffdf9';
+    ctx.fillRect(0, 0, this.w, this.h);
+
+    const hovered = this.hovered;
+
+    for (const link of this.links) {
+      const a = link.source, b = link.target;
+      const active = hovered && (hovered === a || hovered === b);
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = active ? '#c8962c' : 'rgba(122,74,18,0.18)';
+      ctx.lineWidth = active ? 2.2 : 1;
+      ctx.stroke();
+    }
+
+    for (const n of this.nodes) {
+      const dim = hovered && hovered !== n && !this.links.some(l =>
+        (l.source === n && l.target === hovered) || (l.target === n && l.source === hovered));
+      const alpha = dim ? 0.35 : 1;
+
+      ctx.globalAlpha = alpha;
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(80,50,20,0.08)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.color;
+      ctx.fill();
+      ctx.strokeStyle = '#fffdf9';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = `600 ${n.r > 24 ? 11 : 10}px "Segoe UI", system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const lines = n.label.split(' ');
+      if (lines.length > 2 && n.r < 24) {
+        ctx.font = `600 9px "Segoe UI", system-ui, sans-serif`;
+        lines.forEach((line, i) => {
+          ctx.fillText(line, n.x, n.y + (i - (lines.length - 1) / 2) * 11);
+        });
+      } else {
+        ctx.fillText(n.label, n.x, n.y + 1);
+      }
+
+      ctx.globalAlpha = 1;
+    }
+  }
+};
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  buildContentFigures();
+  buildTables();
+  buildMindmap();
+  graph.init();
+
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise().catch(() => {});
+  }
+});
+
+window.addEventListener('load', () => {
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise().catch(() => {});
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte Joker — Suites</title>
+
+<!-- ============ CONFIGURATION MATHJAX 3 ============ -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath:  [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']]
+  },
+  svg: { fontCache: 'global' },
+  startup: {
+    pageReady: function () {
+      return MathJax.startup.defaultPageReady();
+    }
+  }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+/* ================= BASE ================= */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#f4efe6;
+  color:#3a2a1a;
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+}
+h1,h2,h3,h4{margin:0 0 .5em;line-height:1.25}
+h2{font-size:1.05rem;color:#7a4a12;letter-spacing:.1px}
+h3{font-size:.95rem;color:#8a5a1d;margin-top:.9em}
+p{margin:.45em 0}
+ul,ol{margin:.4em 0 .4em 1.1em;padding:0}
+li{margin:.18em 0}
+code,kbd{font-family:"Cascadia Code",Consolas,"Courier New",monospace}
+
+/* ================= SIDEBAR ================= */
+#sidebar{
+  position:fixed;top:0;left:0;width:214px;height:100vh;z-index:60;
+  background:linear-gradient(180deg,#2b2118 0%,#1b1410 100%);
+  color:#e8ddcd;padding:18px 14px;display:flex;flex-direction:column;gap:8px;
+  overflow-y:auto;
+}
+#sidebar h1{font-size:1rem;color:#f0b25a;margin:0;letter-spacing:.4px}
+#sidebar .sub{font-size:.7rem;color:#a99680;margin:-4px 0 12px;letter-spacing:.6px;text-transform:uppercase}
+.navbtn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  background:transparent;border:1px solid #4a3a2a;color:#d9cbb8;
+  padding:10px 11px;border-radius:10px;cursor:pointer;
+  font-size:.84rem;text-align:left;font-family:inherit;transition:.18s;
+}
+.navbtn .num{
+  width:22px;height:22px;border-radius:50%;background:#3a2c20;color:#c9a97a;
+  display:grid;place-items:center;font-size:.72rem;font-weight:700;flex:0 0 auto;
+  transition:.18s;
+}
+.navbtn:hover{border-color:#8a6a3a;color:#fff0d8}
+.navbtn.active{
+  background:linear-gradient(90deg,#4a3213,#33230f);
+  border-color:#d9a14a;color:#ffd9a0;
+  box-shadow:0 0 0 1px rgba(217,161,74,.35) inset;
+}
+.navbtn.active .num{background:#d97a1a;color:#1b1410}
+#sidebar .hint{margin-top:auto;font-size:.68rem;color:#7d6c58;line-height:1.35}
+
+/* ================= MAIN ================= */
+main{margin-left:214px;padding:18px 22px 30px;min-height:100vh}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{
+  background:#fffdf9;border:1px solid #ecdfcb;border-radius:14px;
+  padding:15px 18px 17px;margin:0 0 16px;
+  box-shadow:0 2px 10px rgba(120,80,30,.09);
+}
+.card .num-badge{
+  display:inline-block;background:#f6ead8;color:#a06a1e;border:1px solid #e6cfae;
+  border-radius:8px;font-size:.7rem;font-weight:700;padding:1px 7px;margin-right:8px;
+  vertical-align:2px;letter-spacing:.5px;
+}
+.note{font-size:.92rem;color:#6b5a48}
+.small{font-size:.86rem}
+strong{color:#7a4a12}
+
+/* ================= TABLEAUX HTML ================= */
+table.data{
+  border-collapse:collapse;width:100%;font-size:.86rem;margin:.6em 0 .4em;
+  background:#fffdf9;
+}
+table.data th,table.data td{
+  border:1px solid #e6d8c3;padding:5px 8px;text-align:left;vertical-align:top;
+}
+table.data thead th{background:#f6ead8;color:#7a4a12;font-weight:600}
+table.data tbody tr:nth-child(even){background:#fdf8f0}
+table.data td.c,table.data th.c{text-align:center}
+table.data mjx-container{font-size:.95em !important}
+
+/* ================= FIGURES / SVG ================= */
+figure{margin:.7em 0 .3em}
+figure svg.chart{width:100%;height:auto;display:block;max-width:100%}
+figcaption{font-size:.8rem;color:#7d6a55;text-align:center;margin-top:4px}
+figcaption mjx-container{font-size:.95em !important}
+figcaption mjx-container svg,figcaption > svg{width:auto !important;height:auto !important;max-width:100%;display:inline-block}
+.charts{display:flex;gap:12px;flex-wrap:wrap;margin:.5em 0}
+.charts > figure{flex:1 1 180px;min-width:170px;margin:0}
+svg.schema{width:100%;height:auto;display:block;max-width:100%;margin:.4em 0}
+svg.schema text{font-family:"Segoe UI",system-ui,sans-serif}
+
+/* ================= CODE ================= */
+pre.code{
+  background:#2b2118;color:#f3e7d5;border-radius:10px;padding:10px 12px;
+  font-size:.78rem;line-height:1.45;overflow-x:auto;margin:.5em 0;
+  border:1px solid #3d2f22;
+}
+pre.code .kw{color:#f0b25a}
+pre.code .cm{color:#9d8a72;font-style:italic}
+
+/* ================= CARTE MENTALE ================= */
+#mindWrap{position:relative;width:100%;margin-top:6px}
+#mindSvg{width:100%;height:auto;display:block;touch-action:none;user-select:none;cursor:grab}
+#mindSvg .medge{stroke-width:1.6;fill:none}
+#mindSvg .mnode{cursor:grab}
+#mindSvg .mnode text{font-family:"Segoe UI",system-ui,sans-serif;pointer-events:none}
+#mindSvg .mnode rect{transition:filter .15s}
+#mindSvg .mnode:hover rect{filter:drop-shadow(0 2px 5px rgba(120,80,30,.45))}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;margin-top:10px;font-size:.78rem;color:#6b5a48}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:13px;height:13px;border-radius:4px;display:inline-block}
+
+/* ================= GRAPHE ================= */
+#graphWrap{position:relative;width:100%}
+#graphCanvas{display:block;width:100%;border-radius:12px;background:
+  radial-gradient(circle at 30% 20%,#fffdf9,#f7f0e4 70%);border:1px solid #ecdfcb;touch-action:none;cursor:grab}
+.glegend{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;margin-top:10px;font-size:.78rem;color:#6b5a48}
+.glegend span{display:inline-flex;align-items:center;gap:6px}
+.glegend i{width:13px;height:13px;border-radius:50%;display:inline-block}
+
+/* ================= MODALE VOLANTE (survol) ================= */
+#hoverModal{
+  position:fixed;z-index:200;display:none;
+  width:360px;max-width:min(92vw,520px);max-height:88vh;
+  background:#fffdf9;border:1px solid #e0cba8;border-radius:14px;
+  box-shadow:0 10px 34px rgba(90,55,15,.28);
+  padding:12px 14px;overflow:hidden;
+  font-size:.9rem;line-height:1.45;
+}
+#hoverModal.open{display:block;animation:pop .14s ease}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+#hoverModal .hm-title{
+  font-size:.95rem;font-weight:700;color:#7a4a12;margin-bottom:6px;
+  border-bottom:1px solid #efe2cd;padding-bottom:5px;
+}
+#hoverModal .hm-body{max-height:calc(88vh - 62px);overflow-y:auto;overflow-x:hidden;word-break:break-word}
+#hoverModal p{margin:.35em 0;font-size:.9rem}
+#hoverModal .hm-formula{
+  background:#f8f1e5;border-left:3px solid #d97a1a;border-radius:6px;
+  padding:4px 8px;margin:6px 0;overflow-x:hidden;
+}
+#hoverModal mjx-container{font-size:1em !important}
+#hoverModal mjx-container[display="true"]{font-size:1em !important;margin:.25em 0}
+
+/* ================= MODALE LÉGALE ================= */
+#legalBackdrop{
+  position:fixed;inset:0;background:rgba(30,20,10,.55);z-index:300;
+  display:none;align-items:center;justify-content:center;padding:16px;
+}
+#legalBackdrop.open{display:flex}
+#legalModal{
+  background:#fffdf9;border-radius:14px;border:1px solid #e0cba8;
+  width:min(92vw,560px);max-height:88vh;overflow-y:auto;overflow-x:hidden;
+  padding:18px 20px;position:relative;box-shadow:0 18px 50px rgba(0,0,0,.35);
+  font-size:.9rem;line-height:1.45;word-break:break-word;
+}
+#legalModal h3{font-size:1rem;color:#7a4a12;margin:0 0 8px}
+#legalModal h4{font-size:.92rem;color:#8a5a1d;margin:12px 0 6px}
+#legalModal p{margin:.4em 0}
+#legalModal ol{margin:.4em 0 .4em 1.2em}
+#legalModal li{margin:.35em 0}
+#legalClose{
+  position:absolute;top:10px;right:10px;border:1px solid #e0cba8;background:#f8f1e5;
+  color:#7a4a12;width:30px;height:30px;border-radius:9px;cursor:pointer;font-size:1rem;
+}
+#legalClose:hover{background:#f0e2c9}
+
+/* ================= FOOTER ================= */
+footer{
+  margin-left:0;padding:6px 2px 26px;display:flex;justify-content:center;
+}
+#legalBtn{
+  background:#fffdf9;border:1px solid #e0cba8;color:#7a4a12;
+  padding:8px 16px;border-radius:11px;font-size:.82rem;cursor:pointer;
+  font-family:inherit;box-shadow:0 2px 8px rgba(120,80,30,.10);transition:.18s;
+}
+#legalBtn:hover{background:#f8f1e5;border-color:#d9a14a}
+
+/* ================= CANVAS TABLEAUX ================= */
+.tabwrap{background:#fffdf9;border:1px solid #ecdfcb;border-radius:12px;padding:10px;display:flex;justify-content:center}
+.tabwrap canvas{display:block;max-width:100%;height:auto}
+.tabgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:.6em 0}
+.tabgrid figure{margin:0}
+.tabgrid figcaption{font-size:.78rem;color:#7d6a55;margin-top:6px;text-align:center}
+
+/* ================= MATHJAX (contrôle strict) ================= */
+mjx-container{font-size:1.05em !important}
+mjx-container[display="true"]{font-size:1.1em !important;margin:.4em 0}
+h1 mjx-container,h2 mjx-container,h3 mjx-container{font-size:1em !important}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width:900px){
+  #sidebar{
+    position:sticky;top:0;width:100%;height:auto;flex-direction:row;flex-wrap:wrap;
+    gap:6px;padding:10px 12px;align-items:center;
+  }
+  #sidebar h1{font-size:.9rem;width:100%;margin:0}
+  #sidebar .sub{display:none}
+  #sidebar .hint{display:none}
+  .navbtn{flex:1 1 auto;justify-content:center;padding:8px 6px;font-size:.74rem;gap:6px}
+  .navbtn .num{width:18px;height:18px;font-size:.65rem}
+  main{margin-left:0;padding:14px 12px 20px}
+  .charts > figure{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== MENU VERTICAL ==================== -->
+<nav id="sidebar" aria-label="Navigation entre les volets">
+  <h1>⚜ Carte Joker</h1>
+  <div class="sub">Suites numériques</div>
+  <button class="navbtn active" data-target="panel-1"><span class="num">1</span><span>Contenu classique</span></button>
+  <button class="navbtn" data-target="panel-2"><span class="num">2</span><span>Carte mentale</span></button>
+  <button class="navbtn" data-target="panel-3"><span class="num">3</span><span>Tableaux</span></button>
+  <button class="navbtn" data-target="panel-4"><span class="num">4</span><span>Graphe</span></button>
+  <div class="hint">Survolez les nœuds de la carte mentale et du graphe pour afficher les contenus détaillés.</div>
+</nav>
+
+<main>
+
+<!-- ============================================================
+     VOLET 1 — CONTENU CLASSIQUE
+     ============================================================ -->
+<section class="panel active" id="panel-1">
+
+  <!-- 1. DÉFINITION -->
+  <article class="card">
+    <h2><span class="num-badge">1</span>Définition et vocabulaire</h2>
+    <p>Une <strong>suite numérique</strong> \(\left(u_n\right)\) est une application qui, à tout entier \(n\) d'une partie de \(\mathbb{N}\), associe un nombre réel \(u_n\).</p>
+    <ul>
+      <li>Le nombre \(u_n\), aussi noté \(u(n)\), est le <strong>terme de rang \(n\)</strong>.</li>
+      <li>\(u_0\) est le <strong>premier terme</strong> de la suite (appelé aussi terme initial).</li>
+      <li>On note \(\left(u_n\right)\) la suite tout entière et \(u_n\) le terme de rang \(n\) : ce sont deux objets différents.</li>
+    </ul>
+
+    <svg class="schema" viewBox="0 0 700 210" role="img" aria-label="Schéma : définition, forme explicite, forme récurrente, représentation graphique">
+      <defs>
+        <marker id="schArrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#8a5a2b"/>
+        </marker>
+      </defs>
+      <rect x="235" y="8" width="230" height="58" rx="10" fill="#fdf3e2" stroke="#c08a3e" stroke-width="1.3"/>
+      <text x="350" y="30" text-anchor="middle" font-size="13" fill="#6b3f10" font-weight="600">Définition</text>
+      <text x="350" y="49" text-anchor="middle" font-size="12" fill="#7a4a12">uₙ ou u(n) — terme de rang n</text>
+
+      <rect x="18" y="118" width="200" height="52" rx="10" fill="#fdf3e2" stroke="#c08a3e" stroke-width="1.3"/>
+      <text x="118" y="140" text-anchor="middle" font-size="12.5" fill="#6b3f10" font-weight="600">Forme explicite</text>
+      <text x="118" y="158" text-anchor="middle" font-size="12" fill="#7a4a12">uₙ = f(n)</text>
+
+      <rect x="482" y="118" width="200" height="52" rx="10" fill="#fdf3e2" stroke="#c08a3e" stroke-width="1.3"/>
+      <text x="582" y="140" text-anchor="middle" font-size="12.5" fill="#6b3f10" font-weight="600">Forme récurrente</text>
+      <text x="582" y="158" text-anchor="middle" font-size="12" fill="#7a4a12">uₙ₊₁ = f(uₙ)</text>
+
+      <rect x="250" y="118" width="200" height="52" rx="10" fill="#fdf3e2" stroke="#c08a3e" stroke-width="1.3"/>
+      <text x="350" y="140" text-anchor="middle" font-size="12.5" fill="#6b3f10" font-weight="600">Représentation</text>
+      <text x="350" y="158" text-anchor="middle" font-size="12" fill="#7a4a12">nuage de points (n ; uₙ)</text>
+
+      <line x1="300" y1="66" x2="150" y2="116" stroke="#8a5a2b" stroke-width="1.6" marker-end="url(#schArrow)"/>
+      <line x1="350" y1="66" x2="350" y2="116" stroke="#8a5a2b" stroke-width="1.6" marker-end="url(#schArrow)"/>
+      <line x1="400" y1="66" x2="552" y2="116" stroke="#8a5a2b" stroke-width="1.6" marker-end="url(#schArrow)"/>
+      <line x1="196" y1="144" x2="246" y2="144" stroke="#8a5a2b" stroke-width="1.6" marker-end="url(#schArrow)"/>
+      <line x1="504" y1="144" x2="454" y2="144" stroke="#8a5a2b" stroke-width="1.6" marker-end="url(#schArrow)"/>
+    </svg>
+
+    <p class="note">Les deux formes de définition décrivent <em>la même</em> suite : la forme explicite donne \(u_n\) directement à partir de \(n\), la forme récurrente donne \(u_{n+1}\) à partir de \(u_n\).</p>
+  </article>
+
+  <!-- 2. FORMES -->
+  <article class="card">
+    <h2><span class="num-badge">2</span>Forme explicite et forme récurrente</h2>
+
+    <table class="data">
+      <thead><tr><th style="width:26%">Forme</th><th style="width:34%">Écriture</th><th>Ce qu'il faut savoir</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Explicite</strong></td>
+          <td class="c">\(u_n = f(n)\)</td>
+          <td>On calcule directement n'importe quel terme à partir de son rang \(n\). Aucun terme précédent n'est nécessaire.</td>
+        </tr>
+        <tr>
+          <td><strong>Récurrente</strong></td>
+          <td class="c">\(u_{n+1} = f\left(u_n\right)\)</td>
+          <td>Chaque terme se calcule à partir du précédent. Il faut obligatoirement connaître le premier terme \(u_0\).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Exemple : \(u_n = n^2 - 3n\)</h3>
+    <p>Cette suite est définie de façon <strong>explicite</strong>. On calcule les premiers termes en remplaçant \(n\) par sa valeur :</p>
+    <table class="data">
+      <thead><tr><th class="c">Rang \(n\)</th><th class="c">0</th><th class="c">1</th><th class="c">2</th><th class="c">3</th><th class="c">4</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Terme \(u_n\)</strong></td><td class="c">\(0\)</td><td class="c">\(-2\)</td><td class="c">\(-2\)</td><td class="c">\(0\)</td><td class="c">\(4\)</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Détail : \(u_0 = 0^2-3\times 0 = 0\) ; \(u_1 = 1^2-3\times 1 = -2\) ; \(u_2 = 2^2-3\times 2 = -2\) ; \(u_3 = 3^2-3\times 3 = 0\) ; \(u_4 = 4^2-3\times 4 = 4\).</p>
+
+    <figure>
+      <div id="chart-exemple"></div>
+      <figcaption>Nuage de points de la suite \(u_n = n^2 - 3n\) : points \(\left(0\,;0\right)\), \(\left(1\,;-2\right)\), \(\left(2\,;-2\right)\), \(\left(3\,;0\right)\), \(\left(4\,;4\right)\).</figcaption>
+    </figure>
+    <p class="note">La représentation graphique d'une suite est un <strong>nuage de points</strong> : l'abscisse est le rang \(n\), l'ordonnée est le terme \(u_n\).</p>
+  </article>
+
+  <!-- 3. SENS DE VARIATION -->
+  <article class="card">
+    <h2><span class="num-badge">3</span>Sens de variation d'une suite</h2>
+    <ul>
+      <li><strong>Croissante</strong> : pour tout \(n\), \(u_{n+1} \geq u_n\).</li>
+      <li><strong>Décroissante</strong> : pour tout \(n\), \(u_{n+1} \leq u_n\).</li>
+      <li><strong>Constante</strong> : pour tout \(n\), \(u_{n+1} = u_n\).</li>
+    </ul>
+
+    <h3>Méthode générale</h3>
+    <p>On étudie le <strong>signe de la différence</strong> \(u_{n+1} - u_n\) :</p>
+    <ul>
+      <li>si \(u_{n+1} - u_n \geq 0\) pour tout \(n\), la suite est croissante ;</li>
+      <li>si \(u_{n+1} - u_n \leq 0\) pour tout \(n\), la suite est décroissante ;</li>
+      <li>si \(u_{n+1} - u_n = 0\) pour tout \(n\), la suite est constante.</li>
+    </ul>
+
+    <div class="charts">
+      <figure>
+        <div id="chart-croissante"></div>
+        <figcaption><strong>Croissante</strong><br>\(u_{n+1} \geq u_n\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-decroissante"></div>
+        <figcaption><strong>Décroissante</strong><br>\(u_{n+1} \leq u_n\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-constante"></div>
+        <figcaption><strong>Constante</strong><br>\(u_{n+1} = u_n\)</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 4. SUITES ARITHMÉTIQUES -->
+  <article class="card">
+    <h2><span class="num-badge">4</span>Suites arithmétiques</h2>
+    <p>Une suite \(\left(u_n\right)\) est <strong>arithmétique</strong> lorsqu'il existe un réel \(r\) (appelé <strong>raison</strong>) tel que, pour tout \(n\) :</p>
+    <p style="text-align:center">\[ u_{n+1} = u_n + r \]</p>
+    <p>On passe d'un terme au suivant en <strong>ajoutant toujours le même nombre</strong> \(r\) : la <em>variation absolue</em> est constante.</p>
+
+    <h3>Reconnaissance</h3>
+    <p>Pour montrer qu'une suite est arithmétique, on calcule la différence \(u_{n+1} - u_n\) et on vérifie qu'elle est <strong>constante</strong> (indépendante de \(n\)). Cette constante est la raison \(r\).</p>
+
+    <h3>Variation selon le signe de \(r\)</h3>
+    <table class="data">
+      <thead><tr><th class="c">Raison</th><th class="c">Sens de variation</th><th>Interprétation graphique</th></tr></thead>
+      <tbody>
+        <tr><td class="c">\(r > 0\)</td><td class="c">croissante</td><td>Les points montent régulièrement : ils sont alignés.</td></tr>
+        <tr><td class="c">\(r < 0\)</td><td class="c">décroissante</td><td>Les points descendent régulièrement : ils sont alignés.</td></tr>
+        <tr><td class="c">\(r = 0\)</td><td class="c">constante</td><td>Les points sont sur une droite horizontale.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="charts">
+      <figure>
+        <div id="chart-arith-pos"></div>
+        <figcaption>\(r > 0\) : croissante<br>\(u_{n+1} = u_n + r\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-arith-neg"></div>
+        <figcaption>\(r < 0\) : décroissante<br>\(u_{n+1} = u_n + r\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-arith-zero"></div>
+        <figcaption>\(r = 0\) : constante<br>\(u_{n+1} = u_n\)</figcaption>
+      </figure>
+    </div>
+    <p class="note">Les points représentant une suite arithmétique sont <strong>alignés</strong>.</p>
+  </article>
+
+  <!-- 5. SUITES GÉOMÉTRIQUES -->
+  <article class="card">
+    <h2><span class="num-badge">5</span>Suites géométriques \(\left(u_n > 0\right)\)</h2>
+    <p>Une suite \(\left(u_n\right)\) à termes strictement positifs est <strong>géométrique</strong> lorsqu'il existe un réel \(q > 0\) (appelé <strong>raison</strong>) tel que, pour tout \(n\) :</p>
+    <p style="text-align:center">\[ u_{n+1} = q \times u_n \]</p>
+    <p>On passe d'un terme au suivant en <strong>multipliant toujours par le même nombre</strong> \(q\) : la <em>variation relative</em> est constante.</p>
+
+    <h3>Reconnaissance</h3>
+    <p>Pour montrer qu'une suite (à termes non nuls) est géométrique, on calcule le quotient \(\dfrac{u_{n+1}}{u_n}\) et on vérifie qu'il est <strong>constant</strong> (indépendant de \(n\)). Cette constante est la raison \(q\).</p>
+
+    <h3>Variation selon la valeur de \(q\)</h3>
+    <table class="data">
+      <thead><tr><th class="c">Raison</th><th class="c">Sens de variation</th><th>Interprétation graphique</th></tr></thead>
+      <tbody>
+        <tr><td class="c">\(q > 1\)</td><td class="c">croissante</td><td>Croissance de plus en plus rapide (allure exponentielle).</td></tr>
+        <tr><td class="c">\(0 < q < 1\)</td><td class="c">décroissante</td><td>Décroissance vers \(0\) (allure exponentielle décroissante).</td></tr>
+        <tr><td class="c">\(q = 1\)</td><td class="c">constante</td><td>Les points sont sur une droite horizontale.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="charts">
+      <figure>
+        <div id="chart-geom-sup"></div>
+        <figcaption>\(q > 1\) : croissante<br>\(u_{n+1} = q \times u_n\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-geom-inf"></div>
+        <figcaption>\(0 < q < 1\) : décroissante<br>\(u_{n+1} = q \times u_n\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-geom-un"></div>
+        <figcaption>\(q = 1\) : constante<br>\(u_{n+1} = u_n\)</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 6. AUTRES MODÈLES -->
+  <article class="card">
+    <h2><span class="num-badge">6</span>Autres modèles : suites arithmético-géométriques</h2>
+    <p>Lorsque \(u_{n+1} = a \times u_n + b\) avec \(a \neq 1\) et \(b \neq 0\), la suite n'est <strong>ni arithmétique ni géométrique</strong> : la différence \(u_{n+1} - u_n\) n'est pas constante et le rapport \(\dfrac{u_{n+1}}{u_n}\) non plus.</p>
+
+    <table class="data">
+      <thead><tr><th style="width:34%">Type de croissance</th><th style="width:33%">Opération constante</th><th>Famille de suite</th></tr></thead>
+      <tbody>
+        <tr><td>Croissance linéaire</td><td>ajout constant</td><td><strong>Suite arithmétique</strong></td></tr>
+        <tr><td>Croissance exponentielle</td><td>multiplication constante</td><td><strong>Suite géométrique</strong></td></tr>
+        <tr><td>Autres modèles</td><td>\(u_{n+1} = a\,u_n + b\), \(a \neq 1\), \(b \neq 0\)</td><td>Ni arithmétique ni géométrique</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Reconnaissance en pratique</h3>
+    <ul>
+      <li><strong>Différence constante</strong> \(\;\Rightarrow\;\) suite <strong>arithmétique</strong>.</li>
+      <li><strong>Rapport constant</strong> \(\;\Rightarrow\;\) suite <strong>géométrique</strong>.</li>
+      <li>Ni l'un ni l'autre \(\;\Rightarrow\;\) autre modèle.</li>
+    </ul>
+
+    <h3>Exemple : \(u_{n+1} = 0{,}5\,u_n + 2\) avec \(u_0 = 0\)</h3>
+    <p>Ici \(a = 0{,}5 \neq 1\) et \(b = 2 \neq 0\). Les premiers termes sont \(0\) ; \(2\) ; \(3\) ; \(3{,}5\) ; \(3{,}75\) ; \(3{,}875\) ; … La suite est croissante et ses termes se rapprochent de \(4\).</p>
+    <figure>
+      <div id="chart-ago"></div>
+      <figcaption>Suite arithmético-géométrique \(u_{n+1} = 0{,}5\,u_n + 2\) : la croissance ralentit et les points se rapprochent de la valeur \(4\).</figcaption>
+    </figure>
+  </article>
+
+  <!-- 7. ALGORITHMIQUE -->
+  <article class="card">
+    <h2><span class="num-badge">7</span>Algorithmique <span class="small">(sauf STD2A)</span></h2>
+    <p>Les programmes ci-dessous calculent le terme de rang \(n\) d'une suite, puis recherchent un seuil.</p>
+
+    <h3>Suite arithmétique — boucle <code>for</code></h3>
+<pre class="code"><span class="kw">def</span> terme_arithmetique_for(u0, r, n):
+    u = u0
+    <span class="kw">for</span> i <span class="kw">in</span> range(n):
+        u = u + r
+    <span class="kw">return</span> u</pre>
+
+    <h3>Suite arithmétique — boucle <code>while</code></h3>
+<pre class="code"><span class="kw">def</span> terme_arithmetique_while(u0, r, n):
+    u = u0
+    i = 0
+    <span class="kw">while</span> i &lt; n:
+        u = u + r
+        i = i + 1
+    <span class="kw">return</span> u</pre>
+
+    <h3>Suite géométrique — boucle <code>for</code></h3>
+<pre class="code"><span class="kw">def</span> terme_geometrique_for(u0, q, n):
+    u = u0
+    <span class="kw">for</span> i <span class="kw">in</span> range(n):
+        u = u * q
+    <span class="kw">return</span> u</pre>
+
+    <h3>Suite géométrique — boucle <code>while</code></h3>
+<pre class="code"><span class="kw">def</span> terme_geometrique_while(u0, q, n):
+    u = u0
+    i = 0
+    <span class="kw">while</span> i &lt; n:
+        u = u * q
+        i = i + 1
+    <span class="kw">return</span> u</pre>
+
+    <h3>Recherche de seuil avec condition <code>if</code>/<code>else</code></h3>
+<pre class="code"><span class="kw">def</span> seuil_arithmetique(u0, r, S):
+    <span class="cm"># Trouve le plus petit n tel que u_n &gt;= S</span>
+    u = u0
+    n = 0
+    <span class="kw">if</span> r &lt;= 0 <span class="kw">and</span> u0 &lt; S:
+        <span class="kw">return</span> "Pas de seuil atteint"
+    <span class="kw">else</span>:
+        <span class="kw">while</span> u &lt; S:
+            u = u + r
+            n = n + 1
+        <span class="kw">return</span> n</pre>
+    <p class="note">La boucle <code>for</code> s'utilise quand le nombre d'itérations est connu à l'avance ; la boucle <code>while</code> s'utilise quand on s'arrête sur une condition (seuil, précision, etc.).</p>
+  </article>
+
+  <!-- 8. COMPARAISON -->
+  <article class="card">
+    <h2><span class="num-badge">8</span>Comparaison arithmétique / géométrique</h2>
+    <table class="data">
+      <thead><tr><th style="width:34%"></th><th class="c">Suite arithmétique</th><th class="c">Suite géométrique</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Relation</strong></td><td class="c">\(u_{n+1} = u_n + r\)</td><td class="c">\(u_{n+1} = q \cdot u_n\)</td></tr>
+        <tr><td><strong>Variation</strong> (termes positifs)</td><td class="c">\(r > 0\) : croissante<br>\(r < 0\) : décroissante</td><td class="c">\(q > 1\) : croissante<br>\(0 < q < 1\) : décroissante</td></tr>
+        <tr><td><strong>Reconnaissance</strong></td><td class="c">\(u_{n+1} - u_n\) constant</td><td class="c">\(\dfrac{u_{n+1}}{u_n}\) constant</td></tr>
+        <tr><td><strong>Modélisation</strong></td><td class="c">évolution absolue constante</td><td class="c">évolution relative constante</td></tr>
+        <tr><td><strong>Graphique</strong></td><td class="c">points alignés</td><td class="c">points sur une courbe exponentielle</td></tr>
+      </tbody>
+    </table>
+
+    <h3>À retenir</h3>
+    <p>En première technologique, on utilise uniquement la <strong>relation de récurrence</strong>. L'expression explicite \(u_n = u_0 + n\,r\) et \(u_n = u_0 \times q^{\,n}\) est étudiée en terminale.</p>
+
+    <h3>Trois situations à savoir lire</h3>
+    <div class="charts">
+      <figure>
+        <div id="chart-alt"></div>
+        <figcaption>Géométrique \(q = -0{,}5\) (alternée)<br>\(u_{n+1} = q \times u_n\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-geom2"></div>
+        <figcaption>Géométrique \(q = 2\) (croissante)<br>\(u_{n+1} = q \times u_n\)</figcaption>
+      </figure>
+      <figure>
+        <div id="chart-arith1"></div>
+        <figcaption>Arithmétique \(r = 1\)<br>\(u_{n+1} = u_n + r\)<br>(termes négatifs puis positifs)</figcaption>
+      </figure>
+    </div>
+
+    <ul class="note">
+      <li><strong>Suite géométrique alternée</strong> : raison négative \(\left(q < 0\right)\), les termes changent de signe à chaque étape.</li>
+      <li><strong>Suite géométrique croissante</strong> : \(q > 1\) et \(u_0 > 0\), la croissance est exponentielle.</li>
+      <li><strong>Suite arithmétique avec termes négatifs</strong> : \(u_0\) négatif et \(r > 0\), la suite devient positive à partir d'un certain rang.</li>
+    </ul>
+  </article>
+
+</section>
+
+<!-- ============================================================
+     VOLET 2 — CARTE MENTALE
+     ============================================================ -->
+<section class="panel" id="panel-2">
+  <article class="card">
+    <h2>Carte mentale — Suites numériques</h2>
+    <p class="note">Survolez une feuille pour afficher son contenu détaillé. Glissez-déposez les nœuds et les feuilles pour réorganiser la carte.</p>
+    <div id="mindWrap">
+      <svg id="mindSvg" viewBox="0 0 1200 780" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Carte mentale des suites"></svg>
+    </div>
+    <div class="legend" id="mindLegend"></div>
+  </article>
+</section>
+
+<!-- ============================================================
+     VOLET 3 — TABLEAUX
+     ============================================================ -->
+<section class="panel" id="panel-3">
+
+  <article class="card">
+    <h2>Tableau 1 — Vocabulaire et définitions</h2>
+    <table class="data">
+      <thead><tr><th style="width:22%">Notion</th><th style="width:40%">Définition</th><th>Notation / remarque</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Suite</strong></td><td>Application d'une partie de \(\mathbb{N}\) dans \(\mathbb{R}\).</td><td>\(\left(u_n\right)\) désigne la suite entière.</td></tr>
+        <tr><td><strong>Terme de rang \(n\)</strong></td><td>Nombre associé à l'entier \(n\).</td><td>\(u_n\) ou \(u(n)\).</td></tr>
+        <tr><td><strong>Premier terme</strong></td><td>Terme de rang \(0\).</td><td>\(u_0\).</td></tr>
+        <tr><td><strong>Forme explicite</strong></td><td>\(u_n\) s'exprime directement en fonction de \(n\).</td><td>\(u_n = f(n)\).</td></tr>
+        <tr><td><strong>Forme récurrente</strong></td><td>\(u_{n+1}\) s'exprime en fonction du terme précédent.</td><td>\(u_{n+1} = f\left(u_n\right)\), avec \(u_0\) donné.</td></tr>
+        <tr><td><strong>Représentation</strong></td><td>Nuage de points de coordonnées \(\left(n\,;u_n\right)\).</td><td>Abscisse = rang, ordonnée = terme.</td></tr>
+      </tbody>
+    </table>
+  </article>
+
+  <article class="card">
+    <h2>Tableau 2 — Sens de variation</h2>
+    <table class="data">
+      <thead><tr><th style="width:24%">Vocabulaire</th><th style="width:30%">Inégalité</th><th>Signe de \(u_{n+1} - u_n\)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Croissante</strong></td><td class="c">\(u_{n+1} \geq u_n\)</td><td>positif ou nul</td></tr>
+        <tr><td><strong>Décroissante</strong></td><td class="c">\(u_{n+1} \leq u_n\)</td><td>négatif ou nul</td></tr>
+        <tr><td><strong>Constante</strong></td><td class="c">\(u_{n+1} = u_n\)</td><td>nul</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Méthode générale : on calcule \(u_{n+1} - u_n\), on factorise, puis on étudie le signe.</p>
+  </article>
+
+  <article class="card">
+    <h2>Tableau 3 — Tableaux de signes (rendu type tkz-tab)</h2>
+    <p class="note">Signe de la différence \(u_{n+1} - u_n\) et signe du terme \(u_n\) pour la suite \(u_n = n^2 - 3n\) définie sur \(\mathbb{N}\).</p>
+
+    <div class="tabgrid">
+      <figure>
+        <div class="tabwrap"><canvas id="tab-sign-diff"></canvas></div>
+        <figcaption>Signe de \(u_{n+1} - u_n = 2n - 2\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-sign-un"></canvas></div>
+        <figcaption>Signe de \(u_n = n^2 - 3n\)</figcaption>
+      </figure>
+    </div>
+
+    <div class="tabgrid">
+      <figure>
+        <div class="tabwrap"><canvas id="tab-sign-arith"></canvas></div>
+        <figcaption>Suite arithmétique : signe de \(u_{n+1} - u_n = r\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-sign-geom"></canvas></div>
+        <figcaption>Suite géométrique \(\left(u_n > 0\right)\) : signe de \(u_{n+1} - u_n\) selon \(q\)</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2>Tableau 4 — Tableaux de variations (rendu type tkz-tab)</h2>
+
+    <div class="tabgrid">
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-n2"></canvas></div>
+        <figcaption>Variations de \(u_n = n^2 - 3n\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-ago"></canvas></div>
+        <figcaption>Variations de \(u_{n+1} = 0{,}5\,u_n + 2\), \(u_0 = 0\)</figcaption>
+      </figure>
+    </div>
+
+    <div class="tabgrid">
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-arith-pos"></canvas></div>
+        <figcaption>Arithmétique, \(r > 0\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-arith-neg"></canvas></div>
+        <figcaption>Arithmétique, \(r < 0\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-arith-zero"></canvas></div>
+        <figcaption>Arithmétique, \(r = 0\)</figcaption>
+      </figure>
+    </div>
+
+    <div class="tabgrid">
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-geom-sup"></canvas></div>
+        <figcaption>Géométrique, \(q > 1\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-geom-inf"></canvas></div>
+        <figcaption>Géométrique, \(0 < q < 1\)</figcaption>
+      </figure>
+      <figure>
+        <div class="tabwrap"><canvas id="tab-var-geom-un"></canvas></div>
+        <figcaption>Géométrique, \(q = 1\)</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2>Tableau 5 — Algorithmique</h2>
+    <table class="data">
+      <thead><tr><th style="width:30%">Objectif</th><th style="width:28%">Structure</th><th>Principe</th></tr></thead>
+      <tbody>
+        <tr><td>Terme de rang \(n\) (arithmétique)</td><td><code>for</code> ou <code>while</code></td><td>Partir de \(u_0\), ajouter \(r\) exactement \(n\) fois.</td></tr>
+        <tr><td>Terme de rang \(n\) (géométrique)</td><td><code>for</code> ou <code>while</code></td><td>Partir de \(u_0\), multiplier par \(q\) exactement \(n\) fois.</td></tr>
+        <tr><td>Recherche de seuil</td><td><code>while</code> + <code>if</code>/<code>else</code></td><td>Répéter tant que \(u < S\), en comptant les rangs ; tester d'abord si le seuil est atteignable.</td></tr>
+      </tbody>
+    </table>
+  </article>
+
+  <article class="card">
+    <h2>Tableau 6 — Récapitulatif général</h2>
+    <table class="data">
+      <thead>
+        <tr><th style="width:20%">Critère</th><th style="width:26%">Suite arithmétique</th><th style="width:26%">Suite géométrique</th><th>Autre modèle</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Relation</strong></td><td>\(u_{n+1} = u_n + r\)</td><td>\(u_{n+1} = q \cdot u_n\)</td><td>\(u_{n+1} = a\,u_n + b\)</td></tr>
+        <tr><td><strong>Invariant</strong></td><td>\(u_{n+1} - u_n = r\)</td><td>\(\dfrac{u_{n+1}}{u_n} = q\)</td><td>ni différence ni rapport constant</td></tr>
+        <tr><td><strong>Croissance</strong></td><td>linéaire</td><td>exponentielle</td><td>variable, ralentie ou accélérée</td></tr>
+        <tr><td><strong>\(r > 0\) / \(q > 1\)</strong></td><td>croissante</td><td>croissante \(\left(u_0 > 0\right)\)</td><td>dépend du modèle</td></tr>
+        <tr><td><strong>\(r < 0\) / \(0 < q < 1\)</strong></td><td>décroissante</td><td>décroissante \(\left(u_0 > 0\right)\)</td><td>dépend du modèle</td></tr>
+        <tr><td><strong>\(r = 0\) / \(q = 1\)</strong></td><td>constante</td><td>constante</td><td>—</td></tr>
+        <tr><td><strong>Graphique</strong></td><td>points alignés</td><td>courbe exponentielle</td><td>courbe quelconque</td></tr>
+        <tr><td><strong>Explicite (Tle)</strong></td><td>\(u_n = u_0 + n\,r\)</td><td>\(u_n = u_0 \times q^{\,n}\)</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p class="note">En première technologique, seule la relation de récurrence est utilisée.</p>
+  </article>
+
+</section>
+
+<!-- ============================================================
+     VOLET 4 — GRAPHE INTERACTIF
+     ============================================================ -->
+<section class="panel" id="panel-4">
+  <article class="card">
+    <h2>Graphe des notions</h2>
+    <p class="note">Survolez un nœud pour afficher sa fiche ; les nœuds non reliés s'atténuent. Glissez-déposez les nœuds pour réorganiser le graphe.</p>
+    <div id="graphWrap">
+      <canvas id="graphCanvas" role="img" aria-label="Graphe interactif des notions sur les suites"></canvas>
+    </div>
+    <div class="glegend" id="graphLegend"></div>
+  </article>
+</section>
+
+<!-- ==================== PIED DE PAGE ==================== -->
+<footer>
+  <button id="legalBtn">⚖️ Droits d'auteur &amp; licence</button>
+</footer>
+
+</main>
+
+<!-- ==================== MODALE VOLANTE (survol) ==================== -->
+<div id="hoverModal" role="dialog" aria-modal="false" aria-label="Détail de la notion">
+  <div class="hm-title"></div>
+  <div class="hm-body"></div>
+</div>
+
+<!-- ==================== MODALE LÉGALE ==================== -->
+<div id="legalBackdrop">
+  <div id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+    <button id="legalClose" aria-label="Fermer la fenêtre de licence">✕</button>
+    <h3 id="legalTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h3>
+    <p><strong>Auteur : Yann Merdy (yann.merdy@gmail.com) — octobre 2026</strong></p>
+    <h4>Licence d'Utilisation Non Commerciale</h4>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application (« Carte Joker — Suites ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <h4>Conditions :</h4>
+    <ol>
+      <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+      <li><strong>Utilisation Commerciale (Interdite) :</strong> toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+      <li><strong>Attribution :</strong> toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+    </ol>
+    <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   0. UTILITAIRES GÉNÉRAUX
+   ============================================================ */
+
+/** Insère un texte en imposant un saut de ligne après chaque « . » et « : ». */
+function setTextWithBreaks(el, text){
+  el.innerHTML = '';
+  const parts = String(text).split(/([.:])/);
+  let buf = '';
+  for (let i = 0; i < parts.length; i++){
+    buf += parts[i];
+    if ((parts[i] === '.' || parts[i] === ':') && i < parts.length - 1){
+      const s = document.createElement('span');
+      s.textContent = buf;
+      el.appendChild(s);
+      el.appendChild(document.createElement('br'));
+      buf = '';
+    }
+  }
+  if (buf){
+    const s = document.createElement('span');
+    s.textContent = buf;
+    el.appendChild(s);
+  }
+}
+
+/** Relance la composition MathJax si la bibliothèque est disponible. */
+function typeset(){
+  if (window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise().catch(function(){});
+  }
+}
+
+/* ============================================================
+   1. NAVIGATION ENTRE LES VOLETS
+   ============================================================ */
+document.querySelectorAll('.navbtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.navbtn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    const target = document.getElementById(btn.dataset.target);
+    if (target) target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (btn.dataset.target === 'panel-4') resizeGraph();
+  });
+});
+
+/* ============================================================
+   2. GÉNÉRATEUR DE GRAPHIQUES SVG (exacts, échantillonnage fin)
+   ============================================================ */
+let __uid = 0;
+
+function svgChart(o){
+  const W = o.w || 330, H = o.h || 215;
+  const ml = 40, mr = 22, mt = 18, mb = 32;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const X = function(x){ return ml + (x - o.xmin) / (o.xmax - o.xmin) * iw; };
+  const Y = function(y){ return mt + (o.ymax - y) / (o.ymax - o.ymin) * ih; };
+  const id = 'arw' + (++__uid);
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="chart" role="img">';
+  s += '<defs><marker id="' + id + '" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">' +
+       '<path d="M0,0 L7,3 L0,6 z" fill="#5a4632"/></marker>' +
+       '<clipPath id="clip' + id + '"><rect x="' + ml + '" y="' + mt + '" width="' + iw + '" height="' + ih + '"/></clipPath>' +
+       '</defs>';
+
+  /* Axe horizontal */
+  const y0 = (o.ymin <= 0 && o.ymax >= 0) ? Y(0) : (mt + ih);
+  const x0 = (o.xmin <= 0 && o.xmax >= 0) ? X(0) : ml;
+
+  s += '<line x1="' + ml + '" y1="' + y0 + '" x2="' + (ml + iw) + '" y2="' + y0 +
+       '" stroke="#5a4632" stroke-width="1.2" marker-end="url(#' + id + ')"/>';
+  s += '<line x1="' + x0 + '" y1="' + (mt + ih) + '" x2="' + x0 + '" y2="' + mt +
+       '" stroke="#5a4632" stroke-width="1.2" marker-end="url(#' + id + ')"/>';
+
+  /* Graduations en x */
+  if (o.xticks){
+    o.xticks.forEach(function(t){
+      const px = X(t);
+      s += '<line x1="' + px + '" y1="' + y0 + '" x2="' + px + '" y2="' + (y0 + 4) + '" stroke="#5a4632" stroke-width="1"/>';
+      s += '<text x="' + px + '" y="' + (y0 + 15) + '" text-anchor="middle" font-size="9.5" fill="#6b5a48">' + t + '</text>';
+    });
+  }
+  /* Graduations en y */
+  if (o.yticks){
+    o.yticks.forEach(function(t){
+      const py = Y(t);
+      s += '<line x1="' + x0 + '" y1="' + py + '" x2="' + (x0 - 4) + '" y2="' + py + '" stroke="#5a4632" stroke-width="1"/>';
+      s += '<text x="' + (x0 - 7) + '" y="' + (py + 3.4) + '" text-anchor="end" font-size="9.5" fill="#6b5a48">' + t + '</text>';
+    });
+  }
+
+  /* Courbe échantillonnée */
+  if (o.f){
+    const N = 500;
+    let d = '';
+    for (let i = 0; i <= N; i++){
+      const x = o.xmin + (o.xmax - o.xmin) * i / N;
+      const y = o.f(x);
+      if (!isFinite(y)) continue;
+      d += (d ? 'L' : 'M') + X(x).toFixed(2) + ' ' + Y(y).toFixed(2) + ' ';
+    }
+    s += '<path d="' + d + '" fill="none" stroke="#2f6fb0" stroke-width="1.7" clip-path="url(#clip' + id + ')"/>';
+  }
+  /* Polyligne entre points */
+  if (o.poly && o.points){
+    let d = '';
+    o.points.forEach(function(p, i){
+      d += (i ? 'L' : 'M') + X(p[0]).toFixed(2) + ' ' + Y(p[1]).toFixed(2) + ' ';
+    });
+    s += '<path d="' + d + '" fill="none" stroke="#2f6fb0" stroke-width="1.5" opacity="0.85"/>';
+  }
+  /* Points */
+  if (o.points){
+    o.points.forEach(function(p){
+      s += '<circle cx="' + X(p[0]).toFixed(2) + '" cy="' + Y(p[1]).toFixed(2) +
+           '" r="3.3" fill="#e07b1a" stroke="#a8500a" stroke-width="0.8"/>';
+    });
+  }
+  /* Étiquettes d'axes */
+  s += '<text x="' + (ml + iw + 2) + '" y="' + (y0 + 15) + '" font-size="10.5" fill="#4a3a2a" font-style="italic">' + (o.xlabel || 'n') + '</text>';
+  s += '<text x="' + (x0 - 12) + '" y="' + (mt + 8) + '" font-size="10.5" fill="#4a3a2a" font-style="italic">' + (o.ylabel || 'uₙ') + '</text>';
+  s += '</svg>';
+  return s;
+}
+
+/** Construit les points (n, u_n) d'une suite définie par une fonction de n. */
+function seqPoints(f, nMax){
+  const pts = [];
+  for (let n = 0; n <= nMax; n++) pts.push([n, f(n)]);
+  return pts;
+}
+
+function mountChart(id, opts){
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = svgChart(opts);
+}
+
+/* ============================================================
+   3. GRAPHIQUES DU VOLET 1
+   ============================================================ */
+function buildCharts(){
+
+  /* Suite u_n = n² - 3n */
+  mountChart('chart-exemple', {
+    w: 420, h: 260,
+    xmin: -0.5, xmax: 4.7, ymin: -3.2, ymax: 5.4,
+    f: function(x){ return x * x - 3 * x; },
+    points: seqPoints(function(n){ return n * n - 3 * n; }, 4),
+    xticks: [0, 1, 2, 3, 4],
+    yticks: [-2, 0, 2, 4]
+  });
+
+  /* Croissante */
+  mountChart('chart-croissante', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 6.4,
+    f: function(x){ return Math.pow(1.55, x); },
+    points: seqPoints(function(n){ return Math.pow(1.55, n); }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6]
+  });
+
+  /* Décroissante */
+  mountChart('chart-decroissante', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 6.4,
+    f: function(x){ return 6 * Math.pow(0.62, x); },
+    points: seqPoints(function(n){ return 6 * Math.pow(0.62, n); }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6]
+  });
+
+  /* Constante */
+  mountChart('chart-constante', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 6.4,
+    f: function(){ return 3; },
+    points: seqPoints(function(){ return 3; }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6]
+  });
+
+  /* Arithmétique r > 0 */
+  mountChart('chart-arith-pos', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 8.5,
+    f: function(x){ return 1 + 1.6 * x; },
+    points: seqPoints(function(n){ return 1 + 1.6 * n; }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6, 8]
+  });
+
+  /* Arithmétique r < 0 */
+  mountChart('chart-arith-neg', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 9.5,
+    f: function(x){ return 9 - 1.8 * x; },
+    points: seqPoints(function(n){ return 9 - 1.8 * n; }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 3, 6, 9]
+  });
+
+  /* Arithmétique r = 0 */
+  mountChart('chart-arith-zero', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 6.5,
+    f: function(){ return 3.5; },
+    points: seqPoints(function(){ return 3.5; }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6]
+  });
+
+  /* Géométrique q > 1 */
+  mountChart('chart-geom-sup', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 9.2,
+    f: function(x){ return 0.8 * Math.pow(1.75, x); },
+    points: seqPoints(function(n){ return 0.8 * Math.pow(1.75, n); }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6, 8]
+  });
+
+  /* Géométrique 0 < q < 1 */
+  mountChart('chart-geom-inf', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 6.6,
+    f: function(x){ return 6 * Math.pow(0.6, x); },
+    points: seqPoints(function(n){ return 6 * Math.pow(0.6, n); }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6]
+  });
+
+  /* Géométrique q = 1 */
+  mountChart('chart-geom-un', {
+    xmin: -0.4, xmax: 4.6, ymin: -0.6, ymax: 6.6,
+    f: function(){ return 4; },
+    points: seqPoints(function(){ return 4; }, 4),
+    xticks: [0, 1, 2, 3, 4], yticks: [0, 2, 4, 6]
+  });
+
+  /* Arithmético-géométrique u_{n+1} = 0,5 u_n + 2, u_0 = 0 → u_n = 4(1 - 0,5^n) */
+  mountChart('chart-ago', {
+    w: 420, h: 250,
+    xmin: -0.4, xmax: 7.4, ymin: -0.4, ymax: 4.8,
+    f: function(x){ return 4 * (1 - Math.pow(0.5, x)); },
+    points: seqPoints(function(n){ return 4 * (1 - Math.pow(0.5, n)); }, 7),
+    xticks: [0, 1, 2, 3, 4, 5, 6, 7], yticks: [0, 1, 2, 3, 4]
+  });
+
+  /* Alternée q = -0,5 : u_n = 6 × (-0,5)^n */
+  const altPts = seqPoints(function(n){ return 6 * Math.pow(-0.5, n); }, 5);
+  mountChart('chart-alt', {
+    xmin: -0.4, xmax: 5.4, ymin: -4, ymax: 7,
+    poly: true,
+    points: altPts,
+    xticks: [0, 1, 2, 3, 4, 5], yticks: [-3, 0, 3, 6]
+  });
+
+  /* Géométrique q = 2 */
+  mountChart('chart-geom2', {
+    xmin: -0.4, xmax: 5.4, ymin: -1, ymax: 34,
+    f: function(x){ return 0.5 * Math.pow(2, x); },
+    points: seqPoints(function(n){ return 0.5 * Math.pow(2, n); }, 5),
+    xticks: [0, 1, 2, 3, 4, 5], yticks: [0, 10, 20, 30]
+  });
+
+  /* Arithmétique r = 1 avec u_0 = -3 : u_n = -3 + n */
+  mountChart('chart-arith1', {
+    xmin: -0.4, xmax: 6.4, ymin: -4.2, ymax: 4.2,
+    f: function(x){ return -3 + x; },
+    points: seqPoints(function(n){ return -3 + n; }, 6),
+    xticks: [0, 1, 2, 3, 4, 5, 6], yticks: [-3, -1, 1, 3]
+  });
+}
+
+/* ============================================================
+   4. DESSIN DES TABLEAUX DE SIGNES ET DE VARIATIONS (Canvas)
+   ============================================================ */
+
+/**
+ * Dessine un tableau type tkz-tab sur un canvas.
+ * spec = {
+ *   xLabels : ['0','1','+∞'],
+ *   colw    : largeur d'une colonne (optionnelle),
+ *   rows    : [ {label, kind:'sign', markers:[...], signs:[...]},
+ *               {label, kind:'var',  arrows:[...],  vals:[{t,pos},...]} ]
+ * }
+ *
+ * Convention des marqueurs sur une ligne de signes :
+ *   'z' → zéro : tracé par une ligne verticale EN POINTILLÉS à la frontière
+ *         de colonne correspondante (au lieu d'un « z » textuel).
+ *   'd' → valeur interdite : double barre verticale continue.
+ */
+function drawTab(canvas, spec){
+  if (!canvas) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const k = spec.xLabels.length;
+  const nCols = k - 1;
+
+  const PAD = 16, LABW = 82, COLW = spec.colw || 100;
+  const HEAD = 42, SIGN = 44, VAR = 100;
+
+  const rows = spec.rows;
+  let bodyH = 0;
+  rows.forEach(function(r){ bodyH += (r.kind === 'var' ? VAR : SIGN); });
+
+  const W = PAD * 2 + LABW + COLW * nCols;
+  const H = PAD * 2 + HEAD + bodyH;
+
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width = W + 'px';
+  canvas.style.maxWidth = '100%';
+  canvas.style.height = 'auto';
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const INK = '#3b2a18';
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = INK;
+  ctx.lineWidth = 1.1;
+  ctx.lineCap = 'butt';
+
+  const left = PAD;
+  const top = PAD;
+  const right = PAD + LABW + COLW * nCols;
+  const bottom = PAD + HEAD + bodyH;
+  const barX = PAD + LABW;
+
+  /* Cadre extérieur */
+  ctx.strokeRect(left + 0.5, top + 0.5, right - left, bottom - top);
+
+  /* Double barre verticale séparant l'en-tête des valeurs */
+  ctx.beginPath();
+  ctx.moveTo(barX - 2.5, top); ctx.lineTo(barX - 2.5, bottom);
+  ctx.moveTo(barX + 2.5, top); ctx.lineTo(barX + 2.5, bottom);
+  ctx.stroke();
+
+  /* Ligne sous l'en-tête */
+  ctx.beginPath();
+  ctx.moveTo(left, top + HEAD); ctx.lineTo(right, top + HEAD);
+  ctx.stroke();
+
+  /* Valeurs de x dans l'en-tête, centrées sur les frontières de colonnes */
+  ctx.font = 'italic 14px Cambria, "Times New Roman", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < k; i++){
+    const px = barX + i * COLW;
+    ctx.fillText(spec.xLabels[i], px, top + HEAD / 2);
+  }
+
+  /* Ligne de séparation de la première ligne de valeurs avec la suivante */
+  let y = top + HEAD;
+
+  rows.forEach(function(row, ri){
+    const rowH = (row.kind === 'var' ? VAR : SIGN);
+    const cy = y + rowH / 2;
+
+    /* Libellé de la ligne */
+    ctx.font = 'italic 13px Cambria, "Times New Roman", serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(row.label, left + LABW / 2, cy);
+
+    if (row.kind === 'sign'){
+      /* Signes dans chaque colonne */
+      ctx.font = '16px Cambria, "Times New Roman", serif';
+      for (let i = 0; i < nCols; i++){
+        const sign = row.signs[i];
+        if (sign === undefined || sign === '') continue;
+        ctx.fillText(sign, barX + (i + 0.5) * COLW, cy + 1);
+      }
+      /* Marqueurs aux frontières */
+      for (let i = 0; i < k; i++){
+        const mk = row.markers[i];
+        if (!mk) continue;
+        const px = barX + i * COLW;
+        if (mk === 'z'){
+          /* Zéro : ligne verticale en pointillés à la frontière de colonne */
+          ctx.save();
+          ctx.setLineDash([3.5, 3]);
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.moveTo(px, y + 3);
+          ctx.lineTo(px, y + rowH - 3);
+          ctx.stroke();
+          ctx.restore();
+        } else if (mk === 'd'){
+          /* Valeur interdite : double barre verticale continue */
+          ctx.beginPath();
+          ctx.moveTo(px - 2.6, y + 4); ctx.lineTo(px - 2.6, y + rowH - 4);
+          ctx.moveTo(px + 2.6, y + 4); ctx.lineTo(px + 2.6, y + rowH - 4);
+          ctx.stroke();
+        }
+      }
+    } else {
+      /* Flèches de variation */
+      const yTop = y + 14;
+      const yBot = y + rowH - 14;
+      for (let i = 0; i < nCols; i++){
+        const a = row.arrows[i];
+        if (!a) continue;
+        const x1 = barX + i * COLW + 12;
+        const x2 = barX + (i + 1) * COLW - 12;
+        if (a === 'up'){
+          arrowLine(ctx, x1, yBot, x2, yTop);
+        } else if (a === 'down'){
+          arrowLine(ctx, x1, yTop, x2, yBot);
+        } else if (a === 'flat'){
+          ctx.save();
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(x1, (yTop + yBot) / 2);
+          ctx.lineTo(x2, (yTop + yBot) / 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      /* Valeurs aux bornes */
+      if (row.vals){
+        for (let i = 0; i < k; i++){
+          const v = row.vals[i];
+          if (!v || !v.t) continue;
+          const px = barX + i * COLW;
+          let tx = px, align = 'center';
+          if (i === 0){ align = 'left'; tx = px + 6; }
+          else if (i === k - 1){ align = 'right'; tx = px - 6; }
+          let ty = cy;
+          if (v.pos === 'top') ty = y + 13;
+          else if (v.pos === 'bottom') ty = y + rowH - 13;
+          ctx.font = 'italic 12.5px Cambria, "Times New Roman", serif';
+          ctx.textAlign = align;
+          ctx.textBaseline = 'middle';
+          ctx.fillText(v.t, tx, ty);
+        }
+      }
+    }
+
+    y += rowH;
+
+    /* Filet horizontal entre les lignes */
+    if (ri < rows.length - 1){
+      ctx.beginPath();
+      ctx.moveTo(left, y); ctx.lineTo(right, y);
+      ctx.stroke();
+    }
+  });
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+/** Trace une flèche terminée par une pointe pleine. */
+function arrowLine(ctx, x1, y1, x2, y2){
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  const L = 8;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - L * Math.cos(ang - 0.42), y2 - L * Math.sin(ang - 0.42));
+  ctx.lineTo(x2 - L * Math.cos(ang + 0.42), y2 - L * Math.sin(ang + 0.42));
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ---------- Instanciation des tableaux ---------- */
+function buildTables(){
+  const none = '';
+  const INF = '+∞';
+
+  /* --- Tableau de signes : u_{n+1} - u_n = 2n - 2 --- */
+  drawTab(document.getElementById('tab-sign-diff'), {
+    xLabels: ['0', '1', INF],
+    rows: [
+      { label: 'uₙ₊₁ − uₙ', kind: 'sign', markers: [none, 'z', none], signs: ['−', '+'] }
+    ]
+  });
+
+  /* --- Tableau de signes : u_n = n² - 3n --- */
+  drawTab(document.getElementById('tab-sign-un'), {
+    xLabels: ['0', '3', INF],
+    rows: [
+      { label: 'uₙ', kind: 'sign', markers: ['z', 'z', none], signs: ['−', '+'] }
+    ]
+  });
+
+  /* --- Tableau de signes : suite arithmétique --- */
+  drawTab(document.getElementById('tab-sign-arith'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'r > 0', kind: 'sign', markers: [none, none], signs: ['+'] },
+      { label: 'r < 0', kind: 'sign', markers: [none, none], signs: ['−'] },
+      { label: 'r = 0', kind: 'sign', markers: [none, none], signs: ['0'] }
+    ]
+  });
+
+  /* --- Tableau de signes : suite géométrique (u_n > 0) --- */
+  drawTab(document.getElementById('tab-sign-geom'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'q > 1', kind: 'sign', markers: [none, none], signs: ['+'] },
+      { label: '0 < q < 1', kind: 'sign', markers: [none, none], signs: ['−'] },
+      { label: 'q = 1', kind: 'sign', markers: [none, none], signs: ['0'] }
+    ]
+  });
+
+  /* --- Variations : u_n = n² - 3n --- */
+  drawTab(document.getElementById('tab-var-n2'), {
+    xLabels: ['0', '3/2', INF],
+    rows: [
+      {
+        label: 'uₙ', kind: 'var',
+        arrows: ['down', 'up'],
+        vals: [
+          { t: '0', pos: 'top' },
+          { t: '−9/4', pos: 'bottom' },
+          { t: INF, pos: 'top' }
+        ]
+      }
+    ]
+  });
+
+  /* --- Variations : arithmético-géométrique u_{n+1} = 0,5 u_n + 2 --- */
+  drawTab(document.getElementById('tab-var-ago'), {
+    xLabels: ['0', INF],
+    rows: [
+      {
+        label: 'uₙ', kind: 'var',
+        arrows: ['up'],
+        vals: [
+          { t: '0', pos: 'bottom' },
+          { t: '4', pos: 'top' }
+        ]
+      }
+    ]
+  });
+
+  /* --- Variations : arithmétique r > 0 --- */
+  drawTab(document.getElementById('tab-var-arith-pos'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'uₙ', kind: 'var', arrows: ['up'], vals: [{ t: 'u₀', pos: 'bottom' }, { t: INF, pos: 'top' }] }
+    ]
+  });
+
+  /* --- Variations : arithmétique r < 0 --- */
+  drawTab(document.getElementById('tab-var-arith-neg'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'uₙ', kind: 'var', arrows: ['down'], vals: [{ t: 'u₀', pos: 'top' }, { t: '−∞', pos: 'bottom' }] }
+    ]
+  });
+
+  /* --- Variations : arithmétique r = 0 --- */
+  drawTab(document.getElementById('tab-var-arith-zero'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'uₙ', kind: 'var', arrows: ['flat'], vals: [{ t: 'u₀', pos: 'mid' }, { t: 'u₀', pos: 'mid' }] }
+    ]
+  });
+
+  /* --- Variations : géométrique q > 1 --- */
+  drawTab(document.getElementById('tab-var-geom-sup'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'uₙ', kind: 'var', arrows: ['up'], vals: [{ t: 'u₀', pos: 'bottom' }, { t: INF, pos: 'top' }] }
+    ]
+  });
+
+  /* --- Variations : géométrique 0 < q < 1 --- */
+  drawTab(document.getElementById('tab-var-geom-inf'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'uₙ', kind: 'var', arrows: ['down'], vals: [{ t: 'u₀', pos: 'top' }, { t: '0', pos: 'bottom' }] }
+    ]
+  });
+
+  /* --- Variations : géométrique q = 1 --- */
+  drawTab(document.getElementById('tab-var-geom-un'), {
+    xLabels: ['0', INF],
+    rows: [
+      { label: 'uₙ', kind: 'var', arrows: ['flat'], vals: [{ t: 'u₀', pos: 'mid' }, { t: 'u₀', pos: 'mid' }] }
+    ]
+  });
+}
+
+/* ============================================================
+   5. MODALE VOLANTE PARTAGÉE (survol persistant)
+   ============================================================ */
+const HM = {
+  el: null,
+  timer: null,
+  init: function(){
+    this.el = document.getElementById('hoverModal');
+    const self = this;
+    this.el.addEventListener('mouseenter', function(){ self.keep(); });
+    this.el.addEventListener('mouseleave', function(){ self.schedule(); });
+  },
+  keep: function(){
+    if (this.timer){ clearTimeout(this.timer); this.timer = null; }
+  },
+  schedule: function(){
+    const self = this;
+    this.keep();
+    this.timer = setTimeout(function(){
+      self.el.classList.remove('open');
+    }, 140);
+  },
+  hideNow: function(){
+    this.keep();
+    this.el.classList.remove('open');
+  },
+  show: function(info, sx, sy){
+    this.keep();
+    const el = this.el;
+
+    /* Titre */
+    el.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'hm-title';
+    title.textContent = info.title || '';
+    el.appendChild(title);
+
+    const body = document.createElement('div');
+    body.className = 'hm-body';
+
+    if (info.desc){
+      const p = document.createElement('p');
+      setTextWithBreaks(p, info.desc);
+      body.appendChild(p);
+    }
+    if (info.formulas && info.formulas.length){
+      const f = document.createElement('div');
+      f.className = 'hm-formula';
+      let html = '';
+      info.formulas.forEach(function(t){ html += '\\[' + t + '\\]'; });
+      f.innerHTML = html;
+      body.appendChild(f);
+    }
+    if (info.extra){
+      const p2 = document.createElement('p');
+      setTextWithBreaks(p2, info.extra);
+      body.appendChild(p2);
+    }
+    el.appendChild(body);
+
+    /* Positionnement intelligent */
+    el.style.visibility = 'hidden';
+    el.classList.add('open');
+    const mw = el.offsetWidth || 360;
+    const mh = el.offsetHeight || 200;
+
+    let left = sx + 20;
+    let top = sy - 30;
+
+    if (left + mw > window.innerWidth - 12) left = sx - mw - 20;
+    if (left < 10) left = 10;
+    if (top + mh > window.innerHeight - 12) top = window.innerHeight - mh - 12;
+    if (top < 10) top = 10;
+
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+    el.style.visibility = 'visible';
+
+    typeset();
+  }
+};
+
+/* ============================================================
+   6. DONNÉES DE LA CARTE MENTALE
+   ============================================================ */
+const MIND = [
+  {
+    name: 'Définition', color: '#d97a1a',
+    leaves: [
+      {
+        label: 'Terme de rang n',
+        title: 'Terme de rang n',
+        desc: 'Une suite (un) associe à chaque entier n un nombre réel un. Le nombre un est le terme de rang n. u0 est le premier terme, u1 le terme de rang 1, et ainsi de suite. L\'indice n appartient à l\'ensemble des entiers naturels.',
+        formulas: ['u_n = u\\left(n\\right)'],
+        extra: 'On distingue la suite \\left(u_n\\right), qui est le procédé, du terme u_n, qui est un nombre.'
+      },
+      {
+        label: 'Forme explicite',
+        title: 'Forme explicite',
+        desc: 'Une suite est définie de façon explicite lorsque un s\'exprime directement en fonction de n, sans utiliser les termes précédents. On peut alors calculer n\'importe quel terme sans calculer les précédents.',
+        formulas: ['u_n = f\\left(n\\right)'],
+        extra: 'Exemple : u_n = n^2 - 3n permet de calculer u_{100} directement.'
+      },
+      {
+        label: 'Forme récurrente',
+        title: 'Forme récurrente',
+        desc: 'Une suite est définie par récurrence lorsque chaque terme s\'exprime en fonction du terme précédent. Il faut obligatoirement connaître le premier terme pour démarrer le calcul.',
+        formulas: ['u_{n+1} = f\\left(u_n\\right)'],
+        extra: 'C\'est la forme utilisée en première technologique.'
+      }
+    ]
+  },
+  {
+    name: 'Représentation', color: '#8a5a2b',
+    leaves: [
+      {
+        label: 'Nuage de points',
+        title: 'Nuage de points',
+        desc: 'Dans un repère, on place les points de coordonnées (n ; un). L\'axe des abscisses porte les rangs, l\'axe des ordonnées porte les valeurs des termes.',
+        formulas: [],
+        extra: 'La représentation d\'une suite est un nuage de points, et non une courbe continue.'
+      },
+      {
+        label: 'Exemple n² − 3n',
+        title: 'Exemple : u_n = n² − 3n',
+        desc: 'Pour cette suite, on obtient u0 = 0, u1 = −2, u2 = −2, u3 = 0 et u4 = 4. Les points (0 ; 0), (1 ; −2), (2 ; −2), (3 ; 0) et (4 ; 4) forment le nuage de points.',
+        formulas: ['u_n = n^2 - 3n'],
+        extra: 'La suite décroît jusqu\'à n = 1{,}5 puis croît : le minimum vaut -\\dfrac{9}{4}.'
+      },
+      {
+        label: 'Lecture graphique',
+        title: 'Lecture graphique',
+        desc: 'Sur le graphique, l\'abscisse d\'un point donne le rang n et son ordonnée donne la valeur du terme un. Des points alignés signalent une suite arithmétique. Une allure exponentielle signale une suite géométrique.',
+        formulas: [],
+        extra: 'Le sens de variation se lit directement sur le nuage de points.'
+      }
+    ]
+  },
+  {
+    name: 'Variations', color: '#6f8f5f',
+    leaves: [
+      {
+        label: 'Croissante',
+        title: 'Suite croissante',
+        desc: 'Une suite est croissante lorsque chaque terme est supérieur ou égal au terme précédent, pour tout entier n.',
+        formulas: ['u_{n+1} \\geq u_n'],
+        extra: 'Sur le nuage de points, les points montent lorsque l\'on va vers la droite.'
+      },
+      {
+        label: 'Décroissante',
+        title: 'Suite décroissante',
+        desc: 'Une suite est décroissante lorsque chaque terme est inférieur ou égal au terme précédent, pour tout entier n.',
+        formulas: ['u_{n+1} \\leq u_n'],
+        extra: 'Sur le nuage de points, les points descendent lorsque l\'on va vers la droite.'
+      },
+      {
+        label: 'Méthode uₙ₊₁ − uₙ',
+        title: 'Méthode générale',
+        desc: 'Pour étudier le sens de variation, on calcule la différence u(n+1) − un puis on étudie son signe. Si la différence est positive, la suite est croissante. Si elle est négative, la suite est décroissante. Si elle est nulle, la suite est constante.',
+        formulas: ['u_{n+1} - u_n'],
+        extra: 'On factorise l\'expression obtenue avant d\'étudier son signe.'
+      }
+    ]
+  },
+  {
+    name: 'Arithmétique', color: '#c9a227',
+    leaves: [
+      {
+        label: 'uₙ₊₁ = uₙ + r',
+        title: 'Suite arithmétique',
+        desc: 'Une suite est arithmétique lorsqu\'on passe d\'un terme au suivant en ajoutant toujours le même nombre r, appelé raison. La variation absolue est constante.',
+        formulas: ['u_{n+1} = u_n + r'],
+        extra: 'Les points représentant une suite arithmétique sont alignés.'
+      },
+      {
+        label: 'r > 0 / r < 0',
+        title: 'Variation d\'une suite arithmétique',
+        desc: 'Si r > 0, la suite est strictement croissante. Si r < 0, la suite est strictement décroissante. Si r = 0, la suite est constante.',
+        formulas: [],
+        extra: 'La raison r est un nombre réel quelconque, positif ou négatif.'
+      },
+      {
+        label: 'Différence constante',
+        title: 'Reconnaître une suite arithmétique',
+        desc: 'Pour montrer qu\'une suite est arithmétique, on calcule la différence entre deux termes consécutifs. Si le résultat est constant, indépendant de n, alors la suite est arithmétique et cette constante est la raison.',
+        formulas: ['u_{n+1} - u_n = r'],
+        extra: 'La forme explicite u_n = u_0 + n\\,r est étudiée en terminale.'
+      }
+    ]
+  },
+  {
+    name: 'Géométrique', color: '#a3562a',
+    leaves: [
+      {
+        label: 'uₙ₊₁ = q × uₙ',
+        title: 'Suite géométrique',
+        desc: 'Une suite à termes strictement positifs est géométrique lorsqu\'on passe d\'un terme au suivant en multipliant toujours par le même nombre q strictement positif, appelé raison. La variation relative est constante.',
+        formulas: ['u_{n+1} = q \\times u_n'],
+        extra: 'Les points sont situés sur une courbe de type exponentiel.'
+      },
+      {
+        label: 'q > 1 / 0 < q < 1',
+        title: 'Variation d\'une suite géométrique',
+        desc: 'Si q > 1, la suite est croissante. Si 0 < q < 1, la suite est décroissante. Si q = 1, la suite est constante.',
+        formulas: [],
+        extra: 'Ces règles supposent des termes strictement positifs.'
+      },
+      {
+        label: 'Rapport constant',
+        title: 'Reconnaître une suite géométrique',
+        desc: 'Pour montrer qu\'une suite à termes non nuls est géométrique, on calcule le quotient de deux termes consécutifs. Si le résultat est constant, indépendant de n, alors la suite est géométrique et cette constante est la raison.',
+        formulas: ['\\dfrac{u_{n+1}}{u_n} = q'],
+        extra: 'La forme explicite u_n = u_0 \\times q^{\\,n} est étudiée en terminale.'
+      }
+    ]
+  },
+  {
+    name: 'Modèles & outils', color: '#7a6a4a',
+    leaves: [
+      {
+        label: 'uₙ₊₁ = a·uₙ + b',
+        title: 'Autres modèles',
+        desc: 'Lorsque u(n+1) = a·un + b avec a différent de 1 et b différent de 0, la suite n\'est ni arithmétique ni géométrique. La différence n\'est pas constante et le rapport ne l\'est pas non plus.',
+        formulas: ['u_{n+1} = a\\,u_n + b'],
+        extra: 'Exemple : u_{n+1} = 0{,}5\\,u_n + 2 avec u_0 = 0.'
+      },
+      {
+        label: 'Boucles for / while',
+        title: 'Algorithmique',
+        desc: 'En Python, on calcule les termes d\'une suite avec une boucle for lorsque le nombre d\'itérations est connu, ou avec une boucle while lorsque l\'on s\'arrête sur une condition. La recherche d\'un seuil utilise une boucle while et un test if/else.',
+        formulas: [],
+        extra: 'Il faut toujours initialiser u avec le premier terme avant la boucle.'
+      },
+      {
+        label: 'À retenir',
+        title: 'À retenir',
+        desc: 'En première technologique, on utilise uniquement la relation de récurrence. L\'expression explicite est étudiée en terminale.',
+        formulas: ['u_n = u_0 + n\\,r', 'u_n = u_0 \\times q^{\\,n}'],
+        extra: 'Arithmétique : on ajoute toujours r. Géométrique : on multiplie toujours par q.'
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   7. CARTE MENTALE — LAYOUT, RENDU, GLISSER-DÉPOSER
+   ============================================================ */
+const MIND_CENTER = { x: 600, y: 390 };
+const MIND_R1 = 190;
+const MIND_R2 = 350;
+
+function initMindPositions(){
+  const step = 20;          // degrés entre deux feuilles consécutives
+  const start = -90;
+  MIND.forEach(function(b, bi){
+    b.leaves.forEach(function(l, li){
+      const slot = bi * 3 + li;
+      const a = (start + step * slot) * Math.PI / 180;
+      l.x = MIND_CENTER.x + MIND_R2 * Math.cos(a);
+      l.y = MIND_CENTER.y + MIND_R2 * Math.sin(a);
+    });
+    const a0 = (start + step * (bi * 3)) * Math.PI / 180;
+    const a1 = (start + step * (bi * 3 + 2)) * Math.PI / 180;
+    const am = (a0 + a1) / 2;
+    b.x = MIND_CENTER.x + MIND_R1 * Math.cos(am);
+    b.y = MIND_CENTER.y + MIND_R1 * Math.sin(am);
+  });
+}
+
+function leafWidth(label){
+  return Math.max(96, Math.min(126, label.length * 6.1 + 18));
+}
+
+function renderMind(){
+  const svg = document.getElementById('mindSvg');
+  if (!svg) return;
+
+  let s = '';
+
+  /* Liens */
+  MIND.forEach(function(b){
+    s += '<line class="medge" x1="' + MIND_CENTER.x + '" y1="' + MIND_CENTER.y +
+         '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) +
+         '" stroke="' + b.color + '" opacity="0.75"/>';
+    b.leaves.forEach(function(l){
+      s += '<line class="medge" x1="' + b.x.toFixed(1) + '" y1="' + b.y.toFixed(1) +
+           '" x2="' + l.x.toFixed(1) + '" y2="' + l.y.toFixed(1) +
+           '" stroke="' + b.color + '" opacity="0.45"/>';
+    });
+  });
+
+  /* Nœud central */
+  s += '<g class="mnode" data-type="center" transform="translate(' + MIND_CENTER.x + ',' + MIND_CENTER.y + ')">' +
+       '<rect x="-72" y="-28" width="144" height="56" rx="16" fill="#7a4a12" stroke="#5c370c" stroke-width="1.4"/>' +
+       '<text x="0" y="7" text-anchor="middle" font-size="17" font-weight="700" fill="#fff8ec">Suites</text>' +
+       '</g>';
+
+  /* Branches */
+  MIND.forEach(function(b, bi){
+    const w = Math.max(110, b.name.length * 7.4 + 26);
+    s += '<g class="mnode" data-type="branch" data-bi="' + bi + '" transform="translate(' + b.x.toFixed(1) + ',' + b.y.toFixed(1) + ')">' +
+         '<rect x="' + (-w / 2) + '" y="-16" width="' + w + '" height="32" rx="10" fill="#fff7ea" stroke="' + b.color + '" stroke-width="1.6"/>' +
+         '<text x="0" y="5" text-anchor="middle" font-size="12" font-weight="700" fill="#5a3a12">' + b.name + '</text>' +
+         '</g>';
+  });
+
+  /* Feuilles */
+  MIND.forEach(function(b, bi){
+    b.leaves.forEach(function(l, li){
+      const w = leafWidth(l.label);
+      s += '<g class="mnode" data-type="leaf" data-bi="' + bi + '" data-li="' + li + '" transform="translate(' + l.x.toFixed(1) + ',' + l.y.toFixed(1) + ')">' +
+           '<rect x="' + (-w / 2) + '" y="-14" width="' + w + '" height="28" rx="9" fill="#fffdf9" stroke="' + b.color + '" stroke-width="1.3"/>' +
+           '<text x="0" y="4" text-anchor="middle" font-size="10.5" fill="#3a2a1a">' + escapeXml(l.label) + '</text>' +
+           '</g>';
+    });
+  });
+
+  svg.innerHTML = s;
+}
+
+function escapeXml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderMindLegend(){
+  const el = document.getElementById('mindLegend');
+  if (!el) return;
+  let html = '';
+  MIND.forEach(function(b){
+    html += '<span><i style="background:' + b.color + '"></i>' + b.name + '</span>';
+  });
+  el.innerHTML = html;
+}
+
+/* ---- Interactions carte mentale ---- */
+function initMindInteractions(){
+  const svg = document.getElementById('mindSvg');
+  if (!svg) return;
+
+  let drag = null;   // {type, bi, li, offsetX, offsetY}
+  let dragging = false;
+
+  function toSvgCoords(evt){
+    const rect = svg.getBoundingClientRect();
+    const scale = rect.width / 1200;
+    return {
+      x: (evt.clientX - rect.left) / scale,
+      y: (evt.clientY - rect.top) / scale
+    };
+  }
+
+  svg.addEventListener('pointerdown', function(evt){
+    const g = evt.target.closest('.mnode');
+    if (!g) return;
+    const type = g.dataset.type;
+    const p = toSvgCoords(evt);
+
+    if (type === 'leaf'){
+      const bi = +g.dataset.bi, li = +g.dataset.li;
+      const leaf = MIND[bi].leaves[li];
+      drag = { type: type, bi: bi, li: li, dx: p.x - leaf.x, dy: p.y - leaf.y };
+    } else if (type === 'branch'){
+      const bi = +g.dataset.bi;
+      const br = MIND[bi];
+      drag = { type: type, bi: bi, dx: p.x - br.x, dy: p.y - br.y };
+    } else {
+      drag = { type: 'center', dx: p.x - MIND_CENTER.x, dy: p.y - MIND_CENTER.y };
+    }
+    dragging = false;
+    svg.setPointerCapture(evt.pointerId);
+    evt.preventDefault();
+  });
+
+  svg.addEventListener('pointermove', function(evt){
+    if (!drag) return;
+    dragging = true;
+    const p = toSvgCoords(evt);
+    const nx = p.x - drag.dx;
+    const ny = p.y - drag.dy;
+
+    if (drag.type === 'leaf'){
+      const leaf = MIND[drag.bi].leaves[drag.li];
+      leaf.x = nx; leaf.y = ny;
+    } else if (drag.type === 'branch'){
+      const br = MIND[drag.bi];
+      const ddx = nx - br.x, ddy = ny - br.y;
+      br.x = nx; br.y = ny;
+      br.leaves.forEach(function(l){ l.x += ddx; l.y += ddy; });
+    } else {
+      const ddx = nx - MIND_CENTER.x, ddy = ny - MIND_CENTER.y;
+      MIND_CENTER.x = nx; MIND_CENTER.y = ny;
+      MIND.forEach(function(br){
+        br.x += ddx; br.y += ddy;
+        br.leaves.forEach(function(l){ l.x += ddx; l.y += ddy; });
+      });
+    }
+    renderMind();
+    HM.hideNow();
+  });
+
+  function endDrag(evt){
+    if (!drag) return;
+    drag = null;
+    setTimeout(function(){ dragging = false; }, 30);
+    try { svg.releasePointerCapture(evt.pointerId); } catch (e) {}
+  }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+
+  /* Survol : ouverture de la modale */
+  svg.addEventListener('pointerover', function(evt){
+    if (dragging) return;
+    const g = evt.target.closest('.mnode');
+    if (!g) return;
+    const type = g.dataset.type;
+
+    let info = null, node = null;
+    if (type === 'leaf'){
+      node = MIND[+g.dataset.bi].leaves[+g.dataset.li];
+      info = node;
+    } else if (type === 'branch'){
+      const b = MIND[+g.dataset.bi];
+      info = {
+        title: b.name,
+        desc: 'Branche « ' + b.name + ' » de la carte mentale. Elle regroupe les feuilles suivantes : ' +
+              b.leaves.map(function(l){ return l.label; }).join(', ') + '.',
+        formulas: [],
+        extra: 'Survolez chaque feuille pour obtenir son contenu détaillé.'
+      };
+      node = b;
+    } else {
+      info = {
+        title: 'Suites numériques',
+        desc: 'Une suite associe un nombre réel à chaque entier naturel n. On distingue la définition explicite et la définition par récurrence, puis les suites arithmétiques et géométriques.',
+        formulas: [],
+        extra: 'Ce nœud central relie les six branches de la carte.'
+      };
+      node = MIND_CENTER;
+    }
+
+    if (!node) return;
+    const rect = svg.getBoundingClientRect();
+    const scale = rect.width / 1200;
+    const sx = rect.left + node.x * scale;
+    const sy = rect.top + node.y * scale;
+    HM.show(info, sx, sy);
+  });
+
+  svg.addEventListener('pointerout', function(evt){
+    const g = evt.target.closest('.mnode');
+    if (!g) return;
+    const to = evt.relatedTarget;
+    if (to && to.closest && to.closest('.mnode') === g) return;
+    HM.schedule();
+  });
+}
+
+/* ============================================================
+   8. GRAPHE INTERACTIF (force-directed)
+   ============================================================ */
+const GRAPH_NODES = [
+  { id: 'suite', label: 'Suite (uₙ)', group: 0,
+    desc: 'Une suite numérique est une application d\'une partie de l\'ensemble des entiers naturels dans l\'ensemble des réels. On note (un) la suite et un le terme de rang n.',
+    formulas: ['\\left(u_n\\right)_{n \\in \\mathbb{N}}'],
+    extra: 'Deux modes de définition : explicite et par récurrence.' },
+
+  { id: 'terme', label: 'Terme uₙ', group: 0,
+    desc: 'Le nombre un est le terme de rang n. u0 est le premier terme de la suite. L\'indice n indique la position du terme dans la suite.',
+    formulas: ['u_n = u\\left(n\\right)'],
+    extra: 'Ne pas confondre la suite (un) et le terme un.' },
+
+  { id: 'nuage', label: 'Nuage de points', group: 0,
+    desc: 'Dans un repère, on place les points de coordonnées (n ; un). L\'abscisse est le rang, l\'ordonnée est la valeur du terme.',
+    formulas: ['\\left(n\\,;\\,u_n\\right)'],
+    extra: 'La représentation d\'une suite est un nuage de points, pas une courbe continue.' },
+
+  { id: 'arith', label: 'Arithmétique', group: 1,
+    desc: 'Une suite est arithmétique lorsque l\'on passe d\'un terme au suivant en ajoutant toujours le même nombre r, appelé raison. La variation absolue est constante.',
+    formulas: ['u_{n+1} = u_n + r', 'u_{n+1} - u_n = r'],
+    extra: 'Les points sont alignés.' },
+
+  { id: 'geom', label: 'Géométrique', group: 1,
+    desc: 'Une suite à termes strictement positifs est géométrique lorsque l\'on passe d\'un terme au suivant en multipliant toujours par le même nombre q strictement positif, appelé raison. La variation relative est constante.',
+    formulas: ['u_{n+1} = q \\times u_n', '\\dfrac{u_{n+1}}{u_n} = q'],
+    extra: 'Les points sont sur une courbe de type exponentiel.' },
+
+  { id: 'ago', label: 'Arithméticogéom.', group: 1,
+    desc: 'Lorsque u(n+1) = a·un + b avec a différent de 1 et b différent de 0, la suite n\'est ni arithmétique ni géométrique. La différence et le rapport ne sont pas constants.',
+    formulas: ['u_{n+1} = a\\,u_n + b'],
+    extra: 'Exemple : u_{n+1} = 0{,}5\\,u_n + 2.' },
+
+  { id: 'variation', label: 'Variation', group: 2,
+    desc: 'On étudie le signe de la différence u(n+1) − un. Si elle est positive, la suite est croissante. Si elle est négative, la suite est décroissante. Si elle est nulle, la suite est constante.',
+    formulas: ['u_{n+1} \\geq u_n', 'u_{n+1} \\leq u_n', 'u_{n+1} = u_n'],
+    extra: 'Méthode générale valable pour toute suite.' },
+
+  { id: 'explicite', label: 'Forme explicite', group: 2,
+    desc: 'La forme explicite exprime un directement en fonction de n. Elle permet de calculer n\'importe quel terme sans calculer les précédents.',
+    formulas: ['u_n = f\\left(n\\right)'],
+    extra: 'Exemple : u_n = n^2 - 3n.' },
+
+  { id: 'recurrente', label: 'Forme récurrente', group: 2,
+    desc: 'La forme récurrente exprime chaque terme en fonction du précédent. Il faut obligatoirement connaître le premier terme pour démarrer les calculs.',
+    formulas: ['u_{n+1} = f\\left(u_n\\right)'],
+    extra: 'Forme utilisée en première technologique.' },
+
+  { id: 'algo', label: 'Algorithmique', group: 2,
+    desc: 'On calcule les termes d\'une suite avec une boucle for lorsque le nombre d\'itérations est connu, ou avec une boucle while lorsque l\'on s\'arrête sur une condition. La recherche d\'un seuil combine while et if/else.',
+    formulas: [],
+    extra: 'Initialiser u avec le premier terme avant la boucle.' }
+];
+
+const GRAPH_LINKS = [
+  ['suite', 'terme'], ['suite', 'explicite'], ['suite', 'recurrente'],
+  ['terme', 'nuage'], ['explicite', 'nuage'], ['recurrente', 'arith'],
+  ['recurrente', 'geom'], ['recurrente', 'ago'],
+  ['arith', 'variation'], ['geom', 'variation'], ['ago', 'variation'],
+  ['arith', 'algo'], ['geom', 'algo'], ['ago', 'algo'],
+  ['nuage', 'arith'], ['nuage', 'geom'],
+  ['variation', 'terme'], ['terme', 'explicite']
+];
+
+const GRAPH_COLORS = ['#d97a1a', '#8a5a2b', '#6f8f5f'];
+const GRAPH_GROUP_NAMES = ['Définitions', 'Types de suites', 'Outils'];
+
+const GraphSim = {
+  canvas: null,
+  ctx: null,
+  W: 800, H: 500,
+  nodes: [],
+  links: [],
+  hover: null,
+  drag: null,
+  raf: null,
+  dpr: 1,
+
+  init: function(){
+    this.canvas = document.getElementById('graphCanvas');
+    if (!this.canvas) return;
+    this.ctx = this.canvas.getContext('2d');
+
+    /* Création des nœuds */
+    const n = GRAPH_NODES.length;
+    const byGroup = {};
+    this.nodes = GRAPH_NODES.map(function(nd, i){
+      const g = nd.group;
+      byGroup[g] = (byGroup[g] || 0) + 1;
+      const k = byGroup[g] - 1;
+      const baseAngle = (g / 3) * Math.PI * 2 - Math.PI / 2;
+      const a = baseAngle + k * 0.6;
+      return {
+        id: nd.id, label: nd.label, group: nd.group,
+        info: nd,
+        x: 400 + 200 * Math.cos(a),
+        y: 260 + 150 * Math.sin(a),
+        vx: 0, vy: 0,
+        r: 22
+      };
+    });
+
+    const self = this;
+    this.links = GRAPH_LINKS.map(function(pair){
+      return {
+        a: self.nodes.find(function(x){ return x.id === pair[0]; }),
+        b: self.nodes.find(function(x){ return x.id === pair[1]; })
+      };
+    }).filter(function(l){ return l.a && l.b; });
+
+    this.resize();
+    this.bindEvents();
+    this.loop();
+    this.renderLegend();
+  },
+
+  resize: function(){
+    if (!this.canvas) return;
+    const wrap = this.canvas.parentElement;
+    const w = Math.max(320, wrap.clientWidth);
+    const h = Math.max(360, Math.min(560, Math.round(w * 0.62)));
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.W = w;
+    this.H = h;
+    this.canvas.width = Math.round(w * this.dpr);
+    this.canvas.height = Math.round(h * this.dpr);
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+  },
+
+  renderLegend: function(){
+    const el = document.getElementById('graphLegend');
+    if (!el) return;
+    let html = '';
+    GRAPH_GROUP_NAMES.forEach(function(name, i){
+      html += '<span><i style="background:' + GRAPH_COLORS[i] + '"></i>' + name + '</span>';
+    });
+    el.innerHTML = html;
+  },
+
+  tick: function(){
+    const N = this.nodes;
+    const W = this.W, H = this.H;
+
+    /* Répulsion */
+    for (let i = 0; i < N.length; i++){
+      for (let j = i + 1; j < N.length; j++){
+        let dx = N[j].x - N[i].x;
+        let dy = N[j].y - N[i].y;
+        let d2 = dx * dx + dy * dy;
+        if (d2 < 1) d2 = 1;
+        const d = Math.sqrt(d2);
+        const f = 9000 / d2;
+        const fx = f * dx / d;
+        const fy = f * dy / d;
+        N[i].vx -= fx; N[i].vy -= fy;
+        N[j].vx += fx; N[j].vy += fy;
+      }
+    }
+
+    /* Ressorts */
+    this.links.forEach(function(l){
+      let dx = l.b.x - l.a.x;
+      let dy = l.b.y - l.a.y;
+      let d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const target = 155;
+      const f = (d - target) * 0.010;
+      const fx = f * dx / d;
+      const fy = f * dy / d;
+      l.a.vx += fx; l.a.vy += fy;
+      l.b.vx -= fx; l.b.vy -= fy;
+    });
+
+    /* Ancrage par groupe + amortissement */
+    const groupCenter = [
+      { x: W * 0.24, y: H * 0.32 },
+      { x: W * 0.76, y: H * 0.32 },
+      { x: W * 0.50, y: H * 0.78 }
+    ];
+
+    N.forEach(function(n){
+      const gc = groupCenter[n.group];
+      n.vx += (gc.x - n.x) * 0.0022;
+      n.vy += (gc.y - n.y) * 0.0022;
+      n.vx *= 0.86; n.vy *= 0.86;
+      if (GraphSim.drag && GraphSim.drag.node === n){
+        n.vx = 0; n.vy = 0;
+      } else {
+        n.x += n.vx;
+        n.y += n.vy;
+      }
+      n.x = Math.max(46, Math.min(W - 46, n.x));
+      n.y = Math.max(42, Math.min(H - 42, n.y));
+    });
+  },
+
+  draw: function(){
+    const ctx = this.ctx;
+    const W = this.W, H = this.H;
+    ctx.clearRect(0, 0, W, H);
+
+    const hovered = this.hover;
+    const linked = {};
+    if (hovered){
+      linked[hovered.id] = true;
+      this.links.forEach(function(l){
+        if (l.a === hovered) linked[l.b.id] = true;
+        if (l.b === hovered) linked[l.a.id] = true;
+      });
+    }
+
+    /* Liens */
+    const self = this;
+    this.links.forEach(function(l){
+      const actif = hovered && (l.a === hovered || l.b === hovered);
+      ctx.beginPath();
+      ctx.moveTo(l.a.x, l.a.y);
+      ctx.lineTo(l.b.x, l.b.y);
+      ctx.strokeStyle = actif ? '#d97a1a' : 'rgba(150,120,85,0.32)';
+      ctx.lineWidth = actif ? 2.2 : 1.1;
+      ctx.stroke();
+
+      /* Étiquette de lien au survol */
+      if (actif){
+        const mx = (l.a.x + l.b.x) / 2;
+        const my = (l.a.y + l.b.y) / 2;
+        const txt = self.linkLabel(l);
+        ctx.font = '9.5px "Segoe UI", system-ui, sans-serif';
+        const tw = ctx.measureText(txt).width;
+        ctx.fillStyle = 'rgba(255,253,249,0.92)';
+        ctx.fillRect(mx - tw / 2 - 3, my - 8, tw + 6, 13);
+        ctx.fillStyle = '#8a5a1d';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, mx, my - 1.5);
+      }
+    });
+
+    /* Nœuds */
+    this.nodes.forEach(function(n){
+      const dim = hovered && !linked[n.id];
+      ctx.globalAlpha = dim ? 0.35 : 1;
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = GRAPH_COLORS[n.group];
+      ctx.fill();
+      ctx.lineWidth = (n === hovered) ? 3 : 1.5;
+      ctx.strokeStyle = (n === hovered) ? '#fff8ec' : 'rgba(255,255,255,0.75)';
+      ctx.stroke();
+
+      ctx.globalAlpha = dim ? 0.35 : 1;
+      ctx.font = '10.5px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fffdf9';
+      ctx.fillText(String(n.label.charAt(0)), n.x, n.y + 0.5);
+
+      ctx.font = '10.5px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#4a3a2a';
+      ctx.textBaseline = 'top';
+      ctx.fillText(n.label, n.x, n.y + n.r + 5);
+
+      ctx.globalAlpha = 1;
+      ctx.textBaseline = 'alphabetic';
+    });
+  },
+
+  linkLabel: function(l){
+    const a = l.a.id, b = l.b.id;
+    const key = a + '-' + b;
+    const map = {
+      'suite-terme': 'contient',
+      'suite-explicite': 'définie par',
+      'suite-recurrente': 'définie par',
+      'terme-nuage': 'représenté par',
+      'explicite-nuage': 'calcul direct',
+      'recurrente-arith': 'cas particulier',
+      'recurrente-geom': 'cas particulier',
+      'recurrente-ago': 'cas particulier',
+      'arith-variation': 'étudiée par',
+      'geom-variation': 'étudiée par',
+      'ago-variation': 'étudiée par',
+      'arith-algo': 'calculée par',
+      'geom-algo': 'calculée par',
+      'ago-algo': 'calculée par',
+      'nuage-arith': 'points alignés',
+      'nuage-geom': 'courbe exp.',
+      'variation-terme': 'compare',
+      'terme-explicite': 'défini par'
+    };
+    return map[key] || 'lié à';
+  },
+
+  loop: function(){
+    const self = this;
+    this.tick();
+    this.draw();
+    this.raf = requestAnimationFrame(function(){ self.loop(); });
+  },
+
+  nodeAt: function(x, y){
+    for (let i = this.nodes.length - 1; i >= 0; i--){
+      const n = this.nodes[i];
+      const dx = x - n.x, dy = y - n.y;
+      if (dx * dx + dy * dy <= (n.r + 6) * (n.r + 6)) return n;
+    }
+    return null;
+  },
+
+  bindEvents: function(){
+    const self = this;
+    const canvas = this.canvas;
+
+    function localCoords(evt){
+      const rect = canvas.getBoundingClientRect();
+      return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    }
+
+    canvas.addEventListener('pointerdown', function(evt){
+      const p = localCoords(evt);
+      const n = self.nodeAt(p.x, p.y);
+      if (!n) return;
+      self.drag = { node: n, dx: p.x - n.x, dy: p.y - n.y };
+      canvas.setPointerCapture(evt.pointerId);
+      HM.hideNow();
+      evt.preventDefault();
+    });
+
+    canvas.addEventListener('pointermove', function(evt){
+      const p = localCoords(evt);
+
+      if (self.drag){
+        self.drag.node.x = p.x - self.drag.dx;
+        self.drag.node.y = p.y - self.drag.dy;
+        self.drag.node.vx = 0;
+        self.drag.node.vy = 0;
+        return;
+      }
+
+      const n = self.nodeAt(p.x, p.y);
+      if (n !== self.hover){
+        self.hover = n;
+        if (n){
+          HM.show(n.info, evt.clientX, evt.clientY);
+        } else {
+          HM.schedule();
+        }
+      } else if (n){
+        /* La souris bouge sur le même nœud : rien à faire */
+      }
+    });
+
+    function endDrag(evt){
+      if (self.drag){
+        self.drag = null;
+        try { canvas.releasePointerCapture(evt.pointerId); } catch (e) {}
+      }
+    }
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+
+    canvas.addEventListener('pointerleave', function(){
+      if (self.hover){
+        self.hover = null;
+        HM.schedule();
+      }
+    });
+
+    window.addEventListener('resize', function(){
+      self.resize();
+    });
+  }
+};
+
+/* ============================================================
+   9. MODALE LÉGALE
+   ============================================================ */
+function initLegal(){
+  const btn = document.getElementById('legalBtn');
+  const backdrop = document.getElementById('legalBackdrop');
+  const modal = document.getElementById('legalModal');
+  const close = document.getElementById('legalClose');
+
+  function open(){
+    backdrop.classList.add('open');
+    close.focus();
+  }
+  function closeModal(){
+    backdrop.classList.remove('open');
+    if (btn) btn.focus();
+  }
+
+  btn.addEventListener('click', open);
+  close.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', function(evt){
+    if (evt.target === backdrop) closeModal();
+  });
+  document.addEventListener('keydown', function(evt){
+    if (evt.key === 'Escape' && backdrop.classList.contains('open')){
+      closeModal();
+    }
+  });
+
+  /* Application des sauts de ligne au texte légal */
+  modal.querySelectorAll('p').forEach(function(p){
+    const txt = p.textContent;
+    if (txt && txt.length > 40) setTextWithBreaks(p, txt);
+  });
+}
+
+/* ============================================================
+   10. INITIALISATION GÉNÉRALE
+   ============================================================ */
+function resizeGraph(){
+  if (GraphSim.canvas) GraphSim.resize();
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  HM.init();
+  buildCharts();
+  buildTables();
+  initMindPositions();
+  renderMind();
+  renderMindLegend();
+  initMindInteractions();
+  GraphSim.init();
+  initLegal();
+  typeset();
+  setTimeout(typeset, 900);
+});
+
+window.addEventListener('load', function(){
+  typeset();
+});
+</script>
+</body>
+</html>

@@ -533,6 +533,46 @@ table.tbl caption { caption-side: top; text-align: left; padding: 12px 14px; fon
 .btn--primary:hover { filter: brightness(1.12); }
 
 /* ==========================================================
+   10 bis. MODALE LÉGALE — droits d'auteur & licence
+   ========================================================== */
+.legal-overlay {
+  position: fixed; inset: 0; z-index: 10500;
+  background: rgba(4, 16, 34, 0.62);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; padding: 18px;
+}
+.legal-overlay.is-open { display: flex; }
+.legal-dialog {
+  position: relative;
+  width: 100%; max-width: 680px;
+  max-height: 88vh;
+  overflow-y: auto; overflow-x: hidden;
+  background: var(--bg-panel); color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-3);
+  padding: 24px 30px 20px;
+  font-size: 0.9rem; line-height: 1.6;
+  animation: modalIn 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.legal-title {
+  font-size: 1.12rem; line-height: 1.3;
+  color: var(--brand);
+  margin: 0 0 14px;
+  padding: 0 40px 10px 0;
+  border-bottom: 2px solid var(--line-strong);
+}
+.legal-body { font-size: 0.9rem; }
+.legal-body p { margin: 0 0 0.85em; }
+.legal-body h3 { font-size: 0.98rem; color: var(--brand-strong); margin: 16px 0 8px; }
+.legal-body h4 { font-size: 0.92rem; color: var(--ink); margin: 14px 0 6px; }
+.legal-body ol { padding-left: 22px; margin: 8px 0 14px; }
+.legal-body ol li { margin-bottom: 10px; }
+.legal-body strong { color: var(--brand-strong); }
+.legal-meta { font-size: 0.86rem; color: var(--ink-soft); font-style: italic; margin-bottom: 16px !important; }
+.legal-footer { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); text-align: right; }
+
+/* ==========================================================
    11. SIMULATEUR
    ========================================================== */
 .sim { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-2); overflow: hidden; }
@@ -661,7 +701,18 @@ mjx-container[jax="CHTML"][display="true"], mjx-container[jax="SVG"][display="tr
 /* ==========================================================
    14. FOOTER, DIVERS
    ========================================================== */
-.footer { margin-top: 54px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-faint); display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.footer { margin-top: 54px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-faint); display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.footer__legal {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg-panel); border: 1px solid var(--line-strong);
+  color: var(--ink-soft); padding: 7px 14px; border-radius: 9px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.footer__legal:hover { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
+.footer__legal:active { transform: scale(0.97); }
+
 .back-top {
   position: fixed; right: 22px; bottom: 22px; z-index: 950;
   width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong);
@@ -704,6 +755,7 @@ kbd.kbd {
   .hero h1 { font-size: 25px; }
   .diagram-scroll { height: 58vh; min-height: 340px; }
   .modal-dialog { padding: 22px 18px 16px; }
+  .legal-dialog { padding: 20px 18px 16px; }
   .quiz { padding: 20px 16px; }
   .venn-row { gap: 14px; }
 }
@@ -718,7 +770,8 @@ kbd.kbd {
 @media print {
   :root { --side-w: 0px; }
   .sidebar, .topbar, .progress, .diagram-toolbar, .back-top, .backdrop,
-  .sim__tabs, .sidebar__search, .quiz__actions, .hero__chips { display: none !important; }
+  .sim__tabs, .sidebar__search, .quiz__actions, .hero__chips,
+  .legal-overlay, .footer__legal { display: none !important; }
   .main { margin: 0; padding: 0; }
   body { background: #fff; }
   .panel { display: block !important; }
@@ -1302,6 +1355,7 @@ kbd.kbd {
 <footer class="footer">
   <span>Terminale générale · Option Mathématiques complémentaires — synthèse interactive. Formules rendues par MathJax 3 (repli local si le CDN est indisponible).</span>
   <span>Franchement testable : vérifiez que \(f \in IF\) avant de rejeter un échantillon. 😉</span>
+  <button type="button" class="footer__legal" id="btn-legal" aria-haspopup="dialog" aria-controls="legal-overlay">⚖️ Droits d'auteur &amp; licence</button>
 </footer>
 </main>
 
@@ -1315,6 +1369,36 @@ kbd.kbd {
     <div id="modal-content" class="modal-content"></div>
     <div class="modal-footer">
       <button class="btn--primary" id="modal-close-btn">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODALE LÉGALE — DROITS D'AUTEUR & LICENCE
+     ============================================================ -->
+<div class="legal-overlay" id="legal-overlay" aria-hidden="true">
+  <div class="legal-dialog" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+    <button class="modal-close" id="legal-close-x" aria-label="Fermer la fenêtre des droits d'auteur">✕</button>
+    <h2 class="legal-title" id="legal-title">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <div class="legal-body" id="legal-body">
+      <p class="legal-meta">Auteur : Yann Merdy (yann.merdy@gmail.com) — octobre 2026</p>
+
+      <h3>Licence d'Utilisation Non Commerciale</h3>
+
+      <p>Ce code HTML/CSS/JavaScript ainsi que le contenu de ce document (« Statistiques &amp; Probabilités — la synthèse interactive », Terminale, option Mathématiques complémentaires) sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+
+      <h4>Conditions :</h4>
+
+      <ol>
+        <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> vous êtes autorisé·e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+        <li><strong>Utilisation Commerciale (Interdite) :</strong> toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+        <li><strong>Attribution :</strong> toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+      </ol>
+
+      <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+    </div>
+    <div class="legal-footer">
+      <button class="btn--primary" id="legal-close-btn">Fermer</button>
     </div>
   </div>
 </div>
@@ -1841,6 +1925,7 @@ kbd.kbd {
       if (e.altKey || e.ctrlKey || e.metaKey) return;
       var t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (document.body.classList.contains('no-scroll')) return; /* une modale est ouverte */
       if (/^[1-6]$/.test(e.key)) showPanel(PANELS[parseInt(e.key, 10) - 1]);
     });
   }
@@ -1927,6 +2012,95 @@ kbd.kbd {
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     });
+  }
+
+  /* ==========================================================
+     MODALE LÉGALE — droits d'auteur & licence
+     ========================================================== */
+  var legalOverlay = $('#legal-overlay');
+  var legalTrigger = null;
+
+  /**
+   * Insère un saut de ligne après chaque « . » ou « : » suivi d'un espace.
+   * Les points d'une numérotation (« 1. ») et des adresses (« yann.merdy@… »)
+   * sont préservés : on ne coupe jamais juste après un chiffre, ni devant
+   * un caractère non blanc.
+   */
+  function setTextWithBreaks(root) {
+    if (!root) return;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var nodes = [], cur;
+    while ((cur = walker.nextNode())) nodes.push(cur);
+
+    nodes.forEach(function (node) {
+      var text = node.nodeValue;
+      if (!/[.:]\s/.test(text)) return;
+
+      var frag = document.createDocumentFragment();
+      var buf = '';
+      for (var i = 0; i < text.length; i++) {
+        var c = text.charAt(i);
+        buf += c;
+        if ((c === '.' || c === ':') && /\s/.test(text.charAt(i + 1) || '')) {
+          var prev = text.charAt(i - 1);
+          if (c === '.' && /\d/.test(prev)) continue; /* numérotation « 1. » */
+          var j = i + 1;
+          while (j < text.length && text.charAt(j) === ' ') j++;
+          frag.appendChild(document.createTextNode(buf.replace(/\s+$/, '')));
+          frag.appendChild(document.createElement('br'));
+          buf = '';
+          i = j - 1;
+        }
+      }
+      if (buf) frag.appendChild(document.createTextNode(buf));
+      if (node.parentNode) node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function openLegal() {
+    if (!legalOverlay) return;
+    legalTrigger = document.activeElement;
+    legalOverlay.classList.add('is-open');
+    legalOverlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    hideTip();
+    var x = $('#legal-close-x');
+    if (x) x.focus();
+  }
+  function closeLegal() {
+    if (!legalOverlay || !legalOverlay.classList.contains('is-open')) return;
+    legalOverlay.classList.remove('is-open');
+    legalOverlay.setAttribute('aria-hidden', 'true');
+    if (!overlay.classList.contains('is-open')) document.body.classList.remove('no-scroll');
+    var back = legalTrigger;
+    legalTrigger = null;
+    if (back && back.focus) back.focus();
+  }
+  function initLegal() {
+    var btn = $('#btn-legal');
+    var body = $('#legal-body');
+    if (body) setTextWithBreaks(body);
+    if (btn) btn.addEventListener('click', openLegal);
+    var x = $('#legal-close-x'), f = $('#legal-close-btn');
+    if (x) x.addEventListener('click', closeLegal);
+    if (f) f.addEventListener('click', closeLegal);
+    if (legalOverlay) {
+      legalOverlay.addEventListener('click', function (e) {
+        if (e.target === legalOverlay) closeLegal();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (!legalOverlay.classList.contains('is-open')) return;
+        if (e.key === 'Escape') { e.preventDefault(); closeLegal(); return; }
+        if (e.key === 'Tab') {
+          var focusables = $$('button, [href], input, select, textarea', legalOverlay)
+            .filter(function (el) { return !el.disabled && el.offsetParent !== null; });
+          if (!focusables.length) return;
+          var first = focusables[0], last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      });
+    }
   }
 
   /* ==========================================================
@@ -2677,6 +2851,7 @@ kbd.kbd {
     initSidebarMobile();
     initChrome();
     initModal();
+    initLegal();
     initNotions();
     initSim();
     renderQuiz();

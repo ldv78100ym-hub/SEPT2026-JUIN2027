@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crumble Hall — La loi binomiale, enquête en seize pièces</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#eef1ea; --card:#fffdf7; --ink:#1b2a24; --muted:#5f6f66;
+  --green:#14532d; --green-soft:#dcebe0; --brass:#a16207; --brass-soft:#fdf1d3;
+  --blue:#1e3a5f; --blue-soft:#dde7f3; --red:#b91c1c; --red-soft:#fee2e2;
+  --border:#d5ded5;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; padding:0 0 70px;
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  background:radial-gradient(circle at 8% 0%,#f8faf3 0%,rgba(248,250,243,0) 42%),
+             radial-gradient(circle at 92% 100%,#eff5ea 0%,rgba(239,245,234,0) 42%),
+             var(--bg);
+  color:var(--ink); line-height:1.72; font-size:17px;
+}
+header.hero{
+  background:linear-gradient(135deg,#14532d 0%,#1e3a5f 52%,#3b2a5e 100%);
+  color:#fff; padding:46px 22px 40px; text-align:center;
+  box-shadow:0 8px 26px rgba(20,40,30,.30); position:relative; overflow:hidden;
+}
+header.hero::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:6px;
+  background:repeating-linear-gradient(90deg,#b45309 0 18px,#f3d9a4 18px 36px);
+  opacity:.75;
+}
+header.hero .kicker{
+  margin:0 0 8px; text-transform:uppercase; letter-spacing:.28em;
+  font-size:.74rem; font-weight:700; color:#f0d9a5;
+}
+header.hero h1{margin:0 0 12px; font-family:Georgia,serif; font-size:2.4rem;
+  letter-spacing:-.5px; text-shadow:0 2px 12px rgba(0,0,0,.35);}
+header.hero p.tagline{margin:0 auto; max-width:740px; opacity:.94; font-size:1rem;
+  font-family:Georgia,serif; font-style:italic;}
+header.hero p.meta-note{
+  margin:14px auto 0; max-width:760px; font-size:.88rem;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+  border-radius:10px; padding:9px 14px;
+}
+.progress-wrap{
+  position:sticky; top:0; z-index:60;
+  background:rgba(238,241,234,.93); backdrop-filter:blur(7px);
+  border-bottom:1px solid var(--border); padding:9px 20px;
+}
+.progress-inner{max-width:1400px; margin:0 auto; display:flex; align-items:center; gap:14px;}
+#progLabel{font-size:.82rem; font-weight:700; color:var(--green); white-space:nowrap;
+  text-transform:uppercase; letter-spacing:.08em;}
+.bar{flex:1; height:10px; border-radius:999px; background:#d9e0d5; overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.10);}
+#progBar{height:100%; width:0%; border-radius:999px;
+  background:linear-gradient(90deg,#14532d,#4e8a63 60%,#a16207);
+  transition:width .55s cubic-bezier(.2,.8,.3,1);}
+.app-container{
+  display:grid; grid-template-columns:290px 1fr; gap:24px;
+  max-width:1400px; margin:0 auto; padding:20px; align-items:start;
+}
+.step-menu{
+  position:sticky; top:70px;
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:16px 12px; box-shadow:0 4px 16px rgba(27,42,36,.06);
+  max-height:calc(100vh - 90px); overflow-y:auto; align-self:start;
+}
+.menu-title{
+  font-family:Georgia,serif; font-size:.78rem; text-transform:uppercase;
+  letter-spacing:.14em; font-weight:800; color:var(--brass);
+  padding:0 8px 10px; border-bottom:1px solid var(--border); margin-bottom:10px;
+}
+.menu-list{display:flex; flex-direction:column; gap:5px;}
+.menu-item{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  border:1px solid var(--border); border-radius:10px; padding:9px 11px;
+  background:#fff; cursor:pointer; transition:.15s; font-family:inherit;
+  font-size:.85rem; color:var(--ink); line-height:1.3;
+}
+.menu-item:hover:not([disabled]){background:#f3f7f1; border-color:#b9c9bb; transform:translateX(2px);}
+.menu-item[disabled]{cursor:not-allowed; opacity:.75; background:#f3f5ef; border-color:#dfe6dc;}
+.menu-icon{flex:none; font-size:1.05em; width:22px; text-align:center; font-weight:800;}
+.menu-body{flex:1; display:flex; flex-direction:column; gap:1px; min-width:0;}
+.menu-num{font-size:.65rem; text-transform:uppercase; letter-spacing:.09em;
+  font-weight:800; color:var(--muted);}
+.menu-label{font-size:.83rem; font-weight:600; line-height:1.3;
+  overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+.menu-item.viewing{background:linear-gradient(90deg,#e9f1fa,#f2f7fc);
+  border-color:var(--blue); box-shadow:0 2px 8px rgba(30,58,95,.15);}
+.menu-item.viewing .menu-num,.menu-item.viewing .menu-label,.menu-item.viewing .menu-icon{color:var(--blue);}
+.menu-item.done{background:linear-gradient(90deg,#eff8f0,#f5fbf6); border-color:#b6d3bf;}
+.menu-item.done .menu-num,.menu-item.done .menu-label,.menu-item.done .menu-icon{color:var(--green);}
+.menu-item.viewing.done{background:linear-gradient(90deg,#e0f0ec,#eaf6f2); border-color:#6b9f8a;}
+main#story{min-width:0;}
+.step{
+  background:var(--card); border:1px solid var(--border); border-radius:18px;
+  padding:24px 30px 30px; box-shadow:0 6px 22px rgba(27,42,36,.07); display:none;
+}
+.step.active{display:block; animation:pop .4s ease;}
+.step.done{border-color:#b6d3bf; background:linear-gradient(180deg,#fffdf7,#f6fbf5);}
+.step-head{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:14px;}
+.step-num{
+  width:46px; height:46px; flex:none; border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--green); color:#f7f3e3; font-weight:800; font-size:1.15rem;
+  box-shadow:0 3px 0 rgba(0,0,0,.18);
+}
+.step.done .step-num{background:var(--brass); box-shadow:0 3px 0 #7a4a05;}
+.step-head h2{margin:0; font-family:Georgia,serif; font-size:1.48rem;
+  color:var(--blue); line-height:1.25;}
+.step-head .notion{margin:1px 0 0; font-size:.75rem; text-transform:uppercase;
+  letter-spacing:.14em; color:var(--brass); font-weight:800;}
+.badge{
+  margin-left:auto; font-size:.72rem; font-weight:800; text-transform:uppercase;
+  letter-spacing:.1em; padding:5px 13px; border-radius:999px;
+  background:var(--brass-soft); color:var(--brass); border:1px solid #e6c987; white-space:nowrap;
+}
+.step.done .badge{background:var(--green-soft); color:var(--green); border-color:#a9cdb6;}
+p{margin:11px 0;} ul,ol{margin:10px 0; padding-left:22px;} li{margin:5px 0;}
+.dialogue{
+  border-left:4px solid #cbb98a; padding:4px 0 4px 18px; margin:18px 0;
+  font-style:italic; color:#33453c;
+  background:linear-gradient(90deg,rgba(203,185,138,.13),rgba(203,185,138,0) 70%);
+}
+.dialogue p{margin:7px 0;}
+.dialogue .who{font-style:normal; font-weight:800; color:var(--blue);}
+.exp-note{
+  background:linear-gradient(90deg,#eef4fb,#f8fbff);
+  border:1px solid #c2d3e6; border-left:5px solid var(--blue);
+  border-radius:10px; padding:10px 16px; margin:14px 0;
+  font-size:.9rem; color:#2d4358;
+}
+.exp-note strong{color:var(--blue);}
+.box{border-radius:12px; padding:14px 18px; margin:18px 0; border-left:5px solid;}
+.box .lbl{font-weight:800; text-transform:uppercase; font-size:.74rem;
+  letter-spacing:.11em; display:block; margin-bottom:5px;}
+.def{background:var(--blue-soft); border-color:var(--blue);} .def .lbl{color:var(--blue);}
+.prop{background:var(--green-soft); border-color:var(--green);} .prop .lbl{color:var(--green);}
+.rem{background:#eef1ea; border-color:#94a3a0;} .rem .lbl{color:#4b5a52;}
+.prop-list{margin:18px 0;}
+.counter-note{font-size:.82rem; color:var(--muted); font-weight:700; text-align:right;
+  margin:8px 4px 0; font-variant-numeric:tabular-nums;}
+.prop-item{
+  border:1px solid var(--border); border-radius:12px; background:#fff;
+  padding:14px 16px; margin:10px 0; transition:.18s;
+}
+.prop-item.correct-reveal{border-color:#93c6a4; background:linear-gradient(180deg,#f7fbf7,#eef7f0);}
+.prop-item.incorrect-reveal{border-color:#e8b4a6; background:linear-gradient(180deg,#fdf7f4,#fbeae5);}
+.prop-top{display:flex; gap:14px; align-items:flex-start;}
+.prop-num{
+  flex:none; width:30px; height:30px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--blue-soft); color:var(--blue); font-weight:800; font-size:.82rem;
+}
+.prop-text{flex:1; font-size:.95rem;}
+.prop-text em{color:var(--blue); font-style:italic;}
+.prop-choices{display:flex; gap:10px; margin-top:10px; padding-left:44px;}
+.opt-vf{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:9px;
+  border:2px solid var(--border); border-radius:10px; padding:9px 16px;
+  background:#fafcf9; cursor:pointer; font-weight:700; font-size:.9rem;
+  color:var(--muted); transition:.15s; user-select:none;
+}
+.opt-vf:hover{background:#f0f5ee; border-color:#b9c9bb;}
+.opt-vf input{accent-color:var(--green); margin:0;}
+.opt-vf:has(input:checked){background:var(--green); border-color:var(--green); color:#fff;}
+.opt-vf:has(input:checked) input{accent-color:#fff;}
+.opt-vf:has(input:disabled){cursor:default; opacity:.85;}
+.opt-vf.vrai:has(input:checked){background:#15803d;}
+.opt-vf.faux:has(input:checked){background:#b91c1c;}
+.prop-result{margin-top:12px; padding:10px 14px; border-radius:9px;
+  font-size:.88rem; display:none;}
+.prop-result.show{display:block; animation:pop .35s ease;}
+.prop-result.ok{background:#e6f4ea; border-left:4px solid var(--green); color:#14532d;}
+.prop-result.no{background:#fdecea; border-left:4px solid var(--red); color:#7f1d1d;}
+.prop-result .law-line{
+  margin-top:6px; padding:6px 10px; border-radius:6px;
+  background:rgba(255,255,255,.6); font-size:.83rem; color:#33453c;
+}
+@keyframes pop{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+.btn-verif{
+  margin-top:16px; font-family:inherit; background:var(--green); color:#fff;
+  border:none; border-radius:10px; padding:11px 24px; font-size:.95rem; font-weight:800;
+  cursor:pointer; box-shadow:0 3px 0 #0b3a20; transition:.12s;
+}
+.btn-verif:hover{filter:brightness(1.12);}
+.btn-verif:disabled{background:#9fb3a6; box-shadow:0 3px 0 #8aa093; cursor:default;}
+.btn-next{
+  margin-top:16px; margin-left:10px; font-family:inherit; background:var(--brass);
+  color:#fff; border:none; border-radius:10px; padding:11px 24px; font-size:.95rem;
+  font-weight:800; cursor:pointer; box-shadow:0 3px 0 #7a4a05;
+}
+.btn-next:hover{filter:brightness(1.12);}
+.fb{margin-top:11px; font-weight:700; font-size:.93rem;}
+.fb.ok{color:var(--green);} .fb.no{color:var(--red);}
+.reveal{display:none;}
+.reveal.show{display:block; animation:pop .5s ease;}
+.reveal-title{margin:24px 0 4px; font-size:.78rem; font-weight:800;
+  text-transform:uppercase; letter-spacing:.12em; color:var(--green);
+  display:flex; align-items:center; gap:9px;}
+.reveal-title::before{content:"✔"; display:inline-flex; align-items:center;
+  justify-content:center; width:22px; height:22px; border-radius:50%;
+  background:var(--green); color:#fff; font-size:.7rem;}
+.summary{
+  margin:22px 0; padding:18px 22px; border-radius:14px;
+  background:linear-gradient(160deg,#fffdf7,#f4f9f1);
+  border:2px solid #b6d3bf;
+}
+.summary .score{font-size:1.15rem; font-weight:800; color:var(--green); margin:0 0 8px;}
+.summary .calc{font-size:.95rem; color:#33453c;}
+.feedback-wrap{margin:22px 0; padding:6px 0; overflow-x:auto;}
+.feedback-wrap h4{margin:0 0 12px; font-family:Georgia,serif; font-size:1.08rem;
+  color:var(--blue); text-transform:uppercase; letter-spacing:.06em;}
+.feedback-table{
+  width:100%; border-collapse:collapse; font-size:.85rem; background:#fff;
+  border:1px solid var(--border); border-radius:10px; overflow:hidden;
+}
+.feedback-table th,.feedback-table td{padding:9px 10px;
+  border-bottom:1px solid var(--border); text-align:left; vertical-align:top;}
+.feedback-table thead th{background:var(--blue); color:#fff; font-weight:800;
+  font-size:.76rem; text-transform:uppercase; letter-spacing:.06em;}
+.feedback-table tbody tr.row-ok{background:#f3fbf5;}
+.feedback-table tbody tr.row-no{background:#fdf4f2;}
+.feedback-table .col-n{width:34px; text-align:center; font-weight:800; color:var(--blue);}
+.feedback-table .col-prop{width:35%; font-size:.85rem;}
+.feedback-table .col-att,.feedback-table .col-giv{width:70px; text-align:center; font-weight:800;}
+.feedback-table .col-res{width:96px; text-align:center;}
+.feedback-table .col-just{font-size:.83rem; color:#33453c;}
+.feedback-table .att-vrai{color:#15803d;} .feedback-table .att-faux{color:#b91c1c;}
+.feedback-table .badge-ok{display:inline-block; padding:2px 8px; border-radius:999px;
+  background:#d1fae5; color:#065f46; font-weight:800; font-size:.72rem;}
+.feedback-table .badge-no{display:inline-block; padding:2px 8px; border-radius:999px;
+  background:#fee2e2; color:#991b1b; font-weight:800; font-size:.72rem;}
+.feedback-table tfoot td{background:#eef1ea; font-weight:800; color:var(--green);
+  font-size:.85rem; padding:11px 10px;}
+.feedback-table tfoot .big{font-size:1.05rem;}
+.conclusion-box{
+  margin:22px 0; padding:20px 24px; border-radius:14px;
+  background:linear-gradient(160deg,#fef7e8,#fdf1d3);
+  border:2px solid #e6c987; border-left:6px solid var(--brass);
+}
+.conclusion-box h4{margin:0 0 12px; font-family:Georgia,serif; font-size:1.08rem;
+  color:var(--brass); text-transform:uppercase; letter-spacing:.08em;}
+.conclusion-box p{margin:9px 0; font-size:.95rem;}
+.conclusion-box .final-param{
+  margin-top:14px; padding:12px 16px; border-radius:10px;
+  background:#fff; border:1px dashed var(--brass); text-align:center;
+  font-size:1.05rem; font-weight:800; color:var(--brass);
+}
+.final-param .big{font-size:1.3rem; display:block; margin-top:6px; color:var(--green);}
+.n-variation-note{margin-top:14px; padding:10px 14px; border-radius:8px;
+  background:#fff; border-left:4px solid var(--brass);
+  font-size:.88rem; color:#5c4413; font-style:italic;}
+.finish-card{text-align:center; padding:32px 24px;
+  background:linear-gradient(160deg,#fffdf7,#f4f9f1);
+  border:2px solid #b6d3bf; border-radius:18px; margin-top:26px;}
+.finish-card h3{margin-top:0; font-size:1.3rem; color:var(--green);}
+.seal{display:inline-flex; align-items:center; justify-content:center;
+  width:96px; height:96px; border-radius:50%; margin:6px auto 14px;
+  background:radial-gradient(circle at 35% 30%,#f7e3b5,#c99b3a 70%,#8d6a1e);
+  color:#3a2a06; font-weight:900; font-size:.72rem; letter-spacing:.06em;
+  text-align:center; line-height:1.15; padding:10px;
+  box-shadow:0 6px 18px rgba(141,106,30,.4), inset 0 -3px 8px rgba(0,0,0,.2);}
+footer{max-width:1400px; margin:34px auto 0; padding:0 20px;
+  text-align:center; font-size:.83rem; color:var(--muted);
+  font-family:Georgia,serif; font-style:italic;}
+
+/* Styles pour les graphiques SVG et le code Python */
+.graph-wrap { display: flex; justify-content: center; margin: 12px 0; }
+.graph-wrap svg { max-width: 260px; height: auto; }
+.feedback-table td.col-prop svg { max-width: 100px; height: auto; display: block; margin: 4px auto; border: none; }
+pre { background: #f4f6f3; border: 1px solid #d5ded5; border-radius: 6px; padding: 10px; margin: 10px 0; overflow-x: auto; font-family: monospace; font-size: 0.9em; line-height: 1.4; }
+code { font-family: monospace; }
+
+@media(max-width:900px){
+  .app-container{grid-template-columns:1fr; padding:12px; gap:14px;}
+  .step-menu{position:static; max-height:none; padding:10px;}
+  .menu-list{flex-direction:row; gap:8px; flex-wrap:nowrap; overflow-x:auto;}
+  .menu-item{flex:0 0 auto; min-width:180px; padding:8px 10px;}
+  .step{padding:20px 16px 24px;}
+  header.hero h1{font-size:1.85rem;}
+  .prop-choices{padding-left:0; flex-wrap:wrap;}
+  .opt-vf{flex:1 1 100px;}
+  .feedback-table{font-size:.78rem;}
+  .feedback-table th,.feedback-table td{padding:7px 6px;}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="kicker">Une enquête statistique à travers quinze manoirs du Sussex</p>
+  <h1>Crumble Hall &amp; Compagnie</h1>
+  <p class="tagline">ou : comment quinze excentriques anglais laissèrent leurs élèves<br>
+  écrire eux-mêmes les définitions qu'ils avaient oubliées</p>
+  <p class="meta-note">🎲 <strong>Cette page est une expérience aléatoire.</strong> À chaque
+  rechargement, le manoir change, les questions changent de nombre (4 à 10), d'ordre,
+  d'énoncé et de valeurs numériques. Le contexte loufoque et les questions en découlent
+  immanquablement.</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <span id="progLabel">Étape 1 / 16 — 0 validée</span>
+    <div class="bar"><div id="progBar"></div></div>
+  </div>
+</div>
+
+<div class="app-container">
+  <nav class="step-menu" id="stepMenu" aria-label="Navigation des étapes"></nav>
+  <main id="story"></main>
+</div>
+
+<footer id="pageFooter"></footer>
+
+<script>
+/* ============================================================
+   1. OUTILS
+   ============================================================ */
+function fr(x, d){ d = (d === undefined) ? 4 : d; return Number(x).toFixed(d).replace('.', ','); }
+function randInt(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+function shuffleArr(a){
+  a = a.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function comb(n, k){
+  if(k < 0 || k > n) return 0;
+  k = Math.min(k, n - k);
+  let r = 1;
+  for(let i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+  return Math.round(r);
+}
+var mjRetries = 0;
+function typeset(el){
+  if(!el) return;
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetPromise([el]).catch(function(){});
+    mjRetries = 0;
+  } else if(mjRetries < 200){ mjRetries++; setTimeout(function(){ typeset(el); }, 80); }
+}
+
+/* ============================================================
+   2. GÉNÉRATEURS DE GRAPHIQUES SVG
+   ============================================================ */
+function svgBarChart(vals, labels, title) {
+    const w = 280, h = 160, pad = 30;
+    const max = Math.max(...vals);
+    let rects = '';
+    const bw = (w - 2*pad) / vals.length;
+    vals.forEach((v, i) => {
+        const bh = (v / max) * 90;
+        const x = pad + i*bw + bw*0.15;
+        const y = h - pad - bh;
+        rects += `<rect x="${x}" y="${y}" width="${bw*0.7}" height="${bh}" fill="#1e3a5f" rx="2"/>`;
+        rects += `<text x="${pad + i*bw + bw/2}" y="${h-pad+15}" text-anchor="middle" font-size="11" fill="#5f6f66">${labels[i]}</text>`;
+    });
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; background:#fff; border:1px solid #d5ded5; border-radius:6px; margin:10px 0;">
+        <text x="${w/2}" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b2a24">${title}</text>
+        ${rects}
+        <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#999" stroke-width="1.5"/>
+        <line x1="${pad}" y1="${h-pad}" x2="${pad}" y2="${pad}" stroke="#999" stroke-width="1.5"/>
+        <text x="${pad/2}" y="${h/2}" transform="rotate(-90 ${pad/2} ${h/2})" font-size="10" fill="#5f6f66">Probabilité</text>
+    </svg>`;
+}
+
+function svgCurveChart(type, title) {
+    const w = 280, h = 160, pad = 30;
+    let path = '';
+    if (type === 'normal') {
+        path = `M ${pad} ${h-pad} C ${w/2 - 40} ${h-pad}, ${w/2 - 40} ${pad}, ${w/2} ${pad} C ${w/2 + 40} ${pad}, ${w/2 + 40} ${h-pad}, ${w-pad} ${h-pad}`;
+    } else if (type === 'normal_broad') {
+        path = `M ${pad} ${h-pad} C ${pad + 20} ${h-pad}, ${pad + 20} ${pad+10}, ${w/2} ${pad+10} C ${w-pad - 20} ${pad+10}, ${w-pad - 20} ${h-pad}, ${w-pad} ${h-pad}`;
+    } else if (type === 'uniform') {
+        path = `M ${pad} ${h-pad} L ${pad} ${pad+20} L ${w-pad} ${pad+20} L ${w-pad} ${h-pad}`;
+    } else if (type === 'skew') {
+        path = `M ${pad} ${h-pad} C ${pad+20} ${h-pad}, ${pad+20} ${pad}, ${pad+70} ${pad} C ${pad+100} ${pad}, ${w-pad-10} ${h-pad-15}, ${w-pad} ${h-pad}`;
+    }
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; background:#fff; border:1px solid #d5ded5; border-radius:6px; margin:10px 0;">
+        <text x="${w/2}" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b2a24">${title}</text>
+        <path d="${path}" fill="rgba(30, 58, 95, 0.15)" stroke="#1e3a5f" stroke-width="2"/>
+        <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#999" stroke-width="1.5"/>
+        <line x1="${pad}" y1="${h-pad}" x2="${pad}" y2="${pad}" stroke="#999" stroke-width="1.5"/>
+    </svg>`;
+}
+
+/* ============================================================
+   3. LES QUINZE SCÉNARIOS LOUFOQUES
+   ============================================================ */
+const SCENARIOS = [
+  {
+    lieu: 'Crumble Hall',
+    seigneur: 'Sir Reginald Crumblebottom',
+    majordome: 'Baxter',
+    objet: 'biscuit', objetPl: 'biscuits',
+    succes: 'beurre dessus', echec: 'beurre dessous',
+    action: 'lancer de biscuit',
+    troisieme: 'beurre dans le thé',
+    story: `<p>Il était une fois, dans le Sussex, un manoir nommé <strong>Crumble Hall</strong>, où il pleuvait.</p>
+      <div class="dialogue">
+        <p><span class="who">Sir Reginald.</span> — Baxter. Le biscuit est tombé beurre vers le haut. Encore.</p>
+        <p><span class="who">Baxter.</span> — En effet, Monsieur.</p>
+        <p><span class="who">Sir Reginald.</span> — Il faudrait définir la chose.</p>
+        <p><span class="who">Baxter.</span> — Je crains, Monsieur, que ce ne soit à vos élèves de la définir.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Moule-Frite',
+    seigneur: 'la Baronne Pétronille de la Friteuse',
+    majordome: 'Gédéon',
+    objet: 'frite', objetPl: 'frites',
+    succes: 'pointe en haut', echec: 'pointe en bas',
+    action: 'lâcher de frite',
+    troisieme: 'frite dans la mayonnaise',
+    story: `<p>Au <strong>Château Moule-Frite</strong>, en Bretagne, la Baronne Pétronille de la Friteuse avait une passion : la chute contrôlée de frites.</p>
+      <div class="dialogue">
+        <p><span class="who">Baronne Pétronille.</span> — Gédéon ! La frite est tombée pointe en bas. Encore.</p>
+        <p><span class="who">Gédéon.</span> — En effet, Madame.</p>
+        <p><span class="who">Baronne Pétronille.</span> — Définissez-moi cette chose.</p>
+        <p><span class="who">Gédéon.</span> — Madame, je crains que ce ne soit à la jeunesse de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Manoir Clapotis',
+    seigneur: 'l\'Amiral Balthazar Brisefer',
+    majordome: 'Barnabé',
+    objet: 'mouette', objetPl: 'mouettes',
+    succes: 'passe à tribord', echec: 'passe à bâbord',
+    action: 'envol de mouette',
+    troisieme: 'mouette sur le chapeau',
+    story: `<p>Au <strong>Manoir Clapotis</strong>, l'Amiral Balthazar Brisefer notait avec obsession le passage des mouettes au-dessus de sa terrasse.</p>
+      <div class="dialogue">
+        <p><span class="who">Amiral Brisefer.</span> — Barnabé ! La mouette a filé à tribord. Encore.</p>
+        <p><span class="who">Barnabé.</span> — En effet, Amiral.</p>
+        <p><span class="who">Amiral Brisefer.</span> — Il faut définir ce phénomène.</p>
+        <p><span class="who">Barnabé.</span> — Amiral, c'est une tâche pour vos élèves.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Pamplemousse',
+    seigneur: 'la Duchesse Cunégonde',
+    majordome: 'Firmin',
+    objet: 'pamplemousse', objetPl: 'pamplemousses',
+    succes: 'juteux', echec: 'pourri',
+    action: 'cueillette de pamplemousse',
+    troisieme: 'pamplemousse dans la fontaine',
+    story: `<p>Au <strong>Château Pamplemousse</strong>, la Duchesse Cunégonde surveillait son verger d'un œil féroce.</p>
+      <div class="dialogue">
+        <p><span class="who">Duchesse Cunégonde.</span> — Firmin ! Ce pamplemousse est juteux. Encore.</p>
+        <p><span class="who">Firmin.</span> — En effet, Madame.</p>
+        <p><span class="who">Duchesse Cunégonde.</span> — Firmin, il faut définir la chose.</p>
+        <p><span class="who">Firmin.</span> — Madame, je ne suis que jardinier. C'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Tour de Guingois',
+    seigneur: 'le Magicien Alambic',
+    majordome: 'Potiron',
+    objet: 'chapeau', objetPl: 'chapeaux',
+    succes: 'lapin', echec: 'fleur',
+    action: 'sortie de chapeau',
+    troisieme: 'chapeau dans la cheminée',
+    story: `<p>Dans la <strong>Tour de Guingois</strong>, le Magicien Alambic tentait, depuis 40 ans, de faire sortir un lapin d'un chapeau plutôt qu'une fleur.</p>
+      <div class="dialogue">
+        <p><span class="who">Alambic.</span> — Potiron ! Le chapeau a produit un lapin. Encore.</p>
+        <p><span class="who">Potiron.</span> — En effet, Maître.</p>
+        <p><span class="who">Alambic.</span> — Il faut définir cette chose.</p>
+        <p><span class="who">Potiron.</span> — Maître, je crains que ce ne soit à vos élèves.</p>
+      </div>`
+  },
+  {
+    lieu: 'Manoir Théière',
+    seigneur: 'Lady Agathe de la Tasse',
+    majordome: 'Octave',
+    objet: 'sachet de thé', objetPl: 'sachets',
+    succes: 'infuse fort', echec: 'infuse faible',
+    action: 'infusion de sachet',
+    troisieme: 'sachet dans la théière',
+    story: `<p>Au <strong>Manoir Théière</strong>, Lady Agathe de la Tasse exigeait que chaque sachet infuse exactement comme il faut.</p>
+      <div class="dialogue">
+        <p><span class="who">Lady Agathe.</span> — Octave ! Ce sachet infuse fort. Encore.</p>
+        <p><span class="who">Octave.</span> — En effet, Milady.</p>
+        <p><span class="who">Lady Agathe.</span> — Il faudrait définir ce phénomène.</p>
+        <p><span class="who">Octave.</span> — Milady, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Bric-à-Brac',
+    seigneur: 'le Comte Archibald de la Vis',
+    majordome: 'Rouillé',
+    objet: 'boulon', objetPl: 'boulons',
+    succes: 'se visse à droite', echec: 'se visse à gauche',
+    action: 'vissage de boulon',
+    troisieme: 'boulon dans la soupe',
+    story: `<p>Au <strong>Château Bric-à-Brac</strong>, le Comte Archibald de la Vis collectionnait les boulons qui se vissent du bon côté.</p>
+      <div class="dialogue">
+        <p><span class="who">Comte Archibald.</span> — Rouillé ! Ce boulon s'est vissé à droite. Encore.</p>
+        <p><span class="who">Rouillé.</span> — En effet, Monsieur le Comte.</p>
+        <p><span class="who">Comte Archibald.</span> — Il faudrait définir cette mécanique.</p>
+        <p><span class="who">Rouillé.</span> — Monsieur, c'est l'affaire de vos élèves.</p>
+      </div>`
+  },
+  {
+    lieu: 'Manoir Moustache',
+    seigneur: 'le Baron Firmin Barbuchet',
+    majordome: 'Alphonse',
+    objet: 'moustache', objetPl: 'moustaches',
+    succes: 'se boucle à gauche', echec: 'se boucle à droite',
+    action: 'bouclage de moustache',
+    troisieme: 'moustache dans le potage',
+    story: `<p>Au <strong>Manoir Moustache</strong>, le Baron Firmin Barbuchet exigeait que ses moustaches se bouclent du bon côté.</p>
+      <div class="dialogue">
+        <p><span class="who">Baron Firmin.</span> — Alphonse ! Cette moustache se boucle à gauche. Encore.</p>
+        <p><span class="who">Alphonse.</span> — En effet, Monsieur.</p>
+        <p><span class="who">Baron Firmin.</span> — Il faut définir cela.</p>
+        <p><span class="who">Alphonse.</span> — Monsieur, c'est aux élèves de le définir.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Rocambole',
+    seigneur: 'le Chevalier Gontran',
+    majordome: 'Perceval',
+    objet: 'flèche', objetPl: 'flèches',
+    succes: 'atteint la cible', echec: 'rate la cible',
+    action: 'tir de flèche',
+    troisieme: 'flèche dans le chapeau du roi',
+    story: `<p>Au <strong>Château Rocambole</strong>, le Chevalier Gontran tirait des flèches dans le hall, ce qui déplaisait fort à sa tapisserie.</p>
+      <div class="dialogue">
+        <p><span class="who">Chevalier Gontran.</span> — Perceval ! Cette flèche a atteint la cible. Encore.</p>
+        <p><span class="who">Perceval.</span> — En effet, Messire.</p>
+        <p><span class="who">Chevalier Gontran.</span> — Définis-moi cela.</p>
+        <p><span class="who">Perceval.</span> — Messire, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Manoir Chaussette',
+    seigneur: 'Tante Berthe',
+    majordome: 'Firmin',
+    objet: 'chaussette', objetPl: 'chaussettes',
+    succes: 'est rayée', echec: 'est à pois',
+    action: 'tri de chaussette',
+    troisieme: 'chaussette dans la confiture',
+    story: `<p>Au <strong>Manoir Chaussette</strong>, Tante Berthe triait ses chaussettes selon un protocole qu'elle seule comprenait.</p>
+      <div class="dialogue">
+        <p><span class="who">Tante Berthe.</span> — Firmin ! Cette chaussette est rayée. Encore.</p>
+        <p><span class="who">Firmin.</span> — En effet, Tante Berthe.</p>
+        <p><span class="who">Tante Berthe.</span> — Il faut définir cette affaire.</p>
+        <p><span class="who">Firmin.</span> — Tante Berthe, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Cornichon',
+    seigneur: 'le Roi Cornichon IV',
+    majordome: 'Gribouille',
+    objet: 'cornichon', objetPl: 'cornichons',
+    succes: 'flotte', echec: 'coule',
+    action: 'immersion de cornichon',
+    troisieme: 'cornichon dans la couronne',
+    story: `<p>Au <strong>Château Cornichon</strong>, le Roi Cornichon IV testait la flottabilité de ses cornichons dans un saladier royal.</p>
+      <div class="dialogue">
+        <p><span class="who">Roi Cornichon IV.</span> — Gribouille ! Ce cornichon flotte. Encore.</p>
+        <p><span class="who">Gribouille.</span> — En effet, Majesté.</p>
+        <p><span class="who">Roi Cornichon IV.</span> — Définis-moi cela, fou.</p>
+        <p><span class="who">Gribouille.</span> — Majesté, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Manoir Parapluie',
+    seigneur: 'le Colonel Tempête',
+    majordome: 'Goutte',
+    objet: 'parapluie', objetPl: 'parapluies',
+    succes: 's\'ouvre correctement', echec: 's\'envole',
+    action: 'ouverture de parapluie',
+    troisieme: 'parapluie dans le puits',
+    story: `<p>Au <strong>Manoir Parapluie</strong>, le Colonel Tempête faisait l'inventaire de ses 312 parapluies, un par un, sous la pluie.</p>
+      <div class="dialogue">
+        <p><span class="who">Colonel Tempête.</span> — Goutte ! Ce parapluie s'est ouvert correctement. Encore.</p>
+        <p><span class="who">Goutte.</span> — En effet, mon Colonel.</p>
+        <p><span class="who">Colonel Tempête.</span> — Il faut définir ce phénomène.</p>
+        <p><span class="who">Goutte.</span> — Mon Colonel, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Papillon',
+    seigneur: 'la Comtesse Aurore',
+    majordome: 'Hector',
+    objet: 'papillon', objetPl: 'papillons',
+    succes: 'se pose sur le nez', echec: 'se pose sur la main',
+    action: 'atterrissage de papillon',
+    troisieme: 'papillon dans les cheveux',
+    story: `<p>Au <strong>Château Papillon</strong>, la Comtesse Aurore collectionnait les papillons qui se posaient sur son nez.</p>
+      <div class="dialogue">
+        <p><span class="who">Comtesse Aurore.</span> — Hector ! Ce papillon s'est posé sur mon nez. Encore.</p>
+        <p><span class="who">Hector.</span> — En effet, Madame.</p>
+        <p><span class="who">Comtesse Aurore.</span> — Il faudrait définir cette chose.</p>
+        <p><span class="who">Hector.</span> — Madame, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Manoir Cafetière',
+    seigneur: 'l\'Oncle Gustave',
+    majordome: 'Madeleine',
+    objet: 'café', objetPl: 'cafés',
+    succes: 'déborde', echec: 'dégouline',
+    action: 'service de café',
+    troisieme: 'café dans la soupière',
+    story: `<p>Au <strong>Manoir Cafetière</strong>, l'Oncle Gustave versait son café avec une précision militaire, ce qui produisait des résultats militaires.</p>
+      <div class="dialogue">
+        <p><span class="who">Oncle Gustave.</span> — Madeleine ! Ce café a débordé. Encore.</p>
+        <p><span class="who">Madeleine.</span> — En effet, Oncle Gustave.</p>
+        <p><span class="who">Oncle Gustave.</span> — Il faut définir cela.</p>
+        <p><span class="who">Madeleine.</span> — Oncle Gustave, c'est aux élèves de le faire.</p>
+      </div>`
+  },
+  {
+    lieu: 'Château Escargot',
+    seigneur: 'le Duc Limbour',
+    majordome: 'Anselme',
+    objet: 'escargot', objetPl: 'escargots',
+    succes: 'atteint la salade', echec: 's\'endort avant',
+    action: 'course d\'escargot',
+    troisieme: 'escargot dans le chapeau',
+    story: `<p>Au <strong>Château Escargot</strong>, le Duc Limbour organisait des courses d'escargots tous les jeudis, avec un chronomètre cassé.</p>
+      <div class="dialogue">
+        <p><span class="who">Duc Limbour.</span> — Anselme ! Cet escargot a atteint la salade. Encore.</p>
+        <p><span class="who">Anselme.</span> — En effet, Monseigneur.</p>
+        <p><span class="who">Duc Limbour.</span> — Il faut définir cette chose.</p>
+        <p><span class="who">Anselme.</span> — Monseigneur, c'est aux élèves de le faire.</p>
+      </div>`
+  }
+];
+
+// ============================================================
+// SÉLECTION ALÉATOIRE DU SCÉNARIO
+// ============================================================
+const SC = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
+
+/* ============================================================
+   4. BANQUES DE PROPOSITIONS
+   ============================================================ */
+function P(texte, correct, justif){ return { texte: texte, correct: correct, justif: justif }; }
+
+// Pool de questions Python (sans break ni print)
+const PYTHON_QUESTIONS = [
+    // 1. Compléter une liste (carrés)
+    () => {
+        const n = randInt(5, 9);
+        const code = [
+"def mystere(n):",
+"    L = []",
+"    for i in range(n):",
+"        L.append(i * i)",
+"    return L"
+].join('\n');
+        const v = Array.from({length: n}, (_, i) => i * i).join(', ');
+        const isTrue = Math.random() > 0.5;
+        let prop, correct;
+        if (isTrue) {
+            prop = `mystere(${n}) renvoie [${v}]`;
+            correct = true;
+        } else {
+            const v_faux = v.split(', ');
+            v_faux[randInt(0, n-1)] = randInt(10, 50);
+            prop = `mystere(${n}) renvoie [${v_faux.join(', ')}]`;
+            correct = false;
+        }
+        return P(`<pre><code>${code}</code></pre><p>${prop}</p>`, correct, `Le programme ajoute le carré de i pour i allant de 0 à ${n-1}. Il renvoie donc [${v}].`);
+    },
+    // 2. Compléter une liste (condition if)
+    () => {
+        const n = randInt(6, 10);
+        const code = [
+"def f(n):",
+"    L = []",
+"    for i in range(n):",
+"        if i % 2 == 0:",
+"            L.append(i)",
+"    return L"
+].join('\n');
+        const v = Array.from({length: n}, (_, i) => i).filter(x => x % 2 === 0).join(', ');
+        const isTrue = Math.random() > 0.5;
+        let prop, correct;
+        if (isTrue) {
+            prop = `f(${n}) renvoie [${v}]`;
+            correct = true;
+        } else {
+            const v_faux = Array.from({length: n}, (_, i) => i).filter(x => x % 2 !== 0).join(', ');
+            prop = `f(${n}) renvoie [${v_faux}]`;
+            correct = false;
+        }
+        return P(`<pre><code>${code}</code></pre><p>${prop}</p>`, correct, `Le programme ne garde que les indices pairs (i % 2 == 0). Il renvoie donc [${v}].`);
+    },
+    // 3. Programmes équivalents (for vs while)
+    () => {
+        const code1 = [
+"def f(L):",
+"    s = 0",
+"    for x in L:",
+"        s += x",
+"    return s"
+].join('\n');
+        const code2 = [
+"def f(L):",
+"    s = 0",
+"    i = 0",
+"    while i < len(L):",
+"        s += L[i]",
+"        i += 1",
+"    return s"
+].join('\n');
+        const isTrue = Math.random() > 0.5;
+        let code3 = code2;
+        if (!isTrue) {
+            code3 = [
+"def f(L):",
+"    s = 0",
+"    i = 0",
+"    while i < len(L):",
+"        s += L[i]",
+"        i += 2",
+"    return s"
+].join('\n');
+        }
+        return P(`<p>Ces deux programmes sont-ils équivalents ?</p><pre><code>${code1}</code></pre><pre><code>${code3}</code></pre>`, isTrue, `${isTrue ? 'Les deux parcourent toute la liste et font la somme des éléments.' : 'Le second programme saute un élément sur deux avec i += 2.'}`);
+    },
+    // 4. Programmes équivalents (recherche max)
+    () => {
+        const code1 = [
+"def f(L):",
+"    m = L[0]",
+"    for x in L:",
+"        if x > m:",
+"            m = x",
+"    return m"
+].join('\n');
+        const code2 = [
+"def f(L):",
+"    m = 0",
+"    for x in L:",
+"        if x > m:",
+"            m = x",
+"    return m"
+].join('\n');
+        return P(`<p>Ces deux programmes sont-ils équivalents ?</p><pre><code>${code1}</code></pre><pre><code>${code2}</code></pre>`, false, `Si la liste L ne contient que des nombres négatifs, le deuxième programme renverra 0 alors que le premier renverra le vrai maximum négatif.`);
+    },
+    // 5. Ce que renvoie le programme (Suite)
+    () => {
+        const n = randInt(3, 6);
+        const code = [
+"def f(n):",
+"    L = [1]",
+"    for i in range(1, n):",
+"        L.append(L[-1] * 2)",
+"    return L"
+].join('\n');
+        const v = [];
+        let curr = 1;
+        for(let i=0; i<n; i++){ v.push(curr); curr *= 2; }
+        const isTrue = Math.random() > 0.5;
+        let prop, correct;
+        if (isTrue) {
+            prop = `f(${n}) renvoie [${v.join(', ')}]`;
+            correct = true;
+        } else {
+            const v_faux = v.slice();
+            v_faux[randInt(0, n-1)] = randInt(10, 50);
+            prop = `f(${n}) renvoie [${v_faux.join(', ')}]`;
+            correct = false;
+        }
+        return P(`<pre><code>${code}</code></pre><p>${prop}</p>`, correct, `Le programme initialise L à [1] puis double le dernier élément à chaque itération. Il renvoie [${v.join(', ')}].`);
+    },
+    // 6. Ce que renvoie le programme (Fibonacci)
+    () => {
+        const n = randInt(4, 7);
+        const code = [
+"def f(n):",
+"    L = [0, 1]",
+"    for i in range(2, n):",
+"        L.append(L[i-1] + L[i-2])",
+"    return L[:n]"
+].join('\n');
+        const v = [0, 1];
+        for(let i=2; i<n; i++){ v.push(v[i-1] + v[i-2]); }
+        const isTrue = Math.random() > 0.5;
+        let prop, correct;
+        if (isTrue) {
+            prop = `f(${n}) renvoie [${v.join(', ')}]`;
+            correct = true;
+        } else {
+            const v_faux = v.slice();
+            v_faux[randInt(0, n-1)] = randInt(10, 50);
+            prop = `f(${n}) renvoie [${v_faux.join(', ')}]`;
+            correct = false;
+        }
+        return P(`<pre><code>${code}</code></pre><p>${prop}</p>`, correct, `C'est la suite de Fibonacci. Le programme renvoie les ${n} premiers termes : [${v.join(', ')}].`);
+    },
+    // 7. Compléter liste (multiples)
+    () => {
+        const k = randInt(2, 5);
+        const n = randInt(3, 6);
+        const code = [
+"def f(n, k):",
+"    L = []",
+"    for i in range(n):",
+"        L.append(i * k)",
+"    return L"
+].join('\n');
+        const v = Array.from({length: n}, (_, i) => i * k).join(', ');
+        const isTrue = Math.random() > 0.5;
+        let prop, correct;
+        if (isTrue) {
+            prop = `f(${n}, ${k}) renvoie [${v}]`;
+            correct = true;
+        } else {
+            const v_faux = Array.from({length: n}, (_, i) => i * (k+1)).join(', ');
+            prop = `f(${n}, ${k}) renvoie [${v_faux}]`;
+            correct = false;
+        }
+        return P(`<pre><code>${code}</code></pre><p>${prop}</p>`, correct, `Le programme multiplie i par k à chaque itération. Il renvoie [${v}].`);
+    },
+    // 8. Programmes équivalents (compte)
+    () => {
+        const code1 = [
+"def f(L, x):",
+"    c = 0",
+"    for y in L:",
+"        if y == x:",
+"            c += 1",
+"    return c"
+].join('\n');
+        const code2 = [
+"def f(L, x):",
+"    c = 0",
+"    i = 0",
+"    while i < len(L):",
+"        if L[i] == x:",
+"            c += 1",
+"        i += 1",
+"    return c"
+].join('\n');
+        return P(`<p>Ces deux programmes sont-ils équivalents ?</p><pre><code>${code1}</code></pre><pre><code>${code2}</code></pre>`, true, `Les deux parcourent la liste et comptent le nombre d'occurrences de x. Le for est simplement remplacé par un while.`);
+    },
+    // 9. Ce que renvoie le programme (filter condition if/elif)
+    () => {
+        const n = randInt(5, 8);
+        const code = [
+"def f(n):",
+"    L = []",
+"    for i in range(n):",
+"        if i % 3 == 0:",
+"            L.append(i)",
+"        elif i % 2 == 0:",
+"            L.append(-i)",
+"    return L"
+].join('\n');
+        const v = [];
+        for(let i=0; i<n; i++) {
+            if(i % 3 === 0) v.push(i);
+            else if(i % 2 === 0) v.push(-i);
+        }
+        const isTrue = Math.random() > 0.5;
+        let prop, correct;
+        if (isTrue) {
+            prop = `f(${n}) renvoie [${v.join(', ')}]`;
+            correct = true;
+        } else {
+            const v_faux = v.map(x => x + 1).join(', ');
+            prop = `f(${n}) renvoie [${v_faux}]`;
+            correct = false;
+        }
+        return P(`<pre><code>${code}</code></pre><p>${prop}</p>`, correct, `Le programme applique les conditions dans l'ordre. Il renvoie [${v.join(', ')}].`);
+    }
+];
+
+const STEP_GEN = {
+  // Étape 1 : Épreuve de Bernoulli
+  1: [
+    sc => P(`${sc.majordome} observe ${sc.action} : deux issues, "${sc.succes}" ou "${sc.echec}". C'est une épreuve de Bernoulli.`, true,
+      `Une épreuve de Bernoulli admet exactement deux issues : succès ("${sc.succes}") et échec ("${sc.echec}").`),
+    sc => P(`${sc.majordome} rappelle qu'une épreuve de Bernoulli est une expérience aléatoire dont l'issue est incertaine avant réalisation.`, true,
+      `C'est la définition même d'une expérience aléatoire : on ne sait pas, avant, quelle issue surviendra.`),
+    sc => P(`${sc.majordome} insiste : une épreuve de Bernoulli n'admet que deux issues possibles.`, true,
+      `C'est la définition : exactement deux issues, ni une, ni trois, ni une infinité.`),
+    sc => P(`${sc.seigneur} demande à ${sc.majordome} de nommer les deux issues : on les appelle "succès" et "échec".`, true,
+      `Convention : succès S de probabilité p, échec S̄ de probabilité 1-p.`),
+    sc => P(`Dans une épreuve de Bernoulli, ${sc.majordome} note : succès de probabilité p, échec de probabilité 1-p.`, true,
+      `p + (1-p) = 1 : les deux probabilités sont complémentaires.`),
+    sc => P(`Avant de ${sc.action} à ${sc.lieu}, on ne sait pas si ce sera "${sc.succes}" ou "${sc.echec}" : deux issues, incertitude, c'est une épreuve de Bernoulli.`, true,
+      `Deux issues dont l'issue est incertaine : les deux conditions d'une épreuve de Bernoulli sont réunies.`),
+    sc => P(`${sc.seigneur} affirme qu'une épreuve de Bernoulli peut avoir trois issues : "${sc.succes}", "${sc.echec}", et "${sc.troisieme}".`, false,
+      `Trois issues contredisent la définition : une épreuve de Bernoulli en a exactement deux.`),
+    sc => P(`${sc.majordome} pense que les deux issues d'une épreuve de Bernoulli sont toujours équiprobables.`, false,
+      `Les probabilités sont p et 1-p ; elles ne sont égales que si p = 1/2. L'équiprobabilité n'est pas requise.`),
+    sc => P(`${sc.seigneur} soutient que toute expérience aléatoire est une épreuve de Bernoulli, y compris le choix du pudding (soupe, rôti, tarte).`, false,
+      `Le choix du pudding a trois issues : ce n'est pas une épreuve de Bernoulli.`),
+    sc => P(`${sc.majordome} précise qu'une épreuve de Bernoulli doit être répétée un grand nombre de fois pour mériter son nom.`, false,
+      `Une épreuve de Bernoulli est une expérience unique. Sa répétition identique et indépendante s'appelle un schéma de Bernoulli.`),
+    sc => P(`Dans une épreuve de Bernoulli, ${sc.seigneur} affirme que p désigne toujours la probabilité de l'échec.`, false,
+      `Convention : p est la probabilité du succès ; 1-p celle de l'échec.`),
+    sc => P(`${sc.seigneur} pense que "${sc.objet}" peut avoir un nombre infini d'issues dans une épreuve de Bernoulli.`, false,
+      `Une épreuve de Bernoulli admet exactement deux issues, pas une infinité.`)
+  ],
+
+  // Étape 2 : Graphiques de Bernoulli
+  2: [
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.3, 0.7], ["0", "1"], "Graphique A")}</div> Le graphique A représente une loi de Bernoulli.`, true,
+      `Deux issues (0 et 1), probabilités dont la somme vaut 1 (0,3 + 0,7 = 1) : c'est une loi de Bernoulli.`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.2, 0.5, 0.3], ["0", "1", "2"], "Graphique B")}</div> Le graphique B représente une loi de Bernoulli.`, false,
+      `Trois issues possibles (0, 1 et 2) : ce n'est pas une loi de Bernoulli.`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.5, 0.5], ["0", "1"], "Graphique C")}</div> Le graphique C représente une loi de Bernoulli.`, true,
+      `Deux issues équiprobables (p = 0,5) : c'est une loi de Bernoulli.`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.6, 0.6], ["0", "1"], "Graphique D")}</div> Le graphique D représente une loi de Bernoulli.`, false,
+      `La somme des probabilités vaut 1,2 : ce n'est pas une loi de probabilité, donc pas une loi de Bernoulli.`),
+    sc => P(`<div class="graph-wrap">${svgCurveChart('normal', "Graphique E")}</div> Le graphique E représente une loi de Bernoulli.`, false,
+      `C'est une courbe continue : une loi de Bernoulli est discrète (exactement deux valeurs possibles).`)
+  ],
+
+  // Étape 3 : Schéma de Bernoulli
+  3: [
+    sc => P(`${sc.majordome} répète ${randInt(5, 20)} fois ${sc.action} à ${sc.lieu} dans les mêmes conditions. C'est un schéma de Bernoulli.`, true,
+      `Répétition identique et indépendante : les conditions du schéma sont réunies.`),
+    sc => P(`Dans un schéma de Bernoulli, ${sc.majordome} rappelle que les épreuves sont identiques et indépendantes.`, true,
+      `C'est la définition du schéma de Bernoulli.`),
+    sc => P(`Chaque ${sc.action} d'un schéma de Bernoulli est lui-même une épreuve de Bernoulli.`, true,
+      `Chaque étape est une expérience à deux issues, répétée à l'identique.`),
+    sc => P(`${sc.majordome} explique à ${sc.seigneur} qu'un schéma de Bernoulli est la répétition de n épreuves identiques et indépendantes.`, true,
+      `C'est la définition exacte du schéma de Bernoulli.`),
+    sc => P(`La probabilité de "${sc.succes}" doit rester constante à chaque ${sc.action} pour parler de schéma de Bernoulli à ${sc.lieu}.`, true,
+      `C'est la condition « épreuves identiques » : même p à chaque fois.`),
+    sc => P(`Un schéma de Bernoulli à ${sc.lieu} compte le nombre de "${sc.succes}" sur n ${sc.action}s.`, true,
+      `C'est bien le rôle d'un schéma de Bernoulli : on compte les succès.`),
+    sc => P(`Le neveu de la cuisinière tire trois ${sc.objetPl} d'une boîte sans les remettre. C'est un schéma de Bernoulli.`, false,
+      `Sans remise, p change à chaque tirage et les épreuves sont dépendantes : ce n'est pas un schéma de Bernoulli.`),
+    sc => P(`${sc.seigneur} affirme que les épreuves d'un schéma de Bernoulli peuvent être dépendantes, comme les ${sc.objetPl} qui se collent.`, false,
+      `La dépendance entre épreuves contredit la définition : elles doivent être indépendantes.`),
+    sc => P(`Dans un schéma de Bernoulli, ${sc.seigneur} soutient que p peut changer d'une épreuve à l'autre.`, false,
+      `La constance de p est une condition sine qua non du schéma de Bernoulli.`),
+    sc => P(`${sc.seigneur} dit que les épreuves doivent être simultanées pour être un schéma de Bernoulli.`, false,
+      `Elles doivent être identiques et indépendantes, pas simultanées.`),
+    sc => P(`Un schéma de Bernoulli n'exige pas que les épreuves soient identiques.`, false,
+      `Au contraire : épreuves identiques ET indépendantes sont exigées.`),
+    sc => P(`Un schéma de Bernoulli à ${sc.lieu} est une seule épreuve de Bernoulli.`, false,
+      `Un schéma est la RÉPÉTITION de n épreuves de Bernoulli, pas une seule.`)
+  ],
+
+  // Étape 4 : La loi binomiale
+  4: [
+    sc => P(`Si X ~ B(n,p), alors P(X=k) = C(n,k) · p^k · (1-p)^(n-k).`, true,
+      `C'est la formule de la loi binomiale.`),
+    sc => P(`La loi binomiale donne la probabilité d'obtenir k fois "${sc.succes}" en n ${sc.action}s identiques et indépendants.`, true,
+      `C'est exactement ce que calcule la loi binomiale.`),
+    sc => P(`X, le nombre de "${sc.succes}" sur n ${sc.action}s à ${sc.lieu}, compte les succès d'un schéma de Bernoulli.`, true,
+      `X compte les succès : c'est la définition d'une variable binomiale.`),
+    sc => P(`La loi binomiale est la loi du nombre de succès dans un schéma de Bernoulli, comme les "${sc.succes}" de ${sc.lieu}.`, true,
+      `C'est la définition de la loi binomiale.`),
+    sc => P(`Si X suit B(n,p), la somme des P(X=k) pour k de 0 à n vaut 1.`, true,
+      `Propriété fondamentale d'une loi de probabilité.`),
+    sc => P(`Si X ~ B(n,p), alors P(X=0) = (1-p)^n.`, true,
+      `P(X=0) = C(n,0) p⁰ (1-p)ⁿ = (1-p)ⁿ.`),
+    sc => P(`${sc.seigneur} affirme que P(X=k) = np pour tout k.`, false,
+      `La probabilité dépend de k ; elle ne peut pas être constante égale à np.`),
+    sc => P(`${sc.majordome} dit qu'on peut appliquer la loi binomiale à des tirages de ${sc.objetPl} sans remise.`, false,
+      `Sans remise, les épreuves sont dépendantes et p change : la loi binomiale ne s'applique pas.`),
+    sc => P(`Dans la formule de la loi binomiale, ${sc.seigneur} pense que l'exposant de p est n-k.`, false,
+      `L'exposant de p est k (nombre de succès) ; celui de (1-p) est n-k.`),
+    sc => P(`La loi binomiale ne dépend que de p, pas de n.`, false,
+      `Elle dépend des deux paramètres n et p.`),
+    sc => P(`Un tirage avec remise ne peut pas suivre une loi binomiale.`, false,
+      `Avec remise, les tirages sont identiques et indépendants : la loi binomiale s'applique.`),
+    sc => P(`Dans la loi binomiale, le nombre de succès k peut dépasser n.`, false,
+      `k est compris entre 0 et n : on ne peut pas avoir plus de succès que d'épreuves.`)
+  ],
+
+  // Étape 5 : Graphiques de la loi binomiale
+  5: [
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.001, 0.01, 0.04, 0.12, 0.21, 0.25, 0.21, 0.12, 0.04, 0.01, 0.001], ["0","1","2","3","4","5","6","7","8","9","10"], "Graphique A")}</div> Le graphique A représente une loi binomiale.`, true,
+      `Diagramme en bâtons (discret) symétrique en forme de cloche (n=10, p=0,5) : c'est une loi binomiale.`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.1, 0.3, 0.4, 0.2], ["0","1","2","3"], "Graphique B")}</div> Le graphique B représente une loi binomiale.`, true,
+      `Diagramme en bâtons asymétrique (par exemple n=3, p=0,2) : c'est une loi binomiale.`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.2, 0.2, 0.2, 0.2, 0.2], ["0","1","2","3","4"], "Graphique C")}</div> Le graphique C représente une loi binomiale.`, false,
+      `Diagramme uniforme (tous les bâtons ont la même hauteur) : ce n'est pas une loi binomiale.`),
+    sc => P(`<div class="graph-wrap">${svgCurveChart('normal', "Graphique D")}</div> Le graphique D représente une loi binomiale.`, false,
+      `C'est une courbe continue : la loi binomiale est une loi discrète (représentée par des bâtons).`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.4, 0.1, 0, 0.1, 0.4], ["0","1","2","3","4"], "Graphique E")}</div> Le graphique E représente une loi binomiale.`, false,
+      `Diagramme en U (deux pics) : impossible pour une loi binomiale qui est unimodale.`)
+  ],
+
+  // Étape 6 : Atelier Python I
+  6: PYTHON_QUESTIONS,
+
+  // Étape 7 : Coefficients binomiaux
+  7: [
+    sc => P(`${sc.majordome} a noté dans son carnet : C(n,k) = n! / (k! (n-k)!).`, true,
+      `C'est la formule du coefficient binomial.`),
+    sc => P(`C(n,k) = C(n, n-k).`, true,
+      `C'est la propriété de symétrie des coefficients binomiaux.`),
+    sc => P(`C(n,k) = C(n-1, k-1) + C(n-1, k).`, true,
+      `C'est la relation de Pascal : on isole un objet, choisi ou non.`),
+    sc => P(`${sc.majordome} rappelle que C(n,0) = 1 pour tout n ≥ 0.`, true,
+      `Il y a une seule façon de ne choisir aucun objet.`),
+    sc => P(`${sc.seigneur} affirme que C(n,1) = n pour tout n ≥ 1.`, true,
+      `Choisir 1 objet parmi n : il y a n façons.`),
+    (sc) => { const n = randInt(5, 9); const k = randInt(1, n-1); const v = comb(n, k);
+      return P(`${sc.majordome} calcule : C(${n}, ${k}) = ${v}.`, true,
+        `C(${n}, ${k}) = ${n}! / (${k}! × ${n-k}!) = ${v}.`); },
+    sc => P(`C(n,k) = n! / (n-k)!.`, false,
+      `Il manque le facteur k! au dénominateur.`),
+    sc => P(`C(n,k) = n^k.`, false,
+      `C(5,2) = 10 et 5² = 25 : ce n'est pas la bonne formule.`),
+    sc => P(`C(n,k) = C(n-1, k-1) × C(n-1, k).`, false,
+      `La relation de Pascal est une SOMME, pas un produit.`),
+    sc => P(`C(n,0) = 0 pour tout n ≥ 0.`, false,
+      `Au contraire, C(n,0) = 1 : une seule façon de ne rien choisir.`),
+    (sc) => { const n = randInt(4, 8); const k = randInt(1, n-1); const v = comb(n, k) + randInt(1, 10);
+      return P(`${sc.seigneur} affirme que C(${n}, ${k}) = ${v}.`, false,
+        `C(${n}, ${k}) = ${comb(n, k)}, pas ${v}.`); },
+    sc => P(`C(n,k) = C(n-1, k) - C(n-1, k-1).`, false,
+      `C'est une somme, pas une différence.`)
+  ],
+
+  // Étape 8 : Espérance, variance, écart-type
+  8: [
+    sc => P(`Pour X ~ B(n,p), ${sc.majordome} affirme que E(X) = np.`, true,
+      `E(X) = np : somme des espérances de n épreuves de Bernoulli indépendantes.`),
+    sc => P(`Pour X ~ B(n,p), la variance vaut np(1-p).`, true,
+      `V(X) = np(1-p) pour une loi binomiale.`),
+    sc => P(`L'écart-type d'une loi B(n,p) est √(np(1-p)).`, true,
+      `Écart-type = racine carrée de la variance.`),
+    (sc) => { const n = randInt(8, 40); const p = (randInt(10, 80) / 100);
+      return P(`Pour X ~ B(${n}, ${fr(p, 2)}), E(X) = ${fr(n*p, 2)}.`, true,
+        `E(X) = np = ${n} × ${fr(p, 2)} = ${fr(n*p, 2)}.`); },
+    sc => P(`L'espérance d'une loi binomiale peut être non entière (par exemple ${randInt(2,6)} × 0,5).`, true,
+      `np n'est pas nécessairement entier ; c'est une valeur moyenne, pas un effectif.`),
+    sc => P(`L'espérance est la valeur moyenne que l'on obtiendrait si l'on répétait l'expérience un très grand nombre de fois.`, true,
+      `C'est la loi des grands nombres : la moyenne empirique converge vers E(X).`),
+    sc => P(`Pour X ~ B(n,p), ${sc.seigneur} affirme que V(X) = np.`, false,
+      `V(X) = np(1-p) ; np est l'espérance, pas la variance.`),
+    sc => P(`Pour X ~ B(n,p), E(X) = p.`, false,
+      `E(X) = np ; il manque le facteur n.`),
+    sc => P(`La variance d'une loi binomiale peut être négative.`, false,
+      `Une variance est toujours ≥ 0 ; ici V(X) = np(1-p) ≥ 0.`),
+    sc => P(`L'écart-type d'une loi B(n,p) est np.`, false,
+      `L'écart-type vaut √(np(1-p)), pas np.`),
+    (sc) => { const n = randInt(8, 30); const p = (randInt(10, 70) / 100);
+      return P(`Pour X ~ B(${n}, ${fr(p, 2)}), E(X) = ${fr(n*p + randInt(1, 3), 2)}.`, false,
+        `E(X) = ${n} × ${fr(p, 2)} = ${fr(n*p, 2)}, pas ${fr(n*p + randInt(1, 3), 2)}.`); },
+    sc => P(`Pour X ~ B(n,p), ${sc.majordome} pense que E(X) = n + p.`, false,
+      `E(X) = np, pas n + p.`)
+  ],
+
+  // Étape 9 : Représentations graphiques
+  9: [
+    sc => P(`Pour p = 0,5, le diagramme en bâtons de la loi binomiale est symétrique.`, true,
+      `Quand p = 1/2, la loi binomiale est symétrique autour de n/2.`),
+    sc => P(`Pour p < 0,5, le diagramme s'étire vers la droite (grandes valeurs de k).`, true,
+      `Asymétrie positive : la queue s'étend vers les grandes valeurs de k.`),
+    sc => P(`Pour p > 0,5, le diagramme s'étire vers la gauche (petites valeurs de k).`, true,
+      `Asymétrie négative : la queue s'étend vers les petites valeurs de k.`),
+    sc => P(`Quand n augmente à p fixé, le diagramme se resserre autour de np.`, true,
+      `L'écart-type croît en √n mais n croît plus vite : resserrement relatif.`),
+    sc => P(`Le pic du diagramme est situé au voisinage de np.`, true,
+      `Le mode d'une binomiale est proche de np (plus précisément ⌊(n+1)p⌋).`),
+    (sc) => { const n = randInt(8, 20); const p = 0.5;
+      return P(`Pour X ~ B(${n}, 0,5), le pic du diagramme est à k = ${Math.round(n/2)}.`, true,
+        `Pour p = 0,5, le pic est à k = n/2 = ${Math.round(n/2)}.`); },
+    sc => P(`Le maximum du diagramme est toujours à k = n/2, quelle que soit la valeur de p.`, false,
+      `Le maximum est au voisinage de np, pas nécessairement à n/2.`),
+    sc => P(`Le diagramme de la loi binomiale est toujours symétrique.`, false,
+      `La symétrie n'est vraie que pour p = 1/2.`),
+    sc => P(`Quand n augmente, le diagramme devient plat comme une crêpe.`, false,
+      `Au contraire, il se resserre autour de np : il ne devient pas plat.`),
+    sc => P(`Pour p < 0,5, le diagramme s'étire vers la gauche.`, false,
+      `Pour p < 0,5, l'étirement est vers la droite (asymétrie positive).`),
+    sc => P(`Le pic du diagramme est toujours à k = 0.`, false,
+      `Le pic est au voisinage de np, pas à 0 (sauf si np est très petit).`),
+    (sc) => { const n = randInt(6, 15); const p = 0.3;
+      return P(`Pour X ~ B(${n}, 0,3), le pic du diagramme est au voisinage de k = ${Math.round(n*p) + 3}.`, false,
+        `np = ${fr(n*p, 2)}, le pic est au voisinage de ${Math.round(n*p)}, pas ${Math.round(n*p)+3}.`); }
+  ],
+
+  // Étape 10 : La planche de Galton
+  10: [
+    sc => P(`Une planche de Galton installée à ${sc.lieu} illustre la loi binomiale : chaque bille rebondit à gauche ou à droite.`, true,
+      `Chaque rebond est une épreuve de Bernoulli ; le bac final suit une loi binomiale.`),
+    sc => P(`Chaque bille suit un chemin indépendant des autres.`, true,
+      `Les billes ne s'influencent pas entre elles : les trajets sont indépendants.`),
+    sc => P(`La probabilité qu'une bille arrive dans le bac k est C(n,k) · p^k · (1-p)^(n-k).`, true,
+      `Application directe de la loi binomiale : k chemins à droite sur n.`),
+    sc => P(`Dans une planche équilibrée (p = 0,5), les bacs centraux sont les plus probables.`, true,
+      `Pour p = 1/2, la loi est symétrique et centrée sur n/2.`),
+    sc => P(`Il y a n+1 bacs pour n rangées de clous.`, true,
+      `Le nombre de succès va de 0 à n : cela fait n+1 bacs.`),
+    sc => P(`Le trajet d'une bille est un chemin dans un arbre de Bernoulli à ${sc.lieu}.`, true,
+      `Chaque embranchement est une épreuve de Bernoulli ; le trajet est un chemin de l'arbre.`),
+    sc => P(`Toutes les billes finissent dans le même bac.`, false,
+      `Les billes se répartissent selon la loi binomiale.`),
+    sc => P(`La planche de Galton n'a aucun lien avec la loi binomiale.`, false,
+      `C'est son illustration physique classique.`),
+    sc => P(`Chaque bille ne passe que par un seul clou.`, false,
+      `Chaque bille passe par une suite de clous, un par rangée.`),
+    sc => P(`Il y a n bacs pour n rangées de clous.`, false,
+      `Il y a n+1 bacs : de 0 succès à n succès.`),
+    sc => P(`Les bacs latéraux sont toujours les plus probables.`, false,
+      `Pour p = 0,5, ce sont les bacs centraux les plus probables.`),
+    sc => P(`Les trajets des billes sont dépendants les uns des autres.`, false,
+      `Au contraire, les trajets sont indépendants.`)
+  ],
+
+  // Étape 11 : Moivre–Laplace
+  11: [
+    sc => P(`Pour n grand, la loi B(n,p) peut être approchée par une loi normale.`, true,
+      `Théorème de Moivre–Laplace.`),
+    sc => P(`L'approximation normale est valable en pratique pour np ≥ 5 et n(1-p) ≥ 5.`, true,
+      `Ce sont les conditions usuelles d'application.`),
+    sc => P(`L'approximation normale de B(n,p) a pour moyenne np.`, true,
+      `Même moyenne que la binomiale.`),
+    sc => P(`L'approximation normale de B(n,p) a pour écart-type √(np(1-p)).`, true,
+      `Même écart-type que la binomiale.`),
+    sc => P(`Pour n grand, B(n,p) ≈ N(np, √(np(1-p))).`, true,
+      `Énoncé du théorème de Moivre–Laplace.`),
+    sc => P(`L'approximation normale nécessite que n soit grand.`, true,
+      `C'est une approximation asymptotique.`),
+    sc => P(`L'écart-type de l'approximation normale est np.`, false,
+      `L'écart-type est √(np(1-p)), pas np.`),
+    sc => P(`L'approximation normale est valable pour tout n et tout p.`, false,
+      `Il faut n grand et p ni trop proche de 0 ni de 1.`),
+    sc => P(`L'approximation normale remplace la binomiale par une loi de Poisson.`, false,
+      `Moivre–Laplace approche par une loi NORMALE, pas de Poisson.`),
+    sc => P(`L'approximation normale est valable pour n petit.`, false,
+      `Elle est asymptotique : valable pour n grand.`),
+    sc => P(`L'approximation normale a pour moyenne n.`, false,
+      `La moyenne est np, pas n.`),
+    sc => P(`La loi normale d'approximation a pour écart-type √(np).`, false,
+      `L'écart-type est √(np(1-p)), pas √(np).`)
+  ],
+
+  // Étape 12 : Graphiques de la loi normale
+  12: [
+    sc => P(`<div class="graph-wrap">${svgCurveChart('normal', "Graphique A")}</div> Le graphique A représente une loi normale.`, true,
+      `Courbe en cloche symétrique et continue : c'est une loi normale.`),
+    sc => P(`<div class="graph-wrap">${svgCurveChart('normal_broad', "Graphique B")}</div> Le graphique B représente une loi normale.`, true,
+      `Courbe en cloche plus évasée (écart-type plus grand) : c'est aussi une loi normale.`),
+    sc => P(`<div class="graph-wrap">${svgCurveChart('uniform', "Graphique C")}</div> Le graphique C représente une loi normale.`, false,
+      `Courbe plate (loi uniforme) : ce n'est pas une loi normale.`),
+    sc => P(`<div class="graph-wrap">${svgCurveChart('skew', "Graphique D")}</div> Le graphique D représente une loi normale.`, false,
+      `Courbe asymétrique : une loi normale est toujours symétrique.`),
+    sc => P(`<div class="graph-wrap">${svgBarChart([0.01, 0.05, 0.15, 0.35, 0.35, 0.15, 0.05, 0.01], ["0","1","2","3","4","5","6","7"], "Graphique E")}</div> Le graphique E représente une loi normale.`, false,
+      `C'est un diagramme en bâtons discret, pas une courbe continue.`)
+  ],
+
+  // Étape 13 : Atelier Python II
+  13: PYTHON_QUESTIONS,
+
+  // Étape 14 : Programmes Python (formule)
+  14: [
+    sc => P(`Dans le code de la loi binomiale, on pose q = 1 - p.`, true,
+      `q est la probabilité de l'échec.`),
+    sc => P(`P[0] = q^n.`, true,
+      `P(X=0) = C(n,0) p⁰ qⁿ = qⁿ.`),
+    sc => P(`C(n, k+1) / C(n, k) = (n-k) / (k+1).`, true,
+      `C'est l'identité des coefficients binomiaux utilisée dans la récurrence.`),
+    sc => P(`La ligne correcte dans la boucle est : P.append(P[-1] * (n-k)/(k+1) * p/q).`, true,
+      `C'est exactement le rapport C(n,k+1)/C(n,k) multiplié par p/q.`),
+    sc => P(`La fonction retourne la liste des probabilités P(X=k) pour k de 0 à n.`, true,
+      `La fonction construit P[0], P[1], ..., P[n].`),
+    sc => P(`P(X=0) = q^n, ce qui explique l'initialisation P = [q**n].`, true,
+      `On initialise avec P(X=0) = qⁿ.`),
+    sc => P(`La ligne correcte dans la boucle est : P.append(P[-1] * (k+1)/(n-k) * p/q).`, false,
+      `Le rapport est inversé : c'est (n-k)/(k+1), pas (k+1)/(n-k).`),
+    sc => P(`La ligne correcte dans la boucle est : P.append(P[-1] * p/q) sans coefficient binomial.`, false,
+      `Sans le rapport des coefficients binomiaux, le calcul est faux.`),
+    sc => P(`La fonction retourne une seule probabilité.`, false,
+      `Elle retourne une liste de probabilités.`),
+    sc => P(`La fonction retourne une chaîne de caractères.`, false,
+      `Elle retourne une liste de nombres.`),
+    sc => P(`On initialise P = [p^n].`, false,
+      `On initialise P = [q^n] = [(1-p)^n].`),
+    sc => P(`C(n, k+1) / C(n, k) = (k+1) / (n-k).`, false,
+      `C'est l'inverse : (n-k)/(k+1).`)
+  ],
+
+  // Étape 15 : Épreuve finale
+  15: [
+    sc => P(`Pour X ~ B(20, 0,25), E(X) = 5.`, true,
+      `E(X) = 20 × 0,25 = 5.`),
+    sc => P(`P(X ≥ 1) = 1 - (1-p)^n.`, true,
+      `P(X ≥ 1) = 1 - P(X=0) = 1 - (1-p)ⁿ.`),
+    sc => P(`Avec remise, les tirages peuvent suivre une loi binomiale.`, true,
+      `Avec remise : tirages identiques et indépendants.`),
+    sc => P(`L'événement contraire de X ≥ 1 est X = 0.`, true,
+      `Le contraire de « au moins un succès » est « aucun succès ».`),
+    sc => P(`Une loi binomiale compte le nombre de succès (par exemple les "${sc.succes}" de ${sc.lieu}).`, true,
+      `C'est la définition : nombre de succès dans un schéma de Bernoulli.`),
+    sc => P(`P(X = 0) = (1-p)^n.`, true,
+      `P(X=0) = C(n,0) p⁰ (1-p)ⁿ = (1-p)ⁿ.`),
+    sc => P(`P(X ≥ 1) = (1-p)^n.`, false,
+      `(1-p)ⁿ est P(X=0), pas P(X≥1).`),
+    sc => P(`Sans remise, les tirages suivent une loi binomiale.`, false,
+      `Sans remise : dépendance, pas de loi binomiale.`),
+    sc => P(`Pour B(n,p), V(X) = np.`, false,
+      `V(X) = np(1-p), pas np.`),
+    sc => P(`E(X) = p pour B(n,p).`, false,
+      `E(X) = np, pas p.`),
+    sc => P(`La variance de B(n,p) peut être négative.`, false,
+      `V(X) = np(1-p) ≥ 0.`),
+    sc => P(`P(X = 0) = p^n.`, false,
+      `P(X=0) = (1-p)ⁿ, pas pⁿ.`)
+  ],
+
+  // Étape 16 : Épilogue
+  16: [
+    sc => P(`Si les conditions du schéma de Bernoulli ne sont pas réunies, on ne peut pas appliquer la loi binomiale.`, true,
+      `La loi binomiale exige des épreuves identiques et indépendantes.`),
+    sc => P(`Reconnaître une loi binomiale nécessite de vérifier : répétition, deux issues, p constant, indépendance, comptage des succès.`, true,
+      `La méthode du majordome : cinq conditions à vérifier.`),
+    sc => P(`Un tirage sans remise de ${sc.objetPl} ne suit pas une loi binomiale.`, true,
+      `Sans remise : dépendance, p change.`),
+    sc => P(`Avec remise, un tirage de ${sc.objetPl} à ${sc.lieu} peut suivre une loi binomiale.`, true,
+      `Avec remise : identiques et indépendants.`),
+    sc => P(`Un schéma de Bernoulli exige que les épreuves soient indépendantes.`, true,
+      `C'est l'une des deux conditions du schéma.`),
+    sc => P(`Si X ~ B(n,p), alors X compte le nombre de succès sur n épreuves.`, true,
+      `C'est la définition de la variable binomiale.`),
+    sc => P(`« Il y a plus de deux issues, donc ce n'est pas binomial » est un bon argument.`, false,
+      `On peut regrouper les issues en deux catégories : succès / échec.`),
+    sc => P(`« On tire n cartes sans remise, donc c'est binomial » est un bon argument.`, false,
+      `Sans remise : les tirages sont dépendants, ce n'est pas binomial.`),
+    sc => P(`Le fait que les épreuves soient identiques ne suffit pas pour avoir une loi binomiale.`, false,
+      `Il faut aussi l'indépendance (et les autres conditions).`),
+    sc => P(`La loi binomiale s'applique à toutes les expériences aléatoires.`, false,
+      `Elle exige des conditions précises (schéma de Bernoulli).`),
+    sc => P(`Si les épreuves sont dépendantes, la loi binomiale s'applique quand même.`, false,
+      `La dépendance contredit une condition du schéma.`),
+    sc => P(`« C'est une expérience aléatoire, donc c'est une loi binomiale » est un bon argument.`, false,
+      `Une expérience aléatoire ne suffit pas : il faut un schéma de Bernoulli.`)
+  ]
+};
+
+/* ============================================================
+   5. MÉTA PAR ÉTAPE (notion, intro, synthèse)
+   ============================================================ */
+const STEP_META = {
+  1: {
+    notion: 'Épreuve de Bernoulli',
+    intro: (sc) => sc.story + `<div class="exp-note">🧪 <strong>Expérience aléatoire à ${sc.lieu}.</strong> Chaque affirmation ci-dessous met en scène ${sc.seigneur} et ${sc.majordome}. Avant de cocher, vous ne savez pas si votre jugement sera correct : c'est précisément cela, une épreuve de Bernoulli.</div>`,
+    synthese: `<div class="box def"><span class="lbl">Définition 1 — Épreuve de Bernoulli</span>
+      <p>Une <strong>épreuve de Bernoulli</strong> est une expérience aléatoire qui n'admet que <strong>deux issues</strong> : le succès $S$ de probabilité $p$ et l'échec $\\overline{S}$ de probabilité $q = 1-p$.</p></div>`
+  },
+  2: {
+    notion: 'Graphiques de Bernoulli',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>L'œil du statisticien.</strong> ${sc.majordome} a dessiné ces graphiques pour ${sc.seigneur}. Pouvez-vous dire lesquels représentent une loi de Bernoulli ?</div>`,
+    synthese: `<div class="box def"><span class="lbl">À retenir</span>
+      <p>Une loi de Bernoulli se représente par un <strong>diagramme à deux bâtons</strong> (deux issues possibles, 0 et 1) dont la somme des hauteurs vaut 1.</p></div>`
+  },
+  3: {
+    notion: 'Schéma de Bernoulli',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Répéter l'expérience.</strong> ${sc.majordome} voudrait répéter ${sc.action} à ${sc.lieu}, comme ${sc.seigneur} le fait tous les matins. Mais répéter n'importe comment ne suffit pas.</div>`,
+    synthese: `<div class="box def"><span class="lbl">Définition 2 — Schéma de Bernoulli</span>
+      <p>Un <strong>schéma de Bernoulli</strong> est la répétition de $n$ épreuves <strong>identiques</strong> et <strong>indépendantes</strong>.</p></div>
+      <div class="box rem"><span class="lbl">Rappel de l'étape 1</span>
+      <p>Une épreuve de Bernoulli est une expérience <em>unique</em>. C'est sa répétition, soumise aux deux conditions ci-dessus, qui fait l'objet de la présente étape.</p></div>`
+  },
+  4: {
+    notion: 'La loi binomiale',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Compter les succès.</strong> ${sc.majordome} note dans son carnet le nombre de "${sc.succes}" sur n ${sc.action}s. Cette variable s'appelle X.</div>`,
+    synthese: `<div class="box def"><span class="lbl">Définition 3 — Loi binomiale</span>
+      <p>$X \\sim \\mathcal{B}(n,p)$ : $P(X=k) = \\dbinom{n}{k} p^k (1-p)^{n-k}$.</p></div>`
+  },
+  5: {
+    notion: 'Graphiques de la loi binomiale',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Reconnaître la bête.</strong> Voici des graphiques affichés dans le bureau de ${sc.lieu}. Lesquels représentent une loi binomiale ?</div>`,
+    synthese: `<div class="box def"><span class="lbl">À retenir</span>
+      <p>Une loi binomiale se représente par un <strong>diagramme en bâtons</strong> (valeurs entières de 0 à n), généralement en forme de cloche ou asymétrique, dont la somme des hauteurs vaut 1. Elle est toujours discrète.</p></div>`
+  },
+  6: {
+    notion: 'Atelier Python I',
+    intro: (sc) => `<div class="exp-note">💻 <strong>Le laboratoire de ${sc.majordome}.</strong> De courts programmes Python traînent sur le bureau. Saurez-vous dire ce qu'ils font ? (Programmes tirés au hasard à chaque chargement).</div>`,
+    synthese: `<div class="box def"><span class="lbl">À retenir</span>
+      <p>Savoir lire un programme Python (boucles, conditions, listes) permet de comprendre et de simuler des expériences aléatoires.</p></div>`
+  },
+  7: {
+    notion: 'Coefficients binomiaux',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Compter les chemins.</strong> Combien de façons d'obtenir exactement k fois "${sc.succes}" en n essais à ${sc.lieu} ?</div>`,
+    synthese: `<div class="box def"><span class="lbl">Définition 4 — Coefficient binomial</span>
+      <p>$\\dbinom{n}{k} = \\dfrac{n!}{k!\\,(n-k)!}$.</p></div>
+      <div class="box prop"><span class="lbl">Propriétés</span>
+      <ol><li>Symétrie : $\\dbinom{n}{k} = \\dbinom{n}{n-k}$</li>
+      <li>Relation de Pascal : $\\dbinom{n}{k} = \\dbinom{n-1}{k-1} + \\dbinom{n-1}{k}$</li>
+      <li>$\\sum_{k=0}^{n} \\dbinom{n}{k} = 2^n$</li></ol></div>`
+  },
+  8: {
+    notion: 'Espérance, variance, écart-type',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Mesurer le hasard.</strong> Combien de "${sc.succes}" peut-on espérer à long terme à ${sc.lieu} ? La question préoccupe ${sc.majordome} depuis des années.</div>`,
+    synthese: `<div class="box prop"><span class="lbl">Théorème 1</span>
+      <p>$\\mathbb{E}(X) = np$, $\\mathrm{V}(X) = npq$, $\\sigma(X) = \\sqrt{npq}$ avec $q = 1-p$.</p></div>`
+  },
+  9: {
+    notion: 'Représentations graphiques',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Voir le hasard.</strong> ${sc.majordome} dresse le diagramme en bâtons des "${sc.succes}" sur le tableau du grand salon de ${sc.lieu}.</div>`,
+    synthese: `<div class="box prop"><span class="lbl">Lire un diagramme</span>
+      <ul><li>$p = 0{,}5$ : symétrique.</li>
+      <li>$p < 0{,}5$ : asymétrie positive (queue à droite).</li>
+      <li>$p > 0{,}5$ : asymétrie négative (queue à gauche).</li>
+      <li>$n$ grand : resserrement autour de $np$.</li></ul></div>`
+  },
+  10: {
+    notion: 'La planche de Galton',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Le hasard en cascade.</strong> Imaginez une planche de Galton installée dans la serre de ${sc.lieu} : chaque clou y serait un ${sc.objet} tombant depuis les hauteurs.</div>`,
+    synthese: `<div class="box def"><span class="lbl">Planche de Galton</span>
+      <p>$P(\\text{bac } k) = \\dbinom{n}{k} p^k (1-p)^{n-k}$.</p></div>`
+  },
+  11: {
+    notion: 'Moivre–Laplace',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Le hasard devient prévisible.</strong> Quand on répète ${sc.action} un très grand nombre de fois à ${sc.lieu}, la loi binomiale ressemble à une cloche.</div>`,
+    synthese: `<div class="box prop"><span class="lbl">Théorème de Moivre–Laplace</span>
+      <p>Pour $np \\geq 5$ et $n(1-p) \\geq 5$ : $X \\approx \\mathcal{N}(np\\,;\\,\\sqrt{np(1-p)})$.</p></div>`
+  },
+  12: {
+    notion: 'Graphiques de la loi normale',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>La cloche se précise.</strong> ${sc.majordome} compare la loi binomiale à la loi normale. Voici quelques courbes. Lesquelles sont des lois normales ?</div>`,
+    synthese: `<div class="box def"><span class="lbl">À retenir</span>
+      <p>Une loi normale se représente par une <strong>courbe continue</strong> symétrique en forme de cloche (courbe de Gauss).</p></div>`
+  },
+  13: {
+    notion: 'Atelier Python II',
+    intro: (sc) => `<div class="exp-note">💻 <strong>Les archives de la bibliothèque.</strong> ${sc.majordome} a retrouvé d'autres scripts. À vous de les décrypter. (Programmes tirés au hasard à chaque chargement).</div>`,
+    synthese: `<div class="box prop"><span class="lbl">Pour bien lire un programme</span>
+      <ul><li>Repérer la structure (boucle, condition).</li>
+      <li>Suivre l'évolution des variables pas à pas.</li>
+      <li>Vérifier le type de données manipulées (listes, entiers).</li></ul></div>`
+  },
+  14: {
+    notion: 'Programmes Python (Loi binomiale)',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Simuler le hasard.</strong> Le neveu Babbage code sur sa machine le comptage des "${sc.succes}" de ${sc.lieu}. La fonction est tachée de thé.</div>`,
+    synthese: `<div class="box def"><span class="lbl">La fonction réparée</span>
+<pre><code><span class="kw">def</span> <span class="fn">loi_binomiale</span>(n, p):
+    q = <span class="nb">1</span> - p
+    P = [q**n]
+    <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(n):
+        P.append(P[-1] * (n - k) / (k + <span class="nb">1</span>) * p / q)
+    <span class="kw">return</span> P</code></pre></div>`
+  },
+  15: {
+    notion: 'Épreuve finale',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Expérience aléatoire finale.</strong> Toutes les connaissances accumulées à ${sc.lieu} doivent être convoquées. ${sc.seigneur} attend.</div>`,
+    synthese: `<div class="box prop"><span class="lbl">Les trois réponses clés</span>
+      <ol><li>$\\mathbb{E}(X) = 5$ pour $\\mathcal{B}(20\\,;\\,0{,}25)$.</li>
+      <li>$P(X \\geq 1) = 1 - (1-p)^n$.</li>
+      <li>Sans remise : pas de loi binomiale (dépendance).</li></ol></div>`
+  },
+  16: {
+    notion: 'Épilogue, méthode et rédaction type',
+    intro: (sc) => `<div class="exp-note">🧪 <strong>Dernière expérience aléatoire.</strong> ${sc.seigneur} fut élu membre honoraire de la Royal Society of Biscuit Statistics. ${sc.majordome} reçut une augmentation de trois pence.</div>`,
+    synthese: `<div class="box prop"><span class="lbl">La méthode du majordome</span>
+      <ol><li>Répète-t-on une même expérience un nombre $n$ de fois ?</li>
+      <li>Chaque épreuve a-t-elle deux issues utiles ?</li>
+      <li>La probabilité de succès est-elle constante ?</li>
+      <li>Les épreuves sont-elles indépendantes ?</li>
+      <li>$X$ compte-t-il le nombre de succès ?</li></ol></div>
+      <div class="finish-card"><div class="seal">${SC.lieu.substring(0, 10).toUpperCase()}</div>
+      <h3>Félicitations, membre honoraire</h3>
+      <p>Vous avez traversé les seize pièces de ${SC.lieu}.</p>
+      <button class="btn-next" onclick="location.reload()">Recommencer l'enquête</button></div>`
+  }
+};
+
+/* ============================================================
+   6. SÉLECTION MIXTE (vraies + fausses)
+   ============================================================ */
+function pickPropositions(gens, sc){
+  const all = gens.map(function(g){ return g(sc); });
+  const trues = shuffleArr(all.filter(function(p){ return p.correct; }));
+  const falses = shuffleArr(all.filter(function(p){ return !p.correct; }));
+  const k = randInt(4, Math.min(10, all.length));
+  let nTrue = Math.floor(k / 2);
+  let nFalse = k - nTrue;
+  nTrue = Math.min(nTrue, trues.length);
+  nFalse = Math.min(nFalse, falses.length);
+  while(nTrue + nFalse < k && nTrue < trues.length){ nTrue++; }
+  while(nTrue + nFalse < k && nFalse < falses.length){ nFalse++; }
+  return shuffleArr(trues.slice(0, nTrue).concat(falses.slice(0, nFalse)));
+}
+
+/* ============================================================
+   7. CONSTRUCTION DES ÉTAPES
+   ============================================================ */
+const STEPS = [];
+for(let n = 1; n <= 16; n++){
+  const meta = STEP_META[n];
+  const gens = STEP_GEN[n];
+  STEPS.push({
+    n: n,
+    notion: meta.notion,
+    intro: meta.intro(SC),
+    synthese: meta.synthese,
+    propositions: pickPropositions(gens, SC)
+  });
+}
+
+/* ============================================================
+   8. ÉTAT / UI
+   ============================================================ */
+const state = { current: 1, maxUnlocked: 1, completed: new Set(), built: new Set() };
+const storyEl = document.getElementById('story');
+const menuEl = document.getElementById('stepMenu');
+const progLabel = document.getElementById('progLabel');
+const progBar = document.getElementById('progBar');
+
+function propId(stepN, i){ return 'p' + stepN + '_' + i; }
+
+/* ============================================================
+   9. MENU VERTICAL
+   ============================================================ */
+function renderMenu(){
+  let html = '<div class="menu-title">' + SC.lieu + '</div><div class="menu-list">';
+  STEPS.forEach(function(s){
+    const isDone = state.completed.has(s.n);
+    const isViewing = state.current === s.n;
+    const isUnlocked = s.n <= state.maxUnlocked;
+    let cls = 'menu-item';
+    if(isViewing) cls += ' viewing';
+    if(isDone) cls += ' done';
+    if(!isUnlocked) cls += ' locked';
+    let icon;
+    if(isViewing) icon = '▶';
+    else if(isDone) icon = '✔';
+    else if(!isUnlocked) icon = '🔒';
+    else icon = '○';
+    const dis = !isUnlocked ? 'disabled' : '';
+    html += '<button type="button" class="' + cls + '" data-step="' + s.n + '" ' + dis + '>' +
+      '<span class="menu-icon">' + icon + '</span>' +
+      '<span class="menu-body"><span class="menu-num">Étape ' + s.n + '</span>' +
+      '<span class="menu-label">' + s.notion + '</span></span></button>';
+  });
+  html += '</div>';
+  menuEl.innerHTML = html;
+  menuEl.querySelectorAll('.menu-item:not([disabled])').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      showStep(parseInt(btn.getAttribute('data-step'), 10));
+    });
+  });
+}
+
+/* ============================================================
+   10. RENDU D'UNE ÉTAPE
+   ============================================================ */
+function renderStepHTML(step){
+  const n = step.propositions.length;
+  let propsHTML = '';
+  step.propositions.forEach(function(p, i){
+    const id = propId(step.n, i);
+    propsHTML += '<div class="prop-item" id="item-' + id + '">' +
+      '<div class="prop-top"><span class="prop-num">' + (i+1) + '</span>' +
+      '<span class="prop-text">' + p.texte + '</span></div>' +
+      '<div class="prop-choices">' +
+        '<label class="opt-vf vrai"><input type="radio" name="' + id + '" value="vrai"><span>VRAI</span></label>' +
+        '<label class="opt-vf faux"><input type="radio" name="' + id + '" value="faux"><span>FAUX</span></label>' +
+      '</div>' +
+      '<div class="prop-result" id="res-' + id + '"></div></div>';
+  });
+
+  return '<div class="step-head"><span class="step-num">' + step.n + '</span>' +
+    '<div><h2>' + step.notion + '</h2><p class="notion">Étape ' + step.n + ' · ' + SC.lieu + ' · ' + n + ' jugements</p></div>' +
+    '<span class="badge">' + (step.n === STEPS.length ? 'Fin' : 'À juger') + '</span></div>' +
+    '<div class="step-body">' + step.intro +
+    '<div class="prop-list">' + propsHTML + '</div>' +
+    '<div class="counter-note" id="counter-' + step.n + '">0 / ' + n + ' propositions jugées</div>' +
+    '<button class="btn-verif" type="button">Valider mes jugements</button>' +
+    '<div class="fb step-fb"></div></div><div class="reveal"></div>';
+}
+
+function updateCounter(step, card){
+  const n = step.propositions.length;
+  let count = 0;
+  for(let i = 0; i < n; i++){
+    if(card.querySelector('input[name="' + propId(step.n, i) + '"]:checked')) count++;
+  }
+  const el = card.querySelector('#counter-' + step.n);
+  if(el) el.textContent = count + ' / ' + n + ' propositions jugées';
+}
+
+function ensureStepBuilt(n){
+  if(state.built.has(n)) return;
+  const step = STEPS.find(function(s){ return s.n === n; });
+  if(!step) return;
+  const card = document.getElementById('step-' + n);
+  if(!card) return;
+  card.innerHTML = renderStepHTML(step);
+  const btn = card.querySelector('.btn-verif');
+  btn.addEventListener('click', function(){ validateStep(step, card); });
+  card.querySelectorAll('.prop-choices input').forEach(function(inp){
+    inp.addEventListener('change', function(){ updateCounter(step, card); });
+  });
+  typeset(card);
+  state.built.add(n);
+}
+
+/* ============================================================
+   11. NAVIGATION
+   ============================================================ */
+function showStep(n){
+  if(n < 1 || n > STEPS.length) return;
+  if(n > state.maxUnlocked) return;
+  ensureStepBuilt(n);
+  document.querySelectorAll('.step').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('step-' + n).classList.add('active');
+  state.current = n;
+  renderMenu();
+  updateProgress();
+  typeset(document.getElementById('step-' + n));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress(){
+  const total = STEPS.length;
+  progLabel.textContent = 'Étape ' + state.current + ' / ' + total + ' — ' +
+    state.completed.size + ' validée' + (state.completed.size > 1 ? 's' : '');
+  progBar.style.width = ((state.completed.size / total) * 100) + '%';
+}
+
+/* ============================================================
+   12. TABLEAU DE FEEDBACK
+   ============================================================ */
+function buildFeedbackTable(step, rows){
+  let tbody = '';
+  rows.forEach(function(r){
+    const rowClass = r.ok ? 'row-ok' : 'row-no';
+    const resBadge = r.ok
+      ? '<span class="badge-ok">✓ Succès</span><br><span style="font-size:.72rem; color:#065f46;">$X_{' + r.i + '}=1$</span>'
+      : '<span class="badge-no">✗ Échec</span><br><span style="font-size:.72rem; color:#991b1b;">$X_{' + r.i + '}=0$</span>';
+    const attClass = r.correct ? 'att-vrai' : 'att-faux';
+    const attLabel = r.correct ? 'VRAI' : 'FAUX';
+    const givLabel = r.given === 'vrai' ? 'VRAI' : 'FAUX';
+    tbody += '<tr class="' + rowClass + '"><td class="col-n">' + r.i + '</td>' +
+      '<td class="col-prop">' + r.texte + '</td>' +
+      '<td class="col-att ' + attClass + '">' + attLabel + '</td>' +
+      '<td class="col-giv">' + givLabel + '</td>' +
+      '<td class="col-res">' + resBadge + '</td>' +
+      '<td class="col-just">' + r.justif + '</td></tr>';
+  });
+  const n = rows.length;
+  const successes = rows.filter(function(r){ return r.ok; }).length;
+  const failures = n - successes;
+  return '<div class="feedback-wrap"><h4>📋 Tableau récapitulatif — Succès et échecs</h4>' +
+    '<table class="feedback-table"><thead><tr>' +
+      '<th class="col-n">N°</th><th class="col-prop">Proposition</th>' +
+      '<th class="col-att">Attendu</th><th class="col-giv">Votre réponse</th>' +
+      '<th class="col-res">Résultat</th><th class="col-just">Justification</th>' +
+    '</tr></thead><tbody>' + tbody + '</tbody>' +
+    '<tfoot><tr><td colspan="4">Bilan de l\'étape</td><td colspan="2">' +
+      '<span class="big">✓ ' + successes + '</span> succès &nbsp;·&nbsp; ' +
+      '<span class="big">✗ ' + failures + '</span> échec' + (failures > 1 ? 's' : '') +
+      ' &nbsp;—&nbsp; soit ' + fr(successes / n * 100, 1) + ' % de réussite' +
+    '</td></tr></tfoot></table></div>';
+}
+
+/* ============================================================
+   13. VALIDATION
+   ============================================================ */
+function validateStep(step, card){
+  const n = step.propositions.length;
+  const answers = [];
+  let missing = false;
+  for(let i = 0; i < n; i++){
+    const id = propId(step.n, i);
+    const sel = card.querySelector('input[name="' + id + '"]:checked');
+    if(!sel) missing = true;
+    answers.push(sel ? sel.value : null);
+  }
+  const fbEl = card.querySelector('.step-fb');
+  if(missing){
+    fbEl.className = 'fb step-fb no';
+    fbEl.innerHTML = 'Il reste des propositions sans jugement. Cochez VRAI ou FAUX pour chacune.';
+    return;
+  }
+
+  card.querySelectorAll('.prop-choices input').forEach(function(el){ el.disabled = true; });
+  const btn = card.querySelector('.btn-verif');
+  btn.disabled = true;
+  btn.textContent = 'Jugements enregistrés ✔';
+
+  let successes = 0;
+  const rows = [];
+
+  step.propositions.forEach(function(p, i){
+    const id = propId(step.n, i);
+    const expected = p.correct ? 'vrai' : 'faux';
+    const given = answers[i];
+    const ok = (given === expected);
+    if(ok) successes++;
+
+    const itemEl = card.querySelector('#item-' + id);
+    itemEl.classList.add(ok ? 'correct-reveal' : 'incorrect-reveal');
+    const resEl = card.querySelector('#res-' + id);
+    resEl.classList.add('show', ok ? 'ok' : 'no');
+    const expectedLabel = p.correct ? 'VRAI' : 'FAUX';
+    const givenLabel = given === 'vrai' ? 'VRAI' : 'FAUX';
+    const lawLine = ok
+      ? 'Loi de Bernoulli du jugement ' + (i+1) + ' : $X_{' + (i+1) + '} \\sim \\mathcal{B}(1\\,;\\,\\tfrac{1}{2})$ — issue favorable : $X_{' + (i+1) + '} = 1$ (succès)'
+      : 'Loi de Bernoulli du jugement ' + (i+1) + ' : $X_{' + (i+1) + '} \\sim \\mathcal{B}(1\\,;\\,\\tfrac{1}{2})$ — issue défavorable : $X_{' + (i+1) + '} = 0$ (échec)';
+    resEl.innerHTML = '<div><strong>Réponse attendue :</strong> ' + expectedLabel +
+      ' · <strong>Votre réponse :</strong> ' + givenLabel + ' · ' +
+      (ok ? '✓ Succès' : '✗ Échec') + '</div>' +
+      '<div class="law-line">' + lawLine + '</div>';
+    typeset(resEl);
+
+    rows.push({ i: i+1, texte: p.texte, correct: p.correct, justif: p.justif, given: given, ok: ok });
+  });
+
+  state.completed.add(step.n);
+  if(step.n + 1 <= STEPS.length){
+    state.maxUnlocked = Math.max(state.maxUnlocked, step.n + 1);
+  }
+
+  const scoreHTML = '<div class="summary">' +
+    '<p class="score">Score : ' + successes + ' succès sur ' + n + ' jugements</p>' +
+    '<p class="calc">Chaque jugement est une <strong>épreuve de Bernoulli</strong> à deux issues : succès (jugement correct) ou échec (jugement incorrect).<br>' +
+    'Le nombre total de succès $S = \\sum_{i=1}^{' + n + '} X_i$ suit une loi binomiale si les jugements sont supposés indépendants.</p></div>';
+
+  const tableHTML = buildFeedbackTable(step, rows);
+
+  const pTotal = Math.pow(0.5, n);
+  const conclusionHTML = '<div class="conclusion-box">' +
+    '<h4>Application pratique de la loi de Bernoulli</h4>' +
+    '<p>Pour chaque proposition $i$, le jugement est une épreuve de Bernoulli : $X_i = 1$ si le jugement est correct, $X_i = 0$ sinon.</p>' +
+    '<p>On suppose que chaque jugement a la même probabilité $p = \\tfrac{1}{2}$ d\'être correct (modèle du choix au hasard), et que les jugements sont mutuellement indépendants.</p>' +
+    '<p>L\'événement « <strong>toutes les réponses cochées sont justes</strong> » correspond à $S = ' + n + '$, c\'est-à-dire $X_1 = X_2 = \\cdots = X_{' + n + '} = 1$.</p>' +
+    '<p>Sa probabilité est $\\left(\\tfrac{1}{2}\\right)^{' + n + '} = \\dfrac{1}{' + Math.pow(2, n) + '}$.</p>' +
+    '<p>Cette probabilité est le <strong>paramètre de la loi de Bernoulli</strong> associée au fait que toutes les réponses cochées sont justes :</p>' +
+    '<div class="final-param">$p_{\\text{tout juste}} = \\left(\\tfrac{1}{2}\\right)^{' + n + '}$' +
+      '<span class="big">≈ ' + fr(pTotal, 6) + '</span></div>' +
+    '<p style="margin-top:14px; font-size:.9rem; color:#5c4413;"><em>Interprétation : réussir les ' + n + ' jugements au hasard est très improbable. Un score parfait traduit une véritable maîtrise du concept.</em></p>' +
+    '<div class="n-variation-note">💡 <strong>Comparez avec les autres étapes :</strong> le nombre de propositions $n$ varie d\'une étape à l\'autre (entre 4 et 10). Or la probabilité $(1/2)^n$ en dépend fortement : plus il y a de propositions, plus il est difficile d\'avoir tout juste par hasard.</div>' +
+    '</div>';
+
+  const reveal = card.querySelector('.reveal');
+  reveal.classList.add('show');
+  reveal.innerHTML = '<div class="reveal-title">Ce que vous venez d\'établir</div>' +
+    scoreHTML + tableHTML + (step.synthese || '') + conclusionHTML +
+    (step.n < STEPS.length ? '<button class="btn-next" type="button">Passer à l\'étape suivante →</button>' : '');
+  typeset(reveal);
+
+  const nextBtn = reveal.querySelector('.btn-next');
+  if(nextBtn){
+    nextBtn.addEventListener('click', function(){
+      if(step.n + 1 <= STEPS.length) showStep(step.n + 1);
+    });
+  }
+
+  card.classList.add('done');
+  const badge = card.querySelector('.badge');
+  if(badge) badge.textContent = '✔ Validée';
+
+  renderMenu();
+  updateProgress();
+
+  const summary = reveal.querySelector('.summary');
+  if(summary){
+    setTimeout(function(){ summary.scrollIntoView({ behavior:'smooth', block:'start' }); }, 300);
+  }
+}
+
+/* ============================================================
+   14. INITIALISATION
+   ============================================================ */
+(function init(){
+  document.title = SC.lieu + ' — La loi binomiale, enquête en seize pièces';
+  document.querySelector('header.hero h1').textContent = SC.lieu;
+  document.querySelector('header.hero .kicker').textContent =
+    'Une enquête statistique à ' + SC.lieu;
+  document.getElementById('pageFooter').innerHTML =
+    '« À ' + SC.lieu + ', on ne croit pas aux statistiques. On croit au thé. Mais les deux se trompent rarement. »<br>— ' +
+    SC.majordome + ', majordome de ' + SC.seigneur + '.';
+
+  STEPS.forEach(function(s){
+    const card = document.createElement('section');
+    card.className = 'step';
+    card.id = 'step-' + s.n;
+    storyEl.appendChild(card);
+  });
+
+  ensureStepBuilt(1);
+  document.getElementById('step-1').classList.add('active');
+  state.current = 1;
+  renderMenu();
+  updateProgress();
+  typeset(document.getElementById('step-1'));
+})();
+
+window.addEventListener('load', function(){
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise().catch(function(){});
+});
+</script>
+</body>
+</html>

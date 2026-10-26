@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Quête de l'Exponentielle — Aventure STI2D</title>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#241a10;font-family:Georgia,'Times New Roman',serif;-webkit-font-smoothing:antialiased;}
+#map{position:fixed;inset:0;display:block;width:100%;height:100%;}
+#nodes{position:fixed;inset:0;pointer-events:none;z-index:10;}
+
+/* ==== HUD ==== */
+#hud{position:fixed;top:14px;left:14px;z-index:20;width:min(340px,66vw);padding:12px 16px 12px 14px;background:linear-gradient(160deg,rgba(247,235,205,.95),rgba(228,207,160,.93));border:2px solid #7a5630;border-radius:5px;box-shadow:0 6px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,248,225,.6);color:#4a3221;pointer-events:none;}
+#hud h1{margin:0 0 2px;font-size:15px;font-weight:700;color:#5c3d1e;text-shadow:0 1px 0 rgba(255,250,230,.7);line-height:1.15;}
+#hud .sub{margin:0 0 8px;font-size:10.5px;font-style:italic;color:#8a6434;line-height:1.3;}
+#situations{display:flex;gap:4px;margin:0 0 9px;pointer-events:auto;}
+#situations button{flex:1;font-family:inherit;font-size:8.8px;letter-spacing:.03em;padding:5px 1px;border:1.5px solid #8a6a44;border-radius:3px;background:rgba(255,250,235,.65);color:#5c3d1e;cursor:pointer;font-weight:700;text-transform:uppercase;transition:background .18s, box-shadow .18s;line-height:1.2;}
+#situations button:hover{background:#fff8e2;}
+#situations button.active{background:linear-gradient(180deg,#c9a227,#a67c1a);color:#fffaf0;box-shadow:0 0 10px rgba(201,162,39,.8);}
+#hud .stats{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 9px;font-size:13px;}
+#hearts{letter-spacing:1px;font-size:15px;line-height:1;}
+#hearts .full{color:#c23030;text-shadow:0 0 6px rgba(255,80,80,.6);}
+#hearts .empty{color:#b09878;opacity:.55;}
+#coinDisplay{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#7a4a10;}
+.coin{display:inline-block;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe680,#ffc933 55%,#c08820);border:1.5px solid #a06820;}
+#hud .bar{height:6px;border-radius:4px;background:rgba(120,86,48,.25);overflow:hidden;border:1px solid rgba(120,86,48,.35);}
+#barFill{height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#c9a227,#e8c95a,#a67c1a);transition:width .5s cubic-bezier(.22,.8,.3,1);box-shadow:0 0 8px rgba(255,210,90,.8);}
+#count{display:block;margin-top:6px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#6b4a2a;}
+
+/* ==== NODES carte principale ==== */
+.node{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .22s cubic-bezier(.3,1.4,.5,1);font-family:inherit;}
+.node:hover,.node:focus-visible{transform:translate(-50%,-50%) scale(1.15);outline:none;}
+.node .pin{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 34% 28%,#fbf0d2,#e2c78f 62%,#bfa068);border:2.5px solid #6b4a2a;box-shadow:0 2px 0 #553618, 0 5px 14px rgba(0,0,0,.45), inset 0 0 10px rgba(150,110,60,.45);color:#4a3221;font-weight:700;font-size:15px;transition:box-shadow .25s, background .25s;position:relative;}
+.node .pin::after{content:'';position:absolute;inset:4px;border-radius:50%;border:1px solid rgba(107,74,42,.35);}
+.node .badge{position:absolute;bottom:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#2e6f4e;color:white;font-size:13px;font-weight:700;display:grid;place-items:center;border:2px solid #fffaf0;box-shadow:0 1px 3px rgba(0,0,0,.5);opacity:0;transform:scale(.5);transition:opacity .3s, transform .3s;z-index:2;}
+.node.completed .badge{opacity:1;transform:scale(1);}
+.node .label{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#4a3221;background:rgba(245,232,201,.92);padding:2px 7px;border-radius:2px;border:1px solid rgba(107,74,42,.45);white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 3px rgba(0,0,0,.25);font-weight:600;}
+.node.visited .pin{background:radial-gradient(circle at 34% 28%,#fff2c0,#e8c14a 60%,#a67c1a);border-color:#7a5a10;box-shadow:0 0 18px rgba(255,205,70,.85), 0 2px 0 #7a5a10, 0 5px 14px rgba(0,0,0,.4);color:#4a3000;}
+.node.danger .pin{background:radial-gradient(circle at 34% 28%,#ffe0d0,#e8a07a 62%,#a05028);border-color:#7a2a10;animation:dangerPulse 2.2s ease-in-out infinite;}
+.node.danger.visited .pin{animation:none;background:radial-gradient(circle at 34% 28%,#fff2c0,#e8c14a 60%,#a67c1a);}
+@keyframes dangerPulse{0%,100%{box-shadow:0 0 8px rgba(200,80,40,.6),0 2px 0 #5a1810,0 5px 14px rgba(0,0,0,.4);}50%{box-shadow:0 0 22px rgba(255,100,50,.95),0 2px 0 #5a1810,0 5px 14px rgba(0,0,0,.4);}}
+.node.treasure .pin{background:radial-gradient(circle at 34% 28%,#fffbe0,#ffd84d 55%,#c98a10);border-color:#8a5a00;font-size:19px;animation:treasurePulse 2.6s ease-in-out infinite;}
+@keyframes treasurePulse{0%,100%{box-shadow:0 0 16px rgba(255,210,60,.7),0 2px 0 #8a5a00,0 5px 14px rgba(0,0,0,.45);}50%{box-shadow:0 0 34px rgba(255,225,120,1),0 2px 0 #8a5a00,0 5px 14px rgba(0,0,0,.45);}}
+.node.treasure.visited .pin{animation:none;}
+.node.locked{cursor:not-allowed;}
+.node.locked .pin{background:radial-gradient(circle at 34% 28%,#c8bca8,#a89878 62%,#887858);border-color:#5a4a30;color:#5a4a30;animation:none;box-shadow:0 2px 0 #3a2a18, 0 4px 10px rgba(0,0,0,.35);}
+.node.locked .label{opacity:.65;font-style:italic;}
+.node.locked::after{content:'🔒';position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#fffaf0;color:#5a4a30;display:grid;place-items:center;font-size:10px;border:1.5px solid #7a5630;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+
+/* ==== PANEL ==== */
+#panel{position:fixed;top:0;right:0;height:100%;width:min(700px,97vw);background:linear-gradient(180deg,#f7ecd2 0%,#efdfba 40%,#e6d2a4 100%);border-left:3px double #6b4a2a;box-shadow:-16px 0 48px rgba(0,0,0,.6);transform:translateX(103%);transition:transform .5s cubic-bezier(.22,.8,.3,1);display:flex;flex-direction:column;z-index:60;}
+#panel.open{transform:translateX(0);}
+#panelHead{flex:0 0 auto;padding:16px 20px 12px;border-bottom:2px solid rgba(107,74,42,.35);background:linear-gradient(180deg,rgba(255,250,232,.75),rgba(255,250,232,0));display:flex;align-items:flex-start;gap:12px;}
+#panelSub{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#a07840;margin-bottom:3px;font-weight:700;}
+#panelTitle{margin:0;font-size:19px;color:#5c3d1e;line-height:1.2;flex:1;font-weight:700;}
+#closeBtn{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1.5px solid #8a6a44;background:rgba(255,250,235,.7);color:#5c3d1e;font-size:15px;cursor:pointer;line-height:1;transition:background .2s,transform .2s;}
+#closeBtn:hover{background:#e8d5a9;transform:rotate(90deg);}
+#panelBody{flex:1 1 auto;overflow-y:auto;overflow-x:auto;padding:6px 22px 26px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#b99b62 transparent;}
+#panelBody::-webkit-scrollbar{width:9px;}
+#panelBody::-webkit-scrollbar-thumb{background:#c0a475;border-radius:5px;}
+#panelBody::-webkit-scrollbar-track{background:rgba(150,120,80,.12);}
+
+/* ==== MINI-CARTE ==== */
+.step-map-wrap{position:relative;margin:12px 0 10px;padding:8px;border:2px solid #8a6a44;border-radius:8px;background:#e6d2a4;box-shadow:inset 0 0 22px rgba(120,86,48,.28), 0 4px 14px rgba(90,60,30,.25);}
+.step-map-title{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#7a4a1e;font-weight:700;margin:0 0 6px 4px;display:flex;justify-content:space-between;align-items:center;}
+.step-map-title .pos{color:#8a5a10;font-style:italic;letter-spacing:0;text-transform:none;font-weight:600;font-size:10px;}
+.step-map-inner{position:relative;width:100%;aspect-ratio: 640 / 380;border-radius:5px;overflow:hidden;box-shadow:0 2px 8px rgba(60,40,20,.35);}
+.step-map-inner canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.step-map-nodes{position:absolute;inset:0;pointer-events:none;}
+.step-node{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .22s cubic-bezier(.3,1.4,.5,1);font-family:inherit;}
+.step-node:hover,.step-node:focus-visible{transform:translate(-50%,-50%) scale(1.2);outline:none;}
+.step-node .pin{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;position:relative;background:radial-gradient(circle at 34% 28%,#fbf0d2,#e2c78f 62%,#bfa068);border:2px solid #6b4a2a;color:#4a3221;font-weight:700;font-size:13px;box-shadow:0 2px 0 #553618, 0 4px 10px rgba(0,0,0,.4);transition:background .25s, box-shadow .25s;}
+.step-node .badge{position:absolute;bottom:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#2e6f4e;color:white;font-size:10px;font-weight:700;display:grid;place-items:center;border:1.5px solid #fffaf0;opacity:0;transform:scale(.5);transition:opacity .3s, transform .3s;z-index:2;}
+.step-node.completed .pin{background:radial-gradient(circle at 34% 28%,#d4f0d8,#8fcaa0 62%,#3e8a5a);border-color:#2e6f3e;color:#fffaf0;}
+.step-node.completed .badge{opacity:1;transform:scale(1);}
+.step-node.wrong .pin{background:radial-gradient(circle at 34% 28%,#f8d0c8,#e09a8a 62%,#a05040);border-color:#7a2a10;color:#fffaf0;}
+.step-node.wrong .badge{opacity:1;transform:scale(1);background:#a63a2a;}
+
+/* ==== BANDEAU SITUATION ==== */
+.sit-banner{margin:12px 0;padding:9px 13px;border-radius:0 6px 6px 0;font-size:12.6px;line-height:1.55;color:#3b2a1a;}
+.sit-1{background:rgba(46,111,78,.13);border-left:4px solid #2e6f4e;}
+.sit-2{background:rgba(31,95,139,.13);border-left:4px solid #1f5f8b;}
+.sit-3{background:rgba(166,58,42,.12);border-left:4px solid #a63a2a;}
+
+/* ==== CONTENU PÉDAGOGIQUE ==== */
+#panelBody .lead{font-size:14.5px;font-style:italic;color:#8a5a22;border-left:3px solid #c9a227;padding-left:12px;margin:14px 0 16px;line-height:1.55;}
+#panelBody h4{margin:20px 0 8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7a4a1e;border-bottom:1px solid rgba(107,74,42,.3);padding-bottom:4px;}
+#panelBody p{margin:9px 0;line-height:1.6;color:#3b2a1a;font-size:13.8px;}
+#panelBody ul{margin:9px 0;padding-left:20px;line-height:1.75;color:#3b2a1a;font-size:13.8px;}
+#panelBody li{margin:2px 0;}
+#panelBody b{color:#6b3a12;}
+#panelBody .note{background:rgba(201,162,39,.16);border-left:4px solid #c9a227;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px;line-height:1.55;}
+#panelBody .warn{background:rgba(166,58,42,.11);border-left:4px solid #a63a2a;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px;line-height:1.55;}
+#panelBody .app{background:rgba(46,111,78,.13);border-left:4px solid #2e6f4e;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:13px;line-height:1.55;}
+#panelBody table{border-collapse:collapse;margin:12px auto;font-size:12.5px;background:rgba(255,250,235,.5);}
+#panelBody th,#panelBody td{border:1px solid #a98a5c;padding:5px 10px;text-align:center;color:#3b2a1a;}
+#panelBody th{background:rgba(180,145,85,.28);font-weight:700;}
+#panelBody .graph{text-align:center;margin:12px 0;}
+#panelBody .graph svg{max-width:100%;height:auto;filter:drop-shadow(0 3px 7px rgba(90,60,30,.22));}
+
+/* ==== CHALLENGES ==== */
+.challenges-header{margin:22px 0 4px;padding:10px 14px;background:linear-gradient(90deg,rgba(201,162,39,.22),rgba(201,162,39,.05));border-left:4px solid #c9a227;border-radius:0 6px 6px 0;display:flex;justify-content:space-between;align-items:center;}
+.challenges-title{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7a4a1e;}
+.challenges-count{font-size:12px;font-weight:700;color:#8a5a10;background:rgba(255,250,235,.7);padding:2px 9px;border-radius:10px;border:1px solid rgba(107,74,42,.4);}
+.challenge{margin:18px 0;padding:14px 16px 14px;background:rgba(255,250,235,.5);border:1px solid rgba(107,74,42,.4);border-radius:6px;position:relative;transition:background .3s, box-shadow .3s;}
+.challenge.answered{background:rgba(255,250,235,.85);border-color:rgba(107,74,42,.6);}
+.challenge.flash{animation:flashPulse 1.4s ease-in-out;}
+@keyframes flashPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,162,39,0);}50%{box-shadow:0 0 0 6px rgba(201,162,39,.35), 0 0 24px rgba(201,162,39,.85);}}
+.challenge-num{position:absolute;top:-10px;left:12px;background:#c9a227;color:#fff;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 2px 6px rgba(160,120,20,.5);}
+.challenge-q{font-size:13.8px;line-height:1.6;margin:10px 0 10px;color:#3b2a1a;}
+.challenge-q svg{display:block;margin:8px auto;max-width:100%;}
+.multi-hint{font-size:11px;color:#8a5a10;font-style:italic;margin:-4px 0 8px;}
+.code-block{background:#2a2420;color:#f0e6d0;padding:10px 14px;border-radius:4px;font-family:'Courier New',monospace;font-size:12px;line-height:1.55;overflow-x:auto;margin:8px 0 10px;border-left:4px solid #c9a227;}
+.code-block code{font-family:inherit;}
+.choices{display:flex;flex-direction:column;gap:6px;}
+.choice{padding:8px 12px;background:linear-gradient(180deg,#fffaf0,#f0e0c0);border:1.5px solid #8a6a44;border-radius:4px;text-align:left;cursor:pointer;font-family:inherit;font-size:13.2px;color:#3b2a1a;line-height:1.5;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 2px 0 rgba(120,86,48,.3);}
+.choice:hover:not(:disabled){background:linear-gradient(180deg,#fffef2,#f4e4c0);box-shadow:0 0 8px rgba(201,162,39,.4),0 2px 0 rgba(120,86,48,.4);}
+.choice:active:not(:disabled){transform:translateY(2px);box-shadow:none;}
+.choice:disabled{cursor:not-allowed;opacity:.55;box-shadow:none;}
+.choice.sel{background:linear-gradient(180deg,#ffe9a8,#e8cf7a);border-color:#a67c1a;box-shadow:0 0 10px rgba(201,162,39,.75);}
+.choice.correct{background:linear-gradient(180deg,#d4f0d8,#a8d8b0) !important;border-color:#2e6f3e !important;opacity:1 !important;color:#1a4020;font-weight:700;box-shadow:0 0 12px rgba(60,180,80,.5) !important;}
+.choice.wrong{background:linear-gradient(180deg,#f8d4cc,#e8a89a) !important;border-color:#a63a2a !important;opacity:1 !important;color:#601a10;font-weight:700;}
+.validate{margin-top:9px;padding:7px 18px;font-family:inherit;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border:1.5px solid #8a6a44;border-radius:4px;background:linear-gradient(180deg,#f6ecd2,#e2cc9c);color:#5c3d1e;cursor:pointer;box-shadow:0 2px 0 rgba(120,86,48,.5);transition:background .15s, transform .1s;}
+.validate:hover:not(:disabled){background:linear-gradient(180deg,#fff8e2,#ecd9ac);}
+.validate:active:not(:disabled){transform:translateY(2px);box-shadow:none;}
+.validate:disabled{opacity:.45;cursor:not-allowed;}
+.feedback{margin-top:8px;font-size:12.8px;line-height:1.4;min-height:0;}
+.feedback.success{color:#1a5a20;font-weight:700;}
+.feedback.failure{color:#8a1a10;font-weight:700;}
+
+/* ==== INPUT ==== */
+.challenge-input{display:flex;gap:6px;align-items:stretch;margin:8px 0 4px;}
+.challenge-input input{flex:1;min-width:0;padding:8px 12px;font-family:'Courier New',monospace;font-size:14px;border:1.5px solid #8a6a44;border-radius:4px;background:linear-gradient(180deg,#fffaf0,#f0e0c0);color:#3b2a1a;outline:none;transition:box-shadow .15s, border-color .15s;}
+.challenge-input input:focus{border-color:#c9a227;box-shadow:0 0 8px rgba(201,162,39,.6);}
+.challenge-input input:disabled{opacity:.7;background:#efe0c0;}
+.challenge-input button{padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:linear-gradient(180deg,#f6ecd2,#e2cc9c);color:#5c3d1e;border:1.5px solid #8a6a44;border-radius:4px;cursor:pointer;box-shadow:0 2px 0 rgba(120,86,48,.5);transition:background .15s, transform .1s;}
+.challenge-input button:hover:not(:disabled){background:linear-gradient(180deg,#fff8e2,#ecd9ac);}
+.challenge-input button:active:not(:disabled){transform:translateY(2px);box-shadow:none;}
+.challenge-input button:disabled{opacity:.45;cursor:not-allowed;}
+.input-hint{font-size:11px;color:#8a5a10;font-style:italic;margin:2px 0 0 3px;}
+
+/* ==== NAV ==== */
+#panelNav{flex:0 0 auto;display:flex;gap:8px;padding:10px 16px;border-top:2px solid rgba(107,74,42,.32);background:linear-gradient(0deg,rgba(230,210,164,.95),rgba(247,236,210,.75));}
+#panelNav button{flex:1;padding:9px 6px;cursor:pointer;font-family:inherit;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c3d1e;background:linear-gradient(180deg,#f6ecd2,#e2cc9c);border:1.5px solid #8a6a44;border-radius:3px;font-weight:700;transition:background .18s,transform .12s,box-shadow .18s;box-shadow:0 2px 0 rgba(120,86,48,.5);}
+#panelNav button:hover:not(:disabled){background:linear-gradient(180deg,#fff8e2,#ecd9ac);box-shadow:0 0 10px rgba(201,162,39,.6);}
+#panelNav button:active:not(:disabled){transform:translateY(2px);box-shadow:none;}
+#panelNav button:disabled{opacity:.38;cursor:not-allowed;}
+
+/* ==== VICTORY ==== */
+#victory{position:fixed;inset:0;z-index:100;background:rgba(20,12,6,.75);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px;}
+#victory.show{display:flex;animation:fadeIn .5s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.victory-card{max-width:480px;width:100%;background:linear-gradient(160deg,#fdf6df,#f0dfa8);border:3px double #8a5a00;border-radius:10px;padding:30px 28px;text-align:center;box-shadow:0 12px 44px rgba(0,0,0,.7),0 0 60px rgba(255,200,60,.35);animation:popIn .55s cubic-bezier(.3,1.4,.5,1);}
+@keyframes popIn{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+.victory-icon{font-size:58px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 3px 10px rgba(200,140,20,.6));}
+.victory-card h2{margin:0 0 12px;font-size:26px;color:#5c3d0e;text-shadow:0 2px 0 rgba(255,240,200,.8);}
+.victory-card p{margin:8px 0;font-size:15px;color:#5a3a18;line-height:1.55;}
+.victory-stats{display:flex;justify-content:center;gap:22px;margin:18px 0;padding:14px 0;border-top:1px solid rgba(138,90,0,.3);border-bottom:1px solid rgba(138,90,0,.3);}
+.vstat{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.vstat .v{font-size:22px;font-weight:800;color:#8a5a00;font-family:Georgia,serif;}
+.vstat .l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#7a5a30;}
+#closeVictory{margin-top:14px;font-family:inherit;font-size:14px;letter-spacing:.05em;text-transform:uppercase;padding:11px 26px;cursor:pointer;font-weight:700;color:#fffaf0;background:linear-gradient(180deg,#c98a10,#a06a08);border:1.5px solid #7a4a00;border-radius:5px;box-shadow:0 3px 0 #5a3600,0 4px 12px rgba(0,0,0,.3);transition:transform .12s,box-shadow .18s;}
+#closeVictory:hover{filter:brightness(1.1);}
+#closeVictory:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3600;}
+
+/* ==== TOAST ==== */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(90px);background:#5c3d1e;color:#fffaf0;padding:12px 24px;border-radius:7px;font-family:Georgia,serif;font-size:14px;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,240,200,.2);opacity:0;transition:opacity .35s, transform .35s;pointer-events:none;max-width:80vw;text-align:center;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:820px){
+  .node .label{display:none;}
+  .node .pin{width:34px;height:34px;font-size:13px;}
+  .node.treasure .pin{font-size:15px;}
+  #hud{max-width:62vw;padding:8px 11px;top:8px;left:8px;width:auto;}
+  #hud h1{font-size:12.5px;}
+  #hud .sub{display:none;}
+  #hud .stats{font-size:12px;margin-bottom:6px;}
+  #panelBody{padding:6px 14px 20px;}
+  #panelBody p,#panelBody ul{font-size:13px;}
+  #panelTitle{font-size:16px;}
+  .challenge-q{font-size:13px;}
+  .choice{font-size:12.5px;padding:7px 10px;}
+  .step-node .pin{width:26px;height:26px;font-size:11px;}
+  .step-node .badge{width:13px;height:13px;font-size:8px;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="map"></canvas>
+<div id="nodes"></div>
+
+<header id="hud">
+  <h1>⚔ La Quête de l'Exponentielle</h1>
+  <p class="sub">Aventure mathématique en Terminale STI2D</p>
+  <div id="situations">
+    <button data-sit="1">1 · Découverte</button>
+    <button data-sit="2">2 · En cours</button>
+    <button data-sit="3">3 · Consolidation</button>
+  </div>
+  <div class="stats">
+    <span id="hearts"></span>
+    <span id="coinDisplay"><span class="coin"></span><span id="coinCount">0</span></span>
+  </div>
+  <div class="bar"><div id="barFill"></div></div>
+  <span id="count">0 / 164 défis relevés</span>
+</header>
+
+<aside id="panel" aria-hidden="true">
+  <div id="panelHead">
+    <div style="flex:1">
+      <div id="panelSub"></div>
+      <h2 id="panelTitle"></h2>
+    </div>
+    <button id="closeBtn" aria-label="Fermer">✕</button>
+  </div>
+  <div id="panelBody"></div>
+  <div id="panelNav">
+    <button id="prevBtn">◀ Précédent</button>
+    <button id="nextBtn">Suivant ▶</button>
+  </div>
+</aside>
+
+<div id="victory">
+  <div class="victory-card">
+    <div class="victory-icon">🏆</div>
+    <h2>Trésor Trouvé !</h2>
+    <p>Vous avez triomphé des pièges et des dangers.<br>L'Exponentielle n'a plus de secrets pour vous.</p>
+    <div class="victory-stats">
+      <div class="vstat"><span class="v" id="finalCoins">0</span><span class="l">Pièces d'or</span></div>
+      <div class="vstat"><span class="v" id="finalHearts">3</span><span class="l">Cœurs restants</span></div>
+      <div class="vstat"><span class="v" id="finalScore">0%</span><span class="l">Réussite</span></div>
+    </div>
+    <button id="closeVictory">Fermer</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ==================================================================
+   0. UTILITAIRES
+   ================================================================== */
+const SESSION = (Math.random() * 2147483647) | 0;
+
+const R = {
+  int: function(a,b){ return a + Math.floor(Math.random()*(b-a+1)); },
+  pick: function(a){ return a[Math.floor(Math.random()*a.length)]; },
+  shuffle: function(a){
+    const b = a.slice();
+    for(let i=b.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); const t=b[i]; b[i]=b[j]; b[j]=t; }
+    return b;
+  }
+};
+
+function fmt(x){
+  if(Number.isInteger(x)) return String(x);
+  const r = Math.round(x*10000)/10000;
+  return String(r).replace('.',',');
+}
+
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* QCM : mélange les options et recalcule les bonnes réponses.
+   `correct` est un tableau d'indices (multi-réponses toujours possible). */
+function mk(q, opts, correct, extra){
+  const idxs = Array.isArray(correct) ? correct : [correct];
+  let paired = opts.map(function(o,i){ return {o:o, ok: idxs.indexOf(i)>=0}; });
+  /* anti-doublons : fusionne les options identiques — une copie d'une bonne
+     réponse ne peut jamais rester marquée fausse */
+  const seen = {}; const merged = [];
+  paired.forEach(function(p){
+    const key = String(p.o).replace(/\\left|\\right|\\,|\\;|\\!|\s+/g, '');
+    if(Object.prototype.hasOwnProperty.call(seen, key)){
+      if(p.ok) merged[seen[key]].ok = true;
+    } else {
+      seen[key] = merged.length;
+      merged.push({o:p.o, ok:p.ok});
+    }
+  });
+  paired = merged;
+  const sh = R.shuffle(paired);
+  const newCorrect = [];
+  sh.forEach(function(p,i){ if(p.ok) newCorrect.push(i); });
+  return {
+    type: 'mcq',
+    q: q,
+    opts: sh.map(function(p){ return p.o; }),
+    c: newCorrect,
+    multi: newCorrect.length > 1,
+    code: (extra && extra.code) ? extra.code : null,
+    html: (extra && extra.html) ? extra.html : null
+  };
+}
+
+/* Saisie clavier */
+function mkInput(q, answer, extra){
+  const answers = Array.isArray(answer) ? answer : [answer];
+  return {
+    type: 'input',
+    q: q,
+    answer: answers,
+    tolerance: (extra && extra.tolerance != null) ? extra.tolerance : null,
+    hint: (extra && extra.hint) || null,
+    placeholder: (extra && extra.placeholder) || 'Votre réponse…',
+    opts: [], c: [], multi: false, code: null, html: null
+  };
+}
+
+function normalizeText(s){
+  return String(s).toLowerCase()
+    .replace(/exp\s*\(([^)]+)\)/g, 'e^($1)')
+    .replace(/exp\s+([a-z0-9]+)/g, 'e^$1')
+    .replace(/\bln\s*\(([^)]+)\)/g, 'ln$1')
+    .replace(/\s+/g, '')
+    .replace(/[×·*]/g, '')
+    .replace(/÷/g, '/')
+    .replace(/,/g, '.')
+    .replace(/−/g, '-')
+    .replace(/\$/g, '')
+    .replace(/\^\(([^)]+)\)/g, '^$1');
+}
+
+function checkInput(raw, q){
+  const s = String(raw).trim();
+  if(!s) return false;
+  if(q.tolerance != null){
+    const v = parseFloat(s.replace(',', '.'));
+    if(!isNaN(v)){
+      return q.answer.some(function(a){
+        const t = parseFloat(String(a).replace(',', '.'));
+        return !isNaN(t) && Math.abs(v - t) <= q.tolerance;
+      });
+    }
+  }
+  const norm = normalizeText(s);
+  return q.answer.some(function(a){ return normalizeText(a) === norm; });
+}
+
+/* ==================================================================
+   1. GRAPHIQUES SVG
+   ================================================================== */
+function buildExpGraph(){
+  const ox=140, oy=205, sx=45, sy=18;
+  let d='';
+  for(let x=-2.6; x<=2.2; x+=0.04){ d += (d?'L':'M') + (ox+sx*x).toFixed(1) + ',' + (oy-sy*Math.exp(x)).toFixed(1) + ' '; }
+  return '<div class="graph"><svg viewBox="0 0 320 235" width="320" height="235">' +
+    '<line x1="10" y1="'+oy+'" x2="312" y2="'+oy+'" stroke="#8a6a44" stroke-width="1.3"/>' +
+    '<line x1="'+ox+'" y1="225" x2="'+ox+'" y2="12" stroke="#8a6a44" stroke-width="1.3"/>' +
+    '<line x1="10" y1="'+oy+'" x2="312" y2="'+oy+'" stroke="#a63a2a" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.7"/>' +
+    '<path d="'+d+'" fill="none" stroke="#a63a2a" stroke-width="2.4"/>' +
+    '<circle cx="'+ox+'" cy="'+(oy-sy)+'" r="3.6" fill="#2e6f4e"/>' +
+    '<text x="'+(ox+9)+'" y="'+(oy-sy-8)+'" font-size="10.5" fill="#2e6f4e">(0 ; 1)</text>' +
+    '<text x="'+(ox+95)+'" y="'+(oy-sy*7.2)+'" font-size="13" fill="#a63a2a" font-style="italic">y = eˣ</text>' +
+    '<text x="180" y="'+(oy+16)+'" font-size="10" fill="#8a1a10" font-style="italic">asymptote y = 0</text>' +
+    '</svg></div>';
+}
+function buildTangentGraph(){
+  const ox=150, oy=190, sx=52, sy=20;
+  let d='', t='';
+  for(let x=-2.4; x<=2.0; x+=0.04){ d += (d?'L':'M') + (ox+sx*x).toFixed(1) + ',' + (oy-sy*Math.exp(x)).toFixed(1) + ' '; }
+  for(let x=-1.6; x<=1.3; x+=0.05){ t += (t?'L':'M') + (ox+sx*x).toFixed(1) + ',' + (oy-sy*(x+1)).toFixed(1) + ' '; }
+  return '<div class="graph"><svg viewBox="0 0 330 225" width="330" height="225">' +
+    '<line x1="10" y1="'+oy+'" x2="322" y2="'+oy+'" stroke="#8a6a44" stroke-width="1.2"/>' +
+    '<line x1="'+ox+'" y1="215" x2="'+ox+'" y2="14" stroke="#8a6a44" stroke-width="1.2"/>' +
+    '<path d="'+d+'" fill="none" stroke="#a63a2a" stroke-width="2.4"/>' +
+    '<path d="'+t+'" fill="none" stroke="#1f5f8b" stroke-width="1.8" stroke-dasharray="7 5"/>' +
+    '<circle cx="'+ox+'" cy="'+(oy-sy)+'" r="4" fill="#2e6f4e"/>' +
+    '<text x="'+(ox+92)+'" y="'+(oy-sy*7)+'" font-size="12.5" fill="#a63a2a" font-style="italic">y = eˣ</text>' +
+    '<text x="'+(ox+95)+'" y="'+(oy-sy*2.6)+'" font-size="12" fill="#1f5f8b" font-style="italic">y = x + 1</text>' +
+    '</svg></div>';
+}
+function buildGaussGraph(){
+  const ox=160, oy=190, sx=42, sy=128;
+  let d='';
+  for(let x=-3.2; x<=3.2; x+=0.035){ d += (d?'L':'M') + (ox+sx*x).toFixed(1) + ',' + (oy-sy*Math.exp(-x*x)).toFixed(1) + ' '; }
+  return '<div class="graph"><svg viewBox="0 0 320 225" width="320" height="225">' +
+    '<line x1="10" y1="'+oy+'" x2="312" y2="'+oy+'" stroke="#8a6a44" stroke-width="1.3"/>' +
+    '<line x1="'+ox+'" y1="205" x2="'+ox+'" y2="35" stroke="#8a6a44" stroke-width="1.3"/>' +
+    '<path d="'+d+'" fill="none" stroke="#2e6f4e" stroke-width="2.4"/>' +
+    '<text x="'+(ox+70)+'" y="80" font-size="13" fill="#2e6f4e" font-style="italic">y = e^(−x²)</text>' +
+    '</svg></div>';
+}
+function buildLnGraph(){
+  const ox=100, oy=140, sx=42, sy=40;
+  let d='';
+  for(let x=0.055; x<=5.0; x+=0.02){
+    const py = oy - sy*Math.log(x);
+    if(py > 275 || py < 15) continue;
+    d += (d?'L':'M') + (ox+sx*x).toFixed(1) + ',' + py.toFixed(1) + ' ';
+  }
+  return '<div class="graph"><svg viewBox="0 0 320 285" width="320" height="285">' +
+    '<line x1="10" y1="'+oy+'" x2="312" y2="'+oy+'" stroke="#8a6a44" stroke-width="1.3"/>' +
+    '<line x1="'+ox+'" y1="278" x2="'+ox+'" y2="18" stroke="#8a6a44" stroke-width="1.3"/>' +
+    '<line x1="'+ox+'" y1="278" x2="'+ox+'" y2="18" stroke="#a63a2a" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.7"/>' +
+    '<path d="'+d+'" fill="none" stroke="#1f5f8b" stroke-width="2.4"/>' +
+    '<text x="230" y="60" font-size="13" fill="#1f5f8b" font-style="italic">y = ln x</text>' +
+    '<text x="'+ox+'" y="288" font-size="10" fill="#8a1a10" text-anchor="middle">asymptote x = 0</text>' +
+    '</svg></div>';
+}
+function buildDiffGraph(){
+  const ox=60, oy=200, sx=55, sy=150;
+  let s = '<div class="graph"><svg viewBox="0 0 330 235" width="330" height="235">' +
+    '<line x1="20" y1="'+oy+'" x2="322" y2="'+oy+'" stroke="#8a6a44" stroke-width="1.2"/>' +
+    '<line x1="'+ox+'" y1="215" x2="'+ox+'" y2="20" stroke="#8a6a44" stroke-width="1.2"/>';
+  const cols = ['#a63a2a','#2e6f4e','#1f5f8b'];
+  [0.6,1.2,1.9].forEach(function(C,idx){
+    let d='';
+    for(let t=-1.3;t<=4.2;t+=0.06){
+      const y = C*Math.exp(-0.7*t);
+      const px = ox+sx*t, py = oy-sy*y;
+      if(py>215||py<20) continue;
+      d += (d?'L':'M') + px.toFixed(1)+','+py.toFixed(1)+' ';
+    }
+    s += '<path d="'+d+'" fill="none" stroke="'+cols[idx]+'" stroke-width="2.2"/>';
+  });
+  s += '<text x="200" y="52" font-size="12" fill="#a63a2a" font-style="italic">y = C e^(−kt)</text></svg></div>';
+  return s;
+}
+function buildUnitCircle(){
+  const cx=160, cy=140, r=92;
+  return '<div class="graph"><svg viewBox="0 0 320 270" width="320" height="270">' +
+    '<line x1="20" y1="'+cy+'" x2="300" y2="'+cy+'" stroke="#8a6a44" stroke-width="1.2"/>' +
+    '<line x1="'+cx+'" y1="20" x2="'+cx+'" y2="255" stroke="#8a6a44" stroke-width="1.2"/>' +
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#a63a2a" stroke-width="1.8"/>' +
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+r*0.7071)+'" y2="'+(cy-r*0.7071)+'" stroke="#1f5f8b" stroke-width="2"/>' +
+    '<circle cx="'+(cx+r*0.7071)+'" cy="'+(cy-r*0.7071)+'" r="4" fill="#2e6f4e"/>' +
+    '<text x="'+(cx+r*0.72)+'" y="'+(cy-r*0.78)+'" font-size="12" fill="#2e6f4e">e^(iθ)</text>' +
+    '<text x="'+(cx+30)+'" y="'+(cy-16)+'" font-size="11" fill="#5c3d1e">θ</text>' +
+    '<text x="'+(cx+r+6)+'" y="'+(cy+14)+'" font-size="11" fill="#8a6a44">1</text>' +
+    '</svg></div>';
+}
+const GRAPHS = { exp: buildExpGraph(), tan: buildTangentGraph(), gauss: buildGaussGraph(),
+                 ln: buildLnGraph(), diff: buildDiffGraph(), unit: buildUnitCircle() };
+
+/* ==================================================================
+   2. BANQUE DE GÉNÉRATEURS (multi-réponses privilégiées)
+   s : situations où le défi est proposé (1 = découverte, 2 = formalisation, 3 = consolidation)
+   ================================================================== */
+const GEN = {
+
+base: [
+  {s:[1,2,3], f:function(){ const a=R.int(2,6); return mk(`Combien vaut $(-${a})^{2}$ ?`, [`$-${a*a}$`, `$${a*a}$`, `$-${2*a}$`], 1); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,5),m=R.int(2,4),n=R.int(2,4); return mk(`Simplifier $${a}^{${m}}\\times ${a}^{${n}}$ :`, [`$${a}^{${m+n}}$`, `$${a}^{${m*n}}$`, `$${(2*a)}^{${m+n}}$`], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(2,7),m=R.int(4,8),n=R.int(1,3); const r=Math.round(m/n); const third=(r===m-n||r===m+n)?m*n:r; return mk(`Simplifier $\\dfrac{${a}^{${m}}}{${a}^{${n}}}$ :`, [`$${a}^{${m-n}}$`, `$${a}^{${m+n}}$`, `$${a}^{${third}}$`], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5); let m=R.int(2,3),n=R.int(2,3); if(m===2&&n===2){ n=3; } return mk(`Simplifier $\\left(${a}^{${m}}\\right)^{${n}}$ :`, [`$${a}^{${m*n}}$`, `$${a}^{${m+n}}$`, `$${a}^{${Math.pow(m,n)}}$`], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,9); return mk(`Combien vaut $${a}^{0}$ ?`, ['$0$', '$1$', `$${a}$`], 1); }},
+  {s:[1,2,3], f:function(){ const n=R.int(1,4); const v=fmt(Math.pow(10,-n)); return mk(`Combien vaut $10^{-${n}}$ ?`, [`$-10^{${n}}$`, `$${v}$`, `$-${v}$`], 1); }},
+  {s:[1,2], f:function(){ const a=R.int(2,5),n=R.int(3,6); return mk('Que vaut la variable `p` à la fin du programme ?', [`$${Math.pow(a,n)}$`, `$${a*n}$`, `$${a+n}$`], 0, {code:`p = 1\nfor k in range(${n}):\n    p = p * ${a}`}); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,5); return mk('Que contient la liste `L` ?', [`$[1, ${a}, ${a*a}, ${a*a*a}]$`, `$[${a}, ${a*a}, ${a*a*a}, ${a**4}]$`, `$[0, ${a}, ${2*a}, ${3*a}]$`], 0, {code:`L = [${a}**k for k in range(4)]`}); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,5); return mk(`Combien vaut $-${a}^{2}$ ?`, [`$-${a*a}$`, `$${a*a}$`, `$-${2*a}$`], 0); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$2^{3}\\times 2^{2}=2^{5}$', '$2^{3}+2^{2}=2^{5}$', '$\\left(2^{3}\\right)^{2}=2^{6}$', '$\\dfrac{2^{6}}{2^{2}}=2^{3}$'], [0,2]); }},
+  {s:[1,3], f:function(){ const a=R.int(2,4),n=R.int(2,3); return mk(`Combien vaut $(2\\times ${a})^{${n}}$ ?`, [`$2^{${n}}\\times ${a}^{${n}}$`, `$2\\times ${a}^{${n}}$`, `$2^{${n}}+${a}^{${n}}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces nombres, lesquels sont des puissances de 2 ?', ['$8$', '$12$', '$16$', '$32$'], [0,2,3]); }},
+  {s:[1,2,3], f:function(){ return mk('Quelles écritures sont égales à $2^{6}$ ?', ['$2^{3}\\times 2^{3}$', '$\\left(2^{3}\\right)^{2}$', '$2^{4}\\times 2^{3}$', '$4^{3}$'], [0,1,3]); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces nombres, lesquels sont égaux à $10^{3}$ ?', ['$1000$', '$10\\times10\\times10$', '$2^{10}$', '$1024$'], [0,1]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces affirmations, lesquelles sont vraies ?', ['$a^{0}=1$ pour $a\\ne 0$', '$a^{m+n}=a^{m}a^{n}$', '$(a^{m})^{n}=a^{m+n}$', '$(ab)^{n}=a^{n}b^{n}$'], [0,1,3]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Complétez : $2^{10}=$ ______', '1024', {hint:'Un entier', placeholder:'1024'}); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,5); return mkInput(`Combien vaut $${a}^{4}$ ?`, String(Math.pow(a,4)), {placeholder:'Un entier'}); }},
+  {s:[2,3], f:function(){ return mkInput('Écrivez $2^{3}\\times 2^{4}$ sous la forme $2^{n}$ : $n=$ ______', '7', {hint:'Donnez seulement l\'exposant', placeholder:'n'}); }}
+],
+
+negatifs: [
+  {s:[1,2,3], f:function(){ const a=R.int(2,6),n=R.int(1,4); const v=Math.pow(a,n); return mk(`Que vaut $${a}^{-${n}}$ ?`, [`$-${v}$`, `$\\dfrac{1}{${v}}$`, `$-\\dfrac{1}{${v}}$`], 1); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5),n=R.int(1,3); const v=Math.pow(a,n); return mk(`Que vaut $\\dfrac{1}{${a}^{-${n}}}$ ?`, [`$-${v}$`, `$${v}$`, `$\\dfrac{1}{${v}}$`], 1); }},
+  {s:[2,3], f:function(){ const a=R.int(2,4),m=R.int(1,3),n=R.int(1,3); return mk(`Que vaut $${a}^{-${m}}\\times ${a}^{-${n}}$ ?`, [`$${a}^{${m+n}}$`, `$${a}^{-${m+n}}$`, `$${a}^{-${m*n}}$`], 1); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,5),n=R.int(2,3); const v=Math.pow(a,n); return mk(`Que vaut $\\left(${a}^{-1}\\right)^{${n}}$ ?`, [`$\\dfrac{1}{${v}}$`, `$${v}$`, `$-${v}$`], 0); }},
+  {s:[1,3], f:function(){ const n=R.int(2,4); return mk(`Que vaut $10^{-${n}}\\times 10^{${n}}$ ?`, ['$1$', '$0$', `$10^{${2*n}}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Un exposant négatif donne-t-il toujours un résultat négatif ?', ['Oui, toujours', 'Non : $2^{-3}=\\dfrac{1}{8}\\gt 0$', 'Seulement si la base est négative'], 1); }},
+  {s:[1,2], f:function(){ const n=R.int(3,5); return mk('Que vaut `x` à la fin du programme ?', [`$\\dfrac{1}{${Math.pow(2,n)}}$`, `$${Math.pow(2,n)}$`, `$-${Math.pow(2,n)}$`], 0, {code:`x = 1\nfor k in range(${n}):\n    x = x / 2`}); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5),n=R.int(2,4); return mk(`Comparer $${a}^{-${n}}$ et $-${a}^{${n}}$ :`, [`$${a}^{-${n}}\\gt -${a}^{${n}}$`, `$${a}^{-${n}}\\lt -${a}^{${n}}$`, 'ils sont égaux'], 0); }},
+  {s:[1,3], f:function(){ const n=R.int(1,3); return mk(`Une capacité de $${n}{,}5\\,\\mu\\text{F}$ s'écrit :`, [`$${n}{,}5\\times 10^{-6}\\,\\text{F}$`, `$${n}{,}5\\times 10^{6}\\,\\text{F}$`, `$${n}{,}5\\times 10^{-3}\\,\\text{F}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces écritures, lesquelles sont égales à $\\dfrac{1}{8}$ ?', ['$2^{-3}$', '$8^{-1}$', '$(-2)^{3}$', '$0{,}125$'], [0,1,3]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$2^{-3}=\\dfrac{1}{8}$', '$2^{-3}=-8$', '$10^{-2}=0{,}01$', '$5^{-2}=25$'], [0,2]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces nombres, lesquels sont positifs ?', ['$2^{-3}$', '$-2^{3}$', '$(-2)^{-3}$', '$10^{-5}$'], [0,3]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Écrivez $2^{-3}$ en décimal :', '0.125', {tolerance:0.0001, hint:'Par exemple 0,125', placeholder:'0,125'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('Écrivez $10^{-3}$ en décimal :', '0.001', {tolerance:0.00001, placeholder:'0,001'}); }},
+  {s:[2,3], f:function(){ return mkInput('Calculez $5^{-2}$ en décimal :', '0.04', {tolerance:0.0001, placeholder:'0,04'}); }},
+  {s:[1,2,3], f:function(){ return mk('Que vaut $2^{-1}+2^{-2}$ ?', ['$0{,}75$', '$0{,}5$', '$0{,}25$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces écritures, lesquelles sont égales à $10^{-2}$ ?', ['$0{,}01$', '$\\dfrac{1}{100}$', '$-0{,}01$', '$10^{-1}\\times 10^{-1}$'], [0,1,3]); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$3^{-2}=\\dfrac{1}{9}$', '$3^{-2}=-9$', '$\\dfrac{1}{2^{-2}}=4$', '$(-2)^{-2}=\\dfrac{1}{4}$'], [0,2,3]); }},
+],
+
+racines: [
+  {s:[1,2,3], f:function(){ const k=R.int(3,6); return mk(`Que vaut $${k*k}^{1/2}$ ?`, [`$${k}$`, `$${fmt(k*k/2)}$`, `$${k*k*k}$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.pick([2,4,5]); return mk(`Que vaut $${k**3}^{1/3}$ ?`, [`$${k}$`, `$${k*k}$`, `$${fmt(k**3/3)}$`], 0); }},
+  {s:[2,3], f:function(){ const k=R.pick([2,3,4,5]); return mk(`Que vaut $${k**3}^{2/3}$ ?`, [`$${k*k}$`, `$${fmt(k**3*2/3)}$`, `$${k}$`], 0); }},
+  {s:[2,3], f:function(){ const k=3; return mk(`Que vaut $${k**4}^{1/4}$ ?`, [`$${k}$`, `$${k*k}$`, `$${fmt(k**4/4)}$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.int(3,5); return mk(`Que vaut $\\left(${k*k}^{1/2}\\right)^{2}$ ?`, [`$${k*k}$`, `$${k}$`, `$${2*k}$`], 0); }},
+  {s:[1,2], f:function(){ const k=R.int(3,5); return mk(`Que vaut $${k}^{1/2}\\times ${k}^{1/2}$ ?`, [`$${k}$`, `$${k*k}$`, `$${2*k}$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.pick([3,5,6,7]); return mk(`Que vaut $\\sqrt{${k*k}}$ ?`, [`$${k}$`, `$${fmt(k*k/2)}$`, `$${2*k}$`], 0); }},
+  {s:[1,2], f:function(){ return mk('Que contient la liste `L` ?', ['$[2, 3, 4]$', '$[4, 9, 16]$', '$[1, 1, 1]$'], 0, {code:'L = [n**(1/2) for n in [4, 9, 16]]'}); }},
+  {s:[2,3], f:function(){ const k=R.pick([2,3]); return mk(`Que vaut $${k**5}^{2/5}$ ?`, [`$${k*k}$`, `$${fmt(k**5*2/5)}$`, `$${k}$`], 0); }},
+  {s:[1,3], f:function(){ return mk('$2^{1/2}$ vaut environ :', ['$1{,}414$', '$1{,}732$', '$1{,}5$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces écritures, lesquelles sont égales à $8$ ?', ['$64^{1/2}$', '$4^{3/2}$', '$2^{3}$', '$8^{1/2}$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$9^{1/2}=3$', '$8^{2/3}=4$', '$16^{1/4}=2$', '$27^{1/3}=9$'], [0,1,2]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces nombres, lesquels sont des racines carrées d\'entiers ?', ['$\\sqrt{4}$', '$\\sqrt{5}$', '$\\sqrt{9}$', '$\\sqrt{2}$'], [0,2]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Calculez $\\sqrt{49}$ :', '7', {placeholder:'Un entier'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('Calculez $8^{2/3}$ :', '4', {placeholder:'Un entier'}); }},
+  {s:[2,3], f:function(){ return mkInput('Calculez $27^{1/3}$ :', '3', {placeholder:'Un entier'}); }},
+  {s:[1,2,3], f:function(){ return mk('Que vaut $\\sqrt{2}\\times\\sqrt{8}$ ?', ['$4$', '$\\sqrt{10}$', '$16$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Quelles écritures sont égales à $\\sqrt{16}$ ?', ['$16^{1/2}$', '$4$', '$8$', '$2^{2}$'], [0,1,3]); }},
+],
+
+continu: [
+  {s:[1,2,3], f:function(){ const a=R.pick([2,3,4,5]); const v=Math.pow(a,Math.SQRT2); const n=Math.floor(v); return mk(`$${a}^{\\sqrt{2}}$ est compris entre :`, [`$${n}$ et $${n+1}$`, `$${n+1}$ et $${n+2}$`, `$${n-1}$ et $${n}$`], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,6); return mk(`Pour $a=${a}\\gt 1$, la fonction $x\\mapsto a^{x}$ est :`, ['strictement croissante', 'strictement décroissante', 'constante'], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5); return mk(`$\\lim\\limits_{x\\to+\\infty} ${a}^{x}$ = ?`, ['$+\\infty$', '$0$', '$1$'], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5); return mk(`$\\lim\\limits_{x\\to-\\infty} ${a}^{x}$ = ?`, ['$0$', '$+\\infty$', '$-\\infty$'], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,5); return mk(`$${a}^{0{,}5}\\times ${a}^{0{,}5}$ = ?`, [`$${a}$`, `$${a*a}$`, `$${2*a}$`], 0); }},
+  {s:[1,3], f:function(){ const a=R.pick([2,3,5]); return mk('Lequel est le plus grand ?', [`$${a}^{1{,}4}$`, `$${a}^{1{,}5}$`, 'ils sont égaux'], 1); }},
+  {s:[2,3], f:function(){ return mk('La fonction $x\\mapsto 2^{x}$ sur $\\mathbb{R}$ est :', ['continue partout', 'discontinue en 0', 'définie seulement sur $\\mathbb{Z}$'], 0); }},
+  {s:[1], f:function(){ return mk('$3^{0{,}5}$ vaut environ :', ['$1{,}732$', '$1{,}5$', '$2{,}25$'], 0); }},
+  {s:[1,3], f:function(){ const a=R.pick([2,4,9]); return mk(`$\\sqrt{${a}}$ peut s'écrire :`, [`$${a}^{1/2}$`, `$${a}^{2}$`, `$${a}^{-1/2}$`], 0); }},
+  {s:[1,2], f:function(){ return mk('Quelle est la valeur de $2^{0{,}5}\\times 2^{0{,}5}\\times 2^{0{,}5}$ (environ) ?', ['$2{,}83$', '$3{,}5$', '$2{,}5$'], 0); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces affirmations, lesquelles sont vraies ?', ['$2^{x}$ est croissante sur $\\mathbb{R}$', '$2^{x}$ est définie sur $\\mathbb{R}$', '$\\lim\\limits_{x\\to+\\infty}2^{x}=0$', '$2^{0}=1$'], [0,1,3]); }},
+  {s:[1,2], f:function(){ return mk('Parmi ces valeurs, lesquelles sont comprises entre $2$ et $3$ ?', ['$2^{0{,}5}$', '$2^{1{,}5}$', '$2^{2{,}5}$', '$2^{\\sqrt{2}}$'], [0,1,3]); }},
+  {s:[1,2,3], f:function(){ return mkInput('$2^{0{,}5}\\approx$ ______ (2 décimales)', '1.41', {tolerance:0.02, placeholder:'1,41'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('$2^{\\sqrt{2}}\\approx$ ______ (2 décimales)', '2.67', {tolerance:0.02, placeholder:'2,67'}); }},
+  {s:[1,2,3], f:function(){ const e=R.pick([1.4,2.6,3.4]); const v=Math.pow(2,e); const n=Math.floor(v); return mk(`$2^{${fmt(e)}}$ est compris entre :`, [`$${n}$ et $${n+1}$`, `$${n+1}$ et $${n+2}$`, `$${n-1}$ et $${n}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$5^{0{,}2}\\times 5^{0{,}8}$ = ?', ['$5$', '$25$', '$5^{0{,}16}$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Quelles affirmations sont vraies pour $a\\gt 1$ ?', ['$a^{x}$ est strictement croissante sur $\\mathbb{R}$', '$a^{0}=1$', '$a^{x}$ peut être négative', '$a^{1}=a$'], [0,1,3]); }},
+  {s:[2,3], f:function(){ return mk('Quelles limites sont correctes pour $a\\gt 1$ ?', ['$\\lim\\limits_{x\\to+\\infty}a^{x}=+\\infty$', '$\\lim\\limits_{x\\to-\\infty}a^{x}=0$', '$\\lim\\limits_{x\\to+\\infty}a^{x}=0$', '$\\lim\\limits_{x\\to-\\infty}a^{x}=+\\infty$'], [0,1]); }},
+],
+
+e: [
+  {s:[1,2,3], f:function(){ return mk('Combien vaut $e^{0}$ ?', ['$0$', '$1$', '$e$'], 1); }},
+  {s:[1,2,3], f:function(){ return mk('Combien vaut $e^{1}$ ?', ['$1$', '$e$', '$2$'], 1); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,4),b=R.int(2,4); return mk(`Que vaut $e^{${a}}\\times e^{${b}}$ ?`, [`$e^{${a+b}}$`, `$e^{${a*b}}$`, `$${a*b}e^{${a+b}}$`], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(4,7),b=R.int(1,3); return mk(`Que vaut $\\dfrac{e^{${a}}}{e^{${b}}}$ ?`, [`$e^{${a-b}}$`, `$e^{${Math.round(a/b)}}$`, `$e^{${a+b}}$`], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(2,3),b=R.int(2,3); return mk(`Que vaut $\\left(e^{${a}}\\right)^{${b}}$ ?`, [`$e^{${a*b}}$`, `$e^{${a+b}}$`, `$${b}e^{${a}}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Quelle est la limite de $e^{x}$ quand $x\\to+\\infty$ ?', ['$+\\infty$', '$0$', '$1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Quelle est la limite de $e^{x}$ quand $x\\to-\\infty$ ?', ['$0$', '$+\\infty$', '$-\\infty$'], 0); }},
+  {s:[2,3], f:function(){ return mk("Quelle droite est asymptote à la courbe de $x\\mapsto e^{x}$ en $-\\infty$ ?", ['$y=0$', '$y=x$', '$x=0$'], 0); }},
+  {s:[2,3], f:function(){ return mk("Quelle est l'équation de la tangente à $y=e^{x}$ en $x=0$ ?", ['$y=x+1$', '$y=x$', '$y=e\\,x$'], 0); }},
+  {s:[1,2], f:function(){ return mk('$e^{-1}$ vaut environ :', ['$0{,}368$', '$2{,}718$', '$-2{,}718$'], 0); }},
+  {s:[1,2], f:function(){ return mk('$e^{2}$ vaut environ :', ['$7{,}389$', '$5{,}436$', '$2{,}718$'], 0); }},
+  {s:[1,3], f:function(){ const n=R.int(3,5); let s=0, fa=1; for(let k=0;k<n;k++){ if(k>0) fa*=k; s+=1/fa; }
+      return mk('Que vaut `s` à la fin du programme ?', [`$\\approx ${fmt(s)}$`, `$\\approx 2{,}718$`, `$\\approx ${fmt(s-1)}$`], 0,
+      {code:`s = 0\nfact = 1\nfor k in range(${n}):\n    if k > 0:\n        fact = fact * k\n    s = s + 1/fact`}); }},
+  {s:[1,2,3], f:function(){ const a=R.int(1,4); return mk(`$e^{0}+e^{${a}}$ = ?`, [`$1+e^{${a}}$`, `$e^{${a+1}}$`, `$${a+1}e$`], 0); }},
+  {s:[2,3], f:function(){ return mk('La fonction $\\exp$ est l\'unique fonction dérivable sur $\\mathbb{R}$ telle que :', ["$f'=f$ et $f(0)=1$", "$f'=1$ et $f(0)=0$", "$f'=e$ et $f(0)=e$"], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$e^{0}=1$', '$e^{1}=e$', '$\\ln(e)=1$', '$e^{2}=2e$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces affirmations sur $e^{x}$, lesquelles sont vraies ?', ['$e^{x}\\gt 0$ sur $\\mathbb{R}$', '$e^{x}$ est croissante', '$\\lim\\limits_{x\\to-\\infty}e^{x}=0$', '$e^{x}$ passe par $(0;1)$', '$e^{2x}=2e^{x}$'], [0,1,2,3]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces expressions, lesquelles sont égales à $e^{2}$ ?', ['$e\\times e$', '$\\dfrac{e^{3}}{e}$', '$\\left(e^{1}\\right)^{2}$', '$2e$'], [0,1,2]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Combien vaut $e^{0}$ ?', '1', {placeholder:'Un entier'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('$e^{1}\\approx$ ______ (2 décimales)', '2.72', {tolerance:0.02, placeholder:'2,72'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('Combien vaut $\\ln(e^{3})$ ?', '3', {placeholder:'Un entier'}); }}
+],
+
+derivee: [
+  {s:[1,2,3], f:function(){ return mk("$(e^{x})'$ = ?", ['$e^{x}$', '$xe^{x-1}$', '$0$'], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,6); return mk(`$(e^{${a}x})'$ = ?`, [`$${a}e^{${a}x}$`, `$e^{${a}x}$`, `$${a}e^{x}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk("$(e^{-x})'$ = ?", ['$e^{-x}$', '$-e^{-x}$', '$e^{x}$'], 1); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5); return mk(`$(a^{x})'$ pour $a=${a}$ :`, [`$${a}^{x}$`, `$${a}^{x}\\ln ${a}$`, `$x\\,${a}^{x-1}$`], 1); }},
+  {s:[2,3], f:function(){ const a=R.int(2,5),b=R.int(1,6); return mk(`$(e^{${a}x+${b}})'$ = ?`, [`$${a}e^{${a}x+${b}}$`, `$e^{${a}x+${b}}$`, `$${a}e^{${a}x}$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.int(2,7); return mk(`$(${k}e^{x})'$ = ?`, [`$${k}e^{x}$`, `$e^{x}$`, `$${k}xe^{x-1}$`], 0); }},
+  {s:[2,3], f:function(){ return mk("$(x\\,e^{x})'$ = ?", ['$e^{x}$', '$e^{x}(1+x)$', '$xe^{x-1}+e^{x}$'], 1); }},
+  {s:[1,2,3], f:function(){ return mk("Quel est le signe de $(e^{x})'$ sur $\\mathbb{R}$ ?", ['toujours positif', 'toujours négatif', 'change de signe en 0'], 0); }},
+  {s:[2,3], f:function(){ return mk("Quelle est l'équation de la tangente à $y=e^{x}$ en $x=0$ ?", ['$y=x+1$', '$y=x$', '$y=e\\,x+1$'], 0); }},
+  {s:[1,2], f:function(){ return mk("$(e^{x}+x^{2})'$ = ?", ['$e^{x}+2x$', '$e^{x}+x$', '$xe^{x-1}+2x$'], 0); }},
+  {s:[2,3], f:function(){ return mk("$(e^{x}-x)'$ = ?", ['$e^{x}-1$', '$e^{x}-x$', '$e^{x}$'], 0); }},
+  {s:[1,3], f:function(){ return mk("$(e^{x}\\times e^{x})'$ = ?", ['$2e^{2x}$', '$e^{2x}$', '$e^{x}$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces dérivées, lesquelles sont correctes ?', ['$(e^{x})\'=e^{x}$', '$(e^{2x})\'=e^{2x}$', '$(e^{2x})\'=2e^{2x}$', '$(e^{-x})\'=-e^{-x}$'], [0,2,3]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces fonctions, lesquelles ont pour dérivée $e^{x}$ ?', ['$e^{x}$', '$2e^{x}$', '$e^{x}+5$', '$e^{x}+x$'], [0,1,2]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces affirmations, lesquelles sont vraies ?', ['$(e^{x})\'\\gt 0$ sur $\\mathbb{R}$', '$e^{x}$ est croissante sur $\\mathbb{R}$', 'la tangente en $0$ est $y=x+1$', '$e^{x}$ est décroissante sur $]0;+\\infty[$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mkInput('Écrivez la dérivée de $e^{x}$ :', ['e^x'], {hint:'On peut écrire e^x ou exp(x)', placeholder:'e^x'}); }},
+  {s:[2,3], f:function(){ return mkInput('Écrivez la dérivée de $e^{2x}$ :', ['2e^2x', '2e^(2x)'], {hint:'Facteur 2 devant', placeholder:'2e^2x'}); }},
+  {s:[2,3], f:function(){ return mkInput('Écrivez la dérivée de $e^{-x}$ :', ['-e^-x', '-e^(-x)'], {hint:'Attention au signe', placeholder:'-e^-x'}); }},
+  {s:[1,2,3], f:function(){ const k=R.int(1,9); return mk(`$(e^{x}+${k})'$ = ?`, ['$e^{x}$', `$${k}e^{x}$`, `$e^{x}+${k}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Quelles fonctions ont une dérivée toujours positive sur $\\mathbb{R}$ ?', ['$e^{x}$', '$e^{2x}$', '$e^{-x}$', '$2e^{x}$'], [0,1,3]); }},
+],
+
+composees: [
+  {s:[1,2,3], f:function(){ return mk("$(e^{x^{2}})'$ = ?", ['$e^{x^{2}}$', '$2xe^{x^{2}}$', '$x^{2}e^{x^{2}}$'], 1); }},
+  {s:[1,2,3], f:function(){ return mk("$(e^{-x^{2}})'$ = ?", ['$-2xe^{-x^{2}}$', '$2xe^{-x^{2}}$', '$e^{-x^{2}}$'], 0); }},
+  {s:[2,3], f:function(){ return mk("$(e^{\\sin x})'$ = ?", ['$\\cos x\\,e^{\\sin x}$', '$e^{\\cos x}$', '$e^{\\sin x}$'], 0); }},
+  {s:[2,3], f:function(){ return mk("$(e^{\\cos x})'$ = ?", ['$-\\sin x\\,e^{\\cos x}$', '$\\sin x\\,e^{\\cos x}$', '$e^{\\cos x}$'], 0); }},
+  {s:[2,3], f:function(){ return mk("$(e^{1/x})'$ = ?", ['$-\\dfrac{1}{x^{2}}e^{1/x}$', '$\\dfrac{1}{x^{2}}e^{1/x}$', '$e^{1/x}$'], 0); }},
+  {s:[1,2], f:function(){ const a=R.int(2,4); return mk(`$(e^{${a}x^{2}})'$ = ?`, [`$${2*a}x\\,e^{${a}x^{2}}$`, `$${a}x^{2}e^{${a}x^{2}}$`, `$e^{${a}x^{2}}$`], 0); }},
+  {s:[2,3], f:function(){ return mk('$f(x)=e^{-x^{2}}$ est croissante sur :', ['$x\\lt 0$', '$x\\gt 0$', 'tout $\\mathbb{R}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$f(x)=e^{x^{2}}$ est décroissante sur :', ['$x\\lt 0$', '$x\\gt 0$', 'tout $\\mathbb{R}$'], 0); }},
+  {s:[1,2], f:function(){ return mk("$(e^{2x+3})'$ = ?", ['$2e^{2x+3}$', '$e^{2x+3}$', '$e^{2x}$'], 0); }},
+  {s:[1,2], f:function(){ return mk("$(e^{x+1})'$ = ?", ['$e^{x+1}$', '$e^{x}$', '$(x+1)e^{x}$'], 0); }},
+  {s:[1,3], f:function(){ return mk("Tableau de signes de $(e^{-x^{2}})'$ :", ['positif pour $x\\lt 0$, négatif pour $x\\gt 0$', 'toujours positif', 'négatif pour $x\\lt 0$, positif pour $x\\gt 0$'], 0); }},
+  {s:[1,3], f:function(){ return mk('Que contient la liste `L` ?', ['$[0, 2, 4, 6]$', '$[2, 4, 6, 8]$', '$[0, 1, 2, 3]$'], 0, {code:'L = [2 * k for k in range(4)]'}); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces dérivées, lesquelles sont correctes ?', ['$(e^{x^{2}})\'=2xe^{x^{2}}$', '$(e^{x^{2}})\'=e^{x^{2}}$', '$(e^{-x})\'=-e^{-x}$', '$(e^{2x})\'=2e^{2x}$'], [0,2,3]); }},
+  {s:[2,3], f:function(){ return mk('Pour $f(x)=e^{-x^{2}}$, quelles affirmations sont vraies ?', ['$f\'(x)=-2xe^{-x^{2}}$', '$f$ est croissante sur $x\\lt 0$', '$f(0)=1$', '$f$ est décroissante sur $x\\gt 0$', '$f\'(x)=2xe^{-x^{2}}$'], [0,1,2,3]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces dérivées, lesquelles sont correctes ?', ['$(e^{\\sin x})\'=\\cos x\\,e^{\\sin x}$', '$(e^{\\cos x})\'=-\\sin x\\,e^{\\cos x}$', '$(e^{x+1})\'=e^{x+1}$', '$(e^{3x})\'=3e^{x}$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mkInput('Écrivez la dérivée de $e^{x^{2}}$ :', ['2xe^x^2', '2xe^(x^2)', '2x*e^(x^2)'], {hint:'Règle $u\'e^u$ avec $u=x^2$', placeholder:'2xe^(x^2)'}); }},
+  {s:[2,3], f:function(){ return mkInput('Écrivez la dérivée de $e^{-x^{2}}$ :', ['-2xe^-x^2', '-2xe^(-x^2)'], {hint:'Attention au signe et au facteur', placeholder:'-2xe^(-x^2)'}); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,6); return mk(`$(e^{${a}x})'$ = ?`, [`$${a}e^{${a}x}$`, `$e^{${a}x}$`, `$\\dfrac{e^{${a}x}}{${a}}$`], 0); }},
+],
+
+log: [
+  {s:[1,2,3], f:function(){ return mk('Que vaut $\\ln 1$ ?', ['$0$', '$1$', '$e$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Que vaut $\\ln e$ ?', ['$1$', '$0$', '$e$'], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,6); return mk(`Que vaut $\\ln(e^{${a}})$ ?`, [`$${a}$`, `$e^{${a}}$`, `$1$`], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,7); return mk(`Que vaut $e^{\\ln ${a}}$ ?`, [`$${a}$`, `$e^{${a}}$`, `$\\ln ${a}$`], 0); }},
+  {s:[2,3], f:function(){ return mk('$\\ln(ab)$ = ?', ['$\\ln a+\\ln b$', '$\\ln a\\cdot\\ln b$', '$\\ln a-\\ln b$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$\\ln\\left(\\dfrac{a}{b}\\right)$ = ?', ['$\\ln a-\\ln b$', '$\\dfrac{\\ln a}{\\ln b}$', '$\\ln(a-b)$'], 0); }},
+  {s:[2,3], f:function(){ const n=R.int(2,5); return mk(`$\\ln(a^{${n}})$ = ?`, [`$${n}\\ln a$`, `$(\\ln a)^{${n}}$`, `$\\ln(${n}a)$`], 0); }},
+  {s:[1,2,3], f:function(){ const n=R.int(2,5); return mk(`$\\log_{10}(10^{${n}})$ = ?`, [`$${n}$`, `$10^{${n}}$`, `$1$`], 0); }},
+  {s:[1,2,3], f:function(){ const n=R.pick([2,3,4]); const s = '0'.repeat(n-1); return mk(`$\\log_{10}(0{,}${s}1)$ = ?`, [`$-${n}$`, `$${n}$`, `$-${n+1}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk("$(\\ln x)'$ = ?", ['$\\dfrac{1}{x}$', '$\\ln x$', '$e^{x}$'], 0); }},
+  {s:[2,3], f:function(){ return mk("$(\\ln(x^{2}))'$ pour $x\\gt 0$ = ?", ['$\\dfrac{2}{x}$', '$\\dfrac{1}{x^{2}}$', '$2x$'], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(1,5); return mk(`Domaine de définition de $\\ln(x-${a})$ :`, [`$x\\gt ${a}$`, `$x\\ge ${a}$`, `$x\\ne ${a}$`], 0); }},
+  {s:[2,3], f:function(){ return mk('$\\lim\\limits_{x\\to 0^{+}}\\ln x$ = ?', ['$-\\infty$', '$+\\infty$', '$0$'], 0); }},
+  {s:[2,3], f:function(){ return mk("Quelle droite est asymptote à la courbe de $\\ln$ ?", ['$x=0$', '$y=0$', '$y=x$'], 0); }},
+  {s:[1,3], f:function(){ return mk('Que vaut `s` à la fin du programme ?', ['$3$', '$4$', '$2$'], 0, {code:'s = 0\nwhile 2 ** s < 10:\n    s = s + 1'}); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$\\ln(1)=0$', '$\\ln(e)=1$', '$\\ln(e^{2})=2$', '$\\ln(0)=1$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces expressions, lesquelles sont égales à $\\ln(6)$ ?', ['$\\ln(2)+\\ln(3)$', '$\\ln(2\\times 3)$', '$\\ln(12)-\\ln(2)$', '$2\\ln(3)$'], [0,1,2]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces affirmations sur $\\ln$, lesquelles sont vraies ?', ['définie sur $]0;+\\infty[$', '$\\ln(1)=0$', '$\\ln$ est croissante', '$\\ln(0)=0$'], [0,1,2]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Combien vaut $\\ln 1$ ?', '0', {placeholder:'Un entier'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('Combien vaut $\\ln e$ ?', '1', {placeholder:'Un entier'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('Combien vaut $\\ln(e^{5})$ ?', '5', {placeholder:'Un entier'}); }},
+  {s:[1,2,3], f:function(){ return mk('Quelles égalités sont vraies ?', ['$\\ln(1)=0$', '$\\ln(e^{3})=3$', '$e^{\\ln(5)}=5$', '$\\ln(2)=1$'], [0,1,2]); }},
+],
+
+equations: [
+  {s:[1,2,3], f:function(){ const a=R.int(2,9); return mk(`Résoudre $e^{x}=${a}$ :`, [`$x=\\ln ${a}$`, `$x=${a}$`, `$x=e^{${a}}$`], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(1,5); return mk(`Résoudre $\\ln x=${a}$ :`, [`$x=e^{${a}}$`, `$x=${a}$`, `$x=\\ln ${a}$`], 0); }},
+  {s:[2,3], f:function(){ const a=R.pick([4,9,16,25]); return mk(`Résoudre $e^{2x}=${a}$ :`, [`$x=\\dfrac{\\ln ${a}}{2}$`, `$x=\\ln ${a}$`, `$x=2\\ln ${a}$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Résoudre $e^{x}\\gt 1$ :', ['$x\\gt 0$', '$x\\gt 1$', '$x\\lt 0$'], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(1,5); return mk(`Domaine de définition de $\\ln(x-${a})$ :`, [`$x\\gt ${a}$`, `$x\\ge ${a}$`, `$x\\ne ${a}$`], 0); }},
+  {s:[1,2], f:function(){ return mk('Résoudre $\\ln x+\\ln 2=\\ln 6$ :', ['$x=3$', '$x=4$', '$x=12$'], 0); }},
+  {s:[1,2,3], f:function(){ const n=R.int(2,5); return mk(`Résoudre $2^{x}=2^{${n}}$ :`, [`$x=${n}$`, `$x=${2*n}$`, `$x=\\ln ${n}$`], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(3,9); return mk(`Résoudre $2^{x}=${a}$ :`, [`$x=\\dfrac{\\ln ${a}}{\\ln 2}$`, `$x=\\dfrac{${a}}{2}$`, `$x=\\ln\\left(\\dfrac{${a}}{2}\\right)$`], 0); }},
+  {s:[2,3], f:function(){ return mk('Résoudre $e^{2x}-3e^{x}+2=0$ :', ['$x\\in\\{0,\\ln 2\\}$', '$x\\in\\{1,2\\}$', '$x\\in\\{e,e^{2}\\}$'], 0); }},
+  {s:[2,3], f:function(){ const a=R.int(2,9); return mk(`Résoudre $e^{x}\\lt ${a}$ :`, [`$x\\lt \\ln ${a}$`, `$x\\gt \\ln ${a}$`, `$x\\lt ${a}$`], 0); }},
+  {s:[1,2], f:function(){ return mk('Résoudre $\\ln x\\ge 0$ :', ['$x\\ge 1$', '$x\\ge 0$', '$x\\le 1$'], 0); }},
+  {s:[1,2,3], f:function(){ const a=R.int(2,6); return mk(`Résoudre $e^{x}=e^{${a}}$ :`, [`$x=${a}$`, `$x=e^{${a}}$`, `$x=\\ln ${a}$`], 0); }},
+  {s:[1,3], f:function(){ return mk("Où la courbe de $x\\mapsto e^{x}-2$ coupe-t-elle l'axe des abscisses ?", ['$x=\\ln 2$', '$x=2$', '$x=\\ln(-2)$'], 0); }},
+  {s:[1,3], f:function(){ return mk("Où la courbe de $x\\mapsto e^{x}$ coupe-t-elle l'axe des ordonnées ?", ['en $y=1$', 'en $y=0$', 'jamais'], 0); }},
+  {s:[2,3], f:function(){ return mk('Résoudre $\\ln(x)+\\ln(x-1)=\\ln 2$ pour $x\\gt 1$ :', ['$x=2$', '$x=1$', '$x=-1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces valeurs, lesquelles sont solutions de $e^{x}=1$ ?', ['$0$', '$\\ln(1)$', '$1$', '$e^{0}$'], [0,1,3]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces affirmations, lesquelles sont vraies ?', ['$e^{x}=5$ a pour solution $\\ln(5)$', '$\\ln(x)=2$ a pour solution $e^{2}$', '$e^{x}\\gt 0$ pour tout $x$', '$\\ln(x)$ est définie pour $x\\lt 0$'], [0,1,2]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces courbes, lesquelles coupent l\'axe des abscisses en $x=0$ ?', ['$y=e^{x}-1$', '$y=e^{x}$', '$y=x$', '$y=\\ln(x+1)$'], [0,2,3]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Résolvez $e^{x}=7$ : $x\\approx$ ______ (3 décimales)', '1.946', {tolerance:0.01, placeholder:'1,946'}); }},
+  {s:[1,2,3], f:function(){ return mkInput('Résolvez $\\ln x=3$ : $x\\approx$ ______ (1 décimale)', '20.1', {tolerance:0.15, placeholder:'20,1'}); }}
+],
+
+equationdiff: [
+  {s:[1,2,3], f:function(){ return mk("Les solutions de $y'=y$ sont :", ['$y=Ce^{x}$', '$y=Cx$', '$y=x+C$'], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.int(2,5); return mk(`Les solutions de $y'=${k}y$ sont :`, [`$y=Ce^{${k}x}$`, `$y=${k}Ce^{x}$`, `$y=Ce^{x/${k}}$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.int(2,4); return mk(`Les solutions de $y'=-${k}y$ sont :`, [`$y=Ce^{-${k}x}$`, `$y=-${k}Ce^{x}$`, `$y=C-${k}x$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.int(2,5); return mk(`Résoudre $y'=${k}y$ avec $y(0)=1$ :`, [`$y=e^{${k}x}$`, `$y=${k}e^{x}$`, `$y=e^{x}$`], 0); }},
+  {s:[1,2,3], f:function(){ const k=R.int(2,7); return mk(`Résoudre $y'=y$ avec $y(0)=${k}$ :`, [`$y=${k}e^{x}$`, `$y=e^{${k}x}$`, `$y=${k}+x$`], 0); }},
+  {s:[2,3], f:function(){ const k=R.int(2,4),c=R.int(2,6); return mk(`Résoudre $y'=-${k}y$ avec $y(0)=${c}$ :`, [`$y=${c}e^{-${k}x}$`, `$y=-${k}e^{${c}x}$`, `$y=${c}-${k}x$`], 0); }},
+  {s:[1,2,3], f:function(){ return mk("Refroidissement de Newton $T'=-k(T-T_{\\text{ext}})$ :", ['$T=T_{\\text{ext}}+Ce^{-kt}$', '$T=Ce^{-kt}$', '$T=T_{\\text{ext}}+Ct$'], 0); }},
+  {s:[2,3], f:function(){ return mk('La demi-vie radioactive vaut :', ['$\\dfrac{\\ln 2}{\\lambda}$', '$\\dfrac{\\lambda}{\\ln 2}$', '$2\\lambda$'], 0); }},
+  {s:[1,2], f:function(){ const k=R.int(2,5); return mk(`Si $y=2e^{${k}x}$, que vaut $y'$ ?`, [`$y'=${2*k}e^{${k}x}$`, `$y'=2e^{${k}x}$`, `$y'=${2*k}e^{x}$`], 0); }},
+  {s:[2,3], f:function(){ return mk("Les solutions de $y'=0$ sont :", ['les fonctions constantes', '$y=e^{x}$', '$y=x$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk("Résoudre $y'=y$ avec $y(0)=0$ :", ['$y=0$', '$y=e^{x}$', '$y=1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk("Circuit RC : $u_C'=\\dfrac{E-u_C}{RC}$. La solution qui vérifie $u_C(0)=0$ est :", ['$u_C=E(1-e^{-t/RC})$', '$u_C=e^{-t/RC}$', '$u_C=Et$'], 0); }},
+  {s:[1,3], f:function(){ return mk('Que vaut `y` à la fin du programme ?', ['$8$', '$6$', '$3$'], 0, {code:'n = 0\ny = 1\nwhile n < 3:\n    y = y * 2\n    n = n + 1'}); }},
+  {s:[2,3], f:function(){ return mk("$y'=y$, $y(1)=e^{2}$ : que vaut $y(0)$ ?", ['$e$', '$1$', '$e^{2}$'], 0); }},
+  {s:[2,3], f:function(){ return mk("Quand $t\\to+\\infty$, la solution de $y'=-2y$ avec $y(0)=3$ tend vers :", ['$0$', '$3$', '$+\\infty$'], 0); }},
+  {s:[1,3], f:function(){ return mk("Sur la figure, les courbes $y=Ce^{-kt}$ admettent pour asymptote en $+\\infty$ :", ["l'axe des abscisses $y=0$", "l'axe des ordonnées $x=0$", 'la droite $y=t$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces fonctions, lesquelles sont solutions de $y\'=y$ ?', ['$e^{x}$', '$2e^{x}$', '$Ce^{x}$ (avec $C$ constante)', '$x^{2}$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces fonctions, lesquelles sont solutions de $y\'=-y$ ?', ['$e^{-x}$', '$3e^{-x}$', '$Ce^{-x}$ (avec $C$ constante)', '$e^{x}$'], [0,1,2]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces affirmations, lesquelles sont vraies ?', ['$y=Ce^{kx}$ est solution de $y\'=ky$', '$y\'=y$ et $y(0)=1$ donne $y=e^{x}$', 'la solution de $y\'=-2y$ avec $y(0)=3$ tend vers $0$', '$y\'=y$ a pour solutions $y=C+x$'], [0,1,2]); }},
+  {s:[2,3], f:function(){ return mkInput('$y\'=2y$, $y(0)=1$ : $y(1)\\approx$ ______ (3 décimales)', '7.389', {tolerance:0.02, placeholder:'7,389'}); }},
+  {s:[2,3], f:function(){ return mkInput('$y\'=y$, $y(0)=4$ : $y(1)\\approx$ ______ (2 décimales)', '10.87', {tolerance:0.05, placeholder:'10,87'}); }}
+],
+
+imaginaire: [
+  {s:[1,2,3], f:function(){ return mk('$i^{2}$ = ?', ['$-1$', '$1$', '$i$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$i^{3}$ = ?', ['$-i$', '$i$', '$-1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$i^{4}$ = ?', ['$1$', '$i$', '$-1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk("Formule d'Euler : $e^{i\\theta}$ = ?", ['$\\cos\\theta+i\\sin\\theta$', '$\\sin\\theta+i\\cos\\theta$', '$\\cos\\theta-i\\sin\\theta$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$e^{i\\pi}$ = ?', ['$-1$', '$1$', '$i$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$e^{i\\pi/2}$ = ?', ['$i$', '$-1$', '$0$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$e^{i\\pi}+1$ = ?', ['$0$', '$1$', '$2$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$e^{i\\cdot 0}$ = ?', ['$1$', '$0$', '$i$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$|e^{i\\theta}|$ = ?', ['$1$', '$\\theta$', '$e^{\\theta}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$e^{i\\pi/2}\\times e^{i\\pi/2}$ = ?', ['$-1$', '$1$', '$e^{i\\pi/4}$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$e^{2i\\pi}$ = ?', ['$1$', '$-1$', '$0$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$\\cos\\theta$ en fonction de $e^{i\\theta}$ :', ['$\\dfrac{e^{i\\theta}+e^{-i\\theta}}{2}$', '$\\dfrac{e^{i\\theta}-e^{-i\\theta}}{2i}$', '$e^{i\\theta}+e^{-i\\theta}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$\\sin\\theta$ en fonction de $e^{i\\theta}$ :', ['$\\dfrac{e^{i\\theta}-e^{-i\\theta}}{2i}$', '$\\dfrac{e^{i\\theta}+e^{-i\\theta}}{2}$', '$e^{i\\theta}$'], 0); }},
+  {s:[1,3], f:function(){ return mk('$(1+i)^{2}$ = ?', ['$2i$', '$2$', '$1+i$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$e^{i\\pi/3}$ = ?', ['$\\dfrac{1}{2}+i\\dfrac{\\sqrt3}{2}$', '$\\dfrac{\\sqrt3}{2}+i\\dfrac{1}{2}$', '$-\\dfrac{1}{2}+i\\dfrac{\\sqrt3}{2}$'], 0); }},
+  {s:[1,3], f:function(){ return mk('Quand $\\theta$ varie, $z=e^{i\\theta}$ décrit :', ['le cercle de rayon 1 centré en O', 'une droite', 'le cercle de rayon $\\theta$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$i^{2}=-1$', '$i^{4}=1$', '$e^{i\\pi}=-1$', '$e^{i\\pi/2}=i$', '$i^{3}=1$'], [0,1,2,3]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces nombres complexes, lesquels ont pour module $1$ ?', ['$e^{i\\pi/3}$', '$i$', '$1+i$', '$e^{i\\pi}$'], [0,1,3]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces affirmations, lesquelles sont vraies ?', ['$|e^{i\\theta}|=1$', '$e^{i\\pi}+1=0$', '$e^{2i\\pi}=1$', '$e^{i\\theta}$ est toujours réel'], [0,1,2]); }},
+  {s:[1,2,3], f:function(){ return mkInput('Combien vaut $e^{i\\pi}$ ?', ['-1'], {hint:'C\'est un nombre réel', placeholder:'-1'}); }},
+  {s:[2,3], f:function(){ return mkInput('Combien vaut $|e^{i\\theta}|$ ?', '1', {hint:'Un entier', placeholder:'1'}); }}
+],
+
+tresor: [
+  {s:[1,2,3], f:function(){ return mk('Pour $z=re^{i\\theta}$, $r$ est :', ['le module $|z|$', "l'argument $\\arg(z)$", 'la partie réelle'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=1+i$ : $|z|$ = ?', ['$\\sqrt2$', '$2$', '$1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=1+i$ : $\\arg(z)$ = ?', ['$\\pi/4$', '$\\pi/2$', '$\\pi$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=1+i$ en forme exponentielle :', ['$\\sqrt2\\,e^{i\\pi/4}$', '$2e^{i\\pi/4}$', '$e^{i\\pi/4}$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=i$ en forme exponentielle :', ['$e^{i\\pi/2}$', '$e^{i\\pi}$', '$e^{i\\pi/4}$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=-1$ en forme exponentielle :', ['$e^{i\\pi}$', '$e^{i\\pi/2}$', '$e^{0}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$|z_1z_2|$ = ?', ['$|z_1|\\cdot|z_2|$', '$|z_1|+|z_2|$', '$|z_1|/|z_2|$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$\\arg(z_1z_2)$ = ?', ['$\\arg z_1+\\arg z_2$', '$\\arg z_1\\cdot\\arg z_2$', '$\\arg z_1-\\arg z_2$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=2e^{i\\pi/3}$ et $w=3e^{i\\pi/6}$ : $zw$ = ?', ['$6e^{i\\pi/2}$', '$5e^{i\\pi/2}$', '$6e^{i\\pi/9}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('Mêmes $z$ et $w$ : $\\dfrac{z}{w}$ = ?', ['$\\dfrac{2}{3}e^{i\\pi/6}$', '$6e^{i\\pi/6}$', '$\\dfrac{2}{3}e^{i\\pi/2}$'], 0); }},
+  {s:[1,2], f:function(){ return mk('$z=e^{i\\pi/4}$ : $z^{2}$ = ?', ['$i$', '$e^{i\\pi/4}$', '$e^{i\\pi}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$z=e^{i\\theta}$ : $\\bar z$ = ?', ['$e^{-i\\theta}$', '$e^{i\\theta}$', '$-e^{i\\theta}$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=\\sqrt3+i$ : $|z|$ = ?', ['$2$', '$\\sqrt3$', '$1$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('$z=\\sqrt3+i$ : $\\arg(z)$ = ?', ['$\\pi/6$', '$\\pi/3$', '$\\pi/4$'], 0); }},
+  {s:[2,3], f:function(){ return mk('$z=2e^{i\\pi/3}$ : $z^{3}$ = ?', ['$-8$', '$6e^{i\\pi}$', '$2e^{i\\pi}$'], 0); }},
+  {s:[2,3], f:function(){ return mk('Formule de Moivre : $(\\cos\\theta+i\\sin\\theta)^{n}$ = ?', ['$\\cos(n\\theta)+i\\sin(n\\theta)$', '$\\cos^{n}\\theta+i\\sin^{n}\\theta$', '$n\\cos\\theta+in\\sin\\theta$'], 0); }},
+  {s:[1,3], f:function(){ return mk('$\\left(\\cos\\frac{\\pi}{6}+i\\sin\\frac{\\pi}{6}\\right)^{2}$ = ?', ['$\\cos\\frac{\\pi}{3}+i\\sin\\frac{\\pi}{3}$', '$\\cos\\frac{\\pi}{12}+i\\sin\\frac{\\pi}{12}$', '$2$'], 0); }},
+  {s:[1,3], f:function(){ return mk('$z=1+i$ : $z^{2}$ = ?', ['$2i$', '$2$', '$1+i$'], 0); }},
+  {s:[1,3], f:function(){ return mk('$z=2e^{i\\pi/2}$ : quelle est sa partie réelle ?', ['$0$', '$2$', '$-2$'], 0); }},
+  {s:[1,2,3], f:function(){ return mk('Parmi ces écritures, lesquelles sont des formes exponentielles valides ?', ['$2e^{i\\pi/3}$', '$-e^{i\\pi}$', '$0$', '$e^{i\\pi/4}$'], [0,1,3]); }},
+  {s:[2,3], f:function(){ return mk('Parmi ces complexes, lesquels ont pour argument $\\pi/2$ ?', ['$i$', '$2i$', '$-i$', '$3e^{i\\pi/2}$'], [0,1,3]); }},
+  {s:[1,3], f:function(){ return mk('Parmi ces égalités, lesquelles sont vraies ?', ['$|z_{1}z_{2}|=|z_{1}||z_{2}|$', '$\\arg(z_{1}z_{2})=\\arg(z_{1})+\\arg(z_{2})$', '$z=e^{i\\theta}$ a pour module $\\theta$', '$\\bar{z}=e^{-i\\theta}$ pour $z=e^{i\\theta}$'], [0,1,3]); }},
+  {s:[1,2,3], f:function(){ return mkInput('$|1+i|\\approx$ ______ (3 décimales)', '1.414', {tolerance:0.01, placeholder:'1,414'}); }},
+  {s:[2,3], f:function(){ return mkInput('$\\arg(1+i)\\approx$ ______ rad (3 décimales)', '0.785', {tolerance:0.02, placeholder:'0,785'}); }}
+]
+};
+
+/* Nombre de défis par étape — minimum 10 QCM garantis par étape (12 à 16) */
+const COUNTS = {
+  base:12, negatifs:12, racines:12, continu:12, e:13, derivee:13,
+  composees:14, log:14, equations:15, equationdiff:15, imaginaire:16, tresor:16
+};
+let TOTAL_QUESTIONS = 0;
+for(const k in COUNTS) TOTAL_QUESTIONS += COUNTS[k];
+
+/* ==================================================================
+   3. INTRODUCTIONS PAR ÉTAPE ET PAR SITUATION
+   ================================================================== */
+const INTRO = {
+base:{
+ 1:`<p class="lead">Découverte : plier une feuille…</p><p>Un pliage double l'épaisseur. Après 1 pliage : 2 épaisseurs ; après 2 : 4 ; après 3 : 8. On note $2^{3}=8$ : le petit nombre en haut compte les multiplications.</p><div class="note">Que se passerait-il après 10 pliages ? 20 pliages ?</div>`,
+ 2:`<p class="lead">Le camp de base : l'art de répéter une multiplication.</p><p>Pour $a \\gt 0$ et $n$ entier : $a^n = a\\times a\\times\\cdots\\times a$ ($n$ facteurs), et $a^0=1$.</p><p>Lois : $a^{m+n}=a^m a^n$, $\\;(a^m)^n=a^{mn}$, $\\;(ab)^n=a^n b^n$.</p><div class="warn"><b>Piège n°1 :</b> $-2^2=-4$ mais $(-2)^2=4$.</div><div class="app"><b>STI2D :</b> $2^{10}=1024\\approx 10^3$ (kilo), $10^{-3}$ (milli), $10^{-6}$ (micro).</div>`,
+ 3:`<p class="lead">Consolidation.</p><p>$a^n$ est le produit de $n$ facteurs $a$. On a $a^0=1$, $a^{m+n}=a^m a^n$, $(a^m)^n=a^{mn}$, $(ab)^n=a^n b^n$.</p><div class="warn"><b>Pièges classiques :</b> $-2^2=-4$ ; $2^3\\times 2^2=2^{5}$ (et non $2^{6}$) ; $2^3+2^2\\ne 2^5$.</div><div class="app"><b>STI2D :</b> les préfixes kilo ($10^{3}$), milli ($10^{-3}$), micro ($10^{-6}$) sont des puissances de 10.</div>`},
+negatifs:{
+ 1:`<p class="lead">Le marais qui recule…</p><p>Observe la suite : $2^{3}=8$, $2^{2}=4$, $2^{1}=2$, $2^{0}=1$… et si on continue, $2^{-1}$ ?</p><p>Chaque pas divise par 2 : on trouve $\\tfrac12$. Un exposant négatif fait donc « reculer » la multiplication.</p>`,
+ 2:`<p class="lead">Le marais des exposants négatifs.</p><p>Pour $a\\ne 0$ : $a^{-n} = \\dfrac{1}{a^n}$.</p><p>Exemple : $2^{-3}=1/8=0{,}125$.</p><div class="warn">Un exposant négatif ne rend <b>jamais</b> le résultat négatif !</div><div class="app"><b>STI2D :</b> une capacité $2{,}2\\,\\mu\\text{F}$ s'écrit $2{,}2\\times 10^{-6}\\,\\text{F}$.</div>`,
+ 3:`<p class="lead">Consolidation.</p><p>$a^{-n}=\\dfrac{1}{a^n}$, $\\dfrac{1}{a^{-n}}=a^{n}$, $a^{-m}\\times a^{-n}=a^{-(m+n)}$.</p><div class="warn">Attention : $a^{-n}\\gt 0$ toujours ; c'est le signe de $a$ qui compte, pas celui de l'exposant.</div><div class="app"><b>STI2D :</b> $10^{-6}$ (micro), $10^{-9}$ (nano), $10^{-12}$ (pico).</div>`},
+racines:{
+ 1:`<p class="lead">La clairière des racines.</p><p>Quel nombre, multiplié par lui-même, donne 9 ? C'est 3. On écrit $9^{1/2}=3$.</p><p>De même $8^{1/3}=2$ car $2\\times2\\times2=8$.</p>`,
+ 2:`<p class="lead">La clairière des racines.</p><p>Pour $a\\gt 0$ : $a^{1/n}=\\sqrt[n]{a}$, et $a^{p/q}=(\\sqrt[q]{a})^p$.</p><p>Exemples : $9^{1/2}=3$, $\\;8^{2/3}=4$.</p><div class="app"><b>STI2D :</b> valeur efficace $U_{\\text{eff}}=U_{\\max}/\\sqrt2 = U_{\\max}\\times 2^{-1/2}$.</div>`,
+ 3:`<p class="lead">Consolidation.</p><p>$a^{p/q}=(\\sqrt[q]{a})^{p}$, donc $16^{3/4}=(\\sqrt[4]{16})^{3}=2^{3}=8$.</p><div class="note">Les règles des puissances restent vraies pour les exposants fractionnaires : $a^{1/2}\\times a^{1/2}=a^{1}=a$.</div><div class="app"><b>STI2D :</b> $U_{\\text{eff}}=U_{\\max}\\cdot 2^{-1/2}\\approx 0{,}707\\,U_{\\max}$.</div>`},
+continu:{
+ 1:`<p class="lead">Le pont de la continuité.</p><p>On sait calculer $2^{1}$ et $2^{2}$. Mais $2^{1{,}5}$ ? On approche $1{,}5$ par des fractions et on « remplit les trous ».</p><p>La courbe obtenue est une courbe continue, sans saut.</p>`,
+ 2:`<p class="lead">Le pont de la continuité : de ℚ à ℝ.</p><p>On approche $\\sqrt2 \\approx 1{,}4142$ par des fractions, et on définit $2^{\\sqrt2}$ comme limite de $2^r$ pour $r\\to\\sqrt2$.</p><p>Résultat : $2^x$ est définie sur $\\mathbb{R}$ tout entier, continue, et vérifie $2^{x+y}=2^x 2^y$.</p><div class="note">$2^{\\sqrt2}\\approx 2{,}665$.</div>`,
+ 3:`<p class="lead">Consolidation : limites et comportement.</p><p>Pour $a\\gt 1$ : $\\lim\\limits_{x\\to+\\infty}a^{x}=+\\infty$ et $\\lim\\limits_{x\\to-\\infty}a^{x}=0$.</p><p>La droite $y=0$ est donc <b>asymptote horizontale</b> en $-\\infty$.</p>`},
+e:{
+ 1:`<p class="lead">La caverne du nombre $e$.</p><p>Il existe un nombre mystérieux, noté $e$, qui vaut environ $2{,}71828$. C'est le nombre qui rend la fonction $e^{x}$ égale à sa propre dérivée.</p><p>On le retrouve dans la nature : croissance des populations, refroidissement, radioactivité.</p>`,
+ 2:`<p class="lead">La caverne du nombre $e$.</p><p>$e = \\lim\\limits_{n\\to+\\infty}(1+1/n)^n \\approx 2{,}71828$. La fonction $\\exp(x)=e^x$ est l'unique fonction dérivable sur $\\mathbb{R}$ avec $f'=f$ et $f(0)=1$.</p>${GRAPHS.exp}<div class="app"><b>STI2D :</b> désintégration $N(t)=N_0 e^{-\\lambda t}$, intérêts composés $C(t)=C_0 e^{rt}$.</div>`,
+ 3:`<p class="lead">Consolidation : asymptote et tangente.</p><p>La courbe de $e^{x}$ a pour <b>asymptote</b> la droite $y=0$ en $-\\infty$. Sa <b>tangente</b> en $x=0$ a pour équation $y=x+1$.</p>${GRAPHS.tan}<div class="note">$\\lim\\limits_{x\\to+\\infty}e^{x}=+\\infty$ ; $\\lim\\limits_{x\\to-\\infty}e^{x}=0$.</div>`},
+derivee:{
+ 1:`<p class="lead">La falaise de la dérivée.</p><p>La dérivée mesure la pente de la courbe. Pour la fonction exponentielle, miracle : la pente en un point est égale à la hauteur du point.</p><p>Autrement dit $(e^{x})'=e^{x}$.</p>`,
+ 2:`<p class="lead">La falaise de la dérivée.</p><p>Formule magique : $(e^x)'=e^x$. Pour $a\\gt 0$ : $(a^x)'=a^x\\ln a$.</p><p>Règle de la chaîne : $(e^{u})'=u' e^{u}$.</p><div class="app"><b>STI2D (RC) :</b> $u_C(t)=E(1-e^{-t/\\tau})$ avec $\\tau=RC$. La dérivée $u_C'(t)$ mesure la vitesse de charge.</div>`,
+ 3:`<p class="lead">Consolidation : tangente et variations.</p><p>$(e^{x})'=e^{x}\\gt 0$ : la fonction est strictement croissante sur $\\mathbb{R}$.</p><p>La tangente en $x=0$ est $y=x+1$ ; en $x=a$, c'est $y=e^{a}(x-a)+e^{a}$.</p>${GRAPHS.tan}`},
+composees:{
+ 1:`<p class="lead">Le labyrinthe des composées.</p><p>Quand la fonction à l'intérieur change, il faut en tenir compte : c'est comme une vitesse qui dépend du chemin parcouru.</p><p>$(e^{u})'=u'\\,e^{u}$.</p>`,
+ 2:`<p class="lead">Le labyrinthe des composées.</p><p>Règle : $(e^{u})'=u' e^{u}$. Ne jamais oublier le $u'$ !</p>${GRAPHS.gauss}<div class="app"><b>STI2D :</b> $u_C(t)=E(1-e^{-t/\\tau})$ donne $i(t)=C u_C'(t)=\\dfrac{E}{R}e^{-t/\\tau}$.</div>`,
+ 3:`<p class="lead">Consolidation : dérivée, signe et variations.</p><p>Pour $f(x)=e^{-x^{2}}$ : $f'(x)=-2x\\,e^{-x^{2}}$. Comme $e^{-x^{2}}\\gt 0$, le signe de $f'$ est celui de $-2x$.</p><table><tr><th>$x$</th><td>$-\\infty$</td><td></td><td>$0$</td><td></td><td>$+\\infty$</td></tr><tr><th>$f'(x)$</th><td></td><td>$+$</td><td>$0$</td><td>$-$</td><td></td></tr><tr><th>$f$</th><td>$0$</td><td>$\\nearrow$</td><td>$1$</td><td>$\\searrow$</td><td>$0$</td></tr></table>`},
+log:{
+ 1:`<p class="lead">La rivière des logarithmes.</p><p>$\\ln$ répond à la question : « à quelle puissance faut-il élever $e$ pour obtenir $x$ ? »</p><p>Par exemple $\\ln(e^{3})=3$ et $\\ln(1)=0$.</p>`,
+ 2:`<p class="lead">La rivière des logarithmes.</p><p>$\\ln$ est la réciproque de $\\exp$ : $\\ln x = y \\iff e^y=x$. On a $\\ln(ab)=\\ln a+\\ln b$, $\\ln(a^n)=n\\ln a$.</p><p>Dérivée : $(\\ln x)'=1/x$.</p>${GRAPHS.ln}<div class="app"><b>STI2D :</b> décibels $L=20\\log_{10}(U/U_0)$, pH $=-\\log_{10}[H^+]$, Richter $=\\log_{10}(A/A_0)$.</div>`,
+ 3:`<p class="lead">Consolidation : domaine, limites, asymptote.</p><p>$\\ln$ est définie sur $]0\\,;\\,+\\infty[$, avec $\\lim\\limits_{x\\to0^{+}}\\ln x=-\\infty$ : la droite $x=0$ est <b>asymptote verticale</b>.</p><p>La courbe coupe l'axe des abscisses en $x=1$.</p>${GRAPHS.ln}`},
+equations:{
+ 1:`<p class="lead">Le gouffre des équations.</p><p>Trouver $x$ tel que $2^{x}=8$ : c'est $3$, car $2^{3}=8$.</p><p>Avec $e$, on utilise $\\ln$ : $e^{x}=5 \\iff x=\\ln 5$.</p>`,
+ 2:`<p class="lead">Le gouffre des équations.</p><p>$e^x=a \\iff x=\\ln a$ (pour $a\\gt 0$) ; $\\ln x = a \\iff x=e^a$ (pour $x\\gt 0$).</p><div class="warn"><b>Danger :</b> toujours écrire le <b>domaine</b> AVANT de résoudre.</div><div class="app"><b>STI2D :</b> en électronique, on résout souvent $e^{-t/\\tau}=k$ d'où $t=-\\tau\\ln k$.</div>`,
+ 3:`<p class="lead">Consolidation : équations, inéquations, intersections.</p><p>Pour $a\\gt 1$, $a^{x}$ est croissante : $a^{x}\\lt a^{y}\\iff x\\lt y$. Donc $e^{x}\\gt 1 \\iff x\\gt 0$.</p><p>La courbe de $e^{x}-2$ coupe l'axe des abscisses en $x=\\ln 2$ ; celle de $e^{x}$ coupe l'axe des ordonnées en $y=1$.</p>`},
+equationdiff:{
+ 1:`<p class="lead">Le sanctuaire de l'équation différentielle.</p><p>Une grandeur qui évolue à une vitesse proportionnelle à elle-même : plus elle est grande, plus elle varie vite.</p><p>Sa formule contient toujours une exponentielle.</p>`,
+ 2:`<p class="lead">Le sanctuaire de l'équation différentielle.</p><p>Solution de $y'=ky$ : $y(t)=C e^{kt}$, où $C$ est fixée par $y(0)$.</p><div class="app"><b>STI2D — refroidissement :</b> $T(t)=T_{\\text{ext}}+(T_0-T_{\\text{ext}})e^{-kt}$.</div><div class="app"><b>STI2D — radioactivité :</b> $N(t)=N_0 e^{-\\lambda t}$ ; demi-vie $t_{1/2}=\\ln2/\\lambda$.</div>`,
+ 3:`<p class="lead">Consolidation : familles de solutions et asymptotes.</p><p>Toutes les solutions de $y'=-ky$ ($k\\gt 0$) tendent vers $0$ en $+\\infty$ : l'axe des abscisses est asymptote.</p>${GRAPHS.diff}`},
+imaginaire:{
+ 1:`<p class="lead">La porte temporelle : et si l'exposant devenait imaginaire ?</p><p>On invente un nombre $i$ tel que $i^{2}=-1$. Que devient alors $e^{i\\theta}$ ?</p><p>Réponse : un point qui tourne sur un cercle…</p>`,
+ 2:`<p class="lead">La porte temporelle : et si l'exposant devenait imaginaire ?</p><p>On définit $e^z=\\sum_{n\\ge 0} z^n/n!$ pour tout $z\\in\\mathbb{C}$. Pour $z=i\\theta$ :</p>$$e^{i\\theta}=\\cos\\theta+i\\sin\\theta$$<p>C'est la <b>formule d'Euler</b>.</p><div class="app"><b>STI2D :</b> une tension sinusoïdale $u(t)=U_{\\max}\\cos(\\omega t+\\varphi)$ est la partie réelle de $U_{\\max}e^{i(\\omega t+\\varphi)}$.</div>`,
+ 3:`<p class="lead">Consolidation : cercle unité et module.</p><p>$|e^{i\\theta}|=1$ : le point $e^{i\\theta}$ décrit le cercle trigonométrique.</p>${GRAPHS.unit}<div class="note">$e^{i\\pi}+1=0$ : l'identité d'Euler.</div>`},
+tresor:{
+ 1:`<p class="lead">Le trésor : la forme exponentielle complexe.</p><p>Chaque point du plan peut s'écrire $z=r\\,e^{i\\theta}$ : $r$ donne la distance, $\\theta$ donne l'angle.</p>`,
+ 2:`<p class="lead">Le trésor : la forme exponentielle complexe.</p><p>Tout $z\\ne 0$ s'écrit $z=re^{i\\theta}$ avec $r=|z|\\gt 0$ et $\\theta\\equiv\\arg(z)\\,[2\\pi]$.</p><p>Opérations : $z_1 z_2=r_1 r_2 e^{i(\\theta_1+\\theta_2)}$, $\\;z^n=r^n e^{in\\theta}$.</p><div class="note">L'identité d'Euler : $e^{i\\pi}+1=0$.</div><div class="app"><b>STI2D :</b> en régime sinusoïdal, les impédances complexes $Z_C=1/(jC\\omega)$, $Z_L=jL\\omega$ permettent d'écrire $\\underline{U}=Z\\underline{I}$.</div>`,
+ 3:`<p class="lead">Consolidation : produit, quotient, puissance.</p><p>$|z_1z_2|=|z_1||z_2|$, $\\arg(z_1z_2)=\\arg z_1+\\arg z_2$ ; formule de Moivre : $(\\cos\\theta+i\\sin\\theta)^{n}=\\cos(n\\theta)+i\\sin(n\\theta)$.</p>`}
+};
+
+/* ==================================================================
+   4. DONNÉES DES ÉTAPES
+   ================================================================== */
+const STEPS = [
+  {key:'base',        x:8,  y:84, title:"Le Camp de Base",                    sub:"Puissances entières",              danger:true},
+  {key:'negatifs',    x:17, y:91, title:"Le Marais des Négatifs",             sub:"Exposants négatifs",                danger:true},
+  {key:'racines',     x:27, y:75, title:"La Clairière des Racines",            sub:"Exposants fractionnaires",          danger:true},
+  {key:'continu',     x:38, y:86, title:"Le Pont de la Continuité",            sub:"De ℚ à ℝ",                          danger:true},
+  {key:'e',           x:50, y:72, title:"La Caverne du Nombre e",             sub:"La fonction exponentielle",         danger:true},
+  {key:'derivee',     x:61, y:81, title:"La Falaise de la Dérivée",           sub:"(eˣ)' = eˣ",                        danger:true},
+  {key:'composees',   x:72, y:66, title:"Le Labyrinthe des Composées",        sub:"e^u(x)",                            danger:true},
+  {key:'log',         x:60, y:52, title:"La Rivière des Logarithmes",          sub:"ln et log₁₀",                       danger:true},
+  {key:'equations',   x:46, y:56, title:"Le Gouffre des Équations",            sub:"exp et ln",                         danger:true},
+  {key:'equationdiff',x:34, y:44, title:"Le Sanctuaire de l'Équation Diff.",   sub:"y' = ky",                           danger:true},
+  {key:'imaginaire',  x:52, y:32, title:"La Porte Temporelle",                 sub:"e^{iθ}",                            danger:true},
+  {key:'tresor',      x:78, y:20, title:"Le Trésor de la Forme Exponentielle", sub:"z = r e^{iθ}",                      danger:false}
+];
+const N = STEPS.length;
+
+/* ==================================================================
+   5. THÈMES DES MINI-CARTES
+   ================================================================== */
+const STEP_THEMES = {
+  base:        { label: 'LE CAMP DE BASE',    deco: 'camp',     bg1:'#f0e2b8', bg2:'#d4b878' },
+  negatifs:    { label: 'LE MARAIS',           deco: 'swamp',    bg1:'#c8c8a0', bg2:'#a0a078' },
+  racines:     { label: 'LA CLAIRIÈRE',        deco: 'forest',   bg1:'#e0e8b0', bg2:'#a8c070' },
+  continu:     { label: 'LE PONT',             deco: 'river',    bg1:'#c8dce0', bg2:'#88a8b8' },
+  e:           { label: 'LA CAVERNE',          deco: 'cave',     bg1:'#c8b898', bg2:'#887050' },
+  derivee:     { label: 'LA FALAISE',          deco: 'cliff',    bg1:'#e0d0b0', bg2:'#a08060' },
+  composees:   { label: 'LE LABYRINTHE',       deco: 'maze',     bg1:'#dcd0b0', bg2:'#a89878' },
+  log:         { label: 'LA RIVIÈRE',          deco: 'river',    bg1:'#c0d8e0', bg2:'#7090a0' },
+  equations:   { label: 'LE GOUFFRE',          deco: 'cave',     bg1:'#c8b898', bg2:'#806848' },
+  equationdiff:{ label: 'LE SANCTUAIRE',       deco: 'temple',   bg1:'#e0d0b0', bg2:'#987858' },
+  imaginaire:  { label: 'LA PORTE TEMPORELLE', deco: 'portal',   bg1:'#c8c0e0', bg2:'#7870a0' },
+  tresor:      { label: 'LE TRÉSOR',           deco: 'treasure', bg1:'#f0e0a0', bg2:'#d0a040' }
+};
+
+/* ==================================================================
+   6. ÉTAT DU JEU
+   ================================================================== */
+const MAX_HP = 30;
+let hp = MAX_HP;
+let coins = 0;
+let maxVisited = -1;
+let current = -1;
+let SIT = 1;
+let unlockedIdx = 0;
+let victoryShown = false;
+const visited = new Set();
+const completedSteps = new Set();
+const answered = new Map();
+const qCache = new Map();
+
+function aKey(stepKey){ return SIT + '|' + stepKey; }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+/* ==================================================================
+   7. CARTE PRINCIPALE (canvas)
+   ================================================================== */
+const canvas = document.getElementById('map');
+const ctx = canvas.getContext('2d');
+const baseCanvas = document.createElement('canvas');
+let seed = 1;
+function srand(s){ seed = (s >>> 0) || 1; }
+function rnd(){ seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }
+
+function drawMountain(g,x,y,s){ g.save(); g.translate(x,y); g.lineWidth = 1.1; g.strokeStyle = 'rgba(92,62,30,0.55)'; g.fillStyle = 'rgba(165,135,95,0.32)'; g.beginPath(); g.moveTo(-s*0.62,0); g.lineTo(0,-s); g.lineTo(s*0.62,0); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.moveTo(-s*0.19,-s*0.70); g.lineTo(0,-s); g.lineTo(s*0.19,-s*0.70); g.stroke(); g.restore(); }
+function drawTree(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(72,56,30,0.65)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(0,0); g.lineTo(0,-s*0.38); g.stroke(); g.fillStyle = 'rgba(96,116,62,0.42)'; g.beginPath(); g.arc(0,-s*0.78,s*0.42,0,6.2832); g.fill(); g.beginPath(); g.arc(-s*0.30,-s*0.50,s*0.30,0,6.2832); g.fill(); g.beginPath(); g.arc( s*0.30,-s*0.50,s*0.30,0,6.2832); g.fill(); g.restore(); }
+function drawWave(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(64,96,118,0.45)'; g.lineWidth = 1.2; for(let k=0;k<3;k++){ g.beginPath(); g.arc(-s*0.55 + k*s*0.55, 0, s*0.26, Math.PI, 0); g.stroke(); } g.restore(); }
+function drawSkull(g,x,y,s){ g.save(); g.translate(x,y); g.fillStyle = 'rgba(220,210,190,0.75)'; g.strokeStyle = 'rgba(60,40,20,0.75)'; g.lineWidth = 1.1; g.beginPath(); g.arc(0, -s*0.15, s*0.42, 0, 6.2832); g.fill(); g.stroke(); g.beginPath(); g.moveTo(-s*0.22, s*0.10); g.lineTo(-s*0.18, s*0.40); g.lineTo( s*0.18, s*0.40); g.lineTo( s*0.22, s*0.10); g.closePath(); g.fill(); g.stroke(); g.fillStyle = 'rgba(40,25,10,0.85)'; g.beginPath(); g.arc(-s*0.16, -s*0.20, s*0.10, 0, 6.2832); g.fill(); g.beginPath(); g.arc( s*0.16, -s*0.20, s*0.10, 0, 6.2832); g.fill(); g.strokeStyle = 'rgba(60,40,20,0.6)'; g.beginPath(); g.moveTo(-s*0.10, s*0.25); g.lineTo(-s*0.10, s*0.40); g.moveTo(0, s*0.25); g.lineTo(0, s*0.40); g.moveTo(s*0.10, s*0.25); g.lineTo(s*0.10, s*0.40); g.stroke(); g.restore(); }
+function drawChest(g,x,y,s){ g.save(); g.translate(x,y); g.fillStyle = 'rgba(160,110,40,0.85)'; g.strokeStyle = 'rgba(60,35,10,0.9)'; g.lineWidth = 1.4; g.fillRect(-s*0.55, -s*0.05, s*1.1, s*0.55); g.strokeRect(-s*0.55, -s*0.05, s*1.1, s*0.55); g.beginPath(); g.moveTo(-s*0.55, -s*0.05); g.quadraticCurveTo(0, -s*0.55, s*0.55, -s*0.05); g.closePath(); g.fillStyle = 'rgba(180,125,50,0.9)'; g.fill(); g.stroke(); g.fillStyle = 'rgba(255,215,90,0.95)'; g.fillRect(-s*0.08, -s*0.05, s*0.16, s*0.18); g.strokeRect(-s*0.08, -s*0.05, s*0.16, s*0.18); g.restore(); }
+function drawResistor(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(80,60,30,0.55)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-s*0.6, 0); g.lineTo(-s*0.4, 0); g.lineTo(-s*0.3, -s*0.2); g.lineTo(-s*0.2, s*0.2); g.lineTo(-s*0.1, -s*0.2); g.lineTo(0, s*0.2); g.lineTo(s*0.1, -s*0.2); g.lineTo(s*0.2, s*0.2); g.lineTo(s*0.3, -s*0.2); g.lineTo(s*0.4, 0); g.lineTo(s*0.6, 0); g.stroke(); g.restore(); }
+function drawACWave(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(80,60,130,0.55)'; g.lineWidth = 1.4; g.beginPath(); for(let t=-1; t<=1; t+=0.02){ const px = t*s, py = -s*0.35*Math.sin(t*Math.PI*2); if(t===-1) g.moveTo(px,py); else g.lineTo(px,py); } g.stroke(); g.strokeStyle = 'rgba(80,60,30,0.3)'; g.lineWidth = 1; g.beginPath(); g.moveTo(-s*1.05,0); g.lineTo(s*1.05,0); g.stroke(); g.restore(); }
+function mapLabel(g,text,x,y,size,rot,color){ g.save(); g.translate(x,y); g.rotate(rot||0); g.font = 'italic ' + size + 'px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = color || 'rgba(112,80,44,0.32)'; g.fillText(text,0,0); g.restore(); }
+function drawCompass(g,cx,cy,R){ g.save(); g.translate(cx,cy); g.globalAlpha = 0.8; g.strokeStyle = 'rgba(92,62,30,0.6)'; g.lineWidth = 1.2; g.beginPath(); g.arc(0,0,R,0,6.2832); g.stroke(); g.beginPath(); g.arc(0,0,R*0.80,0,6.2832); g.stroke(); for(let k=0;k<8;k++){ g.save(); g.rotate(k*Math.PI/4); const len = (k%2===0) ? R*0.95 : R*0.56; const w = (k%2===0) ? R*0.15 : R*0.09; g.beginPath(); g.moveTo(0,0); g.lineTo(w,-len*0.38); g.lineTo(0,-len); g.lineTo(-w,-len*0.38); g.closePath(); g.fillStyle = (k%4===0) ? 'rgba(150,44,32,0.82)' : 'rgba(96,64,34,0.7)'; g.fill(); g.strokeStyle = 'rgba(70,45,20,0.7)'; g.lineWidth = 0.8; g.stroke(); g.restore(); } g.font = 'bold ' + (R*0.32).toFixed(0) + 'px Georgia, serif'; g.fillStyle = 'rgba(70,45,20,0.85)'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('N', 0, -R*1.16); g.fillText('S', 0, R*1.16); g.fillText('E', R*1.16, 0); g.fillText('O', -R*1.16, 0); g.restore(); }
+
+let W = 0, H = 0, DPR = 1;
+function buildBase(){
+  baseCanvas.width  = Math.max(1, Math.round(W*DPR));
+  baseCanvas.height = Math.max(1, Math.round(H*DPR));
+  const g = baseCanvas.getContext('2d');
+  g.setTransform(DPR,0,0,DPR,0,0);
+  const rg = g.createRadialGradient(W*0.45, H*0.38, Math.min(W,H)*0.05, W*0.5, H*0.5, Math.max(W,H)*0.78);
+  rg.addColorStop(0,'#f8ecca'); rg.addColorStop(0.42,'#eedcaf'); rg.addColorStop(0.72,'#dfc78f'); rg.addColorStop(1,'#c1a068');
+  g.fillStyle = rg; g.fillRect(0,0,W,H);
+  srand(20240117);
+  for(let i=0;i<2200;i++){ const x = rnd()*W, y = rnd()*H, r = 0.3 + rnd()*2.0; const a = rnd()*0.05; g.fillStyle = (rnd()>0.5) ? 'rgba(110,80,45,'+a+')' : 'rgba(255,248,225,'+(a*1.7)+')'; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+  for(let i=0;i<18;i++){ const x = rnd()*W, y = rnd()*H, r = 50 + rnd()*220; const tg = g.createRadialGradient(x,y,0,x,y,r); tg.addColorStop(0,'rgba(150,110,60,0.075)'); tg.addColorStop(1,'rgba(150,110,60,0)'); g.fillStyle = tg; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+  g.strokeStyle = 'rgba(120,90,50,0.10)'; g.lineWidth = 1;
+  const stp = Math.max(46, Math.round(Math.min(W,H)/12));
+  g.beginPath(); for(let x=0;x<=W;x+=stp){ g.moveTo(x,0); g.lineTo(x,H); } for(let y=0;y<=H;y+=stp){ g.moveTo(0,y); g.lineTo(W,y); } g.stroke();
+  const px = v => v/100*W, py = v => v/100*H;
+  [[24,12,32],[30,15,44],[35,10,28],[20,17,24],[42,13,20],[68,86,26],[72,90,20]].forEach(d => drawMountain(g,px(d[0]),py(d[1]),d[2]));
+  [[5,52,24],[9,58,20],[4,63,17],[88,88,24],[92,93,19],[83,96,21],[14,32,22],[11,27,16],[96,74,18],[8,44,18],[90,60,16]].forEach(d => drawTree(g,px(d[0]),py(d[1]),d[2]));
+  [[33,64,24],[36,67,18],[30,69,15],[84,50,22],[87,55,17],[43,26,20],[46,29,14],[22,80,16],[65,95,18]].forEach(d => drawWave(g,px(d[0]),py(d[1]),d[2]));
+  drawResistor(g, px(20), py(38), 22); drawResistor(g, px(80), py(42), 20);
+  drawACWave(g, px(48), py(15), 30); drawACWave(g, px(30), py(55), 22);
+  drawSkull(g, px(14), py(80), 13); drawSkull(g, px(66), py(74), 12); drawSkull(g, px(40), py(50), 11);
+  drawChest(g, px(80), py(18), 20);
+  mapLabel(g, 'MER DES PUISSANCES',      px(14), py(64), 14, -0.13);
+  mapLabel(g, 'DÉTROIT DES RADICAUX',    px(11), py(97), 11, -0.04);
+  mapLabel(g, 'LAC DES COMPOSÉES',       px(84), py(40), 12,  0.16);
+  mapLabel(g, 'OCÉAN DES COMPLEXES',     px(84), py(10), 13,  0.06);
+  mapLabel(g, "ÎLE DE L'EXPONENTIELLE",  px(50), py(5),  15,  0);
+  mapLabel(g, 'Sanctuaire',              px(22), py(48), 10, -0.20, 'rgba(150,44,32,0.40)');
+  mapLabel(g, 'Porte Temporelle',        px(60), py(25), 10,  0.10, 'rgba(80,60,130,0.45)');
+  drawCompass(g, W-90, H-94, Math.min(46, Math.min(W,H)*0.06));
+  const vg = g.createRadialGradient(W/2, H/2, Math.min(W,H)*0.34, W/2, H/2, Math.max(W,H)*0.80);
+  vg.addColorStop(0,'rgba(60,40,20,0)'); vg.addColorStop(1,'rgba(55,35,15,0.48)');
+  g.fillStyle = vg; g.fillRect(0,0,W,H);
+}
+function smoothPath(g, pts){ if(pts.length < 2) return; g.beginPath(); g.moveTo(pts[0].x, pts[0].y); for(let i=0;i<pts.length-1;i++){ const p0 = pts[i-1] || pts[i]; const p1 = pts[i]; const p2 = pts[i+1]; const p3 = pts[i+2] || pts[i+1]; const c1x = p1.x + (p2.x - p0.x)/6; const c1y = p1.y + (p2.y - p0.y)/6; const c2x = p2.x - (p3.x - p1.x)/6; const c2y = p2.y - (p3.y - p1.y)/6; g.bezierCurveTo(c1x,c1y,c2x,c2y,p2.x,p2.y); } }
+function drawPath(g){ const pts = STEPS.map(s => ({ x: s.x/100*W, y: s.y/100*H })); g.save(); g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([]); g.strokeStyle = 'rgba(120,85,45,0.16)'; g.lineWidth = 11; smoothPath(g, pts); g.stroke(); g.setLineDash([9,11]); g.strokeStyle = 'rgba(122,42,26,0.62)'; g.lineWidth = 2.6; smoothPath(g, pts); g.stroke(); if(maxVisited >= 1){ g.setLineDash([]); g.strokeStyle = 'rgba(214,164,44,0.85)'; g.lineWidth = 3.6; g.shadowColor = 'rgba(255,205,90,0.8)'; g.shadowBlur = 10; smoothPath(g, pts.slice(0, maxVisited+1)); g.stroke(); g.shadowBlur = 0; } g.restore(); }
+function render(){ ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H); ctx.drawImage(baseCanvas, 0, 0, W, H); drawPath(ctx); }
+let rzT = null;
+function resize(){ DPR = Math.min(window.devicePixelRatio || 1, 2); W = window.innerWidth; H = window.innerHeight; canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR); canvas.style.width = W + 'px'; canvas.style.height = H + 'px'; buildBase(); render(); }
+window.addEventListener('resize', function(){ clearTimeout(rzT); rzT = setTimeout(resize, 140); });
+
+/* ==================================================================
+   8. MINI-CARTES PAR ÉTAPE (canvas)
+   ================================================================== */
+function drawTent(g,x,y,s){ g.save(); g.translate(x,y); g.fillStyle = 'rgba(200,160,100,0.7)'; g.strokeStyle = 'rgba(80,50,20,0.85)'; g.lineWidth = 1.3; g.beginPath(); g.moveTo(-s,0); g.lineTo(0,-s*0.95); g.lineTo(s,0); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.moveTo(0,-s*0.95); g.lineTo(0,0); g.stroke(); g.restore(); }
+function drawCampfire(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(80,50,20,0.85)'; g.lineWidth = 2; g.beginPath(); g.moveTo(-s*0.5,s*0.3); g.lineTo(s*0.5,-s*0.3); g.stroke(); g.beginPath(); g.moveTo(-s*0.5,-s*0.3); g.lineTo(s*0.5,s*0.3); g.stroke(); g.fillStyle = 'rgba(255,150,50,0.7)'; g.beginPath(); g.ellipse(0,-s*0.4,s*0.25,s*0.55,0,0,6.2832); g.fill(); g.fillStyle = 'rgba(255,220,80,0.85)'; g.beginPath(); g.ellipse(0,-s*0.4,s*0.13,s*0.32,0,0,6.2832); g.fill(); g.restore(); }
+function drawReed(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(90,120,60,0.85)'; g.lineWidth = 1.4; for(let k=-1;k<=1;k++){ g.beginPath(); g.moveTo(k*s*0.3,0); g.lineTo(k*s*0.5,-s); g.stroke(); } g.restore(); }
+function drawStalagmite(g,x,y,s,dir){ g.save(); g.translate(x,y); g.fillStyle = 'rgba(150,130,110,0.75)'; g.strokeStyle = 'rgba(70,50,30,0.85)'; g.lineWidth = 1.2; g.beginPath(); if(dir>0){ g.moveTo(-s*0.5,0); g.lineTo(0,s*1.3); g.lineTo(s*0.5,0); g.closePath(); } else { g.moveTo(-s*0.5,0); g.lineTo(0,-s*1.3); g.lineTo(s*0.5,0); g.closePath(); } g.fill(); g.stroke(); g.restore(); }
+function drawCrystal(g,x,y,s){ g.save(); g.translate(x,y); g.fillStyle = 'rgba(150,200,240,0.7)'; g.strokeStyle = 'rgba(50,100,150,0.85)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(0,-s); g.lineTo(s*0.5,-s*0.3); g.lineTo(0,s); g.lineTo(-s*0.5,-s*0.3); g.closePath(); g.fill(); g.stroke(); g.restore(); }
+function drawColumn(g,x,y,s){ g.save(); g.translate(x,y); g.fillStyle = 'rgba(220,200,170,0.72)'; g.strokeStyle = 'rgba(90,70,40,0.85)'; g.lineWidth = 1.2; g.fillRect(-s*0.4,-s,s*0.8,s*1.5); g.strokeRect(-s*0.4,-s,s*0.8,s*1.5); g.beginPath(); g.moveTo(-s*0.4,-s); g.lineTo(0,-s*1.2); g.lineTo(s*0.4,-s); g.closePath(); g.fill(); g.stroke(); g.restore(); }
+function drawPortal(g,x,y,s){ g.save(); g.translate(x,y); g.strokeStyle = 'rgba(120,90,180,0.72)'; g.lineWidth = 2; for(let k=0;k<3;k++){ g.beginPath(); g.ellipse(0,0,s*(1-k*0.25),s*(1.3-k*0.3),0,0,6.2832); g.stroke(); } g.fillStyle = 'rgba(180,150,240,0.55)'; g.beginPath(); g.arc(0,0,s*0.5,0,6.2832); g.fill(); g.restore(); }
+
+function drawDeco(g, W, H, kind, rnd){
+  const px = v => v/100*W, py = v => v/100*H;
+  if(kind === 'camp'){ [[15,20,18],[80,15,20],[88,82,16],[10,85,14],[50,10,15]].forEach(d => drawMountain(g, px(d[0]), py(d[1]), d[2])); [[8,55,14],[90,55,14],[15,75,10],[85,75,10],[50,90,12]].forEach(d => drawTree(g, px(d[0]), py(d[1]), d[2])); drawTent(g, px(25), py(55), 16); drawTent(g, px(75), py(50), 14); drawTent(g, px(50), py(78), 15); drawCampfire(g, px(50), py(45), 12); drawResistor(g, px(72), py(80), 14); drawACWave(g, px(30), py(30), 18); }
+  else if(kind === 'swamp'){ for(let i=0;i<8;i++) drawReed(g, px(5+rnd()*90), py(20+rnd()*70), 8+rnd()*6); for(let i=0;i<4;i++) drawWave(g, px(10+rnd()*80), py(15+rnd()*75), 10+rnd()*6); drawSkull(g, px(40), py(70), 9); drawSkull(g, px(65), py(35), 8); drawSkull(g, px(80), py(80), 7); drawTree(g, px(15), py(35), 12); drawTree(g, px(85), py(45), 11); drawTree(g, px(10), py(70), 9); }
+  else if(kind === 'forest'){ for(let i=0;i<14;i++) drawTree(g, px(5+rnd()*90), py(15+rnd()*75), 9+rnd()*5); for(let i=0;i<3;i++) drawMountain(g, px(10+rnd()*80), py(8+rnd()*20), 12+rnd()*4); drawChest(g, px(20), py(85), 10); drawSkull(g, px(80), py(85), 8); drawSkull(g, px(50), py(20), 7); }
+  else if(kind === 'river'){ for(let i=0;i<8;i++) drawWave(g, px(10+rnd()*80), py(15+rnd()*75), 12+rnd()*6); for(let i=0;i<5;i++) drawReed(g, px(10+rnd()*80), py(10+rnd()*80), 9+rnd()*4); drawTree(g, px(8), py(30), 11); drawTree(g, px(92), py(70), 11); drawSkull(g, px(50), py(15), 7); drawChest(g, px(50), py(88), 10); drawResistor(g, px(20), py(60), 12); drawResistor(g, px(80), py(35), 12); }
+  else if(kind === 'cave'){ for(let i=0;i<6;i++) drawStalagmite(g, px(10+rnd()*80), py(3+rnd()*8), 8+rnd()*4, 1); for(let i=0;i<6;i++) drawStalagmite(g, px(10+rnd()*80), py(92+rnd()*5), 8+rnd()*4, -1); for(let i=0;i<5;i++) drawCrystal(g, px(10+rnd()*80), py(30+rnd()*40), 6+rnd()*4); drawSkull(g, px(50), py(50), 9); drawSkull(g, px(25), py(60), 7); drawSkull(g, px(75), py(65), 7); }
+  else if(kind === 'cliff'){ for(let i=0;i<5;i++) drawMountain(g, px(5+rnd()*90), py(5+rnd()*15), 18+rnd()*8); for(let i=0;i<3;i++) drawMountain(g, px(5+rnd()*90), py(15+rnd()*10), 12+rnd()*5); drawWave(g, px(50), py(88), 20); drawWave(g, px(20), py(92), 14); drawSkull(g, px(70), py(50), 8); drawResistor(g, px(30), py(60), 14); drawACWave(g, px(75), py(80), 18); }
+  else if(kind === 'maze'){ g.strokeStyle = 'rgba(100,70,40,0.55)'; g.lineWidth = 2.2; for(let i=0;i<7;i++){ const x1 = px(8+rnd()*84), y1 = py(12+rnd()*76); const x2 = x1 + (rnd()-0.5)*W*0.28, y2 = y1 + (rnd()-0.5)*H*0.28; g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke(); } for(let i=0;i<4;i++) drawColumn(g, px(10+rnd()*80), py(20+rnd()*60), 7+rnd()*3); drawSkull(g, px(50), py(50), 9); drawSkull(g, px(30), py(72), 7); drawSkull(g, px(72), py(28), 7); }
+  else if(kind === 'temple'){ for(let i=0;i<5;i++) drawColumn(g, px(12+i*19), py(28), 12); for(let i=0;i<5;i++) drawColumn(g, px(12+i*19), py(72), 12); drawACWave(g, px(50), py(50), 24); drawChest(g, px(85), py(85), 11); drawSkull(g, px(15), py(88), 7); drawResistor(g, px(50), py(15), 14); }
+  else if(kind === 'portal'){ drawPortal(g, px(50), py(40), 35); for(let i=0;i<6;i++) drawCrystal(g, px(10+rnd()*80), py(70+rnd()*20), 6+rnd()*4); for(let i=0;i<4;i++) drawTree(g, px(10+rnd()*80), py(10+rnd()*20), 9+rnd()*4); drawSkull(g, px(20), py(60), 7); drawSkull(g, px(80), py(60), 7); for(let i=0;i<3;i++) drawWave(g, px(10+rnd()*80), py(85+rnd()*10), 10); }
+  else if(kind === 'treasure'){ for(let i=0;i<3;i++) drawChest(g, px(15+rnd()*70), py(22+rnd()*55), 11+rnd()*3); for(let i=0;i<14;i++){ g.fillStyle = 'rgba(255,215,80,'+(0.5+rnd()*0.4).toFixed(2)+')'; g.beginPath(); g.arc(px(8+rnd()*84), py(12+rnd()*76), 2.5+rnd()*2.5, 0, 6.2832); g.fill(); } drawColumn(g, px(10), py(50), 10); drawColumn(g, px(90), py(50), 10); drawMountain(g, px(20), py(92), 14); drawMountain(g, px(80), py(92), 14); drawCrystal(g, px(50), py(15), 9); }
+}
+
+function getStepNodePositions(n){
+  const pts = [];
+  for(let i=0;i<n;i++){ const t = n === 1 ? 0.5 : i/(n-1); const xPct = 12 + t * 76; const yPct = 58 + Math.sin(t * Math.PI * 1.85 + 0.35) * 26 - t * 12; pts.push({ xPct: xPct, yPct: Math.max(12, Math.min(88, yPct)) }); }
+  return pts;
+}
+
+function drawStepMapCanvas(cv, stepIdx, n){
+  const theme = STEP_THEMES[STEPS[stepIdx].key];
+  const W = 640, H = 380;
+  cv.width = W * 2; cv.height = H * 2;
+  const g = cv.getContext('2d'); g.setTransform(2,0,0,2,0,0);
+  const rg = g.createRadialGradient(W*0.45, H*0.4, 20, W*0.5, H*0.5, W*0.7);
+  rg.addColorStop(0, theme.bg1); rg.addColorStop(0.6, theme.bg2); rg.addColorStop(1, theme.bg2);
+  g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  const rnd = mulberry32((SESSION ^ (stepIdx * 2654435761) ^ 0xA5A5) >>> 0);
+  for(let i=0;i<700;i++){ const x = rnd()*W, y = rnd()*H, r = 0.3 + rnd()*1.7; g.fillStyle = 'rgba(110,80,45,'+(rnd()*0.06).toFixed(3)+')'; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+  for(let i=0;i<8;i++){ const x = rnd()*W, y = rnd()*H, r = 40 + rnd()*100; const tg = g.createRadialGradient(x,y,0,x,y,r); tg.addColorStop(0,'rgba(255,248,225,0.18)'); tg.addColorStop(1,'rgba(255,248,225,0)'); g.fillStyle = tg; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+  g.strokeStyle = 'rgba(120,90,50,0.10)'; g.lineWidth = 1;
+  for(let x=0;x<=W;x+=40){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for(let y=0;y<=H;y+=40){ g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  drawDeco(g, W, H, theme.deco, rnd);
+  const positions = getStepNodePositions(n);
+  const pxPts = positions.map(p => ({ x: p.xPct/100*W, y: p.yPct/100*H }));
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  g.strokeStyle = 'rgba(120,85,45,0.22)'; g.lineWidth = 10; smoothPath(g, pxPts); g.stroke();
+  g.setLineDash([8,9]); g.strokeStyle = 'rgba(140,50,30,0.72)'; g.lineWidth = 2.4; smoothPath(g, pxPts); g.stroke();
+  g.setLineDash([]); g.restore();
+  g.save(); g.font = 'italic bold 22px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(70,45,20,0.55)'; g.fillText(theme.label, W/2, 34); g.restore();
+  drawCompass(g, W-58, H-58, 30);
+  const vg = g.createRadialGradient(W/2, H/2, W*0.34, W/2, H/2, W*0.78);
+  vg.addColorStop(0, 'rgba(60,40,20,0)'); vg.addColorStop(1, 'rgba(55,35,15,0.42)');
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(122,86,48,0.65)'; g.lineWidth = 2; g.strokeRect(2, 2, W-4, H-4);
+}
+
+function buildStepMapDOM(stepIdx, n){
+  const wrap = panelBody.querySelector('.step-map-inner');
+  if(!wrap) return;
+  const cv = wrap.querySelector('canvas');
+  drawStepMapCanvas(cv, stepIdx, n);
+  const nodesCont = wrap.querySelector('.step-map-nodes');
+  nodesCont.innerHTML = '';
+  const positions = getStepNodePositions(n);
+  positions.forEach(function(pos, i){
+    const btn = document.createElement('button');
+    btn.className = 'step-node';
+    btn.dataset.q = i;
+    btn.style.left = pos.xPct + '%';
+    btn.style.top = pos.yPct + '%';
+    btn.setAttribute('aria-label', 'Défi ' + (i+1));
+    btn.innerHTML = '<span class="pin">' + (i+1) + '<span class="badge">✓</span></span>';
+    btn.addEventListener('click', function(){
+      const ch = panelBody.querySelector('.challenge[data-q="' + i + '"]');
+      if(!ch) return;
+      ch.scrollIntoView({behavior:'smooth', block:'center'});
+      ch.classList.remove('flash'); void ch.offsetWidth; ch.classList.add('flash');
+      setTimeout(function(){ ch.classList.remove('flash'); }, 1500);
+    });
+    nodesCont.appendChild(btn);
+  });
+}
+
+function updateStepMapNodes(stepKey){
+  const m = answered.get(aKey(stepKey));
+  panelBody.querySelectorAll('.step-node').forEach(function(btn){
+    const i = +btn.dataset.q;
+    btn.classList.remove('completed','wrong');
+    if(m && m.has(i)){ const entry = m.get(i); if(entry.ok) btn.classList.add('completed'); else btn.classList.add('wrong'); }
+  });
+}
+
+/* ==================================================================
+   9. NŒUDS DE LA CARTE PRINCIPALE
+   ================================================================== */
+const nodesEl = document.getElementById('nodes');
+STEPS.forEach(function(s, i){
+  const b = document.createElement('button');
+  b.className = 'node' + (s.danger ? ' danger' : '') + (i === N-1 ? ' treasure' : '');
+  b.style.left = s.x + '%'; b.style.top = s.y + '%';
+  b.dataset.i = i; b.dataset.key = s.key;
+  b.setAttribute('aria-label', 'Étape ' + (i+1) + ' : ' + s.title);
+  b.innerHTML = '<span class="pin">' + (i === N-1 ? '★' : (i+1)) + '<span class="badge">✓</span></span><span class="label">' + s.title + '</span>';
+  b.addEventListener('click', function(){
+    if(i > unlockedIdx){ showToast('🔒 Étape verrouillée — terminez d\'abord l\'étape en cours.'); return; }
+    openStep(i);
+  });
+  nodesEl.appendChild(b);
+});
+
+/* ==================================================================
+   10. HUD
+   ================================================================== */
+function totalAnsweredForSit(){ let t = 0; STEPS.forEach(function(s){ const m = answered.get(aKey(s.key)); if(m) t += m.size; }); return t; }
+function updateHUD(){
+  const filled = Math.ceil(hp / 10);
+  let h = '';
+  for(let i=0;i<3;i++){ h += (i < filled) ? '<span class="full">♥</span>' : '<span class="empty">♡</span>'; }
+  document.getElementById('hearts').innerHTML = h;
+  document.getElementById('coinCount').textContent = coins;
+  const ta = totalAnsweredForSit();
+  const pct = Math.round(ta / TOTAL_QUESTIONS * 100);
+  document.getElementById('barFill').style.width = pct + '%';
+  document.getElementById('count').textContent = ta + ' / ' + TOTAL_QUESTIONS + ' défis relevés';
+}
+function refreshNodes(){
+  const all = nodesEl.querySelectorAll('.node');
+  all.forEach(function(el){
+    const i = +el.dataset.i; const key = el.dataset.key;
+    el.classList.toggle('visited', visited.has(key));
+    el.classList.toggle('completed', completedSteps.has(SIT + '|' + key));
+    el.classList.toggle('locked', i > unlockedIdx);
+  });
+  updateHUD();
+}
+
+/* ==================================================================
+   11. GÉNÉRATION DES QUESTIONS
+   ================================================================== */
+function getQuestions(stepKey){
+  const ck = SIT + '|' + stepKey;
+  if(qCache.has(ck)) return qCache.get(ck);
+  const pool = GEN[stepKey];
+  const want = COUNTS[stepKey];
+  const MIN_MCQ = 10;   /* nombre minimum de QCM par défi */
+  const MIN_MULTI = 2;  /* dont au moins 2 QCM à réponses multiples si possible */
+  const eligible = R.shuffle(pool.filter(function(g){ return g.s.indexOf(SIT) >= 0; }));
+  const others   = R.shuffle(pool.filter(function(g){ return g.s.indexOf(SIT) < 0; }));
+  /* une instance par générateur : éligibles d'abord, autres en secours */
+  const inst = [];
+  eligible.concat(others).forEach(function(g){ inst.push(g.f()); });
+  const mcqAll = R.shuffle(inst.filter(function(q){ return q.type === 'mcq'; }));
+  const multi  = mcqAll.filter(function(q){ return q.multi; });
+  const single = mcqAll.filter(function(q){ return !q.multi; });
+  const typed  = inst.filter(function(q){ return q.type !== 'mcq'; });
+  const chosen = [];
+  function take(arr, n){ arr.splice(0, Math.max(0, n)).forEach(function(x){ chosen.push(x); }); }
+  /* passe 1 : garantir au moins MIN_MCQ QCM, dont MIN_MULTI à réponses multiples */
+  take(multi, Math.min(MIN_MULTI, multi.length));
+  take(single, Math.min(want, MIN_MCQ) - chosen.length);
+  take(multi, Math.min(want, MIN_MCQ) - chosen.length);
+  /* passe 2 : compléter jusqu'à want avec les QCM restants puis les saisies */
+  const rest = R.shuffle(single.concat(multi).concat(typed));
+  take(rest, want - chosen.length);
+  /* dernier recours : nouveaux tirages aléatoires */
+  let guard = 0;
+  while(chosen.length < want && guard < 300){ chosen.push(R.pick(pool).f()); guard++; }
+  const list = R.shuffle(chosen);
+  qCache.set(ck, list);
+  return list;
+}
+
+/* ==================================================================
+   12. PANNEAU
+   ================================================================== */
+const panel = document.getElementById('panel');
+const panelBody = document.getElementById('panelBody');
+const panelTitle = document.getElementById('panelTitle');
+const panelSub = document.getElementById('panelSub');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function typeset(el){
+  if(!window.MathJax || typeof MathJax.typesetPromise !== 'function'){ setTimeout(function(){ typeset(el); }, 180); return; }
+  MathJax.typesetPromise([el]).catch(function(e){ console.warn(e); });
+}
+
+function renderChallenge(q, idx){
+  let h = '<div class="challenge" data-q="' + idx + '" data-multi="' + (q.multi ? 1 : 0) + '" data-type="' + q.type + '">';
+  h += '<div class="challenge-num">Défi ' + (idx+1) + '</div>';
+  h += '<div class="challenge-q">' + q.q + '</div>';
+  if(q.code) h += '<pre class="code-block"><code>' + escapeHtml(q.code) + '</code></pre>';
+  if(q.html) h += q.html;
+  if(q.type === 'input'){
+    h += '<div class="challenge-input"><input type="text" placeholder="' + escapeHtml(q.placeholder) + '" autocomplete="off" spellcheck="false"><button class="validate-input">Valider</button></div>';
+    if(q.hint) h += '<div class="input-hint">' + q.hint + '</div>';
+  } else {
+    if(q.multi) h += '<div class="multi-hint">Plusieurs réponses correctes : sélectionnez-les toutes.</div>';
+    h += '<div class="choices">';
+    q.opts.forEach(function(o, oi){ h += '<button class="choice" data-oi="' + oi + '">' + o + '</button>'; });
+    h += '</div>';
+    if(q.multi) h += '<button class="validate" disabled>Valider</button>';
+  }
+  h += '<div class="feedback"></div></div>';
+  return h;
+}
+
+function renderChallenges(stepKey){
+  const qs = getQuestions(stepKey);
+  const m = answered.get(aKey(stepKey));
+  const done = m ? m.size : 0;
+  let html = '<div class="challenges-header"><span class="challenges-title">⚔ Défis de l\'étape (' + qs.length + ')</span><span class="challenges-count" id="challengeCount">' + done + ' / ' + qs.length + '</span></div>';
+  qs.forEach(function(q, idx){ html += renderChallenge(q, idx); });
+  return html;
+}
+
+function submitAnswer(stepKey, qIndex, challenge, selected){
+  if(challenge.classList.contains('answered')) return;
+  challenge.classList.add('answered');
+  const qs = getQuestions(stepKey);
+  const q = qs[qIndex];
+  const ok = (selected.length === q.c.length) && q.c.every(function(i){ return selected.indexOf(i) >= 0; });
+  challenge.querySelectorAll('.choice').forEach(function(b){
+    b.disabled = true; b.classList.remove('sel');
+    const oi = +b.dataset.oi;
+    if(q.c.indexOf(oi) >= 0) b.classList.add('correct');
+    else if(selected.indexOf(oi) >= 0) b.classList.add('wrong');
+  });
+  const v = challenge.querySelector('.validate'); if(v) v.remove();
+  const fb = challenge.querySelector('.feedback');
+  if(ok){ coins += (q.multi ? 4 : 3); fb.textContent = '✓ Correct ! +' + (q.multi ? 4 : 3) + ' pièces d\'or.'; fb.className = 'feedback success'; }
+  else { hp = Math.max(0, hp - 1); fb.textContent = '✗ Raté ! -1 cœur. La ou les bonnes réponses sont surlignées en vert.'; fb.className = 'feedback failure'; challenge.animate([{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(0)'}], {duration:300, easing:'ease-in-out'}); }
+  recordAnswer(stepKey, qIndex, { ok: ok, value: null });
+}
+
+function submitInputAnswer(stepKey, qIndex, challenge, rawValue){
+  if(challenge.classList.contains('answered')) return;
+  challenge.classList.add('answered');
+  const qs = getQuestions(stepKey);
+  const q = qs[qIndex];
+  const ok = checkInput(rawValue, q);
+  const inp = challenge.querySelector('.challenge-input input');
+  const btn = challenge.querySelector('.challenge-input button');
+  if(inp) inp.disabled = true; if(btn) btn.remove();
+  const fb = challenge.querySelector('.feedback');
+  if(ok){ coins += 3; fb.textContent = '✓ Correct ! +3 pièces d\'or.'; fb.className = 'feedback success'; }
+  else { hp = Math.max(0, hp - 1); fb.textContent = '✗ Raté ! -1 cœur. Réponse attendue : ' + q.answer[0] + '.'; fb.className = 'feedback failure'; challenge.animate([{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(0)'}], {duration:300, easing:'ease-in-out'}); }
+  recordAnswer(stepKey, qIndex, { ok: ok, value: rawValue });
+}
+
+function recordAnswer(stepKey, qIndex, entry){
+  const key = aKey(stepKey);
+  if(!answered.has(key)) answered.set(key, new Map());
+  answered.get(key).set(qIndex, entry);
+  const cntEl = document.getElementById('challengeCount');
+  if(cntEl) cntEl.textContent = answered.get(key).size + ' / ' + getQuestions(stepKey).length;
+  updateHUD(); updateStepMapNodes(stepKey); refreshNodes(); checkStepCompletion(stepKey); checkVictory();
+}
+
+function checkStepCompletion(stepKey){
+  const qs = getQuestions(stepKey); const key = aKey(stepKey); const m = answered.get(key);
+  if(!m || m.size < qs.length) return;
+  if(completedSteps.has(key)) return;
+  completedSteps.add(key); coins += 10;
+  const idx = STEPS.findIndex(function(s){ return s.key === stepKey; });
+  if(idx >= 0 && idx + 1 > unlockedIdx){ unlockedIdx = idx + 1; setTimeout(function(){ showToast('🔓 Étape ' + Math.min(idx+2, N) + ' : « ' + STEPS[Math.min(idx+1, N-1)].title + ' » débloquée !'); }, 350); }
+  refreshNodes();
+}
+
+function restoreAnswers(stepKey){
+  const key = aKey(stepKey); const m = answered.get(key);
+  if(!m) return;
+  const qs = getQuestions(stepKey);
+  panelBody.querySelectorAll('.challenge').forEach(function(ch, idx){
+    if(!m.has(idx)) return;
+    const entry = m.get(idx); const q = qs[idx];
+    ch.classList.add('answered');
+    if(q.type === 'input'){
+      const inp = ch.querySelector('.challenge-input input'); const btn = ch.querySelector('.challenge-input button');
+      if(inp){ inp.disabled = true; if(entry.value) inp.value = entry.value; } if(btn) btn.remove();
+    } else {
+      ch.querySelectorAll('.choice').forEach(function(b){ b.disabled = true; const oi = +b.dataset.oi; if(q.c.indexOf(oi) >= 0) b.classList.add('correct'); });
+      const v = ch.querySelector('.validate'); if(v) v.remove();
+    }
+    const fb = ch.querySelector('.feedback');
+    if(entry.ok){ fb.textContent = '✓ Correct ! (déjà répondu)'; fb.className = 'feedback success'; }
+    else { fb.textContent = '✗ Raté. La bonne réponse était surlignée.'; fb.className = 'feedback failure'; }
+  });
+}
+
+function attachChallengeListeners(stepKey){
+  panelBody.querySelectorAll('.challenge').forEach(function(ch, idx){
+    const multi = ch.dataset.multi === '1';
+    const type = ch.dataset.type;
+    const validateBtn = ch.querySelector('.validate');
+    if(type === 'input'){
+      const inp = ch.querySelector('.challenge-input input'); const btn = ch.querySelector('.challenge-input button');
+      if(inp && btn){
+        const submit = function(){ if(ch.classList.contains('answered')) return; const val = inp.value.trim(); if(!val) return; submitInputAnswer(stepKey, idx, ch, val); };
+        btn.addEventListener('click', submit);
+        inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); submit(); } });
+      }
+      return;
+    }
+    ch.querySelectorAll('.choice').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(ch.classList.contains('answered')) return;
+        if(multi){ btn.classList.toggle('sel'); const n = ch.querySelectorAll('.choice.sel').length; if(validateBtn) validateBtn.disabled = (n === 0); }
+        else { submitAnswer(stepKey, idx, ch, [+btn.dataset.oi]); }
+      });
+    });
+    if(validateBtn){ validateBtn.addEventListener('click', function(){ const sel = []; ch.querySelectorAll('.choice.sel').forEach(function(b){ sel.push(+b.dataset.oi); }); if(sel.length) submitAnswer(stepKey, idx, ch, sel); }); }
+  });
+}
+
+/* ==================================================================
+   13. OUVERTURE D'UNE ÉTAPE
+   ================================================================== */
+function openStep(i){
+  if(i < 0 || i >= N) return;
+  if(i > unlockedIdx){ showToast('🔒 Étape verrouillée.'); return; }
+  current = i;
+  const s = STEPS[i];
+  visited.add(s.key); if(i > maxVisited) maxVisited = i;
+  if(window.MathJax && typeof MathJax.typesetClear === 'function'){ try { MathJax.typesetClear([panelBody]); } catch(e){} }
+  const qs = getQuestions(s.key);
+  const introHtml = (INTRO[s.key] && INTRO[s.key][SIT]) ? INTRO[s.key][SIT] : '<p>Contenu indisponible.</p>';
+  const sitLabel = (SIT === 1) ? 'Situation 1 — Découverte autonome' : (SIT === 2) ? 'Situation 2 — En cours de formalisation' : 'Situation 3 — Consolidation';
+  let html = '<div class="step-map-wrap"><div class="step-map-title"><span>🗺 Carte de l\'étape — cliquez sur un repère</span><span class="pos">' + qs.length + ' défis</span></div><div class="step-map-inner"><canvas></canvas><div class="step-map-nodes"></div></div></div>';
+  html += '<div class="sit-banner sit-' + SIT + '"><b>' + sitLabel + '</b></div>';
+  html += introHtml;
+  html += renderChallenges(s.key);
+  panelTitle.textContent = (i+1) + '. ' + s.title;
+  panelSub.textContent = s.sub;
+  panelBody.innerHTML = html;
+  panelBody.scrollTop = 0;
+  buildStepMapDOM(i, qs.length);
+  updateStepMapNodes(s.key);
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden','false');
+  attachChallengeListeners(s.key);
+  restoreAnswers(s.key);
+  typeset(panelBody);
+  refreshNodes(); render(); updateNav();
+}
+
+function updateNav(){
+  prevBtn.disabled = (current <= 0 || (current - 1) > unlockedIdx);
+  nextBtn.disabled = (current >= N-1 || (current + 1) > unlockedIdx);
+}
+function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); }
+document.getElementById('closeBtn').addEventListener('click', closePanel);
+prevBtn.addEventListener('click', function(){ if(current > 0 && current - 1 <= unlockedIdx) openStep(current-1); });
+nextBtn.addEventListener('click', function(){ if(current < N-1 && current + 1 <= unlockedIdx) openStep(current+1); });
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closePanel();
+  if(!panel.classList.contains('open')) return;
+  if(e.key === 'ArrowRight' && current < N-1 && current + 1 <= unlockedIdx) openStep(current+1);
+  if(e.key === 'ArrowLeft'  && current > 0 && current - 1 <= unlockedIdx) openStep(current-1);
+});
+
+/* ==================================================================
+   14. SÉLECTION DE LA SITUATION
+   ================================================================== */
+function setSituation(n){
+  if(n === SIT) return;
+  SIT = n; qCache.clear(); completedSteps.clear(); unlockedIdx = 0;
+  document.querySelectorAll('#situations button').forEach(function(b){ b.classList.toggle('active', (+b.dataset.sit) === n); });
+  if(current >= 0) openStep(current);
+  refreshNodes(); updateHUD(); checkVictory();
+}
+document.querySelectorAll('#situations button').forEach(function(b){ b.addEventListener('click', function(){ setSituation(+b.dataset.sit); }); });
+document.querySelector('#situations button[data-sit="1"]').classList.add('active');
+
+/* ==================================================================
+   15. VICTOIRE
+   ================================================================== */
+function checkVictory(){
+  let total = 0;
+  STEPS.forEach(function(s){ const m = answered.get(aKey(s.key)); if(m) total += m.size; });
+  if(total === TOTAL_QUESTIONS && !victoryShown){
+    victoryShown = true;
+    let good = 0;
+    STEPS.forEach(function(s){ const m = answered.get(aKey(s.key)); if(m) m.forEach(function(entry){ if(entry.ok) good++; }); });
+    const pct = Math.round(good / TOTAL_QUESTIONS * 100);
+    setTimeout(function(){
+      document.getElementById('finalCoins').textContent = coins;
+      document.getElementById('finalHearts').textContent = Math.ceil(hp / 10);
+      document.getElementById('finalScore').textContent = pct + '%';
+      document.getElementById('victory').classList.add('show');
+    }, 500);
+  }
+}
+document.getElementById('closeVictory').addEventListener('click', function(){ document.getElementById('victory').classList.remove('show'); });
+
+/* ==================================================================
+   16. DÉMARRAGE
+   ================================================================== */
+resize(); refreshNodes();
+setTimeout(function(){ const first = nodesEl.querySelector('.node'); if(first && visited.size === 0){ first.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.25)'},{transform:'translate(-50%,-50%) scale(1)'}], {duration:1400, iterations:2, easing:'ease-in-out'}); } }, 1200);
+
+})();
+</script>
+</body>
+</html>

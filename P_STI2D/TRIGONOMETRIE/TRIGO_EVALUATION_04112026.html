@@ -36,6 +36,7 @@ body{
   color:var(--text);line-height:1.6;padding:24px 14px 70px;min-height:100vh;
   background:radial-gradient(ellipse at top, #fffdf6 0%, var(--bg) 50%, #efe7cc 100%);
 }
+body.modal-open{overflow:hidden}
 .wrap{max-width:960px;margin:0 auto}
 
 header.title-block{
@@ -323,6 +324,52 @@ details.solution summary:hover{color:var(--accent-light)}
 }
 .complete-table td.blank-cell::before{content:"\2026\2026\2026"}
 
+/* ---- Tableau interactif (exercice 4) ---- */
+.interactive-table-wrap{margin:12px 0;overflow-x:auto}
+.interactive-table td.fill-cell{
+  background:#fbfaf2;
+  text-align:center;
+  padding:8px 10px !important;
+  position:relative;
+}
+.interactive-table td.fill-cell.locked{pointer-events:none}
+.cell-btn{
+  font-family:inherit;font-size:.94rem;
+  padding:7px 14px;border:1.5px dashed var(--border);
+  border-radius:6px;background:#fff;cursor:pointer;
+  color:var(--muted);transition:.15s;min-width:110px;
+}
+.cell-btn:hover{border-color:var(--accent-light);background:#f4f9fc}
+.cell-btn.filled{
+  border-style:solid;border-color:var(--accent);
+  color:var(--text);background:#eaf4f8;
+}
+.cell-options{
+  display:none;flex-wrap:wrap;gap:5px;justify-content:center;
+  margin-top:8px;
+}
+.cell-options.show{display:flex}
+.cell-opt{
+  font-family:inherit;font-size:.86rem;
+  padding:5px 10px;border:1.5px solid var(--border);
+  border-radius:5px;background:#fff;cursor:pointer;transition:.12s;
+}
+.cell-opt:hover{border-color:var(--accent-light);background:#f4f9fc}
+td.fill-cell.correct{
+  background:var(--ok-bg) !important;
+  box-shadow:inset 4px 0 0 var(--ok);
+}
+td.fill-cell.wrong{
+  background:var(--err-bg) !important;
+  box-shadow:inset 4px 0 0 var(--err);
+}
+td.fill-cell.correct .cell-btn{
+  border-color:var(--ok);background:var(--ok-bg);color:#14532d;
+}
+td.fill-cell.wrong .cell-btn{
+  border-color:var(--err);background:var(--err-bg);color:#7f1d1d;
+}
+
 .wrong-opt{
   background:#fbeaea;border-left:3px solid var(--err);
   padding:6px 12px;border-radius:5px;margin:6px 0;
@@ -334,6 +381,84 @@ footer.page-foot{
   text-align:center;margin-top:30px;color:var(--muted);
   font-size:.85rem;font-style:italic;
 }
+footer.page-foot .license-btn{
+  display:inline-block;
+  margin-top:12px;
+  font-family:inherit;
+  font-size:.86rem;
+  font-style:normal;
+  padding:8px 16px;
+  border-radius:8px;
+  border:1.5px solid var(--gold);
+  background:#fff;
+  color:var(--gold-dark);
+  cursor:pointer;
+  transition:.15s;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+footer.page-foot .license-btn:hover{background:var(--warn-bg)}
+
+/* ---- Modale licence ---- */
+.modal-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  background:rgba(30,26,18,.55);
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.modal-overlay.show{display:flex}
+.license-modal{
+  position:relative;
+  width:100%;
+  max-width:760px;
+  max-height:86vh;
+  overflow:auto;
+  background:linear-gradient(135deg,#fffdf6,#fbf5e4);
+  border:2px solid var(--gold);
+  border-radius:12px;
+  padding:24px 28px;
+  box-shadow:0 18px 50px rgba(30,26,18,.35);
+  color:var(--text-soft);
+  line-height:1.55;
+  font-size:.97rem;
+}
+.license-modal h2{
+  color:var(--gold-dark);
+  font-size:1.15rem;
+  margin:0 40px 12px 0;
+  line-height:1.35;
+}
+.license-modal h3{
+  color:var(--gold-dark);
+  font-size:1rem;
+  margin:18px 0 8px;
+}
+.license-modal p{margin:10px 0}
+.license-modal strong{color:var(--gold-dark)}
+.license-modal a{color:var(--accent)}
+.license-modal .em{font-style:italic;color:var(--muted)}
+.modal-close{
+  position:absolute;
+  top:10px;
+  right:14px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:#fff;
+  color:var(--gold-dark);
+  font-size:1.35rem;
+  line-height:1;
+  cursor:pointer;
+  transition:.15s;
+}
+.modal-close:hover{background:var(--warn-bg);border-color:var(--gold)}
+.modal-close:focus{outline:2px solid var(--accent-light);outline-offset:2px}
+
 mjx-container{color:var(--text) !important}
 
 #loadError{
@@ -350,6 +475,9 @@ mjx-container{color:var(--text) !important}
   .qcm-option{font-size:.92rem;padding:9px 12px}
   .save-row{flex-direction:column;align-items:stretch}
   #btnSave{width:100%}
+  .cell-opt{font-size:.8rem;padding:4px 8px}
+  .license-modal{padding:20px 18px}
+  .license-modal h2{font-size:1.05rem}
 }
 </style>
 </head>
@@ -406,8 +534,39 @@ mjx-container{color:var(--text) !important}
   <div id="exercises"></div>
 
   <footer class="page-foot">
-    &#201;valuation formative &#8212; Les Arcanes du Cercle
+    <div>&#201;valuation formative &#8212; Les Arcanes du Cercle</div>
+    <button type="button" class="license-btn" id="btnLicense">&#9878;&#65039; Droits d&#8217;auteur et licence</button>
   </footer>
+</div>
+
+<!-- Modale licence -->
+<div class="modal-overlay" id="licenseModal" role="dialog" aria-modal="true" aria-labelledby="licenseTitle" aria-hidden="true">
+  <div class="license-modal" tabindex="-1">
+    <button type="button" class="modal-close" id="btnCloseLicense" aria-label="Fermer">&#215;</button>
+    <h2 id="licenseTitle">&#9878;&#65039; Droits d&#8217;Auteur et Licence d&#8217;Utilisation</h2>
+    <p>Document p&#233;dagogique web original &#8212; sujet type d&#8217;&#233;valuation en <strong>trigonom&#233;trie (PCM)</strong> &#8212; con&#231;u, &#233;crit et calcul&#233; &#224; la main dans le cabinet des Arcanes du Cercle.<br>&#169; Yann Merdy &#8212; octobre 2026.</p>
+
+    <h3>Licence d&#8217;Utilisation P&#233;dagogique</h3>
+
+    <p><strong>Utilisation Priv&#233;e et &#201;ducative (Autoris&#233;e) :</strong><br>
+    usage personnel, &#233;ducatif et non lucratif autoris&#233; &#8212; copie, projection, impression et adaptation pour vos &#233;l&#232;ves comprises.</p>
+
+    <p><strong>Attribution :</strong><br>
+    toute reproduction ou modification doit conserver la mention de l&#8217;auteur (Yann Merdy) et la pr&#233;sente notice.</p>
+
+    <p><strong>Usage Commercial (Interdit) :</strong><br>
+    toute utilisation commerciale est strictement interdite sans accord &#233;crit pr&#233;alable de l&#8217;auteur.</p>
+
+    <p><strong>Vie priv&#233;e :</strong><br>
+    la page fonctionne int&#233;gralement hors ligne ; votre progression reste dans votre navigateur et dans le fichier chiffr&#233; que vous t&#233;l&#233;chargez vous-m&#234;me. Aucun envoi automatique de donn&#233;es n&#8217;est effectu&#233;.</p>
+
+    <p><strong>Fiction :</strong><br>
+    le cercle trigonom&#233;trique, ses angles remarquables, leurs sym&#233;tries et leurs rotations sont fictifs.<br>
+    Toute ressemblance avec une r&#233;alit&#233; g&#233;om&#233;trique serait parfaitement exacte &#8212; &#224; $2\pi$ pr&#232;s.</p>
+
+    <p>Pour toute demande commerciale, contacter l&#8217;auteur :<br>
+    <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>.</p>
+  </div>
 </div>
 
 <script>
@@ -841,26 +1000,26 @@ mjx-container{color:var(--text) !important}
   }
 
   /* ============================================================
-     EXERCICE 4
+     EXERCICE 4  — tableau interactif
      ============================================================ */
   function exo4(){
     var a, b;
     do { a = randInt(-5, 5); b = randInt(-5, 5); } while(a === 0 || b === 0);
 
     var FORMULES = [
-      { transfo: "la sym\u00e9trie d'axe $(O,\\vec{i})$",
+      { transfo: "Sym\u00e9trie d'axe $(O,\\vec{i})$",
         correct: "-\\theta",
         whyCorrect: "la sym\u00e9trie d'axe $(O,\\vec{i})$ renverse le point M verticalement : l'ordonn\u00e9e change de signe, donc l'angle passe de $\\theta$ \u00e0 $-\\theta$." },
-      { transfo: "la sym\u00e9trie d'axe $(O,\\vec{j})$",
+      { transfo: "Sym\u00e9trie d'axe $(O,\\vec{j})$",
         correct: "\\pi-\\theta",
         whyCorrect: "la sym\u00e9trie d'axe $(O,\\vec{j})$ renverse le point M horizontalement : l'abscisse change de signe, donc l'angle passe de $\\theta$ \u00e0 $\\pi-\\theta$." },
-      { transfo: "la sym\u00e9trie de centre $O$",
+      { transfo: "Sym\u00e9trie de centre $O$",
         correct: "\\pi+\\theta",
         whyCorrect: "la sym\u00e9trie centrale fait faire un demi-tour au point M : l'angle augmente de $\\pi$." },
-      { transfo: "la rotation de $+90^\\circ$",
+      { transfo: "Rotation de $+90^\\circ$",
         correct: "\\theta+\\frac{\\pi}{2}",
         whyCorrect: "une rotation de $+90^\\circ$ fait tourner M d'un quart de tour dans le sens direct." },
-      { transfo: "la rotation de $-90^\\circ$",
+      { transfo: "Rotation de $-90^\\circ$",
         correct: "\\theta-\\frac{\\pi}{2}",
         whyCorrect: "une rotation de $-90^\\circ$ fait tourner M d'un quart de tour dans le sens indirect." }
     ];
@@ -882,11 +1041,7 @@ mjx-container{color:var(--text) !important}
       return map[wrongFormula] || "cette formule ne correspond pas \u00e0 la transformation demand\u00e9e.";
     }
 
-    var questions = [];
-    var solBlocks = [];
-    var resultBank = [];
-
-    FORMULES.forEach(function(item, idx){
+    var tableRows = FORMULES.map(function(item, idx){
       var otherCorrects = FORMULES
         .filter(function(_, j){ return j !== idx; })
         .map(function(f){ return f.correct; });
@@ -900,37 +1055,25 @@ mjx-container{color:var(--text) !important}
       ).slice(0, 2);
 
       var distract = otherCorrects.concat(extras);
-
-      var options = shuffle(
-        [{ label: '$' + item.correct + '$', correct: true }].concat(
-          distract.map(function(f){
-            return { label: '$' + f + '$', correct: false };
-          })
+      var opts = shuffle(
+        [{ latex: item.correct, correct: true }].concat(
+          distract.map(function(f){ return { latex: f, correct: false }; })
         )
       );
 
-      questions.push({
-        text: 'Pour ' + item.transfo + ', quelle est la formule de l\'angle image $\\theta\'$ ?',
-        options: options
-      });
+      var correctIdx = 0;
+      for(var k = 0; k < opts.length; k++){
+        if(opts[k].correct){ correctIdx = k; break; }
+      }
 
-      resultBank.push({ transfo: item.transfo, correct: item.correct });
-
-      var wrongList = distract.map(function(f){
-        return '<div class="wrong-opt"><strong>$' + f + '$</strong> \u2014 ' + whyWrong(f) + '</div>';
-      }).join('');
-
-      solBlocks.push(
-        '<div style="margin-bottom:22px">' +
-          '<p><strong>Question ' + (idx+1) + ' \u2014 ' + item.transfo + ' :</strong></p>' +
-          '<p><strong>Bonne formule :</strong> $\\theta\' = ' + item.correct +
-          '$ \u2014 ' + item.whyCorrect + '</p>' +
-          '<p><strong>Pourquoi les autres suggestions sont fausses :</strong></p>' +
-          wrongList +
-          '<div class="final-box"><strong>Finalement</strong>, pour ' + item.transfo +
-          ', l\'angle image est $\\theta\' = ' + item.correct + '$.</div>' +
-        '</div>'
-      );
+      return {
+        transformation: item.transfo,
+        correct: item.correct,
+        whyCorrect: item.whyCorrect,
+        distractors: distract,
+        options: opts.map(function(o){ return o.latex; }),
+        correctIndex: correctIdx
+      };
     });
 
     var M1 = [-a, b];
@@ -950,25 +1093,41 @@ mjx-container{color:var(--text) !important}
       return { label: fmtPt(p), correct: (p[0] === M2[0] && p[1] === M2[1]) };
     }));
 
-    questions.push({
-      text: 'Soit $M\\big(' + a + '\\,;\\,' + b + '\\big)$. ' +
-            'Quelles sont les coordonn\u00e9es de $M_1$ par la sym\u00e9trie d\'axe $(O,\\vec{j})$ ?',
-      options: q6Options
-    });
-    questions.push({
-      text: 'Soit $M\\big(' + a + '\\,;\\,' + b + '\\big)$. ' +
-            'Quelles sont les coordonn\u00e9es de $M_2$ par la rotation de $+90^\\circ$ ?',
-      options: q7Options
-    });
+    var questions = [
+      {
+        text: 'Soit $M\\big(' + a + '\\,;\\,' + b + '\\big)$. ' +
+              'Quelles sont les coordonn\u00e9es de $M_1$ par la sym\u00e9trie d\'axe $(O,\\vec{j})$ ?',
+        options: q6Options
+      },
+      {
+        text: 'Soit $M\\big(' + a + '\\,;\\,' + b + '\\big)$. ' +
+              'Quelles sont les coordonn\u00e9es de $M_2$ par la rotation de $+90^\\circ$ ?',
+        options: q7Options
+      }
+    ];
+
+    var solBlocks = tableRows.map(function(row, idx){
+      var wrongList = row.distractors.map(function(f){
+        return '<div class="wrong-opt"><strong>$' + f + '$</strong> \u2014 ' + whyWrong(f) + '</div>';
+      }).join('');
+      return '<div style="margin-bottom:22px">' +
+        '<p><strong>Ligne ' + (idx+1) + ' \u2014 ' + row.transformation + ' :</strong></p>' +
+        '<p><strong>Bonne formule :</strong> $\\theta\' = ' + row.correct + '$ \u2014 ' + row.whyCorrect + '</p>' +
+        '<p><strong>Pourquoi les autres suggestions sont fausses :</strong></p>' +
+        wrongList +
+        '<div class="final-box"><strong>Finalement</strong>, pour ' + row.transformation.toLowerCase() +
+        ', l\'angle image est $\\theta\' = ' + row.correct + '$.</div>' +
+      '</div>';
+    }).join('');
 
     var filledTable =
       '<p style="margin-top:14px"><strong>Tableau compl\u00e9t\u00e9 :</strong></p>' +
       '<table class="complete-table">' +
-        '<tr><th>Transformation</th><th>Angle image</th></tr>';
-    resultBank.forEach(function(r){
-      filledTable += '<tr><td>' + r.transfo + '</td><td>$' + r.correct + '$</td></tr>';
-    });
-    filledTable += '</table>';
+        '<tr><th>Transformation</th><th>Angle image</th></tr>' +
+        tableRows.map(function(r){
+          return '<tr><td>' + r.transformation + '</td><td>$' + r.correct + '$</td></tr>';
+        }).join('') +
+      '</table>';
 
     var coordSolution =
       '<p style="margin-top:16px"><strong>Pour $M\\big(' + a + '\\,;\\,' + b + '\\big)$ :</strong></p>' +
@@ -977,29 +1136,20 @@ mjx-container{color:var(--text) !important}
       '<div class="final-box"><strong>Finalement</strong>, $M_1\\big(' + M1[0] + '\\,;\\,' + M1[1] +
       '\\big)$ et $M_2\\big(' + M2[0] + '\\,;\\,' + M2[1] + '\\big)$.</div>';
 
-    var emptyTable =
-      '<p>Compl\u00e9tez le tableau :</p>' +
-      '<table class="complete-table">' +
-        '<tr><th>Transformation</th><th>Angle image</th></tr>' +
-        '<tr><td>Sym\u00e9trie d\'axe $(O,\\vec{i})$</td><td class="blank-cell"></td></tr>' +
-        '<tr><td>Sym\u00e9trie d\'axe $(O,\\vec{j})$</td><td class="blank-cell"></td></tr>' +
-        '<tr><td>Sym\u00e9trie de centre $O$</td><td class="blank-cell"></td></tr>' +
-        '<tr><td>Rotation $+90^\\circ$</td><td class="blank-cell"></td></tr>' +
-        '<tr><td>Rotation $-90^\\circ$</td><td class="blank-cell"></td></tr>' +
-      '</table>' +
-      '<p>Pour chaque ligne, <strong>un seul</strong> angle est correct.</p>' +
-      '<p>On donne \u00e9galement $M\\big(' + a + '\\,;\\,' + b + '\\big)$ pour deux applications.</p>' +
-      '<div class="canvas-wrap"><canvas id="cv4" width="380" height="380"></canvas></div>';
-
     return {
       num: 4,
       title: 'Sym\u00e9tries et rotations',
       pts: 6,
-      intro: emptyTable,
+      intro:
+        '<p>Compl\u00e9tez le <strong>tableau</strong> ci-dessous : pour chaque transformation, ' +
+        'cliquez sur le bouton <em>\u00ab\u00a0choisir\u00a0\u00bb</em> puis s\u00e9lectionnez l\'angle image correct. ' +
+        'Un seul choix est juste par ligne.</p>' +
+        '<div class="canvas-wrap"><canvas id="cv4" width="380" height="380"></canvas></div>',
+      table: { rows: tableRows },
       questions: questions,
       solution:
-        '<p><strong>Analyse d\u00e9taill\u00e9e de chaque question :</strong></p>' +
-        solBlocks.join('') + filledTable + coordSolution,
+        '<p><strong>Analyse d\u00e9taill\u00e9e de chaque transformation :</strong></p>' +
+        solBlocks + filledTable + coordSolution,
       onRender: function(){ drawExo4(a, b, M1, M2); }
     };
   }
@@ -1167,6 +1317,26 @@ mjx-container{color:var(--text) !important}
   /* ============================================================
      RENDU
      ============================================================ */
+  function buildTableHtml(ex){
+    var h = '<div class="interactive-table-wrap">';
+    h += '<table class="complete-table interactive-table" id="ex-table-' + ex.num + '">';
+    h += '<tr><th>Transformation</th><th>Angle image</th></tr>';
+    ex.table.rows.forEach(function(row, ri){
+      var optsHtml = row.options.map(function(optLatex, oi){
+        return '<button type="button" class="cell-opt" data-row="' + ri + '" data-idx="' + oi + '">$' + optLatex + '$</button>';
+      }).join('');
+      h += '<tr>' +
+        '<td>' + row.transformation + '</td>' +
+        '<td class="fill-cell" data-row="' + ri + '" data-correct="' + row.correctIndex + '">' +
+          '<button type="button" class="cell-btn" data-row="' + ri + '">— choisir —</button>' +
+          '<div class="cell-options" data-row="' + ri + '">' + optsHtml + '</div>' +
+        '</td>' +
+      '</tr>';
+    });
+    h += '</table></div>';
+    return h;
+  }
+
   function renderExercise(container, ex){
     var sec = document.createElement('section');
     sec.className = 'exo';
@@ -1175,6 +1345,7 @@ mjx-container{color:var(--text) !important}
     var html = '<h2><span>Exercice ' + ex.num + ' \u2014 ' + ex.title + '</span>' +
                '<span class="pts">' + ex.pts + ' point' + (ex.pts > 1 ? 's' : '') + '</span></h2>';
     if(ex.intro) html += '<div class="enonce">' + ex.intro + '</div>';
+    if(ex.table) html += buildTableHtml(ex);
     html += '<div class="exo-questions"></div>';
     html += '<div class="exo-score" data-ex-score="' + ex.num + '"></div>';
     html += '<details class="solution">' +
@@ -1214,7 +1385,7 @@ mjx-container{color:var(--text) !important}
   }
 
   function snapshotExercise(ex){
-    return {
+    var snap = {
       num: ex.num,
       title: ex.title,
       pts: ex.pts,
@@ -1231,6 +1402,19 @@ mjx-container{color:var(--text) !important}
         };
       })
     };
+    if(ex.table){
+      snap.table = {
+        rows: ex.table.rows.map(function(row, ri){
+          return {
+            id: 't' + ex.num + '_' + ri,
+            transformation: row.transformation,
+            options: row.options,
+            correctIndex: row.correctIndex
+          };
+        })
+      };
+    }
+    return snap;
   }
 
   function showError(msg){
@@ -1248,7 +1432,6 @@ mjx-container{color:var(--text) !important}
     document.body.classList.add('solutions-locked');
     var btn = document.getElementById('btnShowAll');
     if(btn) btn.title = "Enregistrez d'abord vos r\u00e9ponses";
-    /* Fermer tout corrigé ouvert */
     document.querySelectorAll('details.solution').forEach(function(d){ d.open = false; });
   }
   function unlockSolutions(){
@@ -1310,7 +1493,6 @@ mjx-container{color:var(--text) !important}
     var statusEl = document.getElementById('saveStatus');
     if(statusEl){ statusEl.className = 'save-status'; statusEl.innerHTML = ''; }
 
-    /* Nouveau sujet : on reverrouille les corrigés */
     lockSolutions();
   }
 
@@ -1409,6 +1591,13 @@ mjx-container{color:var(--text) !important}
     if(!examSnapshot) return { total: 0, bon: 0, parExercice: {} };
     examSnapshot.forEach(function(ex){
       var exTotal = 0, exBon = 0;
+      if(ex.table){
+        ex.table.rows.forEach(function(row){
+          exTotal++; total++;
+          var rep = studentAnswers[row.id];
+          if(typeof rep === 'number' && rep === row.correctIndex){ exBon++; bon++; }
+        });
+      }
       ex.questions.forEach(function(q){
         exTotal++; total++;
         var rep = studentAnswers[q.id];
@@ -1468,6 +1657,12 @@ mjx-container{color:var(--text) !important}
     };
 
     examSnapshot.forEach(function(ex){
+      if(ex.table){
+        ex.table.rows.forEach(function(row){
+          payload.reponses[row.id] = (typeof studentAnswers[row.id] === 'number')
+            ? studentAnswers[row.id] : null;
+        });
+      }
       ex.questions.forEach(function(q){
         payload.reponses[q.id] = (typeof studentAnswers[q.id] === 'number')
           ? studentAnswers[q.id] : null;
@@ -1496,7 +1691,6 @@ mjx-container{color:var(--text) !important}
         '<br><em>Les corrig\u00e9s sont d\u00e9sormais d\u00e9verrouill\u00e9s.</em>'
       );
 
-      /* Déverrouillage des corrigés */
       unlockSolutions();
       typesetAll();
 
@@ -1548,6 +1742,7 @@ mjx-container{color:var(--text) !important}
      INTERACTIONS
      ============================================================ */
   function onDocumentClick(e){
+    /* --- Choix dans un QCM classique --- */
     var opt = e.target.closest ? e.target.closest('.qcm-option') : null;
     if(opt){
       var qcm = opt.closest('.qcm');
@@ -1560,7 +1755,39 @@ mjx-container{color:var(--text) !important}
       return;
     }
 
-    /* Blocage des summaries de corrigés tant que le fichier n'est pas sauvegardé */
+    /* --- Tableau interactif : ouverture/fermeture du menu --- */
+    var cellBtn = e.target.closest ? e.target.closest('.cell-btn') : null;
+    if(cellBtn){
+      e.preventDefault();
+      var cell = cellBtn.closest('.fill-cell');
+      if(!cell || cell.classList.contains('locked')) return;
+      var optsDiv = cell.querySelector('.cell-options');
+      var wasOpen = optsDiv.classList.contains('show');
+      document.querySelectorAll('.cell-options.show').forEach(function(d){ d.classList.remove('show'); });
+      if(!wasOpen){
+        optsDiv.classList.add('show');
+        typesetAll();
+      }
+      return;
+    }
+
+    /* --- Tableau interactif : sélection d'une formule --- */
+    var cellOpt = e.target.closest ? e.target.closest('.cell-opt') : null;
+    if(cellOpt){
+      e.preventDefault();
+      var cell2 = cellOpt.closest('.fill-cell');
+      if(!cell2 || cell2.classList.contains('locked')) return;
+      var ri = parseInt(cellOpt.dataset.row, 10);
+      var oi = parseInt(cellOpt.dataset.idx, 10);
+      var btn = cell2.querySelector('.cell-btn');
+      btn.innerHTML = cellOpt.innerHTML;
+      btn.classList.add('filled');
+      cell2.querySelector('.cell-options').classList.remove('show');
+      studentAnswers['t4_' + ri] = oi;
+      return;
+    }
+
+    /* --- Blocage des summaries de corrigés tant que le fichier n'est pas sauvegardé --- */
     var summary = e.target.closest ? e.target.closest('summary') : null;
     if(summary){
       var details = summary.parentElement;
@@ -1580,10 +1807,12 @@ mjx-container{color:var(--text) !important}
      ============================================================ */
   function evaluateAll(){
     var qcms = document.querySelectorAll('.qcm');
-    if(qcms.length === 0) return;
+    var tableCells = document.querySelectorAll('.interactive-table .fill-cell');
+    if(qcms.length === 0 && tableCells.length === 0) return;
     var totalQ = 0, totalGood = 0;
     var byEx = {};
 
+    /* --- QCM classiques --- */
     for(var qi = 0; qi < qcms.length; qi++){
       var q = qcms[qi];
       var correct = parseInt(q.dataset.correct, 10);
@@ -1618,6 +1847,32 @@ mjx-container{color:var(--text) !important}
       q.classList.add('locked');
     }
 
+    /* --- Tableau interactif (exercice 4) --- */
+    tableCells.forEach(function(cell){
+      var row = parseInt(cell.dataset.row, 10);
+      var qid = 't4_' + row;
+      var correctIdx = parseInt(cell.dataset.correct, 10);
+      var selected = studentAnswers[qid];
+      var exNum = '4';
+
+      if(!byEx[exNum]) byEx[exNum] = { total: 0, good: 0 };
+      byEx[exNum].total++; totalQ++;
+
+      cell.classList.remove('correct', 'wrong');
+      if(typeof selected === 'number'){
+        if(selected === correctIdx){
+          cell.classList.add('correct');
+          byEx[exNum].good++; totalGood++;
+        } else {
+          cell.classList.add('wrong');
+        }
+      }
+      cell.classList.add('locked');
+      var optsDiv = cell.querySelector('.cell-options');
+      if(optsDiv) optsDiv.classList.remove('show');
+    });
+
+    /* --- Affichage des scores par exercice --- */
     Object.keys(byEx).forEach(function(exNum){
       var el = document.querySelector('[data-ex-score="' + exNum + '"]');
       if(el){
@@ -1629,7 +1884,7 @@ mjx-container{color:var(--text) !important}
     });
 
     var banner = document.getElementById('scoreBanner');
-    var pctG = Math.round(totalGood / totalQ * 100);
+    var pctG = totalQ ? Math.round(totalGood / totalQ * 100) : 0;
     banner.innerHTML =
       'Score global : <span class="score-num">' + totalGood + '</span> / ' + totalQ +
       '<span class="score-sub">' + pctG + ' % de r\u00e9ussite \u2014 ' +
@@ -1678,13 +1933,45 @@ mjx-container{color:var(--text) !important}
     });
     if(bSave) bSave.addEventListener('click', function(){ exportAnswers(); });
 
-    /* Détection de l'ouverture manuelle d'un corrigé (uniquement si déverrouillé) */
+    /* --- Modale licence --- */
+    var btnLicense = document.getElementById('btnLicense');
+    var licenseModal = document.getElementById('licenseModal');
+    var btnCloseLicense = document.getElementById('btnCloseLicense');
+
+    function openLicenseModal(){
+      if(!licenseModal) return;
+      licenseModal.classList.add('show');
+      licenseModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      if(btnCloseLicense) btnCloseLicense.focus();
+      typesetAll();
+    }
+    function closeLicenseModal(){
+      if(!licenseModal) return;
+      licenseModal.classList.remove('show');
+      licenseModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      if(btnLicense) btnLicense.focus();
+    }
+
+    if(btnLicense) btnLicense.addEventListener('click', openLicenseModal);
+    if(btnCloseLicense) btnCloseLicense.addEventListener('click', closeLicenseModal);
+    if(licenseModal){
+      licenseModal.addEventListener('click', function(e){
+        if(e.target === licenseModal) closeLicenseModal();
+      });
+    }
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && licenseModal && licenseModal.classList.contains('show')){
+        closeLicenseModal();
+      }
+    });
+
     document.addEventListener('toggle', function(e){
       if(e.target && e.target.tagName === 'DETAILS' &&
          e.target.classList && e.target.classList.contains('solution') &&
          e.target.open){
         if(!fileSaved){
-          /* Fermer immédiatement (sécurité en cas d'ouverture forcée) */
           e.target.open = false;
           showLockedWarning();
           return;

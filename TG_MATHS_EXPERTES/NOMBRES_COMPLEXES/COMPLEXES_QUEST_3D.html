@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complexe Quest 3D — Nombres complexes · Maths expertes</title>
+<meta name="description" content="Jeu 3D sur les nombres complexes : formes trigonométrique et exponentielle, Euler, Moivre, racines n-ièmes. Niveau Terminale, option Maths expertes.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#2e3780;color:#f2f5ff;display:flex;flex-direction:column;overflow:hidden}
+header#topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:linear-gradient(180deg,rgba(72,84,176,.97),rgba(58,68,152,.92));border-bottom:1px solid rgba(175,195,255,.4);flex-wrap:wrap;z-index:5}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-size:1.05rem;letter-spacing:.4px;background:linear-gradient(90deg,#8ef4ff,#c58bff,#ff8bd8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .sub{font-size:.72rem;color:#c7d2fa}
+.hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{background:rgba(120,160,255,.32);border:1px solid rgba(190,215,255,.55);padding:3px 10px;border-radius:999px;font-size:.78rem;color:#e6edff;white-space:nowrap}
+.chip.risk{background:rgba(255,90,90,.3);border-color:rgba(255,150,150,.75);color:#ffd9d9;font-weight:600}
+.stat{font-size:.82rem;color:#eef2ff;white-space:nowrap}
+.stat b{color:#ffe9a8}
+.dots{display:inline-flex;gap:4px;align-items:center}
+.dots .dot{width:9px;height:9px;border-radius:50%;background:rgba(230,240,255,.35);border:1px solid rgba(220,235,255,.6)}
+.dots .dot.risk{background:#ff6b6b;border-color:#ff9d9d}
+.dots .dot.risk.cur{box-shadow:0 0 8px #ff6b6b;animation:pulse 1.2s infinite}
+.dots .dot.done{background:#59e0a8;border-color:#59e0a8}
+.dots .dot.cur{background:#ffd76e;border-color:#ffd76e;box-shadow:0 0 8px #ffd76e;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.35)}}
+.tool{background:rgba(120,160,255,.3);border:1px solid rgba(190,215,255,.5);color:#eaf0ff;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:.78rem;font-family:inherit}
+.tool:hover{background:rgba(150,185,255,.5)}
+main{flex:1;display:flex;min-height:0}
+#stage{flex:1.7;position:relative;min-width:0;touch-action:none}
+#view{position:absolute;inset:0;width:100%;height:100%;cursor:grab;display:block}
+#view:active{cursor:grabbing}
+#stage.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translate(-6px,2px)}50%{transform:translate(5px,-3px)}75%{transform:translate(-3px,1px)}}
+.glass{position:absolute;background:rgba(52,62,140,.72);border:1px solid rgba(180,205,255,.35);border-radius:12px;padding:8px 12px;backdrop-filter:blur(6px)}
+#readout{left:12px;bottom:12px;font-size:.92rem;line-height:1.8;max-width:360px}
+#camHint{right:12px;bottom:12px;font-size:.7rem;color:#ccd6fc}
+.nice{color:#ffd76e;font-size:.85em}
+#panel{width:400px;max-width:46vw;min-width:300px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,rgba(70,80,170,.92),rgba(54,64,146,.95));border-left:1px solid rgba(175,195,255,.35)}
+.card{background:rgba(88,100,200,.55);border:1px solid rgba(180,205,255,.45);border-radius:14px;padding:14px}
+.m-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.m-title{font-weight:600;color:#eef3ff;font-size:.95rem;flex:1}
+.m-count{font-size:.75rem;color:#c6d1fa}
+.story{font-size:.92rem;line-height:1.6;color:#f2f6ff}
+.ask{font-size:.95rem;line-height:1.7;color:#fff4d6;margin-top:8px;padding:8px 10px;background:rgba(255,210,110,.16);border-left:3px solid #ffd76e;border-radius:6px}
+.legend{margin-top:8px;font-size:.8rem;color:#d6defc}
+.dotc{margin-right:8px}
+.answers{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.inrow{display:flex;align-items:center;gap:8px}
+.inlab{min-width:36px;text-align:right}
+.in{background:rgba(30,38,95,.75);border:1px solid rgba(180,205,255,.5);border-radius:8px;color:#f4f7ff;padding:8px 10px;font-size:1rem;width:150px;font-family:inherit}
+.in:focus{outline:none;border-color:#4de3ff;box-shadow:0 0 0 2px rgba(77,227,255,.25)}
+.in:disabled{opacity:.45}
+.note{font-size:.72rem;color:#c9d3fb;margin-top:6px}
+.btnrow{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.btn{padding:9px 16px;border-radius:10px;font-size:.9rem;cursor:pointer;border:1px solid transparent;font-family:inherit}
+.btn.primary{background:linear-gradient(90deg,#3f8cf0,#8d5cf5);color:#fff;font-weight:600}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.ghost{background:rgba(120,160,255,.28);border-color:rgba(190,215,255,.55);color:#eaf0ff}
+.btn.ghost:hover{background:rgba(150,185,255,.45)}
+.hidden{display:none!important}
+.meta{margin-top:10px;font-size:.78rem;color:#cdd7fc}
+.feedback{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.9rem;line-height:1.7;display:none}
+.feedback.ok{display:block;background:rgba(60,220,140,.18);border:1px solid rgba(80,230,150,.55)}
+.feedback.bad{display:block;background:rgba(255,90,90,.16);border:1px solid rgba(255,120,120,.55)}
+.feedback.warn{display:block;background:rgba(255,190,70,.16);border:1px solid rgba(255,205,110,.55)}
+.feedback.info{display:block;background:rgba(90,170,255,.16);border:1px solid rgba(130,195,255,.55)}
+.feedback.sol{display:block;background:rgba(190,120,255,.16);border:1px solid rgba(210,150,255,.6)}
+.pts{color:#8effc1;font-weight:700}
+.expl{color:#d0dafc;font-size:.85em}
+.quickstrip{font-size:.9rem;background:rgba(84,96,200,.45);border:1px dashed rgba(190,215,255,.5);border-radius:10px;padding:9px 12px;color:#e6edff;overflow-x:auto}
+.credit{font-size:.68rem;color:#b4c1f2}
+.mono{font-family:Consolas,monospace;background:rgba(40,50,120,.8);padding:1px 5px;border-radius:4px}
+#overlay{position:fixed;inset:0;background:rgba(22,28,68,.7);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#overlay.show{display:flex}
+.modalbox{max-width:640px;width:100%;max-height:88vh;overflow-y:auto}
+.modalbox .card{font-size:.95rem;line-height:1.7}
+.modalbox .card a{color:#9fc0ff;text-decoration:underline}
+.legalbar{flex:0;padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(120,160,255,.25)}
+.legalbar .tool{font-size:.8rem;opacity:.9}
+#modalCard h2{margin-bottom:10px;color:#eef3ff}
+.fichebox{margin:12px 0;display:flex;flex-direction:column;gap:8px}
+.fline{background:rgba(62,72,165,.55);border:1px solid rgba(180,205,255,.35);border-radius:10px;padding:8px 12px;overflow-x:auto}
+#modalActions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+.big{font-size:1.4rem;color:#ffe9a8;margin:8px 0}
+.tex,.mvar,.mrm{font-family:'Cambria Math','STIX Two Math','Latin Modern Math',Georgia,serif}
+.mvar{font-style:italic}
+.mrm{font-style:normal}
+.mfrac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.94em;line-height:1.15;margin:0 .14em}
+.mfrac .mnum{padding:0 .3em .1em;border-bottom:1.4px solid currentColor;display:block}
+.mfrac .mden{padding:.1em .3em 0;display:block}
+.msqrt{display:inline-flex;align-items:stretch;margin-right:.1em}
+.msqrt .sbody{border-top:1.4px solid currentColor;padding:0 .18em 0 .1em;margin-left:-.06em}
+.msqrt .sidx{font-size:.72em;align-self:flex-start}
+.msb sub,.msb sup{font-size:.72em}
+.mbar{text-decoration:overline}
+sup,sub{line-height:0}
+@media (max-width:880px){
+  main{flex-direction:column}
+  #panel{width:100%;max-width:none;min-width:0;border-left:none;border-top:1px solid rgba(120,160,255,.25)}
+  #stage{min-height:42vh}
+}
+</style>
+</head>
+<body>
+<header id="topbar">
+  <div class="brand"><b>∮ Complexe Quest 3D</b><span class="sub">Nombres complexes · Terminale générale — option Maths expertes</span></div>
+  <div class="hud">
+    <span id="hLevel" class="chip">—</span>
+    <span id="dots" class="dots"></span>
+    <span class="stat">🏆 <b id="hScore">0</b></span>
+    <span class="stat">⭐ <b id="hBest">0</b></span>
+    <span class="stat" id="hLives">❤❤❤</span>
+    <button id="btnFiche" class="tool">📘 Fiche</button>
+    <button id="btnView" class="tool">🎥 Vue</button>
+    <button id="btnSound" class="tool">🔊</button>
+  </div>
+</header>
+<main>
+  <section id="stage">
+    <canvas id="view"></canvas>
+    <div id="readout" class="glass"></div>
+    <div id="camHint" class="glass">🖱 glisser : orbiter · molette : zoom · double-clic : vue initiale</div>
+  </section>
+  <aside id="panel">
+    <div id="missionCard" class="card"></div>
+    <div class="quickstrip" id="quickStrip"></div>
+    <p class="credit">Programme : forme trigonométrique, forme exponentielle, formules d'Euler et de Moivre, équations du second degré et racines n-ièmes dans ℂ.</p>
+  </aside>
+</main>
+<footer class="legalbar"><button id="btnLegal" class="tool">⚖️ Droits d'Auteur</button></footer>
+<div id="overlay"><div class="modalbox"><div id="modalCard" class="card"></div><div id="modalActions"></div></div></div>
+<noscript><p style="padding:20px">Activez JavaScript pour jouer.</p></noscript>
+<script>
+'use strict';
+/* ================================================================
+   1. OUTILS GÉNÉRAUX
+================================================================ */
+const $=(s)=>document.querySelector(s);
+const pick=(a)=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtN=(x)=>{const s=x.toFixed(2);return s==='-0.00'?'0.00':s;};
+const esc=(s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escAttr=(s)=>esc(s).replace(/"/g,'&quot;');
+
+/* ================================================================
+   2. MINI-MOTEUR LaTeX → HTML (repli auto-contenu de MathJax 3)
+================================================================ */
+const TEX_SYMBOLS={
+  pi:'π',theta:'θ',varphi:'φ',phi:'φ',alpha:'α',beta:'β',gamma:'γ',delta:'δ',rho:'ρ',lambda:'λ',omega:'ω',
+  cdot:'·',times:'×',div:'÷',pm:'±',mp:'∓',approx:'≈',neq:'≠',ne:'≠',leq:'≤',le:'≤',geq:'≥',ge:'≥',equiv:'≡',
+  infty:'∞',in:'∈',notin:'∉',Rightarrow:'⇒',rightarrow:'→',leftarrow:'←',iff:'⇔',Leftrightarrow:'⇔',
+  Longleftrightarrow:'⇔',leftrightarrow:'↔',angle:'∠',circ:'°',bullet:'•',ldots:'…',dots:'…',cdots:'⋯',
+  Re:'Re',Im:'Im',quad:'\u2003',qquad:'\u2003\u2003',',':'\u2009',';':'\u2004','!':'',' ':'',
+  '{':'{','}':'}','|':'|','%':'%','&':'&','#':'#','$':'$','_':'_','^':'^'
+};
+const TEX_ROMAN={cos:1,sin:1,tan:1,arccos:1,arcsin:1,arctan:1,arg:1,exp:1,ln:1,log:1,min:1,max:1,deg:1};
+let __ti=0,__ts='';
+function texToHtml(src){
+  __ts=String(src);__ti=0;
+  return __txUnits();
+}
+function __txUnits(){
+  let out='';
+  while(__ti<__ts.length&&__ts[__ti]!=='}'){
+    let atom=__txAtom();
+    let sup=null,sub=null;
+    for(;;){
+      if(__ts[__ti]==='^'){__ti++;const a=__txArg();sup=(sup===null?'':sup)+a;}
+      else if(__ts[__ti]==='_'){__ti++;const a=__txArg();sub=(sub===null?'':sub)+a;}
+      else break;
+    }
+    if(sup!==null||sub!==null){
+      out+='<span class="msb">'+atom+(sub!==null?'<sub>'+sub+'</sub>':'')+(sup!==null?'<sup>'+sup+'</sup>':'')+'</span>';
+    }else out+=atom;
+  }
+  return out;
+}
+function __txArg(){
+  while(__ts[__ti]===' ')__ti++;
+  if(__ts[__ti]==='{'){__ti++;const u=__txUnits();if(__ts[__ti]==='}')__ti++;return u;}
+  return __txAtom();
+}
+function __txAtom(){
+  const c=__ts[__ti];
+  if(c===undefined)return '';
+  if(c==='\\'){
+    __ti++;
+    if(/[a-zA-Z]/.test(__ts[__ti]||'')){
+      let j=__ti;while(j<__ts.length&&/[a-zA-Z]/.test(__ts[j]))j++;
+      const name=__ts.slice(__ti,j);__ti=j;
+      if(name==='frac'||name==='dfrac'||name==='tfrac'){const a=__txArg(),b=__txArg();return '<span class="mfrac"><span class="mnum">'+a+'</span><span class="mden">'+b+'</span></span>';}
+      if(name==='sqrt'){
+        let idx='';
+        if(__ts[__ti]==='['){const k=__ts.indexOf(']',__ti);idx=__ts.slice(__ti+1,k);__ti=k+1;}
+        const a=__txArg();
+        return '<span class="msqrt">'+(idx?'<sup class="sidx">'+idx+'</sup>':'')+'<span class="srad">√</span><span class="sbody">'+a+'</span></span>';
+      }
+      if(name==='overline'){const a=__txArg();return '<span class="mbar">'+a+'</span>';}
+      if(name==='mathbb'){const a=__txArg();return '<span class="mbb">'+bbMap(a)+'</span>';}
+      if(name==='mathrm'||name==='text'||name==='operatorname'){const a=__txArg();return '<span class="mrm">'+a+'</span>';}
+      if(name==='left'||name==='right')return '';
+      if(TEX_ROMAN[name]){const nxt=__ts.slice(__ti,__ti+6);const spaced=(nxt.charAt(0)==='('||nxt.indexOf('\\left')===0)?'':' ';return '<span class="mrm">'+name+'</span>'+spaced;}
+      if(TEX_SYMBOLS[name]!==undefined)return TEX_SYMBOLS[name];
+      return '<span class="mrm">'+name+'</span>';
+    }
+    const sym=__ts[__ti]||'';__ti++;
+    if(sym==='{'||sym==='}')return esc(sym);
+    if(TEX_SYMBOLS[sym]!==undefined)return TEX_SYMBOLS[sym];
+    return esc(sym);
+  }
+  if(c==='{'){__ti++;const u=__txUnits();if(__ts[__ti]==='}')__ti++;return u;}
+  if(/[0-9.]/.test(c)){let j=__ti;while(j<__ts.length&&/[0-9.]/.test(__ts[j]))j++;const t=__ts.slice(__ti,j);__ti=j;return esc(t);}
+  if(/[a-zA-Z]/.test(c)){let j=__ti;while(j<__ts.length&&/[a-zA-Z]/.test(__ts[j]))j++;const t=__ts.slice(__ti,j);__ti=j;return '<i class="mvar">'+esc(t)+'</i>';}
+  __ti++;
+  return esc(c);
+}
+function bbMap(s){return String(s).replace(/C/g,'ℂ').replace(/R/g,'ℝ').replace(/N/g,'ℕ').replace(/Z/g,'ℤ').replace(/Q/g,'ℚ').replace(/U/g,'𝕌');}
+/* T() : LaTeX encapsulé, amélioré par MathJax 3 si le CDN est accessible */
+function T(s){return '<span class="tex" data-tex="'+escAttr(s)+'">'+texToHtml(s)+'</span>';}
+function TD(s){return '<span class="tex dyn">'+texToHtml(s)+'</span>';}
+function mjUpgrade(root){
+  if(!window.__mjReady||!window.MathJax||!MathJax.typesetPromise)return;
+  try{
+    const els=root.querySelectorAll('.tex[data-tex]:not([data-mj])');
+    let any=false;
+    els.forEach(el=>{el.setAttribute('data-mj','1');el.textContent='\\('+el.getAttribute('data-tex')+'\\)';any=true;});
+    if(any)MathJax.typesetPromise([root]).catch(function(){});
+  }catch(e){}
+}
+
+/* ================================================================
+   3. ANALYSEUR D'EXPRESSIONS (réponses libres : 5pi/6, sqrt(3), 30°…)
+================================================================ */
+function evalMathExpr(raw){
+  if(raw==null)return NaN;
+  let s=String(raw).trim();
+  if(s==='')return NaN;
+  let deg=false;
+  const low=s.toLowerCase();
+  if(/°\s*$/.test(s)||/\bdeg\s*$/.test(low)||/\bdegres?\s*$/.test(low)){
+    deg=true;
+    s=s.replace(/[°º]\s*$/,'').replace(/\bdeg(res)?\s*$/,'').trim();
+  }
+  s=low.replace(/π/g,'pi').replace(/√/g,'sqrt').replace(/,/g,'.').replace(/×/g,'*').replace(/÷/g,'/');
+  const toks=[];let i=0;
+  const valEnd=()=>{const t=toks[toks.length-1];return !!(t&&(t.t==='n'||t.t===')'));};
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue;}
+    if(/[0-9.]/.test(c)){
+      if(valEnd())toks.push({t:'*'});
+      let j=i;while(j<s.length&&/[0-9.]/.test(s[j]))j++;
+      const v=parseFloat(s.slice(i,j));
+      if(!isFinite(v))return NaN;
+      toks.push({t:'n',v});i=j;continue;
+    }
+    if(/[a-z]/.test(c)){
+      let j=i;while(j<s.length&&/[a-z]/.test(s[j]))j++;
+      const w=s.slice(i,j);i=j;
+      if(w==='pi'){if(valEnd())toks.push({t:'*'});toks.push({t:'n',v:Math.PI});}
+      else if(w==='sqrt'||w==='racine'||w==='rad'){if(valEnd())toks.push({t:'*'});toks.push({t:'fn'});}
+      else if(w==='e'){if(valEnd())toks.push({t:'*'});toks.push({t:'n',v:Math.E});}
+      else return NaN;
+      continue;
+    }
+    if(c==='('){if(valEnd())toks.push({t:'*'});toks.push({t:'('});i++;continue;}
+    if('+-*/^()'.indexOf(c)>=0){toks.push({t:c});i++;continue;}
+    return NaN;
+  }
+  /* shunting-yard */
+  const out=[],ops=[];let prev=null;
+  const prec=(o)=>(o==='u-'||o==='u+')?4:(o==='^')?3:((o==='*'||o==='/')?2:1);
+  const rightAssoc=(o)=>(o==='^'||o==='u-'||o==='u+');
+  for(const tk of toks){
+    if(tk.t==='n'){out.push(tk.v);prev='n';continue;}
+    if(tk.t==='fn'){ops.push('fn');prev='fn';continue;}
+    if(tk.t==='('){ops.push('(');prev='(';continue;}
+    if(tk.t===')'){
+      while(ops.length&&ops[ops.length-1]!=='('){const o=ops.pop();out.push(o==='fn'?'F':o);}
+      if(!ops.length)return NaN;
+      ops.pop();prev='n';continue;
+    }
+    let op=tk.t;
+    if((op==='-'||op==='+')&&(prev===null||prev==='op'||prev==='('||prev==='fn'))op='u'+op;
+    while(ops.length){
+      const top=ops[ops.length-1];
+      if(top==='(')break;
+      const pt=top==='fn'?5:prec(top);
+      const po=prec(op);
+      if(pt>po||(pt===po&&!rightAssoc(op))){const o=ops.pop();out.push(o==='fn'?'F':o);}
+      else break;
+    }
+    ops.push(op);prev='op';
+  }
+  while(ops.length){const o=ops.pop();if(o==='(')return NaN;out.push(o==='fn'?'F':o);}
+  /* évaluation RPN */
+  const st=[];
+  for(const t of out){
+    if(typeof t==='number'){st.push(t);continue;}
+    if(t==='F'){const a=st.pop();if(a===undefined)return NaN;st.push(Math.sqrt(a));continue;}
+    if(t==='u-'){const a=st.pop();if(a===undefined)return NaN;st.push(-a);continue;}
+    if(t==='u+'){const a=st.pop();if(a===undefined)return NaN;st.push(a);continue;}
+    const b=st.pop(),a=st.pop();
+    if(a===undefined||b===undefined)return NaN;
+    if(t==='+')st.push(a+b);
+    else if(t==='-')st.push(a-b);
+    else if(t==='*')st.push(a*b);
+    else if(t==='/')st.push(a/b);
+    else if(t==='^')st.push(Math.pow(a,b));
+    else return NaN;
+  }
+  if(st.length!==1)return NaN;
+  const v=st[0];
+  return (isFinite(v)?(deg?v*Math.PI/180:v):NaN);
+}
+
+/* ================================================================
+   4. VALEURS « PROPRES » (surdes q√s/d, angles kπ/n)
+================================================================ */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function normSurd(v){if(v[0]===0)return [0,1,1];const g=gcd(v[0],v[1]);return [v[0]/g,v[1]/g,v[2]];}
+function mulSurd(v,m){return normSurd([v[0]*m,v[1],v[2]]);}
+function divSurd(v,m){return normSurd([v[0],v[1]*m,v[2]]);}
+function surdVal(v){return v[0]*Math.sqrt(v[2])/v[1];}
+function surdParts(v){
+  if(v[0]===0)return {zero:true,neg:false,tex:'0'};
+  let n=Math.abs(v[0]),d=v[1],s=v[2];
+  const g=gcd(n,d);n/=g;d/=g;
+  let core;
+  if(s===1){core=(d===1)?String(n):(n===1?'\\frac{1}{'+d+'}':'\\frac{'+n+'}{'+d+'}');}
+  else{const sq=(n===1)?'\\sqrt{'+s+'}':(n+'\\sqrt{'+s+'}');core=(d===1)?sq:('\\frac{'+sq+'}{'+d+'}');}
+  return {zero:false,neg:v[0]<0,tex:core};
+}
+function surdTex(v){const p=surdParts(v);if(p.zero)return '0';return (p.neg?'-':'')+p.tex;}
+function texAffix(a,b){
+  const A=surdParts(a),B=surdParts(b);
+  if(A.zero&&B.zero)return '0';
+  const bPart=(B.tex==='1')?'i':(B.tex+'\\,i');
+  if(A.zero)return (B.neg?'-':'')+bPart;
+  if(B.zero)return (A.neg?'-':'')+A.tex;
+  return (A.neg?'-':'')+A.tex+(B.neg?' - ':' + ')+bPart;
+}
+/* affixe dont chaque composante est « entier ± surde » (pour z = ω + z′) */
+function texAffix2(aInt,aSurd,bInt,bSurd){
+  const aEmpty=(aInt===0&&aSurd[0]===0);
+  const bEmpty=(bInt===0&&bSurd[0]===0);
+  if(aEmpty&&bEmpty)return '0';
+  let A='0';
+  if(!aEmpty){
+    if(aSurd[0]===0)A=String(aInt);
+    else{
+      const p=surdParts(aSurd);
+      A=(aInt===0)?((p.neg?'-':'')+p.tex):(String(aInt)+(p.neg?' - ':' + ')+p.tex);
+    }
+  }
+  if(bEmpty)return A;
+  const pieces=[];
+  if(bInt!==0)pieces.push(String(bInt));
+  if(bSurd[0]!==0){const p=surdParts(bSurd);pieces.push((p.neg?'-':'')+p.tex);}
+  let expr;
+  const two=(pieces.length===2);
+  if(!two)expr=pieces[0];
+  else expr=pieces[0]+(pieces[1].charAt(0)==='-'?' - ':' + ')+pieces[1].replace(/^-/,'');
+  const neg=(expr.charAt(0)==='-');
+  const mag=neg?expr.slice(1):expr;
+  if(two){
+    if(aEmpty)return 'i\\left('+expr+'\\right)';
+    return A+' + i\\left('+expr+'\\right)';
+  }
+  const bPart=(mag==='1')?'i':(mag+'\\,i');
+  if(aEmpty)return (neg?'-':'')+bPart;
+  return A+(neg?' - ':' + ')+bPart;
+}
+/* cos/sin exacts des angles kπ/n (n ∈ {1,2,3,4,6}) — surds [num, den, √s] */
+const T6=[[1,1,1,0,1,1],[1,2,3,1,2,1],[1,2,1,1,2,3],[0,1,1,1,1,1],[-1,2,1,1,2,3],[-1,2,3,1,2,1],
+[-1,1,1,0,1,1],[-1,2,3,-1,2,1],[-1,2,1,-1,2,3],[0,1,1,-1,1,1],[1,2,1,-1,2,3],[1,2,3,-1,2,1]];
+const T4=[[1,1,1,0,1,1],[1,2,2,1,2,2],[0,1,1,1,1,1],[-1,2,2,1,2,2],
+[-1,1,1,0,1,1],[-1,2,2,-1,2,2],[0,1,1,-1,1,1],[1,2,2,-1,2,2]];
+function stdCS(k,n){
+  if(n===4){const t=T4[((k%8)+8)%8];return {c:[t[0],t[1],t[2]],s:[t[3],t[4],t[5]]};}
+  const m=6/n;
+  const t=T6[((k*m)%12+12)%12];
+  return {c:[t[0],t[1],t[2]],s:[t[3],t[4],t[5]]};
+}
+function piNorm(k,n){
+  if(k===0)return {k:0,n:1};
+  const g=gcd(k,n);k/=g;n/=g;
+  let kk=((k)%(2*n)+2*n)%(2*n);
+  if(kk>n)kk-=2*n;
+  return {k:kk,n};
+}
+function texAnglePi(k,n){
+  if(k===0)return '0';
+  const g=gcd(k,n);k/=g;n/=g;
+  const neg=k<0;k=Math.abs(k);
+  const core=(n===1)?((k===1)?'\\pi':(k+'\\pi')):('\\frac{'+(k===1?'':k)+'\\pi}{'+n+'}');
+  return (neg?'-':'')+core;
+}
+function texExpCoef(coef,angTx){
+  /* exposant non ambigu de e^{coef·i·θ} : on n'écrit jamais « i-θ » (qui se lirait e^i·e^-θ),
+     mais -iθ. texExpCoef('', '-\\frac{\\pi}{3}') → '-i\\frac{\\pi}{3}' ; avec coef='2' → '-2i\\frac{\\pi}{3}' */
+  if(angTx==='0')return '0';
+  const neg=angTx.charAt(0)==='-';
+  const body=neg?angTx.slice(1):angTx;
+  return (neg?'-':'')+(coef?coef:'')+'i'+body;
+}
+function niceAngleTex(th){
+  let t=((th+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+  if(Math.abs(t)<0.01)return null;
+  if(Math.abs(Math.abs(t)-Math.PI)<0.01)t=Math.PI;
+  for(let n=1;n<=12;n++){
+    const k=t*n/Math.PI,kr=Math.round(k);
+    if(kr!==0&&Math.abs(k-kr)<0.01)return texAnglePi(kr,n);
+  }
+  return null;
+}
+function randNiceAngle(){
+  const n=pick([2,3,4,6]);
+  const ks=[];for(let k=-n+1;k<=n;k++)if(k!==0)ks.push(k);
+  return {k:pick(ks),n};
+}
+
+/* ================================================================
+   5. GÉNÉRATEURS DE MISSIONS
+================================================================ */
+function beaconDef(re,im,label,color){return {re,im,label,color};}
+
+function genL1(){
+  const ang=randNiceAngle(),r=pick([1,2,3,4]);
+  const cs=stdCS(ang.k,ang.n);
+  const a=mulSurd(cs.c,r),b=mulSurd(cs.s,r);
+  const aN=surdVal(a),bN=surdVal(b);
+  const angTx=texAnglePi(ang.k,ang.n);
+  const th=ang.k*Math.PI/ang.n;
+  return {
+    kind:'polar',inputs:'polar',
+    title:'Repérage trigonométrique',
+    story:'Un balisage lumineux clignote au point M d\u2019affixe '+T('z = '+texAffix(a,b))+'. Pour autoriser le saut quantique, la base exige la forme trigonométrique de z.',
+    ask:'Donne le module '+T('r')+' et un argument '+T('\\theta')+' (en radians) : la sonde ira se positionner en M.',
+    note:'θ accepté à 2π près — saisie libre : 5pi/6 · -pi/4 · 7*pi/6 …',
+    beacons:[beaconDef(aN,bN,'M','#ffc44d')],
+    sols:[{r:r,th:th}],
+    canon:{re:r*Math.cos(th),im:r*Math.sin(th)},
+    solTex:'z = '+r+'\\left(\\cos\\left('+angTx+'\\right) + i\\sin\\left('+angTx+'\\right)\\right) = '+r+'\\,e^{'+texExpCoef('',angTx)+'}',
+    explain:T('r=|z|=\\sqrt{a^2+b^2}='+r)+',  '+T('\\cos\\left(\\theta\\right)=\\frac{a}{r}='+surdTex(cs.c))+',  '+T('\\sin\\left(\\theta\\right)=\\frac{b}{r}='+surdTex(cs.s))+'  →  '+T('\\theta='+angTx)+' (à 2π près).'
+  };
+}
+function genL2(){
+  const ang=randNiceAngle(),r=pick([1,2,3,4]);
+  const cs=stdCS(ang.k,ang.n);
+  const a=mulSurd(cs.c,r),b=mulSurd(cs.s,r);
+  const aN=surdVal(a),bN=surdVal(b);
+  const angTx=texAnglePi(ang.k,ang.n);
+  return {
+    kind:'cart',inputs:'cart',
+    title:'Traduction exponentielle',
+    story:'Un message brouillé arrive de la nébuleuse : '+T('z = '+r+'\\,e^{'+texExpCoef('',angTx)+'}')+'.',
+    ask:'Ramène z à la forme algébrique : donne '+T('a=\\mathrm{Re}(z)')+' et '+T('b=\\mathrm{Im}(z)')+'.',
+    note:'Saisie libre : 2 · 1.5 · sqrt(3) · -sqrt(2)/2 · 3/2 …',
+    beacons:[],
+    canon:{re:aN,im:bN},
+    solTex:'z = '+texAffix(a,b),
+    explain:T('a=r\\cos\\left(\\theta\\right)='+r+'\\cdot'+surdTex(cs.c)+'='+surdTex(a))+'  et  '+T('b=r\\sin\\left(\\theta\\right)='+r+'\\cdot'+surdTex(cs.s)+'='+surdTex(b))+'.'
+  };
+}
+function genL3(){
+  const op=pick(['mul','div']);
+  const a1=randNiceAngle(),a2=randNiceAngle();
+  let r1,r2;
+  if(op==='mul'){r1=pick([1,2,3]);r2=pick([1,2,3]);}
+  else{r2=pick([1,2,3]);r1=r2*pick([1,2,3]);}
+  const k1=a1.k,n1=a1.n,k2=a2.k,n2=a2.n;
+  const kS=(op==='mul')?(k1*n2+k2*n1):(k1*n2-k2*n1);
+  const nS=n1*n2;
+  const pn=piNorm(kS,nS);
+  const rR=(op==='mul')?r1*r2:r1/r2;
+  const rRTex=(Number.isInteger(rR))?String(rR):('\\frac{'+r1+'}{'+r2+'}');
+  const thTx=texAnglePi(pn.k,pn.n);
+  const th=pn.k*Math.PI/pn.n;
+  const th1=k1*Math.PI/n1,th2=k2*Math.PI/n2;
+  const z1={re:r1*Math.cos(th1),im:r1*Math.sin(th1)},z2={re:r2*Math.cos(th2),im:r2*Math.sin(th2)};
+  const objTx=(op==='mul')?'z_1 z_2':'\\frac{z_1}{z_2}';
+  return {
+    kind:'polar',inputs:'polar',
+    title:(op==='mul')?'Produit de balises':'Quotient de balises',
+    story:'Deux balises : '+T('z_1='+r1+'\\,e^{'+texExpCoef('',texAnglePi(k1,n1))+'}')+' et '+T('z_2='+r2+'\\,e^{'+texExpCoef('',texAnglePi(k2,n2))+'}')+'. L\u2019anomalie orbitale se trouve au point d\u2019affixe '+T(objTx)+'.',
+    ask:'Donne le module '+T('r')+' et un argument '+T('\\theta')+' de '+T(objTx)+' (en radians).',
+    note:'Rappel : les modules et les arguments ne se traitent pas de la même façon…',
+    beacons:[beaconDef(z1.re,z1.im,'z₁','#4de3ff'),beaconDef(z2.re,z2.im,'z₂','#ff4dd8')],
+    sols:[{r:rR,th:th}],
+    canon:{re:rR*Math.cos(th),im:rR*Math.sin(th)},
+    solTex:((op==='mul')?'z_1 z_2':'z_1/z_2')+' = '+rRTex+'\\,e^{'+texExpCoef('',thTx)+'}',
+    explain:(op==='mul')
+      ?T('r_1 r_2='+rR)+'  et  '+T('\\theta_1+\\theta_2='+thTx)+' : modules multipliés, arguments ajoutés.'
+      :T('\\frac{r_1}{r_2}='+rRTex)+'  et  '+T('\\theta_1-\\theta_2='+thTx)+' : modules divisés, arguments soustraits.'
+  };
+}
+function genL4(){
+  const ang=randNiceAngle(),r=pick([1,2,3]),n=pick([2,3]);
+  const pn=piNorm(ang.k*n,ang.n);
+  const rR=Math.pow(r,n);
+  const th=pn.k*Math.PI/pn.n;
+  const angTx=texAnglePi(ang.k,ang.n),thTx=texAnglePi(pn.k,pn.n);
+  const th0=ang.k*Math.PI/ang.n;
+  return {
+    kind:'polar',inputs:'polar',
+    title:'Formule de Moivre',
+    story:'Pour recharger ses boucliers, la sonde doit concentrer toute l\u2019énergie de '+T('z='+r+'\\,e^{'+texExpCoef('',angTx)+'}')+' : elle a besoin de '+T('z^{'+n+'}')+'.',
+    ask:'Donne le module '+T('r')+' et un argument '+T('\\theta')+' de '+T('z^{'+n+'}')+' (en radians).',
+    note:'Moivre : le module est élevé à la puissance n… et l\u2019argument ?',
+    beacons:[beaconDef(r*Math.cos(th0),r*Math.sin(th0),'z','#4de3ff')],
+    sols:[{r:rR,th:th}],
+    canon:{re:rR*Math.cos(th),im:rR*Math.sin(th)},
+    solTex:'z^{'+n+'} = '+r+'^{'+n+'}\\,e^{'+texExpCoef(String(n),angTx)+'} = '+rR+'\\,e^{'+texExpCoef('',thTx)+'}',
+    explain:T('\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right)^{'+n+'}=\\cos\\left('+n+'\\theta\\right)+i\\sin\\left('+n+'\\theta\\right)')+' : le module devient '+rR+', l\u2019argument '+T(thTx)+' (à 2π près).'
+  };
+}
+function genL5a(){
+  const r0=pick([2,3,4,5]),rho=r0*r0;
+  const kk=pick([1,2,3]);
+  const phi=kk*Math.PI/2;
+  const th0=kk*Math.PI/4;
+  const phiTx=texAnglePi(kk,2),th0Tx=texAnglePi(kk,4);
+  return {
+    kind:'polar',inputs:'polar',
+    title:'Équation du second degré',
+    story:'Un vortex instable : son affixe '+T('Z')+' vérifie '+T('Z^2=w')+' où '+T('w='+rho+'\\,e^{'+texExpCoef('',phiTx)+'}')+'.',
+    ask:'Programme la sonde vers l\u2019une des deux solutions : donne '+T('r')+' et '+T('\\theta')+' de '+T('Z')+'.',
+    note:'Deux solutions opposées — une seule suffit !',
+    beacons:[beaconDef(rho*Math.cos(phi),rho*Math.sin(phi),'w','#ff4dd8')],
+    sols:[{r:r0,th:th0},{r:r0,th:th0+Math.PI}],
+    canon:{re:r0*Math.cos(th0),im:r0*Math.sin(th0)},
+    solTex:'Z='+r0+'\\,e^{'+texExpCoef('',th0Tx)+'}\\quad\\text{ou}\\quad Z=-'+r0+'\\,e^{'+texExpCoef('',th0Tx)+'}',
+    explain:T('Z^2=r^2e^{2i\\theta}')+' : il faut '+T('r^2='+rho)+' et '+T('2\\theta\\equiv '+phiTx+'\\;[2\\pi]')+' — d\u2019où deux solutions opposées.'
+  };
+}
+function genL5b(){
+  const c=pick([[2,3],[3,3],[2,4],[2,5],[2,6],[3,4]]);
+  const rn=c[0],n=c[1];
+  const rho=Math.pow(rn,n);
+  const sols=[];
+  for(let k=0;k<n;k++)sols.push({r:rn,th:2*Math.PI*k/n});
+  const list=sols.slice(0,3).map(s=>rn+'\\,e^{'+texExpCoef('',texAnglePi(2*(s.th*n/(2*Math.PI)),n))+'}').join(',\\;\\; ');
+  return {
+    kind:'polar',inputs:'polar',
+    title:'Racines n-ièmes',
+    story:'Le réacteur de la station obéit à l\u2019équation '+T('z^{'+n+'}='+rho)+'.',
+    ask:'Programme la sonde vers n\u2019importe quelle solution : donne '+T('r')+' et '+T('\\theta')+' (en radians).',
+    note:'Il y a '+n+' solutions régulièrement espacées sur un cercle de rayon '+rn+'.',
+    beacons:[beaconDef(rho,0,'ρ','#ffc44d')],
+    sols:sols,
+    canon:{re:rn,im:0},
+    solTex:'z\\in\\left\\{'+list+((n>3)?',\\;\\ldots':'')+'\\right\\}',
+    explain:T('z^{'+n+'}='+rho+'\\,e^{i\\cdot 0}')+'  ⇒  '+T('z='+rn+'\\,e^{\\frac{2ik\\pi}{'+n+'}}')+'  avec '+T('k=0,1,\\ldots,'+(n-1))+'.'
+  };
+}
+function genMission(L,idx){
+  switch(L){
+    case 0:return genL1();
+    case 1:return genL2();
+    case 2:return genL3();
+    case 3:return genL4();
+    default:return (idx%2===0)?genL5a():genL5b();
+  }
+}
+
+/* ================================================================
+   6. NIVEAUX (introductions, indices, fiches)
+================================================================ */
+const LEVELS=[
+  {short:'Niveau 1',name:'Forme trigonométrique',gen:0,count:7,
+   intro:'Un nombre complexe '+TD('z=a+ib')+' se repère dans le plan par sa distance à l\u2019origine (le module '+TD('r')+') et son angle (l\u2019argument '+TD('\\theta')+') : '+TD('z=r\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right)')+'.',
+   hint:'Calcule '+TD('|z|=\\sqrt{a^2+b^2}')+', puis trouve θ avec cos θ = a/r et sin θ = b/r — aide-toi du balisage 3D et de l\u2019arc orange !',
+   quick:'z=r\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right),\\quad r=|z|=\\sqrt{a^2+b^2}',
+   fiche:['z=a+ib\\;\\text{ avec }a=\\mathrm{Re}(z),\\;b=\\mathrm{Im}(z)',
+          'r=|z|=\\sqrt{a^2+b^2}',
+          '\\cos\\left(\\theta\\right)=\\frac{a}{r},\\quad\\sin\\left(\\theta\\right)=\\frac{b}{r}',
+          'z=r\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right)',
+          '\\arg(z)\\text{ est défini modulo }2\\pi\\;(\\text{mesure principale dans }]\\!-\\pi,\\pi])']},
+  {short:'Niveau 2',name:'Forme exponentielle',gen:1,count:7,
+   intro:'La notation d\u2019Euler condense la forme trigonométrique : '+TD('e^{i\\theta}=\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)')+', d\u2019où '+TD('z=r\\,e^{i\\theta}')+'. Cette fois, la sonde ne reçoit que la forme exponentielle : à toi d\u2019effectuer la conversion ! Le satellite relais, en orbite sur un plan parallèle au plan complexe, suit la sonde par la verticale.',
+   hint:'Euler : '+TD('e^{i\\theta}=\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)')+'. Donc a = r·cos θ et b = r·sin θ.',
+   quick:'e^{i\\theta}=\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right),\\quad z=r\\,e^{i\\theta}',
+   fiche:['e^{i\\theta}=\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\quad\\text{(Euler)}',
+          'z=r\\,e^{i\\theta}\\iff z=r\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right)',
+          'a=r\\cos\\left(\\theta\\right),\\quad b=r\\sin\\left(\\theta\\right)',
+          'e^{i\\pi}=-1,\\quad e^{i\\pi/2}=i',
+          '|e^{i\\theta}|=1\\;\\text{(cercle trigonométrique)}']},
+  {short:'Niveau 3',name:'Produits & quotients',gen:2,count:7,
+   intro:'La forme exponentielle transforme produits et quotients en simples règles sur les modules et les arguments.',
+   hint:'Produit : modules multipliés, arguments ajoutés. Quotient : modules divisés, arguments soustraits.',
+   quick:'z_1z_2=r_1r_2\\,e^{i(\\theta_1+\\theta_2)},\\quad \\frac{z_1}{z_2}=\\frac{r_1}{r_2}\\,e^{i(\\theta_1-\\theta_2)}',
+   fiche:['z_1z_2=r_1r_2\\,e^{i(\\theta_1+\\theta_2)}',
+          '\\frac{z_1}{z_2}=\\frac{r_1}{r_2}\\,e^{i(\\theta_1-\\theta_2)}',
+          '\\text{modules : }\\times\\text{ ou }\\div\\quad\\text{arguments : }+\\text{ ou }-']},
+  {short:'Niveau 4',name:'Puissances — Moivre',gen:3,count:7,
+   intro:'La formule de Moivre donne les puissances : '+TD('z^n=r^n\\,e^{in\\theta}')+'.',
+   hint:'Moivre : '+TD('z^n=r^n\\,e^{in\\theta}')+' — module élevé à la puissance n, argument multiplié par n.',
+   quick:'\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right)^n=\\cos\\left(n\\theta\\right)+i\\sin\\left(n\\theta\\right),\\quad z^n=r^n\\,e^{in\\theta}',
+   fiche:['\\left(\\cos\\left(\\theta\\right)+i\\sin\\left(\\theta\\right)\\right)^n=\\cos\\left(n\\theta\\right)+i\\sin\\left(n\\theta\\right)\\quad\\text{(Moivre)}',
+          'z^n=r^n\\,e^{in\\theta}',
+          '\\cos\\left(\\theta\\right)=\\frac{e^{i\\theta}+e^{-i\\theta}}{2},\\quad\\sin\\left(\\theta\\right)=\\frac{e^{i\\theta}-e^{-i\\theta}}{2i}']},
+  {short:'Niveau 5',name:'Équations & racines n-ièmes',gen:4,count:7,
+   intro:'Dans ℂ, une équation comme '+TD('z^2=w')+' ou '+TD('z^n=\\rho')+' se résout grâce à la forme exponentielle : les solutions sont régulièrement réparties sur un cercle.',
+   hint:'Écris '+TD('z=re^{i\\theta}')+' puis résous r^n = ρ et nθ ≡ φ [2π]. Les n solutions sont espacées de 2π/n.',
+   quick:'z^n=\\rho\\,e^{i\\varphi}\\iff z=\\rho^{1/n}\\,e^{\\frac{i(\\varphi+2k\\pi)}{n}}',
+   fiche:['z^n=\\rho\\,e^{i\\varphi}\\;(\\rho>0)\\iff z=\\rho^{1/n}\\,e^{\\frac{i(\\varphi+2k\\pi)}{n}},\\;k=0,1,\\ldots,n-1',
+          'z^2=w\\iff z=\\sqrt{\\rho}\\,e^{i\\varphi/2}\\text{ ou }z=-\\sqrt{\\rho}\\,e^{i\\varphi/2}',
+          'z^n=1\\iff z=e^{\\frac{2ik\\pi}{n}}\\quad\\text{(racines }n\\text{-ièmes de l\u2019unité)}']}
+];
+/* ===== MISSION À TRÈS HAUT RISQUE (7e mission) — changement de plan et de repère complexe ===== */
+function genRisk(L){
+  const w=pick([[1,1],[-2,1],[2,-1],[-1,2],[1,-2],[-2,-1],[2,2],[-3,1]]);
+  const wRe=w[0],wIm=w[1];
+  const wTx=texAffix([wRe,1,1],[wIm,1,1]);
+  const ang=randNiceAngle();
+  const angTx=texAnglePi(ang.k,ang.n);
+  const th=ang.k*Math.PI/ang.n;
+  const cs=stdCS(ang.k,ang.n);
+  const note='Réussite : points doublés · Échec : −2 cœurs · Aucun indice.';
+  const base={risk:true,wRe:wRe,wIm:wIm,inputs:'polar',beacons:[],note:note};
+  if(L===0){
+    const rp=pick([2,3,4]);
+    const zpa=mulSurd(cs.c,rp),zpb=mulSurd(cs.s,rp);
+    return Object.assign(base,{
+      kind:'polar',title:'Changement d\u2019origine',
+      story:'Le plan complexe de secours se déploie à l\u2019altitude du satellite : son origine est Ω′, à la verticale de Ω (affixe '+T('ω='+wTx)+'). L\u2019anomalie M est repérée dans le plan principal par '+T('z = '+texAffix2(wRe,zpa,wIm,zpb))+'.',
+      ask:'Calcule '+T("z'=z-ω")+' (affixe de M dans le repère de secours), puis programme le saut : donne '+T("r'")+' et '+T("\\theta'")+' de z′.',
+      sols:[{r:rp,th:th}],
+      canon:{re:wRe+surdVal(zpa),im:wIm+surdVal(zpb)},
+      solTex:"z'=z-ω="+texAffix(zpa,zpb)+",\\quad r'="+rp+",\\quad \\theta'="+angTx+"+2k\\pi",
+      explain:'Dans le repère de secours, '+T("z'="+texAffix(zpa,zpb))+', d\u2019où '+T("z'="+rp+"\\,e^{"+texExpCoef('',angTx)+"}")+'.'
+    });
+  }
+  if(L===1){
+    const rp=pick([1,2,3,4]);
+    const zpa=mulSurd(cs.c,rp),zpb=mulSurd(cs.s,rp);
+    return Object.assign(base,{
+      kind:'cart',inputs:'cart',title:'Exponentielle — nouveau repère',
+      story:'Le repère de secours (origine Ω′, à la verticale de Ω d\u2019affixe '+T('ω='+wTx)+') est déployé à l\u2019altitude du satellite. La cible y a pour affixe '+T("z'="+rp+"\\,e^{"+texExpCoef('',angTx)+"}")+'.',
+      ask:'Donne '+T("a'=\\mathrm{Re}\\left(z'\\right)")+' et '+T("b'=\\mathrm{Im}\\left(z'\\right)")+' : la sonde sautera dans le plan de secours.',
+      sols:[],canon:{re:wRe+surdVal(zpa),im:wIm+surdVal(zpb)},
+      solTex:"z'="+texAffix(zpa,zpb),
+      explain:T("a'=r'\\cos\\left(\\theta'\\right)="+surdTex(zpa))+' et '+T("b'=r'\\sin\\left(\\theta'\\right)="+surdTex(zpb))+' ; dans le plan principal, '+T("z=ω+z'="+texAffix2(wRe,zpa,wIm,zpb))+'.'
+    });
+  }
+  if(L===2){
+    const r1=pick([1,2]),r2=pick([1,2]);
+    const a2=randNiceAngle();
+    const th1=th,th2=a2.k*Math.PI/a2.n;
+    const pn=piNorm(ang.k*a2.n+a2.k*ang.n,ang.n*a2.n);
+    const rR=r1*r2,thR=pn.k*Math.PI/pn.n,thTx=texAnglePi(pn.k,pn.n);
+    return Object.assign(base,{
+      kind:'polar',title:'Produit — nouveau repère',
+      story:'Deux balises sont posées dans le plan de secours (origine Ω′, affixe '+T('ω='+wTx)+' dans le plan principal) : '+T("z'_1="+r1+"\\,e^{"+texExpCoef('',angTx)+"}")+' et '+T("z'_2="+r2+"\\,e^{"+texExpCoef('',texAnglePi(a2.k,a2.n))+"}")+'.',
+      ask:'La cible a pour affixe le produit '+T("z'_1z'_2")+' dans ce repère : donne '+T("r'")+' et '+T("\\theta'")+'.',
+      beacons:[{re:wRe+r1*Math.cos(th1),im:wIm+r1*Math.sin(th1),alt:1.8,label:'z₁′',color:'#4de3ff'},{re:wRe+r2*Math.cos(th2),im:wIm+r2*Math.sin(th2),alt:1.8,label:'z₂′',color:'#ff4dd8'}],
+      sols:[{r:rR,th:thR}],
+      canon:{re:wRe+rR*Math.cos(thR),im:wIm+rR*Math.sin(thR)},
+      solTex:"z'_1z'_2="+rR+"\\,e^{"+texExpCoef('',thTx)+"}",
+      explain:T("r'_1r'_2="+rR)+' et '+T("\\theta'_1+\\theta'_2="+thTx)+' : les règles sur modules et arguments valent dans tout repère.'
+    });
+  }
+  if(L===3){
+    const r=pick([1,2]),n=pick([2,3]);
+    const pn=piNorm(ang.k*n,ang.n);
+    const rR=Math.pow(r,n),thR=pn.k*Math.PI/pn.n,thTx=texAnglePi(pn.k,pn.n);
+    return Object.assign(base,{
+      kind:'polar',title:'Moivre — nouveau repère',
+      story:'Dans le plan de secours (origine Ω′, affixe '+T('ω='+wTx)+'), la charge utile a pour affixe '+T("z'="+r+"\\,e^{"+texExpCoef('',angTx)+"}")+'. Le vortex réclame '+T("\\left(z'\\right)^{"+n+"}")+'.',
+      ask:'Donne '+T("r'")+' et '+T("\\theta'")+' de '+T("\\left(z'\\right)^{"+n+"}")+'.',
+      beacons:[{re:wRe+r*Math.cos(th),im:wIm+r*Math.sin(th),alt:1.8,label:'z′',color:'#4de3ff'}],
+      sols:[{r:rR,th:thR}],
+      canon:{re:wRe+rR*Math.cos(thR),im:wIm+rR*Math.sin(thR)},
+      solTex:"\\left(z'\\right)^{"+n+"}="+rR+"\\,e^{"+texExpCoef('',thTx)+"}",
+      explain:T("r'^{"+n+"}="+rR)+' et '+T(n+"\\theta'="+thTx)+' — la formule de Moivre s\u2019applique aussi dans le repère de secours.'
+    });
+  }
+  const r0=pick([2,3]),rho=r0*r0,kk=pick([1,2,3]);
+  const phi=kk*Math.PI/2,th0=kk*Math.PI/4;
+  const phiTx=texAnglePi(kk,2),th0Tx=texAnglePi(kk,4);
+  return Object.assign(base,{
+    kind:'polar',title:'Équation — nouveau repère',
+    story:'Dans le plan de secours (origine Ω′, affixe '+T('ω='+wTx)+'), le vortex vérifie '+T("\\left(Z'\\right)^2=w'")+' où '+T("w'="+rho+"\\,e^{"+texExpCoef('',phiTx)+"}")+'.',
+    ask:'Programme la sonde vers l\u2019une des deux solutions : donne '+T("r'")+' et '+T("\\theta'")+' de '+T("Z'")+'.',
+    beacons:[{re:wRe+rho*Math.cos(phi),im:wIm+rho*Math.sin(phi),alt:1.8,label:'w′',color:'#ff4dd8'}],
+    sols:[{r:r0,th:th0},{r:r0,th:th0+Math.PI}],
+    canon:{re:wRe+r0*Math.cos(th0),im:wIm+r0*Math.sin(th0)},
+    solTex:"Z'="+r0+"\\,e^{"+texExpCoef('',th0Tx)+"}\\quad\\text{ou}\\quad Z'=-"+r0+"\\,e^{"+texExpCoef('',th0Tx)+"}",
+    explain:T("\\left(Z'\\right)^2=r'^2e^{2i\\theta'}")+' : il faut '+T("r'^2="+rho)+' et '+T("2\\theta'="+phiTx+"\\;(2\\pi)")+' — d\u2019où deux solutions opposées dans le repère de secours.'
+  });
+}
+function genFor(L,idx){if(idx===6)return genRisk(L);return genMission(LEVELS[L].gen,idx);}
+
+/* ================================================================
+   7. SON
+================================================================ */
+let AC=null,muted=false;
+function ac(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}
+  if(AC&&AC.state==='suspended')AC.resume();
+  return AC;
+}
+function beep(f,d,type,g,slide){
+  if(muted)return;
+  const A=ac();if(!A)return;
+  try{
+    const o=A.createOscillator(),gn=A.createGain();
+    o.type=type||'sine';
+    o.frequency.setValueAtTime(f,A.currentTime);
+    if(slide)o.frequency.exponentialRampToValueAtTime(slide,A.currentTime+d);
+    gn.gain.setValueAtTime(g||0.12,A.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0008,A.currentTime+d);
+    o.connect(gn);gn.connect(A.destination);
+    o.start();o.stop(A.currentTime+d+0.02);
+  }catch(e){}
+}
+const sfxGood=()=>{beep(523,0.12,'sine',0.12);setTimeout(()=>beep(659,0.12,'sine',0.12),90);setTimeout(()=>beep(784,0.22,'sine',0.12),180);};
+const sfxBad=()=>beep(200,0.3,'sawtooth',0.06,90);
+const sfxClick=()=>beep(660,0.05,'triangle',0.05);
+const sfxFly=()=>beep(330,0.6,'sine',0.05,760);
+const sfxArrive=()=>{beep(880,0.1,'sine',0.1);setTimeout(()=>beep(1174,0.18,'sine',0.09),80);};
+
+/* ================================================================
+   8. MOTEUR 3D (canvas 2D + projection perspective)
+================================================================ */
+const stage=$('#stage'),canvas=$('#view'),ctx=canvas.getContext('2d');
+let W=0,H=0,DPR=1,focal=800;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  const r=stage.getBoundingClientRect();
+  W=Math.max(10,r.width);H=Math.max(10,r.height);
+  canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  focal=Math.min(W,H)*1.15;
+}
+window.addEventListener('resize',resize);
+if(window.ResizeObserver){new ResizeObserver(resize).observe(stage);}
+resize();
+const CAM_DEF={yaw:Math.PI/2,pitch:0.95,dist:19};
+const cam={yaw:Math.PI/2,pitch:0.95,dist:19};
+function project(x,y,z){
+  const cy=Math.cos(cam.yaw),sy=Math.sin(cam.yaw),cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch);
+  const px=cam.dist*cp*cy,py=cam.dist*sp,pz=cam.dist*cp*sy;
+  const fx=-cp*cy,fy=-sp,fz=-cp*sy;
+  const rx=sy,rz=-cy;
+  const ux=-cy*sp,uy=cp,uz=-sy*sp;
+  const dx=x-px,dy=y-py,dz=z-pz;
+  const zv=dx*fx+dy*fy+dz*fz;
+  if(zv<=0.01)return null;
+  const xv=dx*rx+dz*rz;
+  const yv=dx*ux+dy*uy+dz*uz;
+  const s=focal/zv;
+  return {x:W/2+xv*s,y:H/2-yv*s,z:zv,s:s};
+}
+function depthOf(re,im,alt){const p=project(re,alt||0,-im);return p?p.z:-1;}
+/* étoiles */
+const stars=[];
+(function(){
+  let seed=42;
+  const rnd=()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648;};
+  for(let i=0;i<260;i++){
+    const u=rnd()*2-1,v=rnd()*2-1,w=rnd()*2-1;
+    const L=Math.hypot(u,v,w)||1;
+    stars.push({x:u/L,y:v/L,z:w/L,tw:rnd()*6.28,m:0.4+0.6*rnd()});
+  }
+})();
+function drawStars(ts){
+  const cy=Math.cos(cam.yaw),sy=Math.sin(cam.yaw),cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch);
+  const rx=sy,rz=-cy,ux=-cy*sp,uy=cp,uz=-sy*sp;
+  const R=Math.hypot(W,H)*0.55;
+  for(const st of stars){
+    const xv=st.x*rx+st.z*rz;
+    const yv=st.x*ux+st.y*uy+st.z*uz;
+    const a=0.22+0.5*Math.abs(Math.sin(ts*0.8+st.tw))*st.m;
+    ctx.fillStyle='rgba(200,220,255,'+a.toFixed(3)+')';
+    ctx.fillRect(W/2+xv*R,H/2-yv*R,1.6,1.6);
+  }
+}
+function line2(x1,z1,x2,z2,style,width,dash){
+  const a=project(x1,0,z1),b=project(x2,0,z2);
+  if(!a||!b)return;
+  ctx.strokeStyle=style;ctx.lineWidth=width;
+  ctx.setLineDash(dash||[]);
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  ctx.setLineDash([]);
+}
+function drawPlane(){
+  const R=gridR();
+  for(let k=-R;k<=R;k++){
+    if(k===0)continue;
+    line2(k,-R,k,R,'rgba(235,242,255,.18)',1);
+    line2(-R,-k,R,-k,'rgba(235,242,255,.18)',1);
+  }
+  line2(-R,0,R,0,'rgba(190,235,255,.95)',2);
+  line2(0,-R,0,R,'rgba(255,175,240,.9)',2);
+  ctx.font='10px system-ui';
+  for(let k=-R;k<=R;k++){
+    if(k===0)continue;
+    if(R>9&&k%2!==0)continue;
+    let p=project(k,0,0.42);
+    if(p){ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillText(String(k),p.x-6,p.y+3);}
+    p=project(0.42,0,-k);
+    if(p){ctx.fillStyle='rgba(255,210,250,.8)';ctx.fillText(String(k),p.x+2,p.y+3);}
+  }
+  const lp=project(R+0.9,0,0);
+  if(lp){ctx.fillStyle='rgba(200,240,255,1)';ctx.font='italic 13px serif';ctx.fillText('Re',lp.x-8,lp.y+4);}
+  const lq=project(0,0,-(R+0.9));
+  if(lq){ctx.fillStyle='rgba(255,190,245,.95)';ctx.font='italic 13px serif';ctx.fillText('Im',lq.x-8,lq.y+4);}
+  const o=project(0,0,0);
+  if(o){ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='italic 12px serif';ctx.fillText('O',o.x-14,o.y+12);}
+  /* cercle trigonométrique */
+  ctx.setLineDash([5,6]);
+  ctx.strokeStyle='rgba(130,240,255,.6)';ctx.lineWidth=1.4;
+  ctx.beginPath();
+  let started=false;
+  for(let i=0;i<=72;i++){
+    const t=i/72*2*Math.PI;
+    const p=project(Math.cos(t),0,-Math.sin(t));
+    if(!p){started=false;continue;}
+    if(!started){ctx.moveTo(p.x,p.y);started=true;}else ctx.lineTo(p.x,p.y);
+  }
+  ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(180,250,255,.85)';
+  const fams=[6,4];
+  for(const n2 of fams)for(let k=0;k<2*n2;k++){
+    const t=k*Math.PI/n2;
+    const p=project(Math.cos(t),0,-Math.sin(t));
+    if(p){ctx.beginPath();ctx.arc(p.x,p.y,2,0,7);ctx.fill();}
+  }
+}
+function line3(x1,y1,z1,x2,y2,z2,style,width,dash){
+  const a=project(x1,y1,z1),b=project(x2,y2,z2);
+  if(!a||!b)return;
+  ctx.strokeStyle=style;ctx.lineWidth=width;
+  ctx.setLineDash(dash||[]);
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  ctx.setLineDash([]);
+}
+/* plan complexe de secours, parallèle, origine Ω′ à la verticale de Ω */
+function drawSecondary(){
+  if(!G.risk)return;
+  const A=1.8,wre=G.risk.wRe,wim=G.risk.wIm;
+  let R2=4;
+  if(G.cur)(G.cur.beacons||[]).forEach(b=>{R2=Math.max(R2,Math.ceil(Math.hypot(b.re-wre,b.im-wim)));});
+  R2=Math.min(R2,8);
+  const zc=-wim;
+  const grid='rgba(255,225,170,.14)';
+  for(let k=-R2;k<=R2;k++){
+    if(k!==0){
+      line3(wre+k,A,zc-R2,wre+k,A,zc+R2,grid,1);
+      line3(wre-R2,A,zc+k,wre+R2,A,zc+k,grid,1);
+    }
+  }
+  line3(wre-R2,A,zc,wre+R2,A,zc,'rgba(255,235,190,.55)',1.6);
+  line3(wre,A,zc-R2,wre,A,zc+R2,'rgba(255,200,240,.5)',1.6);
+  line3(wre,0,zc,wre,A,zc,'rgba(255,225,170,.45)',1.2,[4,4]);
+  ctx.font='12px system-ui';ctx.fillStyle='rgba(255,225,170,.9)';
+  const o=project(wre,A,zc);
+  if(o){ctx.fillText('Ω′',o.x-16,o.y-4);}
+  const ob=project(wre,0,zc);
+  if(ob){ctx.fillText('Ω',ob.x-14,ob.y+14);}
+  const lr=project(wre+R2+0.6,A,zc);
+  if(lr){ctx.fillText('Re′',lr.x-10,lr.y+4);}
+  const li=project(wre,A,zc-(R2+0.6));
+  if(li){ctx.fillText('Im′',li.x-10,li.y);}
+}
+function drawVector(re,im,color,width){
+  const a=project(0,0,0),b=project(re,0,-im);
+  if(!a||!b)return;
+  ctx.strokeStyle=color;ctx.lineWidth=width||2.5;
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+}
+function drawArcAt(r,th,color){
+  if(r<0.18)return;
+  const rad=Math.max(0.5,Math.min(1.2,r*0.42));
+  ctx.strokeStyle=color;ctx.lineWidth=2;
+  ctx.beginPath();
+  const steps=Math.max(8,Math.ceil(Math.abs(th)/0.08));
+  let ok=true;
+  for(let i=0;i<=steps;i++){
+    const t=th*i/steps;
+    const p=project(rad*Math.cos(t),0.02,-rad*Math.sin(t));
+    if(!p){ok=false;break;}
+    if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
+  }
+  if(ok)ctx.stroke();
+  const tMid=th/2;
+  const lp=project(rad*1.28*Math.cos(tMid),0.02,-rad*1.28*Math.sin(tMid));
+  if(lp){ctx.fillStyle=color;ctx.font='italic 13px serif';ctx.fillText('θ',lp.x-3,lp.y+4);}
+}
+function drawBeacon(b,ts,ph){
+  const A=b.alt||0;
+  const p=project(b.re,A,-b.im);
+  if(!p)return;
+  if(A>0.05&&G.risk){
+    const o=project(G.risk.wRe,A,-G.risk.wIm);
+    if(o){ctx.strokeStyle=b.color+'44';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(p.x,p.y);ctx.stroke();}
+  }else{
+    drawVector(b.re,b.im,b.color+'55',1.5);
+  }
+  const pulse=1+0.18*Math.sin(ts*4+ph*1.7);
+  const s=Math.max(4,0.22*p.s)*pulse;
+  ctx.save();
+  ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);
+  ctx.fillStyle=b.color;ctx.globalAlpha=0.25;
+  ctx.fillRect(-s*1.6,-s*1.6,s*3.2,s*3.2);
+  ctx.globalAlpha=1;
+  ctx.fillRect(-s,-s,s*2,s*2);
+  ctx.restore();
+  ctx.fillStyle=b.color;ctx.font='12px system-ui';
+  ctx.fillText(b.label,p.x+s*1.8,p.y+s*1.8);
+}
+/* ===== satellite relais : orbite sur un plan parallèle au plan complexe ===== */
+const SAT_ALT=1.8,SAT_R=0.6;
+function satAnchor(){
+  if(G.risk)return {re:G.risk.wRe,im:G.risk.wIm};
+  const m=G.cur;
+  if(m&&m.beacons&&m.beacons.length)return {re:m.beacons[0].re,im:m.beacons[0].im};
+  return {re:ship.re,im:ship.im};
+}
+function satPos(ts){
+  const an=satAnchor();
+  const a=ts*0.6;
+  return {re:an.re+SAT_R*Math.cos(a),im:an.im+SAT_R*Math.sin(a),anchor:an};
+}
+function drawSatellite(ts,sp){
+  const an=sp.anchor;
+  /* anneau orbital : le plan du satellite, distinct du plan complexe */
+  ctx.setLineDash([4,5]);
+  ctx.strokeStyle='rgba(230,240,255,.4)';ctx.lineWidth=1;
+  ctx.beginPath();
+  let started=false;
+  for(let i=0;i<=28;i++){
+    const t=i/28*2*Math.PI;
+    const q=project(an.re+SAT_R*Math.cos(t),SAT_ALT,-(an.im+SAT_R*Math.sin(t)));
+    if(!q){started=false;continue;}
+    if(!started){ctx.moveTo(q.x,q.y);started=true;}else ctx.lineTo(q.x,q.y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  /* liaison verticale satellite → point d'ancrage (ombre sur le plan complexe) */
+  const pa=project(an.re,0,-an.im);
+  const ps=project(sp.re,SAT_ALT,-sp.im);
+  if(pa){
+    ctx.fillStyle='rgba(15,20,60,.4)';
+    ctx.beginPath();ctx.ellipse(pa.x,pa.y,Math.max(2.5,0.07*pa.s),Math.max(1.5,0.045*pa.s),0,0,7);ctx.fill();
+  }
+  if(!ps)return;
+  if(pa){
+    ctx.strokeStyle='rgba(230,240,255,.4)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(ps.x,ps.y);ctx.lineTo(pa.x,pa.y);ctx.stroke();
+  }
+  /* corps du satellite avec panneaux */
+  const s=Math.max(3,0.12*ps.s);
+  const g=ctx.createRadialGradient(ps.x,ps.y,0,ps.x,ps.y,s*3);
+  g.addColorStop(0,'rgba(255,245,220,.95)');
+  g.addColorStop(0.4,'rgba(255,220,150,.35)');
+  g.addColorStop(1,'rgba(255,220,150,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.arc(ps.x,ps.y,s*3,0,7);ctx.fill();
+  ctx.save();
+  ctx.translate(ps.x,ps.y);
+  ctx.rotate(Math.sin(ts*0.8)*0.25);
+  ctx.strokeStyle='#ffe9c0';ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(-s*2.4,0);ctx.lineTo(-s*1.1,0);
+  ctx.moveTo(s*1.1,0);ctx.lineTo(s*2.4,0);
+  ctx.stroke();
+  ctx.fillStyle='#ffd9a0';
+  ctx.fillRect(-s,-s,s*2,s*2);
+  ctx.restore();
+  ctx.fillStyle='#ffe9c0';ctx.font='10px system-ui';
+  ctx.fillText('SAT',ps.x+s*2.2,ps.y-s*2.2);
+}
+function drawMarker(d){
+  const p=project(d.re,0,-d.im);
+  if(!p)return;
+  ctx.strokeStyle='rgba(140,255,190,.65)';ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.arc(p.x,p.y,Math.max(4,0.14*p.s),0,7);ctx.stroke();
+  ctx.fillStyle='rgba(140,255,190,.9)';
+  ctx.beginPath();ctx.arc(p.x,p.y,2,0,7);ctx.fill();
+  ctx.font='10px system-ui';
+  ctx.fillText('z',p.x+6,p.y-6);
+}
+function drawShip(ts){
+  const p=project(ship.re,ship.alt,-ship.im);
+  if(!p)return;
+  /* ombre portée : sonde hors du plan complexe → affixe de son ombre sur le plan */
+  if(ship.alt>0.04){
+    const ps=project(ship.re,0,-ship.im);
+    if(ps){
+      ctx.setLineDash([3,5]);
+      ctx.strokeStyle='rgba(220,235,255,.5)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(ps.x,ps.y);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(15,20,60,.45)';
+      ctx.beginPath();ctx.ellipse(ps.x,ps.y,Math.max(2.5,0.08*ps.s),Math.max(1.5,0.05*ps.s),0,0,7);ctx.fill();
+      ctx.fillStyle='#dff8ff';
+      ctx.beginPath();ctx.arc(ps.x,ps.y,Math.max(1.5,0.035*ps.s),0,7);ctx.fill();
+    }
+  }
+  const rr=Math.max(3,0.16*p.s);
+  const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rr*3);
+  g.addColorStop(0,'rgba(140,240,255,.9)');
+  g.addColorStop(0.35,'rgba(80,180,255,.35)');
+  g.addColorStop(1,'rgba(80,180,255,0)');
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.arc(p.x,p.y,rr*3,0,7);ctx.fill();
+  ctx.fillStyle='#dff8ff';
+  ctx.beginPath();ctx.arc(p.x,p.y,rr,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(140,240,255,.9)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(p.x,p.y,rr*(1.6+0.25*Math.sin(ts*3)),0,7);ctx.stroke();
+  ctx.fillStyle='#bfefff';ctx.font='11px system-ui';
+  ctx.fillText('sonde',p.x+rr*2.2,p.y-rr*1.5);
+}
+function drawShipOverlay(){
+  const re=ship.re,im=ship.im;
+  const r=Math.hypot(re,im);
+  if(r<0.18)return;
+  const th=Math.atan2(im,re);
+  drawVector(re,im,'rgba(140,240,255,.85)',2.5);
+  const mp=project(re*0.55,0.16,-im*0.55);
+  if(mp){ctx.fillStyle='#bfefff';ctx.font='italic 13px serif';ctx.fillText('r',mp.x-3,mp.y-6);}
+  drawArcAt(r,th,'#ffd76e');
+}
+/* particules & popups */
+const parts=[],popups=[];
+function burst(re,im,alt){
+  const y=alt||0;
+  for(let i=0;i<46;i++){
+    parts.push({x:re,y:y,z:-im,
+      vx:(Math.random()-0.5)*3,vy:1.5+Math.random()*2.5,vz:(Math.random()-0.5)*3,
+      age:0,life:0.9+Math.random()*0.6,
+      c:pick(['#8effc1','#4de3ff','#ff4dd8','#ffd76e'])});
+  }
+}
+function spawnPopup(txt){
+  const p=project(ship.re,0,-ship.im);
+  popups.push({x:p?p.x:W/2,y:(p?p.y:H/2)-30,txt:txt,age:0,color:'#8effc1'});
+}
+function drawParticles(dt){
+  for(let i=parts.length-1;i>=0;i--){
+    const q=parts[i];
+    q.age+=dt;
+    if(q.age>q.life){parts.splice(i,1);continue;}
+    q.vy-=4*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;
+    if(q.y<-0.2){q.y=-0.2;q.vy=Math.abs(q.vy)*0.4;}
+    const p=project(q.x,q.y,q.z);
+    if(!p)continue;
+    ctx.globalAlpha=Math.max(0,1-q.age/q.life);
+    ctx.fillStyle=q.c;
+    ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,7);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawPopups(dt){
+  ctx.font='bold 16px system-ui';
+  for(let i=popups.length-1;i>=0;i--){
+    const q=popups[i];
+    q.age+=dt;q.y-=28*dt;
+    if(q.age>1.4){popups.splice(i,1);continue;}
+    ctx.globalAlpha=Math.max(0,1-q.age/1.4);
+    ctx.fillStyle=q.color;
+    ctx.fillText(q.txt,q.x,q.y);
+  }
+  ctx.globalAlpha=1;
+}
+/* trail */
+const trail=[];
+function fadeTrail(dt){
+  for(const t of trail)t.a-=dt*1.1;
+  while(trail.length&&trail[0].a<=0)trail.shift();
+}
+function drawTrail(){
+  for(const t of trail){
+    const p=project(t.re,t.alt||0,-t.im);
+    if(!p)continue;
+    ctx.fillStyle='rgba(140,240,255,'+(t.a*0.35).toFixed(3)+')';
+    ctx.beginPath();ctx.arc(p.x,p.y,Math.max(1.2,t.a*3.2),0,7);ctx.fill();
+  }
+}
+/* rayon de grille adaptatif */
+function gridR(){
+  let m=2;
+  if(G.risk)m=Math.max(m,Math.hypot(G.risk.wRe,G.risk.wIm)+3);
+  if(G.cur){
+    (G.cur.beacons||[]).forEach(b=>{m=Math.max(m,Math.hypot(b.re,b.im));});
+    m=Math.max(m,Math.hypot(G.cur.canon.re,G.cur.canon.im));
+  }
+  discovered.forEach(d=>{m=Math.max(m,Math.hypot(d.re,d.im));});
+  m=Math.max(m,Math.hypot(ship.re,ship.im));
+  return clamp(Math.ceil(m)+2,6,12);
+}
+/* boucle principale */
+let readoutDirty=true;
+function draw(ts,dt){
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#4a57b8');g.addColorStop(0.6,'#3a45a4');g.addColorStop(1,'#2e3890');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  drawStars(ts);
+  drawPlane();
+  drawSecondary();
+  drawTrail();
+  drawShipOverlay();
+  const objs=[];
+  if(G.cur)(G.cur.beacons||[]).forEach((b,i)=>objs.push({d:depthOf(b.re,b.im,b.alt),f:()=>drawBeacon(b,ts,i)}));
+  discovered.forEach(d=>objs.push({d:depthOf(d.re,d.im),f:()=>drawMarker(d)}));
+  const sp=satPos(ts);
+  objs.push({d:depthOf(sp.re,sp.im,1.8),f:()=>drawSatellite(ts,sp)});
+  objs.push({d:depthOf(ship.re,ship.im,ship.alt),f:()=>drawShip(ts)});
+  objs.filter(o=>o.d>0.3).sort((a,b)=>b.d-a.d).forEach(o=>o.f());
+  drawParticles(dt);
+  drawPopups(dt);
+  if(readoutDirty){updateReadout();readoutDirty=false;}
+}
+let lastT=performance.now();
+function tick(now){
+  const dt=Math.min(0.05,(now-lastT)/1000);
+  lastT=now;
+  updateFlight(dt);
+  fadeTrail(dt);
+  draw(now/1000,dt);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ================================================================
+   9. ÉTAT DU JEU
+================================================================ */
+const G={level:0,idx:0,score:0,lives:3,streak:0,attempts:0,hints:0,t0:0,lock:false,cur:null};
+let best=0;
+try{best=parseInt(localStorage.getItem('cq3d-best')||'0',10)||0;}catch(e){best=0;}
+const ship={re:1,im:0,alt:0};
+const discovered=[];
+let flying=null;
+function saveBest(){best=Math.max(best,G.score);try{localStorage.setItem('cq3d-best',String(best));}catch(e){}}
+function flyTo(target,cb,alt){
+  const altT=alt||0;
+  const fr=Math.hypot(ship.re,ship.im)||0.0001;
+  const ft=Math.atan2(ship.im,ship.re);
+  const tr=Math.max(0.0001,Math.hypot(target.re,target.im));
+  const tt=Math.atan2(target.im,target.re);
+  let d=tt-ft;
+  while(d>Math.PI)d-=2*Math.PI;
+  while(d<-Math.PI)d+=2*Math.PI;
+  const dur=clamp(0.7+Math.abs(d)/(2*Math.PI)*1.6+Math.abs(tr-fr)*0.18,0.9,2.6);
+  const d2=Math.hypot(tr*Math.cos(tt)-fr*Math.cos(ft),tr*Math.sin(tt)-fr*Math.sin(ft));
+  const bump=clamp(d2*0.22,0.45,2.0);
+  flying={fr,ft,tr,d,cb,t:0,dur,bump,alt0:ship.alt,altT:altT};
+  sfxFly();
+}
+function updateFlight(dt){
+  if(!flying)return;
+  flying.t+=dt/flying.dur;
+  const u=clamp(flying.t,0,1);
+  const e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+  const r=flying.fr+(flying.tr-flying.fr)*e;
+  const th=flying.ft+flying.d*e;
+  ship.re=r*Math.cos(th);
+  ship.im=r*Math.sin(th);
+  ship.alt=flying.alt0+(flying.altT-flying.alt0)*e+flying.bump*Math.sin(Math.PI*u);
+  trail.push({re:ship.re,im:ship.im,alt:ship.alt,a:1});
+  if(trail.length>90)trail.shift();
+  readoutDirty=true;
+  if(flying.t>=1){
+    const cb=flying.cb;
+    const altT=flying.altT;
+    flying=null;
+    ship.alt=altT;
+    burst(ship.re,ship.im,altT);
+    sfxArrive();
+    if(cb)cb();
+  }
+}
+function updateReadout(){
+  const re=ship.re,im=ship.im;
+  const r=Math.hypot(re,im),th=Math.atan2(im,re);
+  const zAlg=fmtN(re)+' '+((im<0)?'-':'+')+' '+fmtN(Math.abs(im))+'\\,i';
+  let html='<div class="ro">'+TD('z = '+zAlg)+'</div>';
+  html+='<div class="ro">'+TD('z = '+fmtN(r)+'\\left(\\cos\\left('+fmtN(th)+'\\right) + i\\sin\\left('+fmtN(th)+'\\right)\\right)')+'</div>';
+  const nice=niceAngleTex(th);
+  html+='<div class="ro">'+TD('z = '+fmtN(r)+'\\,e^{'+texExpCoef('',fmtN(th))+'}')+(nice?(' <span class="nice">('+TD('\\theta='+nice)+')</span>'):'')+'</div>';
+  if(G.risk&&ship.alt>1.5){
+    const a2=re-G.risk.wRe,b2=im-G.risk.wIm;
+    const zAlg2=fmtN(a2)+' '+((b2<0)?'-':'+')+' '+fmtN(Math.abs(b2))+'\\,i';
+    html+='<div class="ro">'+TD("z' = "+zAlg2)+' <span class="nice">(repère de secours, origine Ω′)</span></div>';
+  }
+  $('#readout').innerHTML=html;
+}
+
+/* ================================================================
+   10. INTERFACE
+================================================================ */
+function updateHeader(){
+  const L=LEVELS[G.level];
+  $('#hLevel').textContent=L.short+' · '+L.name;
+  $('#hScore').textContent=G.score;
+  $('#hBest').textContent=Math.max(best,G.score);
+  $('#hLives').textContent='❤'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.min(3,Math.max(0,3-G.lives)));
+  let dots='';
+  for(let i=0;i<L.count;i++){
+    let cls='dot';
+    if(i===L.count-1)cls+=' risk';
+    if(i<G.idx)cls+=' done';
+    else if(i===G.idx)cls+=' cur';
+    dots+='<span class="'+cls+'"></span>';
+  }
+  $('#dots').innerHTML=dots;
+}
+function setFeedback(kind,html){
+  const fb=$('#feedback');
+  if(!fb)return;
+  fb.className='feedback '+kind;
+  fb.innerHTML=html;
+  mjUpgrade(fb);
+}
+function buildPanel(){
+  const L=LEVELS[G.level];
+  G.cur=genFor(G.level,G.idx);
+  G.attempts=0;G.hints=0;G.lock=false;
+  G.t0=Date.now();
+  const m=G.cur;
+  G.risk=m.risk?{wRe:m.wRe,wIm:m.wIm}:null;
+  const mc=$('#missionCard');
+  mc.innerHTML='';
+  const top=document.createElement('div');
+  top.className='m-top';
+  top.innerHTML='<span class="chip">'+L.short+'</span>'+(m.risk?'<span class="chip risk">⚠ Très haut risque</span>':'')+'<span class="m-title">'+m.title+'</span><span class="m-count">Mission '+(G.idx+1)+'/'+L.count+'</span>';
+  mc.appendChild(top);
+  const st=document.createElement('p');
+  st.className='story';
+  st.innerHTML=m.story;
+  mc.appendChild(st);
+  const ask=document.createElement('p');
+  ask.className='ask';
+  ask.innerHTML=m.ask;
+  mc.appendChild(ask);
+  {
+    const lg=document.createElement('p');
+    lg.className='legend';
+    let leg='';
+    if(m.beacons&&m.beacons.length)leg+='Balises : '+m.beacons.map(b=>'<span class="dotc" style="color:'+b.color+'">◆ '+b.label+'</span>').join(' ')+' ';
+    leg+='<span class="dotc" style="color:#ffe9c0">◆ SAT : satellite relais en orbite (plan parallèle, projection verticale)</span>';
+    lg.innerHTML=leg;
+    mc.appendChild(lg);
+  }
+  const ans=document.createElement('div');
+  ans.className='answers';
+  ans.id='answerArea';
+  const defs=(m.inputs==='polar')
+    ?(m.risk?[{key:'r',label:"r'\\;=",ph:'ex : 2'},{key:'th',label:"\\theta'\\;=",ph:'ex : 5pi/6'}]
+          :[{key:'r',label:'r\\;=',ph:'ex : 2'},{key:'th',label:'\\theta\\;=',ph:'ex : 5pi/6'}])
+    :(m.risk?[{key:'a',label:"a'\\;=",ph:'ex : sqrt(3)'},{key:'b',label:"b'\\;=",ph:'ex : -3/2'}]
+          :[{key:'a',label:'a\\;=',ph:'ex : sqrt(3)'},{key:'b',label:'b\\;=',ph:'ex : -3/2'}]);
+  defs.forEach(d=>{
+    const row=document.createElement('div');
+    row.className='inrow';
+    const lab=document.createElement('span');
+    lab.className='inlab';
+    lab.innerHTML=T(d.label);
+    row.appendChild(lab);
+    const inp=document.createElement('input');
+    inp.type='text';inp.className='in';inp.id='in-'+d.key;
+    inp.placeholder=d.ph;inp.autocomplete='off';inp.spellcheck=false;
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')validate();});
+    row.appendChild(inp);
+    ans.appendChild(row);
+  });
+  mc.appendChild(ans);
+  const note=document.createElement('p');
+  note.className='note';
+  note.textContent=m.note||'';
+  mc.appendChild(note);
+  const br=document.createElement('div');
+  br.className='btnrow';
+  const bV=document.createElement('button');
+  bV.className='btn primary';bV.textContent='Valider le saut';
+  bV.onclick=validate;
+  br.appendChild(bV);
+  const bH=document.createElement('button');
+  bH.className='btn ghost';bH.textContent='Indice';
+  bH.onclick=hint;
+  if(!m.risk)br.appendChild(bH);
+  const bS=document.createElement('button');
+  bS.className='btn ghost hidden';bS.id='btnSol';bS.textContent='Voir la solution';
+  bS.onclick=revealSolution;
+  br.appendChild(bS);
+  mc.appendChild(br);
+  const meta=document.createElement('div');
+  meta.className='meta';meta.id='metaLine';
+  mc.appendChild(meta);
+  const fb=document.createElement('div');
+  fb.className='feedback';fb.id='feedback';
+  mc.appendChild(fb);
+  $('#quickStrip').innerHTML=T(L.quick);
+  mjUpgrade(mc);
+  mjUpgrade($('#quickStrip'));
+  updateHeader();
+  const first=mc.querySelector('input');
+  if(first)try{first.focus();}catch(e){}
+}
+setInterval(()=>{
+  const el=$('#metaLine');
+  if(!el||!G.cur)return;
+  const sec=Math.max(0,Math.floor((Date.now()-G.t0)/1000));
+  el.textContent='⏱ '+Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')+'   ❤ '+Math.max(0,G.lives)+'/3   🔥 série '+G.streak;
+},500);
+
+/* ================================================================
+   11. LOGIQUE DE VALIDATION
+================================================================ */
+function angEq(a,b){
+  let d=(a-b)%(2*Math.PI);
+  if(d<0)d+=2*Math.PI;
+  d=Math.min(d,2*Math.PI-d);
+  return d<=0.015;
+}
+function validate(){
+  if(G.lock||!G.cur)return;
+  const m=G.cur;
+  const vals={};
+  document.querySelectorAll('#answerArea input').forEach(inp=>{
+    vals[inp.id.slice(3)]=evalMathExpr(inp.value);
+  });
+  if(m.inputs==='polar'){
+    if(isNaN(vals.r)||isNaN(vals.th)){
+      setFeedback('warn','Saisie incomplète ou illisible — formats acceptés : <span class="mono">2</span> <span class="mono">1.5</span> <span class="mono">sqrt(3)</span> <span class="mono">5*pi/6</span> <span class="mono">-pi/4</span> …');
+      return;
+    }
+    if(vals.r<-1e-9){
+      setFeedback('warn','Le module est une distance : '+T('r\\geq 0')+'. Vérifie ton écriture (un argument à π près fait déjà le travail).');
+      return;
+    }
+    const ok=m.sols.some(s=>Math.abs(vals.r-s.r)<=0.02&&angEq(vals.th,s.th));
+    if(ok){succeed(vals);return;}
+    const rOk=m.sols.some(s=>Math.abs(vals.r-s.r)<=0.02);
+    const tOk=m.sols.some(s=>angEq(vals.th,s.th));
+    fail(rOk?(tOk?'none':'th'):(tOk?'r':'both'));
+  }else{
+    if(isNaN(vals.a)||isNaN(vals.b)){
+      setFeedback('warn','Saisie incomplète — formats acceptés : <span class="mono">2</span> <span class="mono">-1.5</span> <span class="mono">sqrt(3)</span> <span class="mono">3/2</span> …');
+      return;
+    }
+    const c=m.risk?{re:m.canon.re-m.wRe,im:m.canon.im-m.wIm}:m.canon;
+    const aOk=Math.abs(vals.a-c.re)<=0.03;
+    const bOk=Math.abs(vals.b-c.im)<=0.03;
+    if(aOk&&bOk){succeed(vals);return;}
+    fail(aOk?'b':(bOk?'a':'both'));
+  }
+}
+function lockInputs(){
+  document.querySelectorAll('#answerArea input').forEach(i=>{i.disabled=true;});
+}
+function succeed(vals){
+  const m=G.cur;
+  G.lock=true;
+  lockInputs();
+  sfxGood();
+  const elapsed=(Date.now()-G.t0)/1000;
+  let pts=[100,60,30,30][Math.min(G.attempts,3)];
+  pts-=25*G.hints;
+  pts+=Math.max(0,Math.round(40-elapsed));
+  if(G.attempts===0){G.streak++;if(G.streak>=3)pts+=20;}
+  else G.streak=0;
+  if(m.risk)pts*=2;
+  pts=Math.max(5,pts);
+  G.score+=pts;
+  const target=(m.inputs==='polar')
+    ?{re:vals.r*Math.cos(vals.th),im:vals.r*Math.sin(vals.th)}
+    :{re:vals.a,im:vals.b};
+  if(m.risk){target.re+=m.wRe;target.im+=m.wIm;}
+  setFeedback('ok','<b>'+(m.risk?'Saut périlleux réussi !':'Appontage réussi !')+'</b> '+T(m.solTex)+' <span class="pts">+'+pts+' pts</span><br><span class="expl">'+m.explain+'</span>');
+  updateHeader();
+  spawnPopup('+'+pts);
+  flyTo(target,()=>{
+    if(!m.risk){
+      discovered.push({re:target.re,im:target.im});
+      if(discovered.length>14)discovered.shift();
+    }
+    nextMission();
+  },m.risk?1.8:0);
+}
+function fail(which){
+  G.attempts++;
+  G.lives-=(G.cur.risk?2:1);
+  sfxBad();
+  updateHeader();
+  shakeStage();
+  if(G.lives<=0){gameOver();return;}
+  const msgs={
+    r:'L\u2019argument θ est bon… mais pas le module !',
+    th:'Le module r est bon… mais pas l\u2019argument !',
+    both:'Ni le module ni l\u2019argument ne collent. Réessaie !',
+    a:'b est correct, mais pas a !',
+    b:'a est correct, mais pas b !'
+  };
+  setFeedback('bad',msgs[which]||'Réessaie !');
+  if(G.attempts>=(G.cur.risk?1:2)){
+    const bS=$('#btnSol');
+    if(bS)bS.classList.remove('hidden');
+  }
+}
+function hint(){
+  if(G.lock)return;
+  G.hints++;
+  sfxClick();
+  setFeedback('info','<b>Indice (−25 pts)</b> : '+LEVELS[G.level].hint);
+}
+function revealSolution(){
+  if(G.lock||!G.cur)return;
+  G.lock=true;
+  lockInputs();
+  G.streak=0;
+  const m=G.cur;
+  setFeedback('sol','<b>Solution</b> : '+T(m.solTex)+'<br><span class="expl">'+m.explain+'</span>');
+  flyTo(m.canon,()=>{
+    if(!m.risk)discovered.push({re:m.canon.re,im:m.canon.im});
+    nextMission();
+  },m.risk?1.8:0);
+}
+function shakeStage(){
+  stage.classList.remove('shake');
+  void stage.offsetWidth;
+  stage.classList.add('shake');
+}
+
+/* ================================================================
+   12. MODALES & PROGRESSION
+================================================================ */
+function showModal(html,actions){
+  const ov=$('#overlay');
+  ov.classList.add('show');
+  $('#modalCard').innerHTML=html;
+  const acts=$('#modalActions');
+  acts.innerHTML='';
+  (actions||[]).forEach(a=>{
+    const b=document.createElement('button');
+    b.className='btn '+(a.primary?'primary':'ghost');
+    b.textContent=a.label;
+    b.onclick=a.cb;
+    acts.appendChild(b);
+  });
+  mjUpgrade($('#modalCard'));
+}
+function showLegal(){
+  showModal(
+    '<h2>⚖️ Droits d\u2019Auteur et Licence d\u2019Utilisation</h2>'
+    +'<p><b>Jeu pédagogique web original</b> — nombres complexes (Terminale, Maths expertes) — conçu, écrit et calculé à la main dans le cabinet des Arcanes du Complexe.<br>© Yann Merdy — octobre 2026.</p>'
+    +'<p><b>Licence d\u2019Utilisation Pédagogique</b></p>'
+    +'<p><b>Utilisation Privée et Éducative (Autorisée)</b> : usage personnel, éducatif et non lucratif autorisé — copie, projection, impression et adaptation pour vos élèves comprises.</p>'
+    +'<p><b>Attribution</b> : toute reproduction ou modification doit conserver la mention de l\u2019auteur (Yann Merdy) et la présente notice.</p>'
+    +'<p><b>Usage Commercial (Interdit)</b> : toute utilisation commerciale est strictement interdite sans accord écrit préalable de l\u2019auteur.</p>'
+    +'<p><b>Vie privée</b> : la page fonctionne intégralement hors ligne ; votre progression (meilleur score) reste dans votre navigateur. Aucun envoi automatique de données n\u2019est effectué.</p>'
+    +'<p><b>Fiction</b> : la sonde, le satellite relais, le plan complexe, ses repères de secours et ses rotations sont fictifs. Toute ressemblance avec une réalité géométrique serait parfaitement exacte — à '+T('\\left(2k\\pi\\right)')+' près.</p>'
+    +'<p>Pour toute demande commerciale, contacter l\u2019auteur : <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>.</p>',
+    [{label:'Fermer',primary:true,cb:hideModal}]
+  );
+}
+function hideModal(){$('#overlay').classList.remove('show');}
+function nextMission(){
+  G.idx++;
+  const L=LEVELS[G.level];
+  if(G.idx>=L.count)levelDone();
+  else buildPanel();
+}
+function levelDone(){
+  if(ship.alt>0.05)flyTo({re:1,im:0},null,0);
+  if(G.level===LEVELS.length-1){victory();return;}
+  saveBest();
+  showModal('<h2>🛰️ Niveau terminé !</h2><p>Score : <b>'+G.score+'</b> pts.</p><p>Prochain niveau : <b>'+LEVELS[G.level+1].name+'</b>.</p>',
+    [{label:'Niveau suivant',primary:true,cb:()=>{hideModal();G.level++;G.idx=0;G.lives=3;showLevelIntro();}}]);
+}
+function showLevelIntro(){
+  const L=LEVELS[G.level];
+  updateHeader();
+  showModal(
+    '<h2>'+L.short+' — '+L.name+'</h2><p>'+L.intro+'</p>'+
+    '<div class="fichebox">'+L.fiche.map(f=>'<div class="fline">'+T(f)+'</div>').join('')+'</div>'+
+    '<p>6 missions + 1 mission à très haut risque (points doublés, échec : −2 cœurs) · réponses en radians.</p>',
+    [{label:'Lancer les missions',primary:true,cb:()=>{hideModal();sfxClick();buildPanel();}}]
+  );
+}
+function gameOver(){
+  saveBest();
+  sfxBad();
+  setTimeout(()=>sfxBad(),160);
+  showModal(
+    '<h2>💀 Perte de signal</h2><p>La sonde a épuisé ses trois cœurs sur la mission « '+G.cur.title+' ».</p>'+
+    '<p class="big">Score : '+G.score+'</p><p>Reprends la mission (valeurs retirées au hasard) ou relance l\u2019expédition.</p>',
+    [{label:'Reprendre la mission',primary:true,cb:()=>{hideModal();G.lives=3;updateHeader();buildPanel();}},
+     {label:'Recommencer tout',cb:()=>{hideModal();resetAll();}}]
+  );
+}
+function victory(){
+  saveBest();
+  showModal(
+    '<h2>🏆 Expédition complète !</h2><p>La sonde a maîtrisé modules, arguments, Euler, Moivre et les racines n-ièmes.</p>'+
+    '<p class="big">Score final : '+G.score+'</p><p>Record : '+best+'</p>',
+    [{label:'Rejouer',primary:true,cb:()=>{hideModal();resetAll();}}]
+  );
+}
+function resetAll(){
+  G.level=0;G.idx=0;G.score=0;G.lives=3;G.streak=0;
+  discovered.length=0;
+  ship.re=1;ship.im=0;ship.alt=0;flying=null;
+  trail.length=0;parts.length=0;popups.length=0;
+  readoutDirty=true;
+  updateHeader();
+  showLevelIntro();
+}
+function showStartModal(){
+  showModal(
+    '<h2>∮ Complexe Quest 3D</h2>'+
+    '<p>Vous pilotez la sonde <b>Æthel</b> dans le plan complexe, représenté ici en 3D. Chaque mission porte sur les <b>formes trigonométrique et exponentielle</b> d\u2019un nombre complexe ; en cas de réussite, la sonde saute au point d\u2019affixe z.</p>'+
+    '<p><b>Commandes</b> : glisser pour orbiter · molette pour zoomer · double-clic pour la vue initiale.</p>'+
+    '<p><b>Réponses</b> en radians, saisie libre : <span class="mono">5pi/6</span> <span class="mono">-pi/4</span> <span class="mono">sqrt(3)</span> <span class="mono">3/2</span> <span class="mono">30°</span></p>'+
+    '<p>5 niveaux · 6 missions + 1 à très haut risque par niveau (la sonde change de plan et de repère complexe) · 3 cœurs. Le bandeau en bas à gauche affiche z en permanence sous ses trois écritures (algébrique, trigonométrique, exponentielle).</p>',
+    [{label:'Commencer l\u2019expédition',primary:true,cb:()=>{hideModal();sfxClick();showLevelIntro();}}]
+  );
+}
+
+/* ================================================================
+   13. CONTRÔLES CAMÉRA & BOUTONS
+================================================================ */
+let drag=null;
+canvas.addEventListener('pointerdown',e=>{
+  drag={x:e.clientX,y:e.clientY,moved:0};
+  try{canvas.setPointerCapture(e.pointerId);}catch(err){}
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  drag.moved+=Math.abs(dx)+Math.abs(dy);
+  drag.x=e.clientX;drag.y=e.clientY;
+  cam.yaw-=dx*0.005;
+  cam.pitch=clamp(cam.pitch+dy*0.005,0.2,1.5);
+});
+canvas.addEventListener('pointerup',()=>{drag=null;});
+canvas.addEventListener('pointercancel',()=>{drag=null;});
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  cam.dist=clamp(cam.dist*Math.exp(e.deltaY*0.0012),6,45);
+},{passive:false});
+canvas.addEventListener('dblclick',()=>{Object.assign(cam,CAM_DEF);});
+$('#btnView').onclick=()=>{Object.assign(cam,CAM_DEF);sfxClick();};
+$('#btnFiche').onclick=()=>{
+  const L=LEVELS[G.level];
+  showModal('<h2>📘 Fiche — '+L.name+'</h2><div class="fichebox">'+L.fiche.map(f=>'<div class="fline">'+T(f)+'</div>').join('')+'</div>',
+    [{label:'Fermer',primary:true,cb:hideModal}]);
+  sfxClick();
+};
+$('#btnSound').onclick=()=>{muted=!muted;$('#btnSound').textContent=muted?'🔇':'🔊';if(!muted)sfxClick();};
+
+/* ================================================================
+   14. MATHJAX 3 (amélioration progressive si le CDN est joignable)
+================================================================ */
+(function(){
+  try{
+    window.MathJax={
+      tex:{inlineMath:[['\\(','\\)']]},
+      startup:{typeset:false}
+    };
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+    s.async=true;
+    s.onerror=function(){};
+    s.onload=function(){
+      const up=()=>{window.__mjReady=true;mjUpgrade(document.body);};
+      if(window.MathJax&&window.MathJax.startup&&window.MathJax.startup.promise){
+        window.MathJax.startup.promise.then(up);
+      }else{setTimeout(up,300);}
+    };
+    document.head.appendChild(s);
+  }catch(e){}
+})();
+
+/* ================================================================
+   15. DÉMARRAGE
+================================================================ */
+updateHeader();
+$('#btnLegal').onclick=showLegal;
+showStartModal();
+</script>
+</body>
+</html>

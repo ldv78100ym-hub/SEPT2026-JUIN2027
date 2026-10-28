@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chasse au trésor — Arithmétique · Parcours approfondis</title>
+<style>
+  :root{
+    --bg:#f3ede1; --panel:#fffdf8; --ink:#22303a; --muted:#6b7b88;
+    --line:#e3dccd; --accent:#b0353f; --gold:#c9962b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:"Segoe UI",Roboto,system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink); overflow:hidden;}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header#topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:8px 16px; background:linear-gradient(180deg,#fffdf8,#f7f1e4);
+    border-bottom:2px solid var(--line); box-shadow:0 2px 10px rgba(120,100,70,.10); z-index:5;}
+  header#topbar h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+  header#topbar h1 small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+  .gauges{display:flex;gap:14px;align-items:center;flex:1;min-width:200px}
+  .gauge{min-width:150px}
+  .gauge .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between}
+  .bar{height:8px;border-radius:6px;background:#e7dfd0;overflow:hidden;margin-top:3px}
+  .bar>i{display:block;height:100%;width:0%;border-radius:6px;transition:width .35s ease}
+  .bar.sky>i{background:linear-gradient(90deg,#7fb6e0,#2b7fd4)}
+  .bar.chest>i{background:linear-gradient(90deg,#e8c25a,#c9962b)}
+  .tools{display:flex;gap:6px;flex-wrap:wrap}
+  button{font-family:inherit;font-size:12px;font-weight:600;color:var(--ink);
+    background:#fffdf8;border:1.5px solid var(--line);border-radius:9px;
+    padding:6px 11px;cursor:pointer;transition:.15s;}
+  button:hover{background:#f2ebdc;border-color:#cfc4ad;transform:translateY(-1px)}
+  main{flex:1;display:flex;min-height:0}
+  #stage{position:relative;flex:1;min-width:0;background:#dceaf5}
+  canvas#cv{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+  canvas#cv:active{cursor:grabbing}
+  #legend{position:absolute;left:12px;bottom:12px;background:rgba(255,253,248,.95);
+    border:1.5px solid var(--line);border-radius:12px;padding:10px 13px;font-size:11.5px;
+    line-height:1.55;box-shadow:0 4px 16px rgba(100,85,60,.14);max-width:300px;backdrop-filter:blur(3px);}
+  #legend b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:5px}
+  #legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:middle}
+  #hint{position:absolute;right:12px;top:12px;background:rgba(255,253,248,.93);
+    border:1.5px solid var(--line);border-radius:12px;padding:7px 12px;font-size:11.5px;
+    color:var(--muted);box-shadow:0 4px 16px rgba(100,85,60,.14);}
+  #banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);
+    background:linear-gradient(90deg,#fff3cf,#ffe9a8);border:2px solid var(--gold);
+    border-radius:12px;padding:8px 18px;font-size:13px;font-weight:700;color:#7a5a10;
+    box-shadow:0 6px 22px rgba(201,150,43,.35);display:none;}
+  aside#panel{width:340px;min-width:260px;max-width:40vw;background:var(--panel);
+    border-left:2px solid var(--line);overflow-y:auto;padding:16px 18px 40px;
+    box-shadow:-4px 0 18px rgba(120,100,70,.07);}
+  aside#panel::-webkit-scrollbar{width:9px}
+  aside#panel::-webkit-scrollbar-thumb{background:#ddd3bf;border-radius:6px}
+  .ph h2{margin:0 0 3px;font-size:17px;line-height:1.25}
+  .ph .sub{margin:0;color:var(--muted);font-size:11.5px}
+  .theme-title{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;
+    color:var(--muted);display:flex;align-items:center;gap:8px;margin:18px 0 8px;}
+  .theme-title i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .notion-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+    background:#fff;border:1.5px solid var(--line);border-radius:9px;
+    padding:8px 10px;margin-bottom:6px;font-size:12.3px;font-weight:500;line-height:1.3;
+    cursor:pointer;transition:.13s;}
+  .notion-row:hover{border-color:#c9bda4;background:#fbf6ea;transform:translateX(2px)}
+  .dots{display:flex;gap:3px;flex-shrink:0}
+  .dots i{width:8px;height:8px;border-radius:50%;background:#e2dacb;display:block}
+  .dots i.on.sky{background:#2b7fd4}
+  .dots i.on.gr{background:#5aa348}
+  .dots i.on.cv{background:#9a6bc4}
+  .mini-note{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.55}
+  .modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center}
+  .modal.open{display:flex;animation:fadeModal .22s ease}
+  @keyframes fadeModal{from{opacity:0}to{opacity:1}}
+  .modal-backdrop{position:absolute;inset:0;background:rgba(30,25,15,.55);backdrop-filter:blur(3px)}
+  .modal-panel{position:relative; width:min(1180px,95vw); height:min(820px,93vh);
+    background:var(--panel); border-radius:18px; overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.40); border:2px solid var(--line);
+    display:flex; flex-direction:column; animation:popModal .26s cubic-bezier(.2,.9,.3,1.2);}
+  @keyframes popModal{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-close{position:absolute;top:10px;right:12px;z-index:20;
+    width:38px;height:38px;border-radius:50%;font-size:22px;line-height:1;
+    background:#fff;border:1.5px solid var(--line);cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .modal-close:hover{background:#f2ebdc}
+  .modal-header{padding:14px 60px 12px 22px;border-bottom:1.5px solid var(--line);
+    background:linear-gradient(180deg,#fffdf8,#f7f1e4);}
+  .modal-header .badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;padding:3px 9px;border-radius:20px;color:#fff;margin-bottom:6px;}
+  .modal-header h2{margin:0;font-size:18px;line-height:1.25}
+  .modal-header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+  .modal-body{flex:1;display:flex;min-height:0}
+  .modal-canvas-wrap{flex:1;position:relative;background:#dceaf5;min-width:0}
+  canvas#miniCv{display:block;width:100%;height:100%}
+  .mini-hint{position:absolute;left:10px;bottom:10px;
+    background:rgba(255,253,248,.92);border:1px solid var(--line);
+    border-radius:8px;padding:5px 10px;font-size:11px;color:var(--muted);pointer-events:none;}
+  .mini-title{position:absolute;left:10px;top:10px;
+    background:rgba(255,253,248,.92);border:1px solid var(--line);
+    border-radius:8px;padding:5px 10px;font-size:11px;color:var(--muted);pointer-events:none;}
+  .modal-info{width:440px;max-width:46%;border-left:1.5px solid var(--line);
+    overflow-y:auto;padding:16px 18px;background:#fffdf8;}
+  .modal-info::-webkit-scrollbar{width:9px}
+  .modal-info::-webkit-scrollbar-thumb{background:#ddd3bf;border-radius:6px}
+  .modal-info-empty{color:var(--muted);font-size:13px;line-height:1.7;text-align:center;padding:50px 14px}
+  .modal-info-empty b{color:var(--ink)}
+  .step-badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;padding:3px 9px;border-radius:20px;color:#fff;margin-bottom:8px;}
+  .step-title{font-size:17px;font-weight:700;margin:0 0 12px;line-height:1.3}
+  .step-progress{font-size:11px;color:var(--muted);margin-bottom:14px}
+  .card{background:#fff;border:1.5px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:11px;box-shadow:0 2px 8px rgba(120,100,70,.05);}
+  .card h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.9px;
+    color:var(--accent);display:flex;align-items:center;gap:6px;}
+  .card.c2 h4{color:#3d8b3d}
+  .card.c3 h4{color:#8a53b8}
+  .card.c4 h4{color:#8a6a10}
+  .card p{margin:0;font-size:13px;line-height:1.62}
+  .card .ex{background:#f7f9f4;border-left:3px solid #9ec98a;padding:8px 10px;
+    border-radius:0 8px 8px 0;margin-top:7px;font-size:12.6px;line-height:1.55;}
+  .reveal{margin-top:8px;font-size:12.5px;background:#fffbe9;border:1.5px dashed #e2c56a;
+    border-radius:9px;padding:9px 11px;display:none;line-height:1.55;}
+  .reveal.show{display:block;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .reveal-btn{font-size:12px;margin-top:9px}
+  .step-nav{display:flex;gap:8px;margin-top:14px}
+  .step-nav button{flex:1;padding:9px 8px;font-size:12px}
+  .step-nav button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .done-tag{display:inline-block;background:#eaf7e6;color:#2f7d2f;border:1px solid #b8e0ab;
+    border-radius:20px;font-size:10.5px;font-weight:700;padding:2px 9px;margin-left:6px;}
+  .step-dots{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle}
+  .step-dots i{width:7px;height:7px;border-radius:50%;background:#e2dacb;display:block}
+  .step-dots i.on{background:currentColor}
+  @media (max-width:900px){
+    main{flex-direction:column}
+    aside#panel{width:100%;max-width:none;height:40%;border-left:none;border-top:2px solid var(--line)}
+    #stage{height:60%}
+    .modal-body{flex-direction:column}
+    .modal-info{width:100%;max-width:none;height:46%;border-left:none;border-top:1.5px solid var(--line)}
+    .modal-panel{width:96vw;height:94vh}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <h1>Chasse au trésor — Arithmétique
+      <small>8 notions · 3 parcours par notion · 3 étapes par parcours · 72 fiches détaillées</small>
+    </h1>
+    <div class="gauges">
+      <div class="gauge">
+        <div class="lab"><span>Étapes explorées</span><span id="fragTxt">0 / 72</span></div>
+        <div class="bar sky"><i id="fragBar"></i></div>
+      </div>
+      <div class="gauge">
+        <div class="lab"><span>Coffres ouverts</span><span id="chestTxt">0 / 8</span></div>
+        <div class="bar chest"><i id="chestBar"></i></div>
+      </div>
+    </div>
+    <div class="tools">
+      <button id="btnReset">Recentrer</button>
+      <button id="btnAll">Vue d'ensemble</button>
+      <button id="btnResetProg">Effacer la progression</button>
+    </div>
+  </header>
+  <main>
+    <div id="stage">
+      <canvas id="cv"></canvas>
+      <div id="banner">Tous les coffres sont ouverts !</div>
+      <div id="hint">Survolez un repère : sa mini-carte s'ouvre · Glisser : tourner · Molette : zoomer</div>
+      <div id="legend">
+        <b>La carte mère</b>
+        <span class="sw" style="background:#b0353f"></span>Un repère par notion d'arithmétique<br>
+        <b style="margin-top:6px">Dans la mini-carte (9 repères)</b>
+        <span class="sw" style="background:#2b7fd4"></span>Parcours Découverte (ciel)<br>
+        <span class="sw" style="background:#5aa348"></span>Parcours Enracinement (sol)<br>
+        <span class="sw" style="background:#9a6bc4"></span>Parcours Reprise (grotte)
+      </div>
+    </div>
+    <aside id="panel"></aside>
+  </main>
+</div>
+
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal-panel" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modalClose" aria-label="Fermer">×</button>
+    <div class="modal-header">
+      <span class="badge" id="modalBadge" style="background:#b0353f">Arithmétique</span>
+      <h2 id="modalTitle">Notion</h2>
+      <p id="modalSubtitle">Mini-carte · 3 parcours de 3 étapes</p>
+    </div>
+    <div class="modal-body">
+      <div class="modal-canvas-wrap">
+        <div class="mini-title" id="miniTitle">Mini-carte</div>
+        <canvas id="miniCv"></canvas>
+        <div class="mini-hint">Cliquez sur un des 9 repères pour afficher son étape · Glisser pour tourner</div>
+      </div>
+      <div class="modal-info" id="modalInfo">
+        <div class="modal-info-empty">
+          <b>Sélectionnez un repère</b><br>
+          dans la mini-carte pour découvrir<br>
+          la méthode, un exemple guidé<br>
+          et un exercice corrigé.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   1. DONNÉES — 8 notions × 3 parcours × 3 étapes = 72 fiches détaillées
+   ========================================================================= */
+const NOTIONS = [
+{id:'E1', nom:"Divisibilité dans ℤ", steps:{
+ d:[
+  {title:"1.1 — Lire la définition", method:"a | b signifie : il existe un entier k tel que b = k·a. C'est une relation entre deux entiers, pas une division au sens de la calculatrice. On lit « a divise b » ou « a est un diviseur de b ».", ex:"7 | 42 car 42 = 6·7 avec k = 6. En revanche 5 ∤ 12 car aucun entier k ne vérifie 5k = 12.", q:"Montrer que 13 | 1001.", r:"1001 = 13 × 77, donc k = 77 convient.", tip:"Ne pas confondre « a divise b » (a | b) avec « a est divisible par b » (b | a). L'ordre est crucial."},
+  {title:"1.2 — Réflexivité et transitivité", method:"Propriétés immédiates : a | a (réflexivité). Si a | b et b | c, alors a | c (transitivité). Ces deux propriétés font de la divisibilité un préordre sur ℤ.", ex:"2 | 6 et 6 | 18, donc 2 | 18. Démonstration : 6 = 3·2 et 18 = 3·6 = 3·(3·2) = 9·2.", q:"Sachant que 4 | 12 et 12 | 144, montrer que 4 | 144.", r:"12 = 3·4 et 144 = 12·12 = 12·(3·4) = 36·4.", tip:"La transitivité est l'outil de base pour enchaîner les divisibilités dans les démonstrations."},
+  {title:"1.3 — Antisymétrie à ±1 près", method:"Si a | b et b | a, alors |a| = |b|. En effet, b = ka et a = lb, donc a = kl·a, d'où kl = 1 (si a ≠ 0), donc k = l = ±1. Sur les entiers naturels, c'est une relation d'ordre partiel.", ex:"Si 6 | n et n | 6, alors n = ±6.", q:"Si a | 12 et 12 | a, que vaut a ?", r:"a ∈ {−12, 12} car |a| = 12.", tip:"Cette propriété caractérise les éléments associés (a et −a)."}
+ ],
+ e:[
+  {title:"1.e1 — Combinaisons linéaires", method:"Si d | a et d | b, alors pour tous u, v ∈ ℤ, d | (au + bv). C'est la stabilité de l'ensemble des multiples de d par combinaison linéaire.", ex:"3 | 12 et 3 | 18, donc 3 | (5·12 − 7·18). Vérifions : 5·12 − 7·18 = 60 − 126 = −66 = 3·(−22).", q:"Montrer que si d | n et d | n+1, alors d = ±1.", r:"d | ((n+1) − n) = 1, donc d = ±1.", tip:"C'est le lemme-clé pour montrer que deux entiers consécutifs sont premiers entre eux."},
+  {title:"1.e2 — Le lemme de Gauss dans ℤ", method:"Si a | bc et si pgcd(a,b) = 1, alors a | c. Ce n'est pas une propriété de divisibilité pure mais une conséquence du théorème de Bézout.", ex:"6 | 35k et pgcd(6,35) = 1 ⟹ 6 | k.", q:"Si 9 | 5n, que peut-on dire de n ?", r:"pgcd(9,5) = 1, donc 9 | n.", tip:"La coprimalité est essentielle ; sans elle le lemme est faux (4 | 6·2 mais 4 ∤ 6)."},
+  {title:"1.e3 — Divisibilité et signe", method:"a | b ⟺ −a | b ⟺ a | −b ⟺ |a| | |b|. La divisibilité ne dépend que de la valeur absolue. Le quotient, lui, dépend du signe.", ex:"−6 | 42 (car 42 = (−7)·(−6)) et 6 | −42.", q:"Montrer que a | b ⟺ |a| | |b|.", r:"Si b = ka, alors |b| = |k|·|a|, donc |a| | |b|. Réciproquement si |b| = K·|a|, alors b = ±K·a.", tip:"En pratique, on travaille souvent avec des entiers naturels et on gère le signe à la fin."}
+ ],
+ r:[
+  {title:"1.r1 — ℤ comme anneau euclidien", method:"ℤ est un anneau intègre euclidien. Ses idéaux sont exactement les nℤ. L'idéal engendré par a et b, noté (a,b), est égal à pgcd(a,b)·ℤ (théorème de Bézout).", ex:"L'idéal (12, 18) = {12u + 18v} = 6ℤ, car pgcd(12,18) = 6.", q:"Décrire l'idéal engendré par 4 et 6.", r:"pgcd(4,6) = 2, donc l'idéal est 2ℤ.", tip:"Cette structure explique l'existence des coefficients de Bézout : le pgcd « engendre » tout l'idéal."},
+  {title:"1.r2 — Divisibilité dans d'autres anneaux", method:"La divisibilité se généralise à ℤ[i] (entiers de Gauss) et à K[X] (polynômes). Dans K[X], la division euclidienne existe et le pgcd est défini via l'algorithme d'Euclide.", ex:"Dans ℝ[X], X − 1 divise Xⁿ − 1 (évaluation en 1 nulle).", q:"Montrer que X − a divise P(X) ssi P(a) = 0.", r:"Division euclidienne : P = (X−a)Q + r avec r constant. En évaluant en a : P(a) = r, donc P(a) = 0 ⟺ r = 0.", tip:"Toute l'arithmétique de ℤ se transpose à K[X]."},
+  {title:"1.r3 — Critères de divisibilité en base 10", method:"En base 10, n ≡ somme des chiffres [9] et [3], n ≡ somme alternée des chiffres [11]. Ces critères viennent de 10 ≡ 1 [9] et 10 ≡ −1 [11].", ex:"2027 : somme des chiffres = 11, donc 2027 ≡ 2 [9] ; 2027 n'est pas divisible par 9.", q:"2027 est-il divisible par 11 ?", r:"Somme alternée : 7 − 2 + 0 − 2 = 3, non divisible par 11. Non.", tip:"Le critère par 7 est plus délicat ; on utilise 1000 ≡ −1 [7]."}
+ ]}},
+
+{id:'E2', nom:"Division euclidienne, congruences, compatibilité", steps:{
+ d:[
+  {title:"2.1 — Division euclidienne", method:"Pour tout a ∈ ℤ et b > 0, il existe un unique couple (q, r) avec a = bq + r et 0 ≤ r < b. q est le quotient, r le reste.", ex:"17 = 5·3 + 2, q = 3, r = 2.", q:"Effectuer la division euclidienne de 2027 par 7.", r:"2027 = 7·289 + 4, q = 289, r = 4.", tip:"Pour a négatif : −17 = 5·(−4) + 3 (r = 3, pas −2)."},
+  {title:"2.2 — Congruence", method:"a ≡ b [n] ⟺ n | (a − b) ⟺ a et b ont le même reste modulo n. La congruence est une relation d'équivalence compatible avec + et ×.", ex:"17 ≡ 2 [5] car 17 − 2 = 15 = 3·5.", q:"Montrer que 2027 ≡ 4 [7].", r:"2027 = 7·289 + 4.", tip:"Toujours ramener le reste dans [0, n−1]."},
+  {title:"2.3 — Compatibilité avec + et ×", method:"Si a ≡ a′ [n] et b ≡ b′ [n], alors a + b ≡ a′ + b′ [n], a − b ≡ a′ − b′ [n], a·b ≡ a′·b′ [n]. On ne peut PAS diviser en général.", ex:"3 ≡ 10 [7] et 5 ≡ 12 [7], donc 3·5 = 15 ≡ 60 = 10·12 [7].", q:"Calculer 17·23 mod 5.", r:"17 ≡ 2 et 23 ≡ 3, donc 17·23 ≡ 2·3 = 6 ≡ 1 [5].", tip:"La division demande une coprimalité avec le module."}
+ ],
+ e:[
+  {title:"2.e1 — Réduction des puissances", method:"Pour calculer aⁿ [p], on cherche l'ordre de a modulo p : le plus petit k > 0 tel que a^k ≡ 1 [p]. On réduit alors n modulo k.", ex:"3¹⁰⁰ [7] : 3⁶ ≡ 1, 100 = 6·16 + 4, donc 3¹⁰⁰ ≡ 3⁴ = 81 ≡ 4 [7].", q:"Calculer 2¹⁰⁰ mod 5.", r:"2⁴ ≡ 1, 100 = 4·25, donc 2¹⁰⁰ ≡ 1 [5].", tip:"Le petit théorème de Fermat donne k = p−1 pour p premier."},
+  {title:"2.e2 — Chiffres et congruences", method:"Le dernier chiffre d'un nombre n s'obtient par n mod 10. Les deux derniers par n mod 100. On combine avec les puissances.", ex:"Dernier chiffre de 3²⁰²⁷ : 3⁴ ≡ 1 [10], 2027 = 4·506 + 3, donc 3²⁰²⁷ ≡ 3³ = 27 ≡ 7 [10].", q:"Dernier chiffre de 7²⁰²⁷ ?", r:"7⁴ ≡ 1 [10], 2027 = 4·506 + 3, donc ≡ 7³ = 343 ≡ 3.", tip:"On peut aussi utiliser le cycle 7, 9, 3, 1 modulo 10."},
+  {title:"2.e3 — Inversibilité modulaire", method:"a est inversible mod n ssi pgcd(a,n) = 1. L'inverse se calcule par Bézout (ou Euclide étendu).", ex:"3 inversible mod 7 : 3·5 = 15 ≡ 1, donc 3⁻¹ ≡ 5.", q:"Inverse de 5 modulo 7 ?", r:"5·3 = 15 ≡ 1, donc 5⁻¹ ≡ 3.", tip:"Si pgcd ≠ 1, il n'y a pas d'inverse (ex : 2 mod 4)."}
+ ],
+ r:[
+  {title:"2.r1 — ℤ/nℤ comme anneau", method:"ℤ/nℤ est un anneau commutatif. C'est un corps ssi n est premier. Ses inversibles sont les classes premières avec n (indicatrice d'Euler φ(n)).", ex:"ℤ/7ℤ est un corps (7 premier), ℤ/8ℤ n'en est pas un (8 = 2³).", q:"Combien y a-t-il d'inversibles mod 12 ?", r:"φ(12) = 12·(1/2)·(2/3) = 4 : les classes 1, 5, 7, 11.", tip:"L'indicatrice d'Euler φ(n) compte les inversibles mod n."},
+  {title:"2.r2 — Théorème chinois", method:"Si m et n sont premiers entre eux, le système x ≡ a [m], x ≡ b [n] a une unique solution modulo mn.", ex:"x ≡ 2 [3], x ≡ 3 [5] ⟹ x ≡ 8 [15].", q:"Résoudre x ≡ 1 [4], x ≡ 2 [9].", r:"x ≡ 29 [36].", tip:"On reconstruit x = a + m·k, en ajustant k pour satisfaire la seconde congruence."},
+  {title:"2.r3 — RSA (esquisse)", method:"RSA : on choisit n = pq (p, q premiers), e premier avec φ(n), d ≡ e⁻¹ [φ(n)]. Chiffrement c = m^e mod n, déchiffrement m = c^d mod n.", ex:"p=3, q=11, n=33, φ=20, e=3, d=7 (3·7=21≡1 [20]). Chiffrer m=4 : c = 4³ mod 33 = 64 ≡ 31. Déchiffrer : 31⁷ mod 33 = 4.", q:"Pourquoi d existe-t-il ?", r:"Parce que pgcd(e, φ(n)) = 1, donc e est inversible mod φ(n) (Bézout).", tip:"La sécurité repose sur la difficulté à factoriser n = pq."}
+ ]}},
+
+{id:'E3', nom:"PGCD, algorithme d'Euclide", steps:{
+ d:[
+  {title:"3.1 — Définition du PGCD", method:"Le pgcd de a et b (non tous nuls) est le plus grand entier qui divise à la fois a et b. On le note pgcd(a,b) ou a ∧ b.", ex:"Diviseurs de 48 : 1,2,3,4,6,8,12,16,24,48. Diviseurs de 18 : 1,2,3,6,9,18. PGCD = 6.", q:"PGCD de 24 et 36 ?", r:"12.", tip:"pgcd(0, n) = |n| par convention."},
+  {title:"3.2 — Algorithme d'Euclide", method:"Si b ≠ 0, pgcd(a, b) = pgcd(b, a mod b). On itère jusqu'à b = 0, où le pgcd est le dernier reste non nul.", ex:"pgcd(48, 18) : 48 = 2·18 + 12 ; 18 = 1·12 + 6 ; 12 = 2·6 + 0. PGCD = 6.", q:"Calculer pgcd(1071, 462).", r:"1071 = 2·462 + 147 ; 462 = 3·147 + 21 ; 147 = 7·21. PGCD = 21.", tip:"L'algorithme est très rapide : complexité O(log min(a,b))."},
+  {title:"3.3 — Propriétés élémentaires", method:"pgcd(a, b) = pgcd(b, a) = pgcd(|a|, |b|). pgcd(a, 0) = |a|. pgcd(ka, kb) = k·pgcd(a, b) pour k > 0.", ex:"pgcd(24, 36) = 12, pgcd(48, 72) = 24 = 2·12.", q:"pgcd(100, 150) ?", r:"pgcd(100, 150) = 50·pgcd(2, 3) = 50.", tip:"Utile pour simplifier les fractions."}
+ ],
+ e:[
+  {title:"3.e1 — PGCD et combinaisons", method:"Le pgcd d de a et b est le plus petit entier > 0 de la forme au + bv. C'est le générateur de l'idéal (a, b).", ex:"pgcd(12, 18) = 6 = 12·(−1) + 18·1.", q:"Exprimer pgcd(21, 15) sous forme 21u + 15v.", r:"3 = 3·15 − 2·21.", tip:"C'est la base du théorème de Bézout."},
+  {title:"3.e2 — Euclide étendu", method:"On remonte les divisions : chaque reste s'exprime comme combinaison linéaire des deux nombres de départ.", ex:"pgcd(21, 15) : 21 = 15 + 6 ; 15 = 2·6 + 3, donc 3 = 15 − 2·6 = 15 − 2·(21 − 15) = 3·15 − 2·21.", q:"pgcd(38, 26) sous forme combinaison.", r:"38 = 26 + 12 ; 26 = 2·12 + 2. Donc 2 = 26 − 2·12 = 26 − 2·(38 − 26) = 3·26 − 2·38.", tip:"Vérifier toujours le résultat en recalculant."},
+  {title:"3.e3 — Algorithme de Stein (binaire)", method:"Alternative sans division : utilise les propriétés pgcd(a, b) = pgcd(a−b, b) et la factorisation par 2. Utile en informatique.", ex:"pgcd(48, 18) : 48−18=30, 30−18=12, 18−12=6, 12−6=6, pgcd=6.", q:"Appliquer à pgcd(20, 12).", r:"20−12=8, 12−8=4, 8−4=4. PGCD=4.", tip:"Soustractions répétées = version naïve ; la version binaire utilise les décalages."}
+ ],
+ r:[
+  {title:"3.r1 — PGCD et fractions irréductibles", method:"La fraction a/b est irréductible ssi pgcd(a,b) = 1. Pour simplifier : diviser par pgcd.", ex:"1071/462 : pgcd = 21, donc 51/22.", q:"Simplifier 1071/462.", r:"51/22.", tip:"Vérifier que le numérateur et le dénominateur simplifiés sont premiers entre eux."},
+  {title:"3.r2 — PGCD dans d'autres anneaux", method:"PGCD dans K[X] via Euclide (avec normalisation unitaire). PGCD dans ℤ[i] : entiers de Gauss. Anneaux euclidiens = anneaux où le pgcd existe.", ex:"pgcd(X²−1, X−1) = X−1 dans ℝ[X].", q:"pgcd(X³−1, X²−1) ?", r:"pgcd = X−1.", tip:"Un anneau où tout idéal est principal est dit principal ; les euclidiens le sont."},
+  {title:"3.r3 — Équations diophantiennes", method:"L'équation ax + by = c a des solutions ssi pgcd(a,b) | c. On trouve une solution particulière via Bézout, puis on ajoute la solution générale de l'équation homogène.", ex:"5x + 3y = 1 : pgcd(5,3) = 1, donc solutions. Solution : x=2, y=−3. Général : x = 2+3k, y = −3−5k.", q:"Résoudre 7x + 5y = 1.", r:"Solution particulière : x=3, y=−4. Général : x = 3+5k, y = −4−7k.", tip:"Vérifier en remplaçant dans l'équation d'origine."}
+ ]}},
+
+{id:'E4', nom:"Couples d'entiers premiers entre eux", steps:{
+ d:[
+  {title:"4.1 — Définition", method:"a et b sont premiers entre eux (ou copremiers) si pgcd(a,b) = 1. Cela signifie qu'ils n'ont aucun diviseur commun autre que 1.", ex:"pgcd(35, 12) = 1 : 12 et 35 sont premiers entre eux. En revanche pgcd(35, 14) = 7.", q:"9 et 16 sont-ils premiers entre eux ?", r:"Oui, pgcd(9,16) = 1.", tip:"Deux nombres consécutifs sont toujours premiers entre eux."},
+  {title:"4.2 — Bézout pour la coprimalité", method:"a et b sont premiers entre eux ssi il existe u, v ∈ ℤ tels que au + bv = 1.", ex:"3 et 7 : 3·5 − 7·2 = 1.", q:"Montrer que 17 et 10 sont premiers entre eux.", r:"17·3 − 10·5 = 51 − 50 = 1.", tip:"C'est souvent la façon la plus rapide de prouver la coprimalité."},
+  {title:"4.3 — Stabilité de la coprimalité", method:"Si pgcd(a,b) = 1 et pgcd(a,c) = 1, alors pgcd(a, bc) = 1. Si pgcd(a,b) = 1 et pgcd(a,c) = 1, alors pgcd(a, b+c) n'est pas nécessairement 1 (ex : a=3, b=2, c=4).", ex:"pgcd(6, 35) = 1 et pgcd(6, 77) = 1 ⟹ pgcd(6, 35·77) = 1.", q:"Montrer que si pgcd(a,b) = 1 alors pgcd(a+b, a) = 1.", r:"Tout diviseur commun d de a+b et a divise (a+b)−a = b, donc d | pgcd(a,b) = 1.", tip:"Ces propriétés permettent de « propager » la coprimalité."}
+ ],
+ e:[
+  {title:"4.e1 — Lemme d'Euclide", method:"Si p est premier et p | ab, alors p | a ou p | b. C'est une conséquence de Gauss. S'étend par récurrence : si p | a₁a₂…aₙ, p divise l'un des aᵢ.", ex:"7 | 3·14 = 42, et 7 | 14.", q:"p premier, p | a². Montrer p | a.", r:"p | a·a, donc p | a.", tip:"Faux si p n'est pas premier : 6 | 2·3 mais 6 ∤ 2 et 6 ∤ 3."},
+  {title:"4.e2 — Théorème de Gauss", method:"Si a | bc et pgcd(a,b) = 1, alors a | c.", ex:"6 | 35k et pgcd(6,35)=1 ⟹ 6 | k.", q:"Si 9 | 5n, montrer 9 | n.", r:"pgcd(9,5) = 1, donc par Gauss 9 | n.", tip:"C'est le théorème clé pour simplifier les congruences."},
+  {title:"4.e3 — Couples remarquables", method:"n et n+1 sont toujours premiers entre eux. Plus généralement, pgcd(n, n+k) | k. Donc si k = 1, pgcd = 1.", ex:"pgcd(2026, 2027) = 1.", q:"PGCD de n et n+2 ?", r:"pgcd(n, n+2) divise 2, donc vaut 1 ou 2 selon la parité de n.", tip:"Généralisation : pgcd(n, n+k) | k."}
+ ],
+ r:[
+  {title:"4.r1 — Théorème chinois", method:"Si m₁, …, mₖ sont deux à deux premiers entre eux, le système x ≡ aᵢ [mᵢ] a une unique solution modulo M = m₁·…·mₖ.", ex:"x ≡ 2 [3], x ≡ 3 [5], x ≡ 2 [7] ⟹ x ≡ 23 [105].", q:"Résoudre x ≡ 1 [3], x ≡ 2 [5].", r:"x ≡ 7 [15].", tip:"La preuve par récurrence utilise Bézout pour chaque paire."},
+  {title:"4.r2 — Éléments nilpotents", method:"Dans ℤ/nℤ, un élément a est nilpotent s'il existe k avec a^k ≡ 0 [n]. C'est équivalent à : tous les facteurs premiers de n divisent a.", ex:"Dans ℤ/8ℤ, 2² = 4, 2³ = 0, donc 2 est nilpotent.", q:"3 est-il nilpotent mod 12 ?", r:"Non, car pgcd(3, 12) = 3, mais 4 ∤ 3^k, donc 3^k n'est jamais divisible par 12.", tip:"Les inversibles et les nilpotents sont « opposés » dans ℤ/nℤ."},
+  {title:"4.r3 — Fractions continues", method:"Le développement en fraction continue d'un rationnel a/b utilise l'algorithme d'Euclide. Les convergentes fournissent les meilleures approximations rationnelles.", ex:"1071/462 : 1071 = 2·462 + 147 ; 462 = 3·147 + 21 ; 147 = 7·21. Fraction continue : [2; 3, 7].", q:"Développer 355/113 en fraction continue.", r:"[3; 7, 16] (car 355 = 3·113 + 16, 113 = 7·16 + 1, 16 = 16·1).", tip:"π ≈ 355/113 est une excellente approximation."}
+ ]}},
+
+{id:'E5', nom:"Théorème de Bézout", steps:{
+ d:[
+  {title:"5.1 — Énoncé", method:"pgcd(a,b) = d ssi il existe u, v ∈ ℤ tels que au + bv = d. Cas particulier : pgcd = 1 ssi ∃u,v, au + bv = 1.", ex:"pgcd(12,18) = 6 = 12·(−1) + 18·1.", q:"Trouver u, v pour 7u + 5v = 1.", r:"u = 3, v = −4 (21 − 20 = 1).", tip:"Les coefficients ne sont pas uniques : u + 5k et v − 7k conviennent aussi."},
+  {title:"5.2 — Conséquences immédiates", method:"Le pgcd divise toute combinaison linéaire. Réciproquement, toute combinaison linéaire de a et b est multiple de pgcd(a,b).", ex:"pgcd(12,18) = 6, donc 12u + 18v est toujours multiple de 6.", q:"Pourquoi 7x + 11y = 4 a-t-il des solutions ?", r:"pgcd(7,11) = 1 | 4, donc oui (Bézout).", tip:"C'est la condition nécessaire et suffisante pour une équation diophantienne."},
+  {title:"5.3 — Équations diophantiennes", method:"ax + by = c a des solutions ssi pgcd(a,b) | c. Dans ce cas, on trouve une solution particulière (Bézout) et on ajoute la solution générale de ax + by = 0.", ex:"5x + 3y = 1 : solution particulière (2, −3). Homogène : 5x + 3y = 0 ⟹ x = 3k, y = −5k. Général : x = 2+3k, y = −3−5k.", q:"Résoudre 7x + 5y = 1.", r:"x = 3+5k, y = −4−7k.", tip:"Toujours vérifier que la solution générale redonne bien l'équation."}
+ ],
+ e:[
+  {title:"5.e1 — Euclide étendu en pratique", method:"On empile les divisions, puis on remonte en exprimant chaque reste comme combinaison linéaire de a et b.", ex:"pgcd(38, 26) : 38 = 26+12, 26 = 2·12+2. Donc 2 = 26−2·12 = 26−2·(38−26) = 3·26−2·38.", q:"pgcd(45, 27) en combinaison.", r:"45 = 1·27 + 18 ; 27 = 1·18 + 9. Donc 9 = 27 − 18 = 27 − (45 − 27) = 2·27 − 45.", tip:"Astuce : commencer par les plus petites divisions."},
+  {title:"5.e2 — Algorithme matriciel", method:"On peut calculer (u,v) en parallèle via des matrices 2×2 : à chaque étape, on applique [[0,1],[1,−q]].", ex:"Pas nécessaire de détailler ici.", q:"Pourquoi cette méthode est-elle utile ?", r:"Elle se programme facilement et évite de stocker toutes les divisions.", tip:"Voir TP Python."},
+  {title:"5.e3 — Inverse modulaire", method:"a⁻¹ mod n : si pgcd(a,n) = 1, Bézout donne au + nv = 1, donc u ≡ a⁻¹ [n].", ex:"3⁻¹ mod 7 : 3·5 − 7·2 = 1, donc 3⁻¹ ≡ 5.", q:"5⁻¹ mod 11 ?", r:"5·9 = 45 ≡ 1 [11], donc 5⁻¹ ≡ 9.", tip:"Vérifier toujours en multipliant."}
+ ],
+ r:[
+  {title:"5.r1 — Bézout dans d'autres anneaux", method:"Dans un anneau principal (ℤ, K[X]), tout idéal de type fini est principal. Le pgcd de plusieurs éléments est le générateur de l'idéal qu'ils engendrent.", ex:"Dans ℝ[X], pgcd(X²−1, X³−1) = X−1.", q:"pgcd(X³−X, X²−X) dans ℝ[X] ?", r:"X³−X = X(X−1)(X+1), X²−X = X(X−1). PGCD = X(X−1).", tip:"Toujours factoriser avant de calculer un pgcd de polynômes."},
+  {title:"5.r2 — Théorème de la progression arithmétique", method:"Si a et b sont premiers entre eux, la suite a, a+b, a+2b, … contient une infinité de nombres premiers (Dirichlet). Cas particulier : a=1, b=2 (Euclide).", ex:"1, 3, 5, 7, 9, 11, … contient tous les impairs, dont une infinité de premiers.", q:"Pourquoi le cas a=1, b=2 est-il un cas particulier ?", r:"C'est la suite des impairs, qui contient 2 (seul pair premier) et tous les impairs premiers.", tip:"La preuve générale utilise les caractères de Dirichlet."},
+  {title:"5.r3 — Applications en cryptographie", method:"Bézout est utilisé pour calculer d = e⁻¹ mod φ(n) dans RSA. Il sert aussi à trouver des générateurs de groupes cycliques et à factoriser (algorithme de Shor en quantique).", ex:"RSA : si e=17, φ=3120, on trouve d=2753 via Bézout (17·2753 = 46801 ≡ 1 mod 3120).", q:"Pourquoi d doit-il vérifier pgcd(e, φ) = 1 ?", r:"Sinon e n'aurait pas d'inverse mod φ, donc on ne pourrait pas déchiffrer.", tip:"En pratique, φ(n) est confidentiel."}
+ ]}},
+
+{id:'E6', nom:"Théorème de Gauss", steps:{
+ d:[
+  {title:"6.1 — Énoncé", method:"Si a | bc et si pgcd(a,b) = 1, alors a | c.", ex:"6 | 35k et pgcd(6,35)=1 ⟹ 6 | k.", q:"9 | 5n, montrer 9 | n.", r:"pgcd(9,5) = 1, donc par Gauss 9 | n.", tip:"La coprimalité est indispensable."},
+  {title:"6.2 — Pourquoi la coprimalité est nécessaire", method:"Sans coprimalité, Gauss est faux. Exemple : 6 | 4·3 mais 6 ∤ 4 et 6 ∤ 3 (pgcd(6,4) = 2 ≠ 1).", ex:"Contre-exemple classique.", q:"Trouver un autre contre-exemple.", r:"4 | 6·2 mais 4 ∤ 6 et 4 ∤ 2 (pgcd(4,6) = 2).", tip:"Vérifier systématiquement la coprimalité avant d'appliquer Gauss."},
+  {title:"6.3 — Gauss et simplification des congruences", method:"Si ax ≡ ay [n] et pgcd(a,n) = 1, alors x ≡ y [n]. Sinon on divise par pgcd(a,n) : ax ≡ ay [n] ⟺ x ≡ y [n/d] avec d = pgcd(a,n).", ex:"3x ≡ 6 [9] : 3 divise tout, mais pgcd(3,9)=3, donc x ≡ 2 [3].", q:"Résoudre 4x ≡ 8 [12].", r:"pgcd(4,12) = 4, donc x ≡ 2 [3].", tip:"Ne jamais simplifier sans vérifier la coprimalité."}
+ ],
+ e:[
+  {title:"6.e1 — Démonstration par Bézout", method:"au + bv = 1, on multiplie par c : auc + bvc = c. a divise les deux termes (a divise auc et a | bc ⟹ a | bvc), donc a | c.", ex:"Reprendre la démo pour 6 | 35k.", q:"Refaire la démo pour 9 | 5n.", r:"9u + 5v = 1 (u=−1, v=2), donc 9·(−1)n + 5·2n = −9n + 10n = n. 9 | 9n et 9 | 5n·2, donc 9 | n.", tip:"La preuve est constructive si on a les coefficients."},
+  {title:"6.e2 — Lemme d'Euclide", method:"Si p premier et p | ab, alors p | a ou p | b. Preuve : si p ∤ a, alors pgcd(p,a) = 1 (car p n'a que 1 et p comme diviseurs, et p ne divise pas a). Donc p | b par Gauss.", ex:"7 | 21 ⟹ 7 | 21 déjà, ou 7 | 3·7 → 7 | 7.", q:"p=5, p | 120, que peut-on dire ?", r:"5 | 120, mais aussi 5 | 2·3·4·5. Comme 5 | 5, il n'y a pas besoin de Gauss.", tip:"Gauss dit que si p premier et p | produit, p divise un facteur."},
+  {title:"6.e3 — Application aux fractions", method:"Une fraction a/b est irréductible ssi pgcd(a,b) = 1. Gauss permet de simplifier des quotients dans les calculs modulaires.", ex:"1071/462 : pgcd = 21, on simplifie par 21 (justifié par Gauss).", q:"Simplifier 1001/2024.", r:"pgcd = 11, donc 91/184.", tip:"Gauss justifie la simplification dans les équations."}
+ ],
+ r:[
+  {title:"6.r1 — Théorème fondamental de l'arithmétique", method:"Tout entier n ≥ 2 se décompose de façon unique (à l'ordre des facteurs près) en produit de nombres premiers. L'unicité repose sur le lemme d'Euclide (donc sur Gauss).", ex:"360 = 2³·3²·5, décomposition unique.", q:"Décomposer 2026.", r:"2·1013, 1013 premier.", tip:"L'existence se montre par récurrence, l'unicité par le lemme d'Euclide."},
+  {title:"6.r2 — Anneaux factoriels", method:"Un anneau est factoriel si tout élément non nul non inversible se décompose de façon unique en irréductibles. ℤ, K[X] sont factoriels.", ex:"ℤ[i] est factoriel (anneau euclidien).", q:"Pourquoi K[X] est-il factoriel ?", r:"K[X] est euclidien, donc principal, donc factoriel.", tip:"Euclidien ⟹ principal ⟹ factoriel."},
+  {title:"6.r3 — Application : irrationalité de √2", method:"Supposons √2 = p/q irréductible. Alors p² = 2q², donc 2 | p², donc 2 | p (Euclide), donc p = 2k. Alors 4k² = 2q², donc q² = 2k², donc 2 | q², donc 2 | q. Contradiction avec pgcd(p,q) = 1.", ex:"√2 ∉ ℚ.", q:"Montrer √3 ∉ ℚ.", r:"Même preuve avec 3 : p² = 3q², 3 | p², 3 | p, p = 3k, 9k² = 3q², q² = 3k², 3 | q, contradiction.", tip:"Généralisation : √n irrationnel sauf si n est un carré parfait."}
+ ]}},
+
+{id:'E7', nom:"Nombres premiers, infinité, décomposition", steps:{
+ d:[
+  {title:"7.1 — Définition", method:"Un entier p ≥ 2 est premier s'il a exactement deux diviseurs : 1 et p. Attention : 1 n'est PAS premier (il n'a qu'un diviseur).", ex:"2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47… sont premiers.", q:"37 est-il premier ?", r:"√37 ≈ 6,1 ; 37 n'est divisible ni par 2, 3, 5 ni 7. Oui.", tip:"Pour tester la primalité, il suffit de tester les diviseurs jusqu'à √p."},
+  {title:"7.2 — Test de primalité", method:"n ≥ 2 est premier ssi aucun entier d ∈ [2, √n] ne le divise. En pratique, on teste les premiers jusqu'à √n.", ex:"√29 ≈ 5,4 : tester 2, 3, 5. Aucun ne divise 29, donc 29 premier.", q:"97 est-il premier ?", r:"√97 ≈ 9,8 : tester 2, 3, 5, 7. Aucun ne divise 97 (97 = 7·13 + 6). Oui.", tip:"Algorithme : crible d'Ératosthène pour tester jusqu'à N."},
+  {title:"7.3 — Infinité (Euclide)", method:"Supposons qu'il y ait un nombre fini de premiers p₁, …, pₙ. Soit N = p₁·…·pₙ + 1. N n'est divisible par aucun pᵢ (reste 1), donc N a un facteur premier distinct des pᵢ. Contradiction.", ex:"2·3·5·7 + 1 = 211, qui est premier.", q:"Application : 2·3·5·7·11 + 1 = ?", r:"2311, premier (vérifiable).", tip:"Euclide fournit une preuve non constructive."}
+ ],
+ e:[
+  {title:"7.e1 — Décomposition en facteurs premiers", method:"Tout entier n ≥ 2 s'écrit n = p₁^{α₁} · p₂^{α₂} · … · pₖ^{αₖ} avec pᵢ premiers distincts et αᵢ ≥ 1. Unicité à l'ordre près.", ex:"360 = 2³ · 3² · 5.", q:"Décomposer 2026.", r:"2026 = 2 · 1013, et 1013 premier.", tip:"On divise successivement par les premiers croissants."},
+  {title:"7.e2 — Nombre de diviseurs", method:"Si n = ∏ pᵢ^{αᵢ}, alors le nombre de diviseurs de n est ∏ (αᵢ + 1).", ex:"360 = 2³·3²·5 → (3+1)(2+1)(1+1) = 24 diviseurs.", q:"Nombre de diviseurs de 2026 ?", r:"2026 = 2·1013, donc (1+1)(1+1) = 4 diviseurs : 1, 2, 1013, 2026.", tip:"Utile pour le crible et pour la recherche de nombres parfaits."},
+  {title:"7.e3 — PGCD et PPCM via décomposition", method:"pgcd(a,b) = ∏ pᵢ^{min(αᵢ, βᵢ)}, ppcm(a,b) = ∏ pᵢ^{max(αᵢ, βᵢ)}.", ex:"a = 2³·3², b = 2²·3³ : pgcd = 2²·3² = 36, ppcm = 2³·3³ = 216.", q:"pgcd et ppcm de 360 et 84 ?", r:"360 = 2³·3²·5, 84 = 2²·3·7. pgcd = 2²·3 = 12, ppcm = 2³·3²·5·7 = 2520.", tip:"Vérifier : pgcd × ppcm = |ab| (pour deux entiers)."}
+ ],
+ r:[
+  {title:"7.r1 — Théorème des nombres premiers", method:"Le nombre π(x) de premiers ≤ x est équivalent à x/ln(x) quand x → ∞ (Hadamard, de la Vallée Poussin).", ex:"π(100) = 25 ≈ 100/ln(100) ≈ 21,7 (approximation grossière).", q:"Estimation du nombre de premiers ≤ 1000 ?", r:"≈ 1000/ln(1000) ≈ 145 (vrai : 168).", tip:"Il y a plus de premiers que l'estimation asymptotique au début."},
+  {title:"7.r2 — Nombres premiers remarquables", method:"Nombres de Mersenne : 2^p − 1, premiers si p premier (réciproque fausse). Nombres de Fermat : 2^(2ⁿ) + 1. Nombres jumeaux : p et p+2.", ex:"2⁷ − 1 = 127 premier, mais 2¹¹ − 1 = 2047 = 23·89 pas premier.", q:"Tester 2¹³ − 1 = 8191.", r:"√8191 ≈ 90,5. Aucun premier ≤ 90 ne divise 8191 (vérifiable), donc 8191 premier.", tip:"Les Mersenne premiers fournissent les plus grands premiers connus."},
+  {title:"7.r3 — Décomposition et cryptographie", method:"La difficulté de factoriser un grand entier est à la base de la sécurité de RSA. Les algorithmes modernes (GNFS, crible quadratique) factorisent des nombres de plusieurs centaines de chiffres en temps raisonnable.", ex:"RSA-2048 : n d'environ 617 chiffres décimaux, deux facteurs premiers de 1024 bits chacun.", q:"Pourquoi factoriser n = pq est-il difficile ?", r:"Parce que les algorithmes connus sont sous-exponentiels, et n a une structure très spécifique (p et q premiers).", tip:"En pratique, on prend p et q de 1024 bits chacun."}
+ ]}},
+
+{id:'E8', nom:"Petit théorème de Fermat", steps:{
+ d:[
+  {title:"8.1 — Énoncé", method:"Si p est premier et p ∤ a, alors a^{p−1} ≡ 1 [p].", ex:"2⁶ = 64 ≡ 1 [7].", q:"3⁴ mod 5 ?", r:"3⁴ = 81 ≡ 1 [5].", tip:"La condition p ∤ a est essentielle ; sinon a^{p−1} ≡ 0."},
+  {title:"8.2 — Forme équivalente", method:"Pour tout a ∈ ℤ, a^p ≡ a [p].", ex:"3⁵ = 243 ≡ 3 [5].", q:"Vérifier pour a=4, p=7.", r:"4⁷ = 16384 ; 16384 = 7·2340 + 4, donc ≡ 4 [7].", tip:"Cette forme est plus maniable car pas de condition sur a."},
+  {title:"8.3 — Petite application", method:"Calculer une puissance modulo p en réduisant l'exposant modulo p−1.", ex:"3¹⁰⁰ mod 7 : 100 = 6·16 + 4, donc 3¹⁰⁰ ≡ 3⁴ = 81 ≡ 4.", q:"5⁹⁹ mod 7 ?", r:"5⁶ ≡ 1, 99 = 6·16 + 3, donc 5⁹⁹ ≡ 5³ = 125 ≡ 6 [7].", tip:"Vérifier pgcd(a,p) = 1 avant d'appliquer Fermat."}
+ ],
+ e:[
+  {title:"8.e1 — Démonstration", method:"Les résidus a, 2a, …, (p−1)a sont distincts modulo p (si ia ≡ ja, alors p | (i−j)a, donc p | i−j car p ∤ a, donc i = j). Ils forment une permutation de 1, …, p−1. Donc leur produit est congru à (p−1)! modulo p. D'où a^{p−1}·(p−1)! ≡ (p−1)! [p], et en simplifiant : a^{p−1} ≡ 1.", ex:"Reprendre la démo pour p=5, a=2 : résidus 2, 4, 6≡1, 8≡3, qui sont 1,2,3,4 dans le désordre.", q:"Pourquoi peut-on simplifier par (p−1)! ?", r:"Parce que pgcd((p−1)!, p) = 1 (p premier > p−1), donc (p−1)! est inversible mod p.", tip:"Cette preuve est due à Euler (généralisée)."},
+  {title:"8.e2 — Inverse modulaire via Fermat", method:"Si p premier et p ∤ a, alors a^{p−2} ≡ a⁻¹ [p].", ex:"3⁻¹ mod 7 : 3⁵ = 243 ≡ 5.", q:"5⁻¹ mod 7 ?", r:"5⁵ = 3125 = 7·446 + 3, donc 5⁵ ≡ 3 [7], et en effet 5·3 = 15 ≡ 1 [7].", tip:"Bézout est souvent plus rapide à la main."},
+  {title:"8.e3 — Test de Fermat", method:"Pour tester si n est premier : choisir a au hasard, vérifier si a^{n−1} ≡ 1 [n]. Si non, n composé. Si oui, n est probablement premier (mais peut être un nombre de Carmichael).", ex:"341 = 11·31 : 2³⁴⁰ ≡ 1 [341] (Fermat ne détecte pas la non-primalité).", q:"Pourquoi 341 est-il un « pseudo-premier » ?", r:"C'est un nombre de Carmichael : a³⁴⁰ ≡ 1 [341] pour tout a premier avec 341.", tip:"Les tests modernes (Miller-Rabin) corrigent cette faille."}
+ ],
+ r:[
+  {title:"8.r1 — Fonction indicatrice d'Euler", method:"φ(n) = nombre d'entiers dans [1, n] premiers avec n. Si n = ∏ pᵢ^{αᵢ}, φ(n) = n·∏(1 − 1/pᵢ). Généralisation de Fermat : a^{φ(n)} ≡ 1 [n] si pgcd(a,n) = 1 (Euler).", ex:"n = 12, φ(12) = 4 (1, 5, 7, 11). 5⁴ = 625 ≡ 1 [12].", q:"φ(1000) ?", r:"1000 = 2³·5³, donc φ(1000) = 1000·(1/2)·(4/5) = 400.", tip:"Euler généralise Fermat à tout module, pas seulement aux premiers."},
+  {title:"8.r2 — Ordre d'un élément", method:"L'ordre de a mod n est le plus petit k > 0 tel que a^k ≡ 1 [n]. Il divise φ(n) (théorème de Lagrange).", ex:"Ordre de 3 mod 7 : 3¹=3, 3²=2, 3³=6, 3⁴=4, 3⁵=5, 3⁶=1. Ordre = 6 = φ(7).", q:"Ordre de 2 mod 7 ?", r:"2¹=2, 2²=4, 2³=1. Ordre = 3.", tip:"Si l'ordre est φ(n), a est une racine primitive."},
+  {title:"8.r3 — Nombres de Carmichael et tests modernes", method:"Un nombre de Carmichael n vérifie a^{n−1} ≡ 1 [n] pour tout a premier avec n, mais n'est pas premier. Le test de Miller-Rabin le détecte avec probabilité 3/4 par essai.", ex:"561 = 3·11·17 est le plus petit Carmichael.", q:"Pourquoi 561 est-il un Carmichael ?", r:"Car 561 = 3·11·17 et 560 = lcm(2, 10, 16), et pour tout a premier avec 561, a^560 ≡ 1 (théorème de Korselt).", tip:"Les Carmichael sont rares mais existent en infinité (Alford, Granville, Pomerance 1994)."}
+ ]}}
+];
+
+/* positions des 8 notions en cercle sur la carte mère */
+NOTIONS.forEach((n, i) => {
+  const angle = (i / NOTIONS.length) * Math.PI * 2 - Math.PI/2;
+  const radius = 72;
+  n.mx = Math.cos(angle) * radius;
+  n.my = Math.sin(angle) * radius;
+  n.idx = i;
+});
+
+/* =========================================================================
+   2. TERRAIN DE LA CARTE MÈRE
+   ========================================================================= */
+const WORLD = 135, N = 34, WATER = -5.0;
+const stepW = (2*WORLD)/N;
+
+function motherHeightAt(x, y){
+  let h = 4.5*Math.sin(x*0.030+0.4)*Math.cos(y*0.034-0.2)
+        + 2.4*Math.sin(x*0.062-1.1)*Math.sin(y*0.056+0.8)
+        + 1.3*Math.cos(x*0.11+y*0.09)
+        + 0.8*Math.sin((x-y)*0.055);
+  NOTIONS.forEach(n => {
+    const d = Math.hypot(x - n.mx, y - n.my);
+    if(d < 26){
+      const w = Math.max(0, 1 - d/26);
+      h += w*w * (3.2*Math.exp(-Math.pow(d-6.5,2)/9) - 2.0*Math.exp(-d*d/22));
+    }
+  });
+  const dc = Math.hypot(x, y);
+  if(dc < 26){
+    const k = Math.min(1, dc/26);
+    h = h*(0.35+0.65*k) + (1-k)*(-0.6);
+  }
+  return h;
+}
+const STOPS = [
+  [-18, [ 55, 88, 128]], [-9,  [ 92,138,170]], [-5.4,[140,182,208]],
+  [-4.85,[226,206,154]], [-3.0,[200,204,142]], [-0.5,[168,198,116]],
+  [ 2.5,[136,186,102]], [ 6.0,[128,170, 96]], [ 9.0,[156,148,120]],
+  [12.5,[168,162,152]], [15.0,[208,214,222]], [18.5,[240,244,250]]
+];
+function lerpColor(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
+function baseColor(h){
+  for(let k=0;k<STOPS.length-1;k++){
+    if(h <= STOPS[k+1][0]){
+      const t = (h - STOPS[k][0])/(STOPS[k+1][0]-STOPS[k][0]);
+      return lerpColor(STOPS[k][1], STOPS[k+1][1], Math.max(0, Math.min(1, t)));
+    }
+  }
+  return STOPS[STOPS.length-1][1];
+}
+const LIGHT = [-0.45,-0.55,0.70];
+
+const VX = [], HG = [], FACE = [];
+for(let i=0;i<=N;i++) VX.push(-WORLD + i*stepW);
+for(let i=0;i<=N;i++){
+  HG.push([]);
+  for(let j=0;j<=N;j++) HG[i].push(motherHeightAt(VX[i], VX[j]));
+}
+for(let i=0;i<N;i++){
+  FACE.push([]);
+  for(let j=0;j<N;j++){
+    const h0=HG[i][j], h1=HG[i+1][j], h2=HG[i+1][j+1], h3=HG[i][j+1];
+    const ha=(h0+h1+h2+h3)/4;
+    const dhx=(h1-h0)/stepW, dhy=(h3-h0)/stepW;
+    const nx=-dhx, ny=-dhy, nz=1, ln=Math.hypot(nx,ny,nz);
+    const ndl=(nx*LIGHT[0]+ny*LIGHT[1]+nz*LIGHT[2])/ln;
+    const sh=0.60+0.62*Math.max(0,ndl);
+    const c = baseColor(ha);
+    const col = 'rgb('+Math.min(255,Math.round(c[0]*sh))+','
+                      +Math.min(255,Math.round(c[1]*sh))+','
+                      +Math.min(255,Math.round(c[2]*sh))+')';
+    FACE[i].push({col, ha});
+  }
+}
+NOTIONS.forEach(n => {
+  const g = motherHeightAt(n.mx, n.my);
+  n.groundZ = Math.max(g, WATER+0.7) + 0.5;
+});
+function seededRandom(seed){
+  const x = Math.sin(seed*12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+const DECORATIONS = [];
+for(let gx=-128; gx<128; gx+=8){
+  for(let gy=-128; gy<128; gy+=8){
+    const h = motherHeightAt(gx, gy);
+    if(h < WATER + 0.6) continue;
+    const r = seededRandom(gx*13.7 + gy*7.3 + 1);
+    if(r > 0.50) continue;
+    const jx = gx + (seededRandom(gx*1.7 + gy*2.3)-0.5)*5;
+    const jy = gy + (seededRandom(gx*2.1 + gy*3.1)-0.5)*5;
+    const jh = motherHeightAt(jx, jy);
+    if(jh < WATER + 0.4) continue;
+    let type;
+    if(jh > 13.5) type = 'snow';
+    else if(jh > 9.5) type = 'rock';
+    else if(jh > 1.0) type = 'tree';
+    else type = 'reed';
+    DECORATIONS.push({ x:jx, y:jy, z:jh, type, size: 0.85 + r*0.8 });
+  }
+}
+
+/* =========================================================================
+   3. PROJECTION 3D
+   ========================================================================= */
+function projectPoint(x, y, z, cam, CX, CY, FOCAL){
+  const dx=x-cam.tx, dy=y-cam.ty, dz=z-cam.tz;
+  const cy=Math.cos(cam.yaw), sy=Math.sin(cam.yaw);
+  const cp=Math.cos(cam.pitch), sp=Math.sin(cam.pitch);
+  const fx=-sy*cp, fy=cy*cp, fz=-sp;
+  const rx=cy, ry=sy, rz=0;
+  const ux=-sy*sp, uy=cy*sp, uz=cp;
+  const px = dx - cam.dist*sy*cp;
+  const py = dy + cam.dist*cy*cp;
+  const pz = dz - cam.dist*sp;
+  const d = px*fx + py*fy + pz*fz;
+  if(d < 8) return null;
+  const sx = px*rx + py*ry + pz*rz;
+  const sup= px*ux + py*uy + pz*uz;
+  const f = FOCAL/d;
+  return { x: CX + sx*f, y: CY - sup*f, d, f };
+}
+
+/* =========================================================================
+   4. ÉTAT
+   ========================================================================= */
+const KEY = 'chasse_arith_parcours_v2';
+const state = { explored:{}, motherHover:null, miniHovered:null, miniSelected:null, miniNotion:null };
+try{
+  const raw = localStorage.getItem(KEY);
+  if(raw) state.explored = JSON.parse(raw) || {};
+}catch(e){ state.explored = {}; }
+
+function stepKey(id, asp, i){ return id+':'+asp+':'+i; }
+function isStepExp(id, asp, i){ return !!state.explored[stepKey(id, asp, i)]; }
+function markStepExp(id, asp, i){
+  const k = stepKey(id, asp, i);
+  if(state.explored[k]) return;
+  state.explored[k] = true;
+  try{ localStorage.setItem(KEY, JSON.stringify(state.explored)); }catch(e){}
+  updateGauges(); renderPanel();
+}
+function isAspectExp(id, asp){
+  return isStepExp(id, asp, 0) && isStepExp(id, asp, 1) && isStepExp(id, asp, 2);
+}
+function isNotionExp(id){
+  return isAspectExp(id,'d') && isAspectExp(id,'e') && isAspectExp(id,'r');
+}
+function countSteps(){
+  let c=0; NOTIONS.forEach(n=>{ ['d','e','r'].forEach(a=>{ for(let i=0;i<3;i++) if(isStepExp(n.id,a,i)) c++; }); }); return c;
+}
+function countChest(){
+  let c=0; NOTIONS.forEach(n=>{ if(isNotionExp(n.id)) c++; }); return c;
+}
+function updateGauges(){
+  const s = countSteps(), c = countChest(), tot = NOTIONS.length*9;
+  document.getElementById('fragTxt').textContent = s+' / '+tot;
+  document.getElementById('fragBar').style.width = (100*s/tot)+'%';
+  document.getElementById('chestTxt').textContent = c+' / '+NOTIONS.length;
+  document.getElementById('chestBar').style.width = (100*c/NOTIONS.length)+'%';
+  document.getElementById('banner').style.display = (s >= tot) ? 'block' : 'none';
+}
+
+/* =========================================================================
+   5. CARTE MÈRE — rendu
+   ========================================================================= */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W=0, H=0, CX=0, CY=0, FOCAL=1000;
+const cam = { yaw:-0.72, pitch:0.63, dist:340, tx:0, ty:0, tz:0 };
+
+function resizeMother(){
+  const r = cv.parentElement.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  CX = W/2; CY = H/2 + H*0.06;
+  FOCAL = Math.max(520, Math.min(W,H)*1.15);
+}
+window.addEventListener('resize', ()=>{ resizeMother(); resizeMini(); });
+
+function drawSky(t){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,   '#c7e1f6'); g.addColorStop(0.42,'#e3effa');
+  g.addColorStop(0.75,'#f4eddd'); g.addColorStop(1,   '#f0e6d2');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  const sx = W*0.16, sy = H*0.13;
+  const rg = ctx.createRadialGradient(sx,sy,4,sx,sy,170);
+  rg.addColorStop(0,'rgba(255,247,205,0.95)'); rg.addColorStop(1,'rgba(255,247,205,0)');
+  ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(sx,sy,170,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  for(let k=0;k<6;k++){
+    const cx0 = ((k*467 + t*0.006) % (W+320)) - 160;
+    const cy0 = H*0.10 + (k%3)*22;
+    ctx.beginPath();
+    ctx.ellipse(cx0, cy0, 72, 15, 0, 0, Math.PI*2);
+    ctx.ellipse(cx0+52, cy0+6, 48, 12, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+function roundRect(c,x,y,w,h,r){
+  c.beginPath(); c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r); c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h); c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y); c.closePath();
+}
+function label(txt,x,y,size,color,bold){
+  ctx.font = (bold?'700 ':'600 ')+(size||11)+'px "Segoe UI",system-ui,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.lineWidth = 3.2; ctx.strokeStyle='rgba(255,253,248,0.92)';
+  ctx.strokeText(txt,x,y); ctx.fillStyle = color || '#22303a'; ctx.fillText(txt,x,y);
+}
+
+function drawNotionBeacon(n, p, t, hovered){
+  const s = Math.max(14, Math.min(58, p.f*2.6));
+  const hov = hovered && hovered.id === n.id;
+  const done = isNotionExp(n.id);
+  const pulse = 1 + 0.07*Math.sin(t*0.004 + n.idx*1.3);
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y + s*0.5, s*0.6, s*0.20, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(60,30,30,0.20)'; ctx.fill();
+  const rg = ctx.createRadialGradient(p.x, p.y - s*0.3, 1, p.x, p.y - s*0.3, s*1.9);
+  rg.addColorStop(0, done ? 'rgba(255,214,102,0.85)' : 'rgba(176,53,63,0.55)');
+  rg.addColorStop(1, 'rgba(176,53,63,0)');
+  ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(p.x, p.y - s*0.3, s*1.9, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y + s*0.35, s*0.55*pulse, s*0.18*pulse, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,253,248,0.92)'; ctx.fill();
+  ctx.lineWidth = 1.6; ctx.strokeStyle = hov ? '#0e7c86' : '#b0353f'; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y + s*0.35); ctx.lineTo(p.x, p.y - s*1.0);
+  ctx.strokeStyle = hov ? '#0e7c86' : 'rgba(80,40,45,0.75)';
+  ctx.lineWidth = Math.max(1.6, s*0.10); ctx.stroke();
+  const orbY = p.y - s*1.15;
+  const orbR = s*0.42 * (hov ? 1.25 : 1);
+  ctx.beginPath(); ctx.arc(p.x, orbY, orbR, 0, Math.PI*2);
+  const gr = ctx.createRadialGradient(p.x-orbR*0.3, orbY-orbR*0.3, 1, p.x, orbY, orbR);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.5, done ? '#ffe08a' : '#e88a94');
+  gr.addColorStop(1, done ? '#c9962b' : '#b0353f');
+  ctx.fillStyle = gr; ctx.fill();
+  ctx.lineWidth = hov ? 2.6 : 1.6; ctx.strokeStyle = hov ? '#0e7c86' : 'rgba(60,20,25,0.4)'; ctx.stroke();
+  ctx.font = '800 '+Math.max(9, Math.min(15, s*0.55))+'px "Segoe UI",system-ui,sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff'; ctx.fillText(String(n.idx+1), p.x, orbY + 1);
+  if(done){
+    ctx.beginPath(); ctx.arc(p.x + orbR*1.2, orbY - orbR*1.2, s*0.18, 0, Math.PI*2);
+    ctx.fillStyle = '#2f9e44'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  if(hov){
+    const txt = (n.idx+1) + '. ' + n.nom;
+    ctx.font = '700 12px "Segoe UI",system-ui,sans-serif';
+    const tw = ctx.measureText(txt).width + 18, th = 22;
+    const tx = p.x - tw/2, ty = orbY - orbR - 30;
+    ctx.beginPath(); roundRect(ctx, tx, ty, tw, th, 7);
+    ctx.fillStyle = 'rgba(255,253,248,0.97)'; ctx.fill();
+    ctx.lineWidth = 1.6; ctx.strokeStyle = '#b0353f'; ctx.stroke();
+    ctx.fillStyle = '#b0353f'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, p.x, ty + th/2 + 1);
+  }
+  return { x: p.x, y: orbY, r: Math.max(20, orbR*1.15), id: n.id };
+}
+
+function drawDecoration(d, p){
+  const s = Math.max(2.5, Math.min(12, p.f*0.42 * d.size));
+  if(s < 2) return;
+  switch(d.type){
+    case 'tree':
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - s*1.4); ctx.lineTo(p.x + s*0.7, p.y); ctx.lineTo(p.x - s*0.7, p.y);
+      ctx.closePath(); ctx.fillStyle = 'rgb(58,110,72)'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - s*1.9); ctx.lineTo(p.x + s*0.55, p.y - s*0.6); ctx.lineTo(p.x - s*0.55, p.y - s*0.6);
+      ctx.closePath(); ctx.fillStyle = 'rgb(74,132,88)'; ctx.fill(); break;
+    case 'rock':
+      ctx.beginPath(); ctx.moveTo(p.x - s*0.9, p.y); ctx.lineTo(p.x - s*0.3, p.y - s*0.9);
+      ctx.lineTo(p.x + s*0.5, p.y - s*0.7); ctx.lineTo(p.x + s*0.85, p.y); ctx.closePath();
+      ctx.fillStyle = 'rgb(120,116,108)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(60,55,48,0.6)'; ctx.lineWidth = 0.8; ctx.stroke(); break;
+    case 'snow':
+      ctx.beginPath(); ctx.moveTo(p.x - s*0.9, p.y); ctx.quadraticCurveTo(p.x, p.y - s*1.3, p.x + s*0.9, p.y);
+      ctx.closePath(); ctx.fillStyle = 'rgba(250,252,255,0.95)'; ctx.fill(); break;
+    case 'reed':
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y - s*1.2);
+      ctx.moveTo(p.x - s*0.35, p.y); ctx.lineTo(p.x - s*0.2, p.y - s*1.0);
+      ctx.moveTo(p.x + s*0.35, p.y); ctx.lineTo(p.x + s*0.2, p.y - s*1.0);
+      ctx.strokeStyle = 'rgb(130,155,85)'; ctx.lineWidth = Math.max(1, s*0.18); ctx.stroke(); break;
+  }
+}
+function drawTreasure(p, t){
+  const s = Math.max(12, Math.min(60, p.f*2.6));
+  const unlocked = countSteps() >= NOTIONS.length*9;
+  const pulse = 1 + 0.05*Math.sin(t*0.003);
+  const rg = ctx.createRadialGradient(p.x,p.y,1,p.x,p.y,s*2.2);
+  rg.addColorStop(0, unlocked ? 'rgba(255,214,102,0.9)' : 'rgba(201,150,43,0.35)');
+  rg.addColorStop(1, 'rgba(201,150,43,0)');
+  ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(p.x,p.y,s*2.2,0,Math.PI*2); ctx.fill();
+  const w = s*1.15*pulse, h = s*0.8*pulse;
+  ctx.save(); ctx.translate(p.x, p.y);
+  ctx.beginPath(); ctx.ellipse(0, h*0.52, w*0.62, h*0.22, 0, 0, Math.PI*2);
+  ctx.fillStyle='rgba(60,80,60,0.20)'; ctx.fill();
+  roundRect(ctx, -w/2, -h*0.10, w, h*0.62, 4);
+  ctx.fillStyle = unlocked ? '#d8a63c' : '#b9a481'; ctx.fill();
+  ctx.strokeStyle = '#6b5525'; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-w/2, -h*0.10); ctx.quadraticCurveTo(0, -h*0.95, w/2, -h*0.10);
+  ctx.closePath(); ctx.fillStyle = unlocked ? '#f0c968' : '#cbb894'; ctx.fill();
+  ctx.strokeStyle='#6b5525'; ctx.stroke();
+  ctx.fillStyle = unlocked ? '#6b5525' : '#8a7a60';
+  ctx.fillRect(-w*0.08, -h*0.15, w*0.16, h*0.30);
+  ctx.restore();
+  label(unlocked ? 'TRÉSOR' : 'Trésor', p.x, p.y - s*1.15, 11, '#7a5a10', true);
+}
+function drawCompass(){
+  const x = W - 62, y = 62, r = 30;
+  ctx.save(); ctx.globalAlpha = 0.85;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle = 'rgba(255,253,248,0.88)'; ctx.fill();
+  ctx.strokeStyle = '#d8cdb6'; ctx.lineWidth = 1.6; ctx.stroke();
+  const a = -cam.yaw;
+  const nx = x + Math.sin(a)*r*0.62, ny = y - Math.cos(a)*r*0.62;
+  ctx.beginPath(); ctx.moveTo(nx, ny);
+  ctx.lineTo(x + Math.sin(a+2.5)*9, y - Math.cos(a+2.5)*9);
+  ctx.lineTo(x + Math.sin(a-2.5)*9, y - Math.cos(a-2.5)*9);
+  ctx.closePath(); ctx.fillStyle = '#b0353f'; ctx.fill();
+  label('N', x + Math.sin(a)*r*0.82, y - Math.cos(a)*r*0.82, 10, '#7a6a4a', true);
+  ctx.restore();
+}
+const hitZones = [];
+let clock = 0;
+function renderMother(t){
+  try{
+    clock = t;
+    drawSky(t);
+    hitZones.length = 0;
+    const items = [];
+    const P = [];
+    for(let i=0;i<=N;i++){
+      const row = [];
+      for(let j=0;j<=N;j++) row.push(projectPoint(VX[i], VX[j], HG[i][j], cam, CX, CY, FOCAL));
+      P.push(row);
+    }
+    for(let i=0;i<N;i++){
+      for(let j=0;j<N;j++){
+        const a=P[i][j], b=P[i+1][j], c=P[i+1][j+1], d=P[i][j+1];
+        if(!a||!b||!c||!d) continue;
+        const f = FACE[i][j];
+        const dep=(a.d+b.d+c.d+d.d)/4;
+        if(f.ha < WATER) items.push({d:dep, k:2, i, j});
+        else             items.push({d:dep, k:1, i, j, col:f.col});
+      }
+    }
+    DECORATIONS.forEach(dco=>{
+      const p = projectPoint(dco.x, dco.y, dco.z, cam, CX, CY, FOCAL);
+      if(!p) return;
+      items.push({d: p.d, k:12, p, d: dco});
+    });
+    NOTIONS.forEach(n => {
+      const p = projectPoint(n.mx, n.my, n.groundZ, cam, CX, CY, FOCAL);
+      if(!p) return;
+      items.push({d: p.d, k:20, n, p});
+    });
+    const pt = projectPoint(0, 0, motherHeightAt(0,0)+1.0, cam, CX, CY, FOCAL);
+    if(pt) items.push({d: pt.d, k:7, p: pt});
+    items.sort((A,B)=> B.d - A.d);
+    for(let k=0;k<items.length;k++){
+      const it = items[k];
+      if(it.k===1){
+        const {i,j,col} = it;
+        ctx.beginPath();
+        ctx.moveTo(P[i][j].x, P[i][j].y); ctx.lineTo(P[i+1][j].x, P[i+1][j].y);
+        ctx.lineTo(P[i+1][j+1].x, P[i+1][j+1].y); ctx.lineTo(P[i][j+1].x, P[i][j+1].y);
+        ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+        ctx.strokeStyle = col; ctx.lineWidth = 0.8; ctx.stroke();
+      } else if(it.k===2){
+        const {i,j} = it;
+        const w0=projectPoint(VX[i],VX[j],WATER,cam,CX,CY,FOCAL);
+        const w1=projectPoint(VX[i+1],VX[j],WATER,cam,CX,CY,FOCAL);
+        const w2=projectPoint(VX[i+1],VX[j+1],WATER,cam,CX,CY,FOCAL);
+        const w3=projectPoint(VX[i],VX[j+1],WATER,cam,CX,CY,FOCAL);
+        if(!w0||!w1||!w2||!w3) continue;
+        ctx.beginPath(); ctx.moveTo(w0.x,w0.y); ctx.lineTo(w1.x,w1.y);
+        ctx.lineTo(w2.x,w2.y); ctx.lineTo(w3.x,w3.y); ctx.closePath();
+        ctx.fillStyle = 'rgba(118,183,222,0.88)'; ctx.fill();
+      } else if(it.k===7) drawTreasure(it.p, clock);
+      else if(it.k===12) drawDecoration(it.d, it.p);
+      else if(it.k===20){
+        const hz = drawNotionBeacon(it.n, it.p, clock, state.motherHover);
+        if(hz) hitZones.push(hz);
+      }
+    }
+    drawCompass();
+  } catch(err){ console.error('[renderMother]', err); }
+  requestAnimationFrame(renderMother);
+}
+
+/* =========================================================================
+   6. MINI-CARTE
+   ========================================================================= */
+const miniCv = document.getElementById('miniCv');
+const miniCtx = miniCv.getContext('2d');
+let mW=0, mH=0, mCX=0, mCY=0, mFOCAL=1000;
+const miniCam = { yaw:-0.55, pitch:0.55, dist:105, tx:0, ty:0, tz:0 };
+const MINI_WORLD = 55, MINI_N = 22, MINI_WATER = -4.5;
+const miniStep = (2*MINI_WORLD)/MINI_N;
+function miniHeightAt(x, y){
+  let h = 3.6*Math.sin(x*0.075)*Math.cos(y*0.085)
+        + 2.0*Math.sin(x*0.14+1.1)*Math.sin(y*0.12-0.5)
+        + 1.2*Math.cos(x*0.23+y*0.19);
+  const d = Math.hypot(x, y);
+  if(d < MINI_WORLD*0.26) h = h * (d/(MINI_WORLD*0.26));
+  return h;
+}
+const miniVX = [], miniHG = [], miniFACE = [];
+for(let i=0;i<=MINI_N;i++) miniVX.push(-MINI_WORLD + i*miniStep);
+for(let i=0;i<=MINI_N;i++){
+  miniHG.push([]);
+  for(let j=0;j<=MINI_N;j++) miniHG[i].push(miniHeightAt(miniVX[i], miniVX[j]));
+}
+for(let i=0;i<MINI_N;i++){
+  miniFACE.push([]);
+  for(let j=0;j<MINI_N;j++){
+    const h0=miniHG[i][j], h1=miniHG[i+1][j], h2=miniHG[i+1][j+1], h3=miniHG[i][j+1];
+    const ha=(h0+h1+h2+h3)/4;
+    const dhx=(h1-h0)/miniStep, dhy=(h3-h0)/miniStep;
+    const nx=-dhx, ny=-dhy, nz=1, ln=Math.hypot(nx,ny,nz);
+    const ndl=(nx*LIGHT[0]+ny*LIGHT[1]+nz*LIGHT[2])/ln;
+    const sh=0.60+0.62*Math.max(0,ndl);
+    const c = baseColor(ha);
+    const col = 'rgb('+Math.min(255,Math.round(c[0]*sh))+','
+                      +Math.min(255,Math.round(c[1]*sh))+','
+                      +Math.min(255,Math.round(c[2]*sh))+')';
+    miniFACE[i].push({col, ha});
+  }
+}
+/* 9 marqueurs : 3 par aspect */
+let miniMarkers = [];
+function setupMiniMarkers(){
+  const surf = (x,y) => Math.max(miniHeightAt(x,y), MINI_WATER+0.5) + 0.4;
+  miniMarkers = [
+    {asp:'d', step:0, x:-15, y:-16, z:16},
+    {asp:'d', step:1, x:  0, y:-19, z:20},
+    {asp:'d', step:2, x: 15, y:-16, z:16},
+    {asp:'e', step:0, x:-15, y:  1, z:surf(-15,1)},
+    {asp:'e', step:1, x:  0, y:  4, z:surf(0,4)},
+    {asp:'e', step:2, x: 15, y:  1, z:surf(15,1)},
+    {asp:'r', step:0, x:-15, y: 17, z:-11},
+    {asp:'r', step:1, x:  0, y: 17, z:-15},
+    {asp:'r', step:2, x: 15, y: 17, z:-11}
+  ];
+}
+/* 3 chemins : segments reliant les 3 étapes d'un aspect */
+const MINI_PATHS = [
+  {asp:'d', col:'#2b7fd4', rgb:[43,127,212], idx:[0,1,2]},
+  {asp:'e', col:'#5aa348', rgb:[90,163,72],  idx:[3,4,5]},
+  {asp:'r', col:'#9a6bc4', rgb:[154,107,196],idx:[6,7,8]}
+];
+
+function resizeMini(){
+  if(!miniCv || !miniCv.parentElement) return;
+  const r = miniCv.parentElement.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  mW = Math.max(200, r.width); mH = Math.max(160, r.height);
+  miniCv.width = Math.round(mW*dpr); miniCv.height = Math.round(mH*dpr);
+  miniCv.style.width = mW+'px'; miniCv.style.height = mH+'px';
+  miniCtx.setTransform(dpr,0,0,dpr,0,0);
+  mCX = mW/2; mCY = mH/2 + mH*0.02;
+  mFOCAL = Math.max(400, Math.min(mW,mH)*1.15);
+}
+
+function drawMiniSky(t){
+  const g = miniCtx.createLinearGradient(0,0,0,mH);
+  g.addColorStop(0,   '#cfe6f7'); g.addColorStop(0.5, '#e6f1fa');
+  g.addColorStop(1,   '#f0e6d2');
+  miniCtx.fillStyle = g; miniCtx.fillRect(0,0,mW,mH);
+  const sx = mW*0.18, sy = mH*0.16;
+  const rg = miniCtx.createRadialGradient(sx,sy,2,sx,sy,120);
+  rg.addColorStop(0,'rgba(255,247,205,0.95)');
+  rg.addColorStop(1,'rgba(255,247,205,0)');
+  miniCtx.fillStyle = rg;
+  miniCtx.beginPath(); miniCtx.arc(sx,sy,120,0,Math.PI*2); miniCtx.fill();
+}
+function miniLabel(txt,x,y,size,color,bold){
+  miniCtx.font = (bold?'700 ':'600 ')+(size||11)+'px "Segoe UI",system-ui,sans-serif';
+  miniCtx.textAlign='center'; miniCtx.textBaseline='middle';
+  miniCtx.lineWidth = 3.2; miniCtx.strokeStyle='rgba(255,253,248,0.92)';
+  miniCtx.strokeText(txt,x,y); miniCtx.fillStyle = color || '#22303a'; miniCtx.fillText(txt,x,y);
+}
+
+function drawMiniSkyMarker(m, p, hovered, selected, done){
+  const s = Math.max(10, Math.min(38, p.f*1.7));
+  const hov = hovered, sel = selected;
+  const pulse = 1 + 0.07*Math.sin(clock*0.0045 + m.step*1.2);
+  const col = '#2b7fd4';
+  miniCtx.save(); miniCtx.globalAlpha = 0.92;
+  miniCtx.beginPath();
+  miniCtx.ellipse(p.x, p.y+s*0.62, s*0.80*pulse, s*0.30*pulse, 0, 0, Math.PI*2);
+  miniCtx.fillStyle = done ? 'rgba(255,240,200,0.95)' : 'rgba(255,255,255,0.92)';
+  miniCtx.fill();
+  miniCtx.lineWidth = 1.4;
+  miniCtx.strokeStyle = done ? 'rgba(201,150,43,0.75)' : 'rgba(110,150,190,0.5)';
+  miniCtx.stroke(); miniCtx.restore();
+  const r = s*0.52*(hov?1.25:1);
+  const cy0 = p.y - s*0.15;
+  miniCtx.beginPath();
+  miniCtx.moveTo(p.x, cy0 - r*1.35);
+  miniCtx.lineTo(p.x + r, cy0 - r*0.15);
+  miniCtx.lineTo(p.x, cy0 + r*1.05);
+  miniCtx.lineTo(p.x - r, cy0 - r*0.15);
+  miniCtx.closePath();
+  const gr = miniCtx.createLinearGradient(p.x-r, cy0-r, p.x+r, cy0+r);
+  gr.addColorStop(0, done ? '#ffe08a' : '#ffffff');
+  gr.addColorStop(1, done ? '#c9962b' : col);
+  miniCtx.fillStyle = gr; miniCtx.fill();
+  miniCtx.lineWidth = sel?2.6:1.4; miniCtx.strokeStyle = sel ? '#0e7c86' : 'rgba(40,60,80,0.4)'; miniCtx.stroke();
+  /* numéro */
+  miniCtx.font = '800 '+Math.max(9, Math.min(15, s*0.55))+'px "Segoe UI",system-ui,sans-serif';
+  miniCtx.textAlign = 'center'; miniCtx.textBaseline = 'middle';
+  miniCtx.fillStyle = '#fff'; miniCtx.fillText(String(m.step+1), p.x, cy0 - r*0.05);
+  if(done){
+    miniCtx.beginPath(); miniCtx.arc(p.x + r*0.9, cy0 - r*0.9, s*0.18, 0, Math.PI*2);
+    miniCtx.fillStyle = '#2f9e44'; miniCtx.fill();
+    miniCtx.strokeStyle = '#fff'; miniCtx.lineWidth = 1.4; miniCtx.stroke();
+  }
+  return { x: p.x, y: cy0, r: Math.max(16, s*0.75), asp:m.asp, step:m.step };
+}
+function drawMiniGroundMarker(m, p, hovered, selected, done){
+  const s = Math.max(10, Math.min(38, p.f*1.7));
+  const hov = hovered, sel = selected;
+  const pulse = 1 + 0.05*Math.sin(clock*0.0045 + m.step*1.4);
+  const col = '#5aa348';
+  miniCtx.beginPath();
+  miniCtx.ellipse(p.x, p.y + s*0.55, s*0.55, s*0.19, 0, 0, Math.PI*2);
+  miniCtx.fillStyle = 'rgba(60,80,60,0.20)'; miniCtx.fill();
+  miniCtx.beginPath();
+  miniCtx.moveTo(p.x, p.y + s*0.5); miniCtx.lineTo(p.x, p.y - s*0.9);
+  miniCtx.strokeStyle = 'rgba(70,85,70,0.7)';
+  miniCtx.lineWidth = Math.max(1.2, s*0.09); miniCtx.stroke();
+  const w = s*0.85*(hov?1.2:1), hh = s*0.62*(hov?1.2:1);
+  miniCtx.beginPath();
+  miniCtx.moveTo(p.x, p.y - s*0.9);
+  miniCtx.lineTo(p.x + w, p.y - s*0.9 + hh*0.5);
+  miniCtx.lineTo(p.x, p.y - s*0.9 + hh);
+  miniCtx.closePath();
+  miniCtx.fillStyle = done ? '#f2c14e' : col; miniCtx.fill();
+  miniCtx.lineWidth = sel?2.4:1.2;
+  miniCtx.strokeStyle = sel ? '#0e7c86' : 'rgba(30,50,40,0.4)'; miniCtx.stroke();
+  miniCtx.beginPath();
+  miniCtx.arc(p.x, p.y + s*0.15, s*0.42*pulse, 0, Math.PI*2);
+  miniCtx.fillStyle = done ? '#fff3cf' : 'rgba(255,255,255,0.95)'; miniCtx.fill();
+  miniCtx.lineWidth = 1.6; miniCtx.strokeStyle = col; miniCtx.stroke();
+  miniCtx.font = '800 '+Math.max(9, Math.min(14, s*0.55))+'px "Segoe UI",system-ui,sans-serif';
+  miniCtx.textAlign='center'; miniCtx.textBaseline='middle';
+  miniCtx.fillStyle = col; miniCtx.fillText(String(m.step+1), p.x, p.y + s*0.15);
+  if(done){
+    miniCtx.beginPath(); miniCtx.arc(p.x + s*0.5, p.y - s*0.7, s*0.18, 0, Math.PI*2);
+    miniCtx.fillStyle = '#2f9e44'; miniCtx.fill();
+    miniCtx.strokeStyle = '#fff'; miniCtx.lineWidth = 1.4; miniCtx.stroke();
+  }
+  return { x: p.x, y: p.y + s*0.15, r: Math.max(16, s*0.8), asp:m.asp, step:m.step };
+}
+function drawMiniCaveMarker(m, p, hovered, selected, done){
+  const s = Math.max(10, Math.min(38, p.f*1.6));
+  const hov = hovered, sel = selected;
+  const pulse = 0.85 + 0.22*Math.sin(clock*0.004 + m.step*1.1);
+  const col = '#9a6bc4';
+  const rg = miniCtx.createRadialGradient(p.x,p.y,1,p.x,p.y,s*2.2);
+  rg.addColorStop(0, done ? 'rgba(255,214,102,0.9)' : 'rgba(154,107,196,0.75)');
+  rg.addColorStop(1, 'rgba(154,107,196,0)');
+  miniCtx.fillStyle = rg;
+  miniCtx.beginPath(); miniCtx.arc(p.x,p.y,s*2.2,0,Math.PI*2); miniCtx.fill();
+  const r = s*0.62*(hov?1.2:1);
+  miniCtx.beginPath();
+  miniCtx.moveTo(p.x, p.y - r*1.5);
+  miniCtx.lineTo(p.x + r*0.62, p.y - r*0.15);
+  miniCtx.lineTo(p.x, p.y + r*1.15);
+  miniCtx.lineTo(p.x - r*0.62, p.y - r*0.15);
+  miniCtx.closePath();
+  const gr = miniCtx.createLinearGradient(p.x-r, p.y-r, p.x+r, p.y+r);
+  gr.addColorStop(0, done ? '#ffe9a8' : '#e3d2f5');
+  gr.addColorStop(1, done ? '#c9962b' : col);
+  miniCtx.fillStyle = gr; miniCtx.fill();
+  miniCtx.lineWidth = sel?2.4:1.3;
+  miniCtx.strokeStyle = sel ? '#0e7c86' : 'rgba(60,30,90,0.45)'; miniCtx.stroke();
+  miniCtx.beginPath(); miniCtx.arc(p.x, p.y - r*0.15, r*0.30*pulse, 0, Math.PI*2);
+  miniCtx.fillStyle = 'rgba(255,255,255,0.9)'; miniCtx.fill();
+  miniCtx.font = '800 '+Math.max(9, Math.min(13, s*0.5))+'px "Segoe UI",system-ui,sans-serif';
+  miniCtx.textAlign='center'; miniCtx.textBaseline='middle';
+  miniCtx.fillStyle = '#5a3a86'; miniCtx.fillText(String(m.step+1), p.x, p.y - r*0.15);
+  if(done){
+    miniCtx.beginPath(); miniCtx.arc(p.x + r*0.7, p.y - r*1.0, s*0.18, 0, Math.PI*2);
+    miniCtx.fillStyle = '#2f9e44'; miniCtx.fill();
+    miniCtx.strokeStyle = '#fff'; miniCtx.lineWidth = 1.4; miniCtx.stroke();
+  }
+  return { x: p.x, y: p.y - r*0.15, r: Math.max(16, s*0.85), asp:m.asp, step:m.step };
+}
+function drawMiniPath(a, b, col){
+  if(!a || !b) return;
+  miniCtx.save();
+  miniCtx.lineCap = 'round';
+  miniCtx.strokeStyle = col;
+  miniCtx.lineWidth = Math.max(1.4, Math.min(4, (a.f + b.f) * 0.24));
+  miniCtx.globalAlpha = 0.55;
+  miniCtx.setLineDash([4, 5]);
+  miniCtx.beginPath();
+  miniCtx.moveTo(a.x, a.y);
+  miniCtx.lineTo(b.x, b.y);
+  miniCtx.stroke();
+  miniCtx.restore();
+}
+const miniHitZones = [];
+function renderMini(t){
+  requestAnimationFrame(renderMini);
+  if(!state.miniNotion) return;
+  try{
+    drawMiniSky(t);
+    miniHitZones.length = 0;
+    const P = [];
+    for(let i=0;i<=MINI_N;i++){
+      const row = [];
+      for(let j=0;j<=MINI_N;j++) row.push(projectPoint(miniVX[i], miniVX[j], miniHG[i][j], miniCam, mCX, mCY, mFOCAL));
+      P.push(row);
+    }
+    const items = [];
+    for(let i=0;i<MINI_N;i++){
+      for(let j=0;j<MINI_N;j++){
+        const a=P[i][j], b=P[i+1][j], c=P[i+1][j+1], d=P[i][j+1];
+        if(!a||!b||!c||!d) continue;
+        const f = miniFACE[i][j];
+        const dep=(a.d+b.d+c.d+d.d)/4;
+        if(f.ha < MINI_WATER) items.push({d:dep, k:2, i, j});
+        else             items.push({d:dep, k:1, i, j, col:f.col});
+      }
+    }
+    /* chemins (3 parcours) */
+    MINI_PATHS.forEach(path => {
+      const ids = path.idx;
+      for(let s=0; s<2; s++){
+        const a = miniMarkers[ids[s]], b = miniMarkers[ids[s+1]];
+        const pa = projectPoint(a.x, a.y, a.z + 0.4, miniCam, mCX, mCY, mFOCAL);
+        const pb = projectPoint(b.x, b.y, b.z + 0.4, miniCam, mCX, mCY, mFOCAL);
+        if(!pa || !pb) continue;
+        items.push({d: Math.max(pa.d, pb.d) + 0.5, k:30, pa, pb, col: path.col});
+      }
+    });
+    /* marqueurs */
+    miniMarkers.forEach(m => {
+      const p = projectPoint(m.x, m.y, m.z, miniCam, mCX, mCY, mFOCAL);
+      if(!p) return;
+      const hov = state.miniHovered && state.miniHovered.asp === m.asp && state.miniHovered.step === m.step;
+      const sel = state.miniSelected && state.miniSelected.asp === m.asp && state.miniSelected.step === m.step;
+      const done = isStepExp(state.miniNotion.id, m.asp, m.step);
+      items.push({d: p.d, k: 40 + (m.asp==='d'?0:m.asp==='e'?1:2), m, p, hov, sel, done});
+    });
+    items.sort((A,B)=> B.d - A.d);
+    for(let k=0;k<items.length;k++){
+      const it = items[k];
+      if(it.k === 1){
+        const {i,j,col} = it;
+        miniCtx.beginPath();
+        miniCtx.moveTo(P[i][j].x, P[i][j].y); miniCtx.lineTo(P[i+1][j].x, P[i+1][j].y);
+        miniCtx.lineTo(P[i+1][j+1].x, P[i+1][j+1].y); miniCtx.lineTo(P[i][j+1].x, P[i][j+1].y);
+        miniCtx.closePath(); miniCtx.fillStyle = col; miniCtx.fill();
+        miniCtx.strokeStyle = col; miniCtx.lineWidth = 0.7; miniCtx.stroke();
+      } else if(it.k === 2){
+        const {i,j} = it;
+        const w0=projectPoint(miniVX[i],miniVX[j],MINI_WATER,miniCam,mCX,mCY,mFOCAL);
+        const w1=projectPoint(miniVX[i+1],miniVX[j],MINI_WATER,miniCam,mCX,mCY,mFOCAL);
+        const w2=projectPoint(miniVX[i+1],miniVX[j+1],MINI_WATER,miniCam,mCX,mCY,mFOCAL);
+        const w3=projectPoint(miniVX[i],miniVX[j+1],MINI_WATER,miniCam,mCX,mCY,mFOCAL);
+        if(!w0||!w1||!w2||!w3) continue;
+        miniCtx.beginPath();
+        miniCtx.moveTo(w0.x,w0.y); miniCtx.lineTo(w1.x,w1.y);
+        miniCtx.lineTo(w2.x,w2.y); miniCtx.lineTo(w3.x,w3.y); miniCtx.closePath();
+        miniCtx.fillStyle = 'rgba(118,183,222,0.88)'; miniCtx.fill();
+      } else if(it.k === 30){
+        drawMiniPath(it.pa, it.pb, it.col);
+      } else if(it.k >= 40){
+        let hz = null;
+        if(it.m.asp === 'd') hz = drawMiniSkyMarker(it.m, it.p, it.hov, it.sel, it.done);
+        else if(it.m.asp === 'e') hz = drawMiniGroundMarker(it.m, it.p, it.hov, it.sel, it.done);
+        else hz = drawMiniCaveMarker(it.m, it.p, it.hov, it.sel, it.done);
+        if(hz) miniHitZones.push(hz);
+        /* étiquette au survol */
+        if(it.hov && state.miniNotion){
+          const step = state.miniNotion.steps[it.m.asp][it.m.step];
+          const txt = step.title;
+          miniCtx.font = '700 11px "Segoe UI",system-ui,sans-serif';
+          const tw = miniCtx.measureText(txt).width + 14;
+          const th = 20;
+          const tx = it.p.x - tw/2;
+          const ty = it.p.y - (it.m.asp==='d'?46:36);
+          miniCtx.beginPath();
+          miniCtx.rect(tx, ty, tw, th);
+          miniCtx.fillStyle = 'rgba(255,253,248,0.97)'; miniCtx.fill();
+          miniCtx.lineWidth = 1.4; miniCtx.strokeStyle = it.m.asp==='d'?'#2b7fd4':it.m.asp==='e'?'#5aa348':'#9a6bc4'; miniCtx.stroke();
+          miniCtx.fillStyle = '#22303a';
+          miniCtx.textAlign = 'center'; miniCtx.textBaseline = 'middle';
+          miniCtx.fillText(txt, it.p.x, ty + th/2 + 1);
+        }
+      }
+    }
+  } catch(err){ console.error('[renderMini]', err); }
+}
+
+/* =========================================================================
+   7. MODALE
+   ========================================================================= */
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modalTitle');
+const modalSubtitle = document.getElementById('modalSubtitle');
+const modalInfo = document.getElementById('modalInfo');
+
+const ASPECT_META = {
+  d:{nom:'Parcours Découverte', col:'#2b7fd4', label:'diamant céleste',
+     sous:"L'élève n'a pas encore traité la notion : on la découvre pas à pas."},
+  e:{nom:'Parcours Enracinement', col:'#5aa348', label:'camp au sol',
+     sous:"La notion est en cours de traitement en classe : on l'enracine et on l'approfondit."},
+  r:{nom:'Parcours Reprise', col:'#9a6bc4', label:'cristal souterrain',
+     sous:"La notion a déjà été traitée : on la réactive et on va plus loin."}
+};
+
+function openModal(notion){
+  state.miniNotion = notion;
+  state.miniSelected = null;
+  state.miniHovered = null;
+  setupMiniMarkers();
+  miniCam.yaw = -0.55; miniCam.pitch = 0.55; miniCam.dist = 105;
+  miniCam.tx = 0; miniCam.ty = 0; miniCam.tz = 0;
+  modalTitle.textContent = (notion.idx+1) + '. ' + notion.nom;
+  modalSubtitle.textContent = '3 parcours (découverte / enracinement / reprise) · 3 étapes chacun';
+  modalInfo.innerHTML = `
+    <div class="modal-info-empty">
+      <b>Sélectionnez un repère</b><br>
+      dans la mini-carte pour découvrir<br>
+      la méthode, un exemple guidé<br>
+      et un exercice corrigé.<br><br>
+      Chaque parcours comporte 3 étapes :<br>
+      cliquez sur 1, puis 2, puis 3<br>
+      pour avancer pas à pas.
+    </div>`;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(()=>{ resizeMini(); });
+}
+function closeModal(){
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  state.miniNotion = null;
+  state.miniSelected = null;
+  state.miniHovered = null;
+}
+
+function stepContentHTML(notion, asp, i){
+  const A = ASPECT_META[asp];
+  const step = notion.steps[asp][i];
+  const prevIdx = i-1;
+  const nextIdx = i+1;
+  const done = isStepExp(notion.id, asp, i);
+  const dotHTML = [0,1,2].map(k => `<i class="${isStepExp(notion.id,asp,k)?'on':''}"></i>`).join('');
+  return `
+    <span class="step-badge" style="background:${A.col}">${A.nom}</span>
+    <h3 class="step-title">${step.title} <span class="step-dots" style="color:${A.col}">${dotHTML}</span></h3>
+    <div class="step-progress">Étape ${i+1} sur 3 · ${done?'explorée':'à explorer'}</div>
+    <div class="card" style="border-left:4px solid ${A.col}">
+      <h4 style="color:${A.col}">Méthode et raisonnement</h4>
+      <p>${step.method}</p>
+    </div>
+    <div class="card c2">
+      <h4>Exemple guidé</h4>
+      <div class="ex">${step.ex}</div>
+    </div>
+    <div class="card c3">
+      <h4>À toi de jouer</h4>
+      <p>${step.q}</p>
+      <button class="reveal-btn">Vérifier ma réponse</button>
+      <div class="reveal">${step.r}</div>
+    </div>
+    <div class="card c4">
+      <h4>Astuce / point de vigilance</h4>
+      <p>${step.tip}</p>
+    </div>
+    <div class="step-nav">
+      <button data-nav="prev" ${i===0?'disabled':''}>← Étape ${i>0?i:''} précédente</button>
+      <button data-nav="next" ${i===2?'disabled':''}>Étape ${i<2?i+2:''} suivante →</button>
+    </div>
+  `;
+}
+
+function showStepContent(notion, asp, i){
+  modalInfo.innerHTML = stepContentHTML(notion, asp, i);
+  const btn = modalInfo.querySelector('.reveal-btn');
+  const rev = modalInfo.querySelector('.reveal');
+  if(btn && rev){
+    btn.addEventListener('click', ()=>{
+      rev.classList.toggle('show');
+      btn.textContent = rev.classList.contains('show') ? 'Masquer' : 'Vérifier ma réponse';
+    });
+  }
+  modalInfo.querySelectorAll('[data-nav]').forEach(b => {
+    b.addEventListener('click', ()=>{
+      const dir = b.dataset.nav;
+      let ni = i + (dir==='next'?1:-1);
+      if(ni >= 0 && ni <= 2){
+        state.miniSelected = { asp, step: ni };
+        markStepExp(notion.id, asp, ni);
+        showStepContent(notion, asp, ni);
+      }
+    });
+  });
+  modalInfo.scrollTop = 0;
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalBackdrop').addEventListener('click', closeModal);
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+});
+
+/* interactions mini-carte */
+let miniDrag = { on:false, x:0, y:0, moved:0 };
+function miniLocalPos(e){
+  const r = miniCv.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+miniCv.addEventListener('pointerdown', e=>{
+  miniDrag.on = true; miniDrag.moved = 0;
+  const p = miniLocalPos(e); miniDrag.x = p.x; miniDrag.y = p.y;
+  try{ miniCv.setPointerCapture(e.pointerId); }catch(err){}
+});
+miniCv.addEventListener('pointermove', e=>{
+  const p = miniLocalPos(e);
+  if(miniDrag.on){
+    const dx = p.x - miniDrag.x, dy = p.y - miniDrag.y;
+    miniDrag.moved += Math.abs(dx)+Math.abs(dy);
+    miniCam.yaw   -= dx*0.0065;
+    miniCam.pitch  = Math.max(0.12, Math.min(1.35, miniCam.pitch + dy*0.005));
+    miniDrag.x = p.x; miniDrag.y = p.y;
+  }
+  let best = null, bestD = 1e9;
+  for(let i=miniHitZones.length-1;i>=0;i--){
+    const h = miniHitZones[i];
+    const d = Math.hypot(h.x-p.x, h.y-p.y);
+    if(d < h.r && d < bestD){ bestD = d; best = h; }
+  }
+  state.miniHovered = best;
+  miniCv.style.cursor = best ? 'pointer' : (miniDrag.on ? 'grabbing' : 'grab');
+});
+miniCv.addEventListener('pointerup', e=>{
+  if(miniDrag.on && miniDrag.moved < 10){
+    const p = miniLocalPos(e);
+    let best = null, bestD = 1e9;
+    for(let i=miniHitZones.length-1;i>=0;i--){
+      const h = miniHitZones[i];
+      const d = Math.hypot(h.x-p.x, h.y-p.y);
+      if(d < h.r && d < bestD){ bestD = d; best = h; }
+    }
+    if(best && state.miniNotion){
+      state.miniSelected = { asp: best.asp, step: best.step };
+      markStepExp(state.miniNotion.id, best.asp, best.step);
+      showStepContent(state.miniNotion, best.asp, best.step);
+    }
+  }
+  miniDrag.on = false;
+});
+miniCv.addEventListener('pointerleave', ()=>{ miniDrag.on = false; state.miniHovered = null; });
+miniCv.addEventListener('wheel', e=>{
+  e.preventDefault();
+  miniCam.dist = Math.max(55, Math.min(220, miniCam.dist * (1 + e.deltaY*0.0012)));
+}, {passive:false});
+
+/* =========================================================================
+   8. SURVOL CARTE MÈRE → OUVERTURE MODALE
+   ========================================================================= */
+let drag = { on:false, x:0, y:0, moved:0 };
+let mouse = { x:-999, y:-999 };
+let hoverTimer = null;
+const HOVER_DELAY = 550;
+
+function localPos(e){
+  const r = cv.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+cv.addEventListener('pointerdown', e=>{
+  drag.on = true; drag.moved = 0;
+  const p = localPos(e); drag.x = p.x; drag.y = p.y;
+  mouse.x = p.x; mouse.y = p.y;
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+});
+cv.addEventListener('pointerover', e=>{
+  const p = localPos(e); mouse.x = p.x; mouse.y = p.y;
+});
+cv.addEventListener('pointermove', e=>{
+  const p = localPos(e);
+  mouse.x = p.x; mouse.y = p.y;
+  if(drag.on){
+    const dx = p.x - drag.x, dy = p.y - drag.y;
+    drag.moved += Math.abs(dx)+Math.abs(dy);
+    cam.yaw   -= dx*0.0062;
+    cam.pitch  = Math.max(0.12, Math.min(1.35, cam.pitch + dy*0.005));
+    drag.x = p.x; drag.y = p.y;
+  }
+});
+cv.addEventListener('pointerup', ()=>{
+  if(drag.on && drag.moved < 10){
+    let best = null, bestD = 1e9;
+    for(let i=hitZones.length-1;i>=0;i--){
+      const h = hitZones[i];
+      const d = Math.hypot(h.x-mouse.x, h.y-mouse.y);
+      if(d < h.r && d < bestD){ bestD = d; best = h; }
+    }
+    if(best){
+      const n = NOTIONS.find(x=>x.id === best.id);
+      if(n){ if(hoverTimer){ clearTimeout(hoverTimer); hoverTimer = null; } openModal(n); }
+    }
+  }
+  drag.on = false;
+});
+cv.addEventListener('pointercancel', ()=>{ drag.on = false; });
+cv.addEventListener('pointerleave', ()=>{
+  drag.on = false; mouse.x = -999; mouse.y = -999;
+  if(hoverTimer){ clearTimeout(hoverTimer); hoverTimer = null; }
+  state.motherHover = null;
+});
+cv.addEventListener('wheel', e=>{
+  e.preventDefault();
+  cam.dist = Math.max(120, Math.min(780, cam.dist * (1 + e.deltaY*0.0011)));
+}, {passive:false});
+
+function updateMotherHover(){
+  if(modal.classList.contains('open')) return;
+  let best = null, bestD = 1e9;
+  for(let i=hitZones.length-1;i>=0;i--){
+    const h = hitZones[i];
+    const d = Math.hypot(h.x-mouse.x, h.y-mouse.y);
+    if(d < h.r && d < bestD){ bestD = d; best = h; }
+  }
+  const prev = state.motherHover;
+  state.motherHover = best ? { id: best.id, x: best.x, y: best.y } : null;
+  if(best){
+    if(!prev || prev.id !== best.id){
+      if(hoverTimer){ clearTimeout(hoverTimer); hoverTimer = null; }
+      const notionId = best.id;
+      hoverTimer = setTimeout(()=>{
+        hoverTimer = null;
+        const n = NOTIONS.find(x=>x.id === notionId);
+        if(n && !modal.classList.contains('open') && state.motherHover && state.motherHover.id === notionId){
+          openModal(n);
+        }
+      }, HOVER_DELAY);
+    }
+    cv.style.cursor = 'pointer';
+  } else {
+    if(hoverTimer){ clearTimeout(hoverTimer); hoverTimer = null; }
+    cv.style.cursor = drag.on ? 'grabbing' : 'grab';
+  }
+}
+setInterval(updateMotherHover, 55);
+
+/* =========================================================================
+   9. PANNEAU LATÉRAL
+   ========================================================================= */
+const panel = document.getElementById('panel');
+function panelHTML(){
+  const s = countSteps(), tot = NOTIONS.length*9, c = countChest();
+  let h = `
+  <div class="ph">
+    <h2>Arithmétique</h2>
+    <p class="sub">8 notions · 3 parcours · 3 étapes · ${tot} fiches</p>
+  </div>
+  <div class="theme-title"><i style="background:#b0353f"></i>Progression : ${s}/${tot} · ${c}/${NOTIONS.length} coffres</div>
+  <p class="mini-note">
+    Survolez un repère sur la carte, ou cliquez-le, pour ouvrir sa mini-carte.
+    Dans chaque mini-carte, 9 repères vous attendent : 3 parcours de 3 étapes.
+  </p>`;
+  NOTIONS.forEach(n=>{
+    const d1 = isAspectExp(n.id,'d'), d2 = isAspectExp(n.id,'e'), d3 = isAspectExp(n.id,'r');
+    const open = d1&&d2&&d3;
+    h += `<button class="notion-row" data-id="${n.id}">
+      <span class="dots">
+        <i class="${d1?'on sky':''}"></i><i class="${d2?'on gr':''}"></i><i class="${d3?'on cv':''}"></i>
+      </span>
+      <span style="flex:1">${n.idx+1}. ${n.nom}</span>
+      ${open?'<span class="done-tag">ouvert</span>':''}
+    </button>`;
+  });
+  h += `<p class="mini-note">
+    Ciel : parcours découverte (notion non traitée). Sol : enracinement (en classe).
+    Grotte : reprise (déjà traitée). Suivez les étapes 1 → 2 → 3 dans chaque parcours.
+  </p>`;
+  return h;
+}
+function renderPanel(){ panel.innerHTML = panelHTML(); }
+panel.addEventListener('click', e=>{
+  const row = e.target.closest('.notion-row');
+  if(row){
+    const n = NOTIONS.find(x=>x.id === row.dataset.id);
+    if(n){ if(hoverTimer){ clearTimeout(hoverTimer); hoverTimer = null; } openModal(n); }
+  }
+});
+
+/* =========================================================================
+   10. BOUTONS
+   ========================================================================= */
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  cam.yaw = -0.72; cam.pitch = 0.63; cam.dist = 340; cam.tx=0; cam.ty=0; cam.tz=0;
+});
+document.getElementById('btnAll').addEventListener('click', ()=>{
+  cam.dist = 440; cam.pitch = 0.85;
+});
+document.getElementById('btnResetProg').addEventListener('click', ()=>{
+  if(confirm('Effacer toute la progression enregistrée ?')){
+    state.explored = {};
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    updateGauges(); renderPanel();
+  }
+});
+
+/* =========================================================================
+   11. DÉMARRAGE
+   ========================================================================= */
+resizeMother();
+resizeMini();
+setupMiniMarkers();
+updateGauges();
+renderPanel();
+requestAnimationFrame(renderMother);
+requestAnimationFrame(renderMini);
+
+setTimeout(()=>{
+  const hint = document.getElementById('hint');
+  hint.style.transition = 'opacity .8s';
+  hint.style.opacity = '0.55';
+}, 6000);
+</script>
+</body>
+</html>

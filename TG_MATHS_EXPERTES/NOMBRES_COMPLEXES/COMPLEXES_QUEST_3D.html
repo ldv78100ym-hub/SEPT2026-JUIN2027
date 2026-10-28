@@ -113,6 +113,18 @@ main{flex:1;display:flex;min-height:0}
 .nreq{position:absolute;right:0;top:-3px;bottom:-3px;width:2.5px;background:#ffd76e}
 .npct{width:86px;text-align:right;font-weight:600;white-space:nowrap;font-size:.82rem}
 .nsub{font-size:.85rem;opacity:.88;margin:6px 0}
+/* ---- Sauvegarde chiffrée, reprise & notions passées ---- */
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(18,26,66,.95);border:1px solid rgba(120,200,255,.65);color:#eaf2ff;padding:9px 16px;border-radius:12px;font-size:.85rem;z-index:80;max-width:92vw;text-align:center;opacity:0;pointer-events:none;transition:opacity .35s}
+#toast.show{opacity:1}
+.idrow{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+.idrow .in{flex:1;min-width:110px;width:auto}
+.fileimp{margin:10px 0;padding:9px 12px;border:1.5px dashed rgba(190,215,255,.6);border-radius:10px;font-size:.85rem;color:#dbe4ff;line-height:1.7}
+.fileimp input{margin-left:8px;max-width:60%;color:#eaf0ff}
+.warnline{color:#ffd76e;font-size:.85rem;margin-top:6px;min-height:1em}
+.skiprow{display:flex;align-items:center;gap:10px;padding:7px 9px;background:rgba(50,60,150,.5);border:1px solid rgba(190,215,255,.4);border-radius:10px;margin:7px 0;flex-wrap:wrap}
+.skiprow .nlab{flex:1;min-width:120px;text-align:left}
+.skiprow .btn{padding:5px 12px;font-size:.82rem}
+.tbrick.skipb{background:repeating-linear-gradient(45deg,rgba(150,150,180,.22) 0 6px,rgba(80,90,140,.38) 6px 12px);border-style:dotted;border-color:rgba(210,210,230,.65)}
 .legalbar{flex:0;padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(120,160,255,.25)}
 .legalbar .tool{font-size:.8rem;opacity:.9}
 #modalCard h2{margin-bottom:10px;color:#eef3ff}
@@ -162,12 +174,15 @@ sup,sub{line-height:0}
 <header id="topbar">
   <div class="brand"><b>∮ Complexe Quest 3D</b><span class="sub">Nombres complexes · Terminale générale — option Maths expertes</span></div>
   <div class="hud">
+    <span id="hWho" class="chip hidden"></span>
     <span id="hLevel" class="chip">—</span>
     <span id="dots" class="dots"></span>
     <span class="stat">🏆 <b id="hScore">0</b></span>
     <span class="stat">⭐ <b id="hBest">0</b></span>
     <span class="stat" id="hLives">❤❤❤</span>
     <button id="btnNotions" class="tool">🎓 Notions</button>
+    <button id="btnSkip" class="tool hidden">⏭ Passées</button>
+    <button id="btnSave" class="tool">💾 Sauvegarde</button>
     <button id="btnFiche" class="tool">📘 Fiche</button>
     <button id="btnView" class="tool">🎥 Vue</button>
     <button id="btnSound" class="tool">🔊</button>
@@ -1284,15 +1299,15 @@ const NOTIONS=[];
   ];
   defs.forEach(d=>d.list.forEach(e=>{
     NOTIONS.push({L:d.L,idx:e.i,risk:(e.i===6),label:e.l,floor:NOTIONS.length+1,
-      req:(e.i===6)?2:3,w:(e.i===6)?4:10,streak:0,seen:0,ok:0});
+      req:(e.i===6)?2:3,w:(e.i===6)?4:10,streak:0,seen:0,ok:0,skip:false});
   }));
 })();
 function notionMastery(n){return Math.min(100,Math.round(100*n.streak/n.req));}
 function masteredCount(){return NOTIONS.filter(n=>n.done).length;}
-function availNotions(){return NOTIONS.filter(n=>n.floor<=G.floor+1);}
+function availNotions(){return NOTIONS.filter(n=>n.floor<=G.floor+1&&!n.skip);}
 function pickNotion(){
   const av=availNotions();
-  if(!av.length)return NOTIONS[0];
+  if(!av.length)return null;
   let tot=0;
   const ws=av.map(n=>{let w=n.w;if(notionMastery(n)>=100)w=Math.min(w,0.5);tot+=w;return w;});
   let x=Math.random()*tot;
@@ -1315,7 +1330,7 @@ function renderTower(mode){
   let html='';
   for(let f=G.floor;f>=1;f--){
     const n=NOTIONS[f-1],m=notionMastery(n);
-    let cls='tbrick'+(m>=100?' m2':(m>0?' m1':' m0'))+(n.risk?' riskb':'')+((f===G.floor)?' now'+((mode==='grow')?' grow':''):'');
+    let cls='tbrick'+(m>=100?' m2':(m>0?' m1':' m0'))+(n.risk?' riskb':'')+((n.skip&&!n.done)?' skipb':'')+((f===G.floor)?' now'+((mode==='grow')?' grow':''):'');
     html+='<div class="'+cls+'" data-floor="'+f+'"></div>';
   }
   html+='<div class="tground">RDC</div>';
@@ -1360,6 +1375,7 @@ function endMission(sc){
       renderTower('');
     }
   }
+  svcCheckpoint('mission');
   if(NOTIONS.every(x=>x.done)){victory();return;}
   nextMission();
 }
@@ -1378,7 +1394,8 @@ function showNotions(){
       '<span class="ntrack"><span class="nfill" style="width:'+m+'%"></span><span class="nreq"></span></span>'+
       '<span class="npct">'+(locked?'🔒 étage '+n.floor:((n.done?'✅ ':'')+m+'%'))+'</span></div>';
   });
-  html+='<p class="nsub">Étage actuel : <b>'+G.floor+'</b> · notions maîtrisées : <b>'+masteredCount()+'/'+NOTIONS.length+'</b> · une mission réussie à plus de 95% construit un étage, sinon la tour s\u2019effondre jusqu\u2019à l\u2019étage le plus fragile.</p>';
+  const skn=NOTIONS.filter(n=>n.skip&&!n.done).length;
+  html+='<p class="nsub">Étage actuel : <b>'+G.floor+'</b> · notions maîtrisées : <b>'+masteredCount()+'/'+NOTIONS.length+'</b> · une mission réussie à plus de 95% construit un étage, sinon la tour s\u2019effondre jusqu\u2019à l\u2019étage le plus fragile.'+(skn?' · ⏭ <b>'+skn+'</b> notion'+(skn>1?'s':'')+' passée'+(skn>1?'s':'')+' en attente (activation une par une via ⏭ Passées) : l\u2019activité ne sera pas finalisée tant qu\u2019elle'+(skn>1?'s':'')+' ne sera'+(skn>1?'nt':'')+' pas maîtrisée'+(skn>1?'s':'')+'.':'')+'</p>';
   showModal(html,[{label:'Fermer',primary:true,cb:hideModal}]);
   sfxClick();
 }
@@ -1891,7 +1908,13 @@ function updateHeader(){
   $('#hScore').textContent=G.score;
   $('#hBest').textContent=Math.max(best,G.score);
   $('#hLives').textContent='❤'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.min(3,Math.max(0,3-G.lives)));
-  $('#dots').innerHTML='<span class="chip">🏢 étage '+G.floor+'</span><span class="chip">🎓 '+masteredCount()+'/'+NOTIONS.length+'</span>';
+  const skn=NOTIONS.filter(n=>n.skip&&!n.done).length;
+  $('#dots').innerHTML='<span class="chip">🏢 étage '+G.floor+'</span><span class="chip">🎓 '+masteredCount()+'/'+NOTIONS.length+'</span>'+(skn?'<span class="chip risk">⏭ '+skn+'</span>':'');
+  const w=$('#hWho');
+  if(w){
+    if(SVC.st&&SVC.st.eleve&&SVC.st.eleve.nom){w.textContent=SVC.st.eleve.prenom+' '+SVC.st.eleve.nom.toUpperCase()+' · '+SVC.st.eleve.classe;w.classList.remove('hidden');}
+    else w.classList.add('hidden');
+  }
 }
 function setFeedback(kind,html){
   const fb=$('#feedback');
@@ -1900,12 +1923,12 @@ function setFeedback(kind,html){
   fb.innerHTML=html;
   mjUpgrade(fb);
 }
-function buildPanel(){
+function buildPanel(restored){
   const L=LEVELS[G.level];
-  G.cur=genFor(G.level,G.idx);
-  G.attempts=0;G.hints=0;G.lock=false;
+  const m=restored||genFor(G.level,G.idx);
+  G.cur=m;
+  if(!restored){G.attempts=0;G.hints=0;G.lock=false;}
   G.t0=Date.now();
-  const m=G.cur;
   G.risk=m.risk?{wRe:m.wRe,wIm:m.wIm}:null;
   const mc=$('#missionCard');
   mc.innerHTML='';
@@ -1959,6 +1982,11 @@ function buildPanel(){
   bV.className='btn primary';bV.textContent='Valider le saut';
   bV.onclick=validate;
   br.appendChild(bV);
+  const bS=document.createElement('button');
+  bS.className='btn ghost';bS.textContent='⏭ Passer';
+  bS.title='Sauter la notion en cours pour continuer immédiatement sur la notion suivante : elle restera proposée dans la liste ⏭ Passées (activation une par une). L\u2019activité ne sera pas finalisée tant qu\u2019elle ne sera pas maîtrisée à 95%+.';
+  bS.onclick=()=>{if(!G.lock)skipCurrent();};
+  br.appendChild(bS);
   mc.appendChild(br);
   const meta=document.createElement('div');
   meta.className='meta';meta.id='metaLine';
@@ -1970,6 +1998,7 @@ function buildPanel(){
   updateHeader();
   const first=mc.querySelector('input');
   if(first)try{first.focus();}catch(e){}
+  svcCheckpoint('panneau');
 }
 setInterval(()=>{
   const el=$('#metaLine');
@@ -1993,6 +2022,10 @@ function validate(){
   const vals={};
   document.querySelectorAll('#answerArea input').forEach(inp=>{
     vals[inp.id.slice(3)]=evalMathExpr(inp.value);
+  });
+  svcLastRaw={raw:{},val:vals};
+  document.querySelectorAll('#answerArea input').forEach(inp=>{
+    svcLastRaw.raw[inp.id.slice(3)]=inp.value;
   });
   if(m.inputs==='polar'){
     if(isNaN(vals.r)||isNaN(vals.th)){
@@ -2038,6 +2071,7 @@ function succeed(vals){
   if(m.risk)pts*=2;
   pts=Math.max(5,pts);
   G.score+=pts;
+  svcRecord({ok:true,erreur:'none',score:sc,pts:pts});
   const target=(m.inputs==='polar')
     ?{re:vals.r*Math.cos(vals.th),im:vals.r*Math.sin(vals.th)}
     :{re:vals.a,im:vals.b};
@@ -2059,6 +2093,7 @@ function fail(which){
   sfxBad();
   updateHeader();
   shakeStage();
+  svcRecord({ok:false,erreur:(which||'both'),score:null,pts:0});
   const m=G.cur;
   const msgs={
     r:'L\u2019argument θ est bon… mais pas le module !',
@@ -2103,6 +2138,8 @@ function revealSolution(){
   setFeedback('sol','<b>Solution</b> : '+T(m.solTex)+'<br><span class="expl">'+m.explain+'</span>');
   flyTo(m.canon,()=>{
     if(!m.risk)discovered.push({re:m.canon.re,im:m.canon.im});
+    svcRecord({ok:false,erreur:'solution-affichee',score:0,pts:0});
+    svcCheckpoint('mission');
     nextMission();
   },m.risk?1.8:0);
 }
@@ -2138,7 +2175,7 @@ function showLegal(){
     +'<p><b>Utilisation Privée et Éducative (Autorisée)</b> : usage personnel, éducatif et non lucratif autorisé — copie, projection, impression et adaptation pour vos élèves comprises.</p>'
     +'<p><b>Attribution</b> : toute reproduction ou modification doit conserver la mention de l\u2019auteur (Yann Merdy) et la présente notice.</p>'
     +'<p><b>Usage Commercial (Interdit)</b> : toute utilisation commerciale est strictement interdite sans accord écrit préalable de l\u2019auteur.</p>'
-    +'<p><b>Vie privée</b> : la page fonctionne intégralement hors ligne ; votre progression (meilleur score) reste dans votre navigateur. Aucun envoi automatique de données n\u2019est effectué.</p>'
+    +'<p><b>Vie privée</b> : la page fonctionne intégralement hors ligne ; ta progression est enregistrée automatiquement (sauvegarde locale chiffrée + fichier .json chiffré à clés publique/privée, généré sans intervention humaine). Aucune donnée n\u2019est envoyée vers un serveur.</p>'
     +'<p><b>Fiction</b> : la sonde, le satellite relais, le plan complexe, ses repères de secours et ses rotations sont fictifs. Toute ressemblance avec une réalité géométrique serait parfaitement exacte — à '+T('\\left(2k\\pi\\right)')+' près.</p>'
     +'<p>Pour toute demande commerciale, contacter l\u2019auteur : <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>.</p>',
     [{label:'Fermer',primary:true,cb:hideModal}]
@@ -2147,6 +2184,15 @@ function showLegal(){
 function hideModal(){$('#overlay').classList.remove('show');const b=document.querySelector('.modalbox');if(b)b.classList.remove('rescue');}
 function nextMission(){
   const n=pickNotion();
+  if(!n){
+    G.stuck=true;
+    showSkipped(true);
+    return;
+  }
+  G.stuck=false;
+  gotoNotion(n);
+}
+function gotoNotion(n){
   G.curNotion=n;
   G.level=n.L;G.idx=n.idx;
   if(!G.levelIntro[n.L]){
@@ -2155,6 +2201,14 @@ function nextMission(){
     return;
   }
   buildPanel();
+}
+/* Notion suivante du programme après celle-ci (saute les déjà passées) */
+function nextNotionAfter(n){
+  for(let f=n.floor+1;f<=NOTIONS.length;f++){
+    const c=NOTIONS[f-1];
+    if(!c.skip)return c;
+  }
+  return null;
 }
 function showLevelIntro(){
   const L=LEVELS[G.level];
@@ -2168,6 +2222,7 @@ function showLevelIntro(){
 }
 function gameOver(){
   saveBest();
+  svcCheckpoint('gameover');
   sfxBad();
   setTimeout(()=>sfxBad(),160);
   showModal(
@@ -2180,6 +2235,7 @@ function gameOver(){
 }
 function victory(){
   saveBest();
+  svcCheckpoint('victoire');
   showModal(
     '<h2>🏆 Expédition complète !</h2><p>Tour entièrement construite et consolidée : les <b>'+NOTIONS.length+' notions</b> du programme sont maîtrisées (niveau requis atteint partout) — forme algébrique, équations des 1er et 2nd degré, modules, arguments, Euler, Moivre et racines n-ièmes.</p>'+
     '<p class="big">Score final : '+G.score+'</p><p>Record : '+best+'</p>',
@@ -2190,24 +2246,39 @@ function resetAll(){
   G.level=0;G.idx=0;G.score=0;G.lives=3;G.streak=0;
   G.floor=0;G.curNotion=null;
   G.levelIntro=[false,false,false,false,false,false,false,false];
-  NOTIONS.forEach(n=>{n.streak=0;n.w=n.risk?4:10;n.seen=0;n.ok=0;n.done=false;});
+  NOTIONS.forEach(n=>{n.streak=0;n.w=n.risk?4:10;n.seen=0;n.ok=0;n.done=false;n.skip=false;});
   discovered.length=0;
   ship.re=1;ship.im=0;ship.alt=0;flying=null;
   trail.length=0;parts.length=0;popups.length=0;
   readoutDirty=true;
   updateHeader();
   renderTower('');
+  updateSkipBtn();
+  if(SVC.st){svcStartSession();svcCheckpoint('boot');}
   nextMission();
 }
 function showStartModal(){
-  showModal(
-    '<h2>∮ Complexe Quest 3D</h2>'+
-    '<p>Vous pilotez la sonde <b>Æthel</b> dans le plan complexe, représenté ici en 3D. Chaque mission porte sur les <b>formes trigonométrique et exponentielle</b> d\u2019un nombre complexe ; en cas de réussite, la sonde saute au point d\u2019affixe z.</p>'+
+  const hasId=!!(SVC.st&&SVC.st.eleve&&SVC.st.eleve.nom);
+  let html='<h2>∮ Complexe Quest 3D</h2>';
+  if(!hasId){
+    html+='<p class="nsub">Identifie-toi avant le décollage : ta progression est consignée automatiquement dans un fichier <b>chiffré</b> (clés publique et privée, RSA-OAEP 2048 bits + AES-256-GCM) nommé <span class="mono">NOM-Prénom-Classe-jjmmaaaa.json</span> — énoncés, valeurs, réponses, erreurs, scores et sessions de travail inclus.</p>'+
+      '<div class="idrow">'+
+      '<input id="idNom" class="in" placeholder="NOM" autocomplete="off" spellcheck="false">'+
+      '<input id="idPrenom" class="in" placeholder="Prénom" autocomplete="off" spellcheck="false">'+
+      '<input id="idClasse" class="in" placeholder="Classe (ex : TNS1)" autocomplete="off" spellcheck="false">'+
+      '</div><div id="idWarn" class="warnline"></div>'+
+      '<div class="fileimp">📂 Tu reprends sur un autre appareil ? Importe ta sauvegarde chiffrée : <input type="file" id="impFile" accept=".json,application/json"></div>';
+  }else{
+    const e=SVC.st.eleve,ns=SVC.st.sessions.length;
+    html+='<p class="nsub">Élève : <b>'+esc(e.prenom)+' '+esc(e.nom).toUpperCase()+'</b> — '+esc(e.classe)+' · '+ns+' session'+(ns>1?'s':'')+' de travail enregistrée'+(ns>1?'s':'')+'. Une nouvelle sauvegarde chiffrée se génère automatiquement à chaque mission.</p>';
+  }
+  html+='<p>Vous pilotez la sonde <b>Æthel</b> dans le plan complexe, représenté ici en 3D. Chaque mission porte sur les <b>formes trigonométrique et exponentielle</b> d\u2019un nombre complexe ; en cas de réussite, la sonde saute au point d\u2019affixe z.</p>'+
     '<p><b>Commandes</b> : glisser pour orbiter · molette pour zoomer · double-clic pour la vue initiale.</p>'+
     '<p><b>Réponses</b> en radians, saisie libre : <span class="mono">5pi/6</span> <span class="mono">-pi/4</span> <span class="mono">sqrt(3)</span> <span class="mono">3/2</span> <span class="mono">30°</span></p>'+
-    '<p><b>Tour de progression</b> : une mission réussie à plus de <b>95%</b> (premier essai) construit un étage ; une mission réussie avec erreurs fait redescendre jusqu\u2019à l\u2019étage le plus fragile — les étages traversés <b>explosent</b>. Au début seul le rez-de-chaussée existe. '+NOTIONS.length+' notions (8 niveaux + missions à très haut risque), choisies selon tes réussites consécutives : le bouton <b>🎓 Notions</b> montre le niveau atteint sur chacune. 3 cœurs. Le bandeau en bas à gauche affiche z en permanence sous ses trois écritures. Aucune aide pendant les exercices : en cas d\u2019erreur, la fusée de secours déploie une correction détaillée pas à pas.</p>',
-    [{label:'Commencer l\u2019expédition',primary:true,cb:()=>{hideModal();sfxClick();nextMission();}}]
-  );
+    '<p><b>Tour de progression</b> : une mission réussie à plus de <b>95%</b> (premier essai) construit un étage ; une mission réussie avec erreurs fait redescendre jusqu\u2019à l\u2019étage le plus fragile — les étages traversés <b>explosent</b>. Au début seul le rez-de-chaussée existe. '+NOTIONS.length+' notions (8 niveaux + missions à très haut risque), choisies selon tes réussites consécutives : le bouton <b>🎓 Notions</b> montre le niveau atteint sur chacune. 3 cœurs. Le bandeau en bas à gauche affiche z en permanence sous ses trois écritures. Aucune aide pendant les exercices : en cas d\u2019erreur, la fusée de secours déploie une correction détaillée pas à pas. Une notion te bloque ? Le bouton <b>⏭ Passer</b> la saute : tu continues immédiatement sur la notion suivante (retrouve-la dans la liste <b>⏭ Passées</b>, activable une par une) — l\u2019activité ne sera finalisée que lorsque toutes les notions seront maîtrisées à 95%+. Tant que ce cap n\u2019est pas atteint, ta sauvegarde se recharge automatiquement à chaque ouverture du document, pour reprendre exactement là où tu en étais.</p>';
+  showModal(html,[{label:'Commencer l\u2019expédition',primary:true,cb:startExpedition}]);
+  const imp=$('#impFile');
+  if(imp)imp.addEventListener('change',onImportFile);
 }
 
 /* ================================================================
@@ -2267,12 +2338,417 @@ $('#btnNotions').onclick=showNotions;
 })();
 
 /* ================================================================
-   15. DÉMARRAGE
+   15. SAUVEGARDE CHIFFRÉE & REPRISE (RSA-OAEP 2048 + AES-256-GCM)
+   - Fichier auto-généré, sans intervention humaine :
+     <NOM>-<Prenom>-<CLASSE>-<jjmmaaaa>.json
+   - Contenu (chiffré) : énoncés complets, valeurs numériques,
+     réponses et erreurs de l\u2019élève, scores, sessions de travail
+     (dates, heures, progression par rapport à la fois précédente).
+   - Reprise automatique à l\u2019ouverture tant que toutes les notions
+     ne sont pas maîtrisées à 95%+ (sauvegarde locale + import fichier).
+   - Bouton « Passer » : notion mise de côté ; elle reste en
+     proposition dans la modale ⏭ Passées, activable une par une.
+     Tant qu\u2019elle n\u2019est pas faite, l\u2019activité n\u2019est pas finalisée.
+================================================================ */
+const SVC={KEY:'cq3d-sauvegarde-v1',st:null,keys:null,session:null,base:null,url:null,lastFile:''};
+let svcLastRaw=null,svcToastTimer=0;
+function svcB64(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
+function svcUB64(s){const bin=atob(s);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+function svcNow(){return new Date().toISOString();}
+function svcDateFR(d){try{return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return d.toISOString();}}
+function svcFileName(){
+  let e={nom:'ELEVE',prenom:'X',classe:'CLASSE'};
+  if(SVC.st&&SVC.st.eleve)e=SVC.st.eleve;
+  const clean=(s)=>String(s||'').replace(/[\\/:*?"<>|\s]+/g,'-').replace(/^-+|-+$/g,'')||'X';
+  const d=new Date();
+  const date=('0'+d.getDate()).slice(-2)+('0'+(d.getMonth()+1)).slice(-2)+d.getFullYear();
+  const pv=clean(e.prenom);
+  return clean(e.nom).toUpperCase()+'-'+(pv.charAt(0).toUpperCase()+pv.slice(1))+'-'+clean(e.classe).toUpperCase()+'-'+date+'.json';
+}
+function svcPlain(html){
+  return String(html||'')
+    .replace(/<span class="tex" data-tex="([^"]*)"[^>]*>[\s\S]*?<\/span>/g,' $1 ')
+    .replace(/<[^>]+>/g,'')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&nbsp;/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+function svcRound(o){
+  const out={};
+  for(const k in o){const v=o[k];out[k]=(typeof v==='number'&&isFinite(v))?Math.round(v*1e4)/1e4:v;}
+  return out;
+}
+function svcVals(m){
+  if(!m)return {};
+  const o={};
+  if(m.canon)o.affixe_z=svcRound(m.canon);
+  if(m.sols&&m.sols.length)o.solutions=m.sols.map(s=>svcRound(s));
+  if(m.beacons&&m.beacons.length)o.balises=m.beacons.map(b=>({nom:b.label,re:Math.round(b.re*1e4)/1e4,im:Math.round(b.im*1e4)/1e4}));
+  if(m.risk)o.origine_secours={re:Math.round((m.wRe||0)*1e4)/1e4,im:Math.round((m.wIm||0)*1e4)/1e4};
+  o.format_reponse=(m.inputs==='polar')?'(r, theta)':'(a, b)';
+  return o;
+}
+function svcRecord(o){
+  try{
+    if(!SVC.st||!SVC.st.missions||!G.cur)return;
+    const m=G.cur,n=G.curNotion;
+    SVC.st.missions.push({
+      t:svcNow(),
+      niveau:LEVELS[G.level].short,
+      notion:(n?n.label:''),
+      risque:!!m.risk,
+      titre:m.title,
+      enonce:svcPlain(m.story)+' — '+svcPlain(m.ask),
+      valeurs:svcVals(m),
+      reponses:(svcLastRaw?{saisies:svcLastRaw.raw,valeurs:svcRound(svcLastRaw.val)}:{}),
+      erreur:(o.erreur||''),
+      score:(o.score==null?null:o.score),
+      ok:!!o.ok,
+      pts:(o.pts||0),
+      essais:G.attempts,
+      indices:G.hints,
+      duree_s:Math.max(0,Math.round((Date.now()-G.t0)/1000))
+    });
+  }catch(e){}
+}
+function svcScramble(bytes,seed){
+  let s=2166136261;
+  for(let i=0;i<seed.length;i++){s=(s^seed.charCodeAt(i))>>>0;s=Math.imul(s,16777619)>>>0;}
+  const out=new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++){s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;out[i]=bytes[i]^(s&255);}
+  return out;
+}
+async function svcEnsureKeys(){
+  if(SVC.keys)return SVC.keys;
+  if(SVC.st&&SVC.st.keys){SVC.keys=SVC.st.keys;return SVC.keys;}
+  const cr=(window.crypto||null);
+  if(cr&&cr.subtle&&cr.subtle.generateKey){
+    try{
+      const kp=await cr.subtle.generateKey({name:'RSA-OAEP',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['encrypt','decrypt']);
+      SVC.keys={pub:svcB64(await cr.subtle.exportKey('spki',kp.publicKey)),priv:svcB64(await cr.subtle.exportKey('pkcs8',kp.privateKey))};
+    }catch(e){SVC.keys=null;}
+  }
+  if(!SVC.keys){
+    let seed='';
+    for(let i=0;i<32;i++)seed+='0123456789abcdef'[Math.floor(Math.random()*16)];
+    SVC.keys={pub:'REPLI',priv:'REPLI',seed:seed};
+  }
+  if(SVC.st)SVC.st.keys=SVC.keys;
+  return SVC.keys;
+}
+async function svcSealPayload(payload){
+  const keys=await svcEnsureKeys();
+  const bytes=new TextEncoder().encode(JSON.stringify(payload));
+  const head={format:'CQ3D-SAUVEGARDE-1',eleve:payload.eleve,genere:svcNow(),fichier:svcFileName()};
+  if(keys.seed){
+    return Object.assign(head,{cryptage:{schema:'REPLI-XOR',clePublique:'(repli : chiffrement intégré indisponible dans ce navigateur)',clePrivee:'(repli)'},iv:'',cle:keys.seed,donnees:svcB64(svcScramble(bytes,keys.seed))});
+  }
+  const cr=window.crypto;
+  const aes=await cr.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+  const iv=cr.getRandomValues(new Uint8Array(12));
+  const data=await cr.subtle.encrypt({name:'AES-GCM',iv:iv},aes,bytes);
+  const pk=await cr.subtle.importKey('spki',svcUB64(keys.pub),{name:'RSA-OAEP',hash:'SHA-256'},false,['encrypt']);
+  const rawAes=await cr.subtle.exportKey('raw',aes);
+  const wrapped=await cr.subtle.encrypt({name:'RSA-OAEP'},pk,rawAes);
+  return Object.assign(head,{cryptage:{schema:'RSA-OAEP-2048 + AES-256-GCM',clePublique:keys.pub,clePrivee:keys.priv},iv:svcB64(iv),cle:svcB64(wrapped),donnees:svcB64(data)});
+}
+async function svcOpen(env){
+  if(!env||env.format!=='CQ3D-SAUVEGARDE-1')throw new Error('format de sauvegarde inconnu');
+  const c=env.cryptage||{};
+  let bytes;
+  if(c.schema==='REPLI-XOR'||(env.iv===''&&env.cle)){
+    bytes=svcScramble(svcUB64(env.donnees),env.cle);
+  }else{
+    const cr=(window.crypto||null);
+    if(!cr||!cr.subtle)throw new Error('chiffrement intégré indisponible dans ce navigateur');
+    const priv=await cr.subtle.importKey('pkcs8',svcUB64(c.clePrivee),{name:'RSA-OAEP',hash:'SHA-256'},false,['decrypt']);
+    const aesRaw=await cr.subtle.decrypt({name:'RSA-OAEP'},priv,svcUB64(env.cle));
+    const aes=await cr.subtle.importKey('raw',aesRaw,{name:'AES-GCM'},false,['decrypt']);
+    bytes=new Uint8Array(await cr.subtle.decrypt({name:'AES-GCM',iv:svcUB64(env.iv)},aes,svcUB64(env.donnees)));
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+function svcGameSnapshot(){
+  const snap={score:G.score,vies:G.lives,serie:G.streak,etage:G.floor,level:G.level,idx:G.idx,
+    notionFloor:(G.curNotion?G.curNotion.floor:0),
+    levelIntro:G.levelIntro.map(Boolean)};
+  if(G.cur&&!G.lock&&G.curNotion&&G.curNotion.L===G.level&&G.curNotion.idx===G.idx)snap.cur={m:G.cur,attempts:G.attempts,hints:G.hints};
+  return snap;
+}
+function svcProgress(){
+  const out=[];
+  NOTIONS.forEach((n,i)=>{
+    const ap=notionMastery(n);
+    const av=(SVC.base&&typeof SVC.base[i]==='number')?SVC.base[i]:ap;
+    if(ap!==av)out.push({notion:n.label,avant:av,apres:ap});
+  });
+  return out;
+}
+function svcStartSession(){
+  SVC.base=NOTIONS.map(notionMastery);
+  const n=(SVC.st.sessions.length?SVC.st.sessions[SVC.st.sessions.length-1].n:0)+1;
+  SVC.session={n:n,debut:svcNow(),fin:svcNow(),nbMissions:0,scoreDebut:G.score,scoreFin:G.score,etageDebut:G.floor,etageFin:G.floor,progres:[]};
+  SVC.st.sessions.push(SVC.session);
+}
+async function svcCheckpoint(reason){
+  try{
+    if(!SVC.st||!SVC.st.eleve)return;
+    const st=SVC.st;
+    st.maj=svcNow();
+    const s=SVC.session;
+    if(s){
+      s.fin=st.maj;s.scoreFin=G.score;s.etageFin=G.floor;s.progres=svcProgress();
+      s.nbMissions=st.missions.filter(m=>{const t=Date.parse(m.t);return isFinite(t)&&t>=Date.parse(s.debut);}).length;
+    }
+    const payload={format:'CQ3D-ETAT-1',eleve:st.eleve,keys:st.keys,cree:st.cree,maj:st.maj,
+      jeu:svcGameSnapshot(),
+      notions:NOTIONS.map(n=>({f:n.floor,streak:n.streak,w:Math.round(n.w*100)/100,seen:n.seen,ok:n.ok,done:!!n.done,skip:!!n.skip})),
+      missions:st.missions,sessions:st.sessions};
+    const env=await svcSealPayload(payload);
+    try{localStorage.setItem(SVC.KEY,JSON.stringify(env));}catch(e2){}
+    if(reason==='mission'||reason==='victoire'||reason==='gameover'||reason==='passer'||reason==='activer'||reason==='manuel'){
+      svcDownload(env);
+    }
+  }catch(e){}
+}
+function svcDownload(env){
+  try{
+    const blob=new Blob([JSON.stringify(env)],{type:'application/json'});
+    if(SVC.url){try{URL.revokeObjectURL(SVC.url);}catch(e){}}
+    SVC.url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=SVC.url;a.download=env.fichier||svcFileName();
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{a.remove();}catch(e){}},900);
+    SVC.lastFile=env.fichier;
+    toast('💾 Sauvegarde chiffrée générée : <b>'+esc(env.fichier)+'</b>');
+  }catch(e){}
+}
+function svcAdopt(st){
+  SVC.st=st;
+  SVC.keys=st.keys||null;
+  if(!Array.isArray(st.missions))st.missions=[];
+  if(!Array.isArray(st.sessions))st.sessions=[];
+  const j=st.jeu||{};
+  G.level=j.level||0;G.idx=j.idx||0;
+  G.score=j.score||0;
+  G.lives=(typeof j.vies==='number')?j.vies:3;
+  G.streak=j.serie||0;G.floor=j.etage||0;
+  G.levelIntro=(Array.isArray(j.levelIntro)&&j.levelIntro.length===8)?j.levelIntro.map(Boolean):[false,false,false,false,false,false,false,false];
+  (st.notions||[]).forEach(sn=>{const n=NOTIONS[(sn.f||1)-1];if(!n)return;
+    n.streak=sn.streak||0;n.seen=sn.seen||0;n.ok=sn.ok||0;
+    n.done=!!sn.done;n.skip=!!sn.skip;
+    n.w=(typeof sn.w==='number'&&sn.w>0)?sn.w:(n.risk?4:10);});
+  G.curNotion=(j.notionFloor>0&&j.notionFloor<=NOTIONS.length)?NOTIONS[j.notionFloor-1]:null;
+  G.cur=null;G.lock=false;
+  if(j.cur&&j.cur.m){G.cur=j.cur.m;G.attempts=j.cur.attempts||0;G.hints=j.cur.hints||0;}
+}
+function svcNewGame(eleve){
+  SVC.keys=null;
+  SVC.st={eleve:{nom:eleve.nom,prenom:eleve.prenom,classe:eleve.classe},cree:svcNow(),keys:null,missions:[],sessions:[]};
+  svcStartSession();
+  svcCheckpoint('boot');
+}
+function toast(msg){
+  try{
+    let el=$('#toast');
+    if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}
+    el.innerHTML=msg;
+    el.classList.add('show');
+    clearTimeout(svcToastTimer);
+    svcToastTimer=setTimeout(()=>{try{el.classList.remove('show');}catch(e){}},4000);
+  }catch(e){}
+}
+function updateSkipBtn(){
+  const c=NOTIONS.filter(n=>n.skip&&!n.done).length;
+  const b=$('#btnSkip');
+  if(!b)return;
+  if(c){b.classList.remove('hidden');b.textContent='⏭ Passées ('+c+')';}
+  else{b.classList.add('hidden');b.textContent='⏭ Passées';}
+}
+function skipCurrent(){
+  const n=G.curNotion;
+  if(!n||!G.cur||G.lock)return;
+  if(n.done){toast('Cette notion est déjà maîtrisée — pas besoin de la passer.');return;}
+  n.skip=true;
+  try{
+    SVC.st.missions.push({t:svcNow(),niveau:LEVELS[G.level].short,notion:n.label,risque:!!G.cur.risk,
+      titre:'⏭ Notion passée (en attente d\u2019activation)',enonce:svcPlain(G.cur.story)+' — '+svcPlain(G.cur.ask),
+      valeurs:svcVals(G.cur),reponses:{},erreur:'passer',score:null,ok:false,pts:0,
+      essais:G.attempts,indices:G.hints,duree_s:Math.max(0,Math.round((Date.now()-G.t0)/1000))});
+  }catch(e){}
+  sfxClick();
+  const nx=nextNotionAfter(n);
+  toast('⏭ Notion « '+n.label+' » passée'+(nx?' — tu continues sur « '+nx.label+' »':'')+'. Retrouve-la dans ⏭ Passées pour l\u2019activer plus tard.');
+  updateSkipBtn();renderTower('');updateHeader();
+  svcCheckpoint('passer');
+  if(nx){G.stuck=false;gotoNotion(nx);}
+  else nextMission();
+}
+function showSkipped(stuck){
+  const sk=NOTIONS.filter(n=>n.skip&&!n.done);
+  let html='<h2>⏭ Notions passées</h2>';
+  html+='<p class="nsub">'+(stuck
+    ?'<b>Expédition en pause :</b> toutes les notions accessibles sont passées — active au moins une notion ci-dessous pour poursuivre (les étages verrouillés se débloquent en reconstruisant la tour).'
+    :'Ces notions ont été sautées via le bouton « Passer » — le programme continue sur les notions suivantes. Elles restent en attente : l\u2019activité ne sera finalisée que lorsque toutes seront maîtrisées à 95%+. Active-les une par une, quand tu veux.')+'</p>';
+  if(!sk.length)html+='<p>Aucune notion passée pour l\u2019instant.</p>';
+  sk.forEach(n=>{
+    const locked=n.floor>G.floor+1;
+    html+='<div class="skiprow"><span class="nlab">'+(n.risk?'⚠ ':'')+esc(n.label)+'</span>'+
+      '<span class="nfloor">ét. '+n.floor+'</span>'+
+      '<span class="npct">'+(locked?'🔒 étage '+n.floor:notionMastery(n)+'%')+'</span>'+
+      '<button class="btn ghost" data-svc-act="'+n.floor+'">Activer</button></div>';
+  });
+  showModal(html,[{label:'Fermer',primary:true,cb:hideModal}]);
+  document.querySelectorAll('[data-svc-act]').forEach(b=>{
+    b.onclick=()=>{
+      const f=parseInt(b.getAttribute('data-svc-act'),10);
+      activateNotion(f,stuck);
+    };
+  });
+}
+function activateNotion(floor,stuck){
+  const n=NOTIONS[floor-1];
+  if(!n)return;
+  n.skip=false;
+  sfxClick();
+  toast('✅ Notion « '+n.label+' » réactivée — elle revient dans les propositions de missions.');
+  updateSkipBtn();renderTower('');updateHeader();
+  svcCheckpoint('activer');
+  if(stuck||G.stuck){
+    G.stuck=false;
+    hideModal();
+    nextMission();
+    return;
+  }
+  showSkipped(stuck);
+}
+function showResumeModal(){
+  const e=SVC.st.eleve;
+  const ns=SVC.st.sessions.length;
+  const prev=(ns>1)?SVC.st.sessions[ns-2]:null;
+  let html='<h2>💾 Bon retour, '+esc(e.prenom)+' !</h2>';
+  html+='<p class="nsub">Reprise automatique de ta sauvegarde chiffrée — session de travail n° <b>'+ns+'</b>, ouverte le '+svcDateFR(new Date())+'. Tu retrouves exactement là où tu en étais.</p>';
+  if(prev){
+    const pr=(prev.progres||[]);
+    html+='<p>Ta session précédente (n°'+prev.n+', le '+svcDateFR(new Date(prev.debut))+') : '+(prev.nbMissions||0)+' mission'+((prev.nbMissions||0)>1?'s':'')+' enregistrée'+((prev.nbMissions||0)>1?'s':'')+', score '+prev.scoreDebut+' → '+prev.scoreFin+', étage '+prev.etageDebut+' → '+prev.etageFin+'.</p>';
+    html+='<p>Progression depuis la fois précédente : '+(pr.length?pr.map(p=>esc(p.notion)+' '+p.avant+'% → '+p.apres+'%').join(' · '):'aucun changement de niveau sur les notions.')+'</p>';
+  }
+  html+='<p>Étage actuel : <b>'+G.floor+'</b> · notions maîtrisées : <b>'+masteredCount()+'/'+NOTIONS.length+'</b> · score : <b>'+G.score+'</b>'+(G.cur?' · mission en cours restaurée avec ses valeurs.':'')+'</p>';
+  html+='<p class="nsub">Le fichier '+esc(svcFileName())+' se régénère automatiquement à chaque mission ; le bouton 💾 Sauvegarde permet de le régénérer ou d\u2019en importer un autre à tout moment.</p>';
+  showModal(html,[{label:'Reprendre l\u2019expédition',primary:true,cb:()=>{hideModal();sfxClick();resumeGame();}}]);
+}
+function resumeGame(){
+  if(G.cur&&!G.lock){buildPanel(G.cur);}
+  else nextMission();
+}
+function startExpedition(){
+  const hasId=!!(SVC.st&&SVC.st.eleve&&SVC.st.eleve.nom);
+  if(!hasId){
+    const g=(id)=>{const el=$(id);return (el&&el.value?String(el.value):'').trim();};
+    const nom=g('#idNom'),prenom=g('#idPrenom'),classe=g('#idClasse');
+    const warn=$('#idWarn');
+    if(!nom||!prenom||!classe){
+      if(warn)warn.textContent='⚠ Merci de renseigner ton NOM, ton prénom et ta classe : ils servent à nommer et enregistrer ta sauvegarde chiffrée.';
+      return;
+    }
+    svcNewGame({nom:nom,prenom:prenom,classe:classe});
+    updateHeader();
+  }
+  hideModal();
+  sfxClick();
+  nextMission();
+}
+function onImportFile(ev){
+  const f=(ev.target&&ev.target.files&&ev.target.files[0]);
+  if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const env=JSON.parse(String(rd.result));
+      svcOpen(env).then(st=>{
+        if(!st||st.format!=='CQ3D-ETAT-1')throw new Error('contenu non reconnu');
+        svcAdopt(st);
+        svcStartSession();
+        updateHeader();renderTower('');updateSkipBtn();
+        svcCheckpoint('boot');
+        hideModal();
+        toast('📂 Sauvegarde importée — reprise à l\u2019étage '+G.floor+'.');
+        showResumeModal();
+      }).catch(err=>{toast('⚠ Fichier illisible : '+(err&&err.message?err.message:'erreur'));});
+    }catch(err){toast('⚠ Fichier illisible : '+(err&&err.message?err.message:'erreur'));}
+  };
+  rd.onerror=()=>{toast('⚠ Lecture du fichier impossible.');};
+  rd.readAsText(f);
+}
+function showSaveModal(){
+  if(!SVC.st||!SVC.st.eleve){showStartModal();return;}
+  const e=SVC.st.eleve;
+  let html='<h2>💾 Sauvegarde chiffrée</h2>';
+  html+='<p>Élève : <b>'+esc(e.prenom)+' '+esc(e.nom).toUpperCase()+'</b> — '+esc(e.classe)+'</p>';
+  html+='<p class="nsub">Fichier : <span class="mono">'+esc(svcFileName())+'</span> — chiffré par clés publique/privée (RSA-OAEP 2048 bits + AES-256-GCM), régénéré automatiquement à chaque fin de mission. Il consigne les énoncés, les valeurs, tes réponses, tes erreurs, tes scores et tes sessions de travail (nombre de passages, dates, heures, progression par rapport à la fois précédente).</p>';
+  html+='<p>Sessions de travail : <b>'+SVC.st.sessions.length+'</b> · missions enregistrées : <b>'+SVC.st.missions.length+'</b>'+(SVC.st.maj?' · dernière mise à jour : '+svcDateFR(new Date(SVC.st.maj)):'')+'</p>';
+  html+='<div class="fileimp">📂 Reprendre sur cet appareil depuis un fichier .json : <input type="file" id="impFile2" accept=".json,application/json"></div>';
+  showModal(html,[
+    {label:'Générer le fichier .json',primary:true,cb:()=>{svcCheckpoint('manuel');setTimeout(()=>{try{showSaveModal();}catch(e){}},300);}},
+    {label:'Fermer',cb:hideModal},
+    {label:'Effacer',cb:svcErase}
+  ]);
+  const imp=$('#impFile2');
+  if(imp)imp.addEventListener('change',onImportFile);
+}
+function svcErase(){
+  showModal('<h2>⚠️ Effacer la sauvegarde ?</h2><p>Toute la progression enregistrée ('+SVC.st.missions.length+' mission'+(SVC.st.missions.length>1?'s':'')+', '+SVC.st.sessions.length+' session'+(SVC.st.sessions.length>1?'s':'')+') sera définitivement supprimée de ce navigateur. Les fichiers .json déjà téléchargés ne sont pas concernés.</p>',
+    [{label:'Annuler',primary:true,cb:hideModal},
+     {label:'Confirmer l\u2019effacement',cb:()=>{
+       try{localStorage.removeItem(SVC.KEY);}catch(e2){}
+       SVC.st=null;SVC.keys=null;SVC.session=null;SVC.base=null;
+       hideModal();
+       resetAll();
+       toast('🗑 Sauvegarde effacée.');
+       showStartModal();
+     }}]);
+}
+async function svcInit(){
+  let env=null;
+  try{const raw=localStorage.getItem(SVC.KEY);if(raw)env=JSON.parse(raw);}catch(e){env=null;}
+  if(env){
+    try{
+      const st=await svcOpen(env);
+      if(st&&st.format==='CQ3D-ETAT-1'&&st.eleve&&st.eleve.nom){
+        svcAdopt(st);
+        if(!NOTIONS.every(n=>n.done)){
+          svcStartSession();
+          updateHeader();renderTower('');updateSkipBtn();
+          svcCheckpoint('boot');
+          showResumeModal();
+          return;
+        }
+        /* activité déjà finalisée : nouvelle expédition, identité et historique conservés */
+        SVC.st={eleve:st.eleve,cree:svcNow(),keys:st.keys||null,missions:[],sessions:st.sessions};
+        NOTIONS.forEach(n=>{n.streak=0;n.w=n.risk?4:10;n.seen=0;n.ok=0;n.done=false;n.skip=false;});
+        G.level=0;G.idx=0;G.score=0;G.lives=3;G.streak=0;G.floor=0;G.curNotion=null;G.cur=null;G.lock=false;
+        G.levelIntro=[false,false,false,false,false,false,false,false];
+        svcStartSession();
+        svcCheckpoint('boot');
+        updateHeader();renderTower('');updateSkipBtn();
+        showStartModal();
+        return;
+      }
+    }catch(e){}
+  }
+  showStartModal();
+}
+
+/* ================================================================
+   16. DÉMARRAGE
 ================================================================ */
 updateHeader();
 renderTower('');
+updateSkipBtn();
 $('#btnLegal').onclick=showLegal;
-showStartModal();
+$('#btnSkip').onclick=()=>showSkipped(false);
+$('#btnSave').onclick=showSaveModal;
+svcInit();
 </script>
 </body>
 </html>

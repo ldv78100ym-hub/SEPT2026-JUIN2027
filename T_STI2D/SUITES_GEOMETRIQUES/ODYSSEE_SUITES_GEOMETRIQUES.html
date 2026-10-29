@@ -283,39 +283,146 @@ function tokenizeSolution(html){
   }
   return tokens;
 }
-const OPTIONAL_WORDS={'le':1,'la':1,'les':1,'un':1,'une':1,'de':1,'du':1,'des':1,'et':1,'ou':1,'où':1,'mais':1,'donc':1,'or':1,'car':1,'puis':1,'si':1,'comme':1,'à':1,'au':1,'aux':1,'en':1,'dans':1,'sur':1,'par':1,'pour':1,'avec':1,'ce':1,'cette':1,'ces':1,'son':1,'sa':1,'ses':1,'il':1,'elle':1,'on':1,'nous':1,'est':1,'sont':1,'a':1,'ont':1,'ici':1,'ainsi':1,'alors':1,'aussi':1,'très':1,"d'où":1,'existe':1,'quelque':1,'soit':1,'tout':1,'conséquence':1};
+/* =========================================================================
+   ATELIER DE RÉDACTION — ANALYSE DE LOGIQUE ET COHÉRENCE
+   La rédaction n'est plus comparée mot à mot à un chemin canonique :
+   seule la LOGIQUE (arguments présents, progression des étapes, conclusion)
+   et la COHÉRENCE (absence de contradictions et de parasites) sont notées.
+   ========================================================================= */
+const CONCEPT_WORDS={'croissante':1,'décroissante':1,'constante':1,'positive':1,'négative':1,'géométrique':1,'arithmétique':1,'converge':1,'diverge':1,'irréductible':1};
+const OPPOSITES={'croissante':'décroissante','décroissante':'croissante','positive':'négative','négative':'positive','géométrique':'arithmétique','arithmétique':'géométrique','converge':'diverge','diverge':'converge'};
+function baseWord(t){return String(t).toLowerCase().replace(/[.,;:!?]$/,'');}
+
+/* Distracteurs typés : 'opposite' (crée une contradiction) ou 'noise' (parasite) */
 function generateDistractors(canonTokens,count,rng){
-  const pool=[],tset=new Set(canonTokens);
-  const push=t=>{if(!t||tset.has(t)||pool.includes(t))return;pool.push(t);};
-  ['donc','or','car','ainsi','toutefois',"d'où",'Finalement','conséquence','en','il','existe','quelque','soit','pour','tout','croissante','décroissante','constante','positive','négative','strictement','égale','égaux','égales','géométrique','arithmétique'].forEach(push);
+  const tset=new Set(canonTokens),pool=[];
+  const push=(label,type,clash)=>{
+    if(!label||tset.has(label))return;
+    if(pool.some(d=>d.label===label))return;
+    pool.push({label,type,clash:clash||null});
+  };
   canonTokens.forEach(t=>{
-    const tl=t.toLowerCase().replace(/[.,;:!?]$/,'');
-    if(tl==='croissante')push(t.replace(/croissante/i,'décroissante'));
-    if(tl==='décroissante')push(t.replace(/décroissante/i,'croissante'));
-    if(tl==='positive')push(t.replace(/positive/i,'négative'));
-    if(tl==='négative')push(t.replace(/négative/i,'positive'));
+    const b=baseWord(t);
+    if(OPPOSITES[b])push(t.replace(new RegExp(b,'i'),OPPOSITES[b]),'opposite',t);
   });
   canonTokens.forEach(t=>{
     if(t.charAt(0)==='$'&&t.includes('=')){
       const m=t.match(/^(.*?=\s*)(-?\d+(?:[.,]\d+)?)(.*)$/);
-      if(m){const n=parseFloat(m[2].replace(',','.'));if(!isNaN(n)&&n!==0)push(m[1]+(-n)+m[3]);}
+      if(m){const n=parseFloat(m[2].replace(',','.'));if(!isNaN(n)&&n!==0)push(m[1]+(-n)+m[3],'opposite',t);}
     }
   });
+  ['donc','or','car','ainsi','toutefois',"d'où",'conséquence','en','il','existe','quelque','soit','pour','tout','strictement','égale','égaux'].forEach(w=>push(w,'noise'));
   shuffleInPlace(pool,rng);
   return pool.slice(0,count);
 }
+
+/* Plus longue sous-séquence croissante : mesure la progression logique */
+function lis(seq){
+  const tails=[];
+  seq.forEach(x=>{
+    let lo=0,hi=tails.length;
+    while(lo<hi){const mid=(lo+hi)>>1;if(tails[mid]<x)lo=mid+1;else hi=mid;}
+    tails[lo]=x;
+  });
+  return tails.length;
+}
+
+/* Structure logique extraite de la solution : arguments (maths + concepts) et conclusion */
 function buildWsFromSolution(solutionHtml,distractorCount,rng){
   const tokens=tokenizeSolution(solutionHtml);
-  const canonOptSet={};let optionalCount=0;
-  tokens.forEach(t=>{if(t!=='Finalement'&&OPTIONAL_WORDS[t.toLowerCase()]){canonOptSet[t]=true;optionalCount++;}});
-  const requiredSeq=tokens.filter(t=>!canonOptSet[t]);
-  function evaluate(path){
-    const pathReq=path.filter(t=>!canonOptSet[t]);
-    if(pathReq.join('\u0001')!==requiredSeq.join('\u0001'))return null;
-    let presentOpt=0;path.forEach(t=>{if(canonOptSet[t])presentOpt++;});
-    return Math.max(1,Math.min(20,20-0.7*(optionalCount-presentOpt)));
+  const args=[];
+  tokens.forEach((t,i)=>{
+    if(t==='Finalement')return;
+    if(t.charAt(0)==='$'||CONCEPT_WORDS[baseWord(t)])args.push({label:t,pos:i});
+  });
+  const ws={tokens,canonical:tokens,args,hasConclusion:tokens.includes('Finalement'),distractors:generateDistractors(tokens,distractorCount,rng)};
+  ws.analyze=path=>analyzeRedaction(path,ws);
+  return ws;
+}
+
+/* ANALYSE DE LA RÉDACTION DE L'ÉLÈVE
+   Barème /20 : couverture logique 11 · progression des étapes 4 · conclusion 2 · cohérence 3.
+   Aucune comparaison mot à mot : formulation et ordre exact des mots ne comptent pas. */
+function analyzeRedaction(path,ws){
+  if(!path||!path.length){
+    return {score:0,label:'rédaction vide',couverture:0,matched:0,total:ws.args.length,inversions:0,contradictions:0,noise:0,
+      diag:[{cls:'bad',text:'Aucun jeton placé — la rédaction est vide.'}]};
   }
-  return {tokens,canonical:tokens,canonOptSet,requiredSeq,optionalCount,size:Math.pow(2,optionalCount),evaluate,distractors:generateDistractors(tokens,distractorCount,rng)};
+  const clip=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+  const canonPos={};
+  ws.args.forEach(a=>{if(!(a.label in canonPos))canonPos[a.label]=a.pos;});
+  const labels=Object.keys(canonPos);
+  const total=labels.length;
+  // 1) Couverture logique : les arguments du raisonnement sont-ils présents ? (ordre libre)
+  const present=new Set(path.filter(t=>t in canonPos));
+  const matched=present.size;
+  const couverture=total?matched/total:1;
+  const missingLabels=labels.filter(l=>!present.has(l));
+  // 2) Progression logique : les arguments s'enchaînent-ils dans un ordre compatible ?
+  const seq=[];const seenL={};
+  path.forEach(t=>{if(t in canonPos&&!seenL[t]){seenL[t]=1;seq.push(canonPos[t]);}});
+  const lseq=lis(seq);
+  const inversions=seq.length-lseq;
+  // 3) Conclusion : présente, et placée après les arguments qu'elle conclut ?
+  const firstIdx={};
+  path.forEach((t,pi)=>{if(t in canonPos&&!(t in firstIdx))firstIdx[t]=pi;});
+  const concIdx=path.indexOf('Finalement');
+  let concPts=0,conclusion='absente';
+  if(!ws.hasConclusion){concPts=2;conclusion='none';}
+  else if(concIdx>=0){
+    const before=Object.keys(firstIdx).filter(l=>firstIdx[l]<concIdx).length;
+    if(matched===0||before>=Math.ceil(matched*0.6)){concPts=2;conclusion='ok';}
+    else{concPts=1;conclusion='mal placée';}
+  }
+  // 4) Cohérence : contradictions internes et jetons parasites
+  const placedLower=path.map(baseWord);
+  const placedSet=new Set(path);
+  let contradictions=0,noise=0;const incoherenceMsgs=[],clashSeen=new Set();
+  path.forEach(t=>{
+    const b=baseWord(t),opp=OPPOSITES[b];
+    if(opp&&placedLower.includes(opp)){
+      const key='c:'+[b,opp].sort().join('|');
+      if(!clashSeen.has(key)){clashSeen.add(key);contradictions++;incoherenceMsgs.push('« '+t+' » contredit « '+opp+' »');}
+    }
+  });
+  ws.distractors.forEach(d=>{
+    if(d.type==='opposite'&&d.clash&&d.clash.charAt(0)==='$'&&placedSet.has(d.label)&&placedSet.has(d.clash)){
+      const key='m:'+[d.label,d.clash].sort().join('|');
+      if(!clashSeen.has(key)){clashSeen.add(key);contradictions++;incoherenceMsgs.push('« '+d.label+' » contredit « '+d.clash+' »');}
+    }
+  });
+  placedSet.forEach(t=>{
+    const d=ws.distractors.find(x=>x.label===t);
+    if(!d)return;
+    if(d.type==='opposite'&&!placedSet.has(d.clash)){
+      contradictions+=0.5;
+      incoherenceMsgs.push('« '+t+' » contredit le raisonnement attendu');
+    }else if(d.type==='noise'){noise++;incoherenceMsgs.push('« '+t+' » est un jeton parasite');}
+  });
+  const noisePenalty=Math.min(1.5,0.25*noise);
+  const cohPts=Math.max(0,3-1.5*contradictions-noisePenalty);
+  // 5) Score final
+  const ordre=seq.length>=2?lseq/seq.length:1;
+  const ordPts=seq.length===0?0:4*ordre;
+  let score=11*couverture+ordPts+concPts+cohPts;
+  score=Math.max(0,Math.min(20,Math.round(score*2)/2));
+  // 6) Diagnostic détaillé
+  const diag=[];
+  if(total>0){
+    if(matched===total)diag.push({cls:'ok',text:'Tous les arguments du raisonnement sont présents.'});
+    else diag.push({cls:couverture>=0.6?'mid':'bad',text:'Arguments manquants ('+(total-matched)+'/'+total+') : '+clip(missingLabels.join(', '),160)+'.'});
+  }
+  if(seq.length>=2&&inversions>0)diag.push({cls:'mid',text:inversions+' argument'+(inversions>1?'s':'')+' s\'enchaînent hors de la progression logique attendue.'});
+  else if(seq.length>=2)diag.push({cls:'ok',text:'La progression logique des étapes est respectée.'});
+  if(contradictions>0)diag.push({cls:'bad',text:'Incohérences : '+clip(incoherenceMsgs.filter(m=>m.indexOf('parasite')===-1).join(' ; '),160)+'.'});
+  if(noise>0)diag.push({cls:'mid',text:noise+' jeton'+(noise>1?'s':'')+' parasite'+(noise>1?'s':'')+' sans lien avec le raisonnement.'});
+  if(ws.hasConclusion){
+    if(conclusion==='absente')diag.push({cls:'mid',text:'La conclusion (« Finalement ») n\'apparaît pas : le raisonnement reste ouvert.'});
+    else if(conclusion==='mal placée')diag.push({cls:'mid',text:'La conclusion apparaît avant les arguments qu\'elle doit conclure.'});
+    else diag.push({cls:'ok',text:'La conclusion est présente et conclut bien le raisonnement.'});
+  }
+  const lbl=score>=16?'logique solide':score>=12?'logique correcte':score>=8?'logique fragile':'logique insuffisante';
+  return {score,label:lbl,couverture,matched,total,inversions,contradictions,noise,diag};
 }
 
 function rappel(level){
@@ -635,12 +742,15 @@ function buildWorkshopState(qid,ws){
   ws.canonical.forEach(t=>{if(!seen.has(t)){seen.add(t);items.push({id:'k'+(uid++),label:t,kind:'key'});}});
   const used=new Set();const nd=[3,5,7,10,12][App.level-1];
   const drng=mulberry32(((App.seed^0xCAFEBABE)+items.length+hashSeed(qid))>>>0);
-  let guard=0;
-  while(used.size<nd&&guard++<300){
-    const d=pickFrom(drng,ws.distractors);
-    if(!d||seen.has(d)||used.has(d))continue;
-    used.add(d);items.push({id:'d'+(uid++),label:d,kind:'distractor'});
-  }
+  const opps=ws.distractors.filter(d=>d.type==='opposite');
+  const rest=ws.distractors.filter(d=>d.type!=='opposite');
+  shuffleInPlace(opps,drng);
+  shuffleInPlace(rest,drng);
+  const chosen=opps.slice(0,Math.min(2,opps.length)).concat(rest).slice(0,nd);
+  chosen.forEach(d=>{
+    if(seen.has(d.label)||used.has(d.label))return;
+    used.add(d.label);items.push({id:'d'+(uid++),label:d.label,kind:'distractor'});
+  });
   shuffleInPlace(items,mulberry32((App.seed^hashSeed(qid)^0x5EEDF00D)>>>0));
   return {qid,ws,items,lines:[[]],selected:null,note:null};
 }
@@ -653,6 +763,7 @@ function renderWorkshop(st){
   const head=el('div','ws-head');
   head.appendChild(el('div','ws-title','📝 Atelier de rédaction'));
   const counter=el('div','ws-counter');head.appendChild(counter);wrap.appendChild(head);
+  wrap.appendChild(el('div','ws-hint','Seules la <strong>logique</strong> (arguments présents, progression des étapes, conclusion) et la <strong>cohérence</strong> (absence de contradictions) sont analysées — la formulation est libre.'));
 
   const pool=el('div','pool');
   pool.dataset.target='pool';
@@ -762,11 +873,10 @@ function renderWorkshop(st){
   addLine.addEventListener('click',()=>{st.lines.push([]);renderWorkshop(st);});
   wrap.appendChild(addLine);
 
-  const nKeys=st.items.filter(i=>i.kind==='key').length;
+  const nArgs=st.ws.args.length;
   const nDistr=st.items.filter(i=>i.kind==='distractor').length;
-  const optSet=new Set();st.ws.canonical.forEach(t=>{if(st.ws.canonOptSet[t])optSet.add(t);});
   const placed=st.lines.reduce((s,l)=>s+l.length,0);
-  counter.textContent=nKeys+' clés ('+optSet.size+' facultatifs) · '+nDistr+' distracteurs · '+placed+' placé'+(placed>1?'s':'');
+  counter.textContent=nArgs+' argument'+(nArgs>1?'s':'')+' logique'+(nArgs>1?'s':'')+' à retrouver · '+nDistr+' distracteurs · '+placed+' jeton'+(placed>1?'s':'')+' placé'+(placed>1?'s':'');
 
   typeset(wrap);
 }
@@ -930,9 +1040,9 @@ function verifyAll(){
       inp.classList.toggle('incorrect',!ok);
     });
 
-    const wsFlat=pathOf(st),wsScore=st.ws.evaluate(wsFlat),wsRecog=wsScore!==null;
-    if(wsRecog){sumWs+=wsScore;nWs++;}
-    st.note=wsScore;
+    const wsFlat=pathOf(st),analysis=st.ws.analyze(wsFlat),wsScore=analysis.score;
+    sumWs+=wsScore;nWs++;
+    st.note=wsScore;st.analysis=analysis;
 
     const corr=document.getElementById('corr-'+st.qid);corr.innerHTML='';
     const allOk=qOk===q.fields.length;
@@ -940,14 +1050,14 @@ function verifyAll(){
     vd.textContent=allOk?'✓ Question juste ('+qOk+'/'+q.fields.length+')':'✗ '+qOk+'/'+q.fields.length+' champ(s) correct(s)';
     corr.appendChild(vd);
     corr.appendChild(el('div',null,q.solution));
-    corr.appendChild(el('h4',null,'📝 Rédaction (atelier)'));
-    corr.appendChild(renderAtelierResult(st,wsRecog,wsScore,wsFlat));
+    corr.appendChild(el('h4',null,'📝 Analyse de la rédaction (logique & cohérence)'));
+    corr.appendChild(renderAtelierResult(st,analysis,wsFlat));
     typeset(corr);
 
     const dot=document.getElementById('status-'+st.qid);
     if(dot){dot.className='q-status '+(allOk?'ok':(qOk>0?'mid':'bad'));}
 
-    breakdown.push({title:q.title,fields:'<span class="'+(allOk?'verdict-ok':'verdict-mid')+'">'+qOk+'/'+q.fields.length+'</span>',ws:wsRecog?fmt(wsScore)+'/20':'non reconnu',ok:allOk});
+    breakdown.push({title:q.title,fields:'<span class="'+(allOk?'verdict-ok':'verdict-mid')+'">'+qOk+'/'+q.fields.length+'</span>',ws:fmt(wsScore)+'/20 · '+analysis.label,ok:allOk});
   });
 
   const pctF=totalFields?okFields/totalFields:0,pctW=nWs?sumWs/(20*nWs):0;
@@ -979,26 +1089,24 @@ function pathOf(st){
   return flat;
 }
 
-function renderAtelierResult(st,recog,note,flat){
+function renderAtelierResult(st,analysis,flat){
   const box=el('div');
-  if(recog){
-    const stars=Math.round(note/4);
-    const v2=el('div','verdict '+(note>=18?'ok':note>=10?'mid':'bad'));
-    v2.innerHTML='<span class="stars">'+repeat('★',Math.max(0,stars))+repeat('☆',Math.max(0,5-stars))+'</span> '+fmt(note)+'/20';
-    box.appendChild(v2);
-    let conseil;
-    if(note>=18)conseil='✓ Rédaction optimale — continue ainsi.';
-    else if(note>=14)conseil='Rédaction valide mais perfectible : ajoute les mots de liaison utiles.';
-    else if(note>=10)conseil='Rédaction acceptable : reprends le rappel de cours pour affiner.';
-    else conseil='Rédaction incomplète : refais l\'exercice avec le rappel sous les yeux.';
-    box.appendChild(el('p',null,conseil));
-  }else{
-    box.appendChild(el('div','verdict bad','✗ Rédaction non reconnue — le chemin ne correspond pas à une reconstruction valide.'));
-    box.appendChild(el('p',null,'Vérifie l\'ordre des mots-clés et la présence du mot-clé « Finalement ».'));
-  }
-  box.appendChild(el('div',null,'<div style="font-size:.78rem;color:#808080;margin-top:6px">Votre chemin :</div>'+pathHtml(flat)));
-  box.appendChild(el('div',null,'<div style="font-size:.78rem;color:#808080;margin-top:6px">Chemin optimal :</div>'+pathHtml(st.ws.canonical)));
-  box.appendChild(el('div','score-line','Matrice de '+st.ws.size+' chemins valides ('+st.ws.optionalCount+' mots facultatifs).'));
+  const note=analysis.score;
+  const stars=Math.max(0,Math.min(5,Math.round(note/4)));
+  const v2=el('div','verdict '+(note>=16?'ok':note>=10?'mid':'bad'));
+  v2.innerHTML='<span class="stars">'+repeat('★',stars)+repeat('☆',5-stars)+'</span> '+fmt(note)+'/20 — '+analysis.label;
+  box.appendChild(v2);
+  const ul=el('ul');
+  ul.style.cssText='margin:6px 0 8px;padding-left:20px;font-size:.85rem;line-height:1.5';
+  analysis.diag.forEach(d=>{
+    const li=el('li',null,d.text);
+    li.style.color=d.cls==='bad'?'var(--err)':(d.cls==='mid'?'var(--warn)':'var(--ok)');
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+  box.appendChild(el('div','score-line','Notation : arguments du raisonnement (11 pts) · progression des étapes (4 pts) · conclusion (2 pts) · cohérence, contradictions et parasites (3 pts). La formulation et l\'ordre exact des mots ne sont pas notés.'));
+  box.appendChild(el('div',null,'<div style="font-size:.78rem;color:#808080;margin-top:6px">Votre rédaction :</div>'+pathHtml(flat)));
+  box.appendChild(el('div',null,'<div style="font-size:.78rem;color:#808080;margin-top:6px">Raisonnement attendu (arguments dans l\'ordre logique) :</div>'+pathHtml(st.ws.canonical)));
   return box;
 }
 

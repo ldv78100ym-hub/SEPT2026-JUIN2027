@@ -123,6 +123,23 @@ window.MathJax = {
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     display:none;align-items:center;justify-content:center;z-index:200;padding:24px}
   #copyrightModal.open, #notionsModal.open{display:flex}
+  #resetModal{position:fixed;inset:0;background:rgba(62,50,28,.55);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    display:none;align-items:center;justify-content:center;z-index:220;padding:24px}
+  #resetModal.open{display:flex}
+  .rbox{max-width:460px;width:100%;background:linear-gradient(180deg,#fffdf4,#f5ebd4);
+    border:1px solid var(--line);border-radius:18px;padding:26px 28px 22px;
+    box-shadow:0 30px 90px rgba(90,70,40,.3);position:relative;text-align:left}
+  .rbox h2{margin:0 0 8px;font-size:18px;color:var(--bad)}
+  .rbox ul{margin:8px 0 10px;padding-left:18px;font-size:13px;line-height:1.55}
+  .rbox p{font-size:13px;line-height:1.5;margin:8px 0}
+  .rwarn{color:var(--bad);font-weight:700}
+  .rbtns{display:flex;gap:10px;margin-top:16px}
+  .rbtns .btn{flex:1;margin-top:0}
+  .rbtn-go{background:var(--bad)}
+  .rbtn-go:hover{filter:brightness(1.1)}
+  .copyright-btn.danger:hover{border-color:var(--bad);color:var(--bad);
+    background:rgba(210,69,95,.07)}
   .cbox, .nbox{max-width:680px;width:100%;max-height:88vh;overflow-y:auto;
     background:linear-gradient(180deg,#fffdf4,#f5ebd4);border:1px solid var(--line);
     border-radius:18px;padding:30px 34px 26px;box-shadow:0 30px 90px rgba(90,70,40,.3);
@@ -357,6 +374,10 @@ window.MathJax = {
               aria-haspopup="dialog" aria-controls="copyrightModal">
         ⚖️ Droits d'auteur &amp; licence
       </button>
+      <button class="copyright-btn danger" id="resetBtn"
+              aria-haspopup="dialog" aria-controls="resetModal">
+        🔄 Réinitialiser tout
+      </button>
     </div>
   </aside>
 </div>
@@ -416,6 +437,29 @@ window.MathJax = {
   </div>
 </div>
 
+<div id="resetModal" aria-hidden="true">
+  <div class="rbox" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <button class="close" id="resetClose" aria-label="Fermer">×</button>
+    <h2 id="resetTitle">🔄 Tout réinitialiser ?</h2>
+    <p>Cette action efface <b>définitivement</b>, sur cet appareil :</p>
+    <ul>
+      <li>toute la progression de la tour : étages, notions validées ou passées,</li>
+      <li>l'historique complet des réponses, les erreurs, les sessions et le chronomètre,</li>
+      <li>la sauvegarde locale et l'identité enregistrée (nom, prénom(s), classe).</li>
+    </ul>
+    <p>Les fichiers .json scellés <b>déjà exportés</b> ne sont pas touchés :
+       l'enseignant pourra toujours les ouvrir avec sa clé privée. Pour
+       simplement recommencer une ascension en gardant l'identité et
+       l'historique, préfère le bouton REJOUER ou le rechargement d'un
+       fichier .json.</p>
+    <p class="rwarn">⚠️ Aucun retour en arrière n'est possible après validation.</p>
+    <div class="rbtns">
+      <button class="btn rbtn-cancel" id="resetCancel">Annuler</button>
+      <button class="btn rbtn-go" id="resetGo">OUI, tout réinitialiser</button>
+    </div>
+  </div>
+</div>
+
 <div id="idPanel" class="hidden">
   <div class="ibox">
     <h2>👤 Qui escalade la tour ?</h2>
@@ -425,13 +469,18 @@ window.MathJax = {
       Aucun mot de passe à retenir : la clé publique intégrée au document scelle ton
       fichier ; seule la clé privée de ton enseignant peut l'ouvrir. À la fin de la séance,
       télécharge-le pour retrouver ta tour exactement où tu l’avais laissée
-      (il se recharge à l'ouverture).</div>
-    <label for="inpNom">Nom</label>
-    <input id="inpNom" autocomplete="off" placeholder="DUPONT">
-    <label for="inpPrenom">Prénom</label>
-    <input id="inpPrenom" autocomplete="off" placeholder="Léa">
-    <label for="inpClasse">Classe</label>
-    <input id="inpClasse" autocomplete="off" placeholder="2nde 3">
+      (il se recharge à l'ouverture).<br>
+      La mise en forme de l'identité est <b>automatique</b> : NOM en majuscules,
+      prénom(s) en minuscules sauf les initiales, CLASSE en majuscules.</div>
+    <label for="inpNom">Nom (en majuscules)</label>
+    <input id="inpNom" autocomplete="off" placeholder="DUPONT"
+           autocapitalize="characters" spellcheck="false">
+    <label for="inpPrenom">Prénom(s) (minuscules sauf les initiales)</label>
+    <input id="inpPrenom" autocomplete="off" placeholder="Léa-Marie"
+           autocapitalize="words" spellcheck="false">
+    <label for="inpClasse">Classe (en majuscules)</label>
+    <input id="inpClasse" autocomplete="off" placeholder="2NDE 3"
+           autocapitalize="characters" spellcheck="false">
     <button class="btn" id="idGo">COMMENCER L’ASCENSION</button>
     <p class="idmsg" id="idMsg"></p>
     <div class="import-row">
@@ -5121,6 +5170,7 @@ function adjustedPenalty(base, currentFloor, streak, genStreak){
 }
 
 function openDoor(floor, then){
+  const ep = TDM_EPOCH;
   state.doorFloor = floor;
   state.doorProgress = 0;
   const start = performance.now();
@@ -5130,7 +5180,7 @@ function openDoor(floor, then){
     state.doorProgress = Math.min(1, el / DUR);
     if(state.doorProgress < 1){
       requestAnimationFrame(anim);
-    } else {
+    } else if(ep === TDM_EPOCH){
       then();
     }
   }
@@ -5225,9 +5275,9 @@ function resolveAnswer(ok, q){
     updateHUD();
 
     if(state.validated.size === N_TOT){
-      setTimeout(startFinalAscent, 900);
+      tdmLater(startFinalAscent, 900);
     } else {
-      setTimeout(newQuestion, 900);
+      tdmLater(newQuestion, 900);
     }
   } else {
     const basePenalty = q.penalty || 1;
@@ -5298,7 +5348,7 @@ function closeLesson(){
 
   closeDoor();
 
-  setTimeout(() => {
+  tdmLater(() => {
     state.falling = false;
     state.pendingError = null;
     if(state.validated.size === N_TOT){
@@ -5321,7 +5371,7 @@ function startFinalAscent(){
 
   state.floor = N_TOT;
   state.maxBuiltFloor = N_TOT;
-  setTimeout(() => { win(); }, 1800);
+  tdmLater(() => { win(); }, 1800);
 }
 
 function win(){
@@ -5459,8 +5509,83 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape') {
     if (copyModal.classList.contains('open')) closeCopyright();
     if (notionsModal.classList.contains('open')) closeNotions();
+    if (resetModal.classList.contains('open')) closeResetModal();
   }
 });
+
+/* ============================================================
+   7ter. RÉINITIALISATION COMPLÈTE (menu hamburger)
+   ============================================================ */
+/* TDM-RESET-START */
+/* Écran d'accueil d'origine : win() REMPLACE le contenu de la boîte
+   d'accueil (écran de victoire + REJOUER) ; la réinitialisation doit
+   pouvoir restaurer l'écran de premier lancement, bouton inclus. */
+const TDM_WELCOME_HTML = $('overlayBox').innerHTML;
+let TDM_EPOCH = 0;
+/* Animations différées liées à la partie en cours : après une
+   réinitialisation, l'incrément d'époque annule tous les rappels encore
+   en attente (fin de chute, nouvelle question, ascension finale,
+   victoire, fin d'animation de porte). */
+function tdmLater(fn, ms){
+  const ep = TDM_EPOCH;
+  setTimeout(() => { if(ep === TDM_EPOCH) fn(); }, ms);
+}
+const resetModal = $('resetModal');
+function openResetModal(){
+  lastFocus = document.activeElement;
+  resetModal.classList.add('open');
+  resetModal.setAttribute('aria-hidden', 'false');
+  $('resetCancel').focus();
+}
+function closeResetModal(){
+  resetModal.classList.remove('open');
+  resetModal.setAttribute('aria-hidden', 'true');
+  if(lastFocus && lastFocus.focus) lastFocus.focus();
+}
+function tdmResetAll(){
+  /* 1. Sauvegarde locale et identité effacées de cet appareil. */
+  [TDM_LS_SAVE, TDM_LS_PROFILE, TDM_LS_KEYS].forEach(k => {
+    try { localStorage.removeItem(k); } catch(e) {}
+  });
+  SAV.keys = null; SAV.data = null; SAV.lastEnv = null;
+  /* 2. Partie en cours annulée : les rappels différés ne s'exécutent plus. */
+  TDM_EPOCH++;
+  /* 3. État remis à zéro, comme au tout premier lancement. */
+  state.floor = 0; state.maxBuiltFloor = 0; state.visualFloor = 0;
+  state.errors = 0; state.elapsed = 0; state.playing = false;
+  state.validated.clear(); state.passed.clear();
+  NOTIONS.forEach(n => { n.prob = 0.5; n.okRun = 0; });
+  state.currentNotion = null; state.lastGen = null;
+  state.lessonActive = false; state.doorFloor = -1; state.doorProgress = 0;
+  state.pendingError = null; state.falling = false; state.finalAscent = false;
+  state.particles = []; state.notionStreak = {}; state.genStreak = {};
+  state.autoRotate = true;
+  state.camY = (0 + 1) * HH - 1.6;
+  /* 4. Champs d'identité vidés : aucun préremplissage ne doit revenir. */
+  $('inpNom').value = ''; $('inpPrenom').value = ''; $('inpClasse').value = '';
+  $('idMsg').textContent = '';
+  /* 5. Écran d'accueil d'origine restauré et affiché. */
+  $('overlayBox').innerHTML = TDM_WELCOME_HTML;
+  $('startBtn').addEventListener('click', tdmShowIdentity);
+  $('overlay').classList.remove('hidden');
+  lessonPanel.classList.remove('open'); resetLessonPos();
+  $('idPanel').classList.add('hidden');
+  $('passedPanel').classList.remove('open');
+  closeNotions(); closeCopyright(); closeResetModal(); closeUtilMenu();
+  qText.innerHTML = `Bienvenue dans la tour.<br><br>Prêt à valider les
+    \\(${N_TOT}\\) notions du programme ?`;
+  opts.innerHTML = '';
+  feedback.className = ''; feedback.textContent = '';
+  updateHUD(); updateTimeDisplay(); typesetAll();
+}
+$('resetBtn').addEventListener('click', openResetModal);
+$('resetClose').addEventListener('click', closeResetModal);
+$('resetCancel').addEventListener('click', closeResetModal);
+$('resetGo').addEventListener('click', tdmResetAll);
+resetModal.addEventListener('click', e => {
+  if(e.target === resetModal) closeResetModal();
+});
+/* TDM-RESET-END */
 
 /* ============================================================
    7bis. SAUVEGARDE SCELLÉE (sécurité bancaire), SESSIONS & NOTIONS PASSÉES
@@ -5784,26 +5909,69 @@ async function tdmSaveNow(){
     /* la partie continue même si la sauvegarde échoue */
   }
 }
+/* TDM-ID-START */
+/* ---------- Identification de l'élève (mise en forme imposée) ----------
+   Nom : EN MAJUSCULES · Prénom(s) : minuscules sauf les initiales ·
+   Classe : EN MAJUSCULES.
+   La mise en forme est appliquée en direct pendant la saisie, à la
+   validation du formulaire et au rechargement d'un fichier .json. */
+function tdmNormUpper(s){
+  return String(s === null || s === undefined ? '' : s).toUpperCase();
+}
+function tdmCasePrenom(s){
+  /* Minuscules partout, puis initiale en majuscule de chaque mot —
+     y compris après un tiret ou une apostrophe : jean-luc → Jean-Luc,
+     n'diaye → N'Diaye, MARIE CLAIRE → Marie Claire. */
+  return String(s === null || s === undefined ? '' : s)
+    .toLowerCase()
+    .replace(/(^|[^a-zà-öø-ÿ])([a-zà-öø-ÿ])/g, (m, sep, c) => sep + c.toUpperCase());
+}
+function tdmNormField(s){
+  /* Nettoyage final : espaces multiples et de bouts de champ. */
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/\s+/g, ' ').trim();
+}
+function tdmNormNom(s){ return tdmNormField(tdmNormUpper(s)); }
+function tdmNormPrenom(s){ return tdmNormField(tdmCasePrenom(s)); }
+function tdmNormClasse(s){ return tdmNormField(tdmNormUpper(s)); }
+function tdmCaseHook(input, fn){
+  /* Correction en direct : la casse est imposée pendant la frappe, sans
+     déplacer le curseur (la longueur du texte ne change jamais). */
+  input.addEventListener('input', () => {
+    const v = input.value;
+    const w = fn(v);
+    if(w !== v){
+      const pos = input.selectionStart;
+      input.value = w;
+      try { input.setSelectionRange(pos, pos); } catch(e) {}
+    }
+  });
+}
+/* TDM-ID-END */
 function tdmShowIdentity(){
   let prof = null;
   try { prof = JSON.parse(localStorage.getItem(TDM_LS_PROFILE) || 'null'); } catch(e) { prof = null; }
   if(prof){
-    if(!$('inpNom').value) $('inpNom').value = prof.nom || '';
-    if(!$('inpPrenom').value) $('inpPrenom').value = prof.prenom || '';
-    if(!$('inpClasse').value) $('inpClasse').value = prof.classe || '';
+    if(!$('inpNom').value) $('inpNom').value = tdmNormNom(prof.nom || '');
+    if(!$('inpPrenom').value) $('inpPrenom').value = tdmNormPrenom(prof.prenom || '');
+    if(!$('inpClasse').value) $('inpClasse').value = tdmNormClasse(prof.classe || '');
   }
   $('idMsg').textContent = '';
   $('idPanel').classList.remove('hidden');
 }
 async function tdmConfirmIdentity(){
-  const nom = ($('inpNom').value || '').trim();
-  const prenom = ($('inpPrenom').value || '').trim();
-  const classe = ($('inpClasse').value || '').trim();
+  const nom = tdmNormNom($('inpNom').value);
+  const prenom = tdmNormPrenom($('inpPrenom').value);
+  const classe = tdmNormClasse($('inpClasse').value);
   if(!nom || !prenom || !classe){
     $('idMsg').textContent = 'Merci de renseigner les trois champs avant de commencer.';
     return;
   }
-  const eleve = { nom: nom.toUpperCase(), prenom: prenom, classe: classe };
+  /* La mise en forme validée est réaffichée dans les champs. */
+  $('inpNom').value = nom;
+  $('inpPrenom').value = prenom;
+  $('inpClasse').value = classe;
+  const eleve = { nom: nom, prenom: prenom, classe: classe };
   /* Aucune clé privée n'est générée ni stockée chez l'élève : la paire de
      clés appartient à l'enseignant, seule la clé publique est dans la page. */
   SAV.keys = null;
@@ -5941,6 +6109,13 @@ function tdmOnImportFile(ev){
         throw new Error('format');
       }
       if(!data || !data.eleve) throw new Error('donnees');
+      /* Mise en forme de l'identité au rechargement (fichiers anciens
+         compris) : NOM, prénom(s) et CLASSE reprennent le format imposé. */
+      data.eleve = {
+        nom: tdmNormNom(data.eleve.nom),
+        prenom: tdmNormPrenom(data.eleve.prenom),
+        classe: tdmNormClasse(data.eleve.classe)
+      };
       try {
         localStorage.setItem(TDM_LS_PROFILE, JSON.stringify(data.eleve));
         localStorage.setItem(TDM_LS_KEYS, JSON.stringify(SAV.keys));
@@ -6037,6 +6212,11 @@ qText.innerHTML = `Bienvenue dans la tour.<br><br>Prêt à valider les
 
 $('startBtn').addEventListener('click', tdmShowIdentity);
 $('idGo').addEventListener('click', tdmConfirmIdentity);
+/* Mise en forme imposée pendant la frappe :
+   NOM → majuscules, prénom(s) → minuscules sauf initiales, CLASSE → majuscules. */
+tdmCaseHook($('inpNom'), tdmNormUpper);
+tdmCaseHook($('inpPrenom'), tdmCasePrenom);
+tdmCaseHook($('inpClasse'), tdmNormUpper);
 $('importInput').addEventListener('change', tdmOnImportFile);
 $('passBtn').addEventListener('click', passCurrentNotion);
 $('passedBtn').addEventListener('click', openPassedPanel);

@@ -2,15 +2,18 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 5 feuilles de style et 31 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 32 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
 existait — vérifié par exécution côte à côte (machines virtuelles Node, PRNG
 déterministe). Cette version ajoute : la **décomposition en éléments
 simples**, l'**horodatage de la dernière mise à jour**, la **révision
-personnalisée** et l'**intégration des documents « Évolutions » et
-« Proportions »** (voir plus bas).
+personnalisée**, l'**intégration des documents « Évolutions » et
+« Proportions »** et l'**explorateur de liens du programme** — une
+succession de sous-graphes centrés sur une notion ou une zone, où
+l'élève voit que les 172 notions sont toutes reliées, directement
+ou indirectement (voir plus bas).
 
 ## Structure
 
@@ -27,8 +30,11 @@ la-tour-des-maths/
 │                                      notions passées, media queries
 │   ├── 04-elements-solutions.css    ← éléments simples, fiches, infobulles,
 │                                      réponse attendue, décomposition
-│   └── 05-revision-maj.css          ← menu utilitaire (date MAJ), modale de
-│                                      révision personnalisée, badge, rev-list
+│   ├── 05-revision-maj.css          ← menu utilitaire (date MAJ), modale de
+│   │                                  révision personnalisée, badge, rev-list
+│   └── 06-graphe-notions.css        ← modale 🕸️ « Graphe des notions » :
+│                                      sous-graphes centrés, étiquettes,
+│                                      panneau de détail, fil du chemin
 └── js/
     ├── 01-outils.js                 ← helpers, formatage, QCM, leçons, SVG
     ├── 02-banque-qcm.js             ← générateurs QCM « GEN » (2nd degré, dérivées…)
@@ -155,14 +161,16 @@ la-tour-des-maths/
     ├── 18-sauvegarde-scellee.js       ← RSA-2048 + AES-256, sessions, passées,
     │                                  horodatage derniereMaj + export enseignant
     ├── 19-demarrage.js                ← init, menu hamburger, typesetAll, tdmBoot
-    └── 19b-revision-personnalisee.js← modale 🎯 révision personnalisée
-                                       (sélection de notions pour la session)
+    ├── 19b-revision-personnalisee.js← modale 🎯 révision personnalisée
+    │                                  (sélection de notions pour la session)
+    └── 20-graphe-notions.js          ← modale 🕸️ « Graphe des notions » :
+                                       sous-graphes centrés, élèves & enseignants
 ```
 
 ## Interconnexions
 
-- `index.html` charge les 5 feuilles CSS **dans l'ordre 01 → 05** puis les
-  23 scripts **dans l'ordre 01 → 19b** (l'ordre de chargement est l'ordre
+- `index.html` charge les 6 feuilles CSS **dans l'ordre 01 → 06** puis les
+  32 scripts **dans l'ordre 01 → 20** (l'ordre de chargement est l'ordre
   d'exécution).
 - L'objet `GEN` (générateurs de questions, **315 clés**) est déclaré dans
   `01-outils.js`, alimenté par `02`, `03`, `04`, complété par l'inscription
@@ -197,6 +205,25 @@ la-tour-des-maths/
   `tdmElemsHTML` (lignes d'éléments, badge ✓n/✗n, ouverture de fiche),
   `tdmRepAttendue`, `tdmDecompoHTML` (élément raté mis en évidence),
   `tdmRappelsHTML`.
+- **`js/20-graphe-notions.js`** : modale 🕸️ « Graphe des notions »
+  (menu utilitaire, entrée `#grapheBtn`) — un explorateur de
+  **sous-graphes centrés** (DOM + SVG, sans physique, très léger) :
+  écran de départ (16 zones cliquables, ou reprise de la position en
+  cours), puis chaque clic fait du nœud choisi le **centre** d'un
+  sous-graphe : ses satellites directs (même sous-catégorie 🔗,
+  même élément d'entraînement ⚙, fiches partagées 📘) sont disposés
+  en anneaux, les liaisons sont **étiquetées** et cliquer un satellite
+  relance l'exploration. Un **fil du chemin** + compteur de sauts
+  permet de revenir en arrière, et une **barre de portée** prouve
+  que tout le programme est atteint en quelques sauts (« tout est
+  lié »). Recherche par nom, panneau de détail à deux visages :
+  mode 🎓 élèves (« Ce que tu vas t'entraîner à faire », fiches)
+  et mode 👩‍🏫 enseignant (identifiants, rappels LaTeX via
+  `tdmGenRappel` + MathJax, notions liées), intitulé du lien suivi,
+  statuts ✔/⏭ synchronisés sur l'état du jeu.
+  API : `tdmOuvreGraphe`, `tdmFermeGraphe`, `tdmGrapheCentre`,
+  `tdmGrapheDepart`, `tdmGrapheMode`, `tdmGrapheVoisins`,
+  `tdmGrapheEtat`.
 - **Trois lieux décomposés** : sommaire « 📚 Progression des notions »,
   modale « ⏭ Notions passées » (mode mini), leçon d'erreur
   (✅ réponse attendue → cours/méthode/piège → 🧩 décomposition →
@@ -551,7 +578,7 @@ du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
 contenus (16 catégories, 172 notions, 315 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (31 modules, banc d'essai 19 sections, chiffrement
+technique (32 modules, banc d'essai 19 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
@@ -631,7 +658,7 @@ nouvelle sous-catégorie « Sommet, taux de variation & conditions »).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 31 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 32 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

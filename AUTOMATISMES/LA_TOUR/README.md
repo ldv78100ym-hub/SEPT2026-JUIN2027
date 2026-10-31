@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 5 feuilles de style et 29 modules
+d'entrée, 1 dossier de présentation, 5 feuilles de style et 30 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -95,6 +95,33 @@ la-tour-des-maths/
     │                                  « Sommet, axe & métamorphoses » et
     │                                  « Déterminer un trinôme par ses
     │                                  conditions », 4 notions → 164 étages)
+    ├── 11j-suites.js             ← suites numériques enrichies
+    │                                  (définitions : liste de valeurs,
+    │                                  explicite, récurrence, rang d'un
+    │                                  terme ; arithmétiques :
+    │                                  reconnaissance par différence
+    │                                  constante, contre-exemples n², n³,
+    │                                  2ⁿ, (−1)ⁿ, variation selon r,
+    │                                  problèmes concrets — économies de
+    │                                  Paul, dépréciation linéaire, dette,
+    │                                  altitude, entraînement ; géométriques
+    │                                  : reconnaissance par quotient,
+    │                                  variation selon q (y compris 0 < q < 1
+    │                                  et q < 0 → alternés), coefficients
+    │                                  multiplicateurs 1±t/100, problèmes
+    │                                  concrets — intérêts composés, CM
+    │                                  économiques ; sens de variation :
+    │                                  étude de u_{n+1}−u_n affine,
+    │                                  quadratique (parfois non monotone),
+    │                                  rationnelle (réduction au même
+    │                                  dénominateur), racine carrée
+    │                                  (croissance de x↦√x) — 20
+    │                                  générateurs, fiches « Suites :
+    │                                  définitions, rangs & récurrence »,
+    │                                  « Arithmétique ou géométrique :
+    │                                  reconnaître & modéliser » et « Sens
+    │                                  de variation : étudier u_{n+1}−u_n »,
+    │                                  4 notions → 168 étages)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -117,7 +144,7 @@ la-tour-des-maths/
 - `index.html` charge les 5 feuilles CSS **dans l'ordre 01 → 05** puis les
   23 scripts **dans l'ordre 01 → 19b** (l'ordre de chargement est l'ordre
   d'exécution).
-- L'objet `GEN` (générateurs de questions, **275 clés**) est déclaré dans
+- L'objet `GEN` (générateurs de questions, **295 clés**) est déclaré dans
   `01-outils.js`, alimenté par `02`, `03`, `04`, complété par l'inscription
   de la banque `G` dans `10-adaptateurs-banque.js` puis par les **18
   générateurs d'évolutions/proportions** de `11c` ; `11-notions.js` et
@@ -141,7 +168,7 @@ la-tour-des-maths/
     fonctions, dérivées, tableaux, suites, proportionnalité, probabilités,
     statistiques, vecteurs, espace, complexes, Python, littéral, logique) —
     ouvertes d'un clic, LaTeX compris.
-  - `GEN_INFO` : pour chacun des 275 générateurs, un **libellé** clair, un
+  - `GEN_INFO` : pour chacun des 295 générateurs, un **libellé** clair, un
     **rappel** court (infobulle au survol) et ses **fiches** associées.
   - Helpers : `tdmGenLabel`, `tdmGenRappel`, `tdmGenFiches`,
     `tdmElemsDeNotion`, `tdmFichesDeNotion`.
@@ -177,7 +204,7 @@ L'élève compose, **pour la session en cours**, un menu de notions à
 réviser :
 
 - bouton « 🎯 Révision personnalisée… » du menu utilitaire → modale avec
-  les **164 notions**, un filtre de recherche, « Tout cocher /
+  les **168 notions**, un filtre de recherche, « Tout cocher /
   Tout décocher » et le décompte en direct ;
 - une fois lancée, la tour ne pose **que** des questions de la sélection
   (`state.customPool` filtré dans `pickNotion`) — mêmes règles de
@@ -407,6 +434,48 @@ variation & conditions »).
 | 🟨 Déterminer un trinôme par ses conditions | système 3×3 par f(0), f(1), f(2) (soustractions membre à membre) ; deux points de même ordonnée → sommet au milieu puis b = −2aα puis c ; f(x) = ax² par un point (a = y₀/x₀², signe imposé) ; sommet + point sans discriminant (a = (y₀−β)/(x₀−α)², b = −2aα, c = aα²+β) ; trajectoire h(t) = at²+bt : b = −ad, mur → inégalité divisée par un négatif (sens retourné), puis choix de a ; raisonnement complet à clés (équation, c = f(0), milieu, déduit, choix, sens, vérification) |
 | 🟨 Métamorphoses de la parabole | étirement y = ax² (sommet O invariant, retournement si a < 0) ; translations x²+β et (x−α)² (piège du signe) ; lecture de la forme canonique a(x−α)²+β ; liens b = −2aα et c = aα²+β sans développer ; raisonnement complet à clés (étirement, retournée, verticale, droite, canonique, axe, développer) |
 
+## Intégration des documents sur les suites numériques
+
+Les documents fournis — « Définitions des suites numériques » (modes de
+définition : liste de valeurs, courbe, formule explicite, relation de
+récurrence), « Leçons sur les suites numériques » (suite (u_n) vs terme
+u_n, rang/indice, sens de variation), simulateurs « Suite arithmétique »
+et « Suite géométrique » (pas à pas, récurrence, formule explicite,
+projection, variation selon r/q), « Cours & méthodes arithmétiques /
+géométriques », « Exercices suites arithmétiques » (reconnaissance,
+contre-exemples n², n³, 2ⁿ, (−1)ⁿ, économies de Paul),
+« Exercices conceptualisés » arithmétiques (bactéries, dépréciation
+linéaire, dette, altitude, entraînement, photocopieuse, empilement de
+cubes) et géométriques (CM/pourcentages, intérêts composés, rumeur,
+voiture, salaire), et « Variation d'une suite » (étude de
+u_{n+1}−u_n : affine, quadratique, rationnelle, racine carrée) — sont
+intégrés au format de la tour, **sans dupliquer** ce qui y existait
+déjà : générateurs historiques des suites arithmétiques et
+géométriques (`suiteArith`, `suiteArith2`, `trouSuiteArith`,
+`suiteGeo`, `suiteGeo2`, `trouSuiteGeo`), notions de la banque
+(`t-suitearith`, `t-suitegeo`, `t-suitegraph`), sommes de suites
+(`sommes-suites`), problèmes (`p-suite`), lectures statistiques
+(`lit-suites-stats`) et évolutions en pourcentages (`t-evolutions`,
+`evol-cm`, `evol-global` — coefficients multiplicateurs déjà couverts
+par la famille évolutions) sont conservés tels quels. Le « Sommaire
+suites numériques 2025-2026 » est une page de liens sans contenu
+propre : il n'est pas intégré.
+
+**4 nouvelles notions en sommet de tour** (la tour passe de 164 à
+**168 étages**), **20 nouveaux générateurs**, **3 fiches** (« 🟪
+Suites : définitions, rangs & récurrence », « 🟪 Arithmétique ou
+géométrique : reconnaître & modéliser », « 🟪 Sens de variation :
+étudier u_{n+1} − u_n »), **1 nouvelle sous-catégorie** dans la
+catégorie 🔁 Suites de la progression (« Définitions, variation &
+modélisation »).
+
+| Notion (étage) | Éléments simples (générateurs) |
+|---|---|
+| 🟪 Suites : définitions, termes & rangs | lecture d'une liste de valeurs (terme lu, rang, nombre de termes) ; formule explicite u_n = f(n) (calcul direct) ; relation de récurrence u_{n+1} = g(u_n) (itération) ; rang du premier terme dépassant un seuil (inéquation ou balayage) ; raisonnement complet à clés (liste, explicite, récurrence, rang, indice, seuil) |
+| 🟪 Suites arithmétiques : reconnaître & modéliser | reconnaissance par différence constante (tableau de valeurs) ; contre-exemples n², n³, 2ⁿ, (−1)ⁿ (pas arithmétiques) ; sens de variation selon le signe de r ; problèmes concrets (économies, dépréciation linéaire, dette, altitude, empilement de cubes) ; raisonnement complet à clés (différence, constante, raison, récurrence, explicite) |
+| 🟪 Suites géométriques : coefficients multiplicateurs | reconnaissance par quotient constant ; sens de variation selon q (croissante si q > 1, décroissante si 0 < q < 1, alternée si q < 0) ; coefficient multiplicateur 1+t/100, 1−t/100 ; problèmes concrets (intérêts composés, CM économiques) ; raisonnement complet à clés (quotient, raison, multiplicateur, récurrence, explicite) |
+| 🟪 Sens de variation d'une suite | étude de u_{n+1}−u_n : cas affine (différence constante) ; cas quadratique (développement de (n+1)², différence affine en n — parfois non monotone) ; cas rationnelle (réduction au même dénominateur, signe du déterminant) ; cas racine (croissance de x↦√x) ; raisonnement complet à clés (différence, développer, dénominateur, signe, monotone) |
+
 ## Dossier de présentation « rapport-publication.html »
 
 Document autonome lié à la tour (bouton « 📄 Dossier de présentation »
@@ -414,16 +483,16 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (16 catégories, 164 notions, 275 générateurs, du cycle 3 au
+contenus (16 catégories, 168 notions, 295 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (29 modules, banc d'essai 17 sections, chiffrement
+technique (30 modules, banc d'essai 18 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 ## Progression des notions par catégories
 
-La modale « 📚 Progression des notions » ne liste plus les 164 notions
+La modale « 📚 Progression des notions » ne liste plus les 168 notions
 dans l'ordre de construction de la tour : le nouveau module
 `11f-progression.js` les regroupe en **16 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
@@ -460,16 +529,16 @@ trinôme, polynômes de degré 3 (lycée), équations produit-nul et
 d'inéquations. Chaque notion apparaît dans **une seule**
 sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
-les 164 notions sont classées, vérifié par le banc d'essai).
+les 168 notions sont classées, vérifié par le banc d'essai).
 
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 17 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 18 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (16 catégories,
-164 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 275 générateurs, segments LaTeX
+168 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
+notions passées, couverture des 295 générateurs, segments LaTeX
 propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
 interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
@@ -496,7 +565,7 @@ nouvelle sous-catégorie « Sommet, taux de variation & conditions »).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 29 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 30 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

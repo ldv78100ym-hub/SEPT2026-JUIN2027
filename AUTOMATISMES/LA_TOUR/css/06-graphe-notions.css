@@ -1,0 +1,188 @@
+/* ============================================================
+   06. GRAPHE DES NOTIONS — explorateur « tout est lié »
+   Sous-graphes centrés : une notion (ou une catégorie / sous-
+   catégorie) au centre, ses liens directs autour, étiquetés.
+   Un clic sur un nœud le fait devenir le centre et déploie ses
+   propres liens. Même langage visuel que la tour (beige/crème,
+   or, cyan, violet) ; rendu DOM + SVG, sans simulation lourde.
+   ============================================================ */
+
+/* ---- Fond de modale ---- */
+#graphModal{position:fixed;inset:0;display:none;z-index:60;
+  background:rgba(58,49,33,.55);backdrop-filter:blur(2px)}
+#graphModal.open{display:flex;align-items:stretch;justify-content:center}
+
+.gbox{position:relative;flex:1;margin:10px;min-width:0;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#faf3e2,#efe4c6);
+  border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:0 10px 40px rgba(70,55,25,.28)}
+.gbox:focus-visible{outline:2px solid var(--violet)}
+
+/* ---- Barre supérieure : titre, fil du chemin, recherche ---- */
+.ghead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+.ghead .gtitre{font-size:14px;font-weight:800;color:var(--gold);letter-spacing:.3px;white-space:nowrap}
+.gtrail{display:flex;align-items:center;gap:4px;flex:1 1 300px;min-width:0;
+  overflow-x:auto;scrollbar-width:thin;padding:2px}
+.gtrail::-webkit-scrollbar{height:5px}
+.gtrail::-webkit-scrollbar-thumb{background:#d3c194;border-radius:99px}
+.gtrail .tsep{color:var(--dim);font-size:11px;flex:0 0 auto}
+.gchip{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;
+  padding:3px 9px;font-size:11px;font-weight:700;color:var(--txt);
+  background:var(--panel2);border:1px solid var(--line);border-radius:99px;
+  cursor:pointer;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.gchip:hover{border-color:var(--violet);color:var(--violet)}
+.gchip.cur{border-color:var(--gold);color:var(--gold);cursor:default}
+.gchip .sauts{color:var(--cyan)}
+
+.gsearch{position:relative;flex:0 1 220px;min-width:130px}
+.gsearch input{width:100%;padding:6px 10px;font-family:inherit;font-size:12.5px;color:var(--txt);
+  background:var(--panel2);border:1px solid var(--line);border-radius:9px}
+.gsearch input:focus{outline:none;border-color:var(--violet)}
+.gdrop{position:absolute;top:calc(100% + 4px);right:0;width:280px;max-width:70vw;z-index:30;
+  max-height:240px;overflow-y:auto;background:var(--panel);border:1px solid var(--line);
+  border-radius:9px;box-shadow:0 6px 18px rgba(120,95,50,.2);display:none}
+.gdrop.open{display:block}
+.gdrop button{display:block;width:100%;text-align:left;padding:7px 10px;border:none;
+  background:transparent;font-family:inherit;font-size:12px;color:var(--txt);
+  cursor:pointer;border-bottom:1px solid var(--line)}
+.gdrop button:last-child{border-bottom:none}
+.gdrop button:hover{background:var(--panel2);color:var(--violet)}
+.gbtn{padding:6px 11px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.3px;
+  color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  cursor:pointer;white-space:nowrap}
+.gbtn:hover{border-color:var(--violet);color:var(--violet)}
+.gclose{position:absolute;top:8px;right:10px;z-index:40;width:32px;height:32px;line-height:28px;
+  font-size:20px;font-weight:700;color:var(--dim);background:var(--panel);
+  border:1px solid var(--line);border-radius:50%;cursor:pointer}
+.gclose:hover{color:var(--bad);border-color:var(--bad)}
+
+/* ---- Scène du sous-graphe ---- */
+.gbody{position:relative;flex:1;min-height:0;overflow:hidden}
+#gStage{position:absolute;inset:0}
+#gLinks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#gLinks line{stroke-width:2}
+#gLinks line.dash{stroke-dasharray:6 5}
+
+/* nœud = notion / sous-catégorie / catégorie */
+.gnode{position:absolute;transform:translate(-50%,-50%);z-index:10;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:7px 12px;max-width:170px;text-align:center;font-family:inherit;
+  font-size:12px;font-weight:700;line-height:1.25;color:var(--txt);
+  background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  cursor:pointer;box-shadow:0 2px 8px rgba(120,95,50,.14);
+  transition:left .45s cubic-bezier(.35,1.2,.4,1),top .45s cubic-bezier(.35,1.2,.4,1),
+             opacity .3s,transform .3s}
+.gnode:hover{transform:translate(-50%,-50%) scale(1.06);z-index:12}
+.gnode .gstat{position:absolute;top:-7px;right:-7px;width:16px;height:16px;line-height:15px;
+  border-radius:50%;font-size:10px;background:var(--panel);border:1.5px solid var(--line)}
+.gnode .gstat.ok{border-color:var(--good);color:var(--good)}
+.gnode .gstat.skip{color:var(--dim)}
+.gnode .gcount{font-size:10px;font-weight:600;color:var(--dim)}
+.gnode.centre{padding:11px 18px;font-size:14px;border-width:3px;cursor:default;
+  box-shadow:0 6px 22px rgba(120,95,50,.25);z-index:11}
+.gnode.centre:hover{transform:translate(-50%,-50%) scale(1)}
+.gnode.centre .etg{font-size:10px;font-weight:600;color:var(--dim);letter-spacing:.5px}
+.gnode.sub{padding:6px 10px;font-size:11.5px}
+.gnode.apparait{animation:gPop .35s ease both}
+@keyframes gPop{from{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+
+/* étiquette de liaison */
+.glab{position:absolute;transform:translate(-50%,-50%);z-index:5;
+  padding:2px 8px;font-size:10px;font-weight:700;color:var(--txt);
+  background:rgba(255,252,243,.94);border:1px solid var(--line);border-radius:99px;
+  white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 1px 4px rgba(120,95,50,.15);pointer-events:none}
+
+/* barre de portée (combien de notions atteignables) */
+.greach{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:6px;max-width:92%;
+  padding:6px 14px;font-size:11.5px;font-weight:600;color:var(--txt);
+  background:rgba(255,252,243,.92);border:1px solid var(--line);border-radius:99px;
+  box-shadow:0 2px 8px rgba(120,95,50,.16);text-align:center}
+.greach b{color:var(--violet)}
+.greach .wow{color:var(--good)}
+
+/* légende des types de liens (bas gauche) */
+.gtypes{position:absolute;left:10px;bottom:10px;z-index:6;display:flex;flex-direction:column;gap:3px;
+  padding:7px 10px;background:rgba(255,252,243,.9);border:1px solid var(--line);border-radius:10px}
+.gtypes span{font-size:10px;color:var(--dim);font-weight:600;white-space:nowrap}
+.gtypes i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+/* bouton « autres liens » */
+.gplus{position:absolute;left:50%;transform:translateX(-50%);z-index:8;
+  padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;color:var(--violet);
+  background:var(--panel);border:1px solid var(--line);border-radius:99px;cursor:pointer}
+.gplus:hover{border-color:var(--violet)}
+
+/* écran de départ */
+.gstart{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;padding:24px;text-align:center;overflow-y:auto}
+.gstart h3{margin:0;font-size:18px;color:var(--gold)}
+.gstart p{margin:0;font-size:12.5px;color:var(--dim);max-width:520px;line-height:1.55}
+.gstart .gcats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,170px));
+  gap:8px;justify-content:center;max-width:760px}
+.gstart .gcat{padding:10px 12px;font-family:inherit;font-size:12px;font-weight:700;color:var(--txt);
+  background:var(--panel);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;text-align:left}
+.gstart .gcat:hover{border-color:var(--violet);transform:translateY(-1px)}
+.gstart .gcat .cnt{margin-left:auto;font-size:10px;color:var(--dim);font-weight:600}
+
+/* ---- Panneau de détail (droite) ---- */
+.gpanel{position:absolute;right:10px;top:10px;bottom:44px;width:320px;max-width:86vw;
+  display:none;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;box-shadow:0 6px 22px rgba(120,95,50,.22);overflow:hidden}
+.gpanel.open{display:flex}
+.gpanel .gphead{padding:8px 12px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel2),transparent)}
+.gpanel .gpfil{font-size:10px;color:var(--dim);font-weight:700;letter-spacing:.4px}
+.gpanel h3{margin:3px 0 6px;font-size:15px;line-height:1.3;color:var(--txt)}
+.gpbadges{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.gpbadge{display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;border-radius:99px;
+  border:1px solid var(--line);background:var(--panel2);color:var(--dim)}
+.gpbadge.ok{border-color:var(--good);color:var(--good)}
+.gpbadge.todo{border-color:var(--gold);color:var(--gold)}
+.gpbadge.skip{border-color:var(--dim)}
+.gpmodes{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:auto}
+.gpmodes button{padding:3px 8px;border:none;background:var(--panel);font-family:inherit;
+  font-size:10.5px;font-weight:700;color:var(--dim);cursor:pointer}
+.gpmodes button.on{background:var(--gold);color:#fffcf3}
+.gpbody{flex:1;overflow-y:auto;padding:10px 12px;font-size:12.5px}
+.gpbody::-webkit-scrollbar{width:7px}
+.gpbody::-webkit-scrollbar-thumb{background:#d3c194;border-radius:99px}
+.gpbody h5{margin:10px 0 5px;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--violet);font-weight:800}
+.gpbody h5.gold{color:var(--gold)}
+.gpbody .pourquoi{background:var(--panel2);border:1px dashed var(--line);border-radius:9px;
+  padding:7px 9px;font-size:11.5px;color:var(--dim)}
+.gpbody .pourquoi b{color:var(--txt)}
+.gpbody ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.gpbody li{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 9px}
+.gpbody .gid{font-family:ui-monospace,Consolas,monospace;font-size:10px;color:var(--dim)}
+.gpbody .grap{font-size:11.5px;color:var(--dim);margin-top:2px}
+.gpbody .grap b{color:var(--txt)}
+.gpbody .gfiches,.gpbody .gsib{display:flex;flex-wrap:wrap;gap:5px}
+.tdm-fiche-btn{padding:4px 9px;font-family:inherit;font-size:11px;font-weight:700;color:var(--cyan);
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.tdm-fiche-btn:hover{border-color:var(--cyan)}
+.gpbody .gsib button{padding:3px 8px;font-family:inherit;font-size:11px;color:var(--txt);
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.gpbody .gsib button:hover{border-color:var(--violet);color:var(--violet)}
+.gptrack{height:6px;border-radius:99px;background:#e3d5b4;border:1px solid var(--line);
+  overflow:hidden;margin-top:6px}
+.gptrack .gpfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan))}
+.gpbody .gpnote{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);
+  font-size:10.5px;color:var(--dim);line-height:1.5}
+
+/* ---- Aide (bas droite) ---- */
+.ghelp{position:absolute;right:10px;bottom:10px;z-index:6;max-width:340px;
+  font-size:10.5px;color:var(--dim);background:rgba(255,252,243,.85);
+  border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+
+@media (max-width:700px){
+  .gpanel{left:10px;right:10px;width:auto;top:auto;bottom:38px;max-height:46vh}
+  .gtypes{display:none}
+  .greach{bottom:auto;top:8px;font-size:10px}
+  .gsearch{flex:1 1 120px}
+}

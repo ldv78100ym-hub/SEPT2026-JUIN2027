@@ -506,7 +506,7 @@ GEN.suGeoCM = function(){
     EXPL(
       `Une évolution de \\(t\\,\\%\\) ne s\u2019additionne pas : elle se traduit par un coefficient multiplicateur, \\(1 + \\dfrac{t}{100}\\) pour une hausse, \\(1 - \\dfrac{t}{100}\\) pour une baisse.`,
       `${hausse ? 'Hausse' : 'Baisse'} de ${t} % : raison \\(q = ${cm}\\). Les valeurs successives forment une suite géométrique de raison \\(q\\) — c\u2019est le mécanisme des intérêts composés.`,
-      `Ne JAMAIS écrire \\(100 - ${t} = ${100 - t}\\) : la raison est ${cm}, pas ${100 - t}. Le « % » cache une division par 100.`
+      `Ne JAMAIS écrire \\(100 - ${t} = ${100 - t}\\) : la raison est ${M(cm)}, pas ${100 - t}. Le « % » cache une division par 100.`
     )
   );
 };

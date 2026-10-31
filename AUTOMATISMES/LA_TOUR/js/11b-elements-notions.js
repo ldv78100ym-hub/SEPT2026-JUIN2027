@@ -480,7 +480,7 @@ const GEN_INFO = {
   'lit-algebre':      { fiches: ['litteral', 'algebre'], rappel: "Relation implicite \\(ax+by=c\\) : isoler y (ou x) ; produit en croix pour les formes fractionnaires." },
   'lit-numeric':      { fiches: ['litteral'], rappel: "Application numérique : unités SI, substitution, calcul, arrondi aux chiffres significatifs." },
   'notation-f':       { fiches: ['fonctions'], rappel: "\\(f\\) est la fonction (objet), \\(f(x)\\) un NOMBRE ; \\(C_f\\) la courbe, \\(G_f\\) le graphe ; jamais « f = 2x + 3 »." },
-  'espace-3d':        { fiches: ['espace'], rappel: "Coordonnées \\((x\\,;\\,y\\,;\\,z\\)\\) ; distance \\\\sqrt{\\Delta x^2+\\Delta y^2+\\Delta z^2}\\) ; milieu = moyennes des coordonnées." },
+  'espace-3d':        { fiches: ['espace'], rappel: "Coordonnées \\((x\\,;\\,y\\,;\\,z)\\) ; distance \\(\\sqrt{\\Delta x^2+\\Delta y^2+\\Delta z^2}\\) ; milieu = moyennes des coordonnées." },
   'polygones':        { fiches: ['geometrie'], rappel: "Régulier : angle au centre \\(\\dfrac{360\\degree}n\\), angle intérieur \\(\\dfrac{(n-2)\\times180\\degree}n\\), n axes de symétrie." },
   'nuage':            { fiches: ['statistiques'], rappel: "Point moyen \\(G(\\bar x\\,;\\,\\bar y)\\) ; droite d'ajustement pour ESTIMER (avec prudence hors nuage)." },
   'proba-totales':    { fiches: ['probabilites'], rappel: "Partition de l'univers : \\(P(B)=\\sum P(A_i\\cap B)\\) — additionner toutes les branches qui mènent à B." },

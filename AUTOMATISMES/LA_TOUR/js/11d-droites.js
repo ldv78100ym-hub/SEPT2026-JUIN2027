@@ -365,8 +365,8 @@ GEN.trouPosition = () => TROU(
    Elles sont CONFONDUES si leurs équations réduites sont {{2}}.<br>
    Elles sont SÉCANTES si \\(m_1\\) {{3}} \\(m_2\\), et leur point d'intersection s'obtient en résolvant un {{4}} de deux équations.<br>
    Elles sont PERPENDICULAIRES si le produit de leurs pentes vaut {{5}} : la perpendiculaire à \\(y=mx+p\\) a donc pour pente {{6}}.`,
-  ['égales', 'sont différentes', 'identiques', '\\ne', 'système', '-1', '-\\dfrac{1}{m}'],
-  ['différentes', 'opposées', 'sont égales', 'proportionnelles', '=', '\\lt', 'somme', 'équation', '0', '1', 'm', '\\dfrac{1}{m}', '-m', 'inéquation'],
+  ['égales', 'sont différentes', 'identiques', '≠', 'système', '-1', '-1/m'],
+  ['différentes', 'opposées', 'sont égales', 'proportionnelles', '=', '≤', 'somme', 'équation', '0', '1', 'm', '1/m', '-m', 'inéquation'],
   `Le test complet se fait sur les COUPLES (m ; p) : mêmes pentes → parallèles ; on ne tranche « confondues » qu'en vérifiant AUSSI les ordonnées à l'origine. Et pour la perpendicularité, c'est le PRODUIT des pentes qui vaut −1, pas leur somme ou leur opposé.`
 );
 
@@ -526,7 +526,7 @@ GEN.dTolerance = () => {
      'Conforme seulement si la mesure vaut exactement la valeur idéale'],
     1,
     EXPL(`La tolérance définit deux droites PARALLÈLES à la droite idéale : \\(y=mx+p\\pm t\\). Conforme si l'écart \\(\\leqslant\\) tolérance.`,
-      `Valeur idéale : \\(y=${m}\\times${xT}${p === 0 ? '' : tdmSgn(p)}=${tdmFN(yTh, 1)}\\) mm. Écart : \\(|${tdmFN(yMes, 1)}-${tdmFN(yTh, 1)}|=${tdmFN(Math.abs(ec), 1)}\\) mm ${conforme ? '\\lt' : '\\gt'} ${tdmFN(tol, 1)} mm : la pièce est ${conforme ? 'CONFORME' : 'NON CONFORME'}. Les droites de tolérance sont ${limite(p + tol)} et ${limite(p - tol)}, parallèles à la droite idéale.`,
+      `Valeur idéale : \\(y=${m}\\times${xT}${p === 0 ? '' : tdmSgn(p)}=${tdmFN(yTh, 1)}\\) mm. Écart : \\(|${tdmFN(yMes, 1)}-${tdmFN(yTh, 1)}|=${tdmFN(Math.abs(ec), 1)}\\) mm ${conforme ? M('\\lt') : M('\\gt')} ${tdmFN(tol, 1)} mm : la pièce est ${conforme ? 'CONFORME' : 'NON CONFORME'}. Les droites de tolérance sont ${limite(p + tol)} et ${limite(p - tol)}, parallèles à la droite idéale.`,
       `Ne pas comparer la mesure à la droite SANS calculer l'écart, ni confondre tolérance verticale (en mm) et distance géométrique à la droite.`));
 };
 

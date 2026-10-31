@@ -70,7 +70,9 @@ function fpWrongFracs(F, extras){
   for(const w of cand){
     if(!w) continue;
     const t = frTex(w);
-    if(!seen.has(t)){ seen.add(t); out.push(t); if(out.length === 4) break; }
+    /* Options de QCM : la bonne réponse est emballée par M(...), les mauvaises
+       doivent l'être aussi, sinon MathJax affiche \dfrac en texte brut. */
+    if(!seen.has(t)){ seen.add(t); out.push(M(t)); if(out.length === 4) break; }
   }
   return out;
 }
@@ -110,7 +112,7 @@ GEN.frSimplifie = () => {
     fpWrongFracs(F, [tdmFR(A, B + k), tdmFR(A - k, B), tdmFR(bp, ap)]),
     1,
     EXPL(`On ne change pas une fraction en divisant son numérateur ET son dénominateur par un même nombre non nul : on cherche leur PGCD.`,
-      `\\(${A} = ${fpDecomp(A)}\\) et \\(${B} = ${fpDecomp(B)}\\) : le facteur commun est \\(${k}\\), donc \\(\\operatorname{PGCD}(${Math.abs(A)}\\,;\\\\,${B}) = ${k}\\).\\n    \\(\\dfrac{${A}}{${B}} = \\dfrac{${ap < 0 ? '(' + ap + ')' : ap} \\times ${k}}{${bp} \\times ${k}} = \\dfrac{${ap}}{${bp}}\\) — et \\(\\operatorname{PGCD}(${Math.abs(ap)}\\,;\\\\,${bp}) = 1\\) : la fraction est irréductible.`,
+      `\\(${A} = ${fpDecomp(A)}\\) et \\(${B} = ${fpDecomp(B)}\\) : le facteur commun est \\(${k}\\), donc \\(\\operatorname{PGCD}(${Math.abs(A)}\\,;\\,${B}) = ${k}\\).\\n    \\(\\dfrac{${A}}{${B}} = \\dfrac{${ap < 0 ? '(' + ap + ')' : ap} \\times ${k}}{${bp} \\times ${k}} = \\dfrac{${ap}}{${bp}}\\) — et \\(\\operatorname{PGCD}(${Math.abs(ap)}\\,;\\,${bp}) = 1\\) : la fraction est irréductible.`,
       `On ne simplifie jamais en RETIRANT un même nombre haut et bas : \\(\\dfrac{${A - k}}{${B - k}}\\) n'a rien à voir avec \\(\\dfrac{${A}}{${B}}\\). Seule la division par un facteur commun conserve la valeur.`));
 };
 
@@ -256,12 +258,12 @@ GEN.frFractionSignee = () => {
   }
   const F = tdmFR((minus % 2 === 0 ? 1 : -1) * num, den);
   return QCM(
-    `Calculez et donnez la forme irréductible :\n    ${disp.join(' \\times ')}`,
+    `Calculez et donnez la forme irréductible :\n    \\(${disp.join('\\times ')}\\)`,
     M(frTex(F)),
     fpWrongFracs(F, [tdmFR(num, den), frNeg(F)]),
     1,
     EXPL(`Le signe d'une fraction peut se placer DEVANT, au NUMÉRATEUR ou au DÉNOMINATEUR : \\(\\dfrac{-a}{b} = \\dfrac{a}{-b} = -\\dfrac{a}{b}\\) et \\(\\dfrac{-a}{-b} = \\dfrac{a}{b}\\).`,
-      `Signes « − » visibles : \\(${minus}\\) (${minus % 2 === 0 ? 'pair' : 'impair'}) → résultat ${minus % 2 === 0 ? 'positif' : 'négatif'}.\\n    En valeurs absolues : ${parts.map(f => `\\dfrac{${f.n}}{${f.d}}`).join(' \\times ')} = \\dfrac{${num}}{${den}} = ${frTexP(F)}, d'où \\(${frTex(F)}\\).`,
+      `Signes « − » visibles : \\(${minus}\\) (${minus % 2 === 0 ? 'pair' : 'impair'}) → résultat ${minus % 2 === 0 ? 'positif' : 'négatif'}.\\n    En valeurs absolues : \\(${parts.map(f => `\\dfrac{${f.n}}{${f.d}}`).join(' \\times ')} = \\dfrac{${num}}{${den}} = ${frTexP(F)}\\), d'où \\(${frTex(F)}\\).`,
       `Compter les « − » visibles ne suffit que pour le SIGNE ; il faut aussi multiplier les valeurs absolues et RÉDUIIRE la fraction obtenue (PGCD du numérateur et du dénominateur).`));
 };
 

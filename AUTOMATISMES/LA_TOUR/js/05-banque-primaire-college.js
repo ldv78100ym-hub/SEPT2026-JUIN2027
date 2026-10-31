@@ -412,7 +412,7 @@ Object.assign(G, {
 
   "s-ensembles": { tag: "Seconde", label: "Ensembles de nombres (ℕ, ℤ, ℚ, ℝ)", make: function (d) {
     if (d === 1) return mkMC(SQ + "2 appartient à quel ensemble (le plus précis) ?", "ℝ, mais pas à ℚ (irrationnel)", ["ℚ", "ℤ", "ℕ"], SQ + "2 ne s'écrit pas comme quotient d'entiers.", SQ + "2 est irrationnel : il est dans ℝ mais pas dans ℚ.");
-    if (d === 2) { var n = pick([-7, -12, -3, -1, -25]); return mkMC("Le plus petit ensemble (au sens de l'inclusion) contenant " + attM(n) + " est ... ?", "ℤ", ["ℕ", "ℚ \\\\ ℤ", "ℝ"], attM(n) + " est un entier relatif ni positif ni nul.", attM(n) + " ∈ ℤ, donc aussi ∈ ℚ et ∈ ℝ, mais le plus petit est ℤ."); }
+    if (d === 2) { var n = pick([-7, -12, -3, -1, -25]); return mkMC("Le plus petit ensemble (au sens de l'inclusion) contenant " + attM(n) + " est ... ?", "ℤ", ["ℕ", "ℚ \ ℤ", "ℝ"], attM(n) + " est un entier relatif ni positif ni nul.", attM(n) + " ∈ ℤ, donc aussi ∈ ℚ et ∈ ℝ, mais le plus petit est ℤ."); }
     var dec = pick([["0,25", "1/4"], ["0,5", "1/2"], ["0,75", "3/4"], ["0,2", "1/5"], ["0,7", "7/10"]]);
     return mkMC("Le plus petit ensemble contenant " + dec[0] + " est ... ?", "ℚ", ["ℕ", "ℤ", "ℝ"], dec[0] + " = " + dec[1] + " : un quotient d'entiers.", dec[0] + " = " + dec[1] + " ∈ ℚ, mais " + dec[0] + " ∉ ℕ et ∉ ℤ."); } },
   "s-facto": { tag: "Seconde", label: "Factorisation : facteur commun", make: function (d) {

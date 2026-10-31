@@ -813,6 +813,119 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   call('tdmFermeGraphe()');
   call('state.validated.delete(NOTIONS[100].id)');
 
+  /* ================================================================ */
+  console.log('== 19. Animation « balle rebondissante » & modale d\'accueil ==');
+  /* la modale d'accueil ne doit plus sortir de l'écran (fichiers) */
+  const cssSur = fs.readFileSync(ROOT + '/css/02-surimpressions.css', 'utf8');
+  ok(/\.box\{[^}]*max-height:calc\(100dvh ?- ?36px\)/.test(cssSur.replace(/\n\s*/g, ' ')), 'modale d\'accueil : hauteur plafonnée à l\'écran (max-height dvh)');
+  ok(/\.box\{[^}]*overflow-y:auto/.test(cssSur.replace(/\n\s*/g, ' ')), 'modale d\'accueil : défilement interne si l\'écran est petit');
+  ok(cssSur.includes('@media (max-height:640px)'), 'modale d\'accueil : version compacte pour les petits écrans');
+  const cssQid = fs.readFileSync(ROOT + '/css/03-questions-identite.css', 'utf8');
+  ok(/\.ibox\{[^}]*max-height:calc\(100dvh ?- ?36px\)/.test(cssQid.replace(/\n\s*/g, ' ')), 'modale identité : garde-fou hauteur écran');
+  ok(/\.pbox\{[^}]*max-height:calc\(100dvh ?- ?36px\)/.test(cssQid.replace(/\n\s*/g, ' ')), 'modale bilan : garde-fou hauteur écran');
+  const idxHtml = fs.readFileSync(ROOT + '/index.html', 'utf8');
+  ok(idxHtml.includes('id="welTot"') && idxHtml.includes('id="welTot2"'), 'accueil : compteurs de notions dynamiques présents');
+  ok(idxHtml.includes('0 / 181'), 'HUD : total statique cohérent (0 / 181)');
+  ok(call('$(\'welTot\').textContent') === '181', 'accueil : compteur notions rempli (181)');
+  ok(call('$(\'welTot2\').textContent') === '181', 'accueil : deuxième compteur rempli (181)');
+
+  /* l'animation alternative : bascule via le bouton du menu */
+  call('state.floor = 0');
+  call('localStorage.removeItem(\'tdm-anim\')');
+  ok(sandbox.tdmBalle && call('tdmBalle.mode()') === 'tour', 'balle : mode par défaut = « tour 3D »');
+  const animBtn = $('animBtn');
+  ok(animBtn && (animBtn.listeners.click || []).length > 0, 'balle : bouton de bascule câblé dans le menu');
+  animBtn.listeners.click.forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('tdmBalle.mode()') === 'balle', 'balle : un clic bascule vers l\'animation « balle rebondissante »');
+  ok(call('localStorage.getItem(\'tdm-anim\')') === 'balle', 'balle : le choix persiste (localStorage)');
+  ok($('hint').textContent.includes('balle'), 'balle : le bandeau d\'aide annonce la nouvelle animation');
+  await sleep(80);                                    /* la balle se place au palier courant */
+  ok(call('tdmBalle.info().active') === true && call('tdmBalle.info().lvl') === 0, 'balle : la balle démarre sur le palier courant');
+  ok(call('tdmBalle.info().rayon') >= 20, 'balle : la balle est bien plus grosse (rayon ' + call('tdmBalle.info().rayon') + ' px)');
+
+  /* bonne réponse : la balle bondit de mur en mur, traînée puis gerbe */
+  call(`(function(){ const q = GEN['canonique'](); q._notionId = 'sd-formes'; q._gen = 'canonique';
+    state.lastGen = 'canonique'; resolveAnswer(true, q); })()`);
+  await sleep(250);
+  let iMid = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+  ok(iMid.phase === 'bounce', 'balle : bonne réponse → elle bondit de mur en mur (phase bounce)');
+  ok(iMid.humeur === 'heureuse', 'balle : en montée, elle est HEUREUSE (grands yeux rieurs, sourire ouvert)');
+  ok(iMid.gerbe > 0, 'balle : elle est fêtée pendant toute la montée (étincelles de joie : ' + iMid.gerbe + ')');
+  ok(iMid.trainee > 0, 'balle : la traînée est visible pendant le bond');
+  await sleep(550);
+  let iEnd = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+  ok(iEnd.lvl > iMid.lvl || iEnd.tgt > iMid.lvl, 'balle : la balle atteint le palier supérieur');
+  ok(iEnd.gerbe > 0 || iEnd.phase === 'bounce', 'balle : feu d\'artifice à l\'arrivée sur le nouveau palier');
+  await sleep(400);
+  iEnd = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+  ok(iEnd.phase === 'idle' && iEnd.gerbe > 0, 'balle : gerbe de feu d\'artifice à l\'atterrissage (' + iEnd.gerbe + ' étincelles)');
+
+  /* erreur : chute entre les murs, écrasement marqué, plancher puis larmes.
+     Clé LOUFOQUE (q._absurd) → pénalité maximale déterministe = tout l'étage
+     courant, pour ne pas dépendre de la « grâce » aléatoire de 15 %. */
+  call(`(function(){ const q = GEN['canonique'](); q._notionId = 'sd-formes'; q._gen = 'canonique';
+    state.lastGen = 'canonique'; q._absurd = true; SAV.logQuestion(q, ['clé loufoque'], false);
+    resolveAnswer(false, q); })()`);
+  await sleep(200);
+  call('closeLesson()');
+  await sleep(120);
+  const iFall = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+  ok(['fallDrop', 'fallFree', 'slide'].includes(iFall.phase), 'balle : erreur → elle chute entre les deux murs (phase ' + iFall.phase + ')');
+  /* échantillonne la chute : écrasement maximal + séquence plancher → larmes */
+  let sqMax1 = 0, sawSlide = false, sawCry = false, larmes = 0;
+  let sadFall = false, larmesBasOk = false, debris1 = 0;
+  for (let k = 0; k < 22; k++){
+    await sleep(90);
+    const s = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+    if (s.phase === 'slide') sawSlide = true;
+    if (s.phase === 'fallFree' || s.phase === 'slide') sadFall = sadFall || (s.humeur === 'triste');
+    if (s.larmes > 0) larmesBasOk = larmesBasOk || (s.larmesBas === s.larmes);
+    if (s.phase === 'cry'){ sawCry = true; larmes = Math.max(larmes, s.larmes); }
+    debris1 = Math.max(debris1, s.debris);
+    sqMax1 = Math.max(sqMax1, s.ecrasement);
+    if (sawCry && larmes > 0 && s.ecrasement === 0 && s.phase === 'idle') break;
+  }
+  const iCry = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+  ok(sawSlide, 'balle : plancher coulissant incliné qui la guide vers son nouveau palier (phase slide)');
+  ok(sadFall, 'balle : pendant la chute, elle est TRÈS TRISTE (sourcils baisés, grande bouche)');
+  ok(sawCry && (larmes > 0 || iCry.larmes > 0), 'balle : après la chute, elle pleure sur son nouveau palier');
+  ok(larmesBasOk, 'balle : les larmes coulent vers le bas (gravité orientée vers le sol)');
+  ok(debris1 > 0, 'balle : dès qu\'elle a rejoint son palier, les pans de murs au-dessus s\'écrasent au sol (' + debris1 + ' morceaux)');
+  ok(sqMax1 > 0.2, 'balle : écrasement marqué à l\'arrivée de la chute (' + sqMax1.toFixed(2) + ')');
+
+  /* montée de plusieurs étages d'un coup, puis GROSSE chute : écrasement ∝ pénalité */
+  call('state.floor = 4');
+  let iHaut = null;                                   /* on attend son arrivée au palier 4 */
+  for (let k = 0; k < 46 && !iHaut; k++){
+    await sleep(100);
+    const s = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+    if (s.phase === 'idle' && s.lvl === 4) iHaut = s;
+  }
+  ok(iHaut && iHaut.lvl === 4, 'balle : une série de bonnes réponses l\'emmène 4 paliers plus haut');
+  ok(iHaut && iHaut.gerbe > 0, 'balle : gerbe plus forte à l\'arrivée d\'un palier haut (' + (iHaut ? iHaut.gerbe : 0) + ' étincelles)');
+  call('state.floor = 0');                            /* chute de 4 paliers */
+  let sqMax4 = 0, sawSlide4 = false, larmes4 = 0, debris4 = 0;
+  for (let k = 0; k < 26; k++){
+    await sleep(90);
+    const s = JSON.parse(call('JSON.stringify(tdmBalle.info())'));
+    if (s.phase === 'slide') sawSlide4 = true;
+    if (s.phase === 'cry') larmes4 = Math.max(larmes4, s.larmes);
+    debris4 = Math.max(debris4, s.debris);
+    sqMax4 = Math.max(sqMax4, s.ecrasement);
+    if (s.phase === 'idle' && s.ecrasement === 0 && s.lvl === 0) break;
+  }
+  ok(sqMax4 > sqMax1 + 0.15, 'balle : plus la chute est importante, plus l\'écrasement d\'arrivée est marqué (' + sqMax4.toFixed(2) + ' vs ' + sqMax1.toFixed(2) + ')');
+  ok(sawSlide4 && larmes4 > 0, 'balle : grosse chute → plancher incliné puis larmes nombreuses (' + larmes4 + ')');
+  ok(debris4 > debris1, 'balle : plus de paliers perdus, plus de pans de murs écrasés au sol (' + debris4 + ' vs ' + debris1 + ')');
+
+  /* retour à la tour : tout se raccroche proprement */
+  animBtn.listeners.click.forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('tdmBalle.mode()') === 'tour', 'balle : un nouveau clic revient à l\'animation « Tour 3D »');
+  ok(call('localStorage.getItem(\'tdm-anim\')') === 'tour', 'balle : le retour persiste aussi (localStorage)');
+  await sleep(200);
+  ok(call('state.visualFloor') === call('state.floor'), 'balle : au retour, la tour reprend l\'étage courant');
+  call('localStorage.removeItem(\'tdm-anim\')');
+
   console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
   process.exit(fail === 0 ? 0 : 1);
 })().catch(e => { console.error('EXCEPTION : ' + e.stack); process.exit(1); });

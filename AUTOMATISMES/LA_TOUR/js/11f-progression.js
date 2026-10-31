@@ -80,6 +80,9 @@ const PROG_CATS = [
     subs: [
       { nom: 'Valeurs remarquables & angles', ids: ['c-trigo', 'trigonometrie', 't-trigo2',
                                                      't-angles-orientes', 't-associes'] },
+      { nom: 'Degrés, radians & mesure principale', ids: ['trigo-conversion', 'trigo-modulo',
+                                                           'trigo-mesure-principale'] },
+      { nom: 'Symétries, rotations & coordonnées', ids: ['trigo-symetries', 'trigo-cossin'] },
       { nom: 'Équations & inéquations trigonométriques', ids: ['t-eqtrigo', 't-ineqtrigo'] },
       { nom: 'Courbes de sinus & cosinus', ids: ['t-courbetrigo'] }
     ] },

@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 6 feuilles de style et 33 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 34 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -179,14 +179,17 @@ la-tour-des-maths/
     ├── 19-demarrage.js                ← init, menu hamburger, typesetAll, tdmBoot
     ├── 19b-revision-personnalisee.js← modale 🎯 révision personnalisée
     │                                  (sélection de notions pour la session)
-    └── 20-graphe-notions.js          ← modale 🕸️ « Graphe des notions » :
-                                       sous-graphes centrés, élèves & enseignants
+    ├── 20-graphe-notions.js          ← modale 🕸️ « Graphe des notions » :
+    │                                  sous-graphes centrés, élèves & enseignants
+    └── 21-monde-balle.js             ← 2ᵉ animation « balle rebondissante » :
+                                       deux murs, paliers, traînée, écrasement,
+                                       plancher coulissant, gerbes & larmes
 ```
 
 ## Interconnexions
 
 - `index.html` charge les 6 feuilles CSS **dans l'ordre 01 → 06** puis les
-  32 scripts **dans l'ordre 01 → 20** (l'ordre de chargement est l'ordre
+  34 scripts **dans l'ordre 01 → 21** (l'ordre de chargement est l'ordre
   d'exécution).
 - L'objet `GEN` (générateurs de questions, **315 clés**) est déclaré dans
   `01-outils.js`, alimenté par `02`, `03`, `04`, complété par l'inscription
@@ -622,7 +625,7 @@ du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
 contenus (18 catégories, 181 notions, 331 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (33 modules, banc d'essai 20 sections, chiffrement
+technique (34 modules, banc d'essai 21 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
@@ -670,10 +673,49 @@ sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
 les 181 notions sont classées, vérifié par le banc d'essai).
 
+## Deux animations au choix : tour 3D & balle rebondissante
+
+Le menu propose un bouton de bascule 🏀 : l'élève (ou l'enseignant)
+choisit l'animation de progression, mémorisée d'une session à l'autre
+(`localStorage`, clé `tdm-anim`) :
+
+- **Tour 3D** (par défaut) : la construction progressive de la tour,
+  une forme 3D par notion.
+- **Balle rebondissante** : deux murs face à face, une balle 3D colorée
+  **bien plus grosse**, qui bondit de mur en mur de palier en palier
+  (un palier = un étage). Chaque bonne réponse la fait bondir vers le
+  haut : **elle est heureuse et fêtée** — yeux rieurs, grand sourire
+  ouvert, étincelles de joie pendant tout le vol, **traînée visible** et
+  **gerbe de feu d'artifice à l'arrivée, plus forte quand le palier
+  atteint est haut**. Chaque erreur la fait **chuter du nombre de
+  paliers de la pénalité** : le visage devient **très triste** (sourcils
+  baissés, grande bouche), des **larmes coulent vers le bas** dès la
+  chute libre ; elle **s'écrase à l'arrivée d'autant plus que le nombre
+  de paliers perdus est grand**, un **plancher coulissant incliné vers
+  le bon mur** la guide vers son nouveau palier, et **dès qu'elle l'a
+  rejoint, les pans de murs au-dessus d'elle se détachent et
+  s'écrasent au sol** (dalles des paliers perdus + briques des murs,
+  avec poussière à l'impact) ; elle **pleure ensuite — plus longtemps
+  et plus fort que la chute était importante**. Les anneaux d'impact,
+  l'ombre et la caméra qui la suit complètent la scène ; un drapeau
+  marque le sommet, les paliers prennent la couleur de la famille de
+  la notion (paliers déjà validés en or).
+
+La balle est une alternative **au rendu, pas au modèle de jeu** : mêmes
+étages, mêmes pénalités, mêmes leçons. Au retour à la tour 3D, la
+caméra reprend l'étage courant sans saut.
+
+L'écran d'accueil (et les modales d'identité et de bilan) est désormais
+**responsive** : hauteur plafonnée à celle de l'écran
+(`max-height: calc(100dvh - 36px)` + repli `100vh`), défilement interne,
+version compacte sous 640 px de haut — le bouton COMMENCER L'ASCENSION
+reste toujours visible, et les compteurs de notions (« 181 notions »)
+sont remplis dynamiquement.
+
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 20 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 21 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (18 catégories,
 181 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
@@ -693,7 +735,14 @@ sur un intervalle »), nouvelles notions trigonométrie (14 générateurs ×
 principale », vérification des 2 nouvelles sous-catégories), nouvelles
 notions second degré (19 générateurs × 25 tirages, leçon d'erreur →
 fiche « Déterminer un trinôme par ses conditions », vérification de la
-nouvelle sous-catégorie « Sommet, taux de variation & conditions »).
+nouvelle sous-catégorie « Sommet, taux de variation & conditions »),
+graphe des notions (sous-graphes, drag & drop, survol des liaisons,
+anti-chevauchement), 2ᵉ animation « balle rebondissante » (bascule du
+menu, balle plus grosse, montée heureuse et fêtée — bond, traînée,
+étincelles de joie, gerbe, chute ∝ pénalité avec écrasement d'arrivée
+croissant, plancher coulissant, larmes qui coulent vers le bas, pans de
+murs qui s'écrasent au sol, retour tour 3D) et modale d'accueil
+responsive (hauteur plafonnée, compteurs dynamiques).
 `node .tests/test-tdm.mjs` → **TOUT PASSE**.
 
 ## Choix techniques
@@ -704,7 +753,7 @@ nouvelle sous-catégorie « Sommet, taux de variation & conditions »).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 33 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 34 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

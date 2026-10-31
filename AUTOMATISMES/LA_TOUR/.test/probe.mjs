@@ -56,7 +56,7 @@ function makeCanvas(){
 }
 const byId = new Map();
 const document = {
-  getElementById(id){ if(!byId.has(id)) byId.set(id, id === 'tower' ? makeCanvas() : makeEl('div')); return byId.get(id); },
+  getElementById(id){ if(!byId.has(id)) byId.set(id, (id === 'tower' || id === 'gCanvas') ? makeCanvas() : makeEl('div')); return byId.get(id); },
   createElement: tag => makeEl(tag),
   body: makeEl('body'),
   addEventListener(){},

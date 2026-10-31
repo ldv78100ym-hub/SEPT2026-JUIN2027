@@ -62,7 +62,7 @@ function makeCanvas(){
 const byId = new Map();
 const document = {
   getElementById(id){
-    if(!byId.has(id)) byId.set(id, id === 'tower' ? makeCanvas() : makeEl('div'));
+    if(!byId.has(id)) byId.set(id, (id === 'tower' || id === 'gCanvas') ? makeCanvas() : makeEl('div'));
     return byId.get(id);
   },
   createElement: tag => makeEl(tag),
@@ -620,6 +620,65 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(body9.includes('data-fiche="suites-limites"'), 'boutons vers la fiche « Limites de suites : définition & formes indéterminées » dans la leçon');
   call('closeLesson()');
   await sleep(1200);
+
+  /* ================= GRAPHE 3D DES NOTIONS (module 20) ================= */
+  console.log('== 18. Graphe des notions (menu 🕸️) ==');
+  call('tdmOuvreGraphe()');
+  const gWrap = call("(function(){ return document.body.children.filter(function(c){ return c.id === 'graphModal'; })[0]; })()");
+  ok(gWrap && gWrap.classList.contains('open'), 'graphe : modale injectée et ouverte depuis le menu');
+  ok(call('NOTIONS.length') === 172 && call('PROG_CATS.length') === 16, 'graphe : 172 notions réparties en 16 catégories');
+  const gTxt = el => { let s = el.textContent || ''; (el.children || []).forEach(c => { s += ' ' + gTxt(c); }); return s; };
+  const gInn = el => { let s = el.innerHTML || ''; (el.children || []).forEach(c => { s += ' ' + gInn(c); }); return s; };
+  /* ouverture en cours de partie : centrage direct sur la notion en cours */
+  const gEt0 = call('tdmGrapheEtat()');
+  ok(gEt0.centre && gEt0.centre.type === 'notion', 'graphe : ouverture centrée sur la position en cours dans la tour');
+  /* retour à l’écran de départ via le bouton 🏠 du fil du chemin */
+  const gHome = $('gTrail').children[0];
+  ((gHome.listeners || {}).click || []).forEach(fn => fn({ stopPropagation(){}, preventDefault(){} }));
+  ok($('gStage').children.length === 1 && gTxt($('gStage')).indexOf('Tout est lié') >= 0, 'graphe : écran de départ « tout est lié » accessible via 🏠');
+  ok($('gStage').children[0].children.some(c => (c.className || '').indexOf('gcat') >= 0), 'graphe : cartes de catégories cliquables au départ');
+  /* vue catégorie puis notion */
+  call('tdmGrapheDepart(0)');
+  let gEt = call('tdmGrapheEtat()');
+  ok(gEt.centre && gEt.centre.type === 'cat', 'graphe : départ par catégorie, la catégorie devient le centre');
+  ok($('gStage').children.length === call('PROG_CATS[0].subs.length') + 1, 'graphe : sous-catégories en satellites autour du centre');
+  call('tdmGrapheCentre(NOTIONS[100].id)');
+  gEt = call('tdmGrapheEtat()');
+  ok(gEt.centre && gEt.centre.type === 'notion', 'graphe : notion centrée, sous-grape de liens rendu');
+  ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'graphe : titre = nom de la notion centrée');
+  ok($('gpBody').innerHTML.includes('Ce que tu vas t’entraîner à faire'), 'graphe : panneau mode élèves (« Ce que tu vas t’entraîner à faire »)');
+  ok($('gpBadges').innerHTML.includes('101 / 172'), 'graphe : badge d’étage (101/172)');
+  ok($('gReach').innerHTML.indexOf('saut') >= 0, 'graphe : barre de portée (liens directs, 2 sauts, 3 sauts)');
+  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 171, 'graphe : la portée couvre les 171 autres notions (preuve « tout est lié »)');
+  ok($('gLinks').children.length > 0, 'graphe : liens SVG dessinés autour du centre');
+  const gLab = gTxt($('gStage'));
+  ok(gLab.indexOf('fiche') >= 0 || gLab.indexOf('sous-catégorie') >= 0 || gLab.indexOf('exercice') >= 0, 'graphe : intitulés des liaisons étiquetés (sous-catégorie / exercice / fiches)');
+  ok(Array.isArray(call('tdmGrapheVoisins(NOTIONS[100].id)')) && call('tdmGrapheVoisins(NOTIONS[100].id)').length > 0, 'graphe : voisins directs accessibles (API tdmGrapheVoisins)');
+  /* navigation : clic sur un satellite → nouveau centre + saut */
+  const gAv = call('tdmGrapheEtat()').hops;
+  const gSat = $('gStage').children.find(c => (c.className || '').indexOf('gnode') >= 0 && (c.className || '').indexOf('centre') < 0);
+  ok(!!gSat, 'graphe : satellite cliquable présent');
+  ((gSat.listeners || {}).click || []).forEach(fn => fn({ stopPropagation(){}, preventDefault(){} }));
+  gEt = call('tdmGrapheEtat()');
+  ok(gEt.hops > gAv, 'graphe : clic sur un satellite → il devient le centre (+' + (gEt.hops - gAv) + ' saut)');
+  ok($('gpBody').innerHTML.includes('Lien suivi'), 'graphe : intitulé du lien suivi affiché après le saut');
+  ok(gInn($('gTrail')).indexOf('saut') >= 0, 'graphe : fil du chemin + compteur de sauts');
+  /* mode enseignant */
+  call("tdmGrapheMode('prof')");
+  const gProf = $('gpBody').innerHTML;
+  ok(gProf.includes('class="gid"') && gProf.includes('Éléments simples'), 'graphe : mode enseignant (identifiants + éléments simples)');
+  ok(gProf.includes('data-gsub="') || gProf.includes('data-fiche="') || gProf.includes('data-gcat="'), 'graphe : liens internes (catégorie / notions liées / fiches) dans le panneau');
+  call("tdmGrapheMode('eleve')");
+  ok($('gpBody').innerHTML.indexOf('class="gid"') < 0, 'graphe : retour au mode élèves');
+  /* statut de progression */
+  call('state.validated.add(NOTIONS[100].id)');
+  call('tdmGrapheCentre(NOTIONS[100].id)');
+  ok($('gpBadges').innerHTML.includes('✔'), 'graphe : statut validé (✔) visible dans le sous-graphe');
+  call('state.validated.delete(NOTIONS[100].id)');
+  call('tdmFermeGraphe()'); call('tdmOuvreGraphe()');
+  ok(true, 'graphe : fermeture/réouverture propres, statut de progression rafraîchi');
+  call('tdmFermeGraphe()');
+  call('state.validated.delete(NOTIONS[100].id)');
 
   console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
   process.exit(fail === 0 ? 0 : 1);

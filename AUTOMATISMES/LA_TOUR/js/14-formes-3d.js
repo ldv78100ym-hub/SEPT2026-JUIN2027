@@ -556,6 +556,13 @@ function spawnExplosion(floor) {
 function draw(){
   requestAnimationFrame(draw);
 
+  /* Deuxième animation « balle rebondissante » (module 21) : quand ce
+     monde est actif, la boucle lui délègue TOUT le rendu du canvas. */
+  if(window.tdmBalle && window.tdmBalle.active){
+    try { window.tdmBalle.draw(ctx, W, H); } catch(e) { window.tdmBalle.active = false; }
+    return;
+  }
+
   if(state.autoRotate) state.angle += 0.0028;
 
   const speed = state.falling ? 0.11 : 0.06;

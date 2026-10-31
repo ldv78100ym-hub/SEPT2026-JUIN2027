@@ -33,6 +33,17 @@ const state = {
 };
 
 const $ = id => document.getElementById(id);
+
+/* L'écran d'accueil affiche le nombre RÉEL de notions : les spans
+   « welTot » sont remplis avec N_TOT au chargement — la modale reste
+   exacte à chaque évolution de la tour. (17-reinitialisation.js
+   capture ce HTML juste après.) */
+try {
+  const _a = $('welTot'), _b = $('welTot2');
+  if (_a) _a.textContent = String(N_TOT);
+  if (_b) _b.textContent = String(N_TOT);
+} catch (e) { /* écran absent : ignorer */ }
+
 const vNotions = $('vNotions'), vFloor = $('vFloor'), vErr = $('vErr'), vTime = $('vTime'), vPassed = $('vPassed');
 const barFill = $('barFill'), themeLbl = $('theme');
 const qText = $('qText'), opts = $('opts'), feedback = $('feedback');

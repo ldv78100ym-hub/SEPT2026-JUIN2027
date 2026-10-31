@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 6 feuilles de style et 32 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 33 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -12,7 +12,7 @@ simples**, l'**horodatage de la dernière mise à jour**, la **révision
 personnalisée**, l'**intégration des documents « Évolutions » et
 « Proportions »** et l'**explorateur de liens du programme** — une
 succession de sous-graphes centrés sur une notion ou une zone, où
-l'élève voit que les 172 notions sont toutes reliées, directement
+l'élève voit que les 181 notions sont toutes reliées, directement
 ou indirectement (voir plus bas).
 
 ## Structure
@@ -66,7 +66,7 @@ la-tour-des-maths/
     │                                  « Fractions & puissances », 6 notions →
     │                                  153 étages au total)
     ├── 11f-progression.js          ← catégories thématiques de la
-    │                                  progression (16 catégories, ex. équations
+    │                                  progression (18 catégories, ex. équations
     │                                  en 4 sous-catégories : 1er degré, 2nd
     │                                  degré, produit, lecture graphique)
     ├── 11g-derivation.js           ← étude d'une fonction polynôme sur un
@@ -148,6 +148,22 @@ la-tour-des-maths/
     │                                  « Arithmético-géométriques &
     │                                  sommes géométriques », 4 notions →
     │                                  172 étages)
+    ├── 11l-maths-expertes.js       ← maths expertes (portail 2026-2027) :
+    │                                  division euclidienne, critères de
+    │                                  divisibilité, facteurs premiers,
+    │                                  PGCD (Euclide), congruences (restes,
+    │                                  opérations, puissances & cycles,
+    │                                  jours de la semaine), complexes
+    │                                  (conjugué, module, inverse,
+    │                                  équations du 1ᵉʳ et 2ᵈ degré dans ℂ),
+    │                                  théorie des graphes (vocabulaire,
+    │                                  degrés, poignées de main, chaînes
+    │                                  eulériennes) — 17 générateurs,
+    │                                  fiches « Divisibilité, nombres
+    │                                  premiers & PGCD », « Congruences
+    │                                  modulo n », « Théorie des graphes »
+    │                                  + complément « Complexes », 2
+    │                                  catégories nouvelles → 181 étages)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -196,7 +212,7 @@ la-tour-des-maths/
     fonctions, dérivées, tableaux, suites, proportionnalité, probabilités,
     statistiques, vecteurs, espace, complexes, Python, littéral, logique) —
     ouvertes d'un clic, LaTeX compris.
-  - `GEN_INFO` : pour chacun des 315 générateurs, un **libellé** clair, un
+  - `GEN_INFO` : pour chacun des 331 générateurs, un **libellé** clair, un
     **rappel** court (infobulle au survol) et ses **fiches** associées.
   - Helpers : `tdmGenLabel`, `tdmGenRappel`, `tdmGenFiches`,
     `tdmElemsDeNotion`, `tdmFichesDeNotion`.
@@ -213,7 +229,19 @@ la-tour-des-maths/
   sous-graphe : ses satellites directs (même sous-catégorie 🔗,
   même élément d'entraînement ⚙, fiches partagées 📘) sont disposés
   en anneaux, les liaisons sont **étiquetées** et cliquer un satellite
-  relance l'exploration. Un **fil du chemin** + compteur de sauts
+  relance l'exploration. **Chaque nœud est déplaçable** à la souris
+  ou au doigt (glisser-déposer : les liaisons suivent, un clic reste
+  un clic), et **chaque liaison ouvre au survol une étiquette
+  explicative** (modale flottante : sous-catégorie commune, exercice
+  partagé ou titres des fiches communes). **Aucun cadre ne se
+  chevauche jamais** : les nœuds qui se touchent s'écartent
+  automatiquement (même relâchés l'un sur l'autre après un
+  glisser-déposer), et les étiquettes des liaisons — repliées sur
+  plusieurs lignes quand elles sont longues — se placent dans un
+  creux libre entre les nœuds. Interface compacte qui
+  laisse toute la place au graphe : barres et légendes réduites,
+  panneau de détail **repliable** (bouton ⤡) pour un graphe plein
+  cadre. Un **fil du chemin** + compteur de sauts
   permet de revenir en arrière, et une **barre de portée** prouve
   que tout le programme est atteint en quelques sauts (« tout est
   lié »). Recherche par nom, panneau de détail à deux visages :
@@ -251,7 +279,7 @@ L'élève compose, **pour la session en cours**, un menu de notions à
 réviser :
 
 - bouton « 🎯 Révision personnalisée… » du menu utilitaire → modale avec
-  les **172 notions**, un filtre de recherche, « Tout cocher /
+  les **181 notions**, un filtre de recherche, « Tout cocher /
   Tout décocher » et le décompte en direct ;
 - une fois lancée, la tour ne pose **que** des questions de la sélection
   (`state.customPool` filtré dans `pickNotion`) — mêmes règles de
@@ -537,6 +565,22 @@ comparaison », « 🟪 Arithmético-géométriques & sommes géométriques »),
 **1 nouvelle sous-catégorie** dans la catégorie 🔁 Suites de la
 progression (« Limites & convergence »).
 
+Les ressources du portail **Maths Expertes 2026-2027** (« L'Affaire
+des Congruences », « À la découverte de la congruence : voyage au pays
+des restes », « Les Congruences du Grimoire » — congruences et
+récurrence —, « Règles de divisibilité — démonstrations », « Nombres
+complexes — cours & équations du premier degré », « LEGERE » — théorie
+des graphes) sont intégrées au format de la tour : **9 nouvelles
+notions** insérées juste sous le sommet (la tour passe de 172 à
+**181 étages**), **17 générateurs**, **3 fiches** (« 🔑 Divisibilité,
+nombres premiers & PGCD », « 🔐 Congruences modulo n », « 🕸️ Théorie
+des graphes ») plus un complément de la fiche « Complexes » (conjugué,
+module, inverse, équations dans ℂ), **2 catégories nouvelles** dans la
+progression (« 🔐 Arithmétique & congruences », « 🕸 Théorie des
+graphes ») et 2 sous-catégories nouvelles dans « 🔷 Nombres
+complexes ». Des fiches-ponts (nombres, logique) relient ces nouveaux
+contenus au reste du programme : tout reste lié dans le graphe.
+
 | Notion (étage) | Éléments simples (générateurs) |
 |---|---|
 | 🟪 Limites de suites : définition, références & opérations | références (n^k → +∞, 1/n^k → 0, q^n selon \|q\|, croissances comparées) ; opérations sur les limites (somme, produit, quotient — et leurs exceptions) ; convergence/divergence (limite finie, ±∞, oscillation) ; définition ε–N (bande de largeur 2ε, rang N, plafond ⌈·⌉) ; raisonnement complet à clés (converge, zéro, plafond, unique, diverge, adhérence, bande) |
@@ -576,18 +620,18 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (16 catégories, 172 notions, 315 générateurs, du cycle 3 au
+contenus (18 catégories, 181 notions, 331 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (32 modules, banc d'essai 19 sections, chiffrement
+technique (33 modules, banc d'essai 20 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 ## Progression des notions par catégories
 
-La modale « 📚 Progression des notions » ne liste plus les 172 notions
+La modale « 📚 Progression des notions » ne liste plus les 181 notions
 dans l'ordre de construction de la tour : le nouveau module
-`11f-progression.js` les regroupe en **16 catégories thématiques**,
+`11f-progression.js` les regroupe en **18 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
 « X/Y validées »). Les éléments simples de chaque notion restent
 inchangés (libellé, rappel au survol, statistiques ✓/✗, fiches) ;
@@ -608,7 +652,9 @@ seule la présentation est réorganisée.
 | 💰 Pourcentages, proportions & évolutions | proportions & pourcentages ; évolutions & coefficients |
 | 🎲 Probabilités & statistiques | statistiques ; probabilités ; lois & variables |
 | ⚛️ Mesures & équations littérales | conversions & mesures ; identifier une formule ; isoler une grandeur |
-| 🔷 Nombres complexes | forme algébrique ; forme trigonométrique |
+| 🔷 Nombres complexes | forme algébrique ; **conjugué, module & inverse** ; **équations dans ℂ** ; forme trigonométrique |
+| 🔐 Arithmétique & congruences | **division, divisibilité & PGCD** ; **congruences modulo n** (restes, opérations, puissances & cycles) |
+| 🕸 Théorie des graphes | **vocabulaire, degrés & arêtes** (poignées de main) ; **chaînes eulériennes** |
 | 🖥️ Algorithmique & Python | algorithmique ; Python |
 | 🎯 Missions de synthèse | enquêtes & missions |
 
@@ -622,16 +668,16 @@ trinôme, polynômes de degré 3 (lycée), équations produit-nul et
 d'inéquations. Chaque notion apparaît dans **une seule**
 sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
-les 172 notions sont classées, vérifié par le banc d'essai).
+les 181 notions sont classées, vérifié par le banc d'essai).
 
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 19 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 20 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
-sommaire décomposé en catégories thématiques (16 catégories,
-172 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 315 générateurs, segments LaTeX
+sommaire décomposé en catégories thématiques (18 catégories,
+181 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
+notions passées, couverture des 331 générateurs, segments LaTeX
 propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
 interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
@@ -658,7 +704,7 @@ nouvelle sous-catégorie « Sommet, taux de variation & conditions »).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 32 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 33 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

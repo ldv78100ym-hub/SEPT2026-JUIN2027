@@ -315,7 +315,7 @@ du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
 contenus (16 catégories, 155 notions, 242 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (27 modules, banc d'essai 14 sections, chiffrement
+technique (27 modules, banc d'essai 15 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
@@ -364,11 +364,13 @@ les 155 notions sont classées, vérifié par le banc d'essai).
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 14 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 15 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (16 catégories,
 155 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 242 générateurs, export enseignant
+notions passées, couverture des 242 générateurs, segments LaTeX
+propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
+interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
 notions évolutions/proportions (18 générateurs × 25 tirages), révision
 personnalisée (sélection, tirage restreint, fin de révision), nouvelles

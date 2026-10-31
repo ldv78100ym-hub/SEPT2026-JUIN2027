@@ -102,7 +102,8 @@ const PROG_CATS = [
     subs: [
       { nom: 'Arithmétiques & sommes', ids: ['suites-arith', 't-suitearith', 'sommes-suites'] },
       { nom: 'Géométriques', ids: ['suites-geo', 't-suitegeo'] },
-      { nom: 'Lectures graphiques', ids: ['t-suitegraph'] }
+      { nom: 'Lectures graphiques', ids: ['t-suitegraph'] },
+      { nom: 'Définitions, variation & modélisation', ids: ['su-generalites', 'su-arithmetiques', 'su-geometriques', 'su-variation'] }
     ] },
 
   /* ---------- 11. Pourcentages, proportions & évolutions ---------- */

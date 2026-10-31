@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Tour des Maths — Édition claire (fond beige & raisonnements à trous)</title>
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  svg: { fontCache: 'global' },
+  startup: { typeset: false }
+};
+</script>
+<!-- Chargement sécurisé de MathJax -->
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js";
+    script.async = true;
+    document.head.appendChild(script);
+  })();
+</script>
+
+<!-- Feuilles de style : charger dans cet ordre (cascade identique au document monolithique) -->
+<link rel="stylesheet" href="css/01-fondations.css">
+<link rel="stylesheet" href="css/02-surimpressions.css">
+<link rel="stylesheet" href="css/03-questions-identite.css">
+<link rel="stylesheet" href="css/04-elements-solutions.css">
+<link rel="stylesheet" href="css/05-revision-maj.css">
+</head>
+<body>
+
+<div id="app">
+  <div id="stage">
+    <canvas id="tower"></canvas>
+    <div id="vignette"></div>
+    <div id="hint">Glisse la souris pour faire tourner la tour</div>
+  </div>
+  <aside id="panel">
+    <div id="hud">
+      <div class="stat"><span class="k">Notions validées</span><span class="v" id="vNotions">0 / 155</span></div>
+      <div class="stat"><span class="k">Altitude</span><span class="v" id="vFloor">1 / 155</span></div>
+      <div class="stat"><span class="k">Erreurs</span><span class="v" id="vErr">0</span></div>
+      <div class="stat"><span class="k">Passées</span><span class="v" id="vPassed">0</span></div>
+      <div class="stat"><span class="k">Temps</span><span class="v" id="vTime">0:00</span></div>
+    </div>
+    <div id="bar"><div id="barFill"></div></div>
+    <div id="theme">—</div>
+    <div id="card">
+      <div id="qText"></div>
+      <div id="opts"></div>
+    </div>
+    <div id="feedback"></div>
+    <div id="qActions">
+      <button class="action-btn" id="passBtn">⏭ Passer cette notion (à refaire plus tard)</button>
+    </div>
+    <button id="utilToggle" aria-haspopup="menu" aria-expanded="false"
+            title="Menu : sauvegarde, notions passées, progression, droits d'auteur">
+      <span></span><span></span><span></span>
+    </button>
+    <div id="utilMenu" role="menu">
+      <button class="copyright-btn save-btn" id="saveBtn">
+        💾 Sauvegarder le fichier .json scellé
+      </button>
+      <button class="copyright-btn" id="passedBtn">
+        ⏭ Notions passées
+      </button>
+      <button class="copyright-btn" id="notionsBtn">
+        📚 Progression des notions
+      </button>
+      <button class="copyright-btn" id="revisionBtn">
+        🎯 Révision personnalisée…
+      </button>
+      <button class="copyright-btn" id="copyrightBtn"
+              aria-haspopup="dialog" aria-controls="copyrightModal">
+        ⚖️ Droits d'auteur &amp; licence
+      </button>
+      <button class="copyright-btn" id="rapportBtn">
+        📄 Dossier de présentation
+      </button>
+      <button class="copyright-btn danger" id="resetBtn"
+              aria-haspopup="dialog" aria-controls="resetModal">
+        🔄 Réinitialiser tout
+      </button>
+      <div id="menuMeta" class="menu-meta" role="status">
+        <span id="lastSaveInfo">🕐 Dernière mise à jour : —</span>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div id="lessonPanel" role="dialog" aria-modal="true" aria-labelledby="lessonTitle">
+  <div class="lesson-top">
+    <span class="lesson-tag" id="lessonTag">Étage</span>
+    <div class="lesson-title" id="lessonTitle">Leçon</div>
+    <div class="lesson-sub" id="lessonSub"></div>
+  </div>
+  <div class="lesson-body" id="lessonBody"></div>
+  <div class="lesson-bottom">
+    <button class="lesson-continue" id="lessonContinue">J'ai compris — continuer</button>
+  </div>
+</div>
+
+<div id="notionsModal" aria-hidden="true">
+  <div class="nbox" role="dialog" aria-modal="true" aria-labelledby="notionsTitle">
+    <button class="close" id="notionsClose" aria-label="Fermer">×</button>
+    <h2 id="notionsTitle">📚 Progression des notions</h2>
+    <div class="sub">Niveau atteint / niveau requis (1 validation)<br>
+      La progression est organisée en <b>catégories thématiques</b> (équations, géométrie, fonctions…) :
+      <b>clique sur un titre de catégorie</b> pour la replier ou la déplier.<br>
+      Chaque notion est <b>décomposée en éléments simples</b> : <b>survole</b> un élément
+      pour son rappel de cours immédiat, <b>clique</b> pour ouvrir la fiche complète.
+      ✓ = réussites, ✗ = erreurs sur cet élément précis.</div>
+    <div id="notionsList" class="notions-list"></div>
+  </div>
+</div>
+
+<div id="copyrightModal" aria-hidden="true">
+  <div class="cbox" role="dialog" aria-modal="true" aria-labelledby="copyTitle">
+    <button class="close" id="copyrightClose" aria-label="Fermer">×</button>
+    <h2 id="copyTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <div class="sub">
+      Jeu pédagogique web original — La Tour des Maths<br>
+      (Toutes les notions du programme)
+    </div>
+    <p>Conçu, écrit et calculé à la main dans le cabinet des Arcanes du Complexe.</p>
+    <p class="sign">© Yann Merdy — octobre 2026.</p>
+    <h3>Licence d'Utilisation Pédagogique</h3>
+    <p><b>Utilisation Privée et Éducative (Autorisée)</b> : usage personnel, éducatif
+       et non lucratif autorisé — copie, projection, impression et adaptation pour
+       vos élèves comprises.</p>
+    <p><b>Attribution</b> : toute reproduction ou modification doit conserver la
+       mention de l'auteur (Yann Merdy) et la présente notice.</p>
+    <p><b>Usage Commercial (Interdit)</b> : toute utilisation commerciale est
+       strictement interdite sans accord écrit préalable de l'auteur.</p>
+    <p><b>Vie privée</b> : la page fonctionne intégralement hors ligne ; votre
+       progression (notions validées, altitude, erreurs, chronomètre) reste dans
+       votre navigateur. Aucun envoi automatique de données n'est effectué.
+       Le fichier de sauvegarde .json est scellé par la <b>clé publique</b> de
+       l'auteur (RSA-2048 OAEP + AES-256-GCM, normes bancaires) : il ne contient
+       <b>aucune clé privée ni mot de passe</b>, et toute modification manuelle
+       casse le scellé.</p>
+    <p><b>Fiction</b> : la tour, ses formes, ses couleurs, le grimpeur lumineux,
+       ses chutes, ses portes et ses rotations sont fictifs. Toute ressemblance
+       avec une réalité mathématique serait parfaitement exacte — à quelques
+       arrondis près.</p>
+    <p>Pour toute demande commerciale, contacter l'auteur :
+       <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>.</p>
+  </div>
+</div>
+
+<div id="resetModal" aria-hidden="true">
+  <div class="rbox" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <button class="close" id="resetClose" aria-label="Fermer">×</button>
+    <h2 id="resetTitle">🔄 Tout réinitialiser ?</h2>
+    <p>Cette action efface <b>définitivement</b>, sur cet appareil :</p>
+    <ul>
+      <li>toute la progression de la tour : étages, notions validées ou passées,</li>
+      <li>l'historique complet des réponses, les erreurs, les sessions et le chronomètre,</li>
+      <li>la sauvegarde locale et l'identité enregistrée (nom, prénom(s), classe).</li>
+    </ul>
+    <p>Les fichiers .json scellés <b>déjà exportés</b> ne sont pas touchés :
+       l'enseignant pourra toujours les ouvrir avec sa clé privée. Pour
+       simplement recommencer une ascension en gardant l'identité et
+       l'historique, préfère le bouton REJOUER ou le rechargement d'un
+       fichier .json.</p>
+    <p class="rwarn">⚠️ Aucun retour en arrière n'est possible après validation.</p>
+    <div class="rbtns">
+      <button class="btn rbtn-cancel" id="resetCancel">Annuler</button>
+      <button class="btn rbtn-go" id="resetGo">OUI, tout réinitialiser</button>
+    </div>
+  </div>
+</div>
+
+<div id="idPanel" class="hidden">
+  <div class="ibox">
+    <h2>👤 Qui escalade la tour ?</h2>
+    <div class="isub">Ta progression est enregistrée automatiquement dans un fichier
+      <b>scellé cryptographiquement</b> (sécurité bancaire : RSA-2048 + AES-256) au nom :
+      <b>la-tour-des-maths-edition-claire_NOM-Prénom_date.json</b>.<br>
+      Aucun mot de passe à retenir : la clé publique intégrée au document scelle ton
+      fichier ; seule la clé privée de ton enseignant peut l'ouvrir. À la fin de la séance,
+      télécharge-le pour retrouver ta tour exactement où tu l’avais laissée
+      (il se recharge à l'ouverture).<br>
+      La mise en forme de l'identité est <b>automatique</b> : NOM en majuscules,
+      prénom(s) en minuscules sauf les initiales, CLASSE en majuscules.</div>
+    <label for="inpNom">Nom (en majuscules)</label>
+    <input id="inpNom" autocomplete="off" placeholder="DUPONT"
+           autocapitalize="characters" spellcheck="false">
+    <label for="inpPrenom">Prénom(s) (minuscules sauf les initiales)</label>
+    <input id="inpPrenom" autocomplete="off" placeholder="Léa-Marie"
+           autocapitalize="words" spellcheck="false">
+    <label for="inpClasse">Classe (en majuscules)</label>
+    <input id="inpClasse" autocomplete="off" placeholder="2NDE 3"
+           autocapitalize="characters" spellcheck="false">
+    <button class="btn" id="idGo">COMMENCER L’ASCENSION</button>
+    <p class="idmsg" id="idMsg"></p>
+    <div class="import-row">
+      <span>Déjà un fichier de sauvegarde .json ? Charge-le ici :</span>
+      <input type="file" id="importInput" accept=".json,application/json">
+    </div>
+  </div>
+</div>
+
+<div id="passedPanel">
+  <div class="pbox">
+    <button class="pbtn-close" id="passedClose" aria-label="Fermer">×</button>
+    <h2>⏭ Notions passées</h2>
+    <div class="psub">Notions mises de côté : <b id="passedCount">0</b>.<br>
+      Chaque notion est <b>décomposée en éléments simples</b> : <b>survole</b> un élément
+      pour son rappel de cours, <b>clique</b> pour la fiche complète — de quoi te remettre
+      à niveau avant de réactiver.<br>
+      Tant qu’une notion passée n’est pas traitée, l’activité entière ne sera pas
+      finalisée. Active-les une par une quand tu es prêt(e).</div>
+    <div class="passed-list" id="passedList"></div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="box" id="overlayBox">
+    <h1>LA TOUR DES MATHS</h1>
+    <p style="color:var(--violet);font-weight:700;letter-spacing:2px;font-size:12px">
+      TOUTES LES NOTIONS DU PROGRAMME
+    </p>
+    <p>La tour compte <b>155 notions</b>. Chaque bonne réponse construit un étage. Chaque erreur
+       <b style="color:var(--bad)">ouvre une porte</b> dans l'étage : une leçon apparaît,
+       puis tu chutes de <b>0 à 5 étages</b> selon la gravité. Les étages détruits explosent !</p>
+    <ul>
+      <li><b>155 notions</b> à valider — toutes, sans exception</li>
+      <li>Au départ, toutes les notions sont équiprobables ; réussir une notion la fait revenir moins souvent, la rater la fait revenir davantage — une probabilité reste toujours comprise entre <b>5 % et 100 %</b> : même validée, une notion peut revenir (révision), et son plancher de <b>5 %</b> n'est atteint qu'après au moins <b>8 apparitions systématiquement justes</b></li>
+      <li>Pour atteindre le sommet : <b>toutes les notions validées</b></li>
+      <li>Pénalité de 0 (étourderie) à n (erreur très grave) ; les erreurs répétées
+          sur un même type d'exercice alourdissent la chute à chaque récidive</li>
+      <li>La tour change de forme et de couleur au fil de la construction</li>
+      <li>Des <b>raisonnements à trous</b> : glisse les mots-clés au bon endroit<br>(certains ne servent à rien, cherchent à te piéger… ou sont totalement
+          loufoques — et une clé sans aucun sens dans le contexte vaut la
+          chute MAXIMALE)</li>
+      <li>Des <b>mini-programmes Python</b> à compléter, à analyser ou à transformer<br>(les clés contiennent aussi les indentations du script !)</li>
+      <li>Sauvegarde <b>scellée</b> type sécurité bancaire (RSA-2048 + AES-256) : le
+          fichier .json contient toutes tes réponses et ne peut pas être modifié
+          à la main sans casser le scellé</li>
+    </ul>
+    <p><b>Objectif :</b> atteindre le sommet avec le moins d'erreurs possibles
+       et le plus rapidement possible.</p>
+    <button class="btn" id="startBtn">COMMENCER L'ASCENSION</button>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     Modules JavaScript : ordre de chargement = ordre d exécution
+     du script monolithique d origine (scripts classiques, non
+     module : la page reste utilisable en ouverture directe
+     fichier://  hors ligne, sans serveur).
+     ============================================================ -->
+<script src="js/01-outils.js"></script>
+<script src="js/02-banque-qcm.js"></script>
+<script src="js/03-raisonnements-a-trous.js"></script>
+<script src="js/04-python.js"></script>
+<script src="js/05-banque-primaire-college.js"></script>
+<script src="js/06-automatismes-1re-techno.js"></script>
+<script src="js/07-complements-1re-techno.js"></script>
+<script src="js/08-equations-litterales.js"></script>
+<script src="js/09-texification.js"></script>
+<script src="js/10-adaptateurs-banque.js"></script>
+<script src="js/11-notions.js"></script>
+<script src="js/11b-elements-notions.js"></script>
+<script src="js/11c-evolutions-proportions.js"></script>
+<script src="js/11d-droites.js"></script>
+<script src="js/11e-fractions.js"></script>
+<script src="js/11f-progression.js"></script>
+<script src="js/11g-derivation.js"></script>
+<script src="js/12-etat-jeu.js"></script>
+<script src="js/13-tour-3d.js"></script>
+<script src="js/14-formes-3d.js"></script>
+<script src="js/15-interface.js"></script>
+<script src="js/16-modales.js"></script>
+<script src="js/16b-solution-pedagogique.js"></script>
+<script src="js/17-reinitialisation.js"></script>
+<script src="js/18-sauvegarde-scellee.js"></script>
+<script src="js/19-demarrage.js"></script>
+<script src="js/19b-revision-personnalisee.js"></script>
+</body>
+</html>

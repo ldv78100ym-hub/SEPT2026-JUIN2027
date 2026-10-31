@@ -448,12 +448,12 @@ GEN.suiteGeo2 = () => {
   const u1 = pick([2,3,4,5]), q = pick([2,3]);
   const u3 = u1*q*q;
   return QCM(
-    `\\((u_n)\\) géométrique, \\(q>0\\), \\(u_1=${u1}\\), \\(u_3=${u3}\\). Raison ?`,
+    `\\((u_n)\\) géométrique, \\(q \\gt 0\\), \\(u_1=${u1}\\), \\(u_3=${u3}\\). Raison ?`,
     `\\(${q}\\)`, [`\\(${-q}\\)`, `\\(${u3-u1}\\)`, `\\(${q*q}\\)`],
     2,
     EXPL(`\\(u_3=u_1\\times q^2\\).`,
       `\\(q^2=${q*q}\\Rightarrow q=${q}\\).`,
-      `Prendre la racine, \\(q>0\\).`));
+      `Prendre la racine, \\(q \\gt 0\\).`));
 };
 
 GEN.pourcentage = () => {

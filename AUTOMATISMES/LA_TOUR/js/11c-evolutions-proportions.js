@@ -121,8 +121,8 @@ GEN.propTotal = () => {
 GEN.trouProp = () => TROU(
   `Proportions et pourcentages : complète le raisonnement.`,
   `La proportion d'une partie dans un total est le {{0}} de la partie par le total.<br>
-   Exemple : 40 élèves de terminale sur 200 élèves au total donnent une proportion de \\(40\\div200={{1}}\\), soit {{2}} \\(\\%\\).<br>
-   Pour obtenir un effectif à partir d'un pourcentage : \\(25\\,\\%\\) de 360 pièces défectueuses possibles sur une ligne de 1440 pièces, c'est \\(1440\\times{{3}}\\div100=360\\).<br>
+   Exemple : 40 élèves de terminale sur 200 élèves au total donnent une proportion de \\(40\\div200\\), soit {{1}} ; en pourcentage, cela fait {{2}} \\(\\%\\).<br>
+   Pour obtenir un effectif à partir d'un pourcentage : \\(25\\,\\%\\) de pièces défectueuses sur une ligne de 1440 pièces, c'est \\(1440\\) multiplié par {{3}} puis divisé par \\(100\\), soit \\(360\\) pièces.<br>
    Attention : la proportion est toujours comprise entre {{4}} et 1 ; un pourcentage d'une partie ne dépasse jamais {{5}} \\(\\%\\).`,
   ['quotient', '0,2', '20', '25', '0', '100'],
   ['produit', 'somme', '2', '0,02', '200', '125', 'pamplemousse', '1000'],
@@ -402,7 +402,7 @@ GEN.tauxManquant = () => {
 /* Raisonnement à trous : taux global. */
 GEN.trouGlobal = () => TROU(
   `Évolutions successives : complète le raisonnement.`,
-  `Après une hausse de 10 % puis une baisse de 10 %, le coefficient global est \\(1{,}1\\times0{,}9={{0}}\\), soit un taux global de {{1}} \\(\\%\\).<br>
+  `Après une hausse de 10 % puis une baisse de 10 %, le coefficient global est \\(1{,}1\\times0{,}9\\), soit {{0}} — un taux global de {{1}} \\(\\%\\).<br>
    Une hausse de 20 % puis une hausse de 20 % donnent un CM de {{2}}, soit +44 % — et non +40 %.<br>
    Le taux global de deux évolutions ne s'obtient jamais en {{3}} les taux : ce sont les {{4}} qui se multiplient.<br>
    Vérification : une hausse de \\(t\\,\\%\\) puis la même baisse laissent une valeur {{5}} à la valeur de départ.`,
@@ -474,7 +474,7 @@ Object.assign(FICHES, {
     <p><b>Valeurs :</b> \\(V_f = V_i\\times CM\\) ; pour REPARTIR en arrière, \\(V_i = \\dfrac{V_f}{CM}\\) (on divise, on ne retranche pas).</p>
     <p><b>Évolutions successives :</b> \\(CM_{global} = (1+t_1)(1+t_2)\\cdots(1+t_n)\\) — les coefficients se MULTIPLIENT, les taux ne s'additionnent pas.
     \\(+10\\,\\%\\) puis \\(+20\\,\\%\\) : \\(1{,}1\\times1{,}2 = 1{,}32\\), soit <b>+32 %</b> (et non +30 %). L'ordre ne change rien (commutativité).</p>
-    <p><b>Taux global :</b> \\(T = CM_{global} - 1\\). Cas symétrique : \\(\\left(1+\\dfrac{t}{100}\\right)\\left(1-\\dfrac{t}{100}\\right) = 1-\\dfrac{t^2}{10000} < 1\\) :
+    <p><b>Taux global :</b> \\(T = CM_{global} - 1\\). Cas symétrique : \\(\\left(1+\\dfrac{t}{100}\\right)\\left(1-\\dfrac{t}{100}\\right) = 1-\\dfrac{t^2}{10000} \\lt 1\\) :
     une hausse puis une baisse de même ampleur laissent la valeur SOUS son point de départ.</p>
     <p><b>Taux moyen (par période) :</b> \\(1+\\bar{t} = CM_{global}^{1/n}\\) — moyenne GÉOMÉTRIQUE des coefficients, pas moyenne arithmétique des taux.
     Exemple : de 100 à 121 en 2 ans → global +21 %, moyen \\(\\sqrt{1{,}21} = 1{,}1\\), soit <b>+10 % par an</b>.</p>

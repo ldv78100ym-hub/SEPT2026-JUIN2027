@@ -128,7 +128,7 @@ Object.assign(G, {
         "AB = √((xB − xA)² + (yB − yA)² + (zB − zA)²).",
         "AB = √(" + trip[0] + "² + " + trip[1] + "² + " + trip[2] + "²) = √" + (trip[0] * trip[0] + trip[1] * trip[1] + trip[2] * trip[2]) + " = " + trip[3] + "."); }
     var comp = pick([[2, 6, 11, 9], [6, 6, 11, 7], [4, 4, 9, 7], [3, 4, 13, 12], [6, 18, 21, 9], [8, 4, 9, 1]]);
-    return mkN("Dans un repère orthonormal de l'espace, \\(M(x\\,;\\," + comp[0] + "\\,;\\," + comp[1] + ")\\) avec \\(x > 0\\) et \\(OM = " + comp[2] + "\\). Que vaut l'abscisse x ?",
+    return mkN("Dans un repère orthonormal de l'espace, \\(M(x\\,;\\," + comp[0] + "\\,;\\," + comp[1] + ")\\) avec \\(x \\gt 0\\) et \\(OM = " + comp[2] + "\\). Que vaut l'abscisse x ?",
       comp[3], 0.01,
       "OM = √(x² + y² + z²) : isole x² = OM² − y² − z².",
       "x² = " + (comp[2] * comp[2]) + " " + NEG + " " + (comp[0] * comp[0]) + " " + NEG + " " + (comp[1] * comp[1]) + " = " + (comp[3] * comp[3]) + " : x = " + comp[3] + ".");

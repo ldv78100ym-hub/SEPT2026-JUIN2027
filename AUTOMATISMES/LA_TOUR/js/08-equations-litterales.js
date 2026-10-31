@@ -294,12 +294,12 @@ Object.assign(G, {
       ["\\(u_0 = u_n + n\\,r\\)", "\\(u_0 = \\dfrac{u_n}{n\\,r}\\)", "\\(u_0 = n\\,r - u_n\\)"],
       "Retranchez \\(n\\,r\\) aux deux membres : le produit \\(nr\\) se retranche EN BLOC.",
       "\\(u_n = u_0 + nr \\Rightarrow u_0 = u_n " + NEG + " nr\\) : u₁₀ = 42 avec r = 4 donne u₀ = 42 − 40 = 2.");
-    if (v === 2) return mkMC("Le terme général d'une suite géométrique vérifie \\(u_n = u_0\\,q^n\\) (avec \\(u_0 > 0\\)). Exprimez la raison \\(q\\) en fonction de \\(u_n\\), \\(u_0\\) et \\(n\\).",
+    if (v === 2) return mkMC("Le terme général d'une suite géométrique vérifie \\(u_n = u_0\\,q^n\\) (avec \\(u_0 \\gt 0\\)). Exprimez la raison \\(q\\) en fonction de \\(u_n\\), \\(u_0\\) et \\(n\\).",
       "\\(q = \\sqrt[n]{\\dfrac{u_n}{u_0}}\\)",
       ["\\(q = \\dfrac{u_n}{u_0}\\)", "\\(q = \\left(\\dfrac{u_0}{u_n}\\right)^n\\)", "\\(q = \\dfrac{u_n}{u_0\\,n}\\)"],
       "Divisez par u₀, puis prenez la racine n-IÈME : q est à la puissance n.",
       "\\(u_n = u_0 q^n \\Rightarrow q^n = \\dfrac{u_n}{u_0} \\Rightarrow q = \\sqrt[n]{\\dfrac{u_n}{u_0}}\\) : oublier la racine est LE piège classique.");
-    if (v === 3) return mkMC("Toujours pour \\(u_n = u_0\\,q^n\\) (avec \\(q > 0\\), \\(q \\neq 1\\)) : exprimez le rang \\(n\\) en fonction de \\(u_n\\), \\(u_0\\) et \\(q\\).",
+    if (v === 3) return mkMC("Toujours pour \\(u_n = u_0\\,q^n\\) (avec \\(q \\gt 0\\), \\(q \\neq 1\\)) : exprimez le rang \\(n\\) en fonction de \\(u_n\\), \\(u_0\\) et \\(q\\).",
       "\\(n = \\dfrac{\\ln(u_n/u_0)}{\\ln q}\\)",
       ["\\(n = \\ln\\dfrac{u_n}{u_0}\\)", "\\(n = \\dfrac{\\ln u_n}{\\ln u_0}\\)", "\\(n = q \\ln\\dfrac{u_n}{u_0}\\)"],
       "L'inconnue est en EXPOSANT : on applique le logarithme des deux membres, puis \\(\\ln(q^n) = n \\ln q\\).",
@@ -321,7 +321,7 @@ Object.assign(G, {
       ["\\(t = I \\times C \\times i\\)", "\\(t = \\dfrac{C\\,i}{I}\\)", "\\(t = \\dfrac{I}{C + i}\\)"],
       "On divise les deux membres par le produit \\(C\\,i\\) (non nul).",
       "\\(I = Cti \\Rightarrow t = \\dfrac{I}{Ci}\\) : 90 € d'intérêts pour 600 € à 3 % (i = 0,03) donnent t = 5 ans.");
-    if (v === 1) return mkMC("Les intérêts composés vérifient \\(C_n = C_0\\,(1 + i)^n\\) (avec \\(1 + i > 0\\), \\(1 + i \\neq 1\\)). Exprimez le nombre de périodes \\(n\\).",
+    if (v === 1) return mkMC("Les intérêts composés vérifient \\(C_n = C_0\\,(1 + i)^n\\) (avec \\(1 + i \\gt 0\\), \\(1 + i \\neq 1\\)). Exprimez le nombre de périodes \\(n\\).",
       "\\(n = \\dfrac{\\ln(C_n/C_0)}{\\ln(1 + i)}\\)",
       ["\\(n = \\ln\\dfrac{C_n}{C_0}\\)", "\\(n = \\dfrac{\\ln C_n}{\\ln C_0}\\)", "\\(n = (1 + i)\\ln\\dfrac{C_n}{C_0}\\)"],
       "L'inconnue est en exposant : logarithme des deux membres, puis \\(\\ln(a^n) = n\\ln a\\).",

@@ -21,7 +21,7 @@ const FICHES = {
     <p><b>Addition posée :</b> aligner unités, dizaines, centièmes… colonne par colonne de droite à gauche ; reporter la retenue.</p>
     <p><b>Soustraction posée :</b> si un chiffre du haut est trop petit, emprunter une dizaine à la colonne de gauche (méthode par emprunt/casse).</p>
     <p><b>Multiplication posée :</b> distribuer chaque chiffre du multiplicateur, décaler d'un rang à chaque ligne, puis additionner.</p>
-    <p><b>Division euclidienne :</b> \\(\\text{dividende}=\\text{diviseur}\\times\\text{quotient}+\\text{reste}\\), avec \\(0\\le\\text{reste}<\\text{diviseur}\\).
+    <p><b>Division euclidienne :</b> \\(\\text{dividende}=\\text{diviseur}\\times\\text{quotient}+\\text{reste}\\), avec \\(0\\le\\text{reste} \\lt \\text{diviseur}\\).
     Exemple : \\(47=5\\times9+2\\) : quotient 9, reste 2.</p>
     <p><b>Vérification :</b> toujours estimer l'ordre de grandeur (arrondir) pour repérer une erreur de position.</p>` },
 
@@ -43,7 +43,7 @@ const FICHES = {
     <p><b>Conversion :</b> on multiplie en descendant vers l'unité plus petite, on divise en remontant : \\(1\\,\\text{m}=100\\,\\text{cm}\\), \\(1\\,\\text{kg}=1000\\,\\text{g}\\).</p>
     <p><b>Volumes et capacités :</b> \\(1\\,\\text{L}=1\\,\\text{dm}^3\\), \\(1\\,\\text{mL}=1\\,\\text{cm}^3\\).</p>
     <p><b>Temps :</b> \\(1\\,\\text{h}=60\\,\\text{min}=3600\\,\\text{s}\\) ; « 3 h 40 » = \\(3\\times60+40=220\\) min. Attention : 1 h 30 = 1,5 h, pas 1,30 h.</p>
-    <p><b>Notation scientifique :</b> \\(a\\times10^n\\) avec \\(1\\le|a|<10\\). Exemple : \\(0{,}00052=5{,}2\\times10^{-4}\\).</p>
+    <p><b>Notation scientifique :</b> \\(a\\times10^n\\) avec \\(1\\le|a| \\lt 10\\). Exemple : \\(0{,}00052=5{,}2\\times10^{-4}\\).</p>
     <p><b>Chiffres significatifs :</b> le résultat d'un calcul garde l'ordre de précision de la donnée la moins précise. On arrondit au dernier chiffre significatif pertinent.</p>
     <p><b>Astronomie :</b> \\(1\\,\\text{ua}\\approx1{,}496\\times10^8\\) km ; \\(1\\,\\text{a.l.}\\approx9{,}46\\times10^{12}\\) km (distance parcourue par la lumière en 1 an à \\(3\\times10^8\\) m/s).</p>` },
 
@@ -103,7 +103,7 @@ const FICHES = {
     <p><b>Équation du 1ᵉʳ degré :</b> la même opération des deux côtés ; transposer en changeant le signe ; diviser par le coefficient de \\(x\\).
     Exemple : \\(3x-5=7 \\Rightarrow 3x=12 \\Rightarrow x=4\\).</p>
     <p><b>Inéquation :</b> comme une équation, MAIS multiplier/diviser par un négatif INVERSE le sens.
-    \\(-2x<6 \\Rightarrow x>-3\\).</p>
+    \\(-2x \\lt 6 \\Rightarrow x \\gt -3\\).</p>
     <p><b>Identités remarquables :</b> \\(a^2-b^2=(a-b)(a+b)\\) ; \\(a^2+2ab+b^2=(a+b)^2\\) ; \\(a^2-2ab+b^2=(a-b)^2\\).</p>
     <p><b>Factoriser :</b> ① facteur commun \\(ka+kb=k(a+b)\\) ; ② identité remarquable ; ③ groupement ;
     ④ double factorisation (d'abord un facteur commun, puis une identité).</p>
@@ -118,11 +118,11 @@ const FICHES = {
     • canonique : \\(a(x-\\alpha)^2+\\beta\\) avec \\(\\alpha=-\\dfrac{b}{2a}\\) et \\(\\beta=f(\\alpha)=-\\dfrac\\Delta{4a}\\) —
     le sommet de la parabole est \\(S(\\alpha\\,;\\,\\beta)\\), son axe de symétrie \\(x=\\alpha\\) ;<br>
     • factorisée : \\(a(x-x_1)(x-x_2)\\) quand les racines existent.</p>
-    <p><b>Discriminant :</b> \\(\\Delta=b^2-4ac\\). Si \\(\\Delta>0\\) : deux racines distinctes
+    <p><b>Discriminant :</b> \\(\\Delta=b^2-4ac\\). Si \\(\\Delta \\gt 0\\) : deux racines distinctes
     \\(x_{1,2}=\\dfrac{-b\\pm\\sqrt\\Delta}{2a}\\) ; si \\(\\Delta=0\\) : racine double \\(x_0=-\\dfrac b{2a}\\) ;
-    si \\(\\Delta<0\\) : aucune racine réelle.</p>
+    si \\(\\Delta \\lt 0\\) : aucune racine réelle.</p>
     <p><b>Somme et produit des racines :</b> \\(x_1+x_2=-\\dfrac ba\\), \\(x_1 x_2=\\dfrac ca\\) — précieux pour trouver des racines « évidentes ».</p>
-    <p><b>Signe (a &gt; 0) :</b> \\(f(x)>0\\) à l'extérieur des racines, \\(f(x)<0\\) entre les racines ; pour a &lt; 0, c'est l'inverse.
+    <p><b>Signe (a &gt; 0) :</b> \\(f(x) \\gt 0\\) à l'extérieur des racines, \\(f(x) \\lt 0\\) entre les racines ; pour a &lt; 0, c'est l'inverse.
     On dresse un tableau de signes : ligne du trinôme = « + 0 − 0 + ».</p>
     <p><b>Inéquations :</b> résoudre \\(ax^2+bx+c\\ge0\\), c'est lire dans le tableau les intervalles où le signe convient ;
     crochets fermés aux racines (valeur qui annule), attention aux valeurs interdites d'un quotient.</p>
@@ -142,8 +142,8 @@ const FICHES = {
     <p><b>Lecture graphique :</b> image de \\(a\\) = ordonnée du point de \\(C_f\\) d'abscisse \\(a\\) ;
     antécédents de \\(k\\) = abscisses des points d'intersection avec la droite \\(y=k\\).</p>
     <p><b>Résolution graphique de \\(f(x)=g(x)\\) :</b> lire les abscisses des points d'intersection des deux courbes.
-    \\(f(x)<g(x)\\) : intervalles où \\(C_f\\) est EN DESSOUS de \\(C_g\\).</p>
-    <p><b>Variations :</b> croissante sur I si pour tous \\(a<b\\) de I, \\(f(a)\\le f(b)\\) ; tableau de variations :
+    \\(f(x) \\lt g(x)\\) : intervalles où \\(C_f\\) est EN DESSOUS de \\(C_g\\).</p>
+    <p><b>Variations :</b> croissante sur I si pour tous \\(a \\lt b\\) de I, \\(f(a)\\le f(b)\\) ; tableau de variations :
     flèche montante/descendante, valeurs aux bornes, extremum là où la flèche change de sens.</p>` },
 
   'derivees': { titre: '📈 Dérivées, tangentes, Euler & optimisation', html: `
@@ -156,7 +156,7 @@ const FICHES = {
     constante → 0.</p>
     <p><b>Tangente en \\(a\\) :</b> \\(y=f'(a)(x-a)+f(a)\\). Graphiquement : sa pente se lit \\(\\dfrac{\\Delta y}{\\Delta x}\\)
     entre deux points de la droite ; elle coupe la courbe au point \\((a\\,;\\,f(a))\\).</p>
-    <p><b>Lien f′ / variations :</b> \\(f'>0\\) sur un intervalle ⇒ \\(f\\) croissante ; \\(f'<0\\) ⇒ décroissante ;
+    <p><b>Lien f′ / variations :</b> \\(f' \\gt 0\\) sur un intervalle ⇒ \\(f\\) croissante ; \\(f' \\lt 0\\) ⇒ décroissante ;
     \\(f'(a)=0\\) avec changement de signe ⇒ extremum local. Lire \\(C_{f'}\\) : au-dessus de l'axe ⇔ \\(f\\) croissante.</p>
     <p><b>Méthode d'Euler :</b> approximer la courbe en suivant les tangentes :
     \\(x_{n+1}=x_n+h\\), \\(y_{n+1}=y_n+h\\,f'(x_n)\\). Plus le pas h est petit, plus l'approximation est fidèle.</p>
@@ -168,15 +168,15 @@ const FICHES = {
     Pour un quotient, barrer la valeur interdite (dénominateur nul).</p>
     <p><b>Tableau de variations :</b> flèches ↗ (croissante) et ↘ (décroissante) ; on reporte les valeurs aux bornes de chaque intervalle ;
     un extremum apparaît là où la flèche change de sens. Double barre en une valeur interdite.</p>
-    <p><b>Lecture d'une courbe :</b> \\(f(x)>0\\) là où la courbe est au-dessus de l'axe des abscisses ;
+    <p><b>Lecture d'une courbe :</b> \\(f(x) \\gt 0\\) là où la courbe est au-dessus de l'axe des abscisses ;
     croissante là où elle « monte » quand on lit de gauche à droite.</p>` },
 
   'suites': { titre: '🪜 Suites arithmétiques & géométriques', html: `
     <p><b>Suite arithmétique :</b> \\(u_{n+1}=u_n+r\\) (r = raison). Forme explicite : \\(u_n=u_0+n\\,r\\).
-    Sens : croissante si \\(r>0\\), décroissante si \\(r<0\\).
+    Sens : croissante si \\(r \\gt 0\\), décroissante si \\(r \\lt 0\\).
     Somme des \\((n+1)\\) premiers termes : \\(\\dfrac{(\\text{nombre de termes})\\times(\\text{premier}+\\text{dernier})}{2}\\).</p>
     <p><b>Suite géométrique :</b> \\(u_{n+1}=q\\,u_n\\) (q = raison). Forme explicite : \\(u_n=u_0\\,q^n\\).
-    Sens : croissante si \\(q>1\\) (avec \\(u_0>0\\)), constante si \\(q=1\\), décroissante si \\(0<q<1\\).
+    Sens : croissante si \\(q \\gt 1\\) (avec \\(u_0 \\gt 0\\)), constante si \\(q=1\\), décroissante si \\(0 \\lt q \\lt 1\\).
     Somme : \\(u_0\\dfrac{1-q^{n+1}}{1-q}\\) (n+1 termes, q ≠ 1).</p>
     <p><b>Sur un graphique :</b> arithmétique = points alignés ; géométrique = points sur une courbe exponentielle.</p>
     <p><b>Isoler un terme dans une somme :</b> la somme des termes dépend du NOMBRE de termes : de \\(u_0\\) à \\(u_n\\) il y a \\(n+1\\) termes.</p>` },
@@ -325,23 +325,23 @@ const GEN_INFO = {
   'trouSigne':            { label: 'Raisonnement : règle des signes', fiches: ['tableaux', 'algebre'],
     rappel: "\\((+)\\times(+)=+\\) ; \\((+)\\times(-)=-\\) ; \\((-)\\times(-)=+\\). Un quotient suit la même règle, sauf valeur interdite." },
   'varExpr':              { label: 'Variations d\'une expression', fiches: ['tableaux', 'derivees'],
-    rappel: "Signe de la dérivée ⇒ sens de variation : \\(f\\'>0\\) croissante, \\(f\\'<0\\) décroissante, \\(f\\'=0\\) extremum possible." },
+    rappel: "Signe de la dérivée ⇒ sens de variation : \\(f\\' \\gt 0\\) croissante, \\(f\\' \\lt 0\\) décroissante, \\(f\\'=0\\) extremum possible." },
   'readVarTable':         { label: 'Lire un tableau de variations', fiches: ['tableaux'],
     rappel: "Flèche montante = croissante, descendante = décroissante ; valeurs aux bornes ; extremum là où la flèche tourne." },
   'curveSign':            { label: 'Courbe & signes', fiches: ['tableaux', 'fonctions'],
-    rappel: "La courbe de \\(f\\) est au-dessus de l'axe (Ox) là où \\(f(x)>0\\), en dessous là où \\(f(x)<0\\) ; elle coupe l'axe aux racines." },
+    rappel: "La courbe de \\(f\\) est au-dessus de l'axe (Ox) là où \\(f(x) \\gt 0\\), en dessous là où \\(f(x) \\lt 0\\) ; elle coupe l'axe aux racines." },
   'trouVariations':       { label: 'Raisonnement : variations', fiches: ['tableaux'],
     rappel: "Vocabulaire : croissante, décroissante, maximum, minimum, extremum — le tableau de variations les résume." },
   'suiteArith':           { label: 'Suites arithmétiques (calculs)', fiches: ['suites'],
     rappel: "\\(u_{n+1}=u_n+r\\), \\(u_n=u_0+n\\,r\\) ; somme = \\(\\dfrac{(\\text{nb de termes})(\\text{premier}+\\text{dernier})}{2}\\)." },
   'suiteArith2':          { label: 'Suites arithmétiques (problèmes)', fiches: ['suites'],
-    rappel: "Identifier la raison r (différence constante), puis \\(u_n=u_0+n\\,r\\) ; croissante si \\(r>0\\)." },
+    rappel: "Identifier la raison r (différence constante), puis \\(u_n=u_0+n\\,r\\) ; croissante si \\(r \\gt 0\\)." },
   'trouSuiteArith':       { label: 'Raisonnement : suite arithmétique', fiches: ['suites'],
     rappel: "Vocabulaire : raison, terme initial, forme explicite \\(u_n=u_0+nr\\), sens de variation selon le signe de r." },
   'suiteGeo':             { label: 'Suites géométriques (calculs)', fiches: ['suites'],
     rappel: "\\(u_{n+1}=q\\,u_n\\), \\(u_n=u_0\\,q^n\\) ; somme \\(u_0\\dfrac{1-q^{n+1}}{1-q}\\) pour q ≠ 1." },
   'suiteGeo2':            { label: 'Suites géométriques (problèmes)', fiches: ['suites'],
-    rappel: "Le rapport entre deux termes consécutifs est constant (= q) ; croissante si \\(q>1\\) (u₀ &gt; 0), décroissante si \\(0<q<1\\)." },
+    rappel: "Le rapport entre deux termes consécutifs est constant (= q) ; croissante si \\(q \\gt 1\\) (u₀ &gt; 0), décroissante si \\(0 \\lt q \\lt 1\\)." },
   'trouSuiteGeo':         { label: 'Raisonnement : suite géométrique', fiches: ['suites'],
     rappel: "Vocabulaire : raison q, terme initial, forme explicite \\(u_n=u_0 q^n\\) ; on multiplie par q à chaque terme." },
   'pourcentage':          { label: 'Pourcentages', fiches: ['proportionnalite'],
@@ -406,7 +406,7 @@ const GEN_INFO = {
   'u-masse':      { fiches: ['unites'],   rappel: "Masse : t, kg, g, mg — \\(1\\,\\text{kg}=1000\\,\\text{g}\\), \\(1\\,\\text{t}=1000\\,\\text{kg}\\)." },
   'u-volume':     { fiches: ['unites'],   rappel: "Capacités : \\(1\\,\\text{L}=1\\,\\text{dm}^3\\), \\(1\\,\\text{mL}=1\\,\\text{cm}^3\\)." },
   'u-astronomie': { fiches: ['unites'],   rappel: "ua = distance Terre-Soleil (\\(1{,}496\\times10^8\\) km) ; a.l. = \\(9{,}46\\times10^{12}\\) km (lumière en 1 an)." },
-  'u-sci':        { fiches: ['unites'],   rappel: "Notation scientifique \\(a\\times10^n\\) avec \\(1\\le|a|<10\\) : \\(0{,}00052=5{,}2\\times10^{-4}\\)." },
+  'u-sci':        { fiches: ['unites'],   rappel: "Notation scientifique \\(a\\times10^n\\) avec \\(1\\le|a| \\lt 10\\) : \\(0{,}00052=5{,}2\\times10^{-4}\\)." },
   'u-cs':         { fiches: ['unites'],   rappel: "Chiffres significatifs : un zéro de position ne compte pas ; le résultat garde la précision de la donnée la moins précise." },
   'u-dim':        { fiches: ['unites', 'litteral'], rappel: "Analyse dimensionnelle : les deux membres d'une égalité doivent avoir la MÊME dimension ; [v] = longueur/temps." },
   'p-geo':        { fiches: ['geometrie'], rappel: "Aires : \\(L\\times l\\) (rectangle), \\(\\dfrac{b\\times h}2\\) (triangle), \\(\\pi r^2\\) (disque) ; volumes : \\(\\text{base}\\times\\text{hauteur}\\), \\(\\frac13\\text{Bh}\\) (pyramide/cône)." },
@@ -496,7 +496,7 @@ const GEN_INFO = {
   't-deriveept':        { fiches: ['derivees'], rappel: "\\(f\\'(a)\\) = pente de la tangente en a = limite du taux d'accroissement." },
   't-tangente':         { fiches: ['derivees'], rappel: "\\(y=f\\'(a)(x-a)+f(a)\\) — développer pour la forme réduite." },
   't-tangentegraph':    { fiches: ['derivees'], rappel: "Pente de la tangente lue graphiquement : \\(\\dfrac{\\Delta y}{\\Delta x}\\) entre deux points de la droite." },
-  't-fprimevariation':  { fiches: ['derivees', 'tableaux'], rappel: "\\(f\\'>0\\) : \\(f\\) croît ; \\(f\\'<0\\) : \\(f\\) décroît ; \\(f\\'=0\\) : extremum candidat." },
+  't-fprimevariation':  { fiches: ['derivees', 'tableaux'], rappel: "\\(f\\' \\gt 0\\) : \\(f\\) croît ; \\(f\\' \\lt 0\\) : \\(f\\) décroît ; \\(f\\'=0\\) : extremum candidat." },
   't-courbederivee':    { fiches: ['derivees'], rappel: "\\(C_{f\\'}\\) au-dessus de (Ox) ⇔ \\(f\\) croissante ; l'image de a sur \\(C_{f\\'}\\) vaut \\(f\\'(a)\\)." },
   't-polynome3':        { fiches: ['second-degre'], rappel: "Racine évidente + factorisation \\((x-r)\\times\\)(trinôme) par identification des coefficients." },
   't-suitearith':       { fiches: ['suites'], rappel: "\\(u_n=u_0+nr\\) ; somme = (nb de termes)(1ᵉʳ+dernier)/2 ; de \\(u_0\\) à \\(u_n\\) : n+1 termes." },

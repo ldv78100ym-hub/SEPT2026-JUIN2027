@@ -78,7 +78,7 @@ GEN.trouDroite = () => TROU(
   `Équation de droite : complète le raisonnement.`,
   `Par deux points \\(A\\) et \\(B\\) passe une seule {{0}}. Son coefficient directeur est \\(m=\\dfrac{y_B-y_A}{x_B-x_A}\\) : c'est la {{1}} de la droite.<br>
    Son ordonnée à l'origine \\(p\\) est l'{{2}} de \\(0\\) : on la lit là où la droite coupe l'axe des ordonnées.<br>
-   Si \\(m>0\\) la droite « monte », si \\(m=0\\) elle est {{3}} ; si elle est {{4}}, elle n'a pas de coefficient directeur.`,
+   Si \\(m \\gt 0\\) la droite « monte », si \\(m=0\\) elle est {{3}} ; si elle est {{4}}, elle n'a pas de coefficient directeur.`,
   ['droite','pente','image','horizontale','verticale'],
   ['diagonale','parabole','trampoline','chaussette','oblique'],
   `Attention au calcul de la pente : toujours \\(\\dfrac{y_B-y_A}{x_B-x_A}\\) dans cet ordre, sinon le signe de \\(m\\) est faux.`
@@ -101,7 +101,7 @@ GEN.trouDerivee = () => TROU(
   `Formules de dérivation : complète le raisonnement.`,
   `Pour dériver \\(u^n\\) : \\((u^n)'=n\\,u^{n-1}\\,u'\\) — on multiplie par l'{{0}}, on le {{1}} d'une unité et on n'oublie pas {{2}}.<br>
    Pour \\(\\sqrt{u}\\) : la dérivée fait apparaître un facteur {{3}} au dénominateur : \\((\\sqrt u)'=\\dfrac{u'}{2\\sqrt u}\\).<br>
-   La dérivée d'une {{4}} est nulle, et \\((u+v)'=u'+{{5}}\\).`,
+   La dérivée d'une {{4}} est nulle, et \\((u+v)'\\) se décompose en \\(u'\\) et {{5}}.`,
   ["exposant","diminue","u'","2","constante","v'"],
   ['augmente','racine','3','choucroute','courgette','variable'],
   `Les pièges classiques : oublier \\(u'\\) dans \\((u^n)'\\), oublier le \\(2\\) de \\((\\sqrt u)'\\), ou croire que \\((u+v)'=u'v'\\).`
@@ -109,17 +109,17 @@ GEN.trouDerivee = () => TROU(
 
 GEN.trouSigne = () => TROU(
   `Signe d'un trinôme : complète le raisonnement.`,
-  `Pour un trinôme \\(ax^2+bx+c\\) avec \\(a>0\\) et deux racines \\(x_1<x_2\\) : le trinôme est positif {{0}} des racines et négatif {{1}} elles.<br>
-   Si le discriminant \\(\\Delta<0\\), il n'y a pas de racine : le trinôme garde alors le {{2}} de \\(a\\) sur \\(\\mathbb{R}\\).<br>
-   Le {{3}} du coefficient \\(a\\) décide de l'allure de la parabole : « sourire » si \\(a>0\\), « grimace » si \\(a<0\\).`,
+  `Pour un trinôme \\(ax^2+bx+c\\) avec \\(a \\gt 0\\) et deux racines \\(x_1 \\lt x_2\\) : le trinôme est positif {{0}} des racines et négatif {{1}} elles.<br>
+   Si le discriminant \\(\\Delta \\lt 0\\), il n'y a pas de racine : le trinôme garde alors le {{2}} de \\(a\\) sur \\(\\mathbb{R}\\).<br>
+   Le {{3}} du coefficient \\(a\\) décide de l'allure de la parabole : « sourire » si \\(a \\gt 0\\), « grimace » si \\(a \\lt 0\\).`,
   ["à l'extérieur",'entre','signe','signe'],
   ["à l'intérieur",'au sommet','pamplemousse','flibuste','dérivée'],
-  `Avec \\(a>0\\), la parabole « sourit » : elle est donc positive dehors et négative dedans. Le tableau suit l'allure, pas l'envie.`
+  `Avec \\(a \\gt 0\\), la parabole « sourit » : elle est donc positive dehors et négative dedans. Le tableau suit l'allure, pas l'envie.`
 );
 
 GEN.trouVariations = () => TROU(
   `Variations d'une fonction : complète le raisonnement.`,
-  `Sur un intervalle où \\(f'>0\\), la fonction \\(f\\) est {{0}} ; là où \\(f'<0\\), elle est {{1}}.<br>
+  `Sur un intervalle où \\(f' \\gt 0\\), la fonction \\(f\\) est {{0}} ; là où \\(f' \\lt 0\\), elle est {{1}}.<br>
    Lorsque \\(f'\\) s'annule en changeant de signe, la courbe admet un extremum : un maximum si \\(f'\\) passe de \\(+\\) à \\(-\\), un {{2}} dans le cas contraire.<br>
    Le tableau de variations se construit donc à partir du {{3}} de la dérivée, pas à partir de ses valeurs.`,
   ['croissante','décroissante','minimum','signe'],

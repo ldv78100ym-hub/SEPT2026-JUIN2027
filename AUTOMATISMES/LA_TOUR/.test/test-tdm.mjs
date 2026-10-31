@@ -186,17 +186,17 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   console.log('== 5. Sommaire « Progression des notions » : catégories & éléments ==');
   call('openNotions()');
   const cats5 = [...$('notionsList').children];
-  ok(cats5.length === 16, '16 catégories thématiques (' + cats5.length + ')');
+  ok(cats5.length === 18, '18 catégories thématiques (' + cats5.length + ')');
   ok(cats5.every(c => c.children.length && c.children[0].innerHTML.includes('prog-cat-title')), 'chaque catégorie a son en-tête cliquable');
   ok(cats5.every(c => /\d+\/\d+ validée/.test(c.children[0].innerHTML)), 'compteur « X/Y validées » par catégorie');
   const items = [];
   cats5.forEach(c => [...c.children].forEach(e => { if(e.innerHTML.includes('tdm-elems')) items.push(e); }));
-  ok(items.length === 172, '172 notions listées (' + items.length + ')');
+  ok(items.length === 181, '181 notions listées (' + items.length + ')');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt')), 'chaque notion est décomposée en éléments simples');
   ok([...items].every(i => i.innerHTML.includes('data-tip=')), 'chaque élément porte son rappel au survol');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt-stats')), 'statistiques ✓/✗ par élément affichées');
   const ids5 = items.map(i => i.getAttribute('data-notion'));
-  ok(ids5.every(Boolean) && new Set(ids5).size === 172 && NOT().every(n => ids5.indexOf(n.id) >= 0),
+  ok(ids5.every(Boolean) && new Set(ids5).size === 181 && NOT().every(n => ids5.indexOf(n.id) >= 0),
      'chaque notion apparaît exactement une fois, toutes catégories confondues');
   const catDeriv = call(`PROG_CATS.filter(c => c.nom.indexOf('Dérivation') === 0)[0]`);
   ok(catDeriv && catDeriv.subs.some(s => s.nom === 'Étude complète sur un intervalle' && s.ids.join() === 'derivee-racines-I,derivee-variations-I'),
@@ -284,7 +284,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const data = call('tdmBuildDonnees()');
   const all = [...(data.notionsTraitees || []), ...(data.notionsATraiter || [])];
   const withElems = all.filter(n => Array.isArray(n.elements) && n.elements.length);
-  ok(withElems.length === 172, 'les 172 notions exportent leurs éléments simples');
+  ok(withElems.length === 181, 'les 181 notions exportent leurs éléments simples');
   const ex = withElems.find(n => n.nom && String(n.nom).includes('Second degré — formes'));
   ok(ex && ex.elements.length === 4 && ex.elements.every(e => e.libelle && e.posees !== undefined && e.reussies !== undefined && e.erreurs !== undefined), 'champs {generateur, libelle, posees, reussies, erreurs} présents');
   const exCanon = ex && ex.elements.find(e => e.generateur === 'canonique');
@@ -300,8 +300,8 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok($('lastSaveInfo').textContent.includes(majTxt.split(' à ')[0]), 'la date du jour apparaît dans le menu');
 
   console.log('== 10. Nouvelles notions « évolutions & proportions » ==');
-  ok(NOT().length === 172, 'la tour compte 172 notions (147 + 25 nouvelles)');
-  ok(vm.runInContext('N_TOT', sandbox) === 172, 'N_TOT = 172 (HUD, altitude, finalisation)');
+  ok(NOT().length === 181, 'la tour compte 181 notions (147 + 25 + 9 nouvelles)');
+  ok(vm.runInContext('N_TOT', sandbox) === 181, 'N_TOT = 181 (HUD, altitude, finalisation)');
   const NEW_IDS = ['proportions', 'prop-de-prop', 'evol-cm', 'evol-global', 'evol-moyen'];
   const allIds = NOT().map(n => n.id);
   ok(NEW_IDS.every(id => allIds.includes(id)), 'les 5 nouvelles notions sont en sommet de tour');
@@ -344,7 +344,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   console.log('== 11. Révision personnalisée (menu 🎯) ==');
   call('tdmOpenRevision()');
   ok($('revisionModal').classList.contains('open'), 'modale de révision ouverte');
-  ok($('revList').children.length === 172, 'les 172 notions sont proposées à la sélection');
+  ok($('revList').children.length === 181, 'les 181 notions sont proposées à la sélection');
   call(`tdmLaunchRevision(['sd-formes', 'evol-global', 'proportions'])`);
   const stR = ST();
   ok(stR.customPool && stR.customPool.size === 3, 'sélection active : 3 notions au menu de la session');
@@ -377,7 +377,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const DR_IDS = ['droites-fractions', 'droites-axes', 'droites-positions', 'droites-cartesiennes', 'droites-pro', 'triangle-droites'];
   const allIds12 = NOT().map(n => n.id);
   ok(DR_IDS.every(id => allIds12.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-31,-25).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
+  ok(NOT().slice(-40,-34).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
   const DR_GENS = ['dEqFrac2pts','dPointCoeff','dPointOrdo','dDeuxImages','dLectureGraph','dInterAxes','dSigne','dPosition2','dIntersectPt','dParallele','dPerpendiculaire','trouPosition','dVectDir','dDistance','dPointFixe','dSeuilRentabilite','dPointEquilibre','dTolerance','triGravite','triOrthocentre'];
   let drErr = 0;
   for(const g of DR_GENS){
@@ -416,7 +416,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const FP_IDS = ['fractions-egalite', 'fractions-signes', 'fractions-priorites', 'fractions-operations', 'puissances-dix', 'puissances-regles'];
   const allIds13 = NOT().map(n => n.id);
   ok(FP_IDS.every(id => allIds13.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-25,-19).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
+  ok(NOT().slice(-34,-28).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
   const FP_GENS = ['frSimplifie','frFracEgales','frCompare','trouSimplifie','frSigneProduit','frEcritureSignes','frFractionSignee','frPriorites','frPemdasPiege','trouPriorites','frAddSous','frMul','frDiv','frEntierFrac','frPuissanceFrac','frCompose','p10Ops','p10Inverse','pSciExposant','pOrdreGrandeur','puBaseRelative','puMemeExp','puLitteral','puComposee'];
   let fpErr = 0;
   for(const g of FP_GENS){
@@ -455,7 +455,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const ET_IDS = ['derivee-racines-I', 'derivee-variations-I'];
   const allIds14 = NOT().map(n => n.id);
   ok(ET_IDS.every(id => allIds14.includes(id)), 'les 2 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-19,-17).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
+  ok(NOT().slice(-28,-26).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
   const ET_GENS = ['etFacto','etRacinesI','etSigneI','etImages','etVariations','etTangente','trouEtudeDerivee'];
   let etErr = 0;
   for(const g of ET_GENS){
@@ -494,7 +494,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SD_IDS = ['sd-sommet','sd-taux-variation','sd-conditions','sd-metamorphoses'];
   const allIds15 = NOT().map(n => n.id);
   ok(SD_IDS.every(id => allIds15.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-12,-8).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
+  ok(NOT().slice(-21,-17).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
   const SD_GENS = ['sd2Coeffs','sd2Axe','sd2Sommet','sd2Extremum','trouSommet','sd2Taux','sd2TauxMilieu','trouTaux','sd2Systeme3','sd2MemeOrdonnee','sd2Ax2','sd2SommetPoint','sd2Trajectoire','trouConditions','sd2Etirement','sd2Transl','sd2CanoniqueLecture','sd2DevCanon','trouMetamorphe'];
   let sdErr = 0;
   for(const g of SD_GENS){
@@ -537,7 +537,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SU_IDS = ['su-generalites','su-arithmetiques','su-geometriques','su-variation'];
   const allIds16 = NOT().map(n => n.id);
   ok(SU_IDS.every(id => allIds16.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-8,-4).every(n => SU_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets limites');
+  ok(NOT().slice(-17,-13).every(n => SU_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets limites');
   const SU_GENS = ['suListe','suExplicite','suRecurrence','suRang','trouSuitesGen','suArithRecon','suNonArith','suArithVariation','suArithProbleme','trouSuitesArith2','suGeoRecon','suGeoVariation','suGeoCM','suGeoProbleme','trouSuitesGeo2','suVarAffine','suVarQuad','suVarRat','suVarRacine','trouSuitesVar'];
   let suErr = 0;
   for(const g of SU_GENS){
@@ -581,7 +581,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const LIM_IDS = ['su-limites','su-fi','su-comparaison','su-arithmetico'];
   const allIds17 = NOT().map(n => n.id);
   ok(LIM_IDS.every(id => allIds17.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-4).every(n => LIM_IDS.includes(n.id)), 'elles ferment la tour (172 étages)');
+  ok(NOT().slice(-4).every(n => LIM_IDS.includes(n.id)), 'elles ferment la tour (181 étages)');
   const LIM_GENS = ['suLimRef','suLimOps','suConvergence','suEpsilon','trouLimitesRef','suFISomme','suFIQuotient','suFIConjuguee','suFITrigo','trouSuitesFI','suGendarmes','suGendarmesQuot','suComparaison','suMonotone','trouGendarmes','suPointFixe','suAuxiliaire','suArithGeoLimite','suArithGeoProbleme','suSommeGeo'];
   let limErr = 0;
   for(const g of LIM_GENS){
@@ -621,12 +621,67 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   call('closeLesson()');
   await sleep(1200);
 
+  /* ================= MATHS EXPERTES (module 11l) ================= */
+  console.log('== 17bis. Nouvelles notions « maths expertes » (congruences, complexes, graphes) ==');
+  const MX_IDS = ['mx-div','mx-premiers','mx-congruence','mx-congruence-ops','cplx-ops','cplx-eq','gr-vocab','gr-structure','gr-euler'];
+  const allIdsBis = NOT().map(n => n.id);
+  ok(MX_IDS.every(id => allIdsBis.includes(id)), 'les 9 notions expertes sont dans la tour');
+  ok(NOT().slice(-4).every(n => n.id.startsWith('su-')), 'le sommet de la tour reste fermé par les notions « limites »');
+  const MX_GENS = ['euclide','divCrit','decomposePremiers','pgcdEuclide','congruenceReste','congruenceJour','congruenceOps','congruencePuiss','cplxConjugue','cplxModule','cplxInverse','cplxEq1','cplxEq2','grVocab','grDegre','grPoignees','grEuler'];
+  let mxErr = 0;
+  for(const g of MX_GENS){
+    for(let i = 0; i < 25; i++){
+      try {
+        const q = vm.runInContext(`GEN['${g}']()`, sandbox);
+        if(q.options){
+          const nOk = q.options.filter(o => o.ok).length;
+          if(nOk !== 1) mxErr++;
+          if(!q.explain) mxErr++;
+          const set = new Set(q.options.map(o => o.t));
+          if(set.size !== q.options.length) mxErr++;
+        } else mxErr++;
+      } catch(e){ mxErr++; console.log('    ' + g + ' → ' + e.message); }
+    }
+  }
+  ok(mxErr === 0, 'les 17 nouveaux générateurs : 25 tirages chacun, 1 seule bonne réponse, leçon présente');
+  ok(call(`FICHES['congruences'] ? /cycle/i.test(FICHES['congruences'].html) && /Fermat/i.test(FICHES['congruences'].html) && /ppcm/i.test(FICHES['congruences'].html) : false`), 'fiche « Congruences » créée (cycles, Fermat, piège des modules composés)');
+  ok(call(`FICHES['divisibilite'] ? /Euclide/i.test(FICHES['divisibilite'].html) && /premiers/i.test(FICHES['divisibilite'].html) : false`), 'fiche « Divisibilité, nombres premiers & PGCD » créée');
+  ok(call(`FICHES['graphes'] ? /poignées de main/i.test(FICHES['graphes'].html) && /Euler/i.test(FICHES['graphes'].html) && /adjacence/i.test(FICHES['graphes'].html) : false`), 'fiche « Théorie des graphes » créée (poignées de main, Euler, matrice d\'adjacence)');
+  ok(call(`FICHES['complexes'].html.includes('Conjugué') && FICHES['complexes'].html.includes('Module') && FICHES['complexes'].html.includes('Inverse') && /racines COMPLEXES CONJUGUÉES/i.test(FICHES['complexes'].html)`), 'fiche « Complexes » enrichie (conjugué, module, inverse, équations)');
+  const mxCat = call(`PROG_CATS.filter(c => c.nom === 'Arithmétique & congruences')[0]`);
+  ok(mxCat && mxCat.subs.some(s => s.ids.join() === 'mx-div,mx-premiers') && mxCat.subs.some(s => s.ids.join() === 'mx-congruence,mx-congruence-ops'),
+     'catégorie « Arithmétique & congruences » (2 sous-catégories)');
+  const grCat = call(`PROG_CATS.filter(c => c.nom === 'Théorie des graphes')[0]`);
+  ok(grCat && grCat.subs.some(s => s.ids.join() === 'gr-vocab,gr-structure') && grCat.subs.some(s => s.ids.join() === 'gr-euler'),
+     'catégorie « Théorie des graphes » (2 sous-catégories)');
+  const cpxCat = call(`PROG_CATS.filter(c => c.nom === 'Nombres complexes')[0]`);
+  ok(cpxCat && cpxCat.subs.some(s => s.ids.join() === 'cplx-ops') && cpxCat.subs.some(s => s.ids.join() === 'cplx-eq'),
+     'catégorie « Nombres complexes » enrichie (conjugué/module/inverse + équations)');
+  ok(call(`GEN_INFO['congruencePuiss'] && GEN_INFO['congruencePuiss'].fiches.indexOf('nombres') >= 0 && GEN_INFO['grVocab'].fiches.indexOf('logique') >= 0`),
+     'fiches-ponts : arithmétique ↔ nombres, graphes ↔ logique (tout reste lié)');
+  /* Erreur sur un nouveau générateur → leçon + fiche congruences */
+  call(`
+    (function(){
+      const q = GEN['congruencePuiss']();
+      q._notionId = 'mx-congruence-ops'; q._gen = 'congruencePuiss';
+      state.lastGen = 'congruencePuiss';
+      SAV.logQuestion(q, ['mauvaise'], false);
+      resolveAnswer(false, q);
+    })()
+  `);
+  await sleep(1300);
+  const body10 = $('lessonBody').innerHTML;
+  ok(body10.includes('décomposée en éléments simples') && body10.toLowerCase().includes('puissances'), 'leçon d\'erreur : décomposition de la notion « Congruences : opérations & puissances »');
+  ok(body10.includes('data-fiche="congruences"'), 'boutons vers la fiche « Congruences » dans la leçon');
+  call('closeLesson()');
+  await sleep(1200);
+
   /* ================= GRAPHE 3D DES NOTIONS (module 20) ================= */
   console.log('== 18. Graphe des notions (menu 🕸️) ==');
   call('tdmOuvreGraphe()');
   const gWrap = call("(function(){ return document.body.children.filter(function(c){ return c.id === 'graphModal'; })[0]; })()");
   ok(gWrap && gWrap.classList.contains('open'), 'graphe : modale injectée et ouverte depuis le menu');
-  ok(call('NOTIONS.length') === 172 && call('PROG_CATS.length') === 16, 'graphe : 172 notions réparties en 16 catégories');
+  ok(call('NOTIONS.length') === 181 && call('PROG_CATS.length') === 18, 'graphe : 181 notions réparties en 18 catégories');
   const gTxt = el => { let s = el.textContent || ''; (el.children || []).forEach(c => { s += ' ' + gTxt(c); }); return s; };
   const gInn = el => { let s = el.innerHTML || ''; (el.children || []).forEach(c => { s += ' ' + gInn(c); }); return s; };
   /* ouverture en cours de partie : centrage direct sur la notion en cours */
@@ -647,9 +702,9 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(gEt.centre && gEt.centre.type === 'notion', 'graphe : notion centrée, sous-grape de liens rendu');
   ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'graphe : titre = nom de la notion centrée');
   ok($('gpBody').innerHTML.includes('Ce que tu vas t’entraîner à faire'), 'graphe : panneau mode élèves (« Ce que tu vas t’entraîner à faire »)');
-  ok($('gpBadges').innerHTML.includes('101 / 172'), 'graphe : badge d’étage (101/172)');
+  ok($('gpBadges').innerHTML.includes('101 / 181'), 'graphe : badge d’étage (101/181)');
   ok($('gReach').innerHTML.indexOf('saut') >= 0, 'graphe : barre de portée (liens directs, 2 sauts, 3 sauts)');
-  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 171, 'graphe : la portée couvre les 171 autres notions (preuve « tout est lié »)');
+  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 180, 'graphe : la portée couvre les 180 autres notions (preuve « tout est lié »)');
   ok($('gLinks').children.length > 0, 'graphe : liens SVG dessinés autour du centre');
   const gLab = gTxt($('gStage'));
   ok(gLab.indexOf('fiche') >= 0 || gLab.indexOf('sous-catégorie') >= 0 || gLab.indexOf('exercice') >= 0, 'graphe : intitulés des liaisons étiquetés (sous-catégorie / exercice / fiches)');
@@ -670,6 +725,84 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(gProf.includes('data-gsub="') || gProf.includes('data-fiche="') || gProf.includes('data-gcat="'), 'graphe : liens internes (catégorie / notions liées / fiches) dans le panneau');
   call("tdmGrapheMode('eleve')");
   ok($('gpBody').innerHTML.indexOf('class="gid"') < 0, 'graphe : retour au mode élèves');
+  /* nœuds déplaçables : glisser-déposer, les liaisons suivent, le clic reste un clic */
+  const gPtr = (el, t, ev) => ((el.listeners || {})[t] || []).forEach(fn => fn(Object.assign({ stopPropagation(){}, preventDefault(){} }, ev || {})));
+  call('tdmGrapheCentre(NOTIONS[100].id)');
+  const gSatD = $('gStage').children.find(c => (c.className || '').indexOf('gnode') >= 0 && (c.className || '').indexOf('centre') < 0);
+  const gL0 = gSatD.style.left, gT0 = gSatD.style.top;
+  const gHitSat = $('gLinks').children.find(l => (l.getAttribute('class') || '').indexOf('ghit') >= 0
+    && Math.abs(l.getAttribute('x2') - parseFloat(gL0)) <= 1 && Math.abs(l.getAttribute('y2') - parseFloat(gT0)) <= 1);
+  const gX2av = gHitSat ? gHitSat.getAttribute('x2') : null;
+  gPtr(gSatD, 'pointerdown', { clientX: 500, clientY: 400, pointerId: 7 });
+  gPtr(gSatD, 'pointermove', { clientX: 560, clientY: 450, pointerId: 7 });
+  gPtr(gSatD, 'pointerup', {});
+  ok(gSatD.style.left !== gL0, 'graphe : nœud déplacé au glisser-déposer (' + gL0 + ' → ' + gSatD.style.left + ')');
+  ok(gHitSat && gHitSat.getAttribute('x2') !== gX2av, 'graphe : la liaison suit le nœud déplacé');
+  const gHav = call('tdmGrapheEtat()').hops;
+  gPtr(gSatD, 'click');
+  ok(call('tdmGrapheEtat()').hops === gHav, 'graphe : un déplacement ne déclenche pas la navigation (clic neutralisé)');
+  gPtr(gSatD, 'click');
+  ok(call('tdmGrapheEtat()').hops > gHav, 'graphe : un vrai clic sur le nœud navigue toujours');
+  /* survol d'une liaison : étiquette explicative en modale flottante */
+  const gHits = $('gLinks').children.filter(l => (l.getAttribute('class') || '').indexOf('ghit') >= 0);
+  ok(gHits.length > 0, 'graphe : zones de survol invisibles sur chaque liaison (' + gHits.length + ')');
+  ok($('gPop').style.display === 'none', 'graphe : étiquette explicative fermée par défaut');
+  gPtr(gHits[0], 'mouseenter', { clientX: 300, clientY: 300 });
+  ok($('gPop').style.display !== 'none' && $('gPop').innerHTML.indexOf('gpop-t') >= 0, 'graphe : survol d’une liaison → étiquette explicative ouverte');
+  ok($('gPop').innerHTML.length > 80, 'graphe : l’étiquette explique le lien (sous-catégorie / exercice / fiches communes)');
+  gPtr(gHits[0], 'mouseleave');
+  ok($('gPop').style.display === 'none', 'graphe : étiquette refermée quand la souris quitte la liaison');
+  /* panneau repliable : le graphe occupe toute la place */
+  ok($('gPanel').classList.contains('open'), 'graphe : panneau de détail ouvert par défaut');
+  gPtr($('gpMin'), 'click');
+  ok(!$('gPanel').classList.contains('open') && $('gpMax').style.display !== 'none', 'graphe : panneau réduit (⤡) → bouton « Détails » proposé, graphe plein cadre');
+  gPtr($('gpMax'), 'click');
+  ok($('gPanel').classList.contains('open'), 'graphe : panneau rouvert depuis « Détails »');
+  /* anti-chevauchement : les cadres des nœuds ne se recouvrent pas,
+     ni entre eux, ni avec les étiquettes des liaisons */
+  const gTailleTest = el => {
+    let spans = 0, lab = '';
+    (el.children || []).forEach(c => { if(((c.className || '') + '').indexOf('gstat') < 0){ spans++; if(!lab) lab = c.textContent || ''; } });
+    let w = Math.min(176, Math.max(58, ((lab || '').length || 3) * 6.8 + 26)), h = 22 + spans * 15;
+    if(((el.className || '') + '').indexOf('centre') >= 0){ h += 8; w = Math.min(200, w + 14); }
+    return { w, h };
+  };
+  const gChevauche = () => {
+    const stage = $('gStage');
+    const nds = stage.children.filter(c => (c.className || '').indexOf('gnode') >= 0);
+    const lbs = stage.children.filter(c => (c.className || '').indexOf('glab') >= 0);
+    let nn = 0, ln = 0;
+    for(let i = 0; i < nds.length; i++){
+      const xi = parseFloat(nds[i].style.left), yi = parseFloat(nds[i].style.top), ti = gTailleTest(nds[i]);
+      for(let j = i + 1; j < nds.length; j++){
+        const xj = parseFloat(nds[j].style.left), yj = parseFloat(nds[j].style.top), tj = gTailleTest(nds[j]);
+        if(Math.abs(xi - xj) < (ti.w + tj.w) / 2 + 8 && Math.abs(yi - yj) < (ti.h + tj.h) / 2 + 6) nn++;
+      }
+    }
+    lbs.forEach(l => {
+      const xl = parseFloat(l.style.left), yl = parseFloat(l.style.top), sl = (l.textContent || '').length || 6;
+      const tl = sl <= 20 ? { w: Math.min(200, Math.max(56, sl * 6.4 + 18)), h: 22 } : { w: 150, h: 14 + Math.max(1, Math.ceil((sl * 6.4) / 132)) * 15 };
+      nds.forEach(n => {
+        const xn = parseFloat(n.style.left), yn = parseFloat(n.style.top), tn = gTailleTest(n);
+        if(Math.abs(xl - xn) < (tl.w + tn.w) / 2 + 4 && Math.abs(yl - yn) < (tl.h + tn.h) / 2 + 4) ln++;
+      });
+    });
+    return { nn, ln };
+  };
+  call('tdmGrapheCentre(NOTIONS[100].id)');
+  let cv = gChevauche();
+  ok(cv.nn === 0, 'graphe : aucun cadre de nœud ne se chevauche (vue notion)');
+  ok(cv.ln === 0, 'graphe : aucune étiquette ne recouvre un nœud (vue notion)');
+  /* dépôt d'un nœud sur un autre : séparation automatique au relâcher */
+  const nds2 = $('gStage').children.filter(c => (c.className || '').indexOf('gnode') >= 0);
+  const aDrag = nds2.find(c => (c.className || '').indexOf('centre') < 0);
+  const bCible = nds2.find(c => (c.className || '').indexOf('centre') < 0 && c !== aDrag);
+  gPtr(aDrag, 'pointerdown', { clientX: parseFloat(aDrag.style.left), clientY: parseFloat(aDrag.style.top), pointerId: 9 });
+  gPtr(aDrag, 'pointermove', { clientX: parseFloat(bCible.style.left), clientY: parseFloat(bCible.style.top), pointerId: 9 });
+  gPtr(aDrag, 'pointerup', {});
+  cv = gChevauche();
+  ok(cv.nn === 0, 'graphe : nœud relâché sur un autre → les cadres se séparent automatiquement');
+  ok(cv.ln === 0, 'graphe : les étiquettes se replacent hors des nœuds après le dépôt');
   /* statut de progression */
   call('state.validated.add(NOTIONS[100].id)');
   call('tdmGrapheCentre(NOTIONS[100].id)');

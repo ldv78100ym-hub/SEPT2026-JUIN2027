@@ -191,12 +191,12 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(cats5.every(c => /\d+\/\d+ validée/.test(c.children[0].innerHTML)), 'compteur « X/Y validées » par catégorie');
   const items = [];
   cats5.forEach(c => [...c.children].forEach(e => { if(e.innerHTML.includes('tdm-elems')) items.push(e); }));
-  ok(items.length === 164, '164 notions listées (' + items.length + ')');
+  ok(items.length === 168, '168 notions listées (' + items.length + ')');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt')), 'chaque notion est décomposée en éléments simples');
   ok([...items].every(i => i.innerHTML.includes('data-tip=')), 'chaque élément porte son rappel au survol');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt-stats')), 'statistiques ✓/✗ par élément affichées');
   const ids5 = items.map(i => i.getAttribute('data-notion'));
-  ok(ids5.every(Boolean) && new Set(ids5).size === 164 && NOT().every(n => ids5.indexOf(n.id) >= 0),
+  ok(ids5.every(Boolean) && new Set(ids5).size === 168 && NOT().every(n => ids5.indexOf(n.id) >= 0),
      'chaque notion apparaît exactement une fois, toutes catégories confondues');
   const catDeriv = call(`PROG_CATS.filter(c => c.nom.indexOf('Dérivation') === 0)[0]`);
   ok(catDeriv && catDeriv.subs.some(s => s.nom === 'Étude complète sur un intervalle' && s.ids.join() === 'derivee-racines-I,derivee-variations-I'),
@@ -284,7 +284,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const data = call('tdmBuildDonnees()');
   const all = [...(data.notionsTraitees || []), ...(data.notionsATraiter || [])];
   const withElems = all.filter(n => Array.isArray(n.elements) && n.elements.length);
-  ok(withElems.length === 164, 'les 164 notions exportent leurs éléments simples');
+  ok(withElems.length === 168, 'les 168 notions exportent leurs éléments simples');
   const ex = withElems.find(n => n.nom && String(n.nom).includes('Second degré — formes'));
   ok(ex && ex.elements.length === 4 && ex.elements.every(e => e.libelle && e.posees !== undefined && e.reussies !== undefined && e.erreurs !== undefined), 'champs {generateur, libelle, posees, reussies, erreurs} présents');
   const exCanon = ex && ex.elements.find(e => e.generateur === 'canonique');
@@ -300,8 +300,8 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok($('lastSaveInfo').textContent.includes(majTxt.split(' à ')[0]), 'la date du jour apparaît dans le menu');
 
   console.log('== 10. Nouvelles notions « évolutions & proportions » ==');
-  ok(NOT().length === 164, 'la tour compte 164 notions (147 + 17 nouvelles)');
-  ok(vm.runInContext('N_TOT', sandbox) === 164, 'N_TOT = 164 (HUD, altitude, finalisation)');
+  ok(NOT().length === 168, 'la tour compte 168 notions (147 + 21 nouvelles)');
+  ok(vm.runInContext('N_TOT', sandbox) === 168, 'N_TOT = 168 (HUD, altitude, finalisation)');
   const NEW_IDS = ['proportions', 'prop-de-prop', 'evol-cm', 'evol-global', 'evol-moyen'];
   const allIds = NOT().map(n => n.id);
   ok(NEW_IDS.every(id => allIds.includes(id)), 'les 5 nouvelles notions sont en sommet de tour');
@@ -344,7 +344,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   console.log('== 11. Révision personnalisée (menu 🎯) ==');
   call('tdmOpenRevision()');
   ok($('revisionModal').classList.contains('open'), 'modale de révision ouverte');
-  ok($('revList').children.length === 164, 'les 164 notions sont proposées à la sélection');
+  ok($('revList').children.length === 168, 'les 168 notions sont proposées à la sélection');
   call(`tdmLaunchRevision(['sd-formes', 'evol-global', 'proportions'])`);
   const stR = ST();
   ok(stR.customPool && stR.customPool.size === 3, 'sélection active : 3 notions au menu de la session');
@@ -377,7 +377,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const DR_IDS = ['droites-fractions', 'droites-axes', 'droites-positions', 'droites-cartesiennes', 'droites-pro', 'triangle-droites'];
   const allIds12 = NOT().map(n => n.id);
   ok(DR_IDS.every(id => allIds12.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-23,-17).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
+  ok(NOT().slice(-27,-21).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
   const DR_GENS = ['dEqFrac2pts','dPointCoeff','dPointOrdo','dDeuxImages','dLectureGraph','dInterAxes','dSigne','dPosition2','dIntersectPt','dParallele','dPerpendiculaire','trouPosition','dVectDir','dDistance','dPointFixe','dSeuilRentabilite','dPointEquilibre','dTolerance','triGravite','triOrthocentre'];
   let drErr = 0;
   for(const g of DR_GENS){
@@ -416,7 +416,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const FP_IDS = ['fractions-egalite', 'fractions-signes', 'fractions-priorites', 'fractions-operations', 'puissances-dix', 'puissances-regles'];
   const allIds13 = NOT().map(n => n.id);
   ok(FP_IDS.every(id => allIds13.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-17,-11).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
+  ok(NOT().slice(-21,-15).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
   const FP_GENS = ['frSimplifie','frFracEgales','frCompare','trouSimplifie','frSigneProduit','frEcritureSignes','frFractionSignee','frPriorites','frPemdasPiege','trouPriorites','frAddSous','frMul','frDiv','frEntierFrac','frPuissanceFrac','frCompose','p10Ops','p10Inverse','pSciExposant','pOrdreGrandeur','puBaseRelative','puMemeExp','puLitteral','puComposee'];
   let fpErr = 0;
   for(const g of FP_GENS){
@@ -455,7 +455,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const ET_IDS = ['derivee-racines-I', 'derivee-variations-I'];
   const allIds14 = NOT().map(n => n.id);
   ok(ET_IDS.every(id => allIds14.includes(id)), 'les 2 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-11,-9).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
+  ok(NOT().slice(-15,-13).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
   const ET_GENS = ['etFacto','etRacinesI','etSigneI','etImages','etVariations','etTangente','trouEtudeDerivee'];
   let etErr = 0;
   for(const g of ET_GENS){
@@ -494,7 +494,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SD_IDS = ['sd-sommet','sd-taux-variation','sd-conditions','sd-metamorphoses'];
   const allIds15 = NOT().map(n => n.id);
   ok(SD_IDS.every(id => allIds15.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-4).every(n => SD_IDS.includes(n.id)), 'elles ferment la tour (164 étages)');
+  ok(NOT().slice(-8,-4).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
   const SD_GENS = ['sd2Coeffs','sd2Axe','sd2Sommet','sd2Extremum','trouSommet','sd2Taux','sd2TauxMilieu','trouTaux','sd2Systeme3','sd2MemeOrdonnee','sd2Ax2','sd2SommetPoint','sd2Trajectoire','trouConditions','sd2Etirement','sd2Transl','sd2CanoniqueLecture','sd2DevCanon','trouMetamorphe'];
   let sdErr = 0;
   for(const g of SD_GENS){
@@ -530,6 +530,50 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const body7 = $('lessonBody').innerHTML;
   ok(body7.includes('décomposée en éléments simples') && body7.includes('Système 3 × 3'), 'leçon d\'erreur : décomposition de la notion « Déterminer un trinôme par ses conditions »');
   ok(body7.includes('data-fiche="second-degre-conditions"'), 'boutons vers la fiche « Déterminer un trinôme par ses conditions » dans la leçon');
+  call('closeLesson()');
+  await sleep(1200);
+
+  console.log('== 16. Nouvelles notions « suites numériques : définitions, modèles & variation » ==');
+  const SU_IDS = ['su-generalites','su-arithmetiques','su-geometriques','su-variation'];
+  const allIds16 = NOT().map(n => n.id);
+  ok(SU_IDS.every(id => allIds16.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
+  ok(NOT().slice(-4).every(n => SU_IDS.includes(n.id)), 'elles ferment la tour (168 étages)');
+  const SU_GENS = ['suListe','suExplicite','suRecurrence','suRang','trouSuitesGen','suArithRecon','suNonArith','suArithVariation','suArithProbleme','trouSuitesArith2','suGeoRecon','suGeoVariation','suGeoCM','suGeoProbleme','trouSuitesGeo2','suVarAffine','suVarQuad','suVarRat','suVarRacine','trouSuitesVar'];
+  let suErr = 0;
+  for(const g of SU_GENS){
+    for(let i = 0; i < 25; i++){
+      try {
+        const q = vm.runInContext(`GEN['${g}']()`, sandbox);
+        if(q.options){
+          if(q.options.filter(o => o.ok).length !== 1) suErr++;
+          if(!q.explain) suErr++;
+        } else if(q.trou){
+          if(!q.answers || q.answers.length !== 7) suErr++;
+        } else suErr++;
+      } catch(e){ suErr++; console.log('    ' + g + ' → ' + e.message); }
+    }
+  }
+  ok(suErr === 0, 'les 20 nouveaux générateurs : 25 tirages chacun, 1 seule bonne réponse, leçon présente');
+  ok(call(`FICHES['suites-generalites'] ? /rang/i.test(FICHES['suites-generalites'].html) && /récurrence/i.test(FICHES['suites-generalites'].html) : false`), 'fiche « Suites : définitions, rangs & récurrence » créée (rang, récurrence)');
+  ok(call(`FICHES['suites-modeles'] ? /multiplicateur/i.test(FICHES['suites-modeles'].html) && /alternés/i.test(FICHES['suites-modeles'].html) : false`), 'fiche « Arithmétique ou géométrique : reconnaître & modéliser » créée (multiplicateur, alternés)');
+  ok(call(`FICHES['suites-variation'] ? /différence/i.test(FICHES['suites-variation'].html) && /monotone/i.test(FICHES['suites-variation'].html) : false`), 'fiche « Sens de variation : étudier u_{n+1} − u_n » créée (différence, monotone)');
+  const suCat16 = call(`PROG_CATS.filter(c => c.nom.indexOf('Suites') === 0)[0]`);
+  ok(suCat16 && suCat16.subs.some(s => s.nom === 'Définitions, variation & modélisation' && s.ids.join() === 'su-generalites,su-arithmetiques,su-geometriques,su-variation'),
+     'sous-catégorie « Définitions, variation & modélisation » dans la catégorie Suites');
+  /* Erreur sur un nouveau générateur → leçon + fiche suites-variation */
+  call(`
+    (function(){
+      const q = GEN['suVarQuad']();
+      q._notionId = 'su-variation'; q._gen = 'suVarQuad';
+      state.lastGen = 'suVarQuad';
+      SAV.logQuestion(q, ['mauvaise'], false);
+      resolveAnswer(false, q);
+    })()
+  `);
+  await sleep(1300);
+  const body8 = $('lessonBody').innerHTML;
+  ok(body8.includes('décomposée en éléments simples') && body8.includes('Variation : suite quadratique'), 'leçon d\'erreur : décomposition de la notion « Sens de variation d\'une suite »');
+  ok(body8.includes('data-fiche="suites-variation"'), 'boutons vers la fiche « Sens de variation : étudier u_{n+1} − u_n » dans la leçon');
   call('closeLesson()');
   await sleep(1200);
 

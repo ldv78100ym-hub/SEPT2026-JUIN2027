@@ -44,6 +44,7 @@ const PROG_CATS = [
       { nom: 'Premier degré', ids: ['c-eq1', 'c-ineq1', 's-systeme', 'lit-algebre'] },
       { nom: 'Second degré & polynômes', ids: ['sd-eq', 'sd-formes', 't-canonique', 't-discriminant',
                                                't-solve2deg', 't-trinomesigne', 'degre3', 't-polynome3'] },
+      { nom: 'Sommet, taux de variation & conditions', ids: ['sd-sommet', 'sd-taux-variation', 'sd-conditions', 'sd-metamorphoses'] },
       { nom: "Produit d'une combinaison de 1ᵉʳ ou 2ᵈ degré", ids: ['s-eqproduit', 's-facto6'] },
       { nom: 'Lecture graphique', ids: ['s-grapheq', 's-graphineq', 't-graphineq2'] }
     ] },

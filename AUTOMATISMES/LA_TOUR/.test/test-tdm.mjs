@@ -259,6 +259,21 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   }
   ok(errGen === 0, 'tous les générateurs produisent leurs exercices sans erreur (' + Object.keys(vm.runInContext('GEN', sandbox)).length + ' générateurs)');
 
+  console.log('== 7bis. Segments LaTeX : trous et < > interdits ==');
+  let texBad = [];
+  for(const f of scripts){
+    const src = fs.readFileSync(ROOT + '/js/' + f, 'utf8');
+    const re = /\\\\\((?:(?!\\\\\)).)*?\\\\\)/g;
+    let m;
+    while((m = re.exec(src))){
+      const seg = m[0];
+      if(/\{\{/.test(seg)) texBad.push(f + ' : trou {{n}} dans \\( ... \\) : ' + seg.slice(0, 50));
+      else if(!/\$\{/.test(seg) && !/texttt/.test(seg) && /[<>]/.test(seg))
+        texBad.push(f + ' : < ou > nu dans \\( ... \\) : ' + seg.slice(0, 50));
+    }
+  }
+  ok(texBad.length === 0, 'aucun segment LaTeX ne contient de trou ni de < > nus (MathJax)' + (texBad.length ? ' — FAUTIFS : ' + texBad.slice(0, 6).join(' | ') : ''));
+
   console.log('== 8. Export enseignant : éléments par notion ==');
   const data = call('tdmBuildDonnees()');
   const all = [...(data.notionsTraitees || []), ...(data.notionsATraiter || [])];

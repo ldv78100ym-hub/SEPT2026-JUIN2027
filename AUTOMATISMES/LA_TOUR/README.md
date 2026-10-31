@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 5 feuilles de style et 27 modules
+d'entrée, 1 dossier de présentation, 5 feuilles de style et 28 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -69,7 +69,17 @@ la-tour-des-maths/
     │                                  signes, variations & extremums,
     │                                  images, tangente — 7 générateurs,
     │                                  fiche « Étude sur un intervalle »,
-    │                                  2 notions → 155 étages au total)
+    │                                  2 notions → 155 étages)
+    ├── 11h-trigonometrie.js        ← trigonométrie enrichie (degrés ↔ radians
+    │                                  exactes, même point & modulo 2π, mesure
+    │                                  principale par division euclidienne,
+    │                                  symétries & rotations sur coordonnées
+    │                                  et angles, compositions, point du
+    │                                  cercle (cos ; sin) & quadrants —
+    │                                  14 générateurs, fiches « Degrés,
+    │                                  radians & mesure principale » et
+    │                                  « Symétries, rotations & coordonnées »,
+    │                                  5 notions → 160 étages au total)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -83,7 +93,7 @@ la-tour-des-maths/
     ├── 18-sauvegarde-scellee.js       ← RSA-2048 + AES-256, sessions, passées,
     │                                  horodatage derniereMaj + export enseignant
     ├── 19-demarrage.js                ← init, menu hamburger, typesetAll, tdmBoot
-    └── 19b-revision-personnalisee.js← NOUVEAU : modale 🎯 révision personnalisée
+    └── 19b-revision-personnalisee.js← modale 🎯 révision personnalisée
                                        (sélection de notions pour la session)
 ```
 
@@ -92,7 +102,7 @@ la-tour-des-maths/
 - `index.html` charge les 5 feuilles CSS **dans l'ordre 01 → 05** puis les
   23 scripts **dans l'ordre 01 → 19b** (l'ordre de chargement est l'ordre
   d'exécution).
-- L'objet `GEN` (générateurs de questions, **242 clés**) est déclaré dans
+- L'objet `GEN` (générateurs de questions, **256 clés**) est déclaré dans
   `01-outils.js`, alimenté par `02`, `03`, `04`, complété par l'inscription
   de la banque `G` dans `10-adaptateurs-banque.js` puis par les **18
   générateurs d'évolutions/proportions** de `11c` ; `11-notions.js` et
@@ -116,7 +126,7 @@ la-tour-des-maths/
     fonctions, dérivées, tableaux, suites, proportionnalité, probabilités,
     statistiques, vecteurs, espace, complexes, Python, littéral, logique) —
     ouvertes d'un clic, LaTeX compris.
-  - `GEN_INFO` : pour chacun des 242 générateurs, un **libellé** clair, un
+  - `GEN_INFO` : pour chacun des 256 générateurs, un **libellé** clair, un
     **rappel** court (infobulle au survol) et ses **fiches** associées.
   - Helpers : `tdmGenLabel`, `tdmGenRappel`, `tdmGenFiches`,
     `tdmElemsDeNotion`, `tdmFichesDeNotion`.
@@ -152,7 +162,7 @@ L'élève compose, **pour la session en cours**, un menu de notions à
 réviser :
 
 - bouton « 🎯 Révision personnalisée… » du menu utilitaire → modale avec
-  les **155 notions**, un filtre de recherche, « Tout cocher /
+  les **160 notions**, un filtre de recherche, « Tout cocher /
   Tout décocher » et le décompte en direct ;
 - une fois lancée, la tour ne pose **que** des questions de la sélection
   (`state.customPool` filtré dans `pickNotion`) — mêmes règles de
@@ -306,6 +316,42 @@ un graphique (barres, boîte, circulaire) », « Probabilités & notations ».
 Le banc d'essai vérifie désormais qu'aucun titre de notion ne contient
 ce mot.
 
+## Intégration des documents de trigonométrie
+
+Les documents fournis — « Trigonométrie — Les Arcanes du Cercle » (cours
+LaTeX + quête interactive en neuf épreuves), « Trigonométrie — Symétries,
+coordonnées & angles en degrés » (24 exercices interactifs en cinq
+parties), « Bilan de trigonométrie » (cours complet + quiz + une
+centaine d'exercices) et le sujet type d'évaluation du 05/11/2026
+(QCM de formules, congruence, mesure principale, tableau symétries →
+angle image) — sont intégrés au format de la tour, **sans dupliquer**
+ce qui y existait déjà : angles associés (`trigoAssoc`, `t-associes`),
+valeurs remarquables isolées (`t-trigo2`), mesure principale de cas
+fixes (`t-angles-orientes`), équations et inéquations
+(`t-eqtrigo`, `t-ineqtrigo`), courbes (`t-courbetrigo`) et trigo du
+triangle rectangle (`c-trigo`) sont conservés tels quels.
+
+**5 nouvelles notions en sommet de tour** (la tour passe de 155 à
+**160 étages**), **14 nouveaux générateurs**, **2 fiches** (« 🌐 Degrés,
+radians & mesure principale », « 🌐 Symétries, rotations &
+coordonnées »), **2 nouvelles sous-catégories** dans la catégorie
+🌐 Trigonométrie de la progression (« Degrés, radians & mesure
+principale », « Symétries, rotations & coordonnées »).
+
+| Notion (étage) | Éléments simples (générateurs) |
+|---|---|
+| 🟪 Degrés & radians : conversions exactes | conversion degrés → radians (facteur π/180, simplification par le PGCD, valeur exacte) ; conversion radians → degrés ; raisonnement complet à clés (correspondance 180° = π, facteur inverse, numérateur, PGCD, valeur exacte) |
+| 🟪 Même point du cercle & modulo 2π | réel repérant le même point (θ + 2kπ, distracteurs θ + π, −θ, 2π − θ, 2θ, θ/2) ; raisonnement complet à clés (multiple de 2π, tours complets, division euclidienne, unicité) |
+| 🟪 Mesure principale d'un angle | cas quelconques (13π/6, −5π/4, 7π/2…) par division euclidienne du numérateur par 2d, retrait d'un tour si le reste dépasse d — au-delà des cas fixes déjà présents |
+| 🟪 Symétries, rotations & coordonnées de l'image | image de M(x ; y) par symétrie d'axe (O, i), (O, j) ou de centre O (entiers, fractions, racines, mixtes) ; image par rotation de ±90° ; angle image (−θ, π−θ, π+θ, θ±π/2) ; identifier la transformation (depuis les coordonnées ou depuis les angles) ; composée de deux transformations (Sj∘Si = SO, involutivité, 3 symétries) ; raisonnement complet à clés |
+| 🟪 Point du cercle : cosinus, sinus & quadrants | coordonnées (cos θ ; sin θ) d'un angle remarquable (les deux à la fois, avec vérification cos²+sin²=1) ; quadrant et signes de cos θ et sin θ |
+
+Les pièges des documents sont conservés en distracteurs : facteur de
+conversion inversé, π remplacé par 3,14 (perte d'exactitude), confondre
+π−θ (axe (O, j)) et π+θ (centre O), mesurer sur [0 ; 2π[ au lieu de
+l'intervalle principal ]−π ; π], échanger abscisse et ordonnée,
+composer deux symétries axiales en une symétrie axiale.
+
 ## Dossier de présentation « rapport-publication.html »
 
 Document autonome lié à la tour (bouton « 📄 Dossier de présentation »
@@ -313,16 +359,16 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (16 catégories, 155 notions, 242 générateurs, du cycle 3 au
+contenus (16 catégories, 160 notions, 256 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (27 modules, banc d'essai 15 sections, chiffrement
+technique (28 modules, banc d'essai 16 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 ## Progression des notions par catégories
 
-La modale « 📚 Progression des notions » ne liste plus les 155 notions
+La modale « 📚 Progression des notions » ne liste plus les 160 notions
 dans l'ordre de construction de la tour : le nouveau module
 `11f-progression.js` les regroupe en **16 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
@@ -339,7 +385,7 @@ seule la présentation est réorganisée.
 | 📈 Fonctions & lectures graphiques | notations, images & antécédents ; affines & références ; variations & signes |
 | 📏 Droites & géométrie analytique | équations de droites ; axes, positions & cartésiennes ; situations pro ; triangle & droites remarquables |
 | 📐 Géométrie | triangles & théorèmes ; transformations ; vecteurs & scalaire ; repérage, aires & volumes |
-| 🌐 Trigonométrie | valeurs & angles ; équations trigonométriques ; courbes sinus/cosinus |
+| 🌐 Trigonométrie | valeurs & angles ; **degrés, radians & mesure principale** ; **symétries, rotations & coordonnées** ; équations trigonométriques ; courbes sinus/cosinus |
 | 📉 Dérivation, primitives & Euler | nombre dérivé & tangentes ; fonctions dérivées ; primitives & Euler |
 | 🔁 Suites | arithmétiques & sommes ; géométriques ; lectures graphiques |
 | 💰 Pourcentages, proportions & évolutions | proportions & pourcentages ; évolutions & coefficients |
@@ -359,16 +405,16 @@ trinôme, polynômes de degré 3 (lycée), équations produit-nul et
 d'inéquations. Chaque notion apparaît dans **une seule**
 sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
-les 155 notions sont classées, vérifié par le banc d'essai).
+les 160 notions sont classées, vérifié par le banc d'essai).
 
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 15 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 16 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (16 catégories,
-155 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 242 générateurs, segments LaTeX
+160 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
+notions passées, couverture des 256 générateurs, segments LaTeX
 propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
 interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
@@ -379,7 +425,9 @@ d'erreur → fiche « Droites dans le plan »), nouvelles notions fractions
 & puissances (24 générateurs × 25 tirages, leçon d'erreur → fiche
 « Fractions & puissances »), nouvelles notions dérivation sur un
 intervalle (7 générateurs × 25 tirages, leçon d'erreur → fiche « Étude
-sur un intervalle »).
+sur un intervalle »), nouvelles notions trigonométrie (14 générateurs ×
+25 tirages, leçon d'erreur → fiche « Degrés, radians & mesure
+principale », vérification des 2 nouvelles sous-catégories).
 `node .tests/test-tdm.mjs` → **TOUT PASSE**.
 
 ## Choix techniques
@@ -390,7 +438,7 @@ sur un intervalle »).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 27 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 28 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

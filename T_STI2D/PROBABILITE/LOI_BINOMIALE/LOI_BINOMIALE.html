@@ -284,10 +284,10 @@ code { font-family: monospace; }
 .mth{ font-family:Georgia,'Times New Roman',serif; font-style:italic; white-space:nowrap; }
 .mth .up{ font-style:normal; }
 .mth sup, .mth sub{ font-size:.72em; }
-.mth .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:-0.55em; margin:0 2px; line-height:1.05; }
+.mth .frac{ display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 2px; line-height:1.05; }
 .mth .frac > .num{ padding:0 3px; }
 .mth .frac > .den{ padding:0 3px; border-top:1.4px solid currentColor; }
-.mth .binom{ display:inline-flex; align-items:center; vertical-align:-0.5em; margin:0 1px; }
+.mth .binom{ display:inline-flex; align-items:center; vertical-align:middle; margin:0 1px; }
 .mth .binom > .par{ font-size:1.9em; font-weight:300; line-height:.8; font-style:normal; }
 .mth .binom > .stack{ display:inline-flex; flex-direction:column; align-items:center; line-height:1.02; font-size:.88em; padding:0 2px; }
 .mth .sqrt-rad{ font-style:normal; }
@@ -358,6 +358,7 @@ header.hero.compact::after { height: 4px; }
   .pedago-header h2{font-size:1.28rem;}
   .pedago-content .modal-hero { margin: -24px -20px 22px -20px; padding: 24px 20px 20px; }
 }
+
 </style>
 </head>
 <body>
@@ -450,7 +451,10 @@ header.hero.compact::after { height: 4px; }
   <p class="tp-hint">📌 Cliquez sur la punaise pour garder cette fiche ouverte ; cliquez ailleurs pour la fermer.</p>
 </div>
 
+<!-- Scripts chargés dans l ordre d origine : core -> data -> app -> ui, puis init -->
 <script>
+
+/* ---- js/core/outils.js ---- */
 /* ============================================================
    1. OUTILS
    ============================================================ */
@@ -598,27 +602,62 @@ function treeFlavor(){ const h = [
   "L'arbre a été validé par le Collège des Moustaches, section statistique appliquée, à l'unanimité des sourcils."
 ]; return h[randInt(0, h.length - 1)]; }
 
+
+
+/* ---- js/core/svg.js ---- */
 /* ============================================================
    2. GÉNÉRATEURS SVG
    ============================================================ */
+/* Formatage décimal court : « 0,30 » → « 0,3 », « 0,00 » → « 0 » (d décimales max). */
+function frTrim(x, d){ d = (d === undefined) ? 2 : d; let s = fr(x, d); if(s.indexOf(',') >= 0){ s = s.replace(/0+$/, '').replace(/,$/, ''); } return s; }
+function R1(x){ return Math.round(x * 10) / 10; } /* arrondi des coordonnées SVG */
 function svgBarChart(vals, labels, title) {
-    const w = 280, h = 160, pad = 30;
-    const max = Math.max(...vals);
-    let rects = '';
-    const bw = (w - 2*pad) / vals.length;
+    /* Échelle fixe de 0 à 1 : ce sont des probabilités, la somme doit pouvoir se vérifier.
+       Axe des ordonnées finement gradué : ligne (et étiquette) tous les 0,1, subdivision
+       secondaire tous les 0,05 — chaque rectangle se lit avec une bonne précision. */
+    const h = 210, xL = 46, yBase = 180, plotH = 140;
+    const axisMax = 1, NB_SUB = 20; /* 20 subdivisions de 0,05 */
+    /* Largeur adaptative : ~36 px par bâton, pour que chaque valeur soit étiquetée
+       à l'horizontale et que la somme des bâtons se vérifie d'un coup d'œil. */
+    const plotW = Math.max(234, Math.min(600, vals.length * 36));
+    const xR = xL + plotW, w = xR + 20;
+    let grid = '', rects = '';
+    const bw = plotW / vals.length;
+    for(let k = 0; k <= NB_SUB; k++){
+        const g = k * 0.05;
+        const gy = yBase - (g / axisMax) * plotH;
+        const major = (k % 2 === 0);
+        if(major){
+            grid += `<line x1="${xL}" y1="${R1(gy)}" x2="${xR}" y2="${R1(gy)}" stroke="${k === NB_SUB ? '#c9d4ca' : '#e3e9e2'}" stroke-width="1"/>`;
+            grid += `<text x="${xL - 6}" y="${R1(gy + 2.8)}" text-anchor="end" font-size="8" fill="#5f6f66">${frTrim(g)}</text>`;
+        } else {
+            /* subdivision secondaire : grille très claire + petit tick sur l'axe */
+            grid += `<line x1="${xL}" y1="${R1(gy)}" x2="${xR}" y2="${R1(gy)}" stroke="#f2f6f1" stroke-width="1"/>`;
+            grid += `<line x1="${xL - 3}" y1="${R1(gy)}" x2="${xL}" y2="${R1(gy)}" stroke="#94a3a0" stroke-width="1"/>`;
+        }
+    }
     vals.forEach((v, i) => {
-        const bh = (v / max) * 90;
-        const x = pad + i*bw + bw*0.15;
-        const y = h - pad - bh;
-        rects += `<rect x="${x}" y="${y}" width="${bw*0.7}" height="${bh}" fill="#1e3a5f" rx="2"/>`;
-        rects += `<text x="${pad + i*bw + bw/2}" y="${h-pad+15}" text-anchor="middle" font-size="11" fill="#5f6f66">${labels[i]}</text>`;
+        const bh = (v / axisMax) * plotH;
+        const x = xL + i*bw + bw*0.15;
+        const y = yBase - bh;
+        rects += `<rect x="${R1(x)}" y="${R1(y)}" width="${R1(bw*0.7)}" height="${R1(bh)}" fill="#1e3a5f" rx="2"/>`;
+        rects += `<text x="${xL + i*bw + bw/2}" y="${R1(yBase + 15)}" text-anchor="middle" font-size="11" fill="#5f6f66">${labels[i]}</text>`;
+        /* Valeur numérique au-dessus de chaque bâton — toujours affichée :
+           à l'horizontale si la place le permet, pivotée à 90° sinon (bâtons étroits). */
+        const cx = xL + i*bw + bw/2, vTxt = frTrim(v, 3);
+        if(bw >= 30){
+            rects += `<text x="${cx}" y="${R1(y - 4)}" text-anchor="middle" font-size="9" font-weight="bold" fill="#1b2a24">${vTxt}</text>`;
+        } else {
+            rects += `<text x="${R1(cx)}" y="${R1(y - 4)}" text-anchor="start" font-size="8.5" font-weight="bold" fill="#1b2a24" transform="rotate(-90 ${R1(cx)} ${R1(y - 4)})">${vTxt}</text>`;
+        }
     });
-    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; background:#fff; border:1px solid #d5ded5; border-radius:6px; margin:10px 0;">
-        <text x="${w/2}" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b2a24">${title}</text>
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; max-width:${w}px; background:#fff; border:1px solid #d5ded5; border-radius:6px; margin:10px 0;">
+        <text x="${w/2}" y="18" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b2a24">${title}</text>
+        ${grid}
         ${rects}
-        <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#999" stroke-width="1.5"/>
-        <line x1="${pad}" y1="${h-pad}" x2="${pad}" y2="${pad}" stroke="#999" stroke-width="1.5"/>
-        <text x="${pad/2}" y="${h/2}" transform="rotate(-90 ${pad/2} ${h/2})" font-size="10" fill="#5f6f66">Probabilité</text>
+        <line x1="${xL}" y1="${yBase}" x2="${xR}" y2="${yBase}" stroke="#999" stroke-width="1.5"/>
+        <line x1="${xL}" y1="${yBase}" x2="${xL}" y2="${yBase - plotH - 6}" stroke="#999" stroke-width="1.5"/>
+        <text x="14" y="${(yBase + yBase - plotH) / 2}" transform="rotate(-90 14 ${(yBase + yBase - plotH) / 2})" font-size="10" fill="#5f6f66">Probabilité</text>
     </svg>`;
 }
 function svgCurveChart(type, title) {
@@ -628,8 +667,13 @@ function svgCurveChart(type, title) {
     else if (type === 'normal_broad') { path = `M ${pad} ${h-pad} C ${pad + 20} ${h-pad}, ${pad + 20} ${pad+10}, ${w/2} ${pad+10} C ${w-pad - 20} ${pad+10}, ${w-pad - 20} ${h-pad}, ${w-pad} ${h-pad}`; }
     else if (type === 'uniform') { path = `M ${pad} ${h-pad} L ${pad} ${pad+20} L ${w-pad} ${pad+20} L ${w-pad} ${h-pad}`; }
     else if (type === 'skew') { path = `M ${pad} ${h-pad} C ${pad+20} ${h-pad}, ${pad+20} ${pad}, ${pad+70} ${pad} C ${pad+100} ${pad}, ${w-pad-10} ${h-pad-15}, ${w-pad} ${h-pad}`; }
+    /* Grille fine et discrète : lignes verticales et horizontales tous les 20 px */
+    let grid = '';
+    for(let gx = pad + 20; gx < w - pad; gx += 20){ grid += `<line x1="${gx}" y1="${pad}" x2="${gx}" y2="${h-pad}" stroke="#eef2ed" stroke-width="1"/>`; }
+    for(let gy = pad + 20; gy < h - pad; gy += 20){ grid += `<line x1="${pad}" y1="${gy}" x2="${w-pad}" y2="${gy}" stroke="#eef2ed" stroke-width="1"/>`; }
     return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; background:#fff; border:1px solid #d5ded5; border-radius:6px; margin:10px 0;">
         <text x="${w/2}" y="20" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b2a24">${title}</text>
+        ${grid}
         <path d="${path}" fill="rgba(30, 58, 95, 0.15)" stroke="#1e3a5f" stroke-width="2"/>
         <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#999" stroke-width="1.5"/>
         <line x1="${pad}" y1="${h-pad}" x2="${pad}" y2="${pad}" stroke="#999" stroke-width="1.5"/>
@@ -712,6 +756,9 @@ function svgTree(opts){
   return svg;
 }
 
+
+
+/* ---- js/data/scenarios.js ---- */
 /* ============================================================
    3. SCÉNARIOS
    ============================================================ */
@@ -869,6 +916,9 @@ const SCENARIOS = [
       </div>` }
 ];
 
+
+
+/* ---- js/data/propositions.js ---- */
 /* ============================================================
    4. BANQUES DE PROPOSITIONS
    ============================================================ */
@@ -1542,10 +1592,23 @@ const STEP_META = {
     return P</code></pre></div>` },
   16: { notion: 'Épreuve finale', intro: (sc) => `<div class="exp-note">🧪 <strong>Expérience aléatoire finale.</strong> Toutes les connaissances accumulées à ${sc.lieu} doivent être convoquées. Et un peu de loufoquerie ne nuit pas.</div>`,
     synthese: `<div class="box prop"><span class="lbl">Les trois réponses clés</span><ol><li>$\\mathbb{E}(X) = 5$ pour $\\mathcal{B}(20\\,;\\,0{,}25)$.</li><li>$P(X \\geq 1) = 1 - (1-p)^n$.</li><li>Sans remise : pas de loi binomiale.</li></ol></div>` },
-  17: { notion: 'Épilogue, méthode et rédaction type', intro: (sc) => `<div class="exp-note">🧪 <strong>Dernière expérience aléatoire.</strong> ${sc.seigneur} fut ${sg(sc, 'élu', 'élue')} membre honoraire de la Royal Society of Biscuit Statistics. Le majordome, lui, prépare le thé.</div>`,
-    synthese: `<div class="box prop"><span class="lbl">La méthode du majordome</span><ol><li>Répète-t-on une même expérience un nombre $n$ de fois ?</li><li>Chaque épreuve a-t-elle deux issues utiles ?</li><li>La probabilité de succès est-elle constante ?</li><li>Les épreuves sont-elles indépendantes ?</li><li>$X$ compte-t-il le nombre de succès ?</li></ol></div>` }
+  17: { notion: 'Épilogue, méthode et rédaction type', intro: (sc) => `<div class="exp-note">🧪 <strong>Dernière expérience aléatoire.</strong> ${sc.seigneur} fut ${sg(sc, 'élu', 'élue')} membre honoraire de la Royal Society of Biscuit Statistics. Le majordome, lui, prépare le thé.</div>
+    <div class="box def"><span class="lbl">Voici les cinq conditions du schéma de Bernoulli — « la méthode du majordome »</span>
+    <p>Avant de conclure qu'une variable $X$ suit la loi binomiale, le majordome vérifie <strong>cinq conditions</strong> :</p>
+    <ol>
+      <li>on <strong>répète</strong> une même expérience un nombre $n$ fixé de fois ;</li>
+      <li>chaque épreuve a exactement <strong>deux issues utiles</strong> — succès ou échec ;</li>
+      <li>la probabilité de succès $p$ est <strong>constante</strong> d'une épreuve à l'autre ;</li>
+      <li>les épreuves sont <strong>indépendantes</strong> les unes des autres ;</li>
+      <li>$X$ <strong>compte le nombre de succès</strong> obtenus sur les $n$ épreuves.</li>
+    </ol>
+    <p>Si l'une des cinq fait défaut (tirage sans remise, $p$ qui varie, plus de deux issues, épreuves liées…), ce n'est pas un schéma de Bernoulli : pas de loi binomiale, et le majordome refuse de servir le thé.</p></div>`,
+    synthese: `<div class="box prop"><span class="lbl">La méthode du majordome — les cinq conditions</span><ol><li>Répète-t-on une même expérience un nombre $n$ de fois ?</li><li>Chaque épreuve a-t-elle deux issues utiles ?</li><li>La probabilité de succès est-elle constante ?</li><li>Les épreuves sont-elles indépendantes ?</li><li>$X$ compte-t-il le nombre de succès ?</li></ol></div>` },
 };
 
+
+
+/* ---- js/app/evaluation.js ---- */
 /* ============================================================
    5. DIFFICULTÉ ET NOUVEAUX PARAMÈTRES D'ÉVALUATION
    ============================================================ */
@@ -1700,13 +1763,16 @@ function analyzeStep(n){
 }
 function analyzeAll(){ const analyses = []; for(let n = 1; n <= 17; n++){ if(state.allAnswers[n]) analyses.push(analyzeStep(n)); } return analyses; }
 
+
+
+/* ---- js/data/glossaire.js ---- */
 /* ============================================================
    6. GLOSSAIRE
    ============================================================ */
 const GLOSSARY = {
   'epreuve-bernoulli': { title: 'Épreuve de Bernoulli', cat: 'essentiel', body: `<p>Une <strong>épreuve de Bernoulli</strong> est une expérience aléatoire à <strong>deux issues</strong> : succès $S$ de probabilité $p$, échec $\\overline{S}$ de probabilité $q = 1-p$.</p><div class="formula">$p + q = 1$</div>` },
   'succes-echec': { title: 'Succès et échec', cat: 'essentiel', body: `<p>Le <strong>succès</strong> est l'issue étudiée (probabilité $p$), l'<strong>échec</strong> l'autre (probabilité $1-p$).</p>` },
-  'schema-bernoulli': { title: 'Schéma de Bernoulli', cat: 'essentiel', body: `<p>Un <strong>schéma de Bernoulli</strong> est la répétition de $n$ épreuves identiques et indépendantes.</p>` },
+  'schema-bernoulli': { title: 'Schéma de Bernoulli', cat: 'essentiel', body: `<p>Un <strong>schéma de Bernoulli</strong> est la répétition de $n$ épreuves identiques et indépendantes. Les <strong>cinq conditions</strong> à vérifier : (1) répétition $n$ fois d'une même épreuve ; (2) deux issues utiles, succès ou échec ; (3) probabilité de succès $p$ constante ; (4) épreuves indépendantes ; (5) $X$ compte le nombre de succès.</p><p>Les cinq réunies $\\Rightarrow$ $X \\sim \\mathcal{B}(n,p)$.</p>` },
   'arbre-bernoulli': { title: 'Arbre de Bernoulli', cat: 'essentiel', body: `<p>Représentation d'un schéma : deux branches par nœud, $p$ constant. L'orientation n'a aucune incidence.</p>` },
   'independance': { title: 'Indépendance', cat: 'essentiel', body: `<p>$P(A \\cap B) = P(A) \\times P(B)$.</p>` },
   'loi-binomiale': { title: 'Loi binomiale', cat: 'essentiel', body: `<div class="formula">$P(X=k) = \\dbinom{n}{k} p^k (1-p)^{n-k}$</div>` },
@@ -1730,6 +1796,9 @@ const GLOSSARY = {
   'approximation-normale': { title: 'Approximation normale', cat: 'culture', body: `<div class="formula">$\\mathcal{B}(n,p) \\approx \\mathcal{N}(np, \\sqrt{np(1-p)})$</div>` }
 };
 
+
+
+/* ---- js/app/cours.js ---- */
 /* ============================================================
    7. VOLETS DU COURS
    ============================================================ */
@@ -1755,7 +1824,7 @@ function getVolet1(){
     <h3>VII. Graphiques</h3>
     <ul><li>$p = 0{,}5$ : symétrique.</li><li>$p < 0{,}5$ : asymétrie positive.</li><li>$p > 0{,}5$ : asymétrie négative.</li><li>Mode $\\approx np$ (${termLink('mode','mode')}).</li></ul>
     <h3>VIII. Méthode</h3>
-    <div class="course-box rem"><span class="cb-lbl">5 conditions</span><ol><li>Répétition ?</li><li>Deux issues utiles ?</li><li>$p$ constant ?</li><li>Indépendance ?</li><li>$X$ = nombre de succès ?</li></ol></div>
+    <div class="course-box rem"><span class="cb-lbl">Les cinq conditions de la méthode du majordome</span><p>Avant d'écrire $X \\sim \\mathcal{B}(n,p)$, vérifier : (1) on répète $n$ fois une même expérience ; (2) deux issues utiles, succès ou échec ; (3) probabilité de succès $p$ constante ; (4) épreuves indépendantes ; (5) $X$ compte le nombre de succès.</p></div>
     <h3>IX. Culture : ${termLink('moivre-laplace','Moivre–Laplace')}</h3>
     <div class="culture-banner">🎓 Culture mathématique.</div>
     <div class="course-box thm"><span class="cb-lbl">Théorème</span><p>Pour $np \\geq 5$ et $n(1-p) \\geq 5$ : $X \\approx \\mathcal{N}(np, \\sqrt{np(1-p)})$.</p></div>
@@ -1924,6 +1993,9 @@ function getVoletIndex(){
   return html;
 }
 
+
+
+/* ---- js/app/bilan.js ---- */
 /* ============================================================
    8. BILAN ENRICHI (version ajustée)
    ============================================================ */
@@ -2178,6 +2250,9 @@ function getBilan(){
   return v1 + v2 + v3;
 }
 
+
+
+/* ---- js/ui/etat.js ---- */
 /* ============================================================
    9. ÉTAT / UI
    ============================================================ */
@@ -2188,6 +2263,9 @@ const progLabel = document.getElementById('progLabel');
 const progBar = document.getElementById('progBar');
 function propId(stepN, i){ return 'p' + stepN + '_' + i; }
 
+
+
+/* ---- js/ui/menu.js ---- */
 /* ============================================================
    10. MENU
    ============================================================ */
@@ -2227,6 +2305,9 @@ function renderMenu(){
   if(toggle){ toggle.addEventListener('click', function(){ const children = document.getElementById('courseChildren'); const caret = toggle.querySelector('.menu-caret'); const isOpen = children.style.display !== 'none'; children.style.display = isOpen ? 'none' : 'block'; caret.textContent = isOpen ? '▸' : '▾'; }); }
 }
 
+
+
+/* ---- js/ui/rendu-etape.js ---- */
 /* ============================================================
    11. RENDU ÉTAPE
    ============================================================ */
@@ -2287,6 +2368,9 @@ function ensureStepBuilt(n){
 
 function bindCourseLinks(card){ card.querySelectorAll('.course-nav a').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); showStep(parseInt(a.getAttribute('data-course'), 10)); }); }); }
 
+
+
+/* ---- js/ui/navigation.js ---- */
 /* ============================================================
    12. NAVIGATION
    ============================================================ */
@@ -2305,6 +2389,9 @@ function showStep(n){
 }
 function updateProgress(){ const total = 17; progLabel.textContent = 'Étape ' + Math.min(state.current, 17) + ' / ' + total + ' — ' + Math.min(state.completed.size, 17) + ' validée' + (state.completed.size > 1 ? 's' : ''); progBar.style.width = ((Math.min(state.completed.size, 17) / total) * 100) + '%'; }
 
+
+
+/* ---- js/ui/feedback.js ---- */
 /* ============================================================
    13. FEEDBACK TABLE
    ============================================================ */
@@ -2324,6 +2411,9 @@ function buildFeedbackTable(step, rows){
   return '<div class="feedback-wrap"><h4>📋 Tableau récapitulatif</h4><table class="feedback-table"><thead><tr><th class="col-n">N°</th><th class="col-prop">Proposition</th><th class="col-att">Attendu</th><th class="col-giv">Votre réponse</th><th class="col-res">Résultat</th><th class="col-just">Justification</th></tr></thead><tbody>' + tbody + '</tbody><tfoot><tr><td colspan="4">Bilan</td><td colspan="2"><span class="big">✓ ' + successes + '</span> succès · <span class="big">✗ ' + failures + '</span> échec' + (failures > 1 ? 's' : '') + ' — ' + fr(successes / n * 100, 1) + ' % de réussite</td></tr></tfoot></table></div>';
 }
 
+
+
+/* ---- js/ui/validation.js ---- */
 /* ============================================================
    14. VALIDATION
    ============================================================ */
@@ -2421,6 +2511,9 @@ function validateStep(step, card){
   if(summary){ setTimeout(function(){ summary.scrollIntoView({ behavior:'smooth', block:'start' }); }, 300); }
 }
 
+
+
+/* ---- js/ui/modales.js ---- */
 /* ============================================================
    15. MODALE EXPLICATIVE
    ============================================================ */
@@ -2508,11 +2601,24 @@ function setupPedagoModal(){
   overlay.setAttribute('aria-hidden','false');
 }
 
+
+
+/* ---- js/app/persistence.js ---- */
 /* ============================================================
    17. SNAPSHOT / PERSISTANCE AUTOMATIQUE
    ============================================================ */
-const STORAGE_KEY = 'crumble_hall_state_v1';
-const SNAPSHOT_VERSION = 1;
+/* v2 : les graphiques (graduations, grilles, valeurs) sont refondus. Les snapshots v1
+   contiennent d'anciens SVG devenues obsolètes ; on ne les restaure plus — une nouvelle
+   enquête démarre, l'ancienne sauvegarde du document d'origine reste intacte. */
+const STORAGE_KEY = 'crumble_hall_state_v2';
+const LEGACY_STORAGE_KEYS = ['crumble_hall_state_v1'];
+const SNAPSHOT_VERSION = 2;
+
+function hasLegacySnapshot(){
+  try{
+    return LEGACY_STORAGE_KEYS.some(function(k){ return !!localStorage.getItem(k); });
+  } catch(e){ return false; }
+}
 
 function buildSnapshot(){
   return {
@@ -2639,6 +2745,9 @@ function resetProgress(){
   location.reload();
 }
 
+
+
+/* ---- js/app/init.js ---- */
 /* ============================================================
    18. INIT
    ============================================================ */
@@ -2683,12 +2792,15 @@ function resetProgress(){
   saveSnapshot();
   if(restored){
     flashSaveIndicator('💾 Progression restaurée');
+  } else if(hasLegacySnapshot()){
+    flashSaveIndicator('🔧 Document mis à jour (graphiques gradués) : nouvelle enquête !');
   } else {
     flashSaveIndicator('💾 Nouvelle partie — sauvegarde initiale');
   }
 
   setupPedagoModal();
 })();
+
 </script>
 </body>
 </html>

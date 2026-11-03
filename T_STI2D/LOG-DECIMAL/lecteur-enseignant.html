@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecteur enseignant — déchiffrer les carnets</title>
+<style>
+:root{--ink:#1e293b;--bg:#f8fafc}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65}
+.wrap{max-width:940px;margin:0 auto;padding:0 16px 56px}
+header.hero{background:linear-gradient(120deg,#0f766e,#0d9488);color:#fff;padding:28px 16px 22px}
+.hero-inner{max-width:940px;margin:0 auto}
+.hero .kicker{font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:#99f6e4;margin:0 0 6px}
+.hero h1{margin:0;font-size:1.55rem}
+.hero .sub{color:#ccfbf1;margin:6px 0 0;font-size:.95rem}
+h1{font-size:1.65rem;margin:26px 0 2px}
+h2{font-size:1.22rem;margin:30px 0 10px;color:#0f766e;border-left:4px solid #0d9488;padding-left:10px}
+.sub{color:#64748b;margin:0 0 18px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h3{margin:0 0 10px;font-size:1rem}
+.callout{border-left:4px solid;border-radius:0 12px 12px 0;padding:12px 16px;margin:14px 0}
+.callout .t{font-weight:700;margin:0 0 6px}
+.co-def{border-color:#38bdf8;background:#f0f9ff}.co-def .t{color:#0369a1}
+.co-key{border-color:#34d399;background:#ecfdf5}.co-key .t{color:#047857}
+.co-warn{border-color:#fb7185;background:#fff1f2}.co-warn .t{color:#be123c}
+.co-method{border-color:#f59e0b;background:#fffbeb}.co-method .t{color:#b45309}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{background:#eef2ff;color:#312e81;padding:1px 6px;border-radius:6px;font-size:.93em}
+.steps{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 14px;white-space:pre-wrap;overflow:auto;max-height:200px;word-break:break-all}
+button{padding:8px 16px;border-radius:9px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:.9rem;font-family:inherit}
+button:hover{background:#eef2ff}
+button.primary{background:#0d9488;border-color:#0d9488;color:#fff;font-weight:600}
+button.primary:hover{background:#0f766e}
+button.danger{color:#be123c;border-color:#fecdd3}
+button.danger:hover{background:#fff1f2}
+button:disabled{opacity:.5;cursor:not-allowed}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:#64748b;font-weight:600;margin:10px 0}
+.fld input,.fld textarea{padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:.9rem;font-weight:400;color:#1e293b;background:#fff}
+.fld textarea{min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem}
+.fld input:focus,.fld textarea:focus{outline:2px solid #c7d2fe;border-color:#0d9488}
+.status{padding:10px 14px;border-radius:10px;font-size:.9rem;margin:10px 0}
+.status.ok{background:#ecfdf5;color:#065f46;border-left:4px solid #10b981}
+.status.bad{background:#fff1f2;color:#9f1239;border-left:4px solid #fb7185}
+.status.info{background:#eff6ff;color:#1e40af;border-left:4px solid #3b82f6}
+.vis-list{font-size:.85rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-top:6px;max-height:120px;overflow:auto}
+.q-block{border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin:10px 0;background:#fff}
+.q-block h4{margin:0 0 6px;font-size:.95rem;color:#0f766e}
+.q-block .p{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:.88rem;white-space:pre-wrap}
+.q-block .p .d{font-size:.72rem;color:#64748b;display:block}
+.student-card{border:2px solid #0d9488;border-radius:14px;padding:14px 18px;background:#fff;margin:14px 0}
+.student-card h3{margin:0 0 4px;color:#0f766e}
+.drop{border:2px dashed #cbd5e1;border-radius:14px;padding:24px 16px;text-align:center;background:#f8fafc;margin:10px 0;transition:.15s;cursor:pointer}
+.drop.over{border-color:#0d9488;background:#ecfdf5}
+.drop p{margin:4px 0;font-size:.9rem;color:#475569}
+.code-block{display:flex;gap:8px;align-items:flex-start;margin:10px 0}
+.code-block pre{flex:1;margin:0}
+.copy-btn{white-space:nowrap;padding:6px 12px;font-size:.8rem}
+details{border:1px solid #e2e8f0;border-radius:10px;background:#fff;margin:10px 0;overflow:hidden}
+details summary{cursor:pointer;padding:10px 14px;background:#f1f5f9;font-weight:600;border-radius:10px}
+details .inner{padding:12px 16px}
+.an-q{border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin:10px 0;background:#fff}
+.an-q h4{margin:0 0 8px;color:#0f766e;font-size:.95rem}
+.an-chip{display:inline-block;font-size:.74rem;font-weight:600;border-radius:999px;padding:2px 10px;margin:2px 6px 2px 0}
+.an-ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.an-ko{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}
+.an-qual{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.an-advice{background:#fffbeb;border-left:4px solid #f59e0b;border-radius:0 10px 10px 0;padding:8px 12px;margin:8px 0;font-size:.88rem}
+.an-lvl{display:inline-block;font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 10px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+.lvl-solide{background:#d1fae5;color:#065f46}
+.lvl-partielle{background:#fef3c7;color:#92400e}
+.lvl-esquisse{background:#fee2e2;color:#991b1b}
+.lvl-absent{background:#f1f5f9;color:#475569}
+.an-metro{background:#f1f5f9;border-radius:999px;height:9px;overflow:hidden;flex:1;min-width:60px}
+.an-metro i{display:block;height:100%;background:#0d9488}
+.an-row{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:.85rem;flex-wrap:wrap}
+.an-row .lb{flex:0 1 46%}
+.stat-chips{font-size:.82rem;color:#475569;margin:6px 0}
+</style></head>
+<body>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLÉ PRIVÉE RSA-OAEP — INTÉGRÉE EN DUR (définie une fois pour toutes)
+   ─────────────────────────────────────────────────────────────────────────
+   ⚠️  NE JAMAIS DIFFUSER CE FICHIER AUX ÉLÈVES.
+   Cette clé correspond à la clé publique intégrée dans 00-decouverte.html :
+   les carnets téléchargés par les élèves se déchiffrent directement ici.
+   ═════════════════════════════════════════════════════════════════════════ */
+var PRIVATE_KEY_JWK = {"kty":"RSA","n":"3hSSVseJx53kJ-PH2c7mB6nNb-5EYsI9h3U5_QOsAHOBAzGYoPdzojoz7ATbgDndzjFmWqpVW4HgsAvX5cwcmXHIJ7ZFBeYY-Q5KZ-qpQtl4ZajyreyiCf3RcBffC604ySjP4VXMGh2Pe3bEc7OdrATJBD2gSGDN2bVEGPv1A1wQDPr602Xd2GXUUoh-7fXHUgosVPNu_O1NjKelm6-U2OPvhyY7XXRWeQq7kP2rJ9den6p1q3O9G547Jq5GrA--OJ8CDhAyhDgDkr1-uINTZcB1NCwxaSpm7x7Nrx1W9jAC7VBEVrSY-2bDWwCFZgVmVNDe-uY7ujgTbq0mX5G9dQ","e":"AQAB","d":"FOiea4WvWugqbDgFn6PbY_LQeP6XmS29AcUfb8sZ9VPqnFydyF_r1uUAcPL3IJAyKiDcCGK7lRk6CJEg402PjsHX7Kc8QeUrSj2Wc0i0ZWsYqweYS5g5HFQ1lQZmVVDahRPu2IINrJLGaMMilVsel-y-aUQNFGtqzhnDHtAP_iAOmDBdyix_xZOZwWMehcqdOPmR3ZMcdrUvlamFJZF-RDgVE4vf8kYeX3JZxmYiN_fsU1ZMSpNdX7rBHgDtBtKLdxz0ih5V7ZoK_JuE5pPQxpsc8dCkvTys08u9VKNPDdiCyiIo0qNT-0zQbKrmpIxJfrCF9ou6juckSxOnwY2IuQ","p":"_NCF4wau1QFcxAjUZlF0A3vVra3OZojlRTSmjJDwslONo7T1pBnbaPNKwFflFXQB_d2dfRVz87V1joNfUXaF-OrmlGLbm99_L4-VAYLWG3JtZpMqlbJ3xrOUSVzbXh6Wa5890OKXizMSDyciRQDRdC_UUfRJOrmW_kyPBo2vL60","q":"4ODpozkgC-WNNt-hc0zvVoIqoHtFRMlOgCaWCC7ogW1E5l0efc3brZ2eKITj_fizNakUTIjcfd_CTj0jlFTZbcZv6LEyCPBhDb0VElwuIdmq-Jndz58yk5mq2kWOYI8tcXs8Q4Vd6D1cNu0ViJ7AarayUeva5DQOsyWgK12z3ek","dp":"Pxo1MPNsFBKg-vVRPrC6ClyQeydUy1cEEwAPSiqrSXd9dQ0n-uvRTiLb16KYtYAdNyZntt7x8DSswQOdeRHiYr0PDJ6YPhHNBywJfzUPCA7Jq76z9GV1bA1Kx_z7bESqOvamUUsdlEsNCOc1sI-BuERv9HzLAnNsctDdKj-XKIk","dq":"GoHIaGn6Ygyb2aUAleOyroLHXYVKQ_Jqo2Zo9uv4khD8Nx8w0elrBIr4spP_f9dJ4IBemSrkup2efLRuNjTOMEdct5PzbuROvFzWWASvl2Pd6FHSuH9uacGKRxI91xnpZF__WYIl8JMTBJJroF_-FFYWrNtdQNr2BJ3hxFrWMck","qi":"A534OHfTUQN7XbNXa6Zj7hsLZWgbpD6EsN9ndBdN5uR8a4uaShaYXXHhr8kxTMgoLn_6dvh3lzdnN4UnrxwDL-ECk5vp0QYgf67v5P7ERKBHZrWXxZ-qGoi-AfCUBGNSRq_9vHxnRlOj6sH4ljwOalCjq6O-3weNN-o_zVESYd4","alg":"RSA-OAEP-256","ext":true};
+
+</script>
+
+<header class="hero"><div class="hero-inner"><p class="kicker">Outils enseignant · hors distribution élève</p><h1>Lecteur des carnets chiffrés</h1><p class="sub">Chargement par lot, déchiffrement, analyse pédagogique individuelle et synthèse de classe</p></div></header>
+<div class="wrap">
+
+<h1>🔐 Lecteur enseignant</h1>
+<p class="sub">Ce fichier ne doit jamais être distribué aux élèves : il contient la clé privée.</p>
+
+<!-- ══════════ PANNEAU DE CONFIGURATION (visible si PRIVATE_KEY_JWK === null) ══════════ -->
+<div id="setup-panel"></div>
+
+<!-- ══════════ PANNEAU DE DÉCHIFFREMENT ══════════ -->
+<div class="card">
+  <h3>📥 Charger des carnets (un ou plusieurs fichiers .json)</h3>
+  <div id="key-status"></div>
+  <div class="drop" id="drop">
+    <p><strong>Glissez-déposez un ou plusieurs fichiers .json</strong></p>
+    <p>ou cliquez pour choisir (sélection multiple possible)</p>
+    <input type="file" id="file-input" accept=".json,application/json" multiple style="display:none">
+  </div>
+  <div id="decrypt-result"></div>
+</div>
+
+<h2>📋 Carnets lus dans cette session</h2>
+<div id="carnets-list"></div>
+
+<h2>📊 Synthèse de classe par question</h2>
+<p class="sub">Analyse automatique des réponses de l’ensemble des carnets chargés : éléments attendus couverts par les élèves, points à retravailler et conseils pour animer le cours.</p>
+<div id="synthese"></div>
+
+<details>
+  <summary>🔧 Détails techniques</summary>
+  <div class="inner">
+    <p><strong>Chiffrement :</strong> hybride RSA-OAEP (2048 bits, SHA-256) + AES-GCM (256 bits). Une clé AES aléatoire chiffre le carnet, puis cette clé AES est chiffrée par la clé publique RSA. Seule la clé privée RSA peut la récupérer.</p>
+    <p><strong>Format du fichier :</strong> <code>{format:"logdec-carnet-v1", algorithm:"RSA-OAEP-2048 + AES-GCM-256", encrypted_key_b64:"…", iv_b64:"…", ciphertext_b64:"…"}</code></p>
+    <p><strong>Architecture :</strong> la clé publique est écrite en dur dans <code>00-decouverte.html</code>, la clé privée en dur dans ce fichier. Aucun stockage navigateur n'est utilisé pour les clés.</p>
+    <p><strong>Analyse pédagogique :</strong> l’analyse est heuristique (éléments attendus par question, mots-clés, qualités rédactionnelles). Elle aide à préparer la remédiation et le déroulé du cours, sans remplacer la lecture des réponses par l’enseignant.</p>
+    <p><strong>Rotation :</strong> pour changer de clé, recliquez sur le générateur, puis recollez les deux nouvelles constantes dans les fichiers respectifs. Les anciens carnets deviendront illisibles avec la nouvelle clé.</p>
+  </div>
+</details>
+
+</div>
+
+<script>
+function $(id){return document.getElementById(id);}
+function b64ToU8(b64){var bin=atob(b64);var u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return u8;}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+function downloadBlob(text, filename, mime){
+  var blob=new Blob([text],{type:mime||'application/octet-stream'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},800);
+}
+
+/* ---------- Statut de la clé ---------- */
+function renderKeyStatus(){
+  var st=$('key-status');
+  if(!st)return;
+  if(PRIVATE_KEY_JWK && PRIVATE_KEY_JWK.d){
+    st.innerHTML='<div class="status ok">✅ Clé privée chargée en dur dans ce fichier. Vous pouvez déchiffrer les carnets.</div>';
+  }else{
+    st.innerHTML='<div class="status bad">⚠️ Aucune clé privée : la constante <code>PRIVATE_KEY_JWK</code> vaut <code>null</code>. Suivez le panneau de configuration ci-dessus.</div>';
+  }
+}
+
+/* ---------- Générateur de paire ---------- */
+async function generateKeyPair(){
+  var kp = await crypto.subtle.generateKey(
+    {name:'RSA-OAEP', modulusLength:2048, publicExponent:new Uint8Array([1,0,1]), hash:'SHA-256'},
+    true, ['encrypt','decrypt']
+  );
+  var pubRaw = await crypto.subtle.exportKey('jwk', kp.publicKey);
+  var privRaw = await crypto.subtle.exportKey('jwk', kp.privateKey);
+  var cleanPub = {kty:'RSA', n:pubRaw.n, e:pubRaw.e, alg:'RSA-OAEP-256', ext:true};
+  var cleanPriv = {kty:'RSA', n:privRaw.n, e:privRaw.e, d:privRaw.d,
+                   p:privRaw.p, q:privRaw.q, dp:privRaw.dp, dq:privRaw.dq, qi:privRaw.qi,
+                   alg:'RSA-OAEP-256', ext:true};
+  return {pub:cleanPub, priv:cleanPriv};
+}
+
+function renderSetupPanel(){
+  var panel=$('setup-panel'); if(!panel)return;
+  if(PRIVATE_KEY_JWK && PRIVATE_KEY_JWK.d){
+    panel.innerHTML='';
+    return;
+  }
+  panel.innerHTML=
+    '<div class="callout co-warn"><p class="t">⚙️ Configuration initiale requise</p>'+
+    '<p>La clé privée n\'est pas encore intégrée. Suivez ces étapes <b>une seule fois</b> :</p>'+
+    '<ol style="margin:6px 0;padding-left:20px;font-size:.9rem">'+
+    '<li>Cliquez sur <b>« Générer une paire de clés »</b> ci-dessous.</li>'+
+    '<li>Copiez la <b>clé publique</b> dans <code>00-decouverte.html</code> (à la place de <code>var PUBLIC_KEY_JWK = null;</code>).</li>'+
+    '<li>Copiez la <b>clé privée</b> dans ce fichier (à la place de <code>var PRIVATE_KEY_JWK = null;</code>).</li>'+
+    '<li>Rechargez les deux fichiers : c\'est terminé, les clés sont en dur.</li>'+
+    '</ol>'+
+    '<p style="margin-top:8px">🔒 <b>Sauvegardez la clé privée</b> (bouton d\'export ci-dessous) : si vous la perdez, plus aucun carnet ne sera déchiffrable.</p>'+
+    '</div>'+
+    '<div class="card">'+
+    '<h3>🔑 Générateur de paire de clés</h3>'+
+    '<p style="font-size:.88rem;color:#64748b;margin:0 0 10px">Cliquez une seule fois. Le code produit est à coller tel quel dans chaque fichier.</p>'+
+    '<button class="primary" id="btn-gen">🔑 Générer une paire de clés</button>'+
+    '<div id="gen-result" style="display:none;margin-top:14px">'+
+      '<p style="font-size:.9rem;margin:10px 0 4px"><b>① À coller dans <code>00-decouverte.html</code></b> (remplacer <code>var PUBLIC_KEY_JWK = null;</code>) :</p>'+
+      '<div class="code-block"><pre class="steps" id="code-pub"></pre><button class="copy-btn" data-target="code-pub">📋 Copier</button></div>'+
+      '<p style="font-size:.9rem;margin:14px 0 4px"><b>② À coller dans <code>lecteur-enseignant.html</code></b> (remplacer <code>var PRIVATE_KEY_JWK = null;</code>) :</p>'+
+      '<div class="code-block"><pre class="steps" id="code-priv"></pre><button class="copy-btn" data-target="code-priv">📋 Copier</button></div>'+
+      '<p style="font-size:.85rem;color:#be123c;margin-top:14px">⚠️ Ne divulguez jamais la clé privée. Sauvegardez-la dans un endroit sûr.</p>'+
+      '<button id="btn-export-priv" class="danger">⬇️ Exporter la clé privée (fichier .json)</button>'+
+    '</div>'+
+    '</div>';
+  $('btn-gen').onclick = async function(){
+    this.disabled = true;
+    try{
+      var kp = await generateKeyPair();
+      var pubCode = 'var PUBLIC_KEY_JWK = ' + JSON.stringify(kp.pub) + ';';
+      var privCode = 'var PRIVATE_KEY_JWK = ' + JSON.stringify(kp.priv) + ';';
+      $('code-pub').textContent = pubCode;
+      $('code-priv').textContent = privCode;
+      $('gen-result').style.display = 'block';
+      $('gen-result').__kp = kp;
+      var b=$('btn-export-priv'); if(b) b.onclick = function(){
+        downloadBlob(JSON.stringify(kp.priv,null,2), 'logdec_cle_privee.json', 'application/json');
+      };
+    }catch(e){ alert('Erreur : '+e.message); }
+    this.disabled = false;
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('.copy-btn'),function(btn){
+    btn.onclick = function(){
+      var tgt = document.getElementById(btn.dataset.target);
+      if(!tgt) return;
+      navigator.clipboard.writeText(tgt.textContent).then(function(){
+        btn.textContent = '✅ Copié !';
+        setTimeout(function(){ btn.textContent = '📋 Copier'; }, 1500);
+      });
+    };
+  });
+}
+
+/* ---------- Déchiffrement ---------- */
+async function decryptEnvelope(envelope, privateJwk){
+  var rsaPriv = await crypto.subtle.importKey('jwk', privateJwk, {name:'RSA-OAEP', hash:'SHA-256'}, false, ['decrypt']);
+  var encKey = b64ToU8(envelope.encrypted_key_b64);
+  var aesRaw = await crypto.subtle.decrypt({name:'RSA-OAEP'}, rsaPriv, encKey);
+  var aesKey = await crypto.subtle.importKey('raw', aesRaw, {name:'AES-GCM'}, false, ['decrypt']);
+  var iv = b64ToU8(envelope.iv_b64);
+  var ct = b64ToU8(envelope.ciphertext_b64);
+  var pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:iv}, aesKey, ct);
+  return new TextDecoder().decode(pt);
+}
+
+/* ══════════════ Chargement par lot ══════════════ */
+function eleveLabel(c){var s=(((c.eleve&&c.eleve.prenom)||'')+' '+((c.eleve&&c.eleve.nom)||'')).trim();return s||'élève sans nom';}
+function carnetKey(c){return [((c.eleve&&((c.eleve.nom||'')+' '+(c.eleve.prenom||'')))||''),c.genere_le||''].join('|');}
+
+var carnets=[];
+function addCarnet(c){
+  var k=carnetKey(c);
+  for(var i=0;i<carnets.length;i++){
+    if(carnetKey(carnets[i])===k){carnets[i]=c;return 'mis à jour';}
+  }
+  carnets.push(c);
+  return 'ajouté';
+}
+
+async function processFile(file){
+  try{
+    var text=await file.text();
+    var data;
+    try{data=JSON.parse(text);}catch(e){return {ok:false,err:'JSON invalide ('+esc(e.message)+')'};}
+    if(data&&data.format==='logdec-carnet-v1'){
+      if(!PRIVATE_KEY_JWK||!PRIVATE_KEY_JWK.d)return {ok:false,err:'fichier chiffré, mais aucune clé privée configurée dans ce fichier'};
+      try{
+        var plain=await decryptEnvelope(data,PRIVATE_KEY_JWK);
+        var json=JSON.parse(plain);
+        return {ok:true,carnet:json,action:addCarnet(json),label:'déchiffré ✓'};
+      }catch(err){return {ok:false,err:'échec du déchiffrement : la clé privée de ce fichier ne correspond pas à la clé publique utilisée par l’élève'};}
+    }
+    if(data&&data.eleve&&data.questions_approfondissement){
+      return {ok:true,carnet:data,action:addCarnet(data),label:'non chiffré (fichier clair)'};
+    }
+    return {ok:false,err:'format non reconnu (ni carnet chiffré, ni carnet clair)'};
+  }catch(e){return {ok:false,err:esc(e.message)};}
+}
+
+async function handleFiles(files){
+  var list=Array.prototype.filter.call(files,function(f){return /\.json$/i.test(f.name)||f.type==='application/json';});
+  var box=$('decrypt-result');
+  if(!list.length){box.innerHTML='<div class="status bad">❌ Aucun fichier .json détecté.</div>';return;}
+  box.innerHTML='<div class="status info">⏳ Lecture de '+list.length+' fichier'+(list.length>1?'s':'')+'…</div>';
+  var results=[];
+  for(var i=0;i<list.length;i++){results.push({name:list[i].name,r:await processFile(list[i])});}
+  var html='';
+  results.forEach(function(o){
+    if(o.r.ok){
+      html+='<div class="status ok">✅ <b>'+esc(o.name)+'</b> — '+o.r.label+' · '+esc(eleveLabel(o.r.carnet))+' ('+o.r.action+')</div>';
+    }else{
+      html+='<div class="status bad">❌ <b>'+esc(o.name)+'</b> — '+o.r.err+'</div>';
+    }
+  });
+  box.innerHTML=html;
+  renderCarnets();
+  renderSynthese();
+  var okOnes=results.filter(function(o){return o.r.ok;});
+  if(okOnes.length===1){renderCarnet(okOnes[0].r.carnet);}
+}
+
+/* ══════════════ Analyse pédagogique ══════════════ */
+var RE_JUSTIF=/\bcar\b|parce que|c’est pourquoi|c'est pourquoi|\bdonc\b|permet de|permet d|grâce à|explique pourquoi|si bien que|c’est-à-dire/i;
+var RE_EXEMPLE=/par exemple|exemple|notamment|tel que|telle que|comme (le|la|les|un|une|l’|dans|dans la|les)|ex\.?:/i;
+
+var ANALYSE={
+  q1:{attendus:[
+    {label:'inventeur cité (Napier / Néper)',test:function(t){return /napier|néper|neper/i.test(t);},conseil:'nommez l’inventeur : John Napier (publication en 1614)'},
+    {label:'Briggs et les tables décimales',test:function(t){return /briggs/i.test(t);},conseil:'mentionnez Henry Briggs, qui a popularisé les tables en base 10'},
+    {label:'idée clé : transformer les produits en sommes',test:function(t){return /addition|somme|addit|transform|convert|remplac|réduit/i.test(t);},conseil:'formulez l’idée centrale : le logarithme transforme une multiplication en addition'},
+    {label:'problème concret de l’époque (longs calculs, astronomie, navigation…)',test:function(t){return /astronom|navigation|éphémérid|calcul|fastidieu|lourd|long|compliqu|laborieu|marchand|terrestre/i.test(t);},conseil:'précisez le besoin de l’époque : raccourcir les longs calculs (astronomie, navigation, commerce)'}
+  ],apres:'Relisez la partie « histoire » du chapitre : Napier voulait soulager les « calculateurs » de son époque en remplaçant les multiplications par des additions.'},
+  q2:{attendus:[
+    {label:'au moins 3 situations citées',test:function(t){
+      var n=0;
+      if(/d[ée]cibel|\bson\b|acoustique|audio|bruit/i.test(t))n++;
+      if(/\bph\b|acid|chimi/i.test(t))n++;
+      if(/richter|s[ée]isme|magnitude/i.test(t))n++;
+      if(/musique|octave|note/i.test(t))n++;
+      if(/astronom|étoile|luminosité/i.test(t))n++;
+      if(/photo|diaphragm|écran|pixel|exposition/i.test(t))n++;
+      if(/scoville|piment|saveur/i.test(t))n++;
+      return n>=3;
+    },conseil:'citez au moins trois situations précises (ex. : décibels pour le son, pH en chimie, magnitude des séismes)'},
+    {label:'unités logarithmiques reconnues (décibel, pH, Richter…)',test:function(t){return /d[ée]cibel|\bph\b|richter|magnitude|octave|scoville/i.test(t);},conseil:'nommez les unités concernées : décibel (son), pH (chimie), magnitude Richter (séismes), octave (musique)…'},
+    {label:'brève explication fournie',test:function(t){return RE_JUSTIF.test(t)||/mesure|correspond|traduit|[ée]chelle/i.test(t);},conseil:'expliquez en une phrase pourquoi ces échelles sont logarithmiques (les sensations varient multiplicativement)'}
+  ],apres:'Le chapitre cite de nombreux exemples du quotidien : son, chimie, séismes, musique… Appuyez-vous dessus.'},
+  q3:{attendus:[
+    {label:'échelles / graphiques à échelle logarithmique',test:function(t){return /[ée]chelle|graphique|semi-?log|rep[èe]re/i.test(t);},conseil:'parlez des repères semi-logarithmiques, qui rendent les courbes lisibles sur plusieurs décades'},
+    {label:'ordres de grandeur',test:function(t){return /ordre(?:s)? de grandeur|magnitude|d[ée]cade/i.test(t);},conseil:'montrez que le log aide à comparer des ordres de grandeur très éloignés'},
+    {label:'tolérances / précision industrielle',test:function(t){return /tol[ée]rance|pr[ée]cision|marge|fiabilit|contr[ôo]le/i.test(t);},conseil:'citez l’usage des tolérances (dB, %, décades) dans les contrôles qualité'},
+    {label:'exemple technique concret (dB, électronique, capteurs…)',test:function(t){return /d[ée]cibel|\bdb\b|[ée]lectronique|antenne|capteur|signal|mat[ée]riau|fr[ée]quence|amplificat/i.test(t);},conseil:'appuyez-vous sur un exemple : gain en dB d’un amplificateur, filtres, sensibilité d’un capteur…'}
+  ],apres:'Le chapitre « Découverte » montre les métiers qui manipulent des dB, des tolérances et des graphiques log.'},
+  q4:{attendus:[
+    {label:'exemples scientifiques cités (pH, décibels, Richter, astronomie…)',test:function(t){return /\bph\b|d[ée]cibel|richter|astronom|magnitude|s[ée]isme/i.test(t);},conseil:'donnez au moins deux exemples parmi pH, décibels, Richter, astronomie, entropie…'},
+    {label:'la raison : couvrir de très grandes étendues de valeurs',test:function(t){return /[ée]tendue|amplitude|gamme|plage|immense|[ée]norm|tr[èe]s (grand|large|vaste)|million|milliard|d[ée]cade/i.test(t);},conseil:'expliquez le besoin : mesurer des gammes immenses (du murmure au moteur, de la poussière au séisme)'},
+    {label:'le bénéfice : lecture et comparaison facilitées',test:function(t){return /lisible|lisib|compar|simple|clair|facilit|direct|percept|intuitif|maniable|penser/i.test(t);},conseil:'concluez sur le bénéfice : comparer et lire facilement des valeurs très éloignées'}
+  ],apres:'La table de logarithmes du chapitre illustre ce point : une page suffit pour couvrir plusieurs décades.'},
+  q5:{attendus:[
+    {label:'complexité logarithmique (O(log n), dichotomie…)',test:function(t){return /complexit|o\(log|log\s*n|dichotom|binaire|bisect/i.test(t);},conseil:'employez le vocabulaire : complexité logarithmique, recherche dichotomique, O(log n)'},
+    {label:'efficacité : peu d’étapes même sur d’énormes données',test:function(t){return /[ée]tape|rapid|efficac|peu d|divis|deux|moiti[ée]|puissance de 2|demi/i.test(t);},conseil:'soulignez l’efficacité : une vingtaine d’étapes suffit pour chercher parmi un million d’éléments'},
+    {label:'exemples informatiques (recherche, tri, arbres, index…)',test:function(t){return /tri|arbre|index|base de donn|entropie|r[ée]seaux?|pagerank|recherche|algorithme/i.test(t);},conseil:'donnez un exemple : recherche dichotomique, arbres binaires, index de base de données'}
+  ],apres:'Le chapitre évoque la complexité des algorithmes : chaque doublement de la taille ne coûte qu’une étape de plus.'},
+  q6:{attendus:[
+    {label:'un apprentissage formulé',test:function(t){return /appris|compris|d[ée]couvert|retenu|r[ée]alis|sais maintenant/i.test(t);},conseil:'formulez en une phrase ce que cette découverte vous a appris'},
+    {label:'une surprise / un point marquant',test:function(t){return /surpris|[ée]tonn|marquant|int[ée]ress|curieux|ignorais|incroyable|frapp/i.test(t);},conseil:'indiquez ce qui vous a surpris (ex. : l’ancienneté de l’invention, le pH du quotidien)'},
+    {label:'un lien personnel avec votre quotidien',test:function(t){return /\bje\b|\bmoi\b|\bmon\b|\bma\b|pour moi|personnel|ma vie|quotidien/i.test(t);},conseil:'reliez le cours à votre quotidien (musique, écrans, sciences, santé…)'}
+  ],apres:'Cette question n’a pas de « bonne réponse » : plus vous reliez le chapitre à votre expérience, plus l’apprentissage dure.'}
+};
+
+function analyzeQuestion(q,reponses){
+  var reps=reponses||[];
+  var texte=reps.map(function(p){return p.texte||'';}).join('\n');
+  var kb=ANALYSE[q.id];
+  var a={id:q.id,question:q.question,n:reps.length,len:texte.replace(/\s+/g,' ').trim().length,coches:[],manques:[],qualites:[],conseils:[],niveau:'absent'};
+  if(!a.n)return a;
+  if(kb){kb.attendus.forEach(function(att){(att.test(texte)?a.coches:a.manques).push(att);});}
+  [{label:'chiffres ou dates précises',re:/\d/},
+   {label:'justification (« car », « donc », « permet de »…)',re:RE_JUSTIF},
+   {label:'exemple illustratif',re:RE_EXEMPLE}].forEach(function(u){if(u.re.test(texte))a.qualites.push(u.label);});
+  if(a.n>1)a.qualites.push('réponse enrichie dans le temps');
+  if(kb){
+    var tot=kb.attendus.length;
+    if(a.coches.length===tot&&(a.qualites.length>=2||a.len>=120))a.niveau='solide';
+    else if(tot&&a.coches.length>=tot-1&&a.qualites.length>=2)a.niveau='solide';
+    else if(a.len<80||(tot&&a.coches.length<=1&&a.len<160))a.niveau='esquisse';
+    else a.niveau='partielle';
+  }else{
+    a.niveau=a.len<80?'esquisse':(a.qualites.length>=2?'solide':'partielle');
+  }
+  if(a.len<150)a.conseils.push('développez la réponse en 3–4 phrases : idée, justification, exemple');
+  a.manques.forEach(function(m){a.conseils.push(m.conseil);});
+  if(a.n===1)a.conseils.push('revenez plus tard enrichir votre réponse : le carnet est fait pour être complété dans le temps');
+  return a;
+}
+
+function shortQ(t){t=String(t);return t.length>62?t.slice(0,59)+'…':t;}
+
+function analyzeCarnet(c){
+  var qs=c.questions_approfondissement||[];
+  var list=qs.map(function(q){return analyzeQuestion(q,q.reponses||[]);});
+  var byId={};list.forEach(function(a){byId[a.id]=a;});
+  var repondu=list.filter(function(a){return a.niveau!=='absent';}).length;
+  var nbSolide=list.filter(function(a){return a.niveau==='solide';}).length;
+  var nbEsquisse=list.filter(function(a){return a.niveau==='esquisse';}).length;
+  var dates=[];
+  qs.forEach(function(q){(q.reponses||[]).forEach(function(p){var d=String(p.date||'').slice(0,10);if(d&&dates.indexOf(d)<0)dates.push(d);});});
+  dates.sort();
+  var visites=(c.dates_visites||[]).length;
+  var niveau='à engager';
+  if(repondu>=5&&nbSolide>=Math.ceil(repondu*0.6))niveau='approfondi';
+  else if(repondu>=4)niveau='en bonne voie';
+  else if(repondu>=2)niveau='à approfondir';
+  var conseils=[];
+  if(repondu===0)conseils.push('aucune question traitée pour l’instant : commencer par celle qui « parle » le plus (vie quotidienne ou informatique)');
+  list.forEach(function(a){
+    if((a.niveau==='esquisse'||a.niveau==='partielle')&&a.conseils.length&&conseils.length<4)
+      conseils.push('« '+shortQ(a.question)+' » : '+a.conseils[0]);
+  });
+  if(repondu>0&&dates.length<=1&&conseils.length<5)conseils.push('travail concentré sur une seule date : encourager un retour régulier sur le carnet');
+  if(dates.length>=3&&conseils.length<5)conseils.push('bonne régularité ('+dates.length+' dates de travail) : prolonger l’effort en développant les réponses');
+  return {list:list,byId:byId,repondu:repondu,nbSolide:nbSolide,nbEsquisse:nbEsquisse,nbQuestions:list.length,dates:dates,visites:visites,niveau:niveau,conseils:conseils};
+}
+
+var LVL={solide:{c:'lvl-solide',t:'✔ solide'},partielle:{c:'lvl-partielle',t:'partielle'},esquisse:{c:'lvl-esquisse',t:'à étoffer'},absent:{c:'lvl-absent',t:'sans réponse'}};
+var GLOB={approfondi:{c:'lvl-solide',t:'travail approfondi'},'en bonne voie':{c:'lvl-partielle',t:'travail en bonne voie'},'à approfondir':{c:'lvl-partielle',t:'travail à approfondir'},'à engager':{c:'lvl-esquisse',t:'travail à engager'}};
+
+/* ══════════════ Rendu d’un carnet + analyse élève ══════════════ */
+function renderCarnet(c){
+  var res=$('decrypt-result');
+  var nom=(c.eleve&&c.eleve.nom)||'',prenom=(c.eleve&&c.eleve.prenom)||'';
+  var an=analyzeCarnet(c);
+  var html='<div class="student-card"><h3>'+esc(prenom+' '+nom)+'</h3>'+
+    '<p style="margin:0;color:#64748b;font-size:.85rem">Généré le '+(c.genere_le?new Date(c.genere_le).toLocaleString('fr-FR'):'—')+'</p>'+
+    '<div class="stat-chips">🧭 Bilan : <span class="an-lvl '+GLOB[an.niveau].c+'">'+GLOB[an.niveau].t+'</span> '+an.repondu+'/'+an.nbQuestions+' questions traitées · '+an.nbSolide+' solide(s) · '+an.nbEsquisse+' à étoffer · '+an.visites+' visite(s)</div></div>';
+  html+='<div class="card"><h3>📅 Visites ('+(c.dates_visites||[]).length+' dates)</h3>';
+  if((c.dates_visites||[]).length){
+    html+='<div class="vis-list">'+c.dates_visites.map(function(d){return new Date(d+'T12:00:00').toLocaleDateString('fr-FR');}).join(' · ')+'</div>';
+  }else{
+    html+='<p style="color:#94a3b8;font-size:.9rem">Aucune date.</p>';
+  }
+  html+='</div>';
+  html+='<div class="card"><h3>💬 Réponses de l’élève</h3>';
+  (c.questions_approfondissement||[]).forEach(function(q){
+    html+='<div class="q-block"><h4>'+esc(q.question)+'</h4>';
+    if((q.reponses||[]).length){
+      q.reponses.forEach(function(p){
+        html+='<div class="p"><span class="d">'+(p.date?new Date(p.date).toLocaleString('fr-FR'):'—')+'</span>'+esc(p.texte)+'</div>';
+      });
+    }else{
+      html+='<p style="color:#94a3b8;font-size:.85rem;margin:0">Pas de réponse.</p>';
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  html+='<div class="card"><h3>🧭 Analyse pédagogique — pour progresser</h3>'+
+    '<p style="font-size:.85rem;color:#64748b;margin:0 0 10px">Évaluation automatique : éléments attendus couverts, qualités rédactionnelles repérées et conseils personnalisés. Ce diagnostic guide, il ne remplace pas votre jugement.</p>';
+  an.list.forEach(function(a,i){
+    html+='<div class="an-q"><h4>'+(i+1)+'. '+esc(shortQ(a.question))+'<span class="an-lvl '+LVL[a.niveau].c+'">'+LVL[a.niveau].t+'</span></h4>';
+    if(a.niveau==='absent'){
+      html+='<p style="color:#94a3b8;font-size:.85rem;margin:0">Pas encore de réponse — question à traiter.</p>';
+    }else{
+      a.coches.forEach(function(m){html+='<span class="an-chip an-ok">✓ '+esc(m.label)+'</span>';});
+      a.manques.forEach(function(m){html+='<span class="an-chip an-ko">✗ '+esc(m.label)+'</span>';});
+      if(a.qualites.length)html+='<div class="stat-chips">Qualités rédactionnelles : '+a.qualites.map(esc).join(' · ')+'</div>';
+    }
+    if(a.conseils.length)html+='<div class="an-advice">💡 '+a.conseils.map(esc).join('<br>💡 ')+'</div>';
+    if(ANALYSE[a.id]&&ANALYSE[a.id].apres&&a.niveau!=='solide')html+='<p style="font-size:.8rem;color:#64748b;margin:6px 0 0">📖 '+esc(ANALYSE[a.id].apres)+'</p>';
+    html+='</div>';
+  });
+  if(an.conseils.length){
+    html+='<div class="callout co-method"><p class="t">🎯 Conseils prioritaires pour cet élève</p>'+
+      '<ul style="margin:4px 0;padding-left:18px;font-size:.9rem">'+an.conseils.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';
+  }
+  html+='</div>';
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">';
+  html+='<button class="primary" id="dl-json">⬇️ Exporter le carnet clair (JSON)</button>';
+  html+='<button id="dl-txt">📄 Exporter le carnet (texte)</button>';
+  html+='<button id="dl-an">🧭 Exporter l’analyse (texte)</button>';
+  html+='</div>';
+  res.innerHTML=html;
+  $('dl-json').onclick=function(){
+    downloadBlob(JSON.stringify(c,null,2),'carnet_'+(nom||'NOM')+'_'+(prenom||'Prenom')+'_CLAIR.json','application/json');
+  };
+  $('dl-txt').onclick=function(){
+    var t='Carnet — '+prenom+' '+nom+'\nGénéré le '+(c.genere_le?new Date(c.genere_le).toLocaleString('fr-FR'):'—')+'\n\n';
+    t+='Dates de visite : '+(c.dates_visites||[]).join(', ')+'\n\n';
+    (c.questions_approfondissement||[]).forEach(function(q){
+      t+='=== '+q.question+' ===\n';
+      (q.reponses||[]).forEach(function(p){t+='['+(p.date?new Date(p.date).toLocaleString('fr-FR'):'—')+'] '+p.texte+'\n';});
+      t+='\n';
+    });
+    downloadBlob(t,'carnet_'+(nom||'NOM')+'_'+(prenom||'Prenom')+'.txt','text/plain');
+  };
+  $('dl-an').onclick=function(){downloadBlob(buildAnalyseTxt(c),'analyse_'+(nom||'NOM')+'_'+(prenom||'Prenom')+'.txt','text/plain');};
+}
+
+function buildAnalyseTxt(c){
+  var an=analyzeCarnet(c);
+  var t='ANALYSE PÉDAGOGIQUE — '+eleveLabel(c)+'\n';
+  t+='Générée le '+new Date().toLocaleString('fr-FR')+'\n\n';
+  t+='BILAN : '+GLOB[an.niveau].t+' — '+an.repondu+'/'+an.nbQuestions+' questions traitées ('+an.nbSolide+' solide(s), '+an.nbEsquisse+' à étoffer), '+an.visites+' visite(s)\n';
+  if(an.dates.length)t+='Dates de travail : '+an.dates.join(', ')+'\n';
+  t+='\n';
+  an.list.forEach(function(a,i){
+    t+='─ '+(i+1)+'. '+a.question+'\n';
+    t+='   Niveau : '+LVL[a.niveau].t+'\n';
+    if(a.niveau!=='absent'){
+      a.coches.forEach(function(m){t+='   ✓ '+m.label+'\n';});
+      a.manques.forEach(function(m){t+='   ✗ '+m.label+'\n';});
+      if(a.qualites.length)t+='   Rédaction : '+a.qualites.join(' · ')+'\n';
+    }
+    a.conseils.forEach(function(x){t+='   💡 '+x+'\n';});
+    t+='\n';
+  });
+  if(an.conseils.length){
+    t+='CONSEILS PRIORITAIRES\n';
+    an.conseils.forEach(function(x,i){t+='  '+(i+1)+'. '+x+'\n';});
+  }
+  return t;
+}
+
+/* ══════════════ Liste des carnets de la session ══════════════ */
+function renderCarnets(){
+  var box=$('carnets-list');
+  if(!box)return;
+  if(!carnets.length){box.innerHTML='<p style="color:#94a3b8">Aucun carnet chargé pour l’instant.</p>';return;}
+  box.innerHTML=carnets.map(function(c,i){
+    var an=analyzeCarnet(c);
+    return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+      '<div><b>'+esc(eleveLabel(c))+'</b> <span class="an-lvl '+GLOB[an.niveau].c+'">'+GLOB[an.niveau].t+'</span><br>'+
+      '<span style="font-size:.8rem;color:#64748b">'+an.repondu+'/'+an.nbQuestions+' questions traitées · '+an.nbSolide+' solide(s) · '+an.visites+' visite(s)</span></div>'+
+      '<div style="display:flex;gap:6px"><button data-i="'+i+'" class="show-carnet primary">👁️ Voir</button><button data-i="'+i+'" class="del-carnet danger">✕</button></div></div>';
+  }).join('');
+  box.querySelectorAll('.show-carnet').forEach(function(b){
+    b.onclick=function(){renderCarnet(carnets[+b.dataset.i]);$('decrypt-result').scrollIntoView({behavior:'smooth'});};
+  });
+  box.querySelectorAll('.del-carnet').forEach(function(b){
+    b.onclick=function(){carnets.splice(+b.dataset.i,1);renderCarnets();renderSynthese();};
+  });
+}
+
+/* ══════════════ Synthèse de classe par question ══════════════ */
+function syntheseData(){
+  var ans=carnets.map(analyzeCarnet);
+  var N=carnets.length;
+  var qs=(carnets[0]&&carnets[0].questions_approfondissement)||[];
+  var totRep=ans.reduce(function(s,a){return s+a.repondu;},0);
+  var questions=qs.map(function(q){
+    var per=ans.map(function(a){return a.byId[q.id]||{niveau:'absent',coches:[],manques:[],qualites:[],conseils:[],len:0,n:0};});
+    var nRep=per.filter(function(a){return a.niveau!=='absent';}).length;
+    var kb=ANALYSE[q.id];
+    var attStats=[];
+    if(kb){
+      kb.attendus.forEach(function(att){
+        var nb=per.filter(function(a){return a.coches.some(function(m){return m.label===att.label;});}).length;
+        attStats.push({label:att.label,pct:Math.round(100*nb/N),nb:nb});
+      });
+    }
+    var rep=per.filter(function(a){return a.niveau!=='absent';});
+    var courts=rep.filter(function(a){return a.len<150;}).length;
+    var conseils=[];
+    if(nRep===0)conseils.push('aucune réponse dans la classe : lancer la question en travail de recherche guidée');
+    else if(nRep/N<0.7)conseils.push((N-nRep)+' carnet(s) sans réponse : prévoir un temps de recherche en classe');
+    attStats.forEach(function(s){if(s.pct<35)conseils.push('à expliciter en cours : '+s.label);});
+    if(nRep&&courts/nRep>0.5)conseils.push('la moitié des réponses sont trop courtes : travailler la justification (idée + « car » + exemple)');
+    if(!conseils.length)conseils.push('question bien traitée par la classe : proposer un défi d’approfondissement');
+    return {id:q.id,question:q.question,nRep:nRep,
+      repartition:{
+        solide:per.filter(function(a){return a.niveau==='solide';}).length,
+        partielle:per.filter(function(a){return a.niveau==='partielle';}).length,
+        esquisse:per.filter(function(a){return a.niveau==='esquisse';}).length,
+        absent:N-nRep
+      },
+      attStats:attStats,conseils:conseils};
+  });
+  return {N:N,tauxReponse:Math.round(100*totRep/((qs.length||1)*N)),eleves:ans.map(function(a,i){
+    return {eleve:carnets[i].eleve||{},niveau:a.niveau,repondu:a.repondu,nbQuestions:a.nbQuestions,visites:a.visites,conseils:a.conseils};
+  }),questions:questions};
+}
+
+function renderSynthese(){
+  var box=$('synthese');
+  if(!box)return;
+  if(!carnets.length){
+    box.innerHTML='<p style="color:#94a3b8">Chargez un ou plusieurs carnets : la synthèse de classe s’affichera automatiquement ici.</p>';
+    return;
+  }
+  var d=syntheseData();
+  var html='<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<div class="stat-chips">📦 '+d.N+' carnet'+(d.N>1?'s':'')+' · 📝 taux de réponse moyen : <b>'+d.tauxReponse+' %</b> · profil le plus fréquent : '+
+    (function(){var cnt={};d.eleves.forEach(function(e){cnt[e.niveau]=(cnt[e.niveau]||0)+1;});var best=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];})[0];return GLOB[best]?GLOB[best].t:best;})()+
+    '</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+    '<button id="syn-txt" class="primary">📄 Synthèse (texte)</button>'+
+    '<button id="syn-json">⬇️ Synthèse (JSON)</button></div></div>';
+  d.questions.forEach(function(q,i){
+    html+='<div class="an-q"><h4>'+(i+1)+'. '+esc(shortQ(q.question))+'</h4>';
+    html+='<div class="stat-chips">Réponses : <b>'+q.nRep+'/'+d.N+'</b> ('+Math.round(100*q.nRep/d.N)+' %) · ✔ solides : '+q.repartition.solide+
+      ' · partielles : '+q.repartition.partielle+' · à étoffer : '+q.repartition.esquisse+' · sans réponse : '+q.repartition.absent+'</div>';
+    q.attStats.forEach(function(s){
+      var cl=s.pct>=70?'an-ok':(s.pct>=35?'an-qual':'an-ko');
+      html+='<div class="an-row"><span class="lb">'+esc(s.label)+'</span><span class="an-metro"><i style="width:'+s.pct+'%"></i></span>'+
+        '<span class="an-chip '+cl+'">'+s.pct+' %</span></div>';
+    });
+    html+='<div class="an-advice">🎯 '+q.conseils.map(esc).join('<br>🎯 ')+'</div>';
+    html+='</div>';
+  });
+  box.innerHTML=html;
+  $('syn-txt').onclick=function(){downloadBlob(buildSyntheseTxt(),'synthese_classe_logarithme.txt','text/plain');};
+  $('syn-json').onclick=function(){downloadBlob(JSON.stringify(syntheseData(),null,2),'synthese_classe_logarithme.json','application/json');};
+}
+
+function buildSyntheseTxt(){
+  var d=syntheseData();
+  var t='SYNTHÈSE DE CLASSE — carnets « Découverte » du logarithme décimal\n';
+  t+='Générée le '+new Date().toLocaleString('fr-FR')+' — '+d.N+' carnet(s), taux de réponse moyen : '+d.tauxReponse+' %\n\n';
+  t+='PROFILS DES ÉLÈVES\n';
+  d.eleves.forEach(function(e){
+    var lbl=((e.eleve.prenom||'')+' '+(e.eleve.nom||'')).trim()||'élève';
+    t+='  • '+lbl+' : '+GLOB[e.niveau].t+' ('+e.repondu+'/'+e.nbQuestions+' questions, '+e.visites+' visite(s))\n';
+  });
+  t+='\n';
+  d.questions.forEach(function(q,i){
+    t+='─ '+(i+1)+'. '+q.question+'\n';
+    t+='  Réponses : '+q.nRep+'/'+d.N+' (solides '+q.repartition.solide+', partielles '+q.repartition.partielle+
+      ', à étoffer '+q.repartition.esquisse+', sans réponse '+q.repartition.absent+')\n';
+    q.attStats.forEach(function(s){
+      t+='  • '+s.label+' : '+s.pct+' % des élèves ('+(s.pct>=70?'acquis':(s.pct>=35?'à consolider':'à retravailler'))+')\n';
+    });
+    q.conseils.forEach(function(x){t+='  🎯 '+x+'\n';});
+    t+='\n';
+  });
+  return t;
+}
+
+/* ══════════════ Init ══════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  renderSetupPanel();
+  renderKeyStatus();
+  var drop=$('drop'),input=$('file-input');
+  drop.onclick=function(){input.click();};
+  drop.ondragover=function(e){e.preventDefault();drop.classList.add('over');};
+  drop.ondragleave=function(){drop.classList.remove('over');};
+  drop.ondrop=function(e){e.preventDefault();drop.classList.remove('over');handleFiles(e.dataTransfer.files);};
+  input.onchange=function(){handleFiles(input.files);input.value='';};
+  renderCarnets();
+  renderSynthese();
+});
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="bTDm+SfetVZnOyaZVkkgHQ==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

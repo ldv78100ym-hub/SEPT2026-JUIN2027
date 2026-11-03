@@ -20,8 +20,8 @@
    ============================================================ */
 const TDM_DOC = 'la-tour-des-maths-edition-claire';
 /* Clé publique RSA-2048 (format SPKI, base64) — empreinte SHA-256 :
-   FE:CB:1E:8E:67:49:15:79:A8:B4:74:B6:89:18:78:3C:2F:28:DD:9B:29:91:94:92:BC:FD:B4:18:49:83:53:BD */
-const TDM_PUB_SPKI_B64 = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkemRsZfbz4EsK/+vy3JoY+2Z4O2ZzzVN40MIvJ+e6Ju63E0ua/8Vu1HzwsvLH4BvgCIrk8Grf0kpwepxQyIu6eMvsO63SQK4Vl2aoveP+Se/V4DtYghbFgBgC2E58qda68eA5yf4tasetaQ4T9AIxQbpN/pbIEr0f6zeeil/4rO5g8AbCuJMVPZHCDkPmrpBxcxUGPFcMgPpuQuboagMH+S9HrQOfPYisxs0jz1PNWiGYBn4g5Ck8LB5qrnu8VKkqAswfrBIqYbagiV3L5hUGe3x8K6HXcjrby1tVHNdeLJRpY+bodSaiCDtS35WRwXTdSwfCw0zO56Pfe3zcbP5LQIDAQAB';
+   65:BB:82:6C:1B:7A:E5:F8:AB:74:90:4F:FA:C3:AF:E4:3A:00:F0:F0:0E:24:C5:4A:19:6E:A0:EB:F8:EC:88:3B */
+const TDM_PUB_SPKI_B64 = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwsJXzf0E24K3zGDSEaxZ0F0ZL1flNPHf2X+vGPBVxjTcY3l4qcka0tqAo/H6Stzx/pqFEymysjuCjrd0Q2WX4Y3gH5szZ9aqPB1XdtFxMS7YFohULv/Bl940Gbr9zjRdoaJwoPQhnxAJP4oXm+ElbRTowYdoBhLU1LkfJ/PZupIrs4L7yFyyasHStXvwi9Vsr2CLxKlrbr9iy0rtZhKbEeR1EQx+yvPplp2KKzZL38cRv2/1pyh+UvSB6861uiyGZ7k+MwuAUz7vvq+FypgXUFAQES5xfLQ6wcUSSZelZCS2up6RFa8C3SisTLXlm9FvlOYwlGza0JK27C32cBOaNQIDAQAB';
 const TDM_LS_PROFILE = 'tdm_profile_v1';
 const TDM_LS_KEYS = 'tdm_keys_v1';
 const TDM_LS_SAVE = 'tdm_save_v1';
@@ -84,7 +84,7 @@ async function tdmSealWithTeacherPub(str){
     const sha = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
     return {
       alg: 'RSA-OAEP-SHA256+AES-256-GCM',
-      clePublique: 'FE:CB:1E:8E:67:49:15:79:A8:B4:74:B6:89:18:78:3C:2F:28:DD:9B:29:91:94:92:BC:FD:B4:18:49:83:53:BD',
+      clePublique: '65:BB:82:6C:1B:7A:E5:F8:AB:74:90:4F:FA:C3:AF:E4:3A:00:F0:F0:0E:24:C5:4A:19:6E:A0:EB:F8:EC:88:3B',
       cle: tdmB64(cle), iv: tdmB64(iv), ct: tdmB64(ct), sha256: tdmB64(sha)
     };
   } catch(e){ return null; }

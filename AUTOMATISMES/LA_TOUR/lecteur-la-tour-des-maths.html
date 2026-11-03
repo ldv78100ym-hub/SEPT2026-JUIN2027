@@ -149,6 +149,7 @@
       <div class="panel" id="p-notions"></div>
       <div class="panel" id="p-sessions"></div>
       <div class="panel" id="p-erreurs"></div>
+      <div class="panel" id="p-rapport"></div>
       <div class="panel" id="p-consignes"></div>
       <div class="panel" id="p-sceau"></div>
       <div class="panel" id="p-raw"></div>
@@ -426,6 +427,7 @@ function renderStudent(){
   renderNotions();
   renderSessions();
   renderErreurs();
+  renderRapport();
   renderConsignes();
   renderSceau();
   renderRaw();
@@ -438,6 +440,7 @@ function buildTabs(){
     ["notions","🧩 Notions"],
     ["sessions","🕓 Sessions"],
     ["erreurs","❌ Erreurs & exercices"],
+    ["rapport","📝 Bilan rédigé"],
     ["consignes","📜 Consignes"],
     ["sceau","🔐 Sceau & métadonnées"],
     ["raw","🧾 JSON brut"],
@@ -654,6 +657,363 @@ function renderErreurs(){
     ${genericTable(d.erreursEleve, "erreursEleve")}
     <h3 style="margin:18px 0 8px">Exercices traités <span class="cnt">${(d.exercicesTraites||[]).length}</span></h3>
     ${genericTable(d.exercicesTraites, "exercicesTraites")}`;
+}
+
+/* ---------- bilan rédigé : utilitaires ---------- */
+const tdmPctNum = v => { const m = /(-?\d+)/.exec(String(v ?? "")); return m ? Number(m[1]) : 0; };
+function tdmParseDH(s){
+  if (typeof s !== "string") return null;
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(s);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0)).getTime();
+  if (/^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})?$/.test(s)){ const t = Date.parse(s); return isNaN(t) ? null : t; }
+  return null;
+}
+function tdmFragiles(n){
+  return (n.elements || [])
+    .filter(e => num(e.erreurs) > 0)
+    .sort((a, b) => num(b.erreurs) - num(a.erreurs))
+    .map(e => `${esc(e.libelle || e.generateur || "élément")} : ${num(e.erreurs)} erreur${num(e.erreurs) > 1 ? "s" : ""} sur ${num(e.posees)} question${num(e.posees) > 1 ? "s" : ""}`);
+}
+
+/* classe UNIQUEMENT les notions réellement travaillées (jamais posée → ignorée) */
+function tdmRapportClasses(){
+  const d = CURRENT.data, out = { acquis: [], enVoie: [], nonAcquis: [] };
+  (d.notionsTraitees || []).forEach(n => {
+    const posees = num(n.posees), reussies = num(n.reussies), errs = num(n.erreursNotion);
+    const validee = n.validee ?? /valid/i.test(n.statut || "");
+    const pct = (n.pourcentageReussite !== undefined && n.pourcentageReussite !== null && n.pourcentageReussite !== "")
+      ? tdmPctNum(n.pourcentageReussite)
+      : (posees ? Math.round(100 * reussies / posees) : 0);
+    const it = { n, posees, reussies, errs, pct };
+    if (validee) out.acquis.push(it);
+    else if (posees >= 3){
+      if (pct >= 40) out.enVoie.push(it); else out.nonAcquis.push(it);
+      it.proche = pct >= 75;
+    }
+    else if (posees >= 2 && reussies === 0){ it.peu = true; out.nonAcquis.push(it); }
+    else { it.peu = true; out.enVoie.push(it); }
+  });
+  return out;
+}
+
+/* ---------- bilan rédigé : vraisemblance (clic à la va-vite, fraude) ---------- */
+function tdmVraisemblance(){
+  const d = CURRENT.data;
+  const exos = d.exercicesTraites || [];
+  const res = { indices: [], niveau: "none", nExos: exos.length, timingOk: false, precisionS: false };
+  if (exos.length < 4) return res;
+  const reps = exos.map(x => String(x.reponseEleve ?? "").trim().toLowerCase());
+  const timed = exos
+    .map(x => ({ t: tdmParseDH(x.dateHeure), ok: !!x.correcte, lf: !!x.cleLoufoque }))
+    .filter(e => e.t !== null)
+    .sort((a, b) => a.t - b.t);
+  const gaps = [];
+  for (let i = 1; i < timed.length; i++){
+    const g = (timed[i].t - timed[i - 1].t) / 1000;
+    if (g >= 0 && g < 86400) gaps.push(g);
+  }
+  if (gaps.some(g => Math.round(g) % 60 !== 0)) res.precisionS = true;
+  res.timingOk = timed.length >= Math.max(4, Math.floor(exos.length * 0.6));
+  const push = (g, txt) => res.indices.push({ g, txt });
+
+  /* 1. réponses quasi instantanées (horodatage à la seconde) */
+  if (res.timingOk && res.precisionS){
+    const fast = gaps.filter(g => g <= 3).length;
+    if (fast >= 5 || (gaps.length && fast / gaps.length >= 0.35))
+      push(3, `${fast} réponse${fast > 1 ? "s" : ""} délivrée${fast > 1 ? "s" : ""} en 3 secondes ou moins après la question précédente (${Math.round(100 * fast / Math.max(1, gaps.length))} % des délais mesurés) — un délai incompatible avec le temps de lire l'énoncé et de réfléchir`);
+  }
+  /* 2. rafales (fonctionne aussi avec un horodatage à la minute) */
+  if (res.timingOk && timed.length >= 6){
+    let maxBurst = 1, burstAt = null;
+    for (let i = 0, j = 0; i < timed.length; i++){
+      while (j < timed.length && timed[j].t - timed[i].t < 60000) j++;
+      if (j - i > maxBurst){ maxBurst = j - i; burstAt = timed[i].t; }
+    }
+    if (maxBurst >= 6)
+      push(2, `une rafale de ${maxBurst} questions en moins d'une minute${burstAt ? " (vers " + new Date(burstAt).toTimeString().slice(0, 5) + ")" : ""} — rythme très peu plausible pour des calculs menés au clavier`);
+  }
+  /* 3. série de réponses identiques d'affilée */
+  let run = 1, best = 1, bestVal = reps[0] || "";
+  for (let i = 1; i < reps.length; i++){
+    run = reps[i] === reps[i - 1] ? run + 1 : 1;
+    if (run > best){ best = run; bestVal = reps[i] || ""; }
+  }
+  if (best >= 5)
+    push(2, `une série de ${best} réponses strictement identiques d'affilée${bestVal ? " (« " + esc(bestVal.slice(0, 20)) + " »)" : ""} — motif typique de clics répétés sans lecture des énoncés`);
+  /* 4. réponse systématiquement la même sur l'ensemble */
+  if (reps.length >= 10){
+    const counts = {};
+    reps.forEach(r => counts[r] = (counts[r] || 0) + 1);
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1] / reps.length >= 0.55)
+      push(2, `la même réponse (« ${esc(String(top[0]).slice(0, 20))} ») revient sur ${top[1]} des ${reps.length} questions (${Math.round(100 * top[1] / reps.length)} %) alors que les énoncés varient`);
+  }
+  /* 5. alternance mécanique */
+  if (reps.length >= 8){
+    const alt = reps.slice(-8);
+    if (alt[0] && alt[1] && alt[0] !== alt[1] && alt.every((r, i) => r === alt[i % 2]))
+      push(1, `les dernières réponses alternent mécaniquement entre deux valeurs (« ${esc(alt[0].slice(0, 20))} » / « ${esc(alt[1].slice(0, 20))} ») — signature d'un clic alternatif sans réflexion`);
+  }
+  /* 6. enchaînement de succès instantanés */
+  if (res.timingOk && res.precisionS && timed.length >= 5){
+    let runOk = 1, bestOk = 1;
+    for (let i = 1; i < timed.length; i++){
+      const g = (timed[i].t - timed[i - 1].t) / 1000;
+      runOk = (timed[i].ok && timed[i - 1].ok && g <= 3) ? runOk + 1 : 1;
+      if (runOk > bestOk) bestOk = runOk;
+    }
+    if (bestOk >= 5)
+      push(3, `${bestOk} bonnes réponses consécutives, chacune espacée de 3 secondes au plus — un sans-faute aussi rapide est inhabituel (réponses connues à l'avance, aide extérieure ou écran annexe)`);
+  }
+  /* 7. clés loufoques : réponses aberrantes fréquentes */
+  const lf = exos.filter(x => x.cleLoufoque).length;
+  if (lf && lf / exos.length >= 0.2)
+    push(2, `${lf} réponse${lf > 1 ? "s" : ""} sur ${exos.length} ${lf > 1 ? "ont" : "a"} déclenché la clé loufoque (option manifestement aberrante), soit ${Math.round(100 * lf / exos.length)} % — cohérent avec des choix faits au hasard`);
+  /* 8. erreurs commises instantanément */
+  if (res.timingOk && res.precisionS){
+    let wrongFast = 0;
+    for (let i = 1; i < timed.length; i++){
+      if (!timed[i].ok && (timed[i].t - timed[i - 1].t) / 1000 <= 3) wrongFast++;
+    }
+    if (wrongFast >= 4)
+      push(2, `${wrongFast} erreurs commises en 3 secondes ou moins après la question précédente — on se précipite sans lire plutôt qu'on se trompe en réfléchissant`);
+  }
+  /* 9. rythme global de l'activité */
+  const tempsS = num((d.statistiques || {}).tempsTotal);
+  if (tempsS && exos.length >= 6){
+    const avg = tempsS / exos.length;
+    if (avg < 8)
+      push(3, `le temps cumulé (${esc((d.statistiques || {}).tempsTotalFormate || Math.round(tempsS) + " s")}) rapporté aux ${exos.length} exercices donne ${String(avg.toFixed(1)).replace(".", ",")} s par question en moyenne — trop court pour lire, calculer et répondre`);
+    else if (avg < 15)
+      push(1, `le temps moyen constaté est de ${String(avg.toFixed(1)).replace(".", ",")} s par exercice — rythme rapide, à croiser avec le niveau de réussite`);
+  }
+  res.niveau = res.indices.some(i => i.g === 3) ? "serieux"
+    : res.indices.some(i => i.g === 2) ? "surveiller"
+    : (res.indices.length ? "ponctuel" : "none");
+  return res;
+}
+
+/* ---------- bilan rédigé : évolution au fil de l'activité (questions croisées) ---------- */
+function tdmEvolution(){
+  const d = CURRENT.data;
+  const exos = d.exercicesTraites || [];
+  const res = { n: exos.length, chronoOk: false, tiers: [], tendance: "na",
+                notions: [], interference: null, transversaux: [] };
+  if (exos.length < 4) return res;
+  const timed = exos.map(x => ({ x, t: tdmParseDH(x.dateHeure) }));
+  const nbOk = timed.filter(e => e.t !== null).length;
+  res.chronoOk = nbOk >= Math.max(4, Math.ceil(exos.length * 0.6));
+  /* chronologie réelle : le jeu pose les questions de façon CROISÉE (plusieurs notions
+     enchevêtrées au fil d'une session) alors que le fichier les regroupe par notion.
+     On trie donc par horodatage, jamais par l'ordre du fichier. */
+  let seq = null;
+  if (res.chronoOk)
+    seq = timed.filter(e => e.t !== null)
+      .sort((a, b) => a.t - b.t || num(a.x.n) - num(b.x.n))
+      .map(e => ({ notion: e.x.notion || e.x.notionId || "", ok: !!e.x.correcte }));
+  /* tendance d'ensemble, par tiers de l'activité */
+  if (seq && seq.length >= 6){
+    const k = Math.floor(seq.length / 3);
+    const parts = [seq.slice(0, k), seq.slice(k, 2 * k), seq.slice(2 * k)];
+    const rate = a => a.length ? Math.round(100 * a.filter(s => s.ok).length / a.length) : 0;
+    res.tiers = parts.map(a => ({ pct: rate(a), n: a.length }));
+    const delta = res.tiers[2].pct - res.tiers[0].pct;
+    res.tendance = delta >= 15 ? "hausse" : (delta <= -15 ? "baisse" : "stable");
+  }
+  /* évolution par notion : chronologique si possible ; à défaut, l'ordre interne du
+     fichier reste fiable POUR UNE MÊME notion (questions d'une notion déjà en ordre),
+     mais jamais pour comparer des notions entre elles. */
+  const byNotion = {};
+  if (seq) seq.forEach(s => (byNotion[s.notion] = byNotion[s.notion] || []).push(s.ok));
+  else exos.forEach(x => { const key = x.notion || x.notionId || ""; (byNotion[key] = byNotion[key] || []).push(!!x.correcte); });
+  Object.entries(byNotion).forEach(([nom, arr]) => {
+    if (arr.length < 4) return;
+    const h = Math.floor(arr.length / 2);
+    const early = arr.slice(0, h), late = arr.slice(h);
+    const pe = Math.round(100 * early.filter(Boolean).length / early.length);
+    const pl = Math.round(100 * late.filter(Boolean).length / late.length);
+    res.notions.push({ nom, total: arr.length,
+      early: { pct: pe, n: early.length }, late: { pct: pl, n: late.length },
+      dir: pl - pe >= 20 ? "hausse" : (pe - pl >= 20 ? "baisse" : "stable") });
+  });
+  /* effet des questions croisées : 1re question après un changement de notion */
+  if (seq && seq.length >= 8){
+    let swTot = 0, swOk = 0, restTot = 0, restOk = 0;
+    seq.forEach((s, i) => {
+      const firstAfterSwitch = i > 0 && s.notion !== seq[i - 1].notion;
+      if (firstAfterSwitch){ swTot++; if (s.ok) swOk++; }
+      else { restTot++; if (s.ok) restOk++; }
+    });
+    if (swTot >= 3 && restTot >= 3){
+      const eSw = Math.round(100 * (swTot - swOk) / swTot);
+      const eRest = Math.round(100 * (restTot - restOk) / restTot);
+      res.interference = { eSw, eRest, marquee: eSw >= eRest + 20 };
+    }
+  }
+  /* compétences transversales : un même générateur suivi dans plusieurs notions */
+  const parGen = {};
+  (d.notionsTraitees || []).forEach(n => (n.elements || []).forEach(e => {
+    const g = e.libelle || e.generateur;
+    if (!g) return;
+    (parGen[g] = parGen[g] || []).push({ notion: n.nom || n.id, posees: num(e.posees), erreurs: num(e.erreurs) });
+  }));
+  res.transversaux = Object.entries(parGen)
+    .filter(([, v]) => v.length >= 2 && v.filter(w => w.erreurs > 0).length >= 2 && v.reduce((t, w) => t + w.erreurs, 0) >= 2)
+    .map(([g, v]) => ({ g, v }));
+  return res;
+}
+
+/* ---------- onglet « Bilan rédigé » ---------- */
+function renderRapport(){
+  const d = CURRENT.data;
+  const s = d.statistiques || {};
+  const elv = d.eleve || {};
+  const exos = d.exercicesTraites || [];
+  const cl = tdmRapportClasses();
+  const P = t => `<p style="text-align:justify;line-height:1.6;margin:10px 0">${t}</p>`;
+  const UL = items => `<ul style="margin:4px 0 12px 22px;line-height:1.55">${items.map(x => `<li style="margin:6px 0">${x}</li>`).join("")}</ul>`;
+  const nomEl = esc([elv.prenom, elv.nom].filter(Boolean).join(" ") || "l'élève");
+  const traitTotal = (d.notionsTraitees || []).length;
+  const antiTotal = (d.notionsATraiter || []).length;
+
+  const statsTxt = [];
+  const nV = num(s.notionsValidees);
+  if (s.notionsValidees !== undefined) statsTxt.push(`${nV} notion${nV > 1 ? "s" : ""} validée${nV > 1 ? "s" : ""} sur ${num(s.totalNotions)}`);
+  if (s.altitude !== undefined) statsTxt.push(`altitude ${num(s.altitude)}`);
+  if (s.scoreGlobal) statsTxt.push(`score global ${esc(s.scoreGlobal)}`);
+  const nbSes = num((d.reprises || {}).nombre);
+  if (nbSes) statsTxt.push(`${nbSes} session${nbSes > 1 ? "s" : ""} pour un temps cumulé de ${esc(s.tempsTotalFormate || "—")}`);
+  if (exos.length) statsTxt.push(`${exos.length} exercice${exos.length > 1 ? "s" : ""} horodaté${exos.length > 1 ? "s" : ""}`);
+
+  const intro = P(`<b>${nomEl}</b>${elv.classe ? ", classe " + esc(elv.classe) : ""} — voici le bilan établi à partir des données de ce fichier${statsTxt.length ? " (" + statsTxt.join(", ") + ")" : ""}. L'analyse porte <b>uniquement sur les ${traitTotal} notion${traitTotal > 1 ? "s" : ""} réellement travaillée${traitTotal > 1 ? "s" : ""}</b> ; les ${antiTotal} notions jamais abordées ne sont ni évaluées ni comptées.`);
+
+  if (!traitTotal && !exos.length){
+    $("#p-rapport").innerHTML = `<h2>📝 Bilan rédigé</h2>
+      <div class="note">Analyse automatique rédigée à partir des données de ce fichier. Tout est calculé localement, aucune donnée n'est envoyée.</div>
+      <div class="box">${intro}${P("Aucune notion n'a encore été travaillée et aucun exercice n'est enregistré : le bilan ne peut pas encore être établi. Il se rédigera automatiquement dès que l'élève aura répondu à ses premières questions.")}</div>`;
+    return;
+  }
+
+  /* acquis */
+  const secAcquis = cl.acquis.map(it => {
+    const n = it.n;
+    let t = `« ${esc(n.nom || n.id)} » est <b>acquise</b> : notion validée par le jeu${n.dateValidation ? " le " + esc(n.dateValidation) : ""}, avec ${it.reussies} réussite${it.reussies > 1 ? "s" : ""} sur ${it.posees} question${it.posees > 1 ? "s" : ""} (${it.pct} %)`;
+    const fr = tdmFragiles(n);
+    if (fr.length) t += `. Fragilité ponctuelle à garder à l'œil — ${fr.join(" ; ")}`;
+    return t + ".";
+  });
+
+  /* en voie d'acquisition */
+  const secVoie = cl.enVoie.map(it => {
+    const n = it.n;
+    let t;
+    if (it.peu)
+      t = `« ${esc(n.nom || n.id)} » n'a été posée que ${it.posees} foi${it.posees > 1 ? "s" : ""} (${it.reussies} réussite${it.reussies > 1 ? "s" : ""}, ${it.pct} %) : trop peu de recul pour statuer, mais le premier contact est ${it.reussies ? "encourageant" : "fragile"} — à proposer à nouveau très bientôt pour confirmer`;
+    else if (it.proche)
+      t = `« ${esc(n.nom || n.id)} » est <b>en voie d'acquisition, proche de la validation</b> : ${it.pct} % de réussite sur ${it.posees} questions (${it.reussies} réussies, ${it.errs} erreur${it.errs > 1 ? "s" : ""})`;
+    else
+      t = `« ${esc(n.nom || n.id)} » est <b>en voie d'acquisition</b> : ${it.pct} % de réussite sur ${it.posees} questions (${it.reussies} réussies, ${it.errs} erreur${it.errs > 1 ? "s" : ""})`;
+    const fr = tdmFragiles(n);
+    if (fr.length) t += `. Le point de vigilance porte sur : ${fr.join(" ; ")}`;
+    return t + ".";
+  });
+
+  /* non acquis */
+  const secNon = cl.nonAcquis.map(it => {
+    const n = it.n;
+    let t = `« ${esc(n.nom || n.id)} » n'est <b>pas acquise</b> : ${it.pct} % de réussite sur ${it.posees} question${it.posees > 1 ? "s" : ""} (${it.reussies} réussie${it.reussies > 1 ? "s" : ""}, ${it.errs} erreur${it.errs > 1 ? "s" : ""})`;
+    const errN = (d.erreursEleve || []).filter(e => e.notion === n.nom || e.notion === n.id);
+    const recid = errN.filter(e => num(e.erreursDeSuiteSurType) >= 2).length;
+    if (recid) t += `, dont ${recid} erreur${recid > 1 ? "s" : ""} commise${recid > 1 ? "s" : ""} en récidive sur un même type d'exercice`;
+    const ex = errN[0];
+    if (ex && ex.enonce){
+      const enc = String(ex.enonce);
+      t += `. Exemple : « ${esc(enc.slice(0, 140))}${enc.length > 140 ? "…" : ""} » — réponse donnée : <b>${esc(String(ex.reponseEleve ?? "—"))}</b>, attendu : <b>${esc(String(ex.bonneReponse ?? "—"))}</b>`;
+    }
+    return t + ".";
+  });
+
+  /* vraisemblance */
+  const v = tdmVraisemblance();
+  let vraiP;
+  if (!exos.length)
+    vraiP = "Aucun exercice horodaté n'est enregistré : l'analyse des délais et des schémas de réponse ne peut pas être menée. Elle s'activera dès les premières réponses.";
+  else {
+    const head = `Chaque réponse est horodatée dans la sauvegarde : le lecteur confronte donc les performances aux délais réels de réponse, à l'uniformité des réponses et aux erreurs « grossières » (clés loufoques). ${exos.length} exercice${exos.length > 1 ? "s" : ""} enregistré${exos.length > 1 ? "s" : ""} a${exos.length > 1 ? "ont" : ""} été analysé${exos.length > 1 ? "s" : ""}${v.timingOk ? "" : " — les horodatages exploitables sont trop rares pour une analyse fine des délais"}. Cette analyse ne démontre rien à elle seule : elle signale des motifs statistiques inhabituels, à croiser avec le contexte de travail et, le cas échéant, un entretien avec l'élève.`;
+    if (v.niveau === "none")
+      vraiP = head + " <b>Aucun indice de réponse précipitée ou de fraude n'a été relevé</b> : les délais, la variété des réponses et la répartition juste/faux sont cohérents entre eux.";
+    else {
+      const label = v.niveau === "serieux" ? "Indices sérieux" : (v.niveau === "surveiller" ? "Indices à surveiller" : "Indices ponctuels");
+      vraiP = head + ` <b>${label} :</b> ${v.indices.map(i => i.txt).join(" ; ")}.`;
+    }
+  }
+
+  /* évolution au fil de l'activité */
+  const ev = tdmEvolution();
+  let evP;
+  if (ev.n < 4)
+    evP = "Trop peu d'exercices enregistrés pour suivre une évolution fiable — à réévaluer après quelques séances supplémentaires.";
+  else {
+    const parts = [];
+    parts.push(ev.chronoOk
+      ? "Le jeu pose ses questions de façon <b>croisée</b> : plusieurs notions s'enchaînent au fil d'une session, alors que le fichier les regroupe par notion. La chronologie a donc été reconstituée à partir des horodatages des réponses avant toute analyse de tendance, afin de ne pas confondre l'ordre du fichier avec l'ordre réel de l'activité."
+      : "Le jeu pose ses questions de façon <b>croisée</b> et le fichier regroupe les réponses par notion ; ici, les horodatages exploitables sont trop rares pour reconstituer l'ordre réel de la séance. Les tendances par notion ci-dessous utilisent donc l'ordre interne des questions de chaque notion (fiable en propre), mais aucune comparaison d'ensemble entre notions n'est hasardée.");
+    if (ev.tiers.length){
+      const [a, b, c] = ev.tiers;
+      const phrase = {
+        hausse: " La dynamique est <b>positive</b> : la réussite progresse au fil de l'activité.",
+        baisse: " La dynamique est <b>négative</b> : la réussite se dégrade au fil de l'activité — lassitude, difficulté croissante des questions, ou conditions de travail à explorer.",
+        stable: " La dynamique est <b>stable</b> d'un bout à l'autre de l'activité."
+      }[ev.tendance];
+      parts.push(` Sur l'ensemble des ${ev.n} exercices, la réussite passe de ${a.pct} % sur les premières questions (${a.n}), à ${b.pct} % au cœur de l'activité (${b.n}), puis à ${c.pct} % sur les dernières (${c.n}).${phrase}`);
+    }
+    if (ev.notions.length)
+      parts.push(" Par notion : " + ev.notions.map(t =>
+        `« ${esc(t.nom)} » (${t.early.pct} % sur ${t.early.n} premières questions → ${t.late.pct} % sur ${t.late.n} suivantes)${t.dir === "hausse" ? " <b>en progression</b>" : (t.dir === "baisse" ? " <b>en régression</b>" : " stable")}`).join(" ; ") + ".");
+    if (ev.interference)
+      parts.push(ev.interference.marquee
+        ? ` Effet des questions croisées : l'élève se trompe davantage à la première question posée juste après un changement de notion (${ev.interference.eSw} % d'erreurs, contre ${ev.interference.eRest} % ensuite) — un profil d'inattention au changement de contexte plutôt qu'une lacune de fond.`
+        : ` Effet des questions croisées : le changement de notion ne perturbe pas visiblement l'élève (${ev.interference.eSw} % d'erreurs à la première question après un changement, contre ${ev.interference.eRest} % ensuite).`);
+    if (ev.transversaux.length)
+      parts.push(" " + ev.transversaux.map(tv => {
+        const det = tv.v.map(w => `« ${esc(w.notion)} » : ${w.erreurs} erreur${w.erreurs > 1 ? "s" : ""} sur ${w.posees}`).join(" ; ");
+        return `Compétence transversale fragilisée — <b>${esc(tv.g)}</b> échoue dans plusieurs notions (${det}) : la lacune porte sur cette compétence partagée plutôt que sur une notion isolée.`;
+      }).join(" "));
+    evP = parts.join("");
+  }
+
+  /* recommandations */
+  const reco = [];
+  if (cl.nonAcquis.length)
+    reco.push(`Reprendre en priorité : ${cl.nonAcquis.map(it => `« ${esc(it.n.nom || it.n.id)} » (${it.pct} %)`).join(", ")}.`);
+  if (cl.enVoie.length)
+    reco.push(`Consolider : ${cl.enVoie.map(it => `« ${esc(it.n.nom || it.n.id)} » (${it.pct} %)`).join(", ")} — le jeu augmentera naturellement leur probabilité d'apparition tant qu'elles ne sont pas validées.`);
+  if (cl.acquis.length)
+    reco.push(`Entretenir : ${cl.acquis.map(it => `« ${esc(it.n.nom || it.n.id)} »`).join(", ")} reviendra de façon espacée ; un échec ponctuel n'invalide pas l'acquisition.`);
+  if (v.niveau === "serieux")
+    reco.push("Compte tenu des indices relevés, privilégier une vérification en présentiel (question flash à l'oral, mini-test surveillé) pour mesurer le niveau réel indépendamment du fichier.");
+  else if (v.niveau !== "none" && exos.length)
+    reco.push("Surveiller la suite de l'activité : si les mêmes motifs se répètent, une vérification ponctuelle en classe permettra de trancher.");
+  if (ev.tendance === "hausse")
+    reco.push("La progression constatée au fil de l'activité est à saluer : encourager l'élève à poursuivre sur ce rythme.");
+  if (ev.tendance === "baisse")
+    reco.push("La réussite se dégrade en seconde partie d'activité : recueillir le contexte (fatigue, difficulté croissante des questions) avant de conclure ; un point rapide avec l'élève est conseillé.");
+  if (ev.transversaux.length)
+    reco.push(`Travailler en priorité la compétence transversale ${ev.transversaux.map(tv => `« ${esc(tv.g)} »`).join(", ")} : elle est sollicitée par plusieurs notions et conditionne l'ensemble.`);
+  if (ev.interference && ev.interference.marquee)
+    reco.push("Aider l'élève à gérer les transitions entre notions (relire l'énoncé en entier, reformuler avant de répondre) : les erreurs se concentrent au changement de question.");
+  if (!reco.length)
+    reco.push("Rien à signaler pour l'instant : l'activité est encore trop brève pour des recommandations ciblées ; relancer l'élève sur les notions du programme.");
+
+  $("#p-rapport").innerHTML = `<h2>📝 Bilan rédigé</h2>
+    <div class="note">Analyse automatique rédigée à partir des données de ce fichier (notions travaillées, exercices horodatés, sanctions du jeu). Tout est calculé localement, aucune donnée n'est envoyée.</div>
+    <div class="box"><h3>Synthèse</h3>${intro}</div>
+    <div class="box"><h3>✅ Acquis (${cl.acquis.length})</h3>${cl.acquis.length ? UL(secAcquis) : P("Aucune notion travaillée n'est encore validée à ce stade.")}</div>
+    <div class="box"><h3>🚧 En voie d'acquisition (${cl.enVoie.length})</h3>${cl.enVoie.length ? UL(secVoie) : P("Aucune notion dans cette catégorie.")}</div>
+    <div class="box"><h3>❌ Non acquis (${cl.nonAcquis.length})</h3>${cl.nonAcquis.length ? UL(secNon) : P("Aucune notion dans cette catégorie.")}</div>
+    <div class="box"><h3>📈 Évolution au fil de l'activité</h3>${P(evP)}</div>
+    <div class="box"><h3>🕵️ Vraisemblance de l'activité</h3>${P(vraiP)}</div>
+    <div class="box"><h3>🎯 Recommandations</h3>${UL(reco)}</div>`;
 }
 
 /* ---------- consignes ---------- */

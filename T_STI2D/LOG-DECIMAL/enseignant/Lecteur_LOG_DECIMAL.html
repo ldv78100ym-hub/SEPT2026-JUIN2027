@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecteur des résultats — log₁₀ (clé privée du professeur)</title>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+  :root{
+    --bg:#f4f7fb; --panel:#ffffff; --panel-2:#f1f5fb; --line:#d9e2ef;
+    --text:#1a2235; --muted:#5b6b88; --accent:#0284c7; --accent2:#b45309;
+    --violet:#7c3aed; --green:#059669; --red:#dc2626;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height:1.65; background-color:#f4f7fb;
+    background-image:
+      radial-gradient(900px 520px at 12% -8%, rgba(2,132,199,.10), transparent 70%),
+      radial-gradient(760px 420px at 92% -4%, rgba(180,83,9,.07), transparent 70%),
+      radial-gradient(700px 500px at 50% 110%, rgba(124,58,237,.07), transparent 70%);
+    background-attachment: fixed; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 40px 20px 90px; }
+  header h1{
+    font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height:1.15; margin: 0 0 .3em;
+    letter-spacing:-.02em;
+    background: linear-gradient(100deg, #0284c7 0%, #7c3aed 45%, #b45309 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header p.lead{ color: var(--muted); font-size: 1.02rem; max-width: 62ch; margin: 0; }
+
+  section{
+    background: linear-gradient(180deg, #ffffff, #fbfcff); border: 1px solid var(--line);
+    border-radius: 16px; padding: 24px 24px 26px; margin-top: 26px;
+    box-shadow: 0 14px 32px -22px rgba(20,45,90,.28);
+  }
+  section h2{
+    margin: 0 0 14px; font-size: 1.32rem; letter-spacing:-.01em;
+    display:flex; align-items:center; gap:.6rem; color:#14203a;
+  }
+  section h2::before{
+    content:""; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 10px 2px rgba(2,132,199,.45); flex:none;
+  }
+  p{ margin: .6em 0; }
+  .muted{ color: var(--muted); }
+  .small{ font-size:.9rem; }
+
+  .note{
+    border-left: 3px solid var(--accent2); background: rgba(180,83,9,.05);
+    padding: 10px 16px; border-radius: 0 10px 10px 0; margin: 16px 0;
+    font-size: .94rem; color: #33405a;
+  }
+  .note.red{ border-left-color: var(--red); background: rgba(220,38,38,.07); }
+  code.inline{
+    background: rgba(2,132,199,.08); color:#0369a1; border-radius:4px; padding:1px 6px;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size:.9em;
+  }
+
+  .dropzone{
+    border: 2px dashed rgba(2,132,199,.45); border-radius: 14px; background: rgba(2,132,199,.04);
+    padding: 34px 20px; text-align: center; cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .12s ease;
+  }
+  .dropzone:hover, .dropzone.dragover{
+    background: rgba(2,132,199,.09); border-color: var(--accent); transform: translateY(-1px);
+  }
+  .dropzone .dz-icon{ font-size: 2.2rem; line-height: 1; margin-bottom: 8px; }
+  .dropzone .dz-title{ font-weight: 700; color:#14203a; }
+  .dropzone .dz-hint{ color: var(--muted); font-size: .9rem; margin-top: 4px; }
+  #fileInput{ display: none; }
+
+  button{
+    background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff;
+    border: 1px solid rgba(2,132,199,.6); padding: 10px 18px; border-radius: 10px;
+    font-size: .94rem; font-weight: 600; font-family: inherit; cursor: pointer;
+    box-shadow: 0 8px 18px -12px rgba(2,132,199,.9);
+    transition: filter .15s ease, transform .12s ease;
+  }
+  button:hover{ filter: brightness(1.08); }
+  button:active{ transform: scale(.97); }
+  button.ghost{
+    background:#f1f5fb; color:#33405a; border:1px solid var(--line); box-shadow:none;
+  }
+  button.ghost:hover{ background:#e2e8f0; filter:none; }
+
+  .error{
+    background: rgba(220,38,38,.08); border: 1px solid rgba(220,38,38,.3);
+    color: #991b1b; border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size:.94rem;
+  }
+
+  .copie{
+    border: 1px solid var(--line); border-radius: 14px; background:#fbfcff;
+    margin-top: 22px; overflow: hidden;
+  }
+  .copie-head{
+    display:flex; align-items:center; gap: 14px; flex-wrap: wrap;
+    padding: 16px 20px; background: linear-gradient(180deg, #ffffff, #f6f9fd);
+    border-bottom: 1px solid var(--line);
+  }
+  .copie-id{ flex: 1 1 240px; min-width: 0; }
+  .copie-id .nom{ font-size: 1.15rem; font-weight: 700; color:#14203a; letter-spacing:-.01em; }
+  .copie-id .meta{ font-size: .88rem; color: var(--muted); }
+  .score-badge{
+    flex: none; border-radius: 10px; padding: 8px 16px; text-align:center;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700;
+  }
+  .score-badge.green{ background: rgba(5,150,105,.12); color:#047857; border:1px solid rgba(5,150,105,.35); }
+  .score-badge.amber{ background: rgba(217,119,6,.12); color:#b45309; border:1px solid rgba(217,119,6,.35); }
+  .score-badge.red{ background: rgba(220,38,38,.10); color:#b91c1c; border:1px solid rgba(220,38,38,.3); }
+  .score-badge .pct{ display:block; font-size:.8rem; font-weight:600; opacity:.85; }
+  .copie-body{ padding: 18px 20px 20px; }
+
+  .q-item{
+    border: 1px solid var(--line); border-radius: 12px; background:#ffffff;
+    padding: 14px 16px; margin: 12px 0;
+  }
+  .q-head{ display:flex; align-items:flex-start; gap: 12px; flex-wrap: wrap; }
+  .q-num{
+    flex:none; width: 30px; height: 30px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.9rem; color:#fff;
+  }
+  .q-num.ok{ background: var(--green); }
+  .q-num.ko{ background: var(--red); }
+  .q-text{ flex: 1 1 260px; min-width: 0; font-size: .98rem; overflow-wrap: break-word; }
+  .q-text mjx-container, .ans mjx-container{ max-width: 100% !important; }
+  .q-text mjx-container > svg, .ans mjx-container > svg{ max-width: 100% !important; height: auto !important; }
+  .q-time{ flex:none; font-size:.78rem; color:var(--muted); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .ans-grid{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: 10px; margin-top: 12px;
+  }
+  .ans{
+    border-radius: 10px; padding: 10px 14px; font-size: .93rem;
+    border: 1px solid var(--line); background: var(--panel-2);
+  }
+  .ans .lab{
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+    font-weight: 700; margin-bottom: 3px;
+  }
+  .ans.given.ok{ background: rgba(5,150,105,.08); border-color: rgba(5,150,105,.35); }
+  .ans.given.ok .lab{ color: #047857; }
+  .ans.given.ko{ background: rgba(220,38,38,.07); border-color: rgba(220,38,38,.3); }
+  .ans.given.ko .lab{ color: #b91c1c; }
+  .ans.expected{ background: rgba(2,132,199,.05); border-color: rgba(2,132,199,.25); }
+  .ans.expected .lab{ color: var(--accent); }
+
+  .stats-row{
+    display:flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 4px;
+  }
+  .stat-chip{
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 4px 12px; font-size: .85rem; color: #33405a;
+  }
+  .stat-chip b{ color: var(--accent); }
+
+  .actions-row{ display:flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  #results{ min-height: 20px; }
+  #emptyState{ text-align:center; color: var(--muted); padding: 26px 10px; }
+  #emptyState .big{ font-size: 2rem; }
+
+  details.keybox{
+    margin-top: 14px; border: 1px solid var(--line); border-radius: 12px;
+    background: #fbfcff; padding: 0;
+  }
+  details.keybox summary{
+    cursor:pointer; padding: 12px 16px; font-weight: 600; color:#33405a; font-size:.92rem;
+    list-style:none;
+  }
+  details.keybox summary::-webkit-details-marker{ display:none; }
+  details.keybox summary::before{ content:"▸ "; }
+  details.keybox[open] summary::before{ content:"▾ "; }
+  details.keybox .keybody{ padding: 0 16px 14px; }
+  details.keybox pre{
+    background:#0f172a; color:#e2e8f0; border-radius:10px; padding:12px 14px;
+    font-size:.76rem; line-height:1.5; overflow-x:auto; white-space:pre; margin:0;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  details.keybox .fingerprint{
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size:.85rem;
+    color: var(--accent2); background: rgba(180,83,9,.07); border:1px solid rgba(180,83,9,.25);
+    border-radius:8px; padding:6px 12px; margin-bottom:10px; overflow-wrap:anywhere;
+  }
+
+  /* ===== Traitement par lot ===== */
+  #batchPanel{ margin-top: 18px; }
+  #batchPanel h3{ margin: 22px 0 8px; font-size: 1.02rem; color: #14203a; }
+  .batch-table-wrap{ overflow-x: auto; margin-top: 10px; border: 1px solid var(--line);
+    border-radius: 12px; background: #ffffff; }
+  table.batch-table{ width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 640px; }
+  .batch-table th{
+    text-align: left; padding: 10px 12px; font-size: .74rem; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--accent); border-bottom: 1px solid var(--line);
+    cursor: pointer; user-select: none; white-space: nowrap; background: #f6f9fd;
+  }
+  .batch-table th:hover{ background: #eef7fe; }
+  .batch-table th.sorted::after{ content: " \25BE"; }
+  .batch-table th.sorted.asc::after{ content: " \25B4"; }
+  .batch-table td{ padding: 9px 12px; border-bottom: 1px solid #eef2f9; vertical-align: middle; }
+  .batch-table tr:last-child td{ border-bottom: none; }
+  .batch-table tbody tr{ cursor: pointer; transition: background .12s ease; }
+  .batch-table tbody tr:hover{ background: #eef7fe; }
+  .batch-table td.mono{ font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+  .batch-table td.filename{ font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: .78rem; color: var(--muted); max-width: 220px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .mini-badge{
+    display: inline-block; border-radius: 6px; padding: 2px 9px; font-weight: 700;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .8rem;
+  }
+  .mini-badge.green{ background: rgba(5,150,105,.12); color: #047857; border: 1px solid rgba(5,150,105,.35); }
+  .mini-badge.amber{ background: rgba(217,119,6,.12); color: #b45309; border: 1px solid rgba(217,119,6,.35); }
+  .mini-badge.red{ background: rgba(220,38,38,.10); color: #b91c1c; border: 1px solid rgba(220,38,38,.3); }
+
+  @media (max-width: 640px){
+    section{ padding: 18px 16px 20px; }
+    .copie-head{ padding: 14px 16px; }
+  }
+  @media print{
+    body{ background:#fff; }
+    .dropzone, .actions-row, details.keybox, header .lead { display:none !important; }
+    .batch-table-wrap{ overflow: visible; }
+    section{ box-shadow:none; border:none; padding:0; margin-top:10px; }
+  }
+
+  /* ===== Bouton et modale : Droits d'auteur ===== */
+  .legal-footer{ margin-top: 34px; text-align: center; }
+  .legal-btn{
+    background:#ffffff; color:#33405a; border:1px solid var(--line);
+    padding:10px 18px; border-radius:10px; font-size:.9rem; font-weight:600;
+    box-shadow:none; margin-top:12px; cursor:pointer; font-family:inherit;
+    transition: filter .15s ease, transform .12s ease, border-color .15s ease, color .15s ease;
+  }
+  .legal-btn:hover{ border-color:var(--accent); color:var(--accent); filter:none; transform:translateY(-1px); }
+  .legal-btn:active{ transform: scale(.97); }
+  .legal-backdrop{
+    position: fixed; inset: 0; z-index: 4000; background: rgba(15,23,42,.5);
+    display: none; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  }
+  .legal-backdrop.show{ display: block; }
+  .legal-modal{
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 4001; width: min(640px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px); overflow-y: auto; background: #ffffff;
+    border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 24px 70px -20px rgba(20,45,90,.6);
+    padding: 22px 24px 18px; display: none;
+  }
+  .legal-modal.show{ display: block; }
+  .legal-close{
+    position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;
+    border-radius: 50%; background: #f1f5fb; color: #64748b; border: 1px solid var(--line);
+    font-size: 1.1rem; line-height: 1; display: flex; align-items: center;
+    justify-content: center; padding: 0; box-shadow: none; cursor: pointer;
+  }
+  .legal-close:hover{ background: #e2e8f0; color: var(--text); filter: none; }
+  .legal-modal h3{ margin: 0 0 10px; padding-right: 42px; font-size: 1.15rem; color: #14203a; letter-spacing: -.01em; }
+  .legal-author{ font-size: .95rem; color: #33405a; }
+  .legal-licence{
+    display: inline-block; font-size: .8rem; font-weight: 700; letter-spacing: .04em;
+    color: #b45309; background: rgba(180,83,9,.10); border-radius: 6px;
+    padding: 3px 10px; margin: 6px 0 10px; text-transform: uppercase;
+  }
+  .legal-modal p{ margin: .55em 0; font-size: .92rem; color: #33405a; line-height: 1.6; }
+  .legal-modal ul{ margin: .5em 0; padding-left: 22px; }
+  .legal-modal li{ margin: .45em 0; font-size: .92rem; color: #33405a; line-height: 1.6; }
+  .legal-modal b{ color: #14203a; }
+  .legal-modal a{ color: var(--accent); }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Lecteur des résultats — logarithme décimal</h1>
+    <p class="lead">
+      Outil réservé au <strong>professeur</strong> : il contient la clé privée RSA qui déchiffre
+      les fichiers <code class="inline">resultats_quiz_*.json</code> produits par le document
+      élève «&nbsp;Le logarithme décimal&nbsp;».
+    </p>
+  </header>
+
+  <section>
+    <h2>Ouvrir un fichier de résultats</h2>
+    <div class="note red">
+      <strong>⚠ Confidentiel :</strong> ce fichier contient la <strong>clé privée</strong> du couple
+      de clés RSA. Ne le distribuez jamais aux élèves : quiconque le possède peut déchiffrer
+      toutes les copies. Conservez-le uniquement sur votre poste.
+    </div>
+    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Ouvrir un fichier de résultats">
+      <div class="dz-icon">📂</div>
+      <div class="dz-title">Glissez-déposez ici les fichiers <code class="inline">resultats_quiz_*.json</code></div>
+      <div class="dz-hint">ou cliquez pour parcourir — plusieurs fichiers, ou un dossier entier à traiter par lot</div>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" multiple>
+    <input type="file" id="dirInput" webkitdirectory multiple style="display:none">
+    <div class="actions-row">
+      <button class="ghost" id="dirBtn">📁 Traiter un dossier entier</button>
+      <button class="ghost" id="csvBtn" disabled>📊 Exporter le résumé (CSV)</button>
+      <button class="ghost" id="jsonBtn" disabled>💾 Exporter tout (JSON)</button>
+      <button class="ghost" id="printBtn">🖨 Imprimer / PDF</button>
+      <button class="ghost" id="clearBtn">🗑 Effacer les copies affichées</button>
+    </div>
+    <div id="batchPanel" hidden>
+      <h3>📋 Résultats du lot</h3>
+      <div class="stats-row" id="batchStats"></div>
+      <div class="batch-table-wrap">
+        <table class="batch-table" id="batchTable">
+          <thead>
+            <tr>
+              <th data-key="nom">Élève</th>
+              <th data-key="classe">Classe</th>
+              <th data-key="score">Score</th>
+              <th data-key="pct">%</th>
+              <th data-key="questions">Questions</th>
+              <th data-key="fichier">Fichier</th>
+              <th data-key="date">Date d'export</th>
+            </tr>
+          </thead>
+          <tbody id="batchBody"></tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:8px;">
+        Cliquez sur un en-tête pour trier le tableau, sur une ligne pour atteindre la copie correspondante.
+        Recharger un même fichier remplace son entrée.
+      </p>
+    </div>
+    <div id="results">
+      <div id="emptyState">
+        <div class="big">🔐</div>
+        <p>Aucune copie chargée pour l'instant.</p>
+        <p class="small">Les résultats chiffrés ne peuvent être lus <em>que</em> depuis ce fichier,
+        car lui seul détient la clé privée.</p>
+      </div>
+    </div>
+    <div id="errors"></div>
+  </section>
+
+  <section>
+    <h2>Clé privée embarquée</h2>
+    <p class="small muted">
+      Cette clé privée RSA-2048 (PKCS&nbsp;#8) est le complément de la clé publique installée dans
+      le document élève. Les résultats sont chiffrés en <strong>RSA-OAEP (SHA-256)</strong> +
+      <strong>AES-256-GCM</strong> : ce lecteur déchiffre la clé AES, puis les données du quiz.
+      Le mode GCM garantit en outre qu'un fichier altéré sera rejeté.
+    </p>
+    <details class="keybox">
+      <summary>Afficher la clé privée (PKCS&nbsp;#8, PEM)</summary>
+      <div class="keybody">
+        <div class="fingerprint" id="keyFingerprint">Empreinte SHA-256 : calcul…</div>
+        <pre id="keyDisplay"></pre>
+      </div>
+    </details>
+  </section>
+
+  <footer class="legal-footer">
+    <button class="legal-btn" id="legalBtn">⚖️ Droits d'auteur</button>
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   CLÉ PRIVÉE DU PROFESSEUR (PKCS #8 PEM, RSA-2048)
+   Complément exact de la clé publique du document élève.
+   ========================================================= */
+const PRIVATE_KEY_PEM = `-----BEGIN PRIVATE KEY-----
+MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDE50weaoxwAL4j
+ZZOP4YFnmlHg6zwYtWJ1bs/l7Hag6RICUAZr1gqmPOHMvOAG5773gBnv6v9hotnj
+fSPvUkyVphnZAgGedPY6p7OKpXAbfj87E2mql0Ke++dJiVLxQg1c76UXHafeykOB
+cx+tRUQUY3VWe4k+AbpyL2a5OaHaFIcFTt5EPwl0BLqVDaR+JF29gG6T75ic4sXe
+PiAVolldTwpeMDE/IuQ1RzGdVWvhVnJEY7DaAqAdtPL3s517HdzKENzYxB1K5mkG
+NpWgZ/z3vthttfQ0qYBLrZY4R/wVSFJVj+zauB6xRhM0FnxsjRZPAK+Wz5/7VDZp
+px3DlSLfAgMBAAECggEASXTEV+CF7c7JIClnyFhnT0Ap5Y+8Rrd8OLUTSAJUKyln
+94blLluWc3fpANlBdjIEcw7OHkv74++9+3kW69Q3D+j8YZG3Cuc1aKJhf4rCbO9H
+JYHTfLmbN/ZfzXY2hByRIaehXiNJGfs4/dT1700U3cpQ3ueNRp2ccbavStBuSg2Q
+XRLN4REJRHfn97bRCCgIH7bKilBz+RByZz+UFSlD0v0qgpPWbCSa5bcfyhn5KkuZ
+XAVun5eQd0ACdhs6DGqPcl75DIruAdUmVV1Nmc5MSSe51mFL6dXutaQO2ZH44lzx
+s49i+fgzIT6MYq31bWaoEerPOx7ZFgG9OXJjm8AK4QKBgQDy2DRXuIh43oWTtP8v
+MqE9O9Zret53koI4zaLYrANF4PE/14w+n8jQ2xfZ2cuAGYM+u6xtpu3jaNwBhLh3
+rGraJq85FXdpHcm2AJnykrs6+uJ8UOJhfqXAouvQ/ihKIAd/y29TpYtChKv8Gb+p
+UlTHShI3wNU2Lr8+mS2zqFfiEQKBgQDPkfoxOzGado3BB6twT6hxH6iV3Z0phuQn
+QA9wMvB54HpBhL3Xi5UuxZq5z091uvAdXxNmCRoI5MxxrvtbALDa0Y2aIoVltfFL
+07jwlp+IP0QteYMqOMPMRT6+lP22dPo/q9JFfXledRrdHQQdZjdJvxe7XNSZ5Jfd
+ssMjfXLF7wKBgGIRkcHDEcnOAx+NPmhvB9JUsdihu+mJzvDlilf5zzCPEJ35i/dW
+S6CcedtOKvJGW0wgOhfmC7eEhyRN1rjtdhE3AhgJZTmb//Nx9rmRK+87le8iMumw
+XXuXz6eMm/SjTqP7IbAj8EMilNmwBEh6qSX58bV2OCQzaKP89AnTd/ohAoGAAdcU
+db1Fmk30wcJUpcE/CAm0z+dQDl8wxJxPxrnc4ee4jb4khLWrE+gSkBUjajLHECuY
+m233Oh71JQjdF5hw+O+kpropnpY3VmnBGPjs3yNYcmLCY+xu5++xN7VQbn6o/UmD
+qrQLEGhPXah1MeGHGfNEvZd8FwUsx31fN4BUNScCgYAf2Vhf7AKmiv0Hebp0rwcg
+HbuHelhbRl5HTGZm2rFvPSPE+xiKBCCGKz+qh4Twvg6S5BRII7DY4ixy1Tq8rMxL
+Z+Fo251a/x6+1fylSJ3AhKIYnd4wU369XKNRyqbiwspXdeUDzu/FGpky8uh6FKw1
+rFZrjEAIoc2or/Y59U63QQ==
+-----END PRIVATE KEY-----`;
+
+/* ============ Utilitaires base64 / PEM ============ */
+function base64ToArrayBuffer(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+function pemToArrayBuffer(pem) {
+  const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
+  return base64ToArrayBuffer(b64);
+}
+
+/* ============ Clés ============ */
+async function importPrivateKey() {
+  const keyData = pemToArrayBuffer(PRIVATE_KEY_PEM);
+  return await crypto.subtle.importKey(
+    'pkcs8',
+    keyData,
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    false,
+    ['decrypt']
+  );
+}
+
+/* ============ Déchiffrement (miroir de encryptPayload du document élève) ============ */
+async function decryptPayload(enc) {
+  const privateKey = await importPrivateKey();
+
+  // 1) Déchiffrer la clé AES-256 transportée (RSA-OAEP SHA-256)
+  const rawAesKey = await crypto.subtle.decrypt(
+    { name: 'RSA-OAEP' },
+    privateKey,
+    base64ToArrayBuffer(enc.encryptedKey)
+  );
+
+  // 2) Importer la clé AES-GCM
+  const aesKey = await crypto.subtle.importKey('raw', rawAesKey, { name: 'AES-GCM' }, false, ['decrypt']);
+
+  // 3) Déchiffrer les données (l'authentification GCM rejette toute altération)
+  const plaintext = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: base64ToArrayBuffer(enc.iv) },
+    aesKey,
+    base64ToArrayBuffer(enc.ciphertext)
+  );
+  return new TextDecoder().decode(plaintext);
+}
+
+/* ============ Interface ============ */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const results = document.getElementById('results');
+const errors = document.getElementById('errors');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+['dragover', 'dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+dropzone.addEventListener('drop', e => { handleFiles(e.dataTransfer.files); });
+
+fileInput.addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
+
+/* Sélection d'un dossier entier : on ne traite que les fichiers .json */
+document.getElementById('dirBtn').addEventListener('click', () => document.getElementById('dirInput').click());
+document.getElementById('dirInput').addEventListener('change', e => {
+  const jsonFiles = Array.from(e.target.files || []).filter(f => /\.json$/i.test(f.name));
+  if (jsonFiles.length === 0) {
+    errors.innerHTML = '<div class="error">Aucun fichier <code class="inline">.json</code> trouvé dans ce dossier.</div>';
+  } else {
+    handleFiles(jsonFiles);
+  }
+  e.target.value = '';
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  results.innerHTML = '<div id="emptyState"><div class="big">🔐</div><p>Aucune copie chargée pour l\'instant.</p></div>';
+  errors.innerHTML = '';
+  batchEntries.length = 0;
+  renderBatch();
+});
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+async function handleFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (files.length === 0) return;
+  const errs = [];
+  for (const file of files) {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      await renderOne(file.name, data);
+    } catch (err) {
+      errs.push({ name: file.name, msg: err.message || String(err) });
+    }
+  }
+  if (errs.length) {
+    errors.innerHTML = errs.map(e =>
+      `<div class="error"><strong>❌ ${escapeHtml(e.name)}</strong> — ${escapeHtml(e.msg)}</div>`
+    ).join('');
+  } else {
+    errors.innerHTML = '';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function fmtDate(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' });
+  } catch (e) { return iso; }
+}
+
+/* =========================================================
+   TRAITEMENT PAR LOT : récapitulatif de toutes les copies
+   ========================================================= */
+const batchEntries = [];
+let batchSeq = 0;
+let batchSort = { key: 'date', dir: -1 };
+const batchPanel = document.getElementById('batchPanel');
+
+/* Tri des en-têtes du tableau (branché une seule fois) */
+document.querySelectorAll('#batchTable th').forEach(th => {
+  th.addEventListener('click', () => {
+    if (batchSort.key === th.dataset.key) batchSort.dir *= -1;
+    else batchSort = { key: th.dataset.key, dir: 1 };
+    renderBatch();
+  });
+});
+
+function registerBatchEntry(fileName, info) {
+  const existing = batchEntries.findIndex(e => e.fileName === fileName);
+  const entry = Object.assign({ fileName }, info);
+  if (existing >= 0) {
+    entry.id = batchEntries[existing].id;   // rechargement du même fichier -> remplacement
+    batchEntries[existing] = entry;
+  } else {
+    entry.id = ++batchSeq;
+    batchEntries.push(entry);
+  }
+  renderBatch();
+  return entry.id;
+}
+
+function sortBatchEntries(arr) {
+  const { key, dir } = batchSort;
+  const val = e => {
+    switch (key) {
+      case 'nom':       return (e.eleve.nom || '').toLowerCase();
+      case 'classe':   return (e.eleve.classe || '').toLowerCase();
+      case 'score':    return e.score;
+      case 'pct':      return e.pct;
+      case 'questions':return e.quizCount;
+      case 'fichier':  return e.fileName.toLowerCase();
+      default:         return e.exportDate || '';
+    }
+  };
+  return arr.slice().sort((a, b) => {
+    const va = val(a), vb = val(b);
+    if (va < vb) return -1 * dir;
+    if (va > vb) return  1 * dir;
+    return 0;
+  });
+}
+
+function renderBatch() {
+  const body  = document.getElementById('batchBody');
+  const stats = document.getElementById('batchStats');
+  const n = batchEntries.length;
+  batchPanel.hidden = (n === 0);
+  document.getElementById('csvBtn').disabled = (n === 0);
+  document.getElementById('jsonBtn').disabled = (n === 0);
+  if (n === 0) { body.innerHTML = ''; stats.innerHTML = ''; return; }
+
+  const sumScore = batchEntries.reduce((s, e) => s + e.score, 0);
+  const sumTotal = batchEntries.reduce((s, e) => s + e.total, 0);
+  const avgPct  = Math.round(batchEntries.reduce((s, e) => s + e.pct, 0) / n);
+  const globalPct = sumTotal > 0 ? Math.round(100 * sumScore / sumTotal) : 0;
+  const best  = batchEntries.reduce((b, e) => (e.pct > b.pct ? e : b), batchEntries[0]);
+  const worst = batchEntries.reduce((b, e) => (e.pct < b.pct ? e : b), batchEntries[0]);
+
+  stats.innerHTML =
+    `<span class="stat-chip">Copies : <b>${n}</b></span>` +
+    `<span class="stat-chip">Moyenne : <b>${avgPct}%</b></span>` +
+    `<span class="stat-chip">Réussite globale : <b>${sumScore}/${sumTotal} (${globalPct}%)</b></span>` +
+    `<span class="stat-chip">Meilleure copie : <b>${escapeHtml(best.eleve.nom || '?')} — ${best.pct}%</b></span>` +
+    `<span class="stat-chip">Copie la plus faible : <b>${escapeHtml(worst.eleve.nom || '?')} — ${worst.pct}%</b></span>`;
+
+  body.innerHTML = sortBatchEntries(batchEntries).map(e => {
+    const cls = e.pct >= 70 ? 'green' : (e.pct >= 50 ? 'amber' : 'red');
+    return `<tr data-copie="${e.id}">
+      <td><b>${escapeHtml(e.eleve.nom || 'Élève inconnu')}</b>${e.eleve.prenoms ? ' ' + escapeHtml(e.eleve.prenoms) : ''}</td>
+      <td>${escapeHtml(e.eleve.classe || '—')}</td>
+      <td class="mono">${e.score} / ${e.total}</td>
+      <td><span class="mini-badge ${cls}">${e.pct}%</span></td>
+      <td class="mono">${e.quizCount}</td>
+      <td class="filename" title="${escapeHtml(e.fileName)}">${escapeHtml(e.fileName)}</td>
+      <td class="small">${e.exportDate ? escapeHtml(fmtDate(e.exportDate)) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  body.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => {
+    const card = document.getElementById('copie-' + tr.dataset.copie);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+
+  document.querySelectorAll('#batchTable th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.key === batchSort.key);
+    th.classList.toggle('asc', th.dataset.key === batchSort.key && batchSort.dir === 1);
+  });
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* Export CSV du résumé (séparateur point-virgule, BOM UTF-8 pour Excel) */
+document.getElementById('csvBtn').addEventListener('click', () => {
+  const esc = v => {
+    const s = (v === undefined || v === null) ? '' : String(v);
+    return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const lines = [['Nom', 'Prénoms', 'Classe', 'Score', 'Total', 'Pourcentage', 'Questions', 'Fichier', 'Date d\'export'].join(';')];
+  for (const e of sortBatchEntries(batchEntries)) {
+    lines.push([e.eleve.nom || '', e.eleve.prenoms || '', e.eleve.classe || '',
+                e.score, e.total, e.pct + '%', e.quizCount, e.fileName, e.exportDate || '']
+      .map(esc).join(';'));
+  }
+  downloadBlob(new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }),
+               'resultats_lot_' + new Date().toISOString().slice(0, 10) + '.csv');
+});
+
+/* Export JSON consolidé (copies déchiffrées) */
+document.getElementById('jsonBtn').addEventListener('click', () => {
+  const out = {
+    generePar: 'Lecteur professeur — logarithme décimal',
+    dateAnalyse: new Date().toISOString(),
+    nbCopies: batchEntries.length,
+    resumes: batchEntries.map(e => ({
+      fichier: e.fileName,
+      eleve: e.eleve,
+      score: e.score,
+      total: e.total,
+      pourcentage: e.pct,
+      dateExport: e.exportDate,
+      quiz: e.quiz
+    }))
+  };
+  downloadBlob(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }),
+               'resultats_lot_' + new Date().toISOString().slice(0, 10) + '.json');
+});
+
+async function renderOne(fileName, data) {
+  // Structure : { version:2, eleve:{...}, encrypted_quiz:{encryptedKey,iv,ciphertext}, exportDate }
+  const enc = (data && data.encrypted_quiz) ? data.encrypted_quiz : data;
+  if (!enc || !enc.encryptedKey || !enc.iv || !enc.ciphertext) {
+    throw new Error('structure inattendue : champs encryptedKey / iv / ciphertext absents. Ce fichier n\'est pas un export du quiz.');
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(await decryptPayload(enc));
+  } catch (e) {
+    throw new Error('déchiffrement impossible (fichier altéré, ou chiffré avec une autre clé publique) : ' + (e.message || e));
+  }
+
+  const eleve = data.eleve || payload.eleve || {};
+  const quiz = Array.isArray(payload.quiz) ? payload.quiz : [];
+  const score = (typeof payload.score === 'number') ? payload.score
+              : (typeof data.score === 'number' ? data.score : quiz.filter(q => q.correct).length);
+  const total = (typeof payload.total === 'number') ? payload.total : quiz.length;
+  const exportDate = data.exportDate || payload.exportDate || '';
+
+  // retire l'état vide
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.remove();
+
+  // si ce fichier était déjà affiché, on remplace l'ancienne copie
+  const previous = results.querySelector('.copie[data-file="' + CSS.escape(fileName) + '"]');
+  if (previous) previous.remove();
+
+  const pct = total > 0 ? Math.round(100 * score / total) : 0;
+  const badgeClass = pct >= 70 ? 'green' : (pct >= 50 ? 'amber' : 'red');
+
+  const card = document.createElement('div');
+  card.className = 'copie';
+
+  const answersHtml = quiz.map((q, i) => {
+    const given = (Array.isArray(q.options) && typeof q.chosenIndex === 'number') ? q.options[q.chosenIndex] : null;
+    const expected = (Array.isArray(q.options) && typeof q.correctIndex === 'number') ? q.options[q.correctIndex] : null;
+    return `
+      <div class="q-item">
+        <div class="q-head">
+          <div class="q-num ${q.correct ? 'ok' : 'ko'}">${q.correct ? '✓' : '✗'}</div>
+          <div class="q-text">${q.question || ''}</div>
+          <div class="q-time">${q.timestamp ? escapeHtml(fmtDate(q.timestamp)) : ''}</div>
+        </div>
+        <div class="ans-grid">
+          <div class="ans given ${q.correct ? 'ok' : 'ko'}">
+            <div class="lab">Réponse donnée</div>
+            ${given !== null ? given : '<span class="muted">—</span>'}
+          </div>
+          <div class="ans expected">
+            <div class="lab">Bonne réponse</div>
+            ${expected !== null ? expected : '<span class="muted">—</span>'}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="copie-head">
+      <div class="copie-id">
+        <div class="nom">${escapeHtml(eleve.nom || 'Élève inconnu')}${eleve.prenoms ? ' ' + escapeHtml(eleve.prenoms) : ''}</div>
+        <div class="meta">
+          ${eleve.classe ? 'Classe : <b>' + escapeHtml(eleve.classe) + '</b> — ' : ''}
+          Fichier : <code class="inline">${escapeHtml(fileName)}</code>
+          ${exportDate ? ' — Exporté le ' + escapeHtml(fmtDate(exportDate)) : ''}
+        </div>
+      </div>
+      <div class="score-badge ${badgeClass}">
+        ${score} / ${total}
+        <span class="pct">${pct}%</span>
+      </div>
+    </div>
+    <div class="copie-body">
+      <div class="stats-row">
+        <span class="stat-chip">Questions : <b>${quiz.length}</b></span>
+        <span class="stat-chip">Bonnes réponses : <b>${quiz.filter(q => q.correct).length}</b></span>
+        <span class="stat-chip">Erreurs : <b>${quiz.filter(q => !q.correct).length}</b></span>
+        <span class="stat-chip">Chiffrement : <b>${escapeHtml(enc.alg || 'RSA-OAEP + AES-GCM')}</b></span>
+      </div>
+      ${quiz.length ? answersHtml : '<p class="muted">Aucune réponse enregistrée dans ce fichier.</p>'}
+    </div>`;
+
+  card.dataset.file = fileName;
+  results.prepend(card);
+
+  // Enregistrement dans le récapitulatif du lot (remplace l'entrée du même fichier)
+  card.id = 'copie-' + registerBatchEntry(fileName, {
+    eleve, score, total, pct, quizCount: quiz.length, exportDate, quiz
+  });
+
+  // Rendu MathJax des questions/options
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([card]).catch(() => {});
+  }
+}
+
+/* ============ Affichage de la clé + empreinte ============ */
+document.getElementById('keyDisplay').textContent = PRIVATE_KEY_PEM;
+(async () => {
+  try {
+    const der = new Uint8Array(pemToArrayBuffer(PRIVATE_KEY_PEM));
+    const digest = await crypto.subtle.digest('SHA-256', der);
+    const hex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    document.getElementById('keyFingerprint').textContent = 'Empreinte SHA-256 (PKCS#8 DER) : ' + hex;
+  } catch (e) {
+    document.getElementById('keyFingerprint').textContent = 'Empreinte SHA-256 : indisponible (' + e.message + ')';
+  }
+})();
+</script>
+
+<!-- Modale : Droits d'auteur -->
+<div class="legal-backdrop" id="legalBackdrop"></div>
+<div class="legal-modal" id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+  <button class="legal-close" id="legalClose" aria-label="Fermer">✕</button>
+  <h3 id="legalTitle">⚖️ Droits d'Auteur et Licence d'Utilisation</h3>
+  <p class="legal-author"><b>Auteur :</b> Yann Merdy (<a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a>) — Novembre 2026</p>
+  <p class="legal-licence">Licence d'Utilisation Non Commerciale</p>
+  <p>
+    Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application
+    (« Lecteur des résultats — logarithme décimal ») sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.
+  </p>
+  <p><b>Conditions :</b></p>
+  <ul>
+    <li>
+      <b>Utilisation Privée et Éducative (Autorisée) :</b> vous êtes autorisé·e à utiliser,
+      copier, modifier et distribuer ce code et son contenu uniquement à des fins
+      personnelles, éducatives et non lucratives.
+    </li>
+    <li>
+      <b>Utilisation Commerciale (Interdite) :</b> toute utilisation, distribution, intégration
+      ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales,
+      lucratives ou professionnelles est strictement interdite sans un accord écrit
+      préalable et explicite de l'auteur.
+    </li>
+    <li>
+      <b>Attribution :</b> toute reproduction ou modification doit conserver la mention de
+      l'auteur original (Yann Merdy) et la présente notice de droits d'auteur.
+    </li>
+  </ul>
+  <p>
+    Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez
+    contacter l'auteur à l'adresse indiquée ci-dessus.
+  </p>
+</div>
+
+<script>
+/* Modale Droits d'auteur : ouverture / fermeture */
+(function () {
+  var backdrop = document.getElementById('legalBackdrop');
+  var modal    = document.getElementById('legalModal');
+  var openBtn  = document.getElementById('legalBtn');
+  var closeBtn = document.getElementById('legalClose');
+  if (!backdrop || !modal || !openBtn || !closeBtn) return;
+  function openModal() {
+    backdrop.classList.add('show');
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    backdrop.classList.remove('show');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', closeModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+  });
+})();
+</script>
+
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="fhLfFPFCviNcuBmLd3cy+w==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="b8DrYYoDnRsrXT6SZWyjnA==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

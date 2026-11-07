@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Calcul avec des Fractions du Primaire à la Terminale</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .text-size-normal { font-size: 1rem; }
+        .text-size-large { font-size: 1.15rem; }
+        .text-size-xlarge { font-size: 1.3rem; }
+
+        .tab-active {
+            border-bottom: 3px solid #0284c7;
+            color: #0284c7;
+            font-weight: 700;
+        }
+
+        .step-line {
+            border-left: 3px solid #0284c7;
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .op-add { background-color: #ffe4e6; color: #be123c; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #f43f5e; }
+        .op-sub { background-color: #dbeafe; color: #1e40af; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #3b82f6; }
+        .op-mul { background-color: #fef3c7; color: #92400e; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #f59e0b; }
+        .op-div { background-color: #f3e8ff; color: #6b21a8; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #8b5cf6; }
+        .simplify-highlight { background-color: #dcfce7; color: #15803d; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #22c55e; }
+
+        /* Color legend */
+        .legend-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.25rem; vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 text-size-normal min-h-screen flex flex-col justify-between" id="app-body">
+
+    <!-- Header & Controls -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                    $\dfrac{a}{b}$
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Le Dossier des Fractions</h1>
+                    <p class="text-xs text-slate-500 font-medium">Le Calcul avec des Fractions du Primaire à la Terminale • 150+ Situations Dynamiques & Corrections Rigoureuses</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                <span class="text-xs font-semibold text-slate-600 px-2">Taille :</span>
+                <button onclick="changeFontSize('normal')" class="px-2.5 py-1 bg-white shadow-sm border border-slate-300 rounded font-bold text-xs hover:bg-slate-50">A</button>
+                <button onclick="changeFontSize('large')" class="px-2.5 py-1 bg-white shadow-sm border border-slate-300 rounded font-bold text-sm hover:bg-slate-50">A+</button>
+                <button onclick="changeFontSize('xlarge')" class="px-2.5 py-1 bg-white shadow-sm border border-slate-300 rounded font-bold text-base hover:bg-slate-50">A++</button>
+            </div>
+        </div>
+
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-2 border-t border-slate-100 text-sm font-medium">
+            <button onclick="switchLevel('primary')" id="tab-primary" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 tab-active hover:text-sky-600">
+                <span>🌱</span> Primaire (30 Situations)
+            </button>
+            <button onclick="switchLevel('college')" id="tab-college" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🌿</span> Collège (30 Situations)
+            </button>
+            <button onclick="switchLevel('lycee')" id="tab-lycee" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🌳</span> Lycée (30 Situations)
+            </button>
+            <button onclick="switchLevel('pieges')" id="tab-pieges" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🔍</span> Fractions Piégées (30 Situations)
+            </button>
+            <button onclick="switchLevel('pro')" id="tab-pro" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🔄</span> Techniques de Pro (30 Situations)
+            </button>
+            <button onclick="switchLevel('quiz')" id="tab-quiz" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🏆</span> Quizz Synthèse
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Legend -->
+        <div class="mb-6 p-3 bg-white rounded-xl border border-slate-200 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-700">
+            <span class="font-bold">Légende des couleurs LaTeX :</span>
+            <span><span class="legend-dot" style="background:#dc2626"></span> Additions $(+)$</span>
+            <span><span class="legend-dot" style="background:#2563eb"></span> Soustractions $(-)$</span>
+            <span><span class="legend-dot" style="background:#d97706"></span> Multiplications $(\times)$</span>
+            <span><span class="legend-dot" style="background:#7c3aed"></span> Divisions $(\div)$</span>
+            <span><span class="legend-dot" style="background:#16a34a"></span> Dénominateurs communs & simplifications</span>
+        </div>
+
+        <!-- ================= PRIMAIRE ================= -->
+        <section id="sec-primary" class="space-y-8">
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200">
+                <h2 class="text-2xl font-extrabold text-amber-900 mb-2">🌱 Étape 1 : Les Fondations du Primaire (30 Situations)</h2>
+                <p class="text-amber-800">Partages en parts égales, fraction d'une quantité, fractions équivalentes, premières comparaisons et fractions décimales.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Leçon & Méthodologie du Primaire</h3>
+                <p class="text-slate-700">Une fraction $\dfrac{a}{b}$ décrit un partage : on découpe l'unité en $b$ parts <strong>strictement égales</strong> et on en prend $a$. Le dénominateur (en bas) dit <em>en combien de parts</em> on coupe ; le numérateur (en haut) dit <em>combien de parts</em> on prend.</p>
+                <div class="p-4 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between flex-wrap gap-3">
+                    <span class="text-sm font-semibold text-sky-900">Astuce : une fraction est d'abord un partage, pas une division posée.</span>
+                    <button onclick="openMethodModal('primary')" class="px-3 py-1.5 bg-sky-600 text-white font-bold text-xs rounded hover:bg-sky-700">💡 Fiche Méthode Primaire</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">🎨 Visualisation Interactive de Fractions</h3>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-100 p-4 rounded-xl">
+                    <canvas id="canvas-primary" width="450" height="220" class="bg-white rounded-lg border border-slate-300 shadow-inner max-w-full"></canvas>
+                    <div class="w-full md:w-1/2 space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 flex justify-between">Numérateur (parts prises) : <span id="val-a" class="text-sky-600 font-bold">3</span></label>
+                            <input type="range" id="slider-a" min="1" max="12" value="3" class="w-full h-2 bg-slate-300 rounded cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 flex justify-between">Dénominateur (parts égales) : <span id="val-b" class="text-emerald-600 font-bold">4</span></label>
+                            <input type="range" id="slider-b" min="1" max="12" value="4" class="w-full h-2 bg-slate-300 rounded cursor-pointer">
+                        </div>
+                        <p class="text-xs text-slate-500">Le disque montre le partage de l'unité, la droite graduée situe la fraction par rapport à 1 et 2.</p>
+                        <div id="math-primary-canvas-out" class="p-3 bg-white rounded border text-center font-bold text-slate-800"></div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations de Calcul avec des Fractions (Primaire)</h3>
+                    <button onclick="generatePrimary30()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="primary-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= COLLEGE ================= -->
+        <section id="sec-college" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-200">
+                <h2 class="text-2xl font-extrabold text-emerald-900 mb-2">🌿 Étape 2 : Le Collège (30 Situations)</h2>
+                <p class="text-emerald-800">Les quatre opérations : réduire au même dénominateur, multiplier, diviser par l'inverse, simplifier par le PGCD et élever à une puissance.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Leçon & Règles Opératoires du Collège</h3>
+                <div class="grid md:grid-cols-3 gap-3 text-center text-xs font-bold">
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$\dfrac{a}{c} \textcolor{#dc2626}{+} \dfrac{b}{c} \textcolor{#7c3aed}{=} \dfrac{a \textcolor{#dc2626}{+} b}{c}$$</div>
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$\dfrac{a}{b} \textcolor{#d97706}{\times} \dfrac{c}{d} \textcolor{#7c3aed}{=} \dfrac{a \textcolor{#d97706}{\times} c}{b \textcolor{#d97706}{\times} d}$$</div>
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$\dfrac{a}{b} \textcolor{#7c3aed}{\div} \dfrac{c}{d} \textcolor{#7c3aed}{=} \dfrac{a}{b} \textcolor{#d97706}{\times} \dfrac{d}{c}$$</div>
+                </div>
+                <p class="text-sm text-slate-700">La multiplication et la division ne demandent <strong>jamais</strong> de dénominateur commun : c'est réservé à l'addition et à la soustraction.</p>
+                <div class="text-right">
+                    <button onclick="openMethodModal('college')" class="px-3 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded hover:bg-emerald-700">💡 Fiche Méthode Collège</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations de Calcul avec des Fractions (Collège)</h3>
+                    <button onclick="generateCollege30()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="college-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= LYCEE ================= -->
+        <section id="sec-lycee" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-2xl border border-indigo-200">
+                <h2 class="text-2xl font-extrabold text-indigo-900 mb-2">🌳 Étape 3 : Le Lycée (30 Situations Avancées)</h2>
+                <p class="text-indigo-800">Fractions rationnelles avec conditions d'existence, factorisation du dénominateur pour simplifier, rationnalisation des radicaux et équations fractionnaires.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Principes de Rigueur au Lycée</h3>
+                <div class="grid md:grid-cols-2 gap-3 text-center text-xs font-bold">
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$\dfrac{1}{\sqrt{a}} \textcolor{#7c3aed}{=} \dfrac{\sqrt{a}}{a}$$</div>
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$\dfrac{1}{\sqrt{m} - \sqrt{n}} \textcolor{#7c3aed}{=} \dfrac{\sqrt{m} + \sqrt{n}}{m - n}$$</div>
+                </div>
+                <p class="text-sm text-slate-700">Une fraction rationnelle existe seulement là où son dénominateur est non nul : on annonce toujours les <strong>conditions d'existence</strong> avant de simplifier.</p>
+                <div class="text-right">
+                    <button onclick="openMethodModal('lycee')" class="px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded hover:bg-indigo-700">💡 Fiche Méthode Lycée</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations de Calcul avec des Fractions (Lycée)</h3>
+                    <button onclick="generateLycee30()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="lycee-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= FRACTIONS PIÉGÉES ================= -->
+        <section id="sec-pieges" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-rose-50 to-pink-50 p-6 rounded-2xl border border-rose-200">
+                <h2 class="text-2xl font-extrabold text-rose-900 mb-2">🔍 Étape 4 : Les Fractions Piégées (30 Situations)</h2>
+                <p class="text-rose-800">Les erreurs classiques démasquées une à une : l'addition « croisée », la simplification abusive, les signes cachés et les divisions mal inversées.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Le « Faux Théorème » à Ne Jamais Appliquer</h3>
+                <div class="p-4 bg-rose-50 border-2 border-rose-300 rounded-xl text-center text-sm font-bold text-rose-900">
+                    $$\dfrac{a}{b} \textcolor{#dc2626}{+} \dfrac{c}{d} \;\textcolor{#dc2626}{\neq}\; \dfrac{a \textcolor{#dc2626}{+} c}{b \textcolor{#dc2626}{+} d}$$
+                    On n'additionne jamais les numérateurs entre eux <em>et</em> les dénominateurs entre eux : il faut d'abord réduire au même dénominateur.
+                </div>
+                <div class="text-right">
+                    <button onclick="openMethodModal('pieges')" class="px-3 py-1.5 bg-rose-600 text-white font-bold text-xs rounded hover:bg-rose-700">💡 Fiche Anti-Pièges</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations de Fractions Piégées</h3>
+                    <button onclick="generatePieges30()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="pieges-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= TECHNIQUES DE PRO ================= -->
+        <section id="sec-pro" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200">
+                <h2 class="text-2xl font-extrabold text-blue-900 mb-2">🔄 Étape 5 : Techniques de Pro (30 Situations)</h2>
+                <p class="text-blue-800">Décompositions en éléments simples, sommes et produits télescopiques, astuce des couples, fractions continues et comparaisons sans calcul.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 L'Arme Secrète : la Décomposition Télescopique</h3>
+                <div class="p-4 bg-sky-50 border-2 border-sky-200 rounded-xl text-center text-sm font-bold text-sky-900">
+                    $$\dfrac{1}{n\left(n \textcolor{#d97706}{+} 1\right)} \textcolor{#7c3aed}{=} \dfrac{1}{n} \textcolor{#2563eb}{-} \dfrac{1}{n \textcolor{#d97706}{+} 1}$$
+                    Chaque terme se scinde en deux morceaux qui s'annulent avec les voisins : la somme entière se réduit à ses deux extrémités.
+                </div>
+                <div class="text-right">
+                    <button onclick="openMethodModal('pro')" class="px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded hover:bg-blue-700">💡 Fiche Techniques de Pro</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations de Techniques de Pro</h3>
+                    <button onclick="generatePro30()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="pro-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= QUIZ ================= -->
+        <section id="sec-quiz" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200">
+                <h2 class="text-2xl font-extrabold text-purple-900 mb-2">🏆 Quizz de Synthèse</h2>
+                <p class="text-purple-800">Des questions à valeurs aléatoires couvrant l'ensemble du document : Primaire, Collège, Lycée, Fractions Piégées et Techniques de Pro. Chaque quizz est inédit : les valeurs et l'ordre des propositions changent à chaque génération.</p>
+            </div>
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-900 font-medium flex items-start gap-2">
+                    <span class="text-base">💡</span>
+                    <span>Chaque question comporte une proposition <strong>« Autre »</strong> : elle est parfois fausse... mais elle peut aussi être <strong>la bonne réponse</strong> ! Ne cochez jamais « Autre » par défaut : réfléchissez, vérifiez par un petit calcul, puis répondez.</span>
+                </div>
+
+                <div id="quiz-mode-panel" class="p-6 bg-purple-50 border border-purple-200 rounded-2xl space-y-4 text-center">
+                    <p class="text-lg font-extrabold text-purple-900">Souhaitez-vous des expressions littérales et des radicaux ?</p>
+                    <p class="text-sm text-purple-700">Le quizz sera généré avec des valeurs aléatoires. En mode « numérique uniquement », aucune expression ne contiendra la lettre $x$ ni un radical $\sqrt{\ }$.</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button onclick="startQuiz(true)" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow transition">🔵 Avec $x$ et $\sqrt{\ }$</button>
+                        <button onclick="startQuiz(false)" class="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow transition">⚪ Numérique uniquement</button>
+                    </div>
+                </div>
+
+                <div id="quiz-run" class="hidden space-y-6">
+                    <div id="quiz-mode-info" class="p-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 text-center"></div>
+                    <div id="quiz-container" class="space-y-6"></div>
+                    <button onclick="checkQuiz()" class="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg shadow transition">Valider mes réponses</button>
+                    <div id="quiz-score" class="hidden p-4 rounded-xl text-center text-xl font-extrabold"></div>
+                    <div id="quiz-review" class="space-y-4"></div>
+                    <button id="quiz-restart" onclick="restartQuiz()" class="hidden w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-base shadow transition">🔄 Nouveau quizz (valeurs inédites)</button>
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    <!-- Method Modal -->
+    <div id="method-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="method-modal-title" class="text-xl font-extrabold text-slate-900">💡 Fiche Méthodologique</h3>
+                <button onclick="closeMethodModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="method-modal-content" class="text-slate-700 space-y-3 text-sm leading-relaxed"></div>
+            <div class="pt-2 text-right">
+                <button onclick="closeMethodModal()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg text-sm">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
+            <div>© 2026 - Le Calcul avec des Fractions du Primaire à la Terminale • Yann Merdy</div>
+            <button onclick="openCopyrightModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow transition flex items-center gap-2">
+                <span>⚖️</span> Droits d'auteur
+            </button>
+        </div>
+    </footer>
+
+    <!-- Copyright Modal -->
+    <div id="copyright-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>⚖️</span> Droits d'Auteur et Licence d'Utilisation
+                </h3>
+                <button onclick="closeCopyrightModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="text-slate-700 space-y-4 text-sm leading-relaxed">
+                <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" class="text-sky-600 underline">yann.merdy@gmail.com</a>) - Novembre 2026</p>
+                <p class="font-bold text-slate-900">Licence d'Utilisation Non Commerciale</p>
+                <p>Ce document web interactif ainsi que l'ensemble du code source (HTML, CSS, JavaScript) et des exercices générés sont la propriété exclusive de l'auteur, Yann Merdy.</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                    <p><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Consultation et usage à des fins d'apprentissage ou d'enseignement non lucratif.</p>
+                    <p><strong>Utilisation Commerciale (Strictement Interdite) :</strong> Toute commercialisation ou distribution à but lucratif est formellement interdite sans accord écrit préalable.</p>
+                </div>
+            </div>
+            <div class="pt-2 text-right">
+                <button onclick="closeCopyrightModal()" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg transition text-sm">J'accepte</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         JAVASCRIPT ENGINE
+         ============================================================ -->
+    <script>
+        // --- 0. LaTeX color helpers ---
+        const CLR_RED    = '#dc2626';  // additions
+        const CLR_BLUE   = '#2563eb';  // soustractions
+        const CLR_AMBER  = '#d97706';  // multiplications
+        const CLR_GREEN  = '#16a34a';  // dénominateurs communs & simplifications
+        const CLR_PURPLE = '#7c3aed';  // égal / division
+
+        const TADD = `\\textcolor{${CLR_RED}}{+}`;
+        const TSUB = `\\textcolor{${CLR_BLUE}}{-}`;
+        const TMUL = `\\textcolor{${CLR_AMBER}}{\\times}`;
+        const TDIV = `\\textcolor{${CLR_PURPLE}}{\\div}`;
+        const TEQ  = `\\textcolor{${CLR_PURPLE}}{=}`;
+        const TFAC = (s) => `\\textcolor{${CLR_GREEN}}{${s}}`;
+        // NB : TFAC (vert) est réservé aux corrections et à la visualisation ; les énoncés restent neutres.
+
+        // --- 1. Formatters & utilitaires ---
+        // Entier aléatoire uniforme dans [min ; max].
+        const randInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
+
+        // Nombre arrondi au millième. latex = false : "0,4" (affichage HTML) ; latex = true : "0{,}4" (protégé pour MathJax).
+        function formatNumber(num, latex = false) {
+            if (!Number.isFinite(num)) return "0";
+            const str = (Math.round(num * 1000) / 1000).toString().replace('.', latex ? '{,}' : ',');
+            if (str.startsWith(latex ? '{' : ',')) return '0' + str;
+            if (str.startsWith('-' + (latex ? '{' : ','))) return '-0' + str.slice(latex ? 2 : 1);
+            return str;
+        }
+        const fmtL = (num) => formatNumber(num, true);
+        window.formatNumber = formatNumber; // utilisé par la visualisation interactive
+
+        // Typeset MathJax d'un seul conteneur (jamais de la page entière).
+        function typesetContainer(el) {
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]);
+        }
+
+        // --- Utilitaires fractionnaires ---
+        // PGCD (positif, jamais nul).
+        function gcd(a, b) {
+            a = Math.abs(a); b = Math.abs(b);
+            while (b) { [a, b] = [b, a % b]; }
+            return a || 1;
+        }
+        // PPCM positif.
+        function lcm(a, b) { return Math.abs(a * b) / gcd(a, b); }
+        // Fraction LaTeX \\dfrac, avec le signe ramené au numérateur.
+        function fx(n, d) {
+            if (d < 0) { n = -n; d = -d; }
+            return `\\dfrac{${n}}{${d}}`;
+        }
+        // Forme irréductible {n, d} d'une fraction (signe au numérateur).
+        function reduceFrac(n, d) {
+            if (d < 0) { n = -n; d = -d; }
+            const g = gcd(n, d);
+            return { n: n / g, d: d / g };
+        }
+        // Écriture "q + r/d" d'une fraction impropre, en LaTeX (r = 0 : entier seul).
+        function mixedLatex(n, d) {
+            const r = reduceFrac(n, d);
+            const q = Math.trunc(r.n / r.d);
+            const rest = Math.abs(r.n) - Math.abs(q) * r.d;
+            if (rest === 0) return `${q}`;
+            return `${q} \\, ${TADD} \\, ${fx(rest, r.d)}`;
+        }
+
+        // Difficulté et badge associés au rang de la situation (1-10, 11-20, 21-30).
+        function difficultyInfo(i, hardLabel = "Avancé", hardBadge = "bg-red-100 text-red-800") {
+            if (i <= 10) return { diff: "Facile", badgeColor: "bg-emerald-100 text-emerald-800" };
+            if (i <= 20) return { diff: "Moyen", badgeColor: "bg-amber-100 text-amber-800" };
+            return { diff: hardLabel, badgeColor: hardBadge };
+        }
+
+        // Taille du texte
+        const FONT_CLASSES = { normal: 'text-size-normal', large: 'text-size-large', xlarge: 'text-size-xlarge' };
+        window.changeFontSize = function(size) {
+            const body = document.getElementById('app-body');
+            body.classList.remove('text-size-normal', 'text-size-large', 'text-size-xlarge');
+            body.classList.add(FONT_CLASSES[size] || 'text-size-normal');
+        };
+
+        // --- Navigation par onglets & génération différée (lazy) ---
+        // Chaque section n'est générée et typeset par MathJax qu'à son premier affichage :
+        // le chargement initial ne traite que la section visible (Primaire).
+        const LEVELS = ['primary', 'college', 'lycee', 'pieges', 'pro', 'quiz'];
+        const SECTION_GENERATORS = {
+            primary: () => window.generatePrimary30(),
+            college: () => window.generateCollege30(),
+            lycee: () => window.generateLycee30(),
+            pieges: () => window.generatePieges30(),
+            pro: () => window.generatePro30(),
+            quiz: () => window.generateQuiz()
+        };
+        const generatedSections = new Set();
+
+        function ensureGenerated(level) {
+            if (generatedSections.has(level)) return;
+            generatedSections.add(level);
+            SECTION_GENERATORS[level]();
+        }
+
+        window.switchLevel = function(level) {
+            LEVELS.forEach(l => {
+                document.getElementById(`sec-${l}`).classList.add('hidden');
+                const tab = document.getElementById(`tab-${l}`);
+                tab.classList.remove('tab-active');
+                tab.classList.add('text-slate-600');
+            });
+            document.getElementById(`sec-${level}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${level}`);
+            activeTab.classList.add('tab-active');
+            activeTab.classList.remove('text-slate-600');
+            ensureGenerated(level); // premier affichage : génération + typeset de cette section uniquement
+        };
+
+        window.openCopyrightModal  = () => document.getElementById('copyright-modal').classList.remove('hidden');
+        window.closeCopyrightModal = () => document.getElementById('copyright-modal').classList.add('hidden');
+
+        window.openMethodModal = function(level) {
+            const modal = document.getElementById('method-modal');
+            const title = document.getElementById('method-modal-title');
+            const content = document.getElementById('method-modal-content');
+            modal.classList.remove('hidden');
+
+            if (level === 'primary') {
+                title.textContent = "💡 Méthodologie Primaire : Lire et Partager une Fraction";
+                content.innerHTML = `
+                    <p><strong>Lecture :</strong> dans $\\dfrac{a}{b}$, le dénominateur $b$ (en bas) donne le <span style="color:${CLR_GREEN};font-weight:700">nombre de parts égales</span>, le numérateur $a$ (en haut) donne le <span style="color:${CLR_GREEN};font-weight:700">nombre de parts prises</span>.</p>
+                    <p class="step-line"><strong>Fraction d'une quantité :</strong> prendre $\\dfrac{a}{b}$ de $N$, c'est couper $N$ en $b$ parts égales puis prendre $a$ parts.</p>
+                    <p class="step-line"><strong>Équivalence :</strong> $\\dfrac{a}{b} = \\dfrac{a \\times m}{b \\times m}$ : couper en 2 fois plus de parts et en prendre 2 fois plus ne change rien.</p>
+                    <p class="step-line"><strong>Comparaison :</strong> à dénominateur égal, la plus grande est celle qui a le plus grand numérateur ; à numérateur égal, la plus grande est celle qui a le plus petit dénominateur.</p>
+                `;
+            } else if (level === 'college') {
+                title.textContent = "💡 Méthodologie Collège : Les Quatre Opérations";
+                content.innerHTML = `
+                    <p><strong>Addition / Soustraction :</strong> réduire au <span style="color:${CLR_GREEN};font-weight:700">même dénominateur</span> (le PPCM des dénominateurs), puis additionner ou soustraire les numérateurs.</p>
+                    <p class="step-line"><strong>Multiplication :</strong> $\\dfrac{a}{b} \\times \\dfrac{c}{d} = \\dfrac{a \\times c}{b \\times d}$ : multiplier haut avec haut, bas avec bas. Simplifier <em>avant</em> de multiplier quand c'est possible.</p>
+                    <p class="step-line"><strong>Division :</strong> diviser par $\\dfrac{c}{d}$, c'est multiplier par son inverse $\\dfrac{d}{c}$.</p>
+                    <p class="step-line"><strong>Simplification :</strong> diviser numérateur et dénominateur par leur PGCD pour obtenir la forme irréductible.</p>
+                `;
+            } else if (level === 'lycee') {
+                title.textContent = "💡 Méthodologie Lycée : Fractions Rationnelles & Radicaux";
+                content.innerHTML = `
+                    <p><strong>Conditions d'existence :</strong> une fraction n'existe que si son dénominateur est non nul : on les annonce <em>avant</em> tout calcul.</p>
+                    <p class="step-line"><strong>Simplification :</strong> factoriser le dénominateur, chercher un facteur commun au numérateur, puis simplifier : $\\dfrac{x^2 - a^2}{x + a} = x - a$ si $x \\ne -a$.</p>
+                    <p class="step-line"><strong>Rationnalisation :</strong> multiplier numérateur et dénominateur par $\\sqrt{a}$ (ou par le conjugué $\\sqrt{m} + \\sqrt{n}$) pour chasser le radical du dénominateur.</p>
+                    <p class="step-line"><strong>Équation fractionnaire :</strong> multiplier les deux membres par le dénominateur commun <em>non nul</em>, résoudre, puis vérifier les conditions.</p>
+                `;
+            } else if (level === 'pieges') {
+                title.textContent = "💡 Fiche Anti-Pièges : Les Six Erreurs Classiques";
+                content.innerHTML = `
+                    <p><strong>Piège 1 :</strong> $\\dfrac{a}{b} + \\dfrac{c}{d} \\ne \\dfrac{a + c}{b + d}$. Toujours réduire au même dénominateur d'abord.</p>
+                    <p class="step-line"><strong>Piège 2 :</strong> $\\dfrac{a + k}{b + k} \\ne \\dfrac{a}{b}$. On ne simplifie que des <em>facteurs communs</em> multipliés, jamais des termes d'une somme.</p>
+                    <p class="step-line"><strong>Piège 3 :</strong> diviser par $\\dfrac{c}{d}$, c'est multiplier par $\\dfrac{d}{c}$ : on inverse la <em>seconde</em> fraction seulement.</p>
+                    <p class="step-line"><strong>Piège 4 :</strong> $-\\dfrac{a}{b} = \\dfrac{-a}{b} = \\dfrac{a}{-b}$ : un seul signe, placé où l'on veut, mais $\\dfrac{-a}{-b} = \\dfrac{a}{b}$.</p>
+                    <p class="step-line"><strong>Piège 5 :</strong> la barre de fraction est une parenthèse : $\\dfrac{a + b}{c}$ signifie $(a + b) \\div c$.</p>
+                    <p class="step-line"><strong>Piège 6 :</strong> une simplification littérale est conditionnelle : $\\dfrac{x - a}{x + a}$ ne peut pas se réduire, et diviser par $x - a$ interdit $x = a$.</p>
+                `;
+            } else if (level === 'pro') {
+                title.textContent = "💡 Techniques de Pro : Télescopiques & Astuces";
+                content.innerHTML = `
+                    <p><strong>Somme télescopique :</strong> $\\dfrac{1}{n(n+1)} = \\dfrac{1}{n} - \\dfrac{1}{n+1}$ : dans une somme, tout le milieu s'annule.</p>
+                    <p class="step-line"><strong>Produit télescopique :</strong> $\\left(1 - \\dfrac{1}{k}\\right) = \\dfrac{k-1}{k}$ : les numérateurs mangent les dénominateurs suivants.</p>
+                    <p class="step-line"><strong>Astuce des couples :</strong> si $x + \\dfrac{1}{x} = s$, alors $x^2 + \\dfrac{1}{x^2} = s^2 - 2$.</p>
+                    <p class="step-line"><strong>Comparaison croisée :</strong> $\\dfrac{a}{b}$ et $\\dfrac{c}{d}$ se comparent via $ad$ et $bc$ : aucun dénominateur commun à calculer.</p>
+                    <p class="step-line"><strong>Fraction continue :</strong> $a + \\dfrac{1}{b + \\dfrac{1}{c}}$ se lit du bas vers le haut.</p>
+                `;
+            }
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([content]);
+        };
+        window.closeMethodModal = () => document.getElementById('method-modal').classList.add('hidden');
+
+        window.toggleSolution = function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('hidden');
+            // MathJax ne traite la correction qu'une seule fois, à sa première ouverture.
+            if (!el.classList.contains('hidden') && !el.dataset.typeset) {
+                el.dataset.typeset = "1";
+                typesetContainer(el);
+            }
+        };
+
+        // --- 2. Card renderer ---
+        function renderCard(idx, title, diff, expr, steps, sol, badgeColor) {
+            let stepsHTML = steps.map(s => `<p class="step-line">${s}</p>`).join('');
+            return `
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center flex-wrap gap-2">
+                        <span class="font-bold text-slate-800 text-sm">${title}</span>
+                        <span class="text-xs px-2 py-0.5 rounded font-bold ${badgeColor}">${diff}</span>
+                    </div>
+                    <div class="text-base font-semibold text-slate-900">${expr}</div>
+                    <button onclick="toggleSolution('sol-${idx}')\" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded font-bold text-slate-700 transition">Afficher/Masquer la correction pas à pas</button>
+                    <div id="sol-${idx}" class="hidden p-4 bg-white rounded-lg border border-slate-300 text-sm space-y-3 text-slate-800 shadow-inner">
+                        <div class="font-semibold text-sky-800 border-b pb-1">Correction Détaillée & Explicite Pas à Pas :</div>
+                        ${stepsHTML}
+                        <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-lg font-bold text-emerald-950 text-base shadow-sm mt-3">
+                            ${sol}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- 3. Primary level : partages, équivalences, comparaisons, décimales ---
+        window.generatePrimary30 = function() {
+            const container = document.getElementById('primary-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i);
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 5) {
+                    title += "Fraction d'une quantité";
+                    const b = randInt(2, 6);
+                    const a = randInt(1, b - 1);
+                    const k = randInt(2, 9);
+                    const N = b * k;
+                    const res = a * k;
+                    expr = `$$A_{${i}} ${TEQ} \\text{ prendre } ${fx(a, b)} \\text{ de } ${N}$$`;
+                    steps = [
+                        `<strong>1. Lecture du dénominateur :</strong> on découpe $${N}$ en $${TFAC(b)}$ parts <strong>strictement égales</strong>.`,
+                        `<strong>2. Taille d'une part :</strong> $${N} \\, ${TDIV} \\, ${b} ${TEQ} ${k}$ : une part vaut $${k}$ (ceci est le partage, une <span class="op-div">Division (÷)</span>).`,
+                        `<strong>3. Lecture du numérateur :</strong> on prend $${TFAC(a)}$ de ces parts, soit $${a} \\, ${TMUL} \\, ${k} ${TEQ} ${res}$ (une <span class="op-mul">Multiplication (×)</span>).`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${a} \\, ${TMUL} \\, ${k} ${TEQ} \\textbf{${res}} \\quad \\text{donc } ${fx(a, b)} \\text{ de } ${N} \\text{ vaut } ${res}$$`;
+                } else if (i <= 10) {
+                    title += "Fractions équivalentes";
+                    const b = randInt(2, 5);
+                    const a = randInt(1, b - 1);
+                    const m = randInt(2, 4);
+                    const d = b * m;
+                    const res = a * m;
+                    expr = `$$A_{${i}} ${TEQ} ${fx(a, b)} ${TEQ} ${fx('\\textcolor{' + CLR_RED + '}{?}', d)}$$`;
+                    steps = [
+                        `<strong>1. Observation des dénominateurs :</strong> on passe de $${b}$ à $${d}$ : or $${d} ${TEQ} ${b} \\, ${TMUL} \\, ${m}$, on a coupé chaque part en $${m}$ morceaux.`,
+                        `<strong>2. Règle d'équivalence :</strong> pour que la valeur ne change pas, le numérateur doit être multiplié <strong>par le même nombre</strong> : $${a} \\, ${TMUL} \\, ${m}$.`,
+                        `<strong>3. Vérification par le partage :</strong> $${res}$ petites parts sur $${d}$, ou $${a}$ grandes parts sur $${b}$ : c'est le même morceau du tout.`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${fx(a * m, b * m)} ${TEQ} \\textbf{${fx(res, d)}} \\quad \\text{car on multiplie haut et bas par } ${m}$$`;
+                } else if (i <= 15) {
+                    title += "Comparer deux fractions simples";
+                    const sameDen = (i % 2 === 1);
+                    let a, b, c, d, expTxt;
+                    if (sameDen) {
+                        b = randInt(3, 9);
+                        a = randInt(1, b - 1);
+                        c = randInt(1, b - 1);
+                        while (c === a) c = randInt(1, b - 1);
+                        d = b;
+                        expTxt = `Les parts sont de même taille ($${b}$ parts), donc il suffit de compter : $${Math.max(a, c)}$ parts pèsent plus que $${Math.min(a, c)}$.`;
+                    } else {
+                        a = randInt(2, 5);
+                        b = randInt(2, 9);
+                        d = randInt(2, 9);
+                        while (d === b) d = randInt(2, 9);
+                        c = a;
+                        expTxt = `On prend le même nombre de parts ($${a}$), mais ces parts sont plus <strong>petites</strong> quand on coupe en $${Math.max(b, d)}$ : donc $${fx(a, Math.min(b, d))}$ est la plus grande.`;
+                    }
+                    const left = a / b, right = c / d;
+                    const win = left > right ? `${fx(a, b)} \\text{ est plus grande}` : `${fx(c, d)} \\text{ est plus grande}`;
+                    expr = `$$A_{${i}} \\quad \\text{Comparer } ${fx(a, b)} \\quad \\text{et} \\quad ${fx(c, d)}$$`;
+                    steps = [
+                        `<strong>1. Stratégie :</strong> ${sameDen ? `même dénominateur $${b}$ : on compare les <span class="simplify-highlight">numérateurs</span>.` : `même numérateur $${a}$ : on compare les <span class="simplify-highlight">dénominateurs</span> (plus le dénominateur est petit, plus les parts sont grosses).`}`,
+                        `<strong>2. Application :</strong> ${expTxt}`,
+                        `<strong>3. Conclusion :</strong> la comparaison porte sur les quantités réelles, pas sur les chiffres isolés.`
+                    ];
+                    sol = `$$A_{${i}} \\quad ${win} \\quad \\left(${fmtL(left)} \\; \\text{ contre} \\; ${fmtL(right)}\\right)$$`;
+                } else if (i <= 20) {
+                    title += "Fraction décimale";
+                    const den = randInt(0, 1) === 0 ? 10 : 100;
+                    const num = den === 10 ? randInt(1, 9) : randInt(11, 99);
+                    const val = num / den;
+                    expr = `$$A_{${i}} ${TEQ} ${fx(num, den)} \\quad \\text{(à écrire avec une virgule)}$$`;
+                    steps = [
+                        `<strong>1. Décomposition :</strong> $${fx(num, den)} ${TEQ} ${num} \\, ${TMUL} \\, ${fx(1, den)}$ : c'est $${num}$ fois un dixième (ou un centième).`,
+                        `<strong>2. Valeur de la part unité :</strong> $${fx(1, 10)} ${TEQ} ${fmtL(0.1)}$ et $${fx(1, 100)} ${TEQ} ${fmtL(0.01)}$.`,
+                        `<strong>3. Addition répétée :</strong> on additionne $${num}$ parts de $${fmtL(1 / den)}$ chacune, ce qui place la virgule au bon rang.`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${fx(num, den)} ${TEQ} \\textbf{${fmtL(val)}} \\quad \\text{soit } ${num} \\text{ } ${fx(1, den)}$$`;
+                } else if (i <= 25) {
+                    title += "Lire une fraction impropre sur la droite graduée";
+                    const b = randInt(2, 6);
+                    const a = randInt(b + 1, 3 * b - 1);
+                    const q = Math.floor(a / b);
+                    const r = a % b;
+                    expr = `$$A_{${i}} \\quad \\text{Situer } ${fx(a, b)} \\text{ sur la droite graduée des entiers}$$`;
+                    steps = [
+                        `<strong>1. Fraction impropre :</strong> le numérateur $${a}$ dépasse le dénominateur $${b}$ : la fraction est plus grande que $1$.`,
+                        `<strong>2. Combien d'unités entières :</strong> $${a} \\, ${TDIV} \\, ${b} ${TEQ} ${q}$ (partie entière), il reste $${r}$ parts.`,
+                        `<strong>3. Écriture mixte :</strong> $${q}$ unités complètes plus $${r}$ parts de taille $\\dfrac{1}{${b}}$, d'où la position sur la droite.`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${fx(a, b)} ${TEQ} ${q} \\, ${TADD} \\, ${fx(r, b)} \\quad \\left(\\text{entre } ${q} \\text{ et } ${q + 1}\\right)$$`;
+                } else {
+                    title += "Somme de parts égales (même dénominateur)";
+                    const b = randInt(3, 8);
+                    const a = randInt(1, b - 1);
+                    const c = randInt(1, b - 1);
+                    const s = a + c;
+                    const red = reduceFrac(s, b);
+                    const simpTxt = (red.d !== b) ? ` On remarque que $${fx(s, b)} ${TEQ} ${fx(red.n, red.d)}$ (fraction équivalente, même valeur).` : '';
+                    const mixTxt = (s > b) ? ` Et comme $${s} > ${b}$, la somme dépasse $1$ : $${fx(s, b)} ${TEQ} ${mixedLatex(s, b)}$.` : '';
+                    expr = `$$A_{${i}} ${TEQ} ${fx(a, b)} \\, ${TADD} \\, ${fx(c, b)}$$`;
+                    steps = [
+                        `<strong>1. Dénominateur commun déjà présent :</strong> les parts ont la même taille $\\dfrac{1}{${b}}$, on peut donc les <span class="op-add">additionner (+)</span> directement.`,
+                        `<strong>2. Addition des numérateurs :</strong> $${a} \\, ${TADD} \\, ${c} ${TEQ} ${s}$ parts de taille $\\dfrac{1}{${b}}$.`,
+                        `<strong>3. Conclusion :</strong> on additionne les numérateurs, <strong>jamais</strong> les dénominateurs : la taille des parts ne change pas.${simpTxt}${mixTxt}`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${fx(a + c, b)}${red.d !== b ? ` ${TEQ} ${fx(red.n, red.d)}` : ''}$$`;
+                }
+
+                cards.push(renderCard(i, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 4. College level : les quatre opérations ---
+        window.generateCollege30 = function() {
+            const container = document.getElementById('college-30-container');
+            if (!container) return;
+            const cards = [];
+            const DEN_PAIRS = [[3, 4], [2, 5], [3, 5], [4, 6], [2, 7], [3, 8], [4, 9], [5, 6], [6, 8], [5, 8]];
+            const DEN_POOL = [4, 6, 8, 9, 10, 12];
+
+            for (let i = 1; i <= 30; i++) {
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i);
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 6) {
+                    title += "Addition à dénominateur commun";
+                    const b = DEN_POOL[randInt(0, DEN_POOL.length - 1)];
+                    let a = randInt(1, b - 1);
+                    let c = randInt(1, b - 1);
+                    while (gcd(a + c, b) === 1) { a = randInt(1, b - 1); c = randInt(1, b - 1); }
+                    const s = a + c;
+                    const red = reduceFrac(s, b);
+                    expr = `$$B_{${i}} ${TEQ} ${fx(a, b)} \\, ${TADD} \\, ${fx(c, b)}$$`;
+                    steps = [
+                        `<strong>1. Même dénominateur :</strong> les parts sont de taille $\\dfrac{1}{${b}}$ dans les deux termes : on peut <span class="op-add">additionner (+)</span> directement les numérateurs.`,
+                        `<strong>2. Somme des numérateurs :</strong> $${a} \\, ${TADD} \\, ${c} ${TEQ} ${s}$, donc $${fx(s, b)}$.`,
+                        `<strong>3. Simplification par le PGCD :</strong> $\\text{PGCD}(${s} \\, ; \\, ${b}) ${TEQ} ${TFAC(gcd(s, b))}$ : on divise haut et bas par $${gcd(s, b)}$ pour obtenir la forme <span class="simplify-highlight">irréductible</span>.`
+                    ];
+                    sol = `$$B_{${i}} ${TEQ} ${fx(s, b)} ${TEQ} ${fx(red.n, red.d)}$$`;
+                } else if (i <= 12) {
+                    title += "Addition à dénominateurs différents";
+                    const [b, d] = DEN_PAIRS[randInt(0, DEN_PAIRS.length - 1)];
+                    const a = randInt(1, b - 1);
+                    const c = randInt(1, d - 1);
+                    const L = lcm(b, d);
+                    const na = a * (L / b), nc = c * (L / d);
+                    const red = reduceFrac(na + nc, L);
+                    expr = `$$B_{${i}} ${TEQ} ${fx(a, b)} \\, ${TADD} \\, ${fx(c, d)}$$`;
+                    steps = [
+                        `<strong>1. Dénominateurs différents :</strong> des parts de taille $\\dfrac{1}{${b}}$ et $\\dfrac{1}{${d}}$ ne s'additionnent pas directement : on cherche un <span class="simplify-highlight">dénominateur commun</span>.`,
+                        `<strong>2. Choix du PPCM :</strong> $\\text{PPCM}(${b} \\, ; \\, ${d}) ${TEQ} ${TFAC(L)}$ : on recoupe les parts pour que tout le monde soit en $${L}$-ièmes.`,
+                        `<strong>3. Mise au même dénominateur :</strong> $${fx(a, b)} ${TEQ} ${fx(na, L)}$ et $${fx(c, d)} ${TEQ} ${fx(nc, L)}$ (haut et bas multipliés par le même nombre : la valeur ne change pas).`,
+                        `<strong>4. Addition :</strong> $${na} \\, ${TADD} \\, ${nc} ${TEQ} ${na + nc}$, puis simplification éventuelle.`
+                    ];
+                    sol = `$$B_{${i}} ${TEQ} ${fx(na, L)} \\, ${TADD} \\, ${fx(nc, L)} ${TEQ} ${fx(na + nc, L)}${red.d !== L ? ` ${TEQ} ${fx(red.n, red.d)}` : ''}$$`;
+                } else if (i <= 18) {
+                    title += "Multiplication avec simplification";
+                    const b = DEN_POOL[randInt(0, DEN_POOL.length - 1)];
+                    const d = DEN_POOL[randInt(0, DEN_POOL.length - 1)];
+                    let a = randInt(1, b - 1), c = randInt(1, d - 1);
+                    let guard = 0;
+                    while (gcd(a, d) === 1 && gcd(b, c) === 1 && guard < 50) { a = randInt(1, b - 1); c = randInt(1, d - 1); guard++; }
+                    const red = reduceFrac(a * c, b * d);
+                    expr = `$$B_{${i}} ${TEQ} ${fx(a, b)} \\, ${TMUL} \\, ${fx(c, d)}$$`;
+                    steps = [
+                        `<strong>1. Règle de la multiplication :</strong> aucune mise au même dénominateur ! On multiplie <span class="op-mul">haut avec haut (×)</span> et bas avec bas.`,
+                        `<strong>2. Simplification avantageuse :</strong> avant de multiplier, on repère un facteur commun entre un numérateur et un dénominateur et on le barre : le calcul reste petit.`,
+                        `<strong>3. Produit :</strong> $${a} \\, ${TMUL} \\, ${c} ${TEQ} ${a * c}$ en haut et $${b} \\, ${TMUL} \\, ${d} ${TEQ} ${b * d}$ en bas.`,
+                        `<strong>4. Forme irréductible :</strong> on divise par le PGCD $${TFAC(gcd(a * c, b * d))}$ si nécessaire.`
+                    ];
+                    sol = `$$B_{${i}} ${TEQ} ${fx(a * c, b * d)} ${TEQ} ${fx(red.n, red.d)}$$`;
+                } else if (i <= 24) {
+                    title += "Division par une fraction";
+                    const b = randInt(3, 9);
+                    const d = randInt(2, 8);
+                    const a = randInt(b + 1, 3 * b);
+                    const c = randInt(1, d - 1);
+                    const red = reduceFrac(a * d, b * c);
+                    expr = `$$B_{${i}} ${TEQ} ${fx(a, b)} \\, ${TDIV} \\, ${fx(c, d)}$$`;
+                    steps = [
+                        `<strong>1. Règle d'or :</strong> diviser par un nombre, c'est multiplier par son <span class="simplify-highlight">inverse</span>. L'inverse de $${fx(c, d)}$ est $${fx(d, c)}$ (on échange haut et bas).`,
+                        `<strong>2. Transformation :</strong> $${fx(a, b)} \\, ${TDIV} \\, ${fx(c, d)} ${TEQ} ${fx(a, b)} \\, ${TMUL} \\, ${fx(d, c)}$. Seule la <strong>seconde</strong> fraction est inversée.`,
+                        `<strong>3. Multiplication :</strong> $${a} \\, ${TMUL} \\, ${d} ${TEQ} ${a * d}$ en haut et $${b} \\, ${TMUL} \\, ${c} ${TEQ} ${b * c}$ en bas.`,
+                        `<strong>4. Simplification :</strong> division par le PGCD $${TFAC(gcd(a * d, b * c))}$ pour la forme irréductible.`
+                    ];
+                    sol = `$$B_{${i}} ${TEQ} ${fx(a, b)} \\, ${TMUL} \\, ${fx(d, c)} ${TEQ} ${fx(a * d, b * c)}${red.d !== b * c || red.n !== a * d ? ` ${TEQ} ${fx(red.n, red.d)}` : ''}$$`;
+                } else if (i % 2 === 1) {
+                    title += "Puissance d'une fraction";
+                    const b = randInt(2, 5);
+                    const a = randInt(1, b - 1);
+                    const n = randInt(2, 3);
+                    const red = reduceFrac(a, b);
+                    if (red.d === b) {
+                        expr = `$$B_{${i}} ${TEQ} \\left(${fx(a, b)}\\right)^{${n}}$$`;
+                        steps = [
+                            `<strong>1. Sens de l'exposant :</strong> $\\left(${fx(a, b)}\\right)^{${n}}$ est le produit de $${n}$ facteurs égaux à $${fx(a, b)}$.`,
+                            `<strong>2. Chaque étage ensemble :</strong> la puissance frappe le numérateur <em>et</em> le dénominateur : $\\left(${fx(a, b)}\\right)^{${n}} ${TEQ} ${fx(`${a}^{${n}}`, `${b}^{${n}}`)}$.`,
+                            `<strong>3. Calculs séparés :</strong> $${a}^{${n}} ${TEQ} ${Math.pow(a, n)}$ et $${b}^{${n}} ${TEQ} ${Math.pow(b, n)}$. Attention : ce n'est <strong>pas</strong> $${fx(a * n, b * n)}$ (qui vaudrait $${fx(a, b)}$) : l'exposant n'est pas un facteur !`
+                        ];
+                        sol = `$$B_{${i}} ${TEQ} ${fx(Math.pow(a, n), Math.pow(b, n))}$$`;
+                    } else {
+                        expr = `$$B_{${i}} ${TEQ} \\left(${fx(a, b)}\\right)^{${n}}$$`;
+                        steps = [
+                            `<strong>1. Simplification d'abord :</strong> $${fx(a, b)} ${TEQ} ${fx(red.n, red.d)}$ (division par le PGCD $${TFAC(gcd(a, b))}$) : autant élever la forme irréductible, les nombres restent petits.`,
+                            `<strong>2. Puissance par étage :</strong> $\\left(${fx(red.n, red.d)}\\right)^{${n}} ${TEQ} ${fx(`${red.n}^{${n}}`, `${red.d}^{${n}}`)}$.`,
+                            `<strong>3. Calculs :</strong> $${red.n}^{${n}} ${TEQ} ${Math.pow(red.n, n)}$ et $${red.d}^{${n}} ${TEQ} ${Math.pow(red.d, n)}$.`
+                        ];
+                        sol = `$$B_{${i}} ${TEQ} \\left(${fx(red.n, red.d)}\\right)^{${n}} ${TEQ} ${fx(Math.pow(red.n, n), Math.pow(red.d, n))}$$`;
+                    }
+                } else {
+                    title += "Entier et fraction : réduire au même dénominateur";
+                    const b = randInt(3, 8);
+                    const a = randInt(1, b - 1);
+                    const k = randInt(2, 5);
+                    const op = randInt(0, 1) === 0 ? TADD : TSUB;
+                    const opTxt = op === TADD ? '+' : '-';
+                    const num = op === TADD ? k * b + a : k * b - a;
+                    const red = reduceFrac(num, b);
+                    expr = `$$B_{${i}} ${TEQ} ${k} \\, ${op} \\, ${fx(a, b)}$$`;
+                    steps = [
+                        `<strong>1. L'entier est une fraction :</strong> $${k} ${TEQ} ${fx(k, 1)}$, ou mieux $${fx(k * b, b)}$ : $${k}$ unités de $${b}$ parts chacune.`,
+                        `<strong>2. Mise au même dénominateur :</strong> on obtient $${fx(k * b, b)} \\, ${op} \\, ${fx(a, b)}$ : les parts sont maintenant toutes de taille $\\dfrac{1}{${b}}$.`,
+                        `<strong>3. Addition ou soustraction des numérateurs :</strong> $${k * b} \\, ${op} \\, ${a} ${TEQ} ${num}$, puis forme irréductible par le PGCD $${TFAC(gcd(num, b))}$.`
+                    ];
+                    sol = `$$B_{${i}} ${TEQ} ${fx(num, b)}${red.d !== b ? ` ${TEQ} ${fx(red.n, red.d)}` : ''}$$`;
+                }
+
+                cards.push(renderCard(i + 30, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 5. Lycée level : fractions rationnelles, radicaux, équations ---
+        window.generateLycee30 = function() {
+            const container = document.getElementById('lycee-30-container');
+            if (!container) return;
+            const cards = [];
+            const SQRTS = [2, 3, 5, 6, 7, 10];
+
+            for (let i = 1; i <= 30; i++) {
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i);
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 6) {
+                    title += "Somme de fractions rationnelles";
+                    const a = randInt(1, 4);
+                    const b = randInt(1, 4);
+                    const c = randInt(1, 5);
+                    expr = `$$C_{${i}}(x) ${TEQ} ${fx(a, 'x')} \\, ${TADD} \\, ${fx(b, `x + ${c}`)} \\quad (x \\ne 0,\\ x \\ne ${-c})$$`;
+                    steps = [
+                        `<strong>1. Conditions d'existence :</strong> la première fraction exige $x \\ne 0$, la seconde $x \\ne ${-c}$ : on les annonce <span style="color:${CLR_GREEN};font-weight:700">avant</span> de calculer.`,
+                        `<strong>2. Dénominateur commun :</strong> $x$ et $x + ${c}$ n'ont aucun facteur commun : le dénominateur commun est le produit $${TFAC(`x\\left(x + ${c}\\right)`)}$.`,
+                        `<strong>3. Produits croisés :</strong> $${fx(a, 'x')} ${TEQ} ${fx(`${a}\\left(x + ${c}\\right)`, `x\\left(x + ${c}\\right)`)}$ et $${fx(b, `x + ${c}`)} ${TEQ} ${fx(`${b}x`, `x\\left(x + ${c}\\right)`)}$.`,
+                        `<strong>4. Addition et réduction :</strong> $${a}\\left(x + ${c}\\right) + ${b}x ${TEQ} ${a + b}x + ${a * c}$ au numérateur.`
+                    ];
+                    sol = `$$C_{${i}}(x) ${TEQ} ${fx(`${a + b}x + ${a * c}`, `x\\left(x + ${c}\\right)`)} \\quad \\text{pour } x \\ne 0 \\text{ et } x \\ne ${-c}$$`;
+                } else if (i <= 12) {
+                    title += "Simplification par factorisation du dénominateur";
+                    const a = randInt(2, 6);
+                    expr = `$$C_{${i}}(x) ${TEQ} ${fx(`x + ${a}`, `x^2 - ${a * a}`)} \\quad (x \\ne ${a},\\ x \\ne ${-a})$$`;
+                    steps = [
+                        `<strong>1. Conditions :</strong> $x^2 - ${a * a} = 0$ pour $x = ${a}$ ou $x = ${-a}$ : la fraction n'existe pas pour ces valeurs.`,
+                        `<strong>2. Factorisation :</strong> $x^2 - ${a * a} ${TEQ} \\left(x - ${a}\\right)\\left(x + ${a}\\right)$ (identité remarquable $A^2 - B^2$).`,
+                        `<strong>3. Factoreur commun :</strong> le numérateur $x + ${a}$ apparaît au dénominateur : on peut <span class="simplify-highlight">simplifier</span> par $x + ${a}$, à condition que $x \\ne ${-a}$.`,
+                        `<strong>4. Résultat :</strong> il ne reste que $\\dfrac{1}{x - ${a}}$ : plus court, mais égal à la fraction de départ <em>partout où les deux existent</em>.`
+                    ];
+                    sol = `$$C_{${i}}(x) ${TEQ} ${fx(1, `x - ${a}`)} \\quad \\text{pour } x \\ne ${a} \\text{ et } x \\ne ${-a}$$`;
+                } else if (i <= 18) {
+                    title += "Rationnalisation d'un dénominateur";
+                    const mod = (i - 13) % 3;
+                    if (mod === 0) {
+                        const a = SQRTS[randInt(0, SQRTS.length - 1)];
+                        expr = `$$C_{${i}} ${TEQ} ${fx(1, `\\sqrt{${a}}`)} \\quad \\text{(chasser le radical du bas)}$$`;
+                        steps = [
+                            `<strong>1. Stratégie :</strong> multiplier haut et bas par le <span class="simplify-highlight">même nombre</span> ne change pas la valeur. On choisit $\\sqrt{${a}}$.`,
+                            `<strong>2. Calcul du bas :</strong> $\\sqrt{${a}} \\, ${TMUL} \\, \\sqrt{${a}} ${TEQ} \\sqrt{${a} \\times ${a}} ${TEQ} ${a}$ : le radical disparaît.`,
+                            `<strong>3. Calcul du haut :</strong> $1 \\, ${TMUL} \\, \\sqrt{${a}} ${TEQ} \\sqrt{${a}}$.`
+                        ];
+                        sol = `$$C_{${i}} ${TEQ} ${fx(`\\sqrt{${a}}`, a)}$$`;
+                    } else if (mod === 1) {
+                        const a = SQRTS[randInt(0, SQRTS.length - 1)];
+                        const b = randInt(2, 7);
+                        expr = `$$C_{${i}} ${TEQ} ${fx(b, `\\sqrt{${a}}`)} \\quad \\text{(chasser le radical du bas)}$$`;
+                        steps = [
+                            `<strong>1. Quantité conjuguée simplifiée :</strong> ici un seul terme au dénominateur : on multiplie haut et bas par $\\sqrt{${a}}$.`,
+                            `<strong>2. Calcul du bas :</strong> $\\sqrt{${a}} \\, ${TMUL} \\, \\sqrt{${a}} ${TEQ} ${a}$.`,
+                            `<strong>3. Calcul du haut :</strong> $${b} \\, ${TMUL} \\, \\sqrt{${a}} ${TEQ} ${b}\\sqrt{${a}}$.`
+                        ];
+                        sol = `$$C_{${i}} ${TEQ} ${fx(`${b}\\sqrt{${a}}`, a)}$$`;
+                    } else {
+                        const pool = [2, 3, 5, 6, 7, 10];
+                        const mi = randInt(1, pool.length - 1);
+                        const n = pool[randInt(0, mi - 1)];
+                        let m = pool[randInt(mi, pool.length - 1)];
+                        while (m === n) m = pool[randInt(0, pool.length - 1)];
+                        expr = `$$C_{${i}} ${TEQ} ${fx(1, `\\sqrt{${m}} - \\sqrt{${n}}`)} \\quad \\text{(chasser le radical du bas)}$$`;
+                        steps = [
+                            `<strong>1. Conjugué :</strong> deux termes au dénominateur : on multiplie haut et bas par le <span class="simplify-highlight">conjugué</span> $\\sqrt{${m}} + \\sqrt{${n}}$.`,
+                            `<strong>2. Identité au bas :</strong> $\\left(\\sqrt{${m}} - \\sqrt{${n}}\\right)\\left(\\sqrt{${m}} + \\sqrt{${n}}\\right) ${TEQ} ${m} - ${n}$ (le produit croisé des radicaux disparaît : $A^2 - B^2$).`,
+                            `<strong>3. Calcul du haut :</strong> il reste $\\sqrt{${m}} + \\sqrt{${n}}$ : les radicaux du numérateur ne gênent personne.`
+                        ];
+                        sol = `$$C_{${i}} ${TEQ} ${fx(`\\sqrt{${m}} + \\sqrt{${n}}`, m - n)}$$`;
+                    }
+                } else if (i <= 24) {
+                    title += "Quotient de polynômes : factoriser avant de simplifier";
+                    const r1 = randInt(1, 6);
+                    let r2 = randInt(1, 6);
+                    while (r2 === r1) r2 = randInt(1, 6);
+                    expr = `$$C_{${i}}(x) ${TEQ} ${fx(`\\left(x - ${r1}\\right)\\left(x - ${r2}\\right)`, `x - ${r1}`)} \\quad (x \\ne ${r1})$$`;
+                    steps = [
+                        `<strong>1. Condition :</strong> le dénominateur s'annule en $x = ${r1}$ : la fraction n'existe pas là-bas, on ne pourra donc jamais « tester » la valeur $${r1}$.`,
+                        `<strong>2. Factoreur commun visible :</strong> le facteur $x - ${r1}$ figure en haut et en bas : on le <span class="simplify-highlight">barre</span>.`,
+                        `<strong>3. Simplification :</strong> il reste $x - ${r2}$. Cette écriture est une <em>droite</em>, alors que la fraction de départ avait un trou en $x = ${r1}$ : d'où l'importance de garder la condition.`,
+                        `<strong>4. Lien avec la factorisation :</strong> simplifier une fraction rationnelle, c'est exactement factoriser haut et bas, puis barrer les facteurs communs.`
+                    ];
+                    sol = `$$C_{${i}}(x) ${TEQ} x - ${r2} \\quad \\text{pour } x \\ne ${r1}$$`;
+                } else {
+                    title += "Équation fractionnaire";
+                    const a = randInt(1, 4);
+                    const b = randInt(a + 1, a + 3);
+                    const c = randInt(1, 6);
+                    const red = reduceFrac(a * c, b - a);
+                    expr = `$$\\text{Résoudre : } \\quad ${fx(a, 'x')} ${TEQ} ${fx(b, `x + ${c}`)}$$`;
+                    steps = [
+                        `<strong>1. Conditions :</strong> $x \\ne 0$ et $x \\ne ${-c}$ (dénominateurs non nuls).`,
+                        `<strong>2. Produit en croix :</strong> deux fractions égales, numérateurs et dénominateurs croisés : $${a}\\left(x + ${c}\\right) ${TEQ} ${b}x$.`,
+                        `<strong>3. Développement et regroupement :</strong> $${a}x + ${a * c} ${TEQ} ${b}x$, donc $${b - a}x ${TEQ} ${a * c}$.`,
+                        `<strong>4. Vérification des conditions :</strong> la solution obtenue est non nulle et différente de $${-c}$ : elle est <span class="simplify-highlight">valide</span>.`
+                    ];
+                    sol = red.d === 1
+                        ? `$$x ${TEQ} ${red.n} \\quad \\text{(vérifie } x \\ne 0 \\text{ et } x \\ne ${-c}\\text{)}$$`
+                        : `$$x ${TEQ} ${fx(red.n, red.d)} \\quad \\text{(vérifie } x \\ne 0 \\text{ et } x \\ne ${-c}\\text{)}$$`;
+                }
+
+                cards.push(renderCard(i + 60, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 6. Fractions piégées : démasquer les erreurs classiques ---
+        window.generatePieges30 = function() {
+            const container = document.getElementById('pieges-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i, "Expert en pièges");
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 6) {
+                    title += "Le piège de l'addition « croisée »";
+                    const b = randInt(2, 9);
+                    const d = randInt(2, 9);
+                    const a = randInt(1, b - 1);
+                    const c = randInt(1, d - 1);
+                    const L = lcm(b, d);
+                    const red = reduceFrac(a * (L / b) + c * (L / d), L);
+                    expr = `$$D_{${i}} \\quad \\text{Un élève écrit : } ${fx(a, b)} \\, ${TADD} \\, ${fx(c, d)} ${TEQ} ${fx(a + c, b + d)} \\quad \\text{A-t-il raison ?}$$`;
+                    steps = [
+                        `<strong>1. Test numérique du faux résultat :</strong> $${fx(a, b)} ${TEQ} ${fmtL(a / b)}$ et $${fx(c, d)} ${TEQ} ${fmtL(c / d)}$, donc la somme vaut environ $${fmtL(a / b + c / d)}$. Or $${fx(a + c, b + d)} ${TEQ} ${fmtL((a + c) / (b + d))}$ : ce n'est <strong>pas</strong> la même valeur.`,
+                        `<strong>2. Pourquoi ça échoue :</strong> $${a}$ neuvièmes et $${c}$ quarts (par exemple) sont des parts de tailles <em>différentes</em> : les additionner directement revient à ajouter des choux et des carottes.`,
+                        `<strong>3. La bonne méthode :</strong> dénominateur commun $${TFAC(L)}$ (PPCM), puis addition des numérateurs : $${fx(a, b)} ${TEQ} ${fx(a * (L / b), L)}$ et $${fx(c, d)} ${TEQ} ${fx(c * (L / d), L)}$.`,
+                        `<strong>4. Remarque de culture :</strong> $${fx(a + c, b + d)}$ n'est pas la somme mais une <em>moyenne pondérée</em> des deux fractions : elle tombe toujours entre elles. C'est pourquoi ce résultat « plausible » est si trompeur.`
+                    ];
+                    sol = `$$D_{${i}} \\quad \\text{Non. La somme vaut } ${fx(a * (L / b) + c * (L / d), L)}${red.d !== L ? ` ${TEQ} ${fx(red.n, red.d)}` : ''} \\quad \\neq \\quad ${fx(a + c, b + d)}$$`;
+                } else if (i <= 12) {
+                    title += "La simplification abusive";
+                    const b = randInt(3, 9);
+                    const a = randInt(1, b - 2);
+                    const k = randInt(2, 8);
+                    expr = `$$D_{${i}} \\quad \\text{Un élève barre les } ${k} \\text{ et écrit : } ${fx(a + k, b + k)} ${TEQ} ${fx(a, b)} \\quad \\text{A-t-il raison ?}$$`;
+                    steps = [
+                        `<strong>1. Test numérique :</strong> $${fx(a + k, b + k)} ${TEQ} ${fmtL((a + k) / (b + k))}$ alors que $${fx(a, b)} ${TEQ} ${fmtL(a / b)}$ : les valeurs diffèrent.`,
+                        `<strong>2. La règle oubliée :</strong> on ne simplifie que des <span class="simplify-highlight">facteurs multipliés</span> : $\\dfrac{a \\times k}{b \\times k} = \\dfrac{a}{b}$. Ici $${k}$ est <em>additionné</em>, pas multiplié : il ne peut pas disparaître.`,
+                        `<strong>3. Vocabulaire :</strong> $${a + k}$ et $${b + k}$ sont des <em>termes</em> d'une somme, pas des facteurs d'un produit.`,
+                        `<strong>4. Contre-exemple célèbre :</strong> $\\dfrac{1 + 1}{2 + 1} = \\dfrac{2}{3} \\ne \\dfrac{1}{2}$ : si la règle abusive marchait, toute fraction serait égale à $\\dfrac{0}{1}$ en bariant tout !`
+                    ];
+                    sol = `$$D_{${i}} \\quad \\text{Non.} \\quad ${fx(a + k, b + k)} ${TEQ} ${fmtL((a + k) / (b + k))} \\quad \\ne \\quad ${fx(a, b)} ${TEQ} ${fmtL(a / b)}$$`;
+                } else if (i <= 18) {
+                    title += "La division mal inversée";
+                    const N = randInt(2, 9);
+                    const b = randInt(2, 7);
+                    const c = randInt(1, b - 1);
+                    const red = reduceFrac(N * c, b);
+                    expr = `$$D_{${i}} \\quad \\text{Calculer : } ${N} \\, ${TDIV} \\, ${fx(c, b)} \\quad \\text{sans inverser la mauvaise fraction !}$$`;
+                    steps = [
+                        `<strong>1. Règle :</strong> diviser par $${fx(c, b)}$, c'est multiplier par son <span class="simplify-highlight">inverse</span> $${fx(b, c)}$. On inverse <em>celle par laquelle on divise</em>, jamais le nombre de départ.`,
+                        `<strong>2. Transformation :</strong> $${N} \\, ${TDIV} \\, ${fx(c, b)} ${TEQ} ${N} \\, ${TMUL} \\, ${fx(b, c)}$ : le $${N}$ (que l'on peut voir comme $${fx(N, 1)}$) garde numérateur et dénominateur.`,
+                        `<strong>3. Erreur classique en face :</strong> écrire $${fx(N * b, c)}$ revient à inverser les deux fractions à la fois : le résultat est faux sauf coup de chance.`,
+                        `<strong>4. Ordre de grandeur :</strong> $${N} \\div ${fmtL(c / b)}$ : diviser par un nombre plus petit que $1$ <strong>agrandit</strong>. Le résultat doit dépasser $${N}$ : un contrôle de tête évite l'erreur.`
+                    ];
+                    sol = `$$D_{${i}} ${TEQ} ${N} \\, ${TMUL} \\, ${fx(b, c)} ${TEQ} ${fx(N * b, c)}${red.d !== c || red.n !== N * b ? ` ${TEQ} ${fx(red.n, red.d)}` : ''} \\quad \\left(\\text{plus grand que } ${N} : normal !}\\right)$$`;
+                } else if (i <= 24) {
+                    title += "Les signes cachés";
+                    const mod = (i - 19) % 2;
+                    if (mod === 0) {
+                        const b = randInt(3, 9);
+                        const d = randInt(2, 9);
+                        const a = randInt(1, b - 1);
+                        const c = randInt(1, d - 1);
+                        const L = lcm(b, d);
+                        const red = reduceFrac(-(a * (L / b)) - c * (L / d), L);
+                        expr = `$$D_{${i}} ${TEQ} ${fx(-a, b)} \\, ${TADD} \\, ${fx(c, -d)}$$`;
+                        steps = [
+                            `<strong>1. Normaliser les signes :</strong> $${fx(c, -d)} ${TEQ} ${fx(-c, d)}$ : le signe d'une fraction peut se déplacer librement entre le haut, le bas et l'avant (un seul signe « moins » en tout).`,
+                            `<strong>2. Expression normalisée :</strong> $${fx(-a, b)} \\, ${TADD} \\, ${fx(-c, d)}$ : les deux termes sont en fait <em>négatifs</em>.`,
+                            `<strong>3. Dénominateur commun :</strong> avec $${TFAC(L)}$ : $${fx(-a, b)} ${TEQ} ${fx(-a * (L / b), L)}$ et $${fx(-c, d)} ${TEQ} ${fx(-c * (L / d), L)}$.`,
+                            `<strong>4. Addition des numérateurs :</strong> deux nombres négatifs s'additionnent en valeur absolue : le résultat reste négatif.`
+                        ];
+                        sol = `$$D_{${i}} ${TEQ} ${fx(red.n, red.d)}$$`;
+                    } else {
+                        const b = randInt(3, 8);
+                        const a = randInt(2, b - 1);
+                        const c = randInt(1, 3);
+                        const d = randInt(1, b - 1);
+                        const num = a + d - c * b;
+                        const red = reduceFrac(num, b);
+                        expr = `$$D_{${i}} ${TEQ} ${fx(a, b)} \\, ${TSUB} \\, \\left(${c} \\, ${TSUB} \\, ${fx(d, b)}\\right)$$`;
+                        steps = [
+                            `<strong>1. La parenthèse change tout :</strong> le signe $${TSUB}$ devant la parenthèse <span class="op-sub">retourne tous les signes</span> intérieurs : $${c} - ${fx(d, b)}$ devient $${-c} \\, ${TADD} \\, ${fx(d, b)}$ après soustraction.`,
+                            `<strong>2. Réécriture :</strong> $${fx(a, b)} - ${c} + ${fx(d, b)}$ : on peut maintenant réordonner librement.`,
+                            `<strong>3. L'entier en fraction :</strong> $${c} ${TEQ} ${fx(c * b, b)}$ pour tout mettre en $${b}$-ièmes.`,
+                            `<strong>4. Attention au sens :</strong> soustraire une quantité <em>plus petite que $${c}$</em> (car $${fx(d, b)} < 1$) éloigne peu du résultat : l'ordre de grandeur finale doit rester proche de $${fmtL(a / b - c)}$.`
+                        ];
+                        sol = `$$D_{${i}} ${TEQ} ${fx(num, b)}${red.d !== b ? ` ${TEQ} ${fx(red.n, red.d)}` : ''}$$`;
+                    }
+                } else {
+                    title += "Pièges avec l'inconnue";
+                    const mod = (i - 25) % 3;
+                    if (mod === 0) {
+                        const a = randInt(1, 5);
+                        expr = `$$D_{${i}} \\quad \\text{Un élève affirme : } ${fx('x', `x + ${a}`)} ${TEQ} ${fx(1, a)} \\quad \\text{En barrant les } x \\text{. Vérifier.}$$`;
+                        steps = [
+                            `<strong>1. Test numérique :</strong> pour $x = ${a + 1}$ : $${fx(a + 1, 2 * a + 1)} ${TEQ} ${fmtL((a + 1) / (2 * a + 1))}$, alors que $${fx(1, a)} ${TEQ} ${fmtL(1 / a)}$. Les valeurs diffèrent : l'affirmation est fausse.`,
+                            `<strong>2. L'erreur :</strong> le $x$ du numérateur est un <em>terme</em> du produit $x \\times 1$... mais le $x$ du bas est un terme de la <em>somme</em> $x + ${a}$. Barrer des éléments qui ne jouent pas le même rôle est interdit.`,
+                            `<strong>3. La seule simplification légale ici :</strong> rien ! $\\dfrac{x}{x + ${a}}$ est déjà irréductible pour toute valeur de $x \\ne ${-a}$.`,
+                            `<strong>4. Règle d'or :</strong> une simplification doit faire intervenir un <span class="simplify-highlight">facteur</span> commun au numérateur <em>et</em> au dénominateur, jamais un terme isolé.`
+                        ];
+                        sol = `$$D_{${i}} \\quad \\text{Faux : } ${fx('x', `x + ${a}`)} \\text{ est irréductible } \\left(x \\ne ${-a}\\right) \\text{ et vaut } ${fmtL(1 / 2)} \\text{ seulement si } x = ${a}$$`;
+                    } else if (mod === 1) {
+                        const a = randInt(1, 5);
+                        expr = `$$D_{${i}} \\quad \\text{Simplifier : } ${fx(`x^2 - ${a * a}`, `x - ${a}`)} \\quad \\text{, puis discuter.}$$`;
+                        steps = [
+                            `<strong>1. Factoriser avant de simplifier :</strong> $x^2 - ${a * a} ${TEQ} \\left(x - ${a}\\right)\\left(x + ${a}\\right)$ : le numérateur est un produit, ce qui rend la simplification <em>possible</em>.`,
+                            `<strong>2. Simplification légale :</strong> le facteur $x - ${a}$ apparaît en haut et en bas : on le barre, <strong>à condition</strong> qu'il soit non nul.`,
+                            `<strong>3. Condition non négociable :</strong> pour $x = ${a}$, la fraction initiale vaut $\\dfrac{0}{0}$ : elle n'existe pas. La simplifiée $x + ${a}$, elle, vaut $${2 * a}$. Les deux expressions coïncident partout <em>sauf</em> en $x = ${a}$.`,
+                            `<strong>4. Conclusion de pro :</strong> $\\dfrac{x^2 - ${a * a}}{x - ${a}} = x + ${a}$ <em>pour $x \\ne ${a}$</em> : la condition fait partie du résultat.`
+                        ];
+                        sol = `$$D_{${i}} \\quad ${fx(`x^2 - ${a * a}`, `x - ${a}`)} ${TEQ} x + ${a} \\quad \\text{pour } x \\ne ${a} \\quad \\text{(et jamais pour } x = ${a} : \\text{ division par } 0\\text{)}$$`;
+                    } else {
+                        const a = randInt(2, 6);
+                        expr = `$$D_{${i}} \\quad \\text{Résoudre : } \\quad ${fx(`x + ${a}`, 'x')} ${TEQ} ${a + 1}$$`;
+                        steps = [
+                            `<strong>1. Condition :</strong> $x \\ne 0$ : on n'a pas le droit de multiplier les deux membres par $x$ sans garder cette information.`,
+                            `<strong>2. Produit en croix :</strong> $x + ${a} ${TEQ} ${a + 1} \\, ${TMUL} \\, x$, soit $x + ${a} ${TEQ} ${a + 1}x$.`,
+                            `<strong>3. Regroupement :</strong> $${a} ${TEQ} ${a + 1}x - x ${TEQ} ${a}x$... piège ! On obtient $x ${TEQ} 1$ : vérifions-le <em>dans l'équation de départ</em>.`,
+                            `<strong>4. Vérification :</strong> pour $x = 1$ : $${fx(a + 1, 1)} ${TEQ} ${a + 1}$ ✓. La solution respecte $x \\ne 0$ : elle est valide.`
+                        ];
+                        sol = `$$x ${TEQ} 1 \\quad \\text{(vérifie } x \\ne 0\\text{)} \\quad \\text{et } ${fx(1 + a, 1)} ${TEQ} ${a + 1} \\checkmark$$`;
+                    }
+                }
+
+                cards.push(renderCard(i + 90, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 7. Techniques de pro : télescopiques, couples, fractions continues ---
+        window.generatePro30 = function() {
+            const container = document.getElementById('pro-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i, "Niveau compétition");
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 6) {
+                    title += "Décomposition en éléments simples";
+                    const n = randInt(2, 9);
+                    expr = `$$E_{${i}} \\quad \\text{Vérifier puis utiliser : } ${fx(1, `n(n+1)`)} ${TEQ} ${fx(1, 'n')} \\, ${TSUB} \\, ${fx(1, `n+1`)} \\quad \\text{avec } n = ${n}$$`;
+                    steps = [
+                        `<strong>1. Réduction au même dénominateur du membre de droite :</strong> $${fx(1, 'n')} - ${fx(1, `n+1`)} ${TEQ} ${fx(`n+1`, `n(n+1)`)} - ${fx('n', `n(n+1)`)}$.`,
+                        `<strong>2. Soustraction :</strong> les numérateurs $${n + 1}$ et $${n}$ ne diffèrent que de $1$ : le haut vaut exactement $1$.`,
+                        `<strong>3. Application numérique :</strong> $${fx(1, `${n} \\times ${n + 1}`)} ${TEQ} ${fx(1, n)} - ${fx(1, n + 1)} ${TEQ} ${fmtL(1 / n)} - ${fmtL(1 / (n + 1))} ${TEQ} ${fmtL(1 / (n * (n + 1)))}$.`,
+                        `<strong>4. L'intérêt :</strong> cette décomposition transforme un gros calcul en une différence de deux fractions simples : c'est la clé des sommes télescopiques.`
+                    ];
+                    sol = `$$E_{${i}} \\quad ${fx(1, `n(n+1)`)} ${TEQ} ${fx(1, n)} \\, ${TSUB} \\, ${fx(1, n + 1)} \\quad \\left(\\text{vérifié pour } n = ${n} : {\\,} ${fx(1, n * (n + 1))}\\right)$$`;
+                } else if (i <= 12) {
+                    title += "Somme télescopique";
+                    const n = randInt(2, 4);
+                    const sumStr = Array.from({ length: n }, (_, k) => `${fx(1, `${k + 1} \\times ${k + 2}`)}`).join(` \\, ${TADD} \\, `);
+                    const red = reduceFrac(n, n + 1);
+                    expr = `$$E_{${i}} ${TEQ} ${sumStr}$$`;
+                    steps = [
+                        `<strong>1. Décomposer chaque terme :</strong> $${fx(1, `k(k+1)`)} ${TEQ} ${fx(1, 'k')} - ${fx(1, `k+1`)}$ pour chaque entier $k$.`,
+                        `<strong>2. Écrire la chaîne :</strong> chaque dénominateur apparaît une fois en position $+$ et une fois en position $-$ : tout l'intérieur s'annule, comme des dominos qui tombent.`,
+                        `<strong>3. Ce qui survit :</strong> le premier $1$ (du premier terme) et le dernier $-\\dfrac{1}{${n + 1}}$ (du dernier terme) : les deux bouts seulement.`,
+                        `<strong>4. Calcul final :</strong> $1 - ${fx(1, n + 1)} ${TEQ} ${fx(n, n + 1)}$. Aucun dénominateur commun à calculer : la magie du télescope.`
+                    ];
+                    sol = `$$E_{${i}} ${TEQ} 1 \\, ${TSUB} \\, ${fx(1, n + 1)} ${TEQ} ${fx(red.n, red.d)}$$`;
+                } else if (i <= 18) {
+                    title += "L'astuce des couples";
+                    const s = randInt(3, 7);
+                    expr = `$$E_{${i}} \\quad \\text{Sachant } x + ${fx(1, 'x')} ${TEQ} ${s} \\; (x > 0), \\quad \\text{calculer } x^2 + ${fx(1, 'x^2')}$$`;
+                    steps = [
+                        `<strong>1. Élever au carré la relation :</strong> $\\left(x + ${fx(1, 'x')}\\right)^2 ${TEQ} ${s}^2$.`,
+                        `<strong>2. Développer le carré :</strong> $x^2 + 2 \\, ${TMUL} \\, x \\, ${TMUL} \\, ${fx(1, 'x')} + ${fx(1, 'x^2')} ${TEQ} x^2 + 2 + ${fx(1, 'x^2')}$.`,
+                        `<strong>3. Le couple isolé :</strong> $x \\times ${fx(1, 'x')} ${TEQ} 1$ : le produit croisé vaut toujours $1$, c'est lui qui fait marcher l'astuce.`,
+                        `<strong>4. Isoler :</strong> $x^2 + ${fx(1, 'x^2')} ${TEQ} ${s * s} - 2 ${TEQ} ${s * s - 2}$. On n'a jamais eu besoin de la valeur de $x$ !`
+                    ];
+                    sol = `$$E_{${i}} \\quad x^2 + ${fx(1, 'x^2')} ${TEQ} ${s * s} \\, ${TSUB} \\, 2 ${TEQ} ${s * s - 2}$$`;
+                } else if (i <= 24) {
+                    title += "Fraction continue";
+                    const a = randInt(1, 3);
+                    const b = randInt(1, 3);
+                    const c = randInt(2, 4);
+                    const inner = reduceFrac(1, b * c + 1);
+                    const whole = reduceFrac(a * (b * c + 1) + c, b * c + 1);
+                    expr = `$$E_{${i}} ${TEQ} ${a} \\, ${TADD} \\, ${fx(1, `${b} \\, ${TADD} \\, ${fx(1, c)}`)}$$`;
+                    steps = [
+                        `<strong>1. Lire du bas vers le haut :</strong> la première quantité à calculer est $${b} + ${fx(1, c)} ${TEQ} ${fx(b * c + 1, c)}$.`,
+                        `<strong>2. Prendre l'inverse :</strong> $${fx(1, `${b} + ${fx(1, c)}`)} ${TEQ} ${fx(c, b * c + 1)}$.`,
+                        `<strong>3. Ajouter l'étage du haut :</strong> $${a} + ${fx(c, b * c + 1)} ${TEQ} ${fx(a * (b * c + 1) + c, b * c + 1)}$.`,
+                        `<strong>4. Simplifier :</strong> forme irréductible par le PGCD $${TFAC(gcd(a * (b * c + 1) + c, b * c + 1))}$.`
+                    ];
+                    sol = `$$E_{${i}} ${TEQ} ${fx(whole.n, whole.d)} \\quad \\left(\\approx ${fmtL(whole.n / whole.d)}\\right)$$`;
+                } else {
+                    title += "Produit télescopique";
+                    const n = randInt(3, 5);
+                    const factors = Array.from({ length: n - 2 }, (_, k) => `\\left(1 - ${fx(1, k + 3)}\\right)`).join(` \\, ${TMUL} \\, `);
+                    expr = `$$E_{${i}} ${TEQ} \\left(1 - ${fx(1, 2)}\\right) \\, ${TMUL} \\, ${factors}$$`;
+                    const chain = Array.from({ length: n - 1 }, (_, k) => `${fx(k + 1, k + 2)}`).join(` \\, ${TMUL} \\, `);
+                    steps = [
+                        `<strong>1. Chaque facteur est une fraction :</strong> $1 - ${fx(1, 'k')} ${TEQ} ${fx('k-1', 'k')}$, donc ici le produit s'écrit $${chain}$.`,
+                        `<strong>2. Effet domino :</strong> le numérateur $${2}$ de $\\dfrac{2}{3}$ mange le dénominateur $${2}$ du facteur précédent, et ainsi de suite : chaque entier apparaît une fois en haut puis une fois en bas.`,
+                        `<strong>3. Ce qui reste :</strong> le tout premier numérateur $1$ et le tout dernier dénominateur $${n}$ : le produit entier vaut $${fx(1, n)}$.`,
+                        `<strong>4. Contrôle de tête :</strong> multiplier des nombres plus petits que $1$ donne un résultat plus petit que chacun : $${fx(1, n)} \\approx ${fmtL(1 / n)}$ est cohérent.`
+                    ];
+                    sol = `$$E_{${i}} ${TEQ} ${fx(1, n)}$$`;
+                }
+
+                cards.push(renderCard(i + 120, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 8. Quizz de synthèse : couvre l'ensemble du document ---
+        // Le quizz est entièrement dynamique : 16 familles de questions à valeurs
+        // aléatoires (13 numériques + 3 réservées au mode littéral), mélangées
+        // à chaque partie. Une mémoire de signatures (session + localStorage)
+        // garantit qu'un même quizz ne se reproduit jamais exactement.
+        // `correct` contient les indices des bonnes réponses dans `options` ;
+        // l'indice options.length désigne « Autre », qui peut être une bonne réponse.
+        // Les explications référencent les propositions par leur contenu, jamais par
+        // leur lettre, car l'ordre des propositions est mélangé.
+
+        // Mélange de Fisher-Yates (copie non destructive).
+        function quizShuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // ---------- Familles de questions (valeurs aléatoires) ----------
+
+        // Primaire : fraction d'une quantité.
+        function famFractionQuantite() {
+            const b = randInt(3, 6);
+            const a = randInt(2, b - 1);
+            const k = randInt(2, 9);
+            const N = b * k;
+            const res = a * k;
+            return {
+                section: 'Primaire',
+                question: `On partage $${N}$ bonbons en $${b}$ parts égales, puis on prend $${a}$ de ces parts. Combien de bonbons a-t-on pris ?`,
+                options: [`${res}`, `${k}`, `${a * N}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Taille d'une part :</strong> $${N} \\div ${b} ${TEQ} ${k}$ bonbons par part.</p>
+                    <p class="step-line"><strong>2. Nombre de parts prises :</strong> $${a} \\times ${k} ${TEQ} ${res}$ bonbons.</p>
+                    <p class="step-line"><strong>3. Analyse des propositions :</strong> $${k}$ est la taille d'<em>une seule</em> part (numérateur 1 oublié), et $${a * N}$ multiplie le tout par $${a}$ au lieu d'une part. Seul $${res}$ est correct.</p>`,
+                sig: `fq:${b}${a}${k}`
+            };
+        }
+
+        // Primaire : fraction équivalente (numérateur manquant).
+        function famEquivalentes() {
+            const b = randInt(3, 5);
+            let a = randInt(2, b - 1);
+            let m = randInt(2, 4);
+            let guard = 0;
+            const o1 = () => a * m, o2 = () => a + m, o3 = () => a * (m + 1);
+            while ((o1() === o2() || o1() === o3() || o2() === o3()) && guard < 40) {
+                a = randInt(2, b - 1); m = randInt(2, 4); guard++;
+            }
+            const resF = a * m, res2 = a + m, res3 = a * (m + 1);
+            const D = b * m;
+            return {
+                section: 'Primaire',
+                question: `Compléter l'égalité de fractions équivalentes : $${fx(a, b)} ${TEQ} \\dfrac{\\textcolor{${CLR_RED}}{?}}{${D}}$`,
+                options: [`${fx(resF, D)}`, `${fx(res2, D)}`, `${fx(res3, D)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Côté dénominateurs :</strong> $${D} ${TEQ} ${b} \\times ${m}$ : chaque part a été recoupée en $${m}$ morceaux.</p>
+                    <p class="step-line"><strong>2. Même facteur en haut :</strong> pour garder la même valeur, le numérateur devient $${a} \\times ${m} ${TEQ} ${resF}$.</p>
+                    <p class="step-line"><strong>3. Analyse des propositions :</strong> $${fx(res2, D)}$ additionne le facteur au lieu de multiplier, et $${fx(res3, D)}$ ajoute une part de trop. La bonne écriture est $${fx(resF, D)}$, même valeur que $${fx(a, b)}$.</p>`,
+                sig: `eq:${b}${a}${m}`
+            };
+        }
+
+        // Collège : comparaison croisée.
+        function famComparaison() {
+            const b = randInt(3, 9);
+            const d = randInt(3, 9);
+            let a = randInt(1, b - 1);
+            let c = randInt(1, d - 1);
+            let guard = 0;
+            while (a * d === b * c && guard < 40) { a = randInt(1, b - 1); c = randInt(1, d - 1); guard++; }
+            const cross1 = a * d, cross2 = b * c;
+            const leftBigger = cross1 > cross2;
+            return {
+                section: 'Collège',
+                question: `Quelle est la <strong>plus grande</strong> de ces deux fractions : $${fx(a, b)}$ ou $${fx(c, d)}$ ?`,
+                options: [`${fx(a, b)} \\text{ est la plus grande}`, `${fx(c, d)} \\text{ est la plus grande}`, `\\text{Elles sont égales}`],
+                correct: [leftBigger ? 0 : 1],
+                explanation: `
+                    <p><strong>1. Pas besoin de dénominateur commun :</strong> on compare les <span class="simplify-highlight">produits en croix</span> $${a} \\times ${d} ${TEQ} ${cross1}$ et $${b} \\times ${c} ${TEQ} ${cross2}$.</p>
+                    <p class="step-line"><strong>2. Lecture du croisement :</strong> $${cross1} ${leftBigger ? '>' : '<'} ${cross2}$, donc $${fx(a, b)}$ est ${leftBigger ? 'plus grande' : 'plus petite'} que $${fx(c, d)}$.</p>
+                    <p class="step-line"><strong>3. Contrôle de tête :</strong> $${fx(a, b)} ${TEQ} ${fmtL(a / b)}$ et $${fx(c, d)} ${TEQ} ${fmtL(c / d)}$ : l'ordre est confirmé.</p>`,
+                sig: `cmp:${b}${d}${a}${c}`
+            };
+        }
+
+        // Collège : addition même dénominateur (deux écritures équivalentes valides).
+        function famSommeMemeDen() {
+            const pool = [4, 6, 8, 9, 10, 12];
+            const b = pool[randInt(0, pool.length - 1)];
+            let a = randInt(1, b - 1), c = randInt(1, b - 1);
+            let guard = 0;
+            while (gcd(a + c, b) === 1 && guard < 60) { a = randInt(1, b - 1); c = randInt(1, b - 1); guard++; }
+            const s = a + c;
+            const red = reduceFrac(s, b);
+            return {
+                section: 'Collège',
+                question: `Que vaut $${fx(a, b)} \\, ${TADD} \\, ${fx(c, b)}$ ?`,
+                options: [`${fx(s, b)}`, `${fx(red.n, red.d)}`, `${fx(s, 2 * b)}`],
+                correct: [0, 1],
+                explanation: `
+                    <p><strong>1. Même dénominateur :</strong> on additionne les numérateurs : $${a} + ${c} ${TEQ} ${s}$, d'où $${fx(s, b)}$.</p>
+                    <p class="step-line"><strong>2. Deux écritures, une seule valeur :</strong> $${fx(s, b)}$ et $${fx(red.n, red.d)}$ désignent le même nombre (division haut et bas par $${TFAC(gcd(s, b))}$) : les deux propositions sont <strong>correctes</strong>.</p>
+                    <p class="step-line"><strong>3. Le piège :</strong> $${fx(s, 2 * b)}$ additionne aussi les dénominateurs : la taille des parts a mystérieusement doublé, ce qui divise le résultat par $2$.</p>`,
+                sig: `smd:${b}${a}${c}`
+            };
+        }
+
+        // Collège : addition à dénominateurs différents, avec le piège croisé en distracteur.
+        function famSommeDifferents() {
+            const pairs = [[3, 4], [2, 5], [3, 5], [4, 6], [2, 7], [3, 8], [5, 6], [6, 8], [5, 8], [4, 9]];
+            const [b, d] = pairs[randInt(0, pairs.length - 1)];
+            const a = randInt(1, b - 1);
+            const c = randInt(1, d - 1);
+            const L = lcm(b, d);
+            const num = a * (L / b) + c * (L / d);
+            const red = reduceFrac(num, L);
+            return {
+                section: 'Collège',
+                question: `Que vaut $${fx(a, b)} \\, ${TADD} \\, ${fx(c, d)}$ ?`,
+                options: [`${fx(red.n, red.d)}`, `${fx(a + c, b + d)}`, `${fx(a + c, b * d)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Dénominateur commun :</strong> $\\text{PPCM}(${b} \\, ; \\, ${d}) ${TEQ} ${TFAC(L)}$.</p>
+                    <p class="step-line"><strong>2. Produits croisés :</strong> $${fx(a, b)} ${TEQ} ${fx(a * (L / b), L)}$ et $${fx(c, d)} ${TEQ} ${fx(c * (L / d), L)}$, d'où la somme $${fx(red.n, red.d)}$.</p>
+                    <p class="step-line"><strong>3. Les deux pièges classiques :</strong> $${fx(a + c, b + d)}$ additionne haut avec haut et bas avec bas (c'est une moyenne pondérée, pas la somme), et $${fx(a + c, b * d)}$ prend bien le produit en bas mais oublie de multiplier les numérateurs.</p>`,
+                sig: `sdif:${b}${d}${a}${c}`
+            };
+        }
+
+        // Collège : multiplication (deux écritures équivalentes valides).
+        function famMultiplication() {
+            const pool = [4, 6, 8, 9, 10, 12];
+            const b = pool[randInt(0, pool.length - 1)];
+            const d = pool[randInt(0, pool.length - 1)];
+            let a = randInt(1, b - 1), c = randInt(1, d - 1);
+            let guard = 0;
+            while (gcd(a, d) === 1 && gcd(b, c) === 1 && guard < 60) { a = randInt(1, b - 1); c = randInt(1, d - 1); guard++; }
+            const red = reduceFrac(a * c, b * d);
+            return {
+                section: 'Collège',
+                question: `Que vaut $${fx(a, b)} \\, ${TMUL} \\, ${fx(c, d)}$ ?`,
+                options: [`${fx(red.n, red.d)}`, `${fx(a * c, b * d)}`, `${fx(a * c, b + d)}`],
+                correct: [0, 1],
+                explanation: `
+                    <p><strong>1. Règle :</strong> multiplier haut avec haut et bas avec bas : $${fx(a, b)} \\times ${fx(c, d)} ${TEQ} ${fx(a * c, b * d)}$.</p>
+                    <p class="step-line"><strong>2. Simplification :</strong> en divisant haut et bas par $${TFAC(gcd(a * c, b * d))}$, on obtient $${fx(red.n, red.d)}$ : <strong>même valeur</strong>, les deux propositions sont donc <strong>correctes</strong>.</p>
+                    <p class="step-line"><strong>3. Le piège :</strong> $${fx(a * c, b + d)}$ additionne les dénominateurs : la multiplication ne mixe jamais les dénominateurs par une addition.</p>`,
+                sig: `mul:${b}${d}${a}${c}`
+            };
+        }
+
+        // Collège : division par une fraction.
+        function famDivision() {
+            let b, d, a, c, guard = 0;
+            do {
+                b = randInt(3, 9);
+                d = randInt(2, 8);
+                a = randInt(b + 1, 3 * b);
+                c = randInt(1, d - 1);
+                guard++;
+            } while (a * d === b * c && guard < 40);
+            const red = reduceFrac(a * d, b * c);
+            return {
+                section: 'Collège',
+                question: `Que vaut $${fx(a, b)} \\, ${TDIV} \\, ${fx(c, d)}$ ?`,
+                options: [`${fx(red.n, red.d)}`, `${fx(a * c, b * d)}`, `${fx(b * c, a * d)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Règle d'or :</strong> diviser par $${fx(c, d)}$, c'est multiplier par son inverse $${fx(d, c)}$.</p>
+                    <p class="step-line"><strong>2. Calcul :</strong> $${fx(a, b)} \\times ${fx(d, c)} ${TEQ} ${fx(a * d, b * c)} ${TEQ} ${fx(red.n, red.d)}$.</p>
+                    <p class="step-line"><strong>3. Les pièges :</strong> $${fx(a * c, b * d)}$ oublie d'inverser, et $${fx(b * c, a * d)}$ inverse les deux fractions à la fois. Ordre de grandeur utile : diviser par $${fmtL(c / d)} < 1$ doit <strong>agrandir</strong> le résultat.</p>`,
+                sig: `div:${b}${d}${a}${c}`
+            };
+        }
+
+        // Collège : puissance d'une fraction.
+        function famPuissance() {
+            const b = randInt(3, 6);
+            const a = randInt(2, b - 1);
+            const n = randInt(2, 3);
+            const an = Math.pow(a, n), bn = Math.pow(b, n);
+            return {
+                section: 'Collège',
+                question: `Que vaut $\\left(${fx(a, b)}\\right)^{${n}}$ ?`,
+                options: [`${fx(an, bn)}`, `${fx(a * n, b * n)}`, `${fx(an, b)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. L'exposant frappe chaque étage :</strong> $\\left(${fx(a, b)}\\right)^{${n}} ${TEQ} ${fx(`${a}^{${n}}`, `${b}^{${n}}`)} ${TEQ} ${fx(an, bn)}$.</p>
+                    <p class="step-line"><strong>2. Le piège du facteur :</strong> $${fx(a * n, b * n)}$ vaut toujours $${fx(a, b)}$ (simplification par $${n}$) : l'exposant n'est pas un facteur qu'on multiplie.</p>
+                    <p class="step-line"><strong>3. Le piège de l'étage oublié :</strong> $${fx(an, b)}$ n'élève que le numérateur : les deux étages doivent subir l'exposant.</p>`,
+                sig: `pow:${b}${a}${n}`
+            };
+        }
+
+        // Fractions piégées : la bonne réponse est « Autre ».
+        function famAutreNumerique() {
+            const k = randInt(3, 9);
+            const N = 8 * k;
+            const res = 3 * k;
+            return {
+                section: 'Fractions Piégées',
+                question: `De tête : que vaut <strong>la moitié des trois quarts</strong> de $${N}$ ?`,
+                options: [`${6 * k}`, `${4 * k}`, `${2 * k}`],
+                correct: [3],
+                explanation: `
+                    <p><strong>1. Les trois quarts de $${N}$ :</strong> $${N} \\div 4 ${TEQ} ${2 * k}$ par quart, donc trois quarts valent $3 \\times ${2 * k} ${TEQ} ${6 * k}$.</p>
+                    <p class="step-line"><strong>2. La moitié de ce résultat :</strong> $${6 * k} \\div 2 ${TEQ} ${res}$.</p>
+                    <p class="step-line"><strong>3. Analyse des propositions :</strong> $${6 * k}$ oublie de prendre la moitié, $${4 * k}$ est la moitié de $${N}$, et $${2 * k}$ est le quart de $${N}$. Aucune ne vaut $${res}$.</p>
+                    <p><strong>Conclusion :</strong> la bonne réponse était <strong>« Autre »</strong> : $${res}$. Un calcul en deux étapes se lit de droite à gauche (d'abord les trois quarts, ensuite la moitié).</p>`,
+                sig: `aut:${k}`
+            };
+        }
+
+        // Collège : simplification par le PGCD.
+        function famSimplification() {
+            const pool = [4, 6, 8, 9];
+            const g = pool[randInt(0, pool.length - 1)];
+            const e = randInt(3, 5);
+            let f = randInt(2, e - 1);
+            while (gcd(f, e) !== 1) f = randInt(2, e - 1);
+            const n = g * f, d = g * e;
+            return {
+                section: 'Collège',
+                question: `Quelle est la forme <strong>irréductible</strong> de $${fx(n, d)}$ ?`,
+                options: [`${fx(f, e)}`, `${fx(n - g, d - g)}`, `${fx(n, e)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Recherche du PGCD :</strong> $\\text{PGCD}(${n} \\, ; \\, ${d}) ${TEQ} ${TFAC(g)}$ : numérateur et dénominateur sont tous les deux multiples de $${g}$.</p>
+                    <p class="step-line"><strong>2. Division haut et bas :</strong> $${n} \\div ${g} ${TEQ} ${f}$ et $${d} \\div ${g} ${TEQ} ${e}$, d'où $${fx(f, e)}$, qui ne peut plus se simplifier.</p>
+                    <p class="step-line"><strong>3. Les pièges :</strong> $${fx(n - g, d - g)}$ barre une « somme » ($- ${g}$) : on ne simplifie que des <em>facteurs multipliés</em>, et $${fx(n, e)}$ divise le haut sans diviser le bas.</p>`,
+                sig: `simp:${g}${e}${f}`
+            };
+        }
+
+        // Fractions piégées : soustraction sans distribuer le signe.
+        function famSoustractionPiege() {
+            let b, d, a, c, red, guard = 0;
+            do {
+                b = randInt(4, 9);
+                d = randInt(3, b - 1);
+                a = randInt(Math.ceil(d / b) + 1, 3 * b);
+                c = randInt(1, d - 1);
+                red = reduceFrac(a * d - b * c, b * d);
+                guard++;
+            } while (guard < 40 && (
+                red.n / red.d === (a - c) / (b - d) ||
+                red.n / red.d === (a - c) / (b * d)
+            ));
+            const num = a * d - b * c;
+            return {
+                section: 'Fractions Piégées',
+                question: `Que vaut $${fx(a, b)} \\, ${TSUB} \\, ${fx(c, d)}$ ?`,
+                options: [`${fx(red.n, red.d)}`, `${fx(a - c, b - d)}`, `${fx(a - c, b * d)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Dénominateur commun :</strong> $${b} \\times ${d} ${TEQ} ${TFAC(b * d)}$ : $${fx(a, b)} ${TEQ} ${fx(a * d, b * d)}$ et $${fx(c, d)} ${TEQ} ${fx(b * c, b * d)}$.</p>
+                    <p class="step-line"><strong>2. Soustraction des numérateurs :</strong> $${a * d} - ${b * c} ${TEQ} ${num}$, d'où $${fx(red.n, red.d)}$.</p>
+                    <p class="step-line"><strong>3. Les pièges :</strong> $${fx(a - c, b - d)}$ soustrait terme à terme les deux fractions, et $${fx(a - c, b * d)}$ multiplie bien les dénominateurs mais oublie les produits croisés au numérateur. La soustraction exige la même rigueur que l'addition.</p>`,
+                sig: `spie:${b}${d}${a}${c}`
+            };
+        }
+
+        // Techniques de Pro : somme télescopique.
+        function famTelescopique() {
+            const n = randInt(2, 4);
+            const sumStr = Array.from({ length: n }, (_, k) => `${fx(1, `${k + 1} \\times ${k + 2}`)}`).join(` \\, ${TADD} \\, `);
+            return {
+                section: 'Techniques de Pro',
+                question: `Sans rien poser : que vaut $${sumStr}$ ?`,
+                options: [`${fx(n, n + 1)}`, `${fx(n - 1, n)}`, `${fx(1, n + 1)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Décomposition de chaque terme :</strong> $${fx(1, `k \\times (k+1)`)} ${TEQ} ${fx(1, 'k')} - ${fx(1, `k+1`)}$.</p>
+                    <p class="step-line"><strong>2. Effet domino :</strong> chaque $\\dfrac{1}{k}$ est immédiatement suivi d'un $-\\dfrac{1}{k}$ : tout le milieu s'annule.</p>
+                    <p class="step-line"><strong>3. Il ne reste que les deux bouts :</strong> $1 - ${fx(1, n + 1)} ${TEQ} ${fx(n, n + 1)}$.</p>
+                    <p class="step-line"><strong>4. Les propositions pièges :</strong> $${fx(n - 1, n)}$ correspond à la somme arrêtée un terme trop tôt, et $${fx(1, n + 1)}$ ne garde que le « bout droit » du télescope en oubliant le $1$.</p>`,
+                sig: `tel:${n}`
+            };
+        }
+
+        // Techniques de Pro : fraction continue.
+        function famFractionContinue() {
+            const a = randInt(1, 3);
+            const b = randInt(1, 3);
+            const c = randInt(2, 4);
+            const den = b * c + 1;
+            const num = a * den + c;
+            const red = reduceFrac(num, den);
+            const d2 = reduceFrac(a * b * c + b + c, b * c);
+            const d3 = reduceFrac(a * b * c + 1, b * c);
+            return {
+                section: 'Techniques de Pro',
+                question: `Que vaut la fraction continue $${a} + ${fx(1, `${b} + ${fx(1, c)}`)}$ ?`,
+                options: [`${fx(red.n, red.d)}`, `${fx(d2.n, d2.d)}`, `${fx(d3.n, d3.d)}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Lire du bas vers le haut :</strong> d'abord $${b} + ${fx(1, c)} ${TEQ} ${fx(den, c)}$.</p>
+                    <p class="step-line"><strong>2. Prendre l'inverse :</strong> $${fx(1, `${b} + ${fx(1, c)}`)} ${TEQ} ${fx(c, den)}$.</p>
+                    <p class="step-line"><strong>3. Ajouter l'étage du haut :</strong> $${a} + ${fx(c, den)} ${TEQ} ${fx(red.n, red.d)}$.</p>
+                    <p class="step-line"><strong>4. Les pièges de lecture :</strong> $${fx(d2.n, d2.d)}$ empile les inverses sans les imbriquer, et $${fx(d3.n, d3.d)}$ multiplie l'étage du milieu au lieu de l'additionner. Une fraction continue se calcule toujours du bas vers le haut.</p>`,
+                sig: `fc:${a}${b}${c}`
+            };
+        }
+
+        // Techniques de Pro, mode littéral uniquement : astuce des couples.
+        function famCouple() {
+            const s = randInt(3, 6);
+            return {
+                section: 'Techniques de Pro',
+                question: `Sachant que $x + ${fx(1, 'x')} ${TEQ} ${s}$ (avec $x > 0$), que vaut $x^2 + ${fx(1, 'x^2')}$ ?`,
+                options: [`${s * s - 2}`, `${s * s}`, `${s * s + 2}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Élever au carré la relation donnée :</strong> $\\left(x + ${fx(1, 'x')}\\right)^2 ${TEQ} ${s}^2$.</p>
+                    <p class="step-line"><strong>2. Développer :</strong> $x^2 + 2 \\times x \\times ${fx(1, 'x')} + ${fx(1, 'x^2')} ${TEQ} x^2 + 2 + ${fx(1, 'x^2')} ${TEQ} ${s * s}$, car le produit croisé $x \\times ${fx(1, 'x')} ${TEQ} 1$.</p>
+                    <p class="step-line"><strong>3. Isoler :</strong> $x^2 + ${fx(1, 'x^2')} ${TEQ} ${s * s} - 2 ${TEQ} ${s * s - 2}$ : la valeur de $x$ elle-même n'a jamais servi.</p>
+                    <p class="step-line"><strong>4. Les propositions pièges :</strong> $${s * s}$ oublie de retirer le double produit, et $${s * s + 2}$ l'ajoute au lieu de le soustraire.</p>`,
+                sig: `cou:${s}`
+            };
+        }
+        famCouple.litOnly = true;
+
+        // Lycée, mode littéral uniquement : rationnalisation.
+        function famRationnalisation() {
+            const pool = [2, 3, 5, 6, 7, 10];
+            const a = pool[randInt(0, pool.length - 1)];
+            return {
+                section: 'Lycée',
+                question: `Comment écrire $${fx(1, `\\sqrt{${a}}`)}$ <strong>sans radical au dénominateur</strong> ?`,
+                options: [`${fx(`\\sqrt{${a}}`, a)}`, `${fx(a, `\\sqrt{${a}}`)}`, `\\sqrt{${a}}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Stratégie :</strong> multiplier haut et bas par $\\sqrt{${a}}$ ne change pas la valeur.</p>
+                    <p class="step-line"><strong>2. Le dénominateur se nettoie :</strong> $\\sqrt{${a}} \\times \\sqrt{${a}} ${TEQ} ${a}$ : le radical disparaît du bas.</p>
+                    <p class="step-line"><strong>3. Résultat :</strong> $${fx(1, `\\sqrt{${a}}`)} ${TEQ} ${fx(`\\sqrt{${a}}`, a)}$.</p>
+                    <p class="step-line"><strong>4. Les propositions piégées :</strong> $${fx(a, `\\sqrt{${a}}`)}$ met le radical au dénominateur au lieu de l'en chasser, et $\\sqrt{${a}}$ seul vaut $${fmtL(Math.sqrt(a))}$, une tout autre valeur que $${fx(1, `\\sqrt{${a}}`)} ${TEQ} ${fmtL(1 / Math.sqrt(a))}$.</p>`,
+                sig: `rat:${a}`
+            };
+        }
+        famRationnalisation.litOnly = true;
+
+        // Lycée, mode littéral uniquement : somme de fractions rationnelles.
+        function famLitterale() {
+            const a = randInt(1, 4);
+            const b = randInt(1, 4);
+            const c = randInt(1, 5);
+            return {
+                section: 'Lycée',
+                question: `Pour $x \\ne 0$ et $x \\ne ${-c}$, que vaut $${fx(a, 'x')} \\, ${TADD} \\, ${fx(b, `x + ${c}`)}$ ?`,
+                options: [
+                    `${fx(`${a + b}x + ${a * c}`, `x\\left(x + ${c}\\right)`)}`,
+                    `${fx(a + b, `2x + ${c}`)}`,
+                    `${fx(a + b, `x\\left(x + ${c}\\right)`)}`
+                ],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Dénominateur commun :</strong> le produit $x\\left(x + ${c}\\right)$, avec les conditions $x \\ne 0$ et $x \\ne ${-c}$.</p>
+                    <p class="step-line"><strong>2. Produits croisés :</strong> $${fx(a, 'x')} ${TEQ} ${fx(`${a}\\left(x + ${c}\\right)`, `x\\left(x + ${c}\\right)`)}$ et $${fx(b, `x + ${c}`)} ${TEQ} ${fx(`${b}x`, `x\\left(x + ${c}\\right)`)}$.</p>
+                    <p class="step-line"><strong>3. Addition :</strong> $${a}\\left(x + ${c}\\right) + ${b}x ${TEQ} ${a + b}x + ${a * c}$, d'où le résultat.</p>
+                    <p class="step-line"><strong>4. Les pièges :</strong> $${fx(a + b, `2x + ${c}`)}$ fusionne les dénominateurs terme à terme, et $${fx(a + b, `x\\left(x + ${c}\\right)`)}$ oublie les produits croisés au numérateur. Le numérateur final doit rester un polynôme de degré $1$.</p>`,
+                sig: `lit:${a}${b}${c}`
+            };
+        }
+        famLitterale.litOnly = true;
+
+        const QUIZ_FAMILLES = [
+            famFractionQuantite, famEquivalentes,
+            famComparaison, famSommeMemeDen, famSommeDifferents,
+            famMultiplication, famDivision, famPuissance,
+            famAutreNumerique, famSimplification, famSoustractionPiege,
+            famTelescopique, famFractionContinue, famCouple,
+            famRationnalisation, famLitterale
+        ];
+
+        // Assemble une question : mélange les propositions (l'indice options.length,
+        // réservé à « Autre », est préservé) et remappe les indices corrects.
+        function buildQuizQuestion(fam) {
+            const q = fam();
+            const order = quizShuffle(q.options.map((_, i) => i));
+            const options = order.map(i => q.options[i]);
+            const correct = q.correct
+                .map(i => i < q.options.length ? order.indexOf(i) : i)
+                .sort((x, y) => x - y);
+            return {
+                section: q.section,
+                question: q.question,
+                options,
+                correct,
+                explanation: q.explanation,
+                sig: `${q.sig}|${order.join('')}`
+            };
+        }
+
+        // Mémoire anti-répétition : un quizz déjà vu exactement (mêmes valeurs,
+        // mêmes ordres) n'est jamais reproposé. Persistée dans localStorage.
+        const QUIZ_HISTORY_KEY = 'fractions-quiz-history';
+        function loadQuizHistory() {
+            try {
+                return new Set(JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY) || '[]'));
+            } catch (e) {
+                return new Set();
+            }
+        }
+        function saveQuizHistory(history) {
+            try {
+                const arr = Array.from(history);
+                localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(arr.length > 400 ? arr.slice(-400) : arr));
+            } catch (e) { /* stockage indisponible : la mémoire de session suffit */ }
+        }
+        const quizHistory = loadQuizHistory();
+
+        function buildQuiz(withLiteral) {
+            const fams = QUIZ_FAMILLES_FILTERED(withLiteral);
+            return quizShuffle(fams).map(buildQuizQuestion);
+        }
+        function QUIZ_FAMILLES_FILTERED(withLiteral) {
+            return QUIZ_FAMILLES.filter(f => withLiteral || !f.litOnly);
+        }
+
+        function generateFreshQuiz(withLiteral) {
+            const prefix = withLiteral ? 'L' : 'N';
+            let quiz, sig, tries = 0;
+            do {
+                quiz = buildQuiz(withLiteral);
+                sig = `${prefix}:${quiz.map(q => q.sig).join('>')}`;
+                tries++;
+            } while (quizHistory.has(sig) && tries < 80);
+            quizHistory.add(sig);
+            saveQuizHistory(quizHistory);
+            return quiz;
+        }
+
+        // Lettres d'identification des propositions (A, B, C, ...)
+        const QUIZ_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+        let quizQuestions = [];
+
+        // Début de chaque quizz : affiche le panneau de choix du mode.
+        window.generateQuiz = function() {
+            const panel = document.getElementById('quiz-mode-panel');
+            const run = document.getElementById('quiz-run');
+            if (!panel || !run) return;
+            panel.classList.remove('hidden');
+            run.classList.add('hidden');
+            document.getElementById('quiz-container').innerHTML = '';
+            document.getElementById('quiz-review').innerHTML = '';
+            document.getElementById('quiz-score').classList.add('hidden');
+            document.getElementById('quiz-restart').classList.add('hidden');
+        };
+
+        // Lance un quizz dans le mode choisi, avec des valeurs inédites.
+        window.startQuiz = function(withLiteral) {
+            quizQuestions = generateFreshQuiz(withLiteral);
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = quizQuestions.map((q, idx) => `
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <p class="font-bold text-slate-900">
+                        <span class="text-xs px-2 py-0.5 rounded font-bold bg-purple-100 text-purple-800 mr-1">${q.section}</span>
+                        Question ${idx + 1} : ${q.question}
+                    </p>
+                    <div class="grid sm:grid-cols-2 gap-2">
+                        ${q.options.map((opt, optIdx) => `
+                            <label class="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                                <input type="radio" name="quiz-q-${idx}" value="${optIdx}" class="w-4 h-4 text-purple-600">
+                                <span class="text-sm font-medium text-slate-800"><strong class="text-purple-700">${QUIZ_LETTERS[optIdx]}.</strong> $${opt}$</span>
+                            </label>`).join('')}
+                        <label class="flex items-center space-x-3 p-2 bg-white rounded-lg border border-purple-300 cursor-pointer hover:bg-purple-100 transition">
+                            <input type="radio" name="quiz-q-${idx}" value="${q.options.length}" class="w-4 h-4 text-purple-600">
+                            <span class="text-sm font-medium text-slate-800"><strong class="text-purple-700">Autre.</strong> Aucune des propositions ci-contre...</span>
+                        </label>
+                    </div>
+                </div>`).join('');
+            document.getElementById('quiz-mode-info').innerHTML = withLiteral
+                ? `Mode actuel : <strong>avec</strong> expressions littérales et radicaux ($x$ et $\\sqrt{\\ }$) : ${quizQuestions.length} questions.`
+                : `Mode actuel : <strong>numérique uniquement</strong> : ${quizQuestions.length} questions. Aucune lettre $x$ ni radical $\\sqrt{\\ }$ n'apparaît.`;
+            document.getElementById('quiz-mode-panel').classList.add('hidden');
+            document.getElementById('quiz-review').innerHTML = '';
+            document.getElementById('quiz-score').classList.add('hidden');
+            document.getElementById('quiz-restart').classList.add('hidden');
+            document.getElementById('quiz-run').classList.remove('hidden');
+            typesetContainer(document.getElementById('quiz-run'));
+        };
+
+        // Validation : score + mise en vis-à-vis réponses élève / bonnes réponses,
+        // avec correction détaillée pas à pas en cas d'erreur.
+        window.checkQuiz = function() {
+            let score = 0;
+            const reviewHTML = quizQuestions.map((q, idx) => {
+                const selEl = document.querySelector(`input[name="quiz-q-${idx}"]:checked`);
+                const sel = selEl ? parseInt(selEl.value, 10) : -1;
+                const isCorrect = q.correct.includes(sel);
+                if (isCorrect) score++;
+
+                const selHTML = sel === -1
+                    ? '<em class="text-slate-500">Aucune réponse sélectionnée</em>'
+                    : (sel === q.options.length
+                        ? '<strong>« Autre »</strong>'
+                        : `<strong>${QUIZ_LETTERS[sel]}.</strong> $${q.options[sel]}$`);
+                const goodHTML = q.correct.map(i => `
+                            <div class="p-2 bg-emerald-50 rounded-lg border border-emerald-300 text-sm font-bold text-emerald-900">
+                                ${i === q.options.length ? '<strong>« Autre »</strong>' : `<strong>${QUIZ_LETTERS[i]}.</strong> $${q.options[i]}$`}
+                            </div>`).join('');
+
+                return `
+                    <div class="p-4 rounded-xl border space-y-3 ${isCorrect ? 'bg-emerald-50 border-emerald-300' : 'bg-rose-50 border-rose-300'}">
+                        <div class="flex justify-between items-center flex-wrap gap-2">
+                            <p class="font-bold text-slate-900">
+                                <span class="text-xs px-2 py-0.5 rounded font-bold bg-purple-100 text-purple-800 mr-1">${q.section}</span>
+                                Question ${idx + 1} : ${q.question}
+                            </p>
+                            <span class="text-xs px-2 py-0.5 rounded font-bold whitespace-nowrap ${isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isCorrect ? '✔ Bonne réponse' : (sel === -1 ? '− Sans réponse' : '✘ Réponse incorrecte')}</span>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-3 text-sm">
+                            <div class="p-3 bg-white rounded-lg border ${isCorrect ? 'border-emerald-300' : 'border-rose-300'}">
+                                <div class="text-xs font-bold uppercase tracking-wide ${isCorrect ? 'text-emerald-700' : 'text-rose-700'} mb-1">Votre réponse</div>
+                                ${selHTML}
+                            </div>
+                            <div class="p-3 bg-white rounded-lg border border-emerald-300">
+                                <div class="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-1">Bonne(s) réponse(s) acceptée(s)</div>
+                                <div class="space-y-1">${goodHTML}</div>
+                            </div>
+                        </div>
+                        ${isCorrect
+                            ? `<p class="text-sm font-semibold text-emerald-800">✔ Exact, bien joué !${q.correct.length > 1 ? ' (NB : une autre proposition était également acceptée.)' : ''}</p>`
+                            : `<div class="p-3 bg-white rounded-lg border border-rose-200 space-y-2 text-sm text-slate-800">
+                                   <div class="font-bold text-rose-800">📖 Correction détaillée pas à pas :</div>
+                                   ${q.explanation}
+                               </div>`}
+                    </div>`;
+            }).join('');
+
+            // On verrouille les réponses : la correction ne doit plus pouvoir être modifiée.
+            document.querySelectorAll('input[name^="quiz-q-"]').forEach(r => { r.disabled = true; });
+
+            const total = quizQuestions.length;
+            const pct = Math.round(100 * score / total);
+            const scoreDiv = document.getElementById('quiz-score');
+            scoreDiv.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-amber-100', 'text-amber-900', 'bg-rose-100', 'text-rose-900');
+            if (score === total) {
+                scoreDiv.classList.add('bg-emerald-100', 'text-emerald-900');
+                scoreDiv.innerHTML = `🎉 Score Parfait : ${score} / ${total} ! Vous maîtrisez tout le calcul fractionnaire, du Primaire à la Terminale !`;
+            } else if (pct >= 80) {
+                scoreDiv.classList.add('bg-emerald-100', 'text-emerald-900');
+                scoreDiv.innerHTML = `👏 Très bien : ${score} / ${total} (${pct}&nbsp;%). Étudiez les corrections ci-dessous pour viser le sans-faute.`;
+            } else if (pct >= 50) {
+                scoreDiv.classList.add('bg-amber-100', 'text-amber-900');
+                scoreDiv.innerHTML = `👍 Score : ${score} / ${total} (${pct}&nbsp;%). Lisez attentivement chaque correction détaillée ci-dessous.`;
+            } else {
+                scoreDiv.classList.add('bg-rose-100', 'text-rose-900');
+                scoreDiv.innerHTML = `📚 Score : ${score} / ${total} (${pct}&nbsp;%). Reprenez les fiches méthode de chaque niveau, puis refaites le quizz !`;
+            }
+
+            const review = document.getElementById('quiz-review');
+            review.innerHTML = reviewHTML;
+            typesetContainer(review);
+            document.getElementById('quiz-restart').classList.remove('hidden');
+            scoreDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        // Recommencer : retour au choix du mode, corrections effacées.
+        window.restartQuiz = function() {
+            window.generateQuiz();
+            document.getElementById('quiz-mode-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        // --- 9. Canvas : visualisation interactive d'une fraction ---
+        function initPrimaryCanvas() {
+            const canvas = document.getElementById('canvas-primary');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const sliderA = document.getElementById('slider-a');
+            const sliderB = document.getElementById('slider-b');
+            const outMath = document.getElementById('math-primary-canvas-out');
+            let mathTimer = null;
+
+            function draw() {
+                const a = parseInt(sliderA.value, 10);
+                const b = parseInt(sliderB.value, 10);
+
+                document.getElementById('val-a').textContent = formatNumber(a);
+                document.getElementById('val-b').textContent = formatNumber(b);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Disque de partage : b parts égales, les a premières coloriées.
+                const cx = 95, cy = 95, r = 68;
+                const ang = 2 * Math.PI / b;
+                for (let k = 0; k < b; k++) {
+                    const start = -Math.PI / 2 + k * ang;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, r, start, start + ang);
+                    ctx.closePath();
+                    ctx.fillStyle = k < a ? 'rgba(2, 132, 199, 0.45)' : 'rgba(226, 232, 240, 0.6)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                // Droite graduée de 0 à 2, avec la fraction repérée.
+                const ly = 195, x0 = 30, unit = 190;
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x0 - 10, ly);
+                ctx.lineTo(x0 + 2 * unit + 10, ly);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+                ctx.font = 'bold 11px system-ui';
+                ctx.fillStyle = '#0f172a';
+                for (let t = 0; t <= 2; t++) {
+                    const xt = x0 + t * unit;
+                    ctx.beginPath();
+                    ctx.moveTo(xt, ly - 6);
+                    ctx.lineTo(xt, ly + 6);
+                    ctx.stroke();
+                    ctx.fillText(`${t}`, xt - 3, ly + 20);
+                }
+                const xv = Math.min(a / b, 2) * unit + x0;
+                ctx.fillStyle = '#0284c7';
+                ctx.beginPath();
+                ctx.arc(xv, ly, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#0369a1';
+                ctx.fillText(`${a}/${b}`, Math.min(xv + 8, x0 + 2 * unit - 20), ly - 12);
+
+                // Valeur, forme irréductible et éventuelle écriture mixte.
+                const g = gcd(a, b);
+                const sn = a / g, sd = b / g;
+                let html = `$$${fx(a, b)}`;
+                if (g > 1) html += ` ${TEQ} ${fx(sn, sd)}`;
+                html += ` ${TEQ} ${fmtL(a / b)}$$`;
+                if (a > b) {
+                    const q = Math.floor(a / b);
+                    const rest = a % b;
+                    html += `<div class="text-sm font-semibold text-sky-800 mt-1">Fraction impropre : $${fx(a, b)} ${TEQ} ${rest === 0 ? q : `${q} \\, ${TADD} \\, ${fx(rest, b)}`}$${rest === 0 ? '' : ` \\quad \\left(\\text{elle dépasse } ${q}\\right)$`}</div>`;
+                }
+                // La formule n'est re-typeset qu'après un court délai :
+                // on ne sature pas MathJax quand on déplace rapidement les curseurs.
+                outMath.innerHTML = html;
+                clearTimeout(mathTimer);
+                mathTimer = setTimeout(() => typesetContainer(outMath), 150);
+            }
+
+            sliderA.addEventListener('input', draw);
+            sliderB.addEventListener('input', draw);
+            draw();
+        }
+
+        // --- 10. Initialisation robuste ---
+        // Seule la section visible par défaut (Primaire) est générée au chargement ;
+        // les autres sections le sont à la demande, à leur premier affichage.
+        function initAll() {
+            initPrimaryCanvas();
+            ensureGenerated('primary');
+        }
+
+        // Attend MathJax (script async) pendant 5 s au maximum ;
+        // au-delà, le contenu est quand même généré (sans rendu mathématique).
+        function tryInitMathJax(retries = 100) {
+            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                window.MathJax.startup.promise.then(initAll);
+            } else if (retries <= 0) {
+                initAll();
+            } else {
+                setTimeout(() => tryInitMathJax(retries - 1), 50);
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            tryInitMathJax();
+        } else {
+            window.addEventListener('load', tryInitMathJax);
+        }
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="u9DAOsPdXZ9IY4eMwX2NFw==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

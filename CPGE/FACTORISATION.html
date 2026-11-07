@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Factorisation du Primaire à la Terminale</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .text-size-normal { font-size: 1rem; }
+        .text-size-large { font-size: 1.15rem; }
+        .text-size-xlarge { font-size: 1.3rem; }
+
+        .tab-active {
+            border-bottom: 3px solid #0284c7;
+            color: #0284c7;
+            font-weight: 700;
+        }
+
+        .step-line {
+            border-left: 3px solid #0284c7;
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .op-add { background-color: #ffe4e6; color: #be123c; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #f43f5e; }
+        .op-sub { background-color: #dbeafe; color: #1e40af; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #3b82f6; }
+        .op-mul { background-color: #fef3c7; color: #92400e; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #f59e0b; }
+        .factor-highlight { background-color: #dcfce7; color: #15803d; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-weight: 700; border: 1px solid #22c55e; }
+
+        /* Color legend */
+        .legend-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.25rem; vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 text-size-normal min-h-screen flex flex-col justify-between" id="app-body">
+
+    <!-- Header & Controls -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                    $a^2$
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Le Dossier de la Factorisation</h1>
+                    <p class="text-xs text-slate-500 font-medium">Du Primaire à la Terminale • 150+ Situations Dynamiques & Corrections Rigoureuses</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+                <span class="text-xs font-semibold text-slate-600 px-2">Taille :</span>
+                <button onclick="changeFontSize('normal')" class="px-2.5 py-1 bg-white shadow-sm border border-slate-300 rounded font-bold text-xs hover:bg-slate-50">A</button>
+                <button onclick="changeFontSize('large')" class="px-2.5 py-1 bg-white shadow-sm border border-slate-300 rounded font-bold text-sm hover:bg-slate-50">A+</button>
+                <button onclick="changeFontSize('xlarge')" class="px-2.5 py-1 bg-white shadow-sm border border-slate-300 rounded font-bold text-base hover:bg-slate-50">A++</button>
+            </div>
+        </div>
+
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-2 border-t border-slate-100 text-sm font-medium">
+            <button onclick="switchLevel('primary')" id="tab-primary" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 tab-active hover:text-sky-600">
+                <span>🌱</span> Primaire (30 Situations)
+            </button>
+            <button onclick="switchLevel('college')" id="tab-college" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🌿</span> Collège (30 Situations)
+            </button>
+            <button onclick="switchLevel('lycee')" id="tab-lycee" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🌳</span> Lycée (30 Situations)
+            </button>
+            <button onclick="switchLevel('hidden')" id="tab-hidden" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🔍</span> Facteurs Cachés (30 Situations)
+            </button>
+            <button onclick="switchLevel('substitution')" id="tab-substitution" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🔄</span> Changement de Variable (30 Situations)
+            </button>
+            <button onclick="switchLevel('quiz')" id="tab-quiz" class="py-3 px-4 flex items-center whitespace-nowrap gap-2 text-slate-600 hover:text-sky-600">
+                <span>🏆</span> Quizz Synthèse
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- Legend -->
+        <div class="mb-6 p-3 bg-white rounded-xl border border-slate-200 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-700">
+            <span class="font-bold">Légende des couleurs LaTeX :</span>
+            <span><span class="legend-dot" style="background:#dc2626"></span> Additions $(+)$</span>
+            <span><span class="legend-dot" style="background:#2563eb"></span> Soustractions $(-)$</span>
+            <span><span class="legend-dot" style="background:#d97706"></span> Multiplications $(\times)$</span>
+            <span><span class="legend-dot" style="background:#16a34a"></span> Facteurs communs</span>
+            <span><span class="legend-dot" style="background:#7c3aed"></span> Signes $=$</span>
+        </div>
+
+        <!-- ================= PRIMAIRE ================= -->
+        <section id="sec-primary" class="space-y-8">
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200">
+                <h2 class="text-2xl font-extrabold text-amber-900 mb-2">🌱 Étape 1 : Les Fondations du Primaire (30 Situations)</h2>
+                <p class="text-amber-800">Calcul mental, décompositions en paquets, aires géométriques et premières factorisations d'entiers et de décimaux.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Leçon & Méthodologie du Primaire</h3>
+                <p class="text-slate-700">Factoriser en arithmétique consiste à regrouper des quantités sous forme de paquets identiques. On transforme une somme en produit grâce au facteur commun.</p>
+                <div class="p-4 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between flex-wrap gap-3">
+                    <span class="text-sm font-semibold text-sky-900">Astuce : Cherchez toujours ce qui est répété dans chaque terme.</span>
+                    <button onclick="openMethodModal('primary')" class="px-3 py-1.5 bg-sky-600 text-white font-bold text-xs rounded hover:bg-sky-700">💡 Fiche Méthode Primaire</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">🎨 Visualisation d'Aires Rectangulaires Interactives</h3>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-100 p-4 rounded-xl">
+                    <canvas id="canvas-primary" width="450" height="200" class="bg-white rounded-lg border border-slate-300 shadow-inner max-w-full"></canvas>
+                    <div class="w-full md:w-1/2 space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 flex justify-between">Hauteur commune ($k$) : <span id="val-a" class="text-sky-600 font-bold">4</span></label>
+                            <input type="range" id="slider-a" min="2" max="8" value="4" class="w-full h-2 bg-slate-300 rounded cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 flex justify-between">Base 1 ($a$) : <span id="val-b" class="text-emerald-600 font-bold">3</span></label>
+                            <input type="range" id="slider-b" min="1" max="6" value="3" class="w-full h-2 bg-slate-300 rounded cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 flex justify-between">Base 2 ($b$) : <span id="val-c" class="text-indigo-600 font-bold">5</span></label>
+                            <input type="range" id="slider-c" min="1" max="6" value="5" class="w-full h-2 bg-slate-300 rounded cursor-pointer">
+                        </div>
+                        <div id="math-primary-canvas-out" class="p-3 bg-white rounded border text-center font-bold text-slate-800"></div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations De Factorisation (Primaire)</h3>
+                    <button onclick="generatePrimary30()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="primary-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= COLLEGE ================= -->
+        <section id="sec-college" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-200">
+                <h2 class="text-2xl font-extrabold text-emerald-900 mb-2">🌿 Étape 2 : Le Collège (30 Situations)</h2>
+                <p class="text-emerald-800">Facteurs monômes, blocs parenthésés, identités remarquables et méthode Somme-Produit.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Leçon & Identités Remarquables du Collège</h3>
+                <div class="grid md:grid-cols-3 gap-3 text-center text-xs font-bold">
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$a^2 \textcolor{#dc2626}{+} 2ab \textcolor{#dc2626}{+} b^2 \textcolor{#7c3aed}{=} \left(a \textcolor{#dc2626}{+} b\right)^2$$</div>
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$a^2 \textcolor{#2563eb}{-} 2ab \textcolor{#dc2626}{+} b^2 \textcolor{#7c3aed}{=} \left(a \textcolor{#2563eb}{-} b\right)^2$$</div>
+                    <div class="p-3 bg-slate-50 border rounded-xl">$$a^2 \textcolor{#2563eb}{-} b^2 \textcolor{#7c3aed}{=} \left(a \textcolor{#2563eb}{-} b\right)\left(a \textcolor{#dc2626}{+} b\right)$$</div>
+                </div>
+                <div class="text-right">
+                    <button onclick="openMethodModal('college')" class="px-3 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded hover:bg-emerald-700">💡 Fiche Méthode Collège</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations De Factorisation (Collège)</h3>
+                    <button onclick="generateCollege30()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="college-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= LYCEE ================= -->
+        <section id="sec-lycee" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-2xl border border-indigo-200">
+                <h2 class="text-2xl font-extrabold text-indigo-900 mb-2">🌳 Étape 3 : Le Lycée (30 Situations Avancées)</h2>
+                <p class="text-indigo-800">Second degré esthétique, factorisation dans $\mathbb{C}$, expressions exponentielles, trigonométriques et polynômes de degré 3.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">📖 Principes d'Élégance au Lycée</h3>
+                <p class="text-slate-700 text-sm">Au Lycée, on évite le discriminant $\Delta$ lorsque des racines évidentes existent. Dans $\mathbb{C}$, la somme de deux carrés se factorise grâce à $i^2 = -1$.</p>
+                <div class="text-right">
+                    <button onclick="openMethodModal('lycee')" class="px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded hover:bg-indigo-700">💡 Fiche Méthode Lycée</button>
+                </div>
+            </article>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations De Factorisation (Lycée)</h3>
+                    <button onclick="generateLycee30()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="lycee-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= FACTEURS CACHÉS ================= -->
+        <section id="sec-hidden" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-rose-50 to-pink-50 p-6 rounded-2xl border border-rose-200">
+                <h2 class="text-2xl font-extrabold text-rose-900 mb-2">🔍 Étape 4 : Les Facteurs Cachés (30 Situations)</h2>
+                <p class="text-rose-800">Des expressions où le facteur commun n'est pas un simple monôme : un 1 implicite, un signe opposé, ou une identité remarquable déguisée.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations De Facteurs Cachés</h3>
+                    <button onclick="generateHidden30()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="hidden-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= CHANGEMENT DE VARIABLE ================= -->
+        <section id="sec-substitution" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200">
+                <h2 class="text-2xl font-extrabold text-blue-900 mb-2">🔄 Étape 5 : Changement de Variable (30 Situations)</h2>
+                <p class="text-blue-800">Poser $X = f(x)$ pour transformer une expression complexe (bicarrée, exponentielle, logarithmique, trigonométrique...) en un trinôme du second degré plus simple à factoriser.</p>
+            </div>
+
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="text-xl font-bold text-slate-900">📚 30 Situations De Factorisation par Substitution</h3>
+                    <button onclick="generateSubstitution30()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition">🎲 Valeurs Dynamiques</button>
+                </div>
+                <div id="substitution-30-container" class="space-y-4"></div>
+            </article>
+        </section>
+
+        <!-- ================= QUIZ ================= -->
+        <section id="sec-quiz" class="space-y-8 hidden">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200">
+                <h2 class="text-2xl font-extrabold text-purple-900 mb-2">🏆 Quizz de Synthèse</h2>
+                <p class="text-purple-800">Des questions à valeurs aléatoires couvrant l'ensemble du document : Primaire, Collège, Lycée, Facteurs Cachés et Changement de Variable. Chaque quizz est inédit : les valeurs et l'ordre des propositions changent à chaque génération.</p>
+            </div>
+            <article class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-900 font-medium flex items-start gap-2">
+                    <span class="text-base">💡</span>
+                    <span>Chaque question comporte une proposition <strong>« Autre »</strong> : elle est parfois fausse... mais elle peut aussi être <strong>la bonne réponse</strong> ! Ne cochez jamais « Autre » par défaut : réfléchissez, vérifiez par un petit calcul, puis répondez.</span>
+                </div>
+
+                <div id="quiz-mode-panel" class="p-6 bg-purple-50 border border-purple-200 rounded-2xl space-y-4 text-center">
+                    <p class="text-lg font-extrabold text-purple-900">Souhaitez-vous des expressions avec les nombres complexes ?</p>
+                    <p class="text-sm text-purple-700">Le quizz sera généré avec des valeurs aléatoires. En mode « sans », aucune expression ne contiendra $i$ ou $\mathbb{C}$.</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button onclick="startQuiz(true)" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow transition">🔵 Avec $z \in \mathbb{C}$</button>
+                        <button onclick="startQuiz(false)" class="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow transition">⚪ Sans les complexes (dans $\mathbb{R}$ uniquement)</button>
+                    </div>
+                </div>
+
+                <div id="quiz-run" class="hidden space-y-6">
+                    <div id="quiz-mode-info" class="p-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 text-center"></div>
+                    <div id="quiz-container" class="space-y-6"></div>
+                    <button onclick="checkQuiz()" class="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg shadow transition">Valider mes réponses</button>
+                    <div id="quiz-score" class="hidden p-4 rounded-xl text-center text-xl font-extrabold"></div>
+                    <div id="quiz-review" class="space-y-4"></div>
+                    <button id="quiz-restart" onclick="restartQuiz()" class="hidden w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-base shadow transition">🔄 Nouveau quizz (valeurs inédites)</button>
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    <!-- Method Modal -->
+    <div id="method-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="method-modal-title" class="text-xl font-extrabold text-slate-900">💡 Fiche Méthodologique</h3>
+                <button onclick="closeMethodModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="method-modal-content" class="text-slate-700 space-y-3 text-sm leading-relaxed"></div>
+            <div class="pt-2 text-right">
+                <button onclick="closeMethodModal()" class="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg text-sm">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
+            <div>© 2026 - La Factorisation du Primaire à la Terminale • Yann Merdy</div>
+            <button onclick="openCopyrightModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow transition flex items-center gap-2">
+                <span>⚖️</span> Droits d'auteur
+            </button>
+        </div>
+    </footer>
+
+    <!-- Copyright Modal -->
+    <div id="copyright-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>⚖️</span> Droits d'Auteur et Licence d'Utilisation
+                </h3>
+                <button onclick="closeCopyrightModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="text-slate-700 space-y-4 text-sm leading-relaxed">
+                <p><strong>Auteur :</strong> Yann Merdy (<a href="mailto:yann.merdy@gmail.com" class="text-sky-600 underline">yann.merdy@gmail.com</a>) - Novembre 2026</p>
+                <p class="font-bold text-slate-900">Licence d'Utilisation Non Commerciale</p>
+                <p>Ce document web interactif ainsi que l'ensemble du code source (HTML, CSS, JavaScript) et des exercices générés sont la propriété exclusive de l'auteur, Yann Merdy.</p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                    <p><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Consultation et usage à des fins d'apprentissage ou d'enseignement non lucratif.</p>
+                    <p><strong>Utilisation Commerciale (Strictement Interdite) :</strong> Toute commercialisation ou distribution à but lucratif est formellement interdite sans accord écrit préalable.</p>
+                </div>
+            </div>
+            <div class="pt-2 text-right">
+                <button onclick="closeCopyrightModal()" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg transition text-sm">J'accepte</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         JAVASCRIPT ENGINE
+         ============================================================ -->
+    <script>
+        // --- 0. LaTeX color helpers ---
+        const CLR_RED    = '#dc2626';  // additions
+        const CLR_BLUE   = '#2563eb';  // soustractions
+        const CLR_AMBER  = '#d97706';  // multiplications
+        const CLR_GREEN  = '#16a34a';  // facteurs communs
+        const CLR_PURPLE = '#7c3aed';  // égal
+
+        const TADD = `\\textcolor{${CLR_RED}}{+}`;
+        const TSUB = `\\textcolor{${CLR_BLUE}}{-}`;
+        const TMUL = `\\textcolor{${CLR_AMBER}}{\\times}`;
+        const TEQ  = `\\textcolor{${CLR_PURPLE}}{=}`;
+        const TFAC = (s) => `\\textcolor{${CLR_GREEN}}{${s}}`;
+        // NB : TFAC (vert) est réservé aux corrections et à la visualisation ; les énoncés restent neutres.
+
+        // --- 1. Formatters & utilitaires ---
+        // Entier aléatoire uniforme dans [min ; max].
+        const randInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
+
+        // Nombre arrondi au millième. latex = false : "0,4" (affichage HTML) ; latex = true : "0{,}4" (protégé pour MathJax).
+        function formatNumber(num, latex = false) {
+            if (!Number.isFinite(num)) return "0";
+            const str = (Math.round(num * 1000) / 1000).toString().replace('.', latex ? '{,}' : ',');
+            if (str.startsWith(latex ? '{' : ',')) return '0' + str;
+            if (str.startsWith('-' + (latex ? '{' : ','))) return '-0' + str.slice(latex ? 2 : 1);
+            return str;
+        }
+        const fmtL = (num) => formatNumber(num, true);
+        window.formatNumber = formatNumber; // utilisé par la visualisation d'aires
+
+        // Typeset MathJax d'un seul conteneur (jamais de la page entière).
+        function typesetContainer(el) {
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]);
+        }
+
+        // Difficulté et badge associés au rang de la situation (1-10, 11-20, 21-30).
+        function difficultyInfo(i, hardLabel = "Avancé", hardBadge = "bg-red-100 text-red-800") {
+            if (i <= 10) return { diff: "Facile", badgeColor: "bg-emerald-100 text-emerald-800" };
+            if (i <= 20) return { diff: "Moyen", badgeColor: "bg-amber-100 text-amber-800" };
+            return { diff: hardLabel, badgeColor: hardBadge };
+        }
+
+        // Taille du texte
+        const FONT_CLASSES = { normal: 'text-size-normal', large: 'text-size-large', xlarge: 'text-size-xlarge' };
+        window.changeFontSize = function(size) {
+            const body = document.getElementById('app-body');
+            body.classList.remove('text-size-normal', 'text-size-large', 'text-size-xlarge');
+            body.classList.add(FONT_CLASSES[size] || 'text-size-normal');
+        };
+
+        // --- Navigation par onglets & génération différée (lazy) ---
+        // Chaque section n'est générée et typeset par MathJax qu'à son premier affichage :
+        // le chargement initial ne traite que la section visible (Primaire).
+        const LEVELS = ['primary', 'college', 'lycee', 'hidden', 'substitution', 'quiz'];
+        const SECTION_GENERATORS = {
+            primary: () => window.generatePrimary30(),
+            college: () => window.generateCollege30(),
+            lycee: () => window.generateLycee30(),
+            hidden: () => window.generateHidden30(),
+            substitution: () => window.generateSubstitution30(),
+            quiz: () => window.generateQuiz()
+        };
+        const generatedSections = new Set();
+
+        function ensureGenerated(level) {
+            if (generatedSections.has(level)) return;
+            generatedSections.add(level);
+            SECTION_GENERATORS[level]();
+        }
+
+        window.switchLevel = function(level) {
+            LEVELS.forEach(l => {
+                document.getElementById(`sec-${l}`).classList.add('hidden');
+                const tab = document.getElementById(`tab-${l}`);
+                tab.classList.remove('tab-active');
+                tab.classList.add('text-slate-600');
+            });
+            document.getElementById(`sec-${level}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${level}`);
+            activeTab.classList.add('tab-active');
+            activeTab.classList.remove('text-slate-600');
+            ensureGenerated(level); // premier affichage : génération + typeset de cette section uniquement
+        };
+
+        window.openCopyrightModal  = () => document.getElementById('copyright-modal').classList.remove('hidden');
+        window.closeCopyrightModal = () => document.getElementById('copyright-modal').classList.add('hidden');
+
+        window.openMethodModal = function(level) {
+            const modal = document.getElementById('method-modal');
+            const title = document.getElementById('method-modal-title');
+            const content = document.getElementById('method-modal-content');
+            modal.classList.remove('hidden');
+
+            if (level === 'primary') {
+                title.textContent = "💡 Méthodologie Primaire : Chercher le Facteur Commun";
+                content.innerHTML = `
+                    <p><strong>Principe :</strong> Pour factoriser $k \\times a + k \\times b$, on cherche ce qui est répété.</p>
+                    <p class="step-line"><strong>Étape 1 :</strong> Repérer le nombre <span style="color:${CLR_GREEN};font-weight:700">commun</span>.</p>
+                    <p class="step-line"><strong>Étape 2 :</strong> Le placer devant des parenthèses.</p>
+                    <p class="step-line"><strong>Étape 3 :</strong> Inscrire les quotients restants dans la parenthèse.</p>
+                `;
+            } else if (level === 'college') {
+                title.textContent = "💡 Méthodologie Collège : Stratégie de Factorisation";
+                content.innerHTML = `
+                    <p><strong>1. Facteur commun :</strong> Extraire les monômes ou blocs parenthésés communs.</p>
+                    <p><strong>2. Identités remarquables :</strong> Réduire $a^2 \\textcolor{${CLR_BLUE}}{-} b^2$ en $\\left(a \\textcolor{${CLR_BLUE}}{-} b\\right)\\left(a \\textcolor{${CLR_RED}}{+} b\\right)$.</p>
+                    <p><strong>3. Méthode Somme-Produit :</strong> Trouver deux entiers de produit $P$ et somme $S$.</p>
+                `;
+            } else if (level === 'lycee') {
+                title.textContent = "💡 Méthodologie Lycée : Rigueur & Élégance";
+                content.innerHTML = `
+                    <p><strong>Second degré :</strong> Privilégier les racines évidentes et la forme canonique avant $\\Delta$.</p>
+                    <p><strong>Complexes $\\mathbb{C}$ :</strong> $x^2 \\textcolor{${CLR_RED}}{+} a^2 = x^2 \\textcolor{${CLR_BLUE}}{-} \\left(ia\\right)^2 = \\left(x \\textcolor{${CLR_BLUE}}{-} ia\\right)\\left(x \\textcolor{${CLR_RED}}{+} ia\\right)$.</p>
+                    <p><strong>Changement de variable :</strong> Poser $X = e^x$, $X = \\ln\\left(x\\right)$ ou $X = \\cos\\left(x\\right)$.</p>
+                `;
+            }
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([content]);
+        };
+        window.closeMethodModal = () => document.getElementById('method-modal').classList.add('hidden');
+
+        window.toggleSolution = function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('hidden');
+            // MathJax ne traite la correction qu'une seule fois, à sa première ouverture.
+            if (!el.classList.contains('hidden') && !el.dataset.typeset) {
+                el.dataset.typeset = "1";
+                typesetContainer(el);
+            }
+        };
+
+        // --- 2. Card renderer ---
+        function renderCard(idx, title, diff, expr, steps, sol, badgeColor) {
+            let stepsHTML = steps.map(s => `<p class="step-line">${s}</p>`).join('');
+            return `
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center flex-wrap gap-2">
+                        <span class="font-bold text-slate-800 text-sm">${title}</span>
+                        <span class="text-xs px-2 py-0.5 rounded font-bold ${badgeColor}">${diff}</span>
+                    </div>
+                    <div class="text-base font-semibold text-slate-900">${expr}</div>
+                    <button onclick="toggleSolution('sol-${idx}')" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded font-bold text-slate-700 transition">Afficher/Masquer la correction pas à pas</button>
+                    <div id="sol-${idx}" class="hidden p-4 bg-white rounded-lg border border-slate-300 text-sm space-y-3 text-slate-800 shadow-inner">
+                        <div class="font-semibold text-sky-800 border-b pb-1">Correction Détaillée & Explicite Pas à Pas :</div>
+                        ${stepsHTML}
+                        <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-lg font-bold text-emerald-950 text-base shadow-sm mt-3">
+                            ${sol}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- 3. Primary level ---
+        function primeFactors(n) {
+            const f = [];
+            let d = 2;
+            while (n > 1) {
+                while (n % d === 0) { f.push(d); n = Math.floor(n / d); }
+                d++;
+            }
+            return f;
+        }
+
+        window.generatePrimary30 = function() {
+            const container = document.getElementById('primary-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                const k = randInt(2, 7);   // facteur commun
+                const a = randInt(1, 7);
+                const b = randInt(1, 7);
+                const c = randInt(1, 5);
+                const dec = randInt(1, 4) / 10;
+
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i);
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 5) {
+                    title += "Facteur entier commun simple";
+                    const ka = k * a, kb = k * b;
+                    expr = `$$A_{${i}} ${TEQ} ${ka} \\, ${TADD} \\, ${kb}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Une <span class="op-add">Addition (+)</span> relie les deux termes $${ka}$ et $${kb}$.`,
+                        `<strong>2. Détermination du facteur commun :</strong> On décompose $${ka} ${TEQ} ${TFAC(k)} \\, ${TMUL} \\, ${a}$ et $${kb} ${TEQ} ${TFAC(k)} \\, ${TMUL} \\, ${b}$. Le <span class="factor-highlight">Facteur Commun $k = ${k}$</span> apparaît dans les deux termes.`,
+                        `<strong>3. Regroupement distributif :</strong> On isole $${TFAC(k)}$ devant la parenthèse $\\left(${a} \\, ${TADD} \\, ${b}\\right)$.`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${TFAC(k)} \\, ${TMUL} \\, \\left(${a} \\, ${TADD} \\, ${b}\\right) ${TEQ} ${ka + kb}$$`;
+                } else if (i <= 10) {
+                    title += "Soustraction de paquets d'objets";
+                    const ka = k * a, kc = k * c;
+                    expr = `$$A_{${i}} ${TEQ} ${ka} \\, ${TSUB} \\, ${kc}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Une <span class="op-sub">Soustraction (−)</span> entre $${ka}$ et $${kc}$.`,
+                        `<strong>2. Détermination du facteur commun :</strong> $${ka} ${TEQ} ${TFAC(k)} \\, ${TMUL} \\, ${a}$ et $${kc} ${TEQ} ${TFAC(k)} \\, ${TMUL} \\, ${c}$. Le <span class="factor-highlight">Facteur Commun $${k}$</span> est extrait.`,
+                        `<strong>3. Extraction :</strong> On regroupe la différence dans $\\left(${a} \\, ${TSUB} \\, ${c}\\right)$.`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${TFAC(k)} \\, ${TMUL} \\, \\left(${a} \\, ${TSUB} \\, ${c}\\right) ${TEQ} ${ka - kc}$$`;
+                } else if (i <= 20) {
+                    title += "Facteur commun décimal à 3 termes";
+                    const dL = fmtL(dec);
+                    expr = `$$A_{${i}} ${TEQ} ${dL} \\, ${TMUL} \\, ${a} \\, ${TADD} \\, ${dL} \\, ${TMUL} \\, ${b} \\, ${TADD} \\, ${dL} \\, ${TMUL} \\, ${c}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Deux <span class="op-add">Additions (+)</span> lient trois <span class="op-mul">Multiplications (×)</span>.`,
+                        `<strong>2. Détermination du facteur commun :</strong> Le nombre décimal $${TFAC(dL)}$ est explicitement présent dans les trois termes : c'est le <span class="factor-highlight">Facteur Commun</span>.`,
+                        `<strong>3. Regroupement :</strong> On place $${TFAC(dL)}$ devant la parenthèse $\\left(${a} \\, ${TADD} \\, ${b} \\, ${TADD} \\, ${c}\\right)$.`
+                    ];
+                    sol = `$$A_{${i}} ${TEQ} ${TFAC(dL)} \\, ${TMUL} \\, \\left(${a} \\, ${TADD} \\, ${b} \\, ${TADD} \\, ${c}\\right) ${TEQ} ${fmtL(dec * (a + b + c))}$$`;
+                } else {
+                    title += "Décomposition en facteurs premiers";
+                    const val = k * a * 4;
+                    const pf = primeFactors(val);
+                    const pfStr = pf.map(x => TFAC(x)).join(` \\, ${TMUL} \\, `);
+                    expr = `$$A_{${i}} ${TEQ} \\text{Décomposer } ${val} \\text{ en facteurs premiers}$$`;
+                    steps = [
+                        `<strong>1. Objectif :</strong> Transformer $${val}$ en un produit de nombres premiers.`,
+                        `<strong>2. Décomposition progressive :</strong> On divise successivement par les plus petits nombres premiers ($2, 3, 5, \\dots$). Chaque diviseur est un <span class="factor-highlight">Facteur Premier</span>.`,
+                        `<strong>3. Vérification :</strong> Le produit de tous les facteurs retrouve bien $${val}$.`
+                    ];
+                    sol = `$$${val} ${TEQ} ${pfStr}$$`;
+                }
+
+                cards.push(renderCard(i, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 4. College level ---
+        window.generateCollege30 = function() {
+            const container = document.getElementById('college-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                const a = randInt(2, 6);
+                const b = randInt(1, 6);
+                const c = randInt(1, 4);
+
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i);
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 6) {
+                    title += "Facteur monôme algébrique";
+                    expr = `$$B_{${i}}\\left(x\\right) ${TEQ} ${a + 'x'} \\, ${TMUL} \\, x \\, ${TADD} \\, ${a + 'x'} \\, ${TMUL} \\, ${b}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Une <span class="op-add">Addition (+)</span> relie $${a}x^2$ et $${a * b}x$.`,
+                        `<strong>2. Facteur commun :</strong> $${a}x^2 ${TEQ} ${TFAC(a + 'x')} \\, ${TMUL} \\, x$ et $${a * b}x ${TEQ} ${TFAC(a + 'x')} \\, ${TMUL} \\, ${b}$. Le <span class="factor-highlight">Facteur Monôme $${a}x$</span> est commun.`,
+                        `<strong>3. Factorisation :</strong> On isole $${TFAC(a + 'x')}$ devant $\\left(x \\, ${TADD} \\, ${b}\\right)$.`
+                    ];
+                    sol = `$$B_{${i}}\\left(x\\right) ${TEQ} ${TFAC(a + 'x')} \\, ${TMUL} \\, \\left(x \\, ${TADD} \\, ${b}\\right)$$`;
+                } else if (i <= 12) {
+                    title += "Identité remarquable $A^2 - B^2$";
+                    expr = `$$B_{${i}}\\left(x\\right) ${TEQ} ${a * a}x^2 \\, ${TSUB} \\, ${b * b}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Une <span class="op-sub">Soustraction (−)</span> entre deux carrés parfaits.`,
+                        `<strong>2. Identification :</strong> $A ${TEQ} ${TFAC(a + 'x')}$ et $B ${TEQ} ${TFAC(b)}$.`,
+                        `<strong>3. Application :</strong> $A^2 ${TSUB} B^2 ${TEQ} \\left(A \\, ${TSUB} \\, B\\right)\\left(A \\, ${TADD} \\, B\\right)$, d'où les deux <span class="factor-highlight">facteurs</span>.`
+                    ];
+                    sol = `$$B_{${i}}\\left(x\\right) ${TEQ} \\left(${TFAC(a + 'x')} \\, ${TSUB} \\, ${TFAC(b)}\\right)\\left(${TFAC(a + 'x')} \\, ${TADD} \\, ${TFAC(b)}\\right)$$`;
+                } else if (i <= 18) {
+                    title += "Facteur bloc parenthésé commun";
+                    const inner = 1 - c;
+                    const innerStr = inner >= 0
+                        ? `2x \\, ${TADD} \\, ${inner}`
+                        : `2x \\, ${TSUB} \\, ${-inner}`;
+                    expr = `$$B_{${i}}\\left(x\\right) ${TEQ} \\left(${a}x \\, ${TADD} \\, ${b}\\right) \\left(x \\, ${TADD} \\, 1\\right) \\, ${TADD} \\, \\left(${a}x \\, ${TADD} \\, ${b}\\right) \\left(x \\, ${TSUB} \\, ${c}\\right)$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Une <span class="op-add">Addition (+)</span> relie deux produits de binômes.`,
+                        `<strong>2. Facteur bloc :</strong> Le binôme <span class="factor-highlight">$ ${TFAC(`\\left(${a}x \\, ${TADD} \\, ${b}\\right)`)} $</span> apparaît dans chaque produit.`,
+                        `<strong>3. Réduction interne :</strong> On factorise par le bloc puis on réduit l'intérieur à $\\left(${innerStr}\\right)$.`
+                    ];
+                    sol = `$$B_{${i}}\\left(x\\right) ${TEQ} ${TFAC(`\\left(${a}x \\, ${TADD} \\, ${b}\\right)`)} \\, ${TMUL} \\, \\left(${innerStr}\\right)$$`;
+                } else if (i <= 24) {
+                    title += "Carré parfait $\\left(A + B\\right)^2$";
+                    expr = `$$B_{${i}}\\left(x\\right) ${TEQ} x^2 \\, ${TADD} \\, ${2 * b}x \\, ${TADD} \\, ${b * b}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Deux <span class="op-add">Additions (+)</span> forment un trinôme du second degré.`,
+                        `<strong>2. Vérification :</strong> $x^2 {=} \\left(x\\right)^2$, $${b * b} {=} ${b}^2$, et le double produit $2 \\times x \\times ${b} {=} ${2 * b}x$.`,
+                        `<strong>3. Condensation :</strong> Le trinôme est le carré de $\\left(x \\, ${TADD} \\, ${TFAC(b)}\\right)$.`
+                    ];
+                    sol = `$$B_{${i}}\\left(x\\right) ${TEQ} \\left(x \\, ${TADD} \\, ${TFAC(b)}\\right)^2$$`;
+                } else {
+                    title += "Méthode Somme-Produit";
+                    const S = a + b, P = a * b;
+                    expr = `$$B_{${i}}\\left(x\\right) ${TEQ} x^2 \\, ${TADD} \\, ${S}x \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Une somme de deux <span class="op-add">Additions (+)</span>.`,
+                        `<strong>2. Recherche des facteurs :</strong> Deux entiers dont le Produit $P ${TEQ} ${P}$ et la Somme $S ${TEQ} ${S}$ : ce sont $${TFAC(a)}$ et $${TFAC(b)}$.`,
+                        `<strong>3. Décomposition :</strong> On forme les deux binômes $\\left(x \\, ${TADD} \\, ${TFAC(a)}\\right)$ et $\\left(x \\, ${TADD} \\, ${TFAC(b)}\\right)$.`
+                    ];
+                    sol = `$$B_{${i}}\\left(x\\right) ${TEQ} \\left(x \\, ${TADD} \\, ${TFAC(a)}\\right)\\left(x \\, ${TADD} \\, ${TFAC(b)}\\right)$$`;
+                }
+
+                cards.push(renderCard(i + 30, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 5. Lycée level ---
+        window.generateLycee30 = function() {
+            const container = document.getElementById('lycee-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                const a = randInt(1, 4);
+                const r1 = randInt(1, 4);
+                const r2 = randInt(5, 8);
+
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i, "Expert", "bg-purple-100 text-purple-800");
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 6) {
+                    title += "Second degré sans discriminant (Racines évidentes)";
+                    const S = r1 + r2, P = r1 * r2;
+                    expr = `$$C_{${i}}\\left(x\\right) ${TEQ} x^2 \\, ${TSUB} \\, ${S}x \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Trinôme avec une <span class="op-sub">Soustraction (−)</span> et une <span class="op-add">Addition (+)</span>.`,
+                        `<strong>2. Racine évidente :</strong> En testant $x ${TEQ} ${r1}$, on vérifie que le trinôme s'annule : $x_1 ${TEQ} ${TFAC(r1)}$ est racine.`,
+                        `<strong>3. Seconde racine :</strong> Par le produit $x_1 \\times x_2 ${TEQ} ${P}$, on déduit $x_2 ${TEQ} ${TFAC(r2)}$. On factorise avec les <span class="factor-highlight">facteurs affines</span>.`
+                    ];
+                    sol = `$$C_{${i}}\\left(x\\right) ${TEQ} \\left(x \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(x \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else if (i <= 12) {
+                    title += "Factorisation dans $\\mathbb{C}$";
+                    expr = `$$C_{${i}}\\left(x\\right) ${TEQ} x^2 \\, ${TADD} \\, ${a * a}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> <span class="op-add">Addition (+)</span> de deux carrés réels.`,
+                        `<strong>2. Astuce des complexes :</strong> Puisque $i^2 {=} -1$, on réécrit $x^2 ${TADD} ${a * a} {=} x^2 ${TSUB} \\left(i \\, ${TFAC(a)}\\right)^2$.`,
+                        `<strong>3. Différence de carrés dans $\\mathbb{C}$ :</strong> On factorise en <span class="factor-highlight">facteurs conjugués</span>.`
+                    ];
+                    sol = `$$C_{${i}}\\left(x\\right) ${TEQ} \\left(x \\, ${TSUB} \\, ${TFAC(`i\\,${a}`)}\\right)\\left(x \\, ${TADD} \\, ${TFAC(`i\\,${a}`)}\\right)$$`;
+                } else if (i <= 18) {
+                    title += "Changement de variable exponentielle";
+                    const S = r1 + r2, P = r1 * r2;
+                    expr = `$$C_{${i}}\\left(x\\right) ${TEQ} e^{2x} \\, ${TSUB} \\, ${S}\\,e^x \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Combinaison de <span class="op-sub">Soustraction (−)</span> et d'<span class="op-add">Addition (+)</span> sur des termes en $e^x$.`,
+                        `<strong>2. Changement de variable :</strong> En posant $X {=} e^x \\, (> 0)$, le trinôme $X^2 ${TSUB} ${S}X ${TADD} ${P}$ a pour racines $X_1 {=} ${TFAC(r1)}$ et $X_2 {=} ${TFAC(r2)}$.`,
+                        `<strong>3. Substitution inverse :</strong> On remplace $X$ par $e^x$ pour obtenir les <span class="factor-highlight">facteurs exponentiels</span>.`
+                    ];
+                    sol = `$$C_{${i}}\\left(x\\right) ${TEQ} \\left(e^x \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(e^x \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else if (i <= 24) {
+                    title += "Factorisation trigonométrique";
+                    expr = `$$C_{${i}}\\left(x\\right) ${TEQ} \\cos^2\\left(x\\right) \\, ${TSUB} \\, \\sin^2\\left(x\\right)$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> <span class="op-sub">Soustraction (−)</span> entre deux carrés d'expressions trigonométriques.`,
+                        `<strong>2. Identification :</strong> $A {=} \\cos\\left(x\\right)$ et $B {=} \\sin\\left(x\\right)$.`,
+                        `<strong>3. Différence de carrés :</strong> On applique $A^2 ${TSUB} B^2$ pour obtenir deux <span class="factor-highlight">facteurs trigonométriques</span>.`
+                    ];
+                    sol = `$$C_{${i}}\\left(x\\right) ${TEQ} \\left(\\cos\\left(x\\right) \\, ${TSUB} \\, \\sin\\left(x\\right)\\right)\\left(\\cos\\left(x\\right) \\, ${TADD} \\, \\sin\\left(x\\right)\\right)$$`;
+                } else {
+                    title += "Polynôme de degré 3 par groupement";
+                    expr = `$$C_{${i}}\\left(x\\right) ${TEQ} x^3 \\, ${TSUB} \\, ${r1}x^2 \\, ${TADD} \\, x \\, ${TSUB} \\, ${r1}$$`;
+                    steps = [
+                        `<strong>1. Repérage des opérations :</strong> Alternance de <span class="op-sub">Soustractions (−)</span> et d'<span class="op-add">Additions (+)</span>.`,
+                        `<strong>2. Groupement :</strong> On factorise par blocs : $x^2\\left(x \\, ${TSUB} \\, ${r1}\\right) \\, ${TADD} \\, 1 \\cdot \\left(x \\, ${TSUB} \\, ${r1}\\right)$. Le <span class="factor-highlight">bloc commun</span> apparaît.`,
+                        `<strong>3. Extraction :</strong> On met le bloc en facteur.`
+                    ];
+                    sol = `$$C_{${i}}\\left(x\\right) ${TEQ} \\left(x \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(x^2 \\, ${TADD} \\, 1\\right)$$`;
+                }
+
+                cards.push(renderCard(i + 60, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 6. Hidden factors level ---
+        window.generateHidden30 = function() {
+            const container = document.getElementById('hidden-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i);
+                let expr = "", steps = [], sol = "";
+
+                if (i === 1) {
+                    title += "Le facteur implicite 1";
+                    expr = `$$H_{1}(x) = (2x ${TADD} 1)(3x ${TADD} 2) ${TADD} (2x ${TADD} 1)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On voit le bloc $(2x ${TADD} 1)$ dans le premier produit, et le même bloc seul à la fin.`,
+                        `<strong>2. Facteur caché :</strong> Le terme seul peut s'écrire $(2x ${TADD} 1) ${TMUL} 1$. Le <span class="factor-highlight">facteur commun caché</span> est $(2x ${TADD} 1)$.`,
+                        `<strong>3. Factorisation :</strong> On isole le bloc et on rassemble les restes : $\\left[(3x ${TADD} 2) ${TADD} 1\\right]$.`
+                    ];
+                    sol = `$$H_{1}(x) = ${TFAC("(2x+1)")} \\left(3x ${TADD} 3\\right)$$`;
+                } else if (i === 2) {
+                    title += "Soustraction du facteur (implicite -1)";
+                    expr = `$$H_{2}(x) = (3x ${TADD} 2)(2x ${TADD} 5) ${TSUB} (3x ${TADD} 2)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Le bloc $(3x ${TADD} 2)$ est présent dans le produit et seul derrière le signe moins.`,
+                        `<strong>2. Facteur caché :</strong> On le réécrit comme $(3x ${TADD} 2) ${TMUL} 1$.`,
+                        `<strong>3. Factorisation :</strong> On factorise par $(3x ${TADD} 2)$ et il reste $\\left[(2x ${TADD} 5) ${TSUB} 1\\right]$.`
+                    ];
+                    sol = `$$H_{2}(x) = ${TFAC("(3x+2)")} \\left(2x ${TADD} 4\\right)$$`;
+                } else if (i === 3) {
+                    title += "Carré + terme simple";
+                    expr = `$$H_{3}(x) = (x ${TADD} 4)^2 ${TADD} (x ${TADD} 4)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Le bloc $(x ${TADD} 4)$ est au carré et présent seul.`,
+                        `<strong>2. Facteur caché :</strong> $(x ${TADD} 4)^2 = (x ${TADD} 4)(x ${TADD} 4)$.`,
+                        `<strong>3. Factorisation :</strong> On factorise par $(x ${TADD} 4)$ : $\\left[(x ${TADD} 4) ${TADD} 1\\right]$.`
+                    ];
+                    sol = `$$H_{3}(x) = ${TFAC("(x+4)")} \\left(x ${TADD} 5\\right)$$`;
+                } else if (i === 4) {
+                    title += "Carré - terme simple";
+                    expr = `$$H_{4}(x) = (x ${TADD} 5)^2 ${TSUB} (x ${TADD} 5)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Le bloc $(x ${TADD} 5)$ est au carré et présent seul derrière un signe moins.`,
+                        `<strong>2. Factorisation :</strong> On factorise par $(x ${TADD} 5)$ : $\\left[(x ${TADD} 5) ${TSUB} 1\\right]$.`
+                    ];
+                    sol = `$$H_{4}(x) = ${TFAC("(x+5)")} \\left(x ${TADD} 4\\right)$$`;
+                } else if (i === 5) {
+                    title += "Le facteur opposé (signe -)";
+                    expr = `$$H_{5}(x) = (x ${TSUB} 2)(x ${TADD} 3) ${TSUB} (2 ${TSUB} x)(x ${TADD} 1)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On a $(x ${TSUB} 2)$ et $(2 ${TSUB} x)$. Ce sont des opposés : $(2 ${TSUB} x) = ${TSUB}(x ${TSUB} 2)$.`,
+                        `<strong>2. Transformation :</strong> L'expression devient $(x ${TSUB} 2)(x ${TADD} 3) ${TADD} (x ${TSUB} 2)(x ${TADD} 1)$.`,
+                        `<strong>3. Factorisation :</strong> On factorise par $(x ${TSUB} 2)$ : $\\left[(x ${TADD} 3) ${TADD} (x ${TADD} 1)\\right]$.`
+                    ];
+                    sol = `$$H_{5}(x) = ${TFAC("(x-2)")} \\left(2x ${TADD} 4\\right)$$`;
+                } else if (i === 6) {
+                    title += "Opposé avec coefficient";
+                    expr = `$$H_{6}(x) = (x ${TSUB} 3)(2x ${TADD} 4) ${TADD} (3 ${TSUB} x)(x ${TADD} 2)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $(3 ${TSUB} x) = ${TSUB}(x ${TSUB} 3)$.`,
+                        `<strong>2. Transformation :</strong> On réécrit la deuxième partie avec un signe moins : ${TSUB}(x ${TSUB} 3)(x ${TADD} 2)$.`,
+                        `<strong>3. Factorisation :</strong> On factorise par $(x ${TSUB} 3)$ : $\\left[(2x ${TADD} 4) ${TSUB} (x ${TADD} 2)\\right]$.`
+                    ];
+                    sol = `$$H_{6}(x) = ${TFAC("(x-3)")} \\left(x ${TADD} 2\\right)$$`;
+                } else if (i === 7) {
+                    title += "Puissances supérieures (Cube + Carré)";
+                    expr = `$$H_{7}(x) = (2x ${TADD} 1)^3 ${TADD} (2x ${TADD} 1)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Les deux termes contiennent $(2x ${TADD} 1)$.`,
+                        `<strong>2. Facteur caché :</strong> Le plus petit exposant est 2. On factorise par $(2x ${TADD} 1)^2$.`,
+                        `<strong>3. Factorisation :</strong> Il reste $\\left[(2x ${TADD} 1) ${TADD} 1\\right]$.`
+                    ];
+                    sol = `$$H_{7}(x) = ${TFAC("(2x+1)^2")} \\left(2x ${TADD} 2\\right)$$`;
+                } else if (i === 8) {
+                    title += "Puissances supérieures (Cube - Carré)";
+                    expr = `$$H_{8}(x) = (3x ${TADD} 2)^3 ${TSUB} (3x ${TADD} 2)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On factorise par le terme de plus petit degré : $(3x ${TADD} 2)^2$.`,
+                        `<strong>2. Factorisation :</strong> Il reste $\\left[(3x ${TADD} 2) ${TSUB} 1\\right]$.`
+                    ];
+                    sol = `$$H_{8}(x) = ${TFAC("(3x+2)^2")} \\left(3x ${TADD} 1\\right)$$`;
+                } else if (i === 9) {
+                    title += "Coefficient devant le facteur";
+                    expr = `$$H_{9}(x) = 5(x ${TADD} 2) ${TADD} x(x ${TADD} 2)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Le bloc $(x ${TADD} 2)$ apparaît dans les deux termes.`,
+                        `<strong>2. Factorisation :</strong> On le met en facteur devant la somme des autres facteurs : $\\left[5 ${TADD} x\\right]$.`
+                    ];
+                    sol = `$$H_{9}(x) = ${TFAC("(x+2)")} \\left(x ${TADD} 5\\right)$$`;
+                } else if (i === 10) {
+                    title += "Produit + Carré";
+                    expr = `$$H_{10}(x) = (x ${TADD} 1)(x ${TADD} 3) ${TADD} (x ${TADD} 1)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Facteur commun caché $(x ${TADD} 1)$.`,
+                        `<strong>2. Factorisation :</strong> On regroupe : $\\left[(x ${TADD} 3) ${TADD} (x ${TADD} 1)\\right]$.`
+                    ];
+                    sol = `$$H_{10}(x) = ${TFAC("(x+1)")} \\left(2x ${TADD} 4\\right)$$`;
+                } else if (i === 11) {
+                    title += "Carré - Produit (simplification)";
+                    expr = `$$H_{11}(x) = (x ${TADD} 4)^2 ${TSUB} (x ${TADD} 1)(x ${TADD} 4)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Le facteur $(x ${TADD} 4)$ est commun.`,
+                        `<strong>2. Factorisation :</strong> On obtient $\\left[(x ${TADD} 4) ${TSUB} (x ${TADD} 1)\\right]$.`,
+                        `<strong>3. Simplification :</strong> La parenthèse se réduit à une constante : $4 ${TSUB} 1 = 3$.`
+                    ];
+                    sol = `$$H_{11}(x) = ${TFAC("(x+4)")} \\left(3\\right)$$`;
+                } else if (i === 12) {
+                    title += "Différence de carrés cachée";
+                    expr = `$$H_{12}(x) = (x ${TADD} 3)^2 ${TSUB} 4$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $4 = 2^2$. On a une forme $A^2 ${TSUB} B^2$.`,
+                        `<strong>2. Identification :</strong> $A = (x ${TADD} 3)$ et $B = 2$.`,
+                        `<strong>3. Factorisation :</strong> $(A ${TSUB} B)(A ${TADD} B) = ((x ${TADD} 3) ${TSUB} 2)((x ${TADD} 3) ${TADD} 2)$.`
+                    ];
+                    sol = `$$H_{12}(x) = \\left(x ${TADD} 1\\right)\\left(x ${TADD} 5\\right)$$`;
+                } else if (i === 13) {
+                    title += "Différence de carrés avec coefficient";
+                    expr = `$$H_{13}(x) = (2x ${TADD} 1)^2 ${TSUB} 9$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $9 = 3^2$.`,
+                        `<strong>2. Identification :</strong> $A = (2x ${TADD} 1)$ et $B = 3$.`,
+                        `<strong>3. Factorisation :</strong> $(A ${TSUB} B)(A ${TADD} B)$.`
+                    ];
+                    sol = `$$H_{13}(x) = \\left(2x ${TSUB} 2\\right)\\left(2x ${TADD} 4\\right)$$`;
+                } else if (i === 14) {
+                    title += "Somme de deux carrés";
+                    expr = `$$H_{14}(x) = (x ${TADD} 1)^2 ${TADD} 9$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $9 = 3^2$. On a $A^2 ${TADD} B^2$.`,
+                        `<strong>2. Astuce :</strong> Cette forme n'est pas factorisable dans $\\mathbb{R}$.`,
+                        `<strong>3. Résultat :</strong> On laisse sous forme de somme de carrés ou on factorise dans $\\mathbb{C}$ avec $i$.`
+                    ];
+                    sol = `$$H_{14}(x) = (x ${TADD} 1)^2 ${TADD} 9$$`;
+                } else if (i === 15) {
+                    title += "Opposé au cube";
+                    expr = `$$H_{15}(x) = (2 ${TSUB} x)^3 ${TADD} (x ${TSUB} 2)^3$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $(2 ${TSUB} x)^3 = ${TSUB}(x ${TSUB} 2)^3$.`,
+                        `<strong>2. Transformation :</strong> L'expression devient ${TSUB}(x ${TSUB} 2)^3 ${TADD} (x ${TSUB} 2)^3 = 0$.`
+                    ];
+                    sol = `$$H_{15}(x) = 0$$`;
+                } else if (i === 16) {
+                    title += "Facteur caché avec parenthèses imbriquées";
+                    expr = `$$H_{16}(x) = (x ${TADD} (y ${TADD} 1))(y ${TADD} 1) ${TSUB} (y ${TADD} 1)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Le facteur $(y ${TADD} 1)$ est présent dans les deux termes.`,
+                        `<strong>2. Factorisation :</strong> On factorise par $(y ${TADD} 1)$ : $\\left[(x ${TADD} (y ${TADD} 1)) ${TSUB} 1\\right]$.`
+                    ];
+                    sol = `$$H_{16}(x) = ${TFAC("(y+1)")} \\left(x ${TADD} y\\right)$$`;
+                } else if (i === 17) {
+                    title += "Carré - Produit de binômes";
+                    expr = `$$H_{17}(x) = (x ${TADD} 2)^2 ${TSUB} (x ${TADD} 2)(x ${TSUB} 3)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Facteur commun $(x ${TADD} 2)$.`,
+                        `<strong>2. Factorisation :</strong> On obtient $\\left[(x ${TADD} 2) ${TSUB} (x ${TSUB} 3)\\right]$.`,
+                        `<strong>3. Simplification :</strong> La parenthèse se réduit à $5$.`
+                    ];
+                    sol = `$$H_{17}(x) = ${TFAC("(x+2)")} \\left(5\\right)$$`;
+                } else if (i === 18) {
+                    title += "Coefficients cachés (3 = 3x1)";
+                    expr = `$$H_{18}(x) = 3(x ${TSUB} 1) ${TADD} 3x(x ${TSUB} 1)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Facteur commun $(x ${TSUB} 1)$.`,
+                        `<strong>2. Extraction :</strong> Il reste $\\left[3 ${TADD} 3x\\right]$.`,
+                        `<strong>3. Nettoyage :</strong> On peut aussi factoriser par 3 dans la parenthèse.`
+                    ];
+                    sol = `$$H_{18}(x) = ${TFAC("(x-1)")} \\cdot 3(1 ${TADD} x)$$`;
+                } else if (i === 19) {
+                    title += "Différence de carrés avec $(2x-1)$ et $(1-2x)$";
+                    expr = `$$H_{19}(x) = (2x ${TSUB} 1)^2 ${TSUB} (1 ${TSUB} 2x)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $(1 ${TSUB} 2x) = ${TSUB}(2x ${TSUB} 1)$.`,
+                        `<strong>2. Élévation :</strong> $(1 ${TSUB} 2x)^2 = (${TSUB}(2x ${TSUB} 1))^2 = (2x ${TSUB} 1)^2$.`,
+                        `<strong>3. Résultat :</strong> L'expression vaut $0$.`
+                    ];
+                    sol = `$$H_{19}(x) = 0$$`;
+                } else if (i === 20) {
+                    title += "Carré + cube (exposants)";
+                    expr = `$$H_{20}(x) = x^2(x ${TADD} 1) ${TADD} x(x ${TADD} 1)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Facteur commun $x(x ${TADD} 1)$.`,
+                        `<strong>2. Factorisation :</strong> On extrait et on rassemble : $\\left[x ${TADD} (x ${TADD} 1)\\right]$.`
+                    ];
+                    sol = `$$H_{20}(x) = ${TFAC("x(x+1)")} \\left(2x ${TADD} 1\\right)$$`;
+                } else if (i === 21) {
+                    title += "Opposé avec puissances";
+                    expr = `$$H_{21}(x) = (x ${TSUB} 1)^2 ${TSUB} (1 ${TSUB} x)^3$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $(1 ${TSUB} x) = ${TSUB}(x ${TSUB} 1)$.`,
+                        `<strong>2. Transformation :</strong> $(1 ${TSUB} x)^3 = ${TSUB}(x ${TSUB} 1)^3$.`,
+                        `<strong>3. Factorisation :</strong> Facteur commun $(x ${TSUB} 1)^2$.`
+                    ];
+                    sol = `$$H_{21}(x) = ${TFAC("(x-1)^2")} \\left(1 ${TADD} x ${TSUB} 1\\right) = ${TFAC("(x-1)^2")} \\cdot x$$`;
+                } else if (i === 22) {
+                    title += "Identité remarquable masquée";
+                    expr = `$$H_{22}(x) = 9(x ${TADD} 2)^2 ${TSUB} 16$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $9 = 3^2$ et $16 = 4^2$.`,
+                        `<strong>2. Identification :</strong> $A = 3(x ${TADD} 2)$ et $B = 4$.`,
+                        `<strong>3. Factorisation :</strong> $(3(x ${TADD} 2) ${TSUB} 4)(3(x ${TADD} 2) ${TADD} 4)$.`
+                    ];
+                    sol = `$$H_{22}(x) = \\left(3x ${TADD} 2\\right)\\left(3x ${TADD} 10\\right)$$`;
+                } else if (i === 23) {
+                    title += "Facteur 1/2";
+                    expr = `$$H_{23}(x) = \\frac{1}{2}(x ${TADD} 3) ${TADD} x(x ${TADD} 3)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Facteur commun $(x ${TADD} 3)$.`,
+                        `<strong>2. Factorisation :</strong> Il reste $(\\frac{1}{2} ${TADD} x)$.`
+                    ];
+                    sol = `$$H_{23}(x) = ${TFAC("(x+3)")} \\left(x ${TADD} \\frac{1}{2}\\right)$$`;
+                } else if (i === 24) {
+                    title += "Différence de carrés (x^2-1)";
+                    expr = `$$H_{24}(x) = (x^2 ${TSUB} 1) ${TADD} (x ${TSUB} 1)(x ${TADD} 2)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $x^2 ${TSUB} 1 = (x ${TSUB} 1)(x ${TADD} 1)$.`,
+                        `<strong>2. Transformation :</strong> On a $(x ${TSUB} 1)(x ${TADD} 1) ${TADD} (x ${TSUB} 1)(x ${TADD} 2)$.`,
+                        `<strong>3. Factorisation :</strong> On factorise par $(x ${TSUB} 1)$.`
+                    ];
+                    sol = `$$H_{24}(x) = ${TFAC("(x-1)")} \\left(2x ${TADD} 3\\right)$$`;
+                } else if (i === 25) {
+                    title += "Opposé et facteur 2";
+                    expr = `$$H_{25}(x) = 2(x ${TSUB} 4)(x ${TADD} 1) ${TSUB} (4 ${TSUB} x)(x ${TADD} 3)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $(4 ${TSUB} x) = ${TSUB}(x ${TSUB} 4)$.`,
+                        `<strong>2. Transformation :</strong> $2(x ${TSUB} 4)(x ${TADD} 1) ${TADD} (x ${TSUB} 4)(x ${TADD} 3)$.`,
+                        `<strong>3. Factorisation :</strong> On factorise par $(x ${TSUB} 4)$.`
+                    ];
+                    sol = `$$H_{25}(x) = ${TFAC("(x-4)")} \\left(3x ${TADD} 5\\right)$$`;
+                } else if (i === 26) {
+                    title += "Carré - 4";
+                    expr = `$$H_{26}(x) = (x ${TADD} 1)^2 ${TSUB} 4$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $4 = 2^2$.`,
+                        `<strong>2. Factorisation :</strong> Différence de deux carrés.`
+                    ];
+                    sol = `$$H_{26}(x) = \\left(x ${TSUB} 1\\right)\\left(x ${TADD} 3\\right)$$`;
+                } else if (i === 27) {
+                    title += "Carré - 9";
+                    expr = `$$H_{27}(x) = (2x ${TSUB} 3)^2 ${TSUB} 9$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $9 = 3^2$.`,
+                        `<strong>2. Factorisation :</strong> Différence de deux carrés.`
+                    ];
+                    sol = `$$H_{27}(x) = \\left(2x ${TSUB} 6\\right)\\left(2x\\right) = 4x(x ${TSUB} 3)$$`;
+                } else if (i === 28) {
+                    title += "Mélange de facteurs";
+                    expr = `$$H_{28}(x) = (x ${TADD} 1)^2(x ${TADD} 2) ${TADD} (x ${TADD} 1)(x ${TADD} 2)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Facteur commun $(x ${TADD} 1)(x ${TADD} 2)$.`,
+                        `<strong>2. Factorisation :</strong> On l'extrait et on rassemble les restes.`
+                    ];
+                    sol = `$$H_{28}(x) = ${TFAC("(x+1)(x+2)")} \\left(2x ${TADD} 3\\right)$$`;
+                } else if (i === 29) {
+                    title += "Opposé double";
+                    expr = `$$H_{29}(x) = (x ${TSUB} 3)(x ${TADD} 1) ${TSUB} (3 ${TSUB} x)(2x ${TADD} 5)$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> $(3 ${TSUB} x) = ${TSUB}(x ${TSUB} 3)$.`,
+                        `<strong>2. Factorisation :</strong> On réintroduit le moins et on factorise par $(x ${TSUB} 3)$.`
+                    ];
+                    sol = `$$H_{29}(x) = ${TFAC("(x-3)")} \\left(3x ${TADD} 6\\right) = 3(x-3)(x+2)$$`;
+                } else {
+                    title += "Identité remarquable a²-b² déguisée";
+                    expr = `$$H_{30}(x) = (x ${TADD} 2)^2 ${TSUB} (x ${TSUB} 1)^2$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> Différence de deux carrés. $A = (x ${TADD} 2)$, $B = (x ${TSUB} 1)$.`,
+                        `<strong>2. Factorisation :</strong> $(A ${TSUB} B)(A ${TADD} B)$.`
+                    ];
+                    sol = `$$H_{30}(x) = \\left(3\\right)\\left(2x ${TADD} 1\\right) = 3(2x ${TADD} 1)$$`;
+                }
+
+                cards.push(renderCard(i + 90, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 7. Substitution level ---
+        window.generateSubstitution30 = function() {
+            const container = document.getElementById('substitution-30-container');
+            if (!container) return;
+            const cards = [];
+
+            for (let i = 1; i <= 30; i++) {
+                const r1 = randInt(1, 5);
+                const r2 = randInt(3, 7);
+                const S = r1 + r2;
+                const P = r1 * r2;
+
+                let title = `Situation ${i} : `;
+                const { diff, badgeColor } = difficultyInfo(i, "Expert", "bg-purple-100 text-purple-800");
+                let expr = "", steps = [], sol = "";
+
+                if (i <= 5) {
+                    title += "Équation bicarrée (X = x²)";
+                    expr = `$$S_{${i}}(x) ${TEQ} x^4 \\, ${TSUB} \\, ${S}x^2 \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On remarque la présence de $x^4$ et $x^2$. C'est une équation bicarrée.`,
+                        `<strong>2. Changement de variable :</strong> On pose $X ${TEQ} x^2$. L'expression devient $X^2 \\, ${TSUB} \\, ${S}X \\, ${TADD} \\, ${P}$.`,
+                        `<strong>3. Racines :</strong> Les racines du trinôme en $X$ sont $X_1 ${TEQ} ${TFAC(r1)}$ et $X_2 ${TEQ} ${TFAC(r2)}$.`,
+                        `<strong>4. Substitution inverse :</strong> On remplace $X$ par $x^2$ pour obtenir la factorisation.`
+                    ];
+                    sol = `$$S_{${i}}(x) ${TEQ} \\left(x^2 \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(x^2 \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else if (i <= 10) {
+                    title += "Équation exponentielle (X = eˣ)";
+                    expr = `$$S_{${i}}(x) ${TEQ} e^{2x} \\, ${TSUB} \\, ${S}e^x \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On note $e^{2x} = (e^x)^2$.`,
+                        `<strong>2. Changement de variable :</strong> On pose $X ${TEQ} e^x$. L'expression devient $X^2 \\, ${TSUB} \\, ${S}X \\, ${TADD} \\, ${P}$.`,
+                        `<strong>3. Racines :</strong> Les racines sont $X_1 ${TEQ} ${TFAC(r1)}$ et $X_2 ${TEQ} ${TFAC(r2)}$.`,
+                        `<strong>4. Substitution inverse :</strong> On remplace $X$ par $e^x$.`
+                    ];
+                    sol = `$$S_{${i}}(x) ${TEQ} \\left(e^x \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(e^x \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else if (i <= 15) {
+                    title += "Équation logarithmique (X = ln x)";
+                    expr = `$$S_{${i}}(x) ${TEQ} (\\ln x)^2 \\, ${TSUB} \\, ${S}\\ln x \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> L'expression est un trinôme en $\\ln(x)$.`,
+                        `<strong>2. Changement de variable :</strong> On pose $X ${TEQ} \\ln(x)$.`,
+                        `<strong>3. Racines :</strong> Les racines sont $X_1 ${TEQ} ${TFAC(r1)}$ et $X_2 ${TEQ} ${TFAC(r2)}$.`,
+                        `<strong>4. Substitution inverse :</strong> On remplace $X$ par $\\ln(x)$.`
+                    ];
+                    sol = `$$S_{${i}}(x) ${TEQ} \\left(\\ln x \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(\\ln x \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else if (i <= 20) {
+                    title += "Équation trigonométrique (X = sin x)";
+                    expr = `$$S_{${i}}(x) ${TEQ} \\sin^2 x \\, ${TSUB} \\, ${S}\\sin x \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> L'expression est un trinôme en $\\sin(x)$.`,
+                        `<strong>2. Changement de variable :</strong> On pose $X ${TEQ} \\sin(x)$.`,
+                        `<strong>3. Racines :</strong> Les racines sont $X_1 ${TEQ} ${TFAC(r1)}$ et $X_2 ${TEQ} ${TFAC(r2)}$.`,
+                        `<strong>4. Substitution inverse :</strong> On remplace $X$ par $\\sin(x)$.`
+                    ];
+                    sol = `$$S_{${i}}(x) ${TEQ} \\left(\\sin x \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(\\sin x \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else if (i <= 25) {
+                    title += "Équation irrationnelle (X = √x)";
+                    expr = `$$S_{${i}}(x) ${TEQ} x \\, ${TSUB} \\, ${S}\\sqrt{x} \\, ${TADD} \\, ${P}$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On voit apparaître $x = (\\sqrt{x})^2$.`,
+                        `<strong>2. Changement de variable :</strong> On pose $X ${TEQ} \\sqrt{x}$ (avec $X \\geq 0$).`,
+                        `<strong>3. Racines :</strong> Les racines sont $X_1 ${TEQ} ${TFAC(r1)}$ et $X_2 ${TEQ} ${TFAC(r2)}$.`,
+                        `<strong>4. Substitution inverse :</strong> On remplace $X$ par $\\sqrt{x}$.`
+                    ];
+                    sol = `$$S_{${i}}(x) ${TEQ} \\left(\\sqrt{x} \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(\\sqrt{x} \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                } else {
+                    title += "Expression symétrique (X = x + 1/x)";
+                    expr = `$$S_{${i}}(x) ${TEQ} x^2 \\, ${TADD} \\, \\frac{1}{x^2} \\, ${TSUB} \\, ${S}\\left(x \\, ${TADD} \\, \\frac{1}{x}\\right) \\, ${TADD} \\, ${P + 2}$$`;
+                    steps = [
+                        `<strong>1. Repérage :</strong> On a des termes en $x^2$ et $1/x^2$, ainsi que $x$ et $1/x$.`,
+                        `<strong>2. Changement de variable :</strong> On pose $X ${TEQ} x \\, ${TADD} \\, \\frac{1}{x}$. On remarque que $X^2 ${TEQ} x^2 \\, ${TADD} \\, 2 \\, ${TADD} \\, \\frac{1}{x^2}$, donc $x^2 \\, ${TADD} \\, \\frac{1}{x^2} ${TEQ} X^2 \\, ${TSUB} \\, 2$.`,
+                        `<strong>3. Nouvelle expression :</strong> En remplaçant, on obtient $X^2 \\, ${TSUB} \\, 2 \\, ${TSUB} \\, ${S}X \\, ${TADD} \\, ${P + 2} ${TEQ} X^2 \\, ${TSUB} \\, ${S}X \\, ${TADD} \\, ${P}$.`,
+                        `<strong>4. Factorisation :</strong> Les racines sont $${TFAC(r1)}$ et $${TFAC(r2)}$. On revient à $X$ : $(X ${TSUB} ${r1})(X ${TSUB} ${r2})$.`
+                    ];
+                    sol = `$$S_{${i}}(x) ${TEQ} \\left(x \\, ${TADD} \\, \\frac{1}{x} \\, ${TSUB} \\, ${TFAC(r1)}\\right)\\left(x \\, ${TADD} \\, \\frac{1}{x} \\, ${TSUB} \\, ${TFAC(r2)}\\right)$$`;
+                }
+
+                cards.push(renderCard(i + 120, title, diff, expr, steps, sol, badgeColor));
+            }
+            container.innerHTML = cards.join('');
+            typesetContainer(container);
+        };
+
+        // --- 8. Quizz de synthèse : couvre l'ensemble du document ---
+        // Le quizz est entièrement dynamique : 16 familles de questions à valeurs
+        // aléatoires (14 sans complexes + 2 réservées au mode complexes), mélangées
+        // à chaque partie. Une mémoire de signatures (session + localStorage)
+        // garantit qu'un même quizz ne se reproduit jamais exactement.
+        // `correct` contient les indices des bonnes réponses dans `options` ;
+        // l'indice options.length désigne « Autre », qui peut être une bonne réponse.
+        // Les explications référencent les propositions par leur contenu, jamais par
+        // leur lettre, car l'ordre des propositions est mélangé.
+
+        // Mélange de Fisher-Yates (copie non destructive).
+        function quizShuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // ---------- Familles de questions (valeurs aléatoires) ----------
+
+        // Primaire : plusieurs factorisations peuvent être valides.
+        function famFacteurCommunDouble() {
+            const p = randInt(2, 3);
+            const q = randInt(2, 3);
+            const a = randInt(2, 4);
+            let b = randInt(2, 4);
+            while (b === a) b = randInt(2, 4);
+            const k = p * q;
+            const N = k * a, M = k * b;
+            const o1 = `${k} \\times (${a} + ${b})`;
+            const o2 = `${p} \\times (${q * a + p} + ${q * b})`;
+            const o3 = `${p} \\times (${q * a} + ${q * b})`;
+            return {
+                section: 'Primaire',
+                question: `Deux nombres : $${N}$ et $${M}$. Quelle(s) écriture(s) représente(nt) leur somme sous forme d'un produit ?`,
+                options: [o1, o2, o3],
+                correct: [0, 2],
+                explanation: `
+                    <p><strong>1. Principe :</strong> factoriser une somme revient à extraire ce qui est répété : $k \\times a + k \\times b = k \\times (a + b)$. Ici $${N} + ${M} = ${N + M}$.</p>
+                    <p class="step-line"><strong>2. Vérifions $${o1}$ :</strong> en développant, on obtient $${k} \\times ${a} + ${k} \\times ${b} = ${N} + ${M}$. Cette écriture est <strong>correcte</strong>.</p>
+                    <p class="step-line"><strong>3. Vérifions $${o2}$ :</strong> en développant, on obtient $${p} \\times ${q * a + p} + ${p} \\times ${q * b} = ${N + p * p} + ${M}$, soit $${N + M + p * p}$ : il y a $${p * p}$ de trop. Cette écriture est <strong>fausse</strong>.</p>
+                    <p class="step-line"><strong>4. Vérifions $${o3}$ :</strong> $${p} \\times ${q * a} = ${N}$ et $${p} \\times ${q * b} = ${M}$, donc le développement redonne bien $${N + M}$. Cette écriture est <strong>également correcte</strong>.</p>
+                    <p><strong>Conclusion :</strong> $${k}$ n'est pas le seul facteur commun de $${N}$ et $${M}$ : $${p}$ (et même $${q}$) fonctionne aussi. Deux propositions étaient valides.</p>`,
+                sig: `dbl:${p}${q}${a}${b}`
+            };
+        }
+
+        // Primaire : décomposition en facteurs premiers.
+        function famFacteursPremiers() {
+            const pool = [
+                { n: 60, f: [2, 2, 3, 5] },
+                { n: 84, f: [2, 2, 3, 7] },
+                { n: 90, f: [2, 3, 3, 5] },
+                { n: 126, f: [2, 3, 3, 7] },
+                { n: 140, f: [2, 2, 5, 7] },
+                { n: 198, f: [2, 3, 3, 11] }
+            ];
+            const pick = pool[randInt(0, pool.length - 1)];
+            const n = pick.n, f = pick.f;
+            const fmt = (arr) => arr.join(' \\times ');
+            const o1 = fmt(f);
+            const m1 = [f[0] * f[1], f[2], f[3]];
+            const m2 = [f[0], f[1], f[2] * f[3]];
+            const o2 = fmt(m1);
+            const o3 = fmt(m2);
+            let chain = `${n}`, factorStr = '', rest = n;
+            for (const pr of f) {
+                rest = rest / pr;
+                factorStr = factorStr ? `${factorStr} \\times ${pr}` : `${pr}`;
+                if (rest > 1) chain += ` = ${factorStr} \\times ${rest}`;
+            }
+            if (!chain.includes(factorStr)) chain += ` = ${factorStr}`;
+            return {
+                section: 'Primaire',
+                question: `Quelle est la décomposition en <strong>facteurs premiers</strong> de $${n}$ ?`,
+                options: [o1, o2, o3],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Définition :</strong> un facteur premier est un nombre entier $> 1$ qui n'admet que deux diviseurs : 1 et lui-même. On divise donc $${n}$ successivement par les plus petits nombres premiers.</p>
+                    <p class="step-line"><strong>2. Divisions successives :</strong> $${chain}$.</p>
+                    <p class="step-line"><strong>3. Analyse des propositions :</strong> $${o2}$ et $${o3}$ valent bien $${n}$ (vérifiez le produit !), mais elles contiennent des facteurs <em>composés</em> : $${m1[0]} = ${f[0]} \\times ${f[1]}$ et $${m2[2]} = ${f[2]} \\times ${f[3]}$ ne sont pas premiers.</p>
+                    <p><strong>Conclusion :</strong> seule la décomposition $${o1}$ n'utilise que des nombres premiers.</p>`,
+                sig: `fp:${n}`
+            };
+        }
+
+        // Collège : identité remarquable $A^2 - B^2$.
+        function famDifferenceCarres() {
+            const a = randInt(2, 9);
+            const b = randInt(2, 9);
+            const A2 = a * a, B2 = b * b;
+            return {
+                section: 'Collège',
+                question: `Quelle est la factorisation de $${A2}x^2 - ${B2}$ ?`,
+                options: [`(${a}x - ${b})(${a}x + ${b})`, `(${a}x - ${b})^2`, `(${a}x + ${b})^2`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Repérage :</strong> $${A2}x^2 = (${a}x)^2$ et $${B2} = ${b}^2$. L'expression est une différence de deux carrés, de la forme $A^2 - B^2$.</p>
+                    <p class="step-line"><strong>2. Identité remarquable :</strong> $A^2 - B^2 = (A - B)(A + B)$ avec $A = ${a}x$ et $B = ${b}$.</p>
+                    <p class="step-line"><strong>3. Pièges :</strong> $(${a}x - ${b})^2 = ${A2}x^2 - ${2 * a * b}x + ${B2}$ et $(${a}x + ${b})^2 = ${A2}x^2 + ${2 * a * b}x + ${B2}$ : les deux carrés parfaits contiennent un terme en $x$ qui n'existe pas ici.</p>
+                    <p><strong>Conclusion :</strong> $${A2}x^2 - ${B2} = (${a}x - ${b})(${a}x + ${b})$. Vérification par développement : $${A2}x^2 + ${2 * a * b}x - ${2 * a * b}x - ${B2}$, ce qui redonne bien l'expression de départ.</p>`,
+                sig: `dcar:${a}${b}`
+            };
+        }
+
+        // Collège : carré parfait $(x + b)^2$.
+        function famCarreParfait() {
+            const b = randInt(3, 12);
+            return {
+                section: 'Collège',
+                question: `Quelle est la factorisation de $x^2 + ${2 * b}x + ${b * b}$ ?`,
+                options: [`(x + ${b})^2`, `(x + ${b})(x - ${b})`, `x(x + ${2 * b}) + ${b * b}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Repérage :</strong> le premier terme $x^2$ est le carré de $x$, le troisième terme $${b * b}$ est le carré de $${b}$.</p>
+                    <p class="step-line"><strong>2. Vérification du double produit :</strong> $2 \\times x \\times ${b} = ${2 * b}x$ : c'est exactement le terme central. Le trinôme est donc un carré parfait.</p>
+                    <p class="step-line"><strong>3. Pièges :</strong> $(x + ${b})(x - ${b}) = x^2 - ${b * b}$ (il manque le terme en $x$), et $x(x + ${2 * b}) + ${b * b}$ n'est pas un produit : le $${b * b}$ final reste isolé.</p>
+                    <p><strong>Conclusion :</strong> $x^2 + ${2 * b}x + ${b * b} = (x + ${b})^2$.</p>`,
+                sig: `carre:${b}`
+            };
+        }
+
+        // Collège : méthode Somme-Produit.
+        function famSommeProduit() {
+            const r1 = randInt(2, 9);
+            let r2 = randInt(2, 9);
+            while (r2 === r1) r2 = randInt(2, 9);
+            const S = r1 + r2, P = r1 * r2;
+            return {
+                section: 'Collège',
+                question: `Par la méthode <strong>Somme-Produit</strong>, quelle est la factorisation de $x^2 - ${S}x + ${P}$ ?`,
+                options: [`(x - ${r1})(x - ${r2})`, `(x + ${r1})(x + ${r2})`, `(x - 1)(x - ${P})`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Signes :</strong> le produit $${P}$ est positif et la somme $-${S}$ est négative : on cherche donc deux nombres <strong>négatifs</strong> dont le produit vaut $${P}$ et la somme $-${S}$.</p>
+                    <p class="step-line"><strong>2. Recherche :</strong> les nombres $-${r1}$ et $-${r2}$ conviennent car $(-${r1}) \\times (-${r2}) = ${P}$ et $(-${r1}) + (-${r2}) = -${S}$.</p>
+                    <p class="step-line"><strong>3. Pièges :</strong> $(x + ${r1})(x + ${r2}) = x^2 + ${S}x + ${P}$ (signes opposés), et $(x - 1)(x - ${P})$ donne $x^2 - ${P + 1}x + ${P}$ : la somme serait $${P + 1}$, pas $${S}$.</p>
+                    <p><strong>Conclusion :</strong> $x^2 - ${S}x + ${P} = (x - ${r1})(x - ${r2})$.</p>`,
+                sig: `sp:${r1}${r2}`
+            };
+        }
+
+        // Collège : facteur bloc parenthésé, réduction interne.
+        function famFacteurBloc() {
+            const a = randInt(2, 4);
+            const b = randInt(1, 5);
+            const c = randInt(1, 4);
+            const d = randInt(1, 4);
+            const k = c + d;
+            const bloc = `${a}x + ${b}`;
+            return {
+                section: 'Collège',
+                question: `Quelle est la forme factorisée (et réduite) de $(${bloc})(x + ${c}) - (${bloc})(x - ${d})$ ?`,
+                options: [`${k}(${bloc})`, `(${bloc})(x - ${k})`, `(${bloc})(x + ${c})`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Facteur commun :</strong> le bloc $(${bloc})$ apparaît dans les deux produits : on le met en facteur.</p>
+                    <p class="step-line"><strong>2. Réduction de la parenthèse :</strong> $(x + ${c}) - (x - ${d}) = x + ${c} - x + ${d} = ${k}$. Attention : soustraire $x - ${d}$ change <em>tous</em> les signes, le $-${d}$ devient donc $+${d}$.</p>
+                    <p class="step-line"><strong>3. Pièges :</strong> $(${bloc})(x - ${k})$ et $(${bloc})(x + ${c})$ gardent un $x$ dans le second facteur alors que la réduction donne la constante $${k}$.</p>
+                    <p><strong>Conclusion :</strong> l'expression vaut $${k}(${bloc}) = ${k * a}x + ${k * b}$, un produit de deux facteurs.</p>`,
+                sig: `fb:${a}${b}${c}${d}`
+            };
+        }
+
+        // Lycée : polynôme de degré 3 par groupement.
+        function famDegre3() {
+            const r = randInt(2, 6);
+            return {
+                section: 'Lycée',
+                question: `Quelle est la factorisation de $x^3 - ${r}x^2 + x - ${r}$ ?`,
+                options: [`(x - ${r})(x^2 + 1)`, `(x + ${r})(x^2 - 1)`, `(x - ${r})(x^2 - 1)`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Groupement :</strong> on isole les blocs de même structure : $x^2(x - ${r}) + 1 \\times (x - ${r})$.</p>
+                    <p class="step-line"><strong>2. Facteur commun caché :</strong> le second bloc $x - ${r}$ est multiplié par $1$ (facteur implicite). Le facteur commun est donc $(x - ${r})$.</p>
+                    <p class="step-line"><strong>3. Extraction :</strong> $x^2(x - ${r}) + (x - ${r}) = (x - ${r})(x^2 + 1)$.</p>
+                    <p class="step-line"><strong>4. Pièges :</strong> $(x - ${r})(x^2 - 1) = x^3 - ${r}x^2 - x + ${r}$ (le terme en $x$ a changé de signe), et $(x + ${r})(x^2 - 1)$ a de plus le mauvais signe pour le facteur $x^2 - 1$.</p>
+                    <p><strong>Remarque :</strong> $x^2 + 1$ ne se factorise pas dans $\\mathbb{R}$ (il est toujours positif) : la factorisation s'arrête ici.</p>`,
+                sig: `deg3:${r}`
+            };
+        }
+
+        // Lycée, mode complexes uniquement : $x^2 + a^2$.
+        function famComplexeSomme() {
+            const a = randInt(2, 6);
+            return {
+                section: 'Lycée',
+                question: `Dans $\\mathbb{C}$, quelle est la factorisation de $x^2 + ${a * a}$ ?`,
+                options: [`(x - ${a}i)(x + ${a}i)`, `(x - ${a})(x + ${a})`, `\\text{Non factorisable}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Blocage dans $\\mathbb{R}$ :</strong> une somme de deux carrés n'admet aucune factorisation réelle. Mais dans $\\mathbb{C}$, $i^2 = -1$.</p>
+                    <p class="step-line"><strong>2. Astuce :</strong> $x^2 + ${a * a} = x^2 - (${a}i)^2$ car $(${a}i)^2 = ${a * a} \\times i^2 = -${a * a}$.</p>
+                    <p class="step-line"><strong>3. Différence de carrés :</strong> $x^2 - (${a}i)^2 = (x - ${a}i)(x + ${a}i)$.</p>
+                    <p class="step-line"><strong>4. Pièges :</strong> $(x - ${a})(x + ${a}) = x^2 - ${a * a}$ (c'est la différence des carrés, pas la somme), et l'expression est bien factorisable dans $\\mathbb{C}$.</p>
+                    <p><strong>Conclusion :</strong> les deux racines complexes sont $${a}i$ et $-${a}i$.</p>`,
+                sig: `cx:${a}`
+            };
+        }
+        famComplexeSomme.complexOnly = true;
+
+        // Lycée : trigonométrie (deux écritures valides).
+        function famTrigoDouble() {
+            const k = randInt(2, 5);
+            return {
+                section: 'Lycée',
+                question: `Quelle(s) écriture(s) est/sont égale(s) à $\\cos^2(${k}x) - \\sin^2(${k}x)$ ?`,
+                options: [`(\\cos(${k}x) - \\sin(${k}x))(\\cos(${k}x) + \\sin(${k}x))`, `\\cos(${2 * k}x)`, `(\\cos(${k}x) - \\sin(${k}x))^2`],
+                correct: [0, 1],
+                explanation: `
+                    <p><strong>1. Différence de carrés :</strong> en posant $A = \\cos(${k}x)$ et $B = \\sin(${k}x)$, on a $A^2 - B^2 = (A - B)(A + B)$, soit $(\\cos(${k}x) - \\sin(${k}x))(\\cos(${k}x) + \\sin(${k}x))$. Cette écriture est <strong>correcte</strong>.</p>
+                    <p class="step-line"><strong>2. Formule du doublement :</strong> $\\cos(2u) = \\cos^2(u) - \\sin^2(u)$ avec $u = ${k}x$ donne $\\cos(${2 * k}x)$. Cette écriture est <strong>également correcte</strong>.</p>
+                    <p class="step-line"><strong>3. Piège :</strong> $(\\cos(${k}x) - \\sin(${k}x))^2 = \\cos^2(${k}x) - 2\\cos(${k}x)\\sin(${k}x) + \\sin^2(${k}x)$ : le double produit $-2\\cos(${k}x)\\sin(${k}x) = -\\sin(${2 * k}x)$ est en trop.</p>
+                    <p><strong>Conclusion :</strong> deux propositions étaient valides.</p>`,
+                sig: `trigo:${k}`
+            };
+        }
+
+        // Facteurs cachés : le facteur 1 implicite.
+        function famFacteurUn() {
+            const a = randInt(2, 4);
+            const b = randInt(1, 5);
+            const c = randInt(1, 6);
+            const bloc = `${a}x + ${b}`;
+            return {
+                section: 'Facteurs Cachés',
+                question: `Quelle est la factorisation de $(${bloc})(x + ${c}) + (${bloc})$ ?`,
+                options: [`(${bloc})(x + ${c + 1})`, `(${bloc})(x + ${c})`, `\\text{Impossible : il n'y a pas de facteur commun}`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Facteur caché :</strong> le second terme $(${bloc})$ est multiplié par $1$ : $(${bloc})(x + ${c}) + \\underline{1} \\times (${bloc})$.</p>
+                    <p class="step-line"><strong>2. Extraction :</strong> on factorise par $(${bloc})$ : $(${bloc}) \\times [(x + ${c}) + 1]$.</p>
+                    <p class="step-line"><strong>3. Réduction :</strong> $(x + ${c}) + 1 = x + ${c + 1}$.</p>
+                    <p class="step-line"><strong>4. Pièges :</strong> $(${bloc})(x + ${c})$ oublie le $+1$, et l'expression est très factorisable : le $1$ implicite est un facteur caché classique.</p>
+                    <p><strong>Conclusion :</strong> $(${bloc})(x + ${c}) + (${bloc}) = (${bloc})(x + ${c + 1})$.</p>`,
+                sig: `un:${a}${b}${c}`
+            };
+        }
+
+        // Facteurs cachés : le facteur opposé.
+        function famOppose() {
+            const r = randInt(2, 5);
+            const s = randInt(1, 4);
+            const t = randInt(1, 4);
+            const st = s + t;
+            return {
+                section: 'Facteurs Cachés',
+                question: `Quelle est la factorisation de $(x - ${r})(x + ${s}) - (${r} - x)(x + ${t})$ ?`,
+                options: [`(x - ${r})(2x + ${st})`, `(x - ${r})(-2x - ${st})`, `(x + ${r})(2x + ${st})`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Signe opposé :</strong> $${r} - x = -(x - ${r})$. C'est le facteur caché du second produit.</p>
+                    <p class="step-line"><strong>2. Réécriture :</strong> l'expression devient $(x - ${r})(x + ${s}) + (x - ${r})(x + ${t})$ : soustraire un opposé revient à ajouter.</p>
+                    <p class="step-line"><strong>3. Extraction et réduction :</strong> $(x - ${r})[(x + ${s}) + (x + ${t})] = (x - ${r})(2x + ${st})$.</p>
+                    <p class="step-line"><strong>4. Pièges :</strong> $(x - ${r})(-2x - ${st})$ est l'opposé exact du résultat (le signe du second facteur ne change pas), et $(x + ${r})(2x + ${st})$ corrige à tort le signe du facteur commun.</p>
+                    <p><strong>Conclusion :</strong> $(x - ${r})(2x + ${st})$.</p>`,
+                sig: `opp:${r}${s}${t}`
+            };
+        }
+
+        // Facteurs cachés : la bonne réponse est « Autre ».
+        function famDifferenceNumerique() {
+            const n = randInt(12, 98);
+            const j = randInt(3, 9);
+            const hi = n + j, lo = n - j;
+            const val = 4 * n * j;
+            return {
+                section: 'Facteurs Cachés',
+                question: `De tête, que vaut $${hi}^2 - ${lo}^2$ ?`,
+                options: [`${2 * n * j}`, `${n * n - j * j}`, `${4 * j}`],
+                correct: [3],
+                explanation: `
+                    <p><strong>1. Sans calculer les carrés :</strong> l'identité $a^2 - b^2 = (a - b)(a + b)$ s'applique avec $a = ${hi}$ et $b = ${lo}$.</p>
+                    <p class="step-line"><strong>2. Les deux facteurs :</strong> $a - b = ${hi} - ${lo} = ${2 * j}$ et $a + b = ${hi} + ${lo} = ${2 * n}$.</p>
+                    <p class="step-line"><strong>3. Résultat :</strong> $(a - b)(a + b) = ${2 * j} \\times ${2 * n} = ${val}$.</p>
+                    <p class="step-line"><strong>4. Analyse des propositions :</strong> $${2 * n * j}$ (oubli du facteur 2), $${n * n - j * j}$ (c'est $a \\times b$, le produit de $a$ et $b$, pas la différence de leurs carrés) et $${4 * j}$ (oubli du facteur $${n}$) sont toutes les trois fausses.</p>
+                    <p><strong>Conclusion :</strong> aucune proposition ne vaut $${val}$ : la bonne réponse était <strong>« Autre »</strong>. Réfléchir avant de répondre évite de cocher un résultat qui « ressemble ».</p>`,
+                sig: `num:${n}${j}`
+            };
+        }
+
+        // Changement de variable : équation bicarrée (deux écritures valides).
+        function famBicarree() {
+            const r1 = randInt(2, 5);
+            let r2 = randInt(2, 5);
+            while (r2 === r1) r2 = randInt(2, 5);
+            const S = r1 + r2, P = r1 * r2;
+            return {
+                section: 'Changement de Variable',
+                question: `Quelle(s) écriture(s) est/sont une factorisation correcte de $x^4 - ${S}x^2 + ${P}$ ?`,
+                options: [
+                    `(x^2 - ${r1})(x^2 - ${r2})`,
+                    `(x - ${r1})(x - ${r2})`,
+                    `(x^2 + ${r1})(x^2 + ${r2})`,
+                    `(x - \\sqrt{${r1}})(x + \\sqrt{${r1}})(x - \\sqrt{${r2}})(x + \\sqrt{${r2}})`
+                ],
+                correct: [0, 3],
+                explanation: `
+                    <p><strong>1. Changement de variable :</strong> on pose $X = x^2$. L'expression devient $X^2 - ${S}X + ${P}$, un trinôme du second degré.</p>
+                    <p class="step-line"><strong>2. Somme-Produit :</strong> deux nombres de produit $${P}$ et de somme $${S}$ : $${r1}$ et $${r2}$. D'où $(X - ${r1})(X - ${r2})$.</p>
+                    <p class="step-line"><strong>3. Retour à $x$ :</strong> on remplace $X$ par $x^2$ : $(x^2 - ${r1})(x^2 - ${r2})$. Cette écriture est <strong>correcte</strong>.</p>
+                    <p class="step-line"><strong>4. Aller plus loin :</strong> $x^2 - ${r1} = (x - \\sqrt{${r1}})(x + \\sqrt{${r1}})$ et $x^2 - ${r2} = (x - \\sqrt{${r2}})(x + \\sqrt{${r2}})$ (différences de carrés). La décomposition complète en quatre facteurs réels est donc <strong>également correcte</strong>.</p>
+                    <p class="step-line"><strong>5. Pièges :</strong> $(x - ${r1})(x - ${r2})$ confond $x$ et $x^2$ (le retour de variable a été oublié), et $(x^2 + ${r1})(x^2 + ${r2}) = x^4 + ${S}x^2 + ${P}$ a des signes incorrects.</p>
+                    <p><strong>Conclusion :</strong> deux propositions étaient valides : l'équation bicarrée se traite toujours ainsi.</p>`,
+                sig: `bic:${r1}${r2}`
+            };
+        }
+
+        // Changement de variable : exponentielle.
+        function famExponentielle() {
+            const r1 = randInt(2, 4);
+            let r2 = randInt(2, 5);
+            while (r2 === r1) r2 = randInt(2, 5);
+            const S = r1 + r2, P = r1 * r2;
+            return {
+                section: 'Changement de Variable',
+                question: `Quelle est la factorisation de $e^{2x} - ${S}e^x + ${P}$ ?`,
+                options: [`(e^x - ${r1})(e^x - ${r2})`, `e^x(e^x - ${S}) + ${P}`, `(e^x - ${P})(e^x - 1)`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Changement de variable :</strong> on pose $X = e^x > 0$. L'expression devient $X^2 - ${S}X + ${P}$.</p>
+                    <p class="step-line"><strong>2. Somme-Produit :</strong> les nombres $${r1}$ et $${r2}$ ont pour produit $${P}$ et pour somme $${S}$ : $X^2 - ${S}X + ${P} = (X - ${r1})(X - ${r2})$.</p>
+                    <p class="step-line"><strong>3. Retour à $e^x$ :</strong> on remplace $X$ par $e^x$ : $(e^x - ${r1})(e^x - ${r2})$.</p>
+                    <p class="step-line"><strong>4. Pièges :</strong> $e^x(e^x - ${S}) + ${P}$ n'est pas un produit (le $${P}$ reste isolé), et $(e^x - ${P})(e^x - 1) = e^{2x} - ${P + 1}e^x + ${P}$ : la somme serait $${P + 1}$, pas $${S}$.</p>
+                    <p><strong>Conclusion :</strong> $(e^x - ${r1})(e^x - ${r2})$.</p>`,
+                sig: `expo:${r1}${r2}`
+            };
+        }
+
+        // Changement de variable : logarithme.
+        function famLogarithme() {
+            const r = randInt(2, 7);
+            return {
+                section: 'Changement de Variable',
+                question: `Quelle est la factorisation de $(\\ln x)^2 - ${r * r}$ ?`,
+                options: [`(\\ln x - ${r})(\\ln x + ${r})`, `\\ln(x^2 - ${r * r})`, `\\ln(x - ${r}) \\cdot \\ln(x + ${r})`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Changement de variable :</strong> on pose $X = \\ln x$. L'expression devient $X^2 - ${r * r}$, une différence de deux carrés ($X^2$ et $${r}^2$).</p>
+                    <p class="step-line"><strong>2. Identité remarquable :</strong> $X^2 - ${r * r} = (X - ${r})(X + ${r})$, puis on remplace $X$ par $\\ln x$ : $(\\ln x - ${r})(\\ln x + ${r})$.</p>
+                    <p class="step-line"><strong>3. Pièges :</strong> $(\\ln x)^2 \\ne \\ln(x^2)$, donc $\\ln(x^2 - ${r * r})$ mélange les niveaux ; et $\\ln(x - ${r}) \\cdot \\ln(x + ${r})$ est un produit de logarithmes, pas une factorisation de l'expression donnée.</p>
+                    <p><strong>Conclusion :</strong> $(\\ln x - ${r})(\\ln x + ${r})$.</p>`,
+                sig: `ln:${r}`
+            };
+        }
+
+        // Lycée, mode complexes uniquement : trinôme à racines conjuguées.
+        function famComplexeTrinome() {
+            const m = randInt(1, 3);
+            const a = randInt(2, 4);
+            const c = m * m + a * a;
+            return {
+                section: 'Lycée',
+                question: `Dans $\\mathbb{C}$, quelle est la factorisation de $z^2 - ${2 * m}z + ${c}$ ?`,
+                options: [`(z - ${m} - ${a}i)(z - ${m} + ${a}i)`, `(z - ${m + a}i)(z + ${m + a}i)`, `(z - ${m} - ${a}i)^2`],
+                correct: [0],
+                explanation: `
+                    <p><strong>1. Forme canonique :</strong> $z^2 - ${2 * m}z + ${c} = (z - ${m})^2 + ${a * a}$ (le double produit $2 \\times z \\times ${m} = ${2 * m}z$, et $${m}^2 + ${a * a} = ${c}$).</p>
+                    <p class="step-line"><strong>2. Astuce des complexes :</strong> $(z - ${m})^2 + ${a * a} = (z - ${m})^2 - (${a}i)^2$ car $(${a}i)^2 = -${a * a}$.</p>
+                    <p class="step-line"><strong>3. Différence de carrés :</strong> $(z - ${m})^2 - (${a}i)^2 = \\left[(z - ${m}) - ${a}i\\right] \\left[(z - ${m}) + ${a}i\\right] = (z - ${m} - ${a}i)(z - ${m} + ${a}i)$.</p>
+                    <p class="step-line"><strong>4. Pièges :</strong> $(z - ${m + a}i)(z + ${m + a}i) = z^2 + ${(m + a) * (m + a)}$ (les racines ne sont pas symétriques autour de 0 mais autour de $${m}$), et $(z - ${m} - ${a}i)^2$ donnerait un double produit imaginaire en $z$.</p>
+                    <p><strong>Conclusion :</strong> les deux racines complexes conjuguées sont $${m} + ${a}i$ et $${m} - ${a}i$.</p>`,
+                sig: `ztri:${m}${a}`
+            };
+        }
+        famComplexeTrinome.complexOnly = true;
+
+        const QUIZ_FAMILIES = [
+            famFacteurCommunDouble, famFacteursPremiers,
+            famDifferenceCarres, famCarreParfait, famSommeProduit,
+            famFacteurBloc, famDegre3, famComplexeSomme, famTrigoDouble,
+            famFacteurUn, famOppose, famDifferenceNumerique,
+            famBicarree, famExponentielle, famLogarithme, famComplexeTrinome
+        ];
+
+        // Assemble une question : mélange les propositions (l'indice options.length,
+        // réservé à « Autre », est préservé) et remappe les indices corrects.
+        function buildQuizQuestion(fam) {
+            const q = fam();
+            const order = quizShuffle(q.options.map((_, i) => i));
+            const options = order.map(i => q.options[i]);
+            const correct = q.correct
+                .map(i => i < q.options.length ? order.indexOf(i) : i)
+                .sort((x, y) => x - y);
+            return {
+                section: q.section,
+                question: q.question,
+                options,
+                correct,
+                explanation: q.explanation,
+                sig: `${q.sig}|${order.join('')}`
+            };
+        }
+
+        // Mémoire anti-répétition : un quizz déjà vu exactement (mêmes valeurs,
+        // mêmes ordres) n'est jamais reproposé. Persistée dans localStorage.
+        const QUIZ_HISTORY_KEY = 'factorisation-quiz-history';
+        function loadQuizHistory() {
+            try {
+                return new Set(JSON.parse(localStorage.getItem(QUIZ_HISTORY_KEY) || '[]'));
+            } catch (e) {
+                return new Set();
+            }
+        }
+        function saveQuizHistory(history) {
+            try {
+                const arr = Array.from(history);
+                localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(arr.length > 400 ? arr.slice(-400) : arr));
+            } catch (e) { /* stockage indisponible : la mémoire de session suffit */ }
+        }
+        const quizHistory = loadQuizHistory();
+
+        function buildQuiz(withComplex) {
+            const fams = QUIZ_FAMILIES.filter(f => withComplex || !f.complexOnly);
+            return quizShuffle(fams).map(buildQuizQuestion);
+        }
+
+        function generateFreshQuiz(withComplex) {
+            const prefix = withComplex ? 'C' : 'R';
+            let quiz, sig, tries = 0;
+            do {
+                quiz = buildQuiz(withComplex);
+                sig = `${prefix}:${quiz.map(q => q.sig).join('>')}`;
+                tries++;
+            } while (quizHistory.has(sig) && tries < 80);
+            quizHistory.add(sig);
+            saveQuizHistory(quizHistory);
+            return quiz;
+        }
+
+        // Lettres d'identification des propositions (A, B, C, ...)
+        const QUIZ_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+        let quizQuestions = [];
+
+        // Début de chaque quizz : affiche le panneau de choix du mode.
+        window.generateQuiz = function() {
+            const panel = document.getElementById('quiz-mode-panel');
+            const run = document.getElementById('quiz-run');
+            if (!panel || !run) return;
+            panel.classList.remove('hidden');
+            run.classList.add('hidden');
+            document.getElementById('quiz-container').innerHTML = '';
+            document.getElementById('quiz-review').innerHTML = '';
+            document.getElementById('quiz-score').classList.add('hidden');
+            document.getElementById('quiz-restart').classList.add('hidden');
+        };
+
+        // Lance un quizz dans le mode choisi, avec des valeurs inédites.
+        window.startQuiz = function(withComplex) {
+            quizQuestions = generateFreshQuiz(withComplex);
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = quizQuestions.map((q, idx) => `
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <p class="font-bold text-slate-900">
+                        <span class="text-xs px-2 py-0.5 rounded font-bold bg-purple-100 text-purple-800 mr-1">${q.section}</span>
+                        Question ${idx + 1} : ${q.question}
+                    </p>
+                    <div class="grid sm:grid-cols-2 gap-2">
+                        ${q.options.map((opt, optIdx) => `
+                            <label class="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                                <input type="radio" name="quiz-q-${idx}" value="${optIdx}" class="w-4 h-4 text-purple-600">
+                                <span class="text-sm font-medium text-slate-800"><strong class="text-purple-700">${QUIZ_LETTERS[optIdx]}.</strong> $${opt}$</span>
+                            </label>`).join('')}
+                        <label class="flex items-center space-x-3 p-2 bg-white rounded-lg border border-purple-300 cursor-pointer hover:bg-purple-100 transition">
+                            <input type="radio" name="quiz-q-${idx}" value="${q.options.length}" class="w-4 h-4 text-purple-600">
+                            <span class="text-sm font-medium text-slate-800"><strong class="text-purple-700">Autre.</strong> Aucune des propositions ci-contre...</span>
+                        </label>
+                    </div>
+                </div>`).join('');
+            document.getElementById('quiz-mode-info').innerHTML = withComplex
+                ? `Mode actuel : <strong>avec</strong> les nombres complexes ($z \\in \\mathbb{C}$) : ${quizQuestions.length} questions.`
+                : `Mode actuel : <strong>sans</strong> les nombres complexes (dans $\\mathbb{R}$ uniquement) : ${quizQuestions.length} questions. Aucune expression ne contient $i$.`;
+            document.getElementById('quiz-mode-panel').classList.add('hidden');
+            document.getElementById('quiz-review').innerHTML = '';
+            document.getElementById('quiz-score').classList.add('hidden');
+            document.getElementById('quiz-restart').classList.add('hidden');
+            document.getElementById('quiz-run').classList.remove('hidden');
+            typesetContainer(document.getElementById('quiz-run'));
+        };
+
+        // Validation : score + mise en vis-à-vis réponses élève / bonnes réponses,
+        // avec correction détaillée pas à pas en cas d'erreur.
+        window.checkQuiz = function() {
+            let score = 0;
+            const reviewHTML = quizQuestions.map((q, idx) => {
+                const selEl = document.querySelector(`input[name="quiz-q-${idx}"]:checked`);
+                const sel = selEl ? parseInt(selEl.value, 10) : -1;
+                const isCorrect = q.correct.includes(sel);
+                if (isCorrect) score++;
+
+                const selHTML = sel === -1
+                    ? '<em class="text-slate-500">Aucune réponse sélectionnée</em>'
+                    : (sel === q.options.length
+                        ? '<strong>« Autre »</strong>'
+                        : `<strong>${QUIZ_LETTERS[sel]}.</strong> $${q.options[sel]}$`);
+                const goodHTML = q.correct.map(i => `
+                            <div class="p-2 bg-emerald-50 rounded-lg border border-emerald-300 text-sm font-bold text-emerald-900">
+                                ${i === q.options.length ? '<strong>« Autre »</strong>' : `<strong>${QUIZ_LETTERS[i]}.</strong> $${q.options[i]}$`}
+                            </div>`).join('');
+
+                return `
+                    <div class="p-4 rounded-xl border space-y-3 ${isCorrect ? 'bg-emerald-50 border-emerald-300' : 'bg-rose-50 border-rose-300'}">
+                        <div class="flex justify-between items-center flex-wrap gap-2">
+                            <p class="font-bold text-slate-900">
+                                <span class="text-xs px-2 py-0.5 rounded font-bold bg-purple-100 text-purple-800 mr-1">${q.section}</span>
+                                Question ${idx + 1} : ${q.question}
+                            </p>
+                            <span class="text-xs px-2 py-0.5 rounded font-bold whitespace-nowrap ${isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isCorrect ? '✔ Bonne réponse' : (sel === -1 ? '− Sans réponse' : '✘ Réponse incorrecte')}</span>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-3 text-sm">
+                            <div class="p-3 bg-white rounded-lg border ${isCorrect ? 'border-emerald-300' : 'border-rose-300'}">
+                                <div class="text-xs font-bold uppercase tracking-wide ${isCorrect ? 'text-emerald-700' : 'text-rose-700'} mb-1">Votre réponse</div>
+                                ${selHTML}
+                            </div>
+                            <div class="p-3 bg-white rounded-lg border border-emerald-300">
+                                <div class="text-xs font-bold uppercase tracking-wide text-emerald-700 mb-1">Bonne(s) réponse(s) acceptée(s)</div>
+                                <div class="space-y-1">${goodHTML}</div>
+                            </div>
+                        </div>
+                        ${isCorrect
+                            ? `<p class="text-sm font-semibold text-emerald-800">✔ Exact, bien joué !${q.correct.length > 1 ? ' (NB : une autre proposition était également acceptée.)' : ''}</p>`
+                            : `<div class="p-3 bg-white rounded-lg border border-rose-200 space-y-2 text-sm text-slate-800">
+                                   <div class="font-bold text-rose-800">📖 Correction détaillée pas à pas :</div>
+                                   ${q.explanation}
+                               </div>`}
+                    </div>`;
+            }).join('');
+
+            // On verrouille les réponses : la correction ne doit plus pouvoir être modifiée.
+            document.querySelectorAll('input[name^="quiz-q-"]').forEach(r => { r.disabled = true; });
+
+            const total = quizQuestions.length;
+            const pct = Math.round(100 * score / total);
+            const scoreDiv = document.getElementById('quiz-score');
+            scoreDiv.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-amber-100', 'text-amber-900', 'bg-rose-100', 'text-rose-900');
+            if (score === total) {
+                scoreDiv.classList.add('bg-emerald-100', 'text-emerald-900');
+                scoreDiv.innerHTML = `🎉 Score Parfait : ${score} / ${total} ! Vous maîtrisez toute la factorisation, du Primaire à la Terminale !`;
+            } else if (pct >= 80) {
+                scoreDiv.classList.add('bg-emerald-100', 'text-emerald-900');
+                scoreDiv.innerHTML = `👏 Très bien : ${score} / ${total} (${pct}&nbsp;%). Étudiez les corrections ci-dessous pour viser le sans-faute.`;
+            } else if (pct >= 50) {
+                scoreDiv.classList.add('bg-amber-100', 'text-amber-900');
+                scoreDiv.innerHTML = `👍 Score : ${score} / ${total} (${pct}&nbsp;%). Lisez attentivement chaque correction détaillée ci-dessous.`;
+            } else {
+                scoreDiv.classList.add('bg-rose-100', 'text-rose-900');
+                scoreDiv.innerHTML = `📚 Score : ${score} / ${total} (${pct}&nbsp;%). Reprenez les fiches méthode de chaque niveau, puis refaites le quizz !`;
+            }
+
+            const review = document.getElementById('quiz-review');
+            review.innerHTML = reviewHTML;
+            typesetContainer(review);
+            document.getElementById('quiz-restart').classList.remove('hidden');
+            scoreDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        // Recommencer : retour au choix du mode, corrections effacées.
+        window.restartQuiz = function() {
+            window.generateQuiz();
+            document.getElementById('quiz-mode-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        // --- 9. Canvas ---
+        function initPrimaryCanvas() {
+            const canvas = document.getElementById('canvas-primary');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const sliderA = document.getElementById('slider-a');
+            const sliderB = document.getElementById('slider-b');
+            const sliderC = document.getElementById('slider-c');
+            const outMath = document.getElementById('math-primary-canvas-out');
+            let mathTimer = null;
+
+            function draw() {
+                const a = parseInt(sliderA.value, 10);
+                const b = parseInt(sliderB.value, 10);
+                const c = parseInt(sliderC.value, 10);
+
+                document.getElementById('val-a').textContent = formatNumber(a);
+                document.getElementById('val-b').textContent = formatNumber(b);
+                document.getElementById('val-c').textContent = formatNumber(c);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const startX = 40, startY = 30, scaleX = 25, scaleY = 20;
+                const widthB = b * scaleX, widthC = c * scaleX, heightA = a * scaleY;
+
+                ctx.fillStyle = 'rgba(2, 132, 199, 0.2)';
+                ctx.strokeStyle = '#0284c7';
+                ctx.fillRect(startX, startY, widthB, heightA);
+                ctx.strokeRect(startX, startY, widthB, heightA);
+
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                ctx.strokeStyle = '#059669';
+                ctx.fillRect(startX + widthB, startY, widthC, heightA);
+                ctx.strokeRect(startX + widthB, startY, widthC, heightA);
+
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 12px system-ui';
+                ctx.fillText(`k = ${a}`, startX - 35, startY + heightA / 2);
+                ctx.fillText(`a = ${b}`, startX + widthB / 2 - 10, startY - 8);
+                ctx.fillText(`b = ${c}`, startX + widthB + widthC / 2 - 10, startY - 8);
+
+                // La formule n'est re-typeset qu'après un court délai :
+                // on ne sature pas MathJax quand on déplace rapidement les curseurs.
+                outMath.innerHTML = `$$\\text{Aire} ${TEQ} ${TFAC(a)} \\, ${TMUL} \\, \\left(${b} \\, ${TADD} \\, ${c}\\right) ${TEQ} ${a * (b + c)}$$`;
+                clearTimeout(mathTimer);
+                mathTimer = setTimeout(() => typesetContainer(outMath), 150);
+            }
+
+            sliderA.addEventListener('input', draw);
+            sliderB.addEventListener('input', draw);
+            sliderC.addEventListener('input', draw);
+            draw();
+        }
+
+        // --- 10. Initialisation robuste ---
+        // Seule la section visible par défaut (Primaire) est générée au chargement ;
+        // les autres sections le sont à la demande, à leur premier affichage.
+        function initAll() {
+            initPrimaryCanvas();
+            ensureGenerated('primary');
+        }
+
+        // Attend MathJax (script async) pendant 5 s au maximum ;
+        // au-delà, le contenu est quand même généré (sans rendu mathématique).
+        function tryInitMathJax(retries = 100) {
+            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                window.MathJax.startup.promise.then(initAll);
+            } else if (retries <= 0) {
+                initAll();
+            } else {
+                setTimeout(() => tryInitMathJax(retries - 1), 50);
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            tryInitMathJax();
+        } else {
+            window.addEventListener('load', tryInitMathJax);
+        }
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="Wr7Gpe5dA9EDl7U0phkStg==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

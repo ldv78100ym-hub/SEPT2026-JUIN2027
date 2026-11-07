@@ -819,15 +819,22 @@
             filteredRoots = allRoots.filter(r => r >= intervalA.value() - 1e-7 && r <= intervalB.value() + 1e-7);
         }
 
-        const allX = [...allRoots, cp1, cp2];
-        if (intervalA !== null) allX.push(intervalA.value());
-        if (intervalB !== null) allX.push(intervalB.value());
-
-        let minX_val = Math.min(...allX);
-        let maxX_val = Math.max(...allX);
-        const xMargin = Math.max((maxX_val - minX_val) * 0.2, 1.5);
-        minX_val -= xMargin;
-        maxX_val += xMargin;
+        // --- OPTIMISATION DU CADRAGE GRAPHIQUE ---
+        let minX_val, maxX_val;
+        if (intervalA !== null && intervalB !== null) {
+            // Si un intervalle [a ; b] est précisé, on centre et optimise exactement entre a et b avec une marge fine
+            const span = intervalB.value() - intervalA.value();
+            const margin = Math.max(span * 0.15, 0.2);
+            minX_val = intervalA.value() - margin;
+            maxX_val = intervalB.value() + margin;
+        } else {
+            const allX = [...allRoots, cp1, cp2];
+            minX_val = Math.min(...allX);
+            maxX_val = Math.max(...allX);
+            const xMargin = Math.max((maxX_val - minX_val) * 0.2, 1.5);
+            minX_val -= xMargin;
+            maxX_val += xMargin;
+        }
 
         let sampleY = [];
         for (let px = 0; px <= width; px++) {
@@ -888,7 +895,7 @@
             ctx.beginPath(); ctx.moveTo(pxb, 0); ctx.lineTo(pxb, height); ctx.stroke();
             ctx.restore();
 
-            // Étiquettes a et b converties en texte brut (ex: x = 5/4)
+            // Étiquettes a et b converties en texte brut
             ctx.fillStyle = '#8e44ad';
             ctx.font = 'bold 13px Georgia';
             ctx.textAlign = 'center';
@@ -911,25 +918,12 @@
         ctx.font = 'bold 13px Georgia';
         ctx.fillText(`y = ${texToPlain(targetK.toTex(globalModeDecimal))}`, 12, yK_px - 8);
 
-        // Tracé de la courbe Cf (partie estompée hors intervalle + partie pleine dans l'intervalle)
+        // Tracé de la courbe Cf (UNIQUEMENT entre x = a et x = b si l'intervalle est précisé)
         const hasBounds = (intervalA !== null && intervalB !== null);
         const aVal = hasBounds ? intervalA.value() : -Infinity;
         const bVal = hasBounds ? intervalB.value() : Infinity;
 
-        // Tracé complet en léger transparent si intervalle restreint
-        if (hasBounds) {
-            ctx.strokeStyle = 'rgba(52, 152, 219, 0.35)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for (let px = 0; px <= width; px++) {
-                let py = toPxY(sampleY[px]);
-                if (px === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-            }
-            ctx.stroke();
-        }
-
-        // Tracé principal (dans l'intervalle)
+        // Tracé principal restreint strictement à l'intervalle [a ; b]
         ctx.strokeStyle = '#3498db';
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -946,7 +940,7 @@
 
         ctx.fillStyle = '#2980b9';
         ctx.font = 'bold 14px Georgia';
-        ctx.fillText('Cf', width - 35, toPxY(sampleY[width - 1]) - 12);
+        ctx.fillText('Cf', width - 35, toPxY(sampleY[Math.floor(width * 0.75)]) - 12);
 
         // Intersections et projections vers l'axe x
         filteredRoots.forEach((rt, idx) => {

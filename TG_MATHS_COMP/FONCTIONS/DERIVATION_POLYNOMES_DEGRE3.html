@@ -389,6 +389,7 @@
     function texToPlain(s) {
         s = String(s);
         s = s.replace(/\\dfrac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2');
+        s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2');
         s = s.replace(/\\sqrt\{([^{}]*)\}/g, '√$1');
         s = s.replace(/\\infty/g, '∞');
         s = s.replace(/\^2/g, '²');
@@ -735,7 +736,7 @@
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(xTgt - 14, yTgt - 10, 28, 20);
                     ctx.fillStyle = '#d35400';
-                    ctx.fillText(kLabel, xTgt, yTgt + 4);
+                    ctx.fillText(texToPlain(kLabel), xTgt, yTgt + 4);
                     ctx.restore();
                 }
             });
@@ -749,9 +750,6 @@
         }
     }
 
-    /**
-     * Calcule numériquement les racines réelles de f(x) - k = 0
-     */
     function findCubicRoots(c3, c2, c1, c0, k) {
         const a = c3.value(), b = c2.value(), c = c1.value(), d = c0.value() - k;
         const p = (3 * a * c - b * b) / (3 * a * a);
@@ -783,7 +781,7 @@
         if (!container) return;
         container.innerHTML = '';
 
-        const { c3, c2, c1, c0, r1, x_ext, targetK, targetSolutions } = state;
+        const { c3, c2, c1, c0, r1, x_ext, targetK, targetSolutions, intervalA, intervalB } = state;
         const dpr = window.devicePixelRatio || 1;
         const width = 600, height = 340;
 
@@ -800,7 +798,11 @@
 
         const cap = document.createElement('div');
         cap.className = 'cap';
-        cap.innerHTML = `Représentation graphique de \\(\\mathcal{C}_f\\) et de la droite d'équation \\(y = ${targetK.toTex(globalModeDecimal)}\\)`;
+        let capText = `Représentation graphique de \\(\\mathcal{C}_f\\) et de la droite d'équation \\(y = ${targetK.toTex(globalModeDecimal)}\\)`;
+        if (intervalA !== null && intervalB !== null) {
+            capText += ` sur l'intervalle \\([${intervalA.toTex(globalModeDecimal)}\\,;\\,${intervalB.toTex(globalModeDecimal)}]\\)`;
+        }
+        cap.innerHTML = capText;
         wrap.appendChild(cap);
 
         container.appendChild(wrap);
@@ -808,14 +810,22 @@
         const ctx = canvas.getContext('2d');
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        const roots = findCubicRoots(c3, c2, c1, c0, targetK.value());
+        const allRoots = findCubicRoots(c3, c2, c1, c0, targetK.value());
         const cp1 = r1.value() < x_ext.value() ? r1.value() : x_ext.value();
         const cp2 = r1.value() < x_ext.value() ? x_ext.value() : r1.value();
 
-        const allX = [...roots, cp1, cp2];
+        let filteredRoots = allRoots;
+        if (intervalA !== null && intervalB !== null) {
+            filteredRoots = allRoots.filter(r => r >= intervalA.value() - 1e-7 && r <= intervalB.value() + 1e-7);
+        }
+
+        const allX = [...allRoots, cp1, cp2];
+        if (intervalA !== null) allX.push(intervalA.value());
+        if (intervalB !== null) allX.push(intervalB.value());
+
         let minX_val = Math.min(...allX);
         let maxX_val = Math.max(...allX);
-        const xMargin = Math.max((maxX_val - minX_val) * 0.25, 1.5);
+        const xMargin = Math.max((maxX_val - minX_val) * 0.2, 1.5);
         minX_val -= xMargin;
         maxX_val += xMargin;
 
@@ -838,7 +848,7 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
-        // Grille et axes
+        // Grille
         ctx.strokeStyle = '#f1f5f9';
         ctx.lineWidth = 1;
         for (let x = Math.ceil(minX_val); x <= Math.floor(maxX_val); x++) {
@@ -850,6 +860,7 @@
             ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(width, py); ctx.stroke();
         }
 
+        // Axes de coordonnées
         const originY = toPxY(0);
         if (originY >= 0 && originY <= height) {
             ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.2;
@@ -861,7 +872,32 @@
             ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, height); ctx.stroke();
         }
 
-        // Droite y = k
+        // Droites verticales d'intervalle x=a et x=b
+        if (intervalA !== null && intervalB !== null) {
+            const pxa = toPxX(intervalA.value());
+            const pxb = toPxX(intervalB.value());
+
+            ctx.save();
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = '#8e44ad';
+            ctx.lineWidth = 2;
+
+            // Droite x = a
+            ctx.beginPath(); ctx.moveTo(pxa, 0); ctx.lineTo(pxa, height); ctx.stroke();
+            // Droite x = b
+            ctx.beginPath(); ctx.moveTo(pxb, 0); ctx.lineTo(pxb, height); ctx.stroke();
+            ctx.restore();
+
+            // Étiquettes a et b converties en texte brut (ex: x = 5/4)
+            ctx.fillStyle = '#8e44ad';
+            ctx.font = 'bold 13px Georgia';
+            ctx.textAlign = 'center';
+            const textAxisY = (originY >= 0 && originY <= height) ? Math.min(Math.max(originY - 8, 20), height - 20) : height - 10;
+            ctx.fillText(`x = ${texToPlain(intervalA.toTex(globalModeDecimal))}`, pxa, textAxisY);
+            ctx.fillText(`x = ${texToPlain(intervalB.toTex(globalModeDecimal))}`, pxb, textAxisY);
+        }
+
+        // Droite y = k convertie en texte brut
         const yK_px = toPxY(targetK.value());
         ctx.strokeStyle = '#e67e22';
         ctx.lineWidth = 2;
@@ -873,16 +909,38 @@
 
         ctx.fillStyle = '#d35400';
         ctx.font = 'bold 13px Georgia';
-        ctx.fillText(`y = ${targetK.toTex(globalModeDecimal)}`, 12, yK_px - 8);
+        ctx.fillText(`y = ${texToPlain(targetK.toTex(globalModeDecimal))}`, 12, yK_px - 8);
 
-        // Courbe Cf
+        // Tracé de la courbe Cf (partie estompée hors intervalle + partie pleine dans l'intervalle)
+        const hasBounds = (intervalA !== null && intervalB !== null);
+        const aVal = hasBounds ? intervalA.value() : -Infinity;
+        const bVal = hasBounds ? intervalB.value() : Infinity;
+
+        // Tracé complet en léger transparent si intervalle restreint
+        if (hasBounds) {
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.35)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let px = 0; px <= width; px++) {
+                let py = toPxY(sampleY[px]);
+                if (px === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+        }
+
+        // Tracé principal (dans l'intervalle)
         ctx.strokeStyle = '#3498db';
-        ctx.lineWidth = 2.8;
+        ctx.lineWidth = 3;
         ctx.beginPath();
+        let started = false;
         for (let px = 0; px <= width; px++) {
-            let py = toPxY(sampleY[px]);
-            if (px === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
+            let xVal = minX_val + (px / width) * (maxX_val - minX_val);
+            if (xVal >= aVal && xVal <= bVal) {
+                let py = toPxY(sampleY[px]);
+                if (!started) { ctx.moveTo(px, py); started = true; }
+                else ctx.lineTo(px, py);
+            }
         }
         ctx.stroke();
 
@@ -891,7 +949,7 @@
         ctx.fillText('Cf', width - 35, toPxY(sampleY[width - 1]) - 12);
 
         // Intersections et projections vers l'axe x
-        roots.forEach((rt, idx) => {
+        filteredRoots.forEach((rt, idx) => {
             const rx = toPxX(rt);
             const ry = yK_px;
 
@@ -914,7 +972,7 @@
             ctx.stroke();
 
             // Label x_0, x_1, x_2
-            const labelName = targetSolutions === 3 ? `x${idx}` : `x₀`;
+            const labelName = filteredRoots.length > 1 ? `x${idx}` : `x₀`;
             ctx.fillStyle = '#d35400';
             ctx.font = 'bold 14px Georgia';
             ctx.textAlign = 'center';
@@ -1017,6 +1075,8 @@
         const isExplicitPrompt = Math.random() < 0.5;
 
         let targetK;
+        let intervalA = null;
+        let intervalB = null;
 
         if (targetSolutions === 3) {
             if (globalModeDecimal) {
@@ -1037,11 +1097,14 @@
         } else {
             const offset = new NumValue(2);
             targetK = (valMax === f_r1.value() ? f_r1 : f_ext).add(offset);
+            intervalA = r1.value() < x_ext.value() ? r1 : x_ext;
+            intervalB = r1.value() < x_ext.value() ? x_ext : r1;
         }
 
         state = { 
             a, r1, r2, c3, c2, c1, c0, x_ext, f_r1, f_ext, 
-            targetK, targetSolutions, isExplicitPrompt, valMin, valMax 
+            targetK, targetSolutions, isExplicitPrompt, valMin, valMax,
+            intervalA, intervalB
         };
 
         renderExercise();
@@ -1087,7 +1150,7 @@
     }
 
     function renderExercise() {
-        const { a, r1, r2, c3, c2, c1, c0, targetK, targetSolutions, isExplicitPrompt } = state;
+        const { a, r1, r2, c3, c2, c1, c0, targetK, targetSolutions, isExplicitPrompt, intervalA, intervalB } = state;
 
         document.getElementById('math-function').innerHTML = `\\[ f(x) = ${formatPoly(c3, c2, c1, c0)} \\]`;
 
@@ -1103,9 +1166,7 @@
         const eqStr = `\\(f(x) = ${targetK.toTex(globalModeDecimal)}\\)`;
 
         if (targetSolutions === 0) {
-            const minX = r1.value() < state.x_ext.value() ? r1 : state.x_ext;
-            const maxX = r1.value() < state.x_ext.value() ? state.x_ext : r1;
-            const intervalStr = `\\([${minX.toTex(globalModeDecimal)}\\,;\\,${maxX.toTex(globalModeDecimal)}]\\)`;
+            const intervalStr = `\\([${intervalA.toTex(globalModeDecimal)}\\,;\\,${intervalB.toTex(globalModeDecimal)}]\\)`;
             
             if (isExplicitPrompt) {
                 q5Container.innerHTML = `Justifier, à l'aide du tableau de variation, que l'équation ${eqStr} n'admet <strong>aucune solution</strong> dans l'intervalle ${intervalStr}.`;
@@ -1123,7 +1184,7 @@
     }
 
     function renderSolution() {
-        const { a, r1, r2, c3, c2, c1, c0, x_ext, f_r1, f_ext, targetK, targetSolutions } = state;
+        const { a, r1, r2, c3, c2, c1, c0, x_ext, f_r1, f_ext, targetK, targetSolutions, intervalA, intervalB } = state;
         const solDiv = document.getElementById('solution-content');
 
         const kTex = targetK.toTex(globalModeDecimal);
@@ -1156,8 +1217,8 @@
             solQ5Explanation = `La valeur cible \\(k = ${kTex}\\) est strictement extérieure à l'intervalle des extrémums locaux \\([${minExt.toTex(globalModeDecimal)}\\,;\\,${maxExt.toTex(globalModeDecimal)}]\\).<br>
             Par application du théorème des valeurs intermédiaires, l'équation \\(f(x) = ${kTex}\\) n'admet qu'<strong>une seule solution</strong> (notée \\(x_0\\)) sur \\(\\mathbb{R}\\).`;
         } else {
-            solQ5Explanation = `Sur l'intervalle restreint entre les deux points critiques, l'image de la fonction varie entre \\(${minExt.toTex(globalModeDecimal)}\\) et \\(${maxExt.toTex(globalModeDecimal)}\\).<br>
-            Comme \\(k = ${kTex}\\) se situe en dehors de ces valeurs, l'équation \\(f(x) = ${kTex}\\) n'admet <strong>aucune solution (0 solution)</strong> sur cet intervalle.`;
+            solQ5Explanation = `Sur l'intervalle restreint \\([${intervalA.toTex(globalModeDecimal)}\\,;\\,${intervalB.toTex(globalModeDecimal)}]\\) entre les deux points critiques, l'image de la fonction varie uniquement entre \\(${minExt.toTex(globalModeDecimal)}\\) et \\(${maxExt.toTex(globalModeDecimal)}\\).<br>
+            Comme \\(k = ${kTex}\\) se situe strictement en dehors de cet intervalle de valeurs, l'équation \\(f(x) = ${kTex}\\) n'admet <strong>aucune solution (0 solution)</strong> sur cet intervalle.`;
         }
 
         let tangentStr = "";
@@ -1328,21 +1389,43 @@
             }
         }
 
-        renderVarTable('sol-q5-var-container', {
-            xVals: ['-\\infty', cp1.toTex(globalModeDecimal), cp2.toTex(globalModeDecimal), '+\\infty'],
-            varSpecs: isA3Pos ? [
-                { pos: '-', val: '-\\infty' },
-                { pos: '+', val: f_cp1.toTex(globalModeDecimal) },
-                { pos: '-', val: f_cp2.toTex(globalModeDecimal) },
-                { pos: '+', val: '+\\infty' }
+        let q5XVals = ['-\\infty', cp1.toTex(globalModeDecimal), cp2.toTex(globalModeDecimal), '+\\infty'];
+        let q5VarSpecs = isA3Pos ? [
+            { pos: '-', val: '-\\infty' },
+            { pos: '+', val: f_cp1.toTex(globalModeDecimal) },
+            { pos: '-', val: f_cp2.toTex(globalModeDecimal) },
+            { pos: '+', val: '+\\infty' }
+        ] : [
+            { pos: '+', val: '+\\infty' },
+            { pos: '-', val: f_cp1.toTex(globalModeDecimal) },
+            { pos: '+', val: f_cp2.toTex(globalModeDecimal) },
+            { pos: '-', val: '-\\infty' }
+        ];
+
+        // Correction spécifique pour l'intervalle restreint [intervalA ; intervalB]
+        if (intervalA !== null && intervalB !== null) {
+            const f_a = evalPoly(c3, c2, c1, c0, intervalA);
+            const f_b = evalPoly(c3, c2, c1, c0, intervalB);
+
+            q5XVals = [
+                intervalA.toTex(globalModeDecimal),
+                intervalB.toTex(globalModeDecimal)
+            ];
+
+            q5VarSpecs = isA3Pos ? [
+                { pos: '+', val: f_a.toTex(globalModeDecimal) },
+                { pos: '-', val: f_b.toTex(globalModeDecimal) }
             ] : [
-                { pos: '+', val: '+\\infty' },
-                { pos: '-', val: f_cp1.toTex(globalModeDecimal) },
-                { pos: '+', val: f_cp2.toTex(globalModeDecimal) },
-                { pos: '-', val: '-\\infty' }
-            ],
+                { pos: '-', val: f_a.toTex(globalModeDecimal) },
+                { pos: '+', val: f_b.toTex(globalModeDecimal) }
+            ];
+        }
+
+        renderVarTable('sol-q5-var-container', {
+            xVals: q5XVals,
+            varSpecs: q5VarSpecs,
             name: 'f',
-            caption: `Recherche des antécédents de k = ${kTex} dans le tableau de variations`,
+            caption: `Recherche des antécédents de k = ${kTex} dans le tableau de variations` + (intervalA ? ` sur [${intervalA.toTex(globalModeDecimal)} ; ${intervalB.toTex(globalModeDecimal)}]` : ''),
             targets: targetsQ5
         });
 

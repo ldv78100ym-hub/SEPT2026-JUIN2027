@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 6 feuilles de style et 44 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 45 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -292,9 +292,16 @@ la-tour-des-maths/
     │                                  (sélection de notions pour la session)
     ├── 20-graphe-notions.js          ← modale 🕸️ « Graphe des notions » :
     │                                  sous-graphes centrés, élèves & enseignants
-    └── 21-monde-balle.js             ← 2ᵉ animation « balle rebondissante » :
-                                       deux murs, paliers, traînée, écrasement,
-                                       plancher coulissant, gerbes & larmes
+    ├── 21-monde-balle.js             ← 2ᵉ animation « balle rebondissante » :
+    │                                  deux murs, paliers, traînée, écrasement,
+    │                                  plancher coulissant, gerbes & larmes
+    └── 22-nouveautes.js               ← modale 🆕 « Quoi de neuf » à
+                                       l'ouverture : mises à jour présentées
+                                       (mise en avant de la coche directe dans
+                                       le tableau croisé selon le niveau),
+                                       option « Ne plus afficher au
+                                       démarrage », bouton « 🎓 Découvrir le
+                                       tableau croisé »
 ```
 
 ## Interconnexions
@@ -910,7 +917,7 @@ Trois usages :
   niveaux de classe × notions à traiter » (22 lignes × 7 colonnes,
   calculée depuis les données du jeu, totaux 209) et tous les
   compteurs actualisés (209 notions, 402 générateurs, 22 catégories,
-  7 niveaux, 44 modules, banc d'essai 24 sections, novembre 2026).
+  7 niveaux, 45 modules, banc d'essai 25 sections, novembre 2026).
 
 Le rattachement suit les programmes : calcul et fractions au cycle 3-4,
 factorisations, systèmes, fonctions de référence et Python en 2de,
@@ -921,6 +928,29 @@ dénombrement expert et valeurs propres au-delà. Aucune notion n'a
 changé d'étage, de catégorie, de fiche ou de générateur : le module
 n'est que **données de classement**, vérifiées par la section 20 du
 banc d'essai.
+
+### 🆕 Modale « Quoi de neuf » à l'ouverture
+
+Un 45ᵉ module (`js/22-nouveautes.js`) affiche automatiquement, à
+l'ouverture de la page, une modale d'alerte qui présente les mises à
+jour effectuées — et **met en avant la possibilité de cocher
+directement dans le tableau croisé les notions à réviser selon son
+niveau de classe** (survol d'un numéro → bulle informative, clic →
+coche ✓, « 🎯 Réviser la sélection »). Elle liste aussi les niveaux de
+classe (effectifs par niveau), la vue « 🎓 Par niveau » et les filtres
+de la révision personnalisée :
+
+- **Opt-out respectueux** : la case « Ne plus afficher au démarrage »
+  mémorise le choix (`localStorage`, clé `tdm-news-hide`) ; la modale
+  ne se réaffiche plus tant que la case reste cochée ;
+- **Réouverture manuelle** : le bouton « 🆕 Nouveautés & niveaux de
+  classe » du menu utilitaire rouvre la modale à tout moment ;
+- **« 🎓 Découvrir le tableau croisé »** : ferme l'alerte, bascule la
+  progression en vue « Par niveau » et l'ouvre directement sur le
+  tableau croisé ;
+- Fermeture par « J'ai compris », croix, clic sur le fond ou Échap ;
+- API de test : `tdmNewsShow(force)`, `tdmNewsClose()`,
+  `tdmNewsBox()` (section 21 du banc d'essai).
 
 ## Dossier de présentation « rapport-publication.html »
 
@@ -933,7 +963,7 @@ contenus (22 catégories, 209 notions, 402 générateurs, 7 niveaux de
 classe, du cycle 3 au post-bac), **tableau croisé niveaux × notions**
 (22 catégories en lignes, 7 niveaux en colonnes, effectifs calculés
 depuis les données du jeu), principes didactiques, architecture
-technique (44 modules, banc d'essai 24 sections, chiffrement
+technique (45 modules, banc d'essai 25 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
@@ -1025,7 +1055,7 @@ sont remplis dynamiquement.
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 24 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 25 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (22 catégories,
 209 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
@@ -1064,7 +1094,11 @@ niveau » pré-coche les notions du niveau, puces de filtrage de la
 révision, chiffres du dossier de présentation, **bulle d'information et
 cases cochables du tableau croisé** — chaque numéro actif porte son
 data-tip, se coche/décoche au clic, « 🎯 Réviser la sélection » ouvre
-la révision pré-remplie, « ↺ Vider » efface).
+la révision pré-remplie, « ↺ Vider » efface) et **modale « Quoi de
+neuf » à l'ouverture** (affichage automatique au démarrage, contenu :
+coche directe dans le tableau croisé selon le niveau, option « Ne plus
+afficher au démarrage » persistée, réouverture par le bouton du menu,
+« 🎓 Découvrir le tableau croisé » → progression en vue « Par niveau »).
 `node .tests/test-tdm.mjs` → **TOUT PASSE**.
 
 ## Choix techniques
@@ -1075,7 +1109,7 @@ la révision pré-remplie, « ↺ Vider » efface).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 44 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 45 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

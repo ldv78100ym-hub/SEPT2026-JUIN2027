@@ -1182,11 +1182,46 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(dossier.includes('209'), 'dossier : compteur 209 présent');
   ok(dossier.includes('402'), 'dossier : compteur 402 générateurs présent');
   ok(dossier.includes('22 catégories'), 'dossier : 22 catégories mentionnées');
-  ok(dossier.includes('44 modules'), 'dossier : 44 modules mentionnés');
+  ok(dossier.includes('45 modules'), 'dossier : 45 modules mentionnés');
   ok(dossier.includes('Tableau croisé'), 'dossier : section « tableau croisé niveaux × notions »');
   ok(dossier.includes('CPGE'), 'dossier : la colonne CPGE du tableau croisé figure bien');
   ok(dossier.includes('Réviser la sélection'), 'dossier : l’interactivité du tableau (bulles, cases cochables) est décrite');
 
-  console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
+    /* ================================================================
+     21. Modale d’alerte « Quoi de neuf » à l’ouverture de la page
+     ================================================================ */
+  console.log('== 21. Modale d’alerte « Quoi de neuf » à l’ouverture ==');
+  ok($('newsModal') && $('newsModal').classList.contains('open'), 'modale d’alerte affichée automatiquement à l’ouverture');
+  const newsBox = call('tdmNewsBox()');
+  ok(newsBox.innerHTML.includes('Quoi de neuf'), 'titre « Quoi de neuf »');
+  ok(newsBox.innerHTML.includes('tableau croisé') && newsBox.innerHTML.includes('cocher'), 'mise en avant : cocher directement dans le tableau croisé');
+  ok(newsBox.innerHTML.includes('Réviser la sélection') && newsBox.innerHTML.includes('niveau de classe'), 'la révision selon le niveau de classe est précisée');
+  ok(newsBox.innerHTML.includes('Ne plus afficher au démarrage'), 'option « Ne plus afficher au démarrage » proposée');
+  ok(($('newsOk').listeners.click || []).length > 0 && ($('newsDiscover').listeners.click || []).length > 0, 'boutons « J’ai compris » et « Découvrir le tableau croisé » câblés');
+  ($('newsOk').listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(!$('newsModal').classList.contains('open'), '« J’ai compris » ferme l’alerte');
+  $('newsHide').checked = true;
+  ($('newsHide').listeners.change || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('localStorage.getItem(\'tdm-news-hide\')') === '1', 'l’option persiste (localStorage)');
+  call('tdmNewsShow()');
+  ok(!$('newsModal').classList.contains('open'), 'avec l’option active, l’alerte ne se rouvre pas d’elle-même');
+  ok(($('newsBtn').listeners.click || []).length > 0, 'bouton « 🆕 Nouveautés » du menu câblé');
+  ($('newsBtn').listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok($('newsModal').classList.contains('open'), 'le menu rouvre l’alerte même masquée au démarrage');
+  call("$('notionsList').children.length = 0");
+  ($('newsDiscover').listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(!$('newsModal').classList.contains('open'), '« Découvrir » ferme l’alerte');
+  ok($('notionsModal').classList.contains('open'), '« Découvrir » ouvre la progression');
+  ok(call('PROG_VIEW') === 'niveau', 'vue basculée sur « Par niveau »');
+  ok([...$('notionsList').children].some(c => (c.className || '').includes('croise-wrap')), 'tableau croisé affiché directement');
+  call('closeNotions()');
+  $('newsHide').checked = false;
+  ($('newsHide').listeners.change || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('localStorage.getItem(\'tdm-news-hide\')') === null, 'décocher l’option la retire du localStorage');
+  call('tdmNewsShow()');
+  ok($('newsModal').classList.contains('open'), 'l’alerte se montre à nouveau à l’ouverture');
+  call('tdmNewsClose()');
+
+console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
   process.exit(fail === 0 ? 0 : 1);
 })().catch(e => { console.error('EXCEPTION : ' + e.stack); process.exit(1); });

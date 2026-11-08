@@ -44,7 +44,7 @@
       uniq3(texN(n), [texN(Math.round(n * 1.1)), texN(10 * k), texN(n / 10), texN(Math.pow(9, k))]),
       1,
       EXPL(`Une suite ordonnée de ${k} éléments choisis AVEC répétition parmi \\(n\\) est un k-uplet : chaque position est indépendante des autres.`,
-        `On dessine ${k} cases : chacune offre 10 choix (0 à 9), répétitions permises. Principe multiplicatif : \\(10 \\times 10 \\times \\cdots \\times 10 = 10^{${k}}\\\\).`,
+        `On dessine ${k} cases : chacune offre 10 choix (0 à 9), répétitions permises. Principe multiplicatif : \\(10 \\times 10 \\times \\cdots \\times 10 = 10^{${k}}\\).`,
         `Le piège : vouloir « interdire les doublons » alors que l'énoncé les AUTORISE, ou oublier une case. Un k-uplet compte \\(n^k\\) possibilités — ni plus, ni moins.`));
   };
 
@@ -58,7 +58,7 @@
       uniq3(texN(n), [texN(n * 10), texN(Math.pow(9, k - 1)), texN(n / 10)]),
       1,
       EXPL(`Une position IMPOSÉE ne contribue qu'un seul choix : elle ne multiplie plus par 10.`,
-        `Case 1 : fixée sur 9, elle n'offre que 1 possibilité. Cases 2 à ${k} : 10 choix libres chacune. Total : \\(1 \\times 10^{${k - 1}} = ${texN(n)}\\\\).`,
+        `Case 1 : fixée sur 9, elle n'offre que 1 possibilité. Cases 2 à ${k} : 10 choix libres chacune. Total : \\(1 \\times 10^{${k - 1}} = ${texN(n)}\\).`,
         `\\(10^{${k}} = ${texN(Math.pow(10, k))}\\) compte TOUS les codes ; le code commençant par 9 n'en représente qu'un dixième. Une contrainte RÉDUIT toujours l'univers — jamais l'inverse.`));
   };
 
@@ -84,8 +84,8 @@
       M(texN(v)),
       uniq3(texN(v), [texN(v * n), texN(fact(n) * 2), texN(Math.pow(n, n))]),
       1,
-      EXPL(`Ranger complètement \\(n\\) objets distincts sur \\(n\\) places est une PERMUTATION : il y en a \\(n!\\\\).`,
-        `Première place : ${n} choix ; deuxième : \\(${n - 1}\\) ; … dernière : 1 seul. Total \\(${n}! = ${n} \\times ${n - 1} \\times \\cdots \\times 1 = ${texN(v)}\\\\).`,
+      EXPL(`Ranger complètement \\(n\\) objets distincts sur \\(n\\) places est une PERMUTATION : il y en a \\(n!\\).`,
+        `Première place : ${n} choix ; deuxième : \\(${n - 1}\\) ; … dernière : 1 seul. Total \\(${n}! = ${n} \\times ${n - 1} \\times \\cdots \\times 1 = ${texN(v)}\\).`,
         `Ranger TOUT l'univers n'est pas choisir : un rangement complet compte \\(n!\\) issues, pas \\(n^n\\) (qui autoriserait de poser deux fois le même livre). L'ordre compte ici, sans remise.`));
   };
 
@@ -101,7 +101,7 @@
       uniq3(texN(v), [texN(fact(L)), texN(fact(L) / (fact(n1) * fact(n2) * 2)), texN(fact(L - 1))]),
       1,
       EXPL(`Quand certaines lettres sont IDENTIQUES, échanger deux jumelles ne crée pas de nouveau mot : on divise \\(n!\\) par les factorielles des effectifs.`,
-        `« ${mot} » compte \\(${L}\\) lettres dont \\(${n1}\\) identiques d'un type et \\(${n2}\\) d'un autre : \\(\\dfrac{${L}!}{${n1}! \\times ${n2}!} = ${texN(v)}\\\\).`,
+        `« ${mot} » compte \\(${L}\\) lettres dont \\(${n1}\\) identiques d'un type et \\(${n2}\\) d'un autre : \\(\\dfrac{${L}!}{${n1}! \\times ${n2}!} = ${texN(v)}\\).`,
         `\\(${L}! = ${texN(fact(L))}\\) surcompte : les mots obtenus en échangeant seulement les lettres jumelles sont INDISCERNABLES. Une anagramme de plus n'apparaît pas parce qu'on permute des lettres identiques.`));
   };
 
@@ -114,8 +114,8 @@
       M(texN(v)),
       uniq3(texN(v), [texN(n * (n - 1) * (n - 2) / 6), texN(n * n * n), texN(v * 2)]),
       1,
-      EXPL(`Un podium est une suite ordonnée de 3 coureurs DISTINCTS : c'est un ARRANGEMENT \\(A_n^3 = n(n-1)(n-2)\\\\).`,
-        `Or : ${n} choix ; argent : \\(${n - 1}\\) restants ; bronze : \\(${n - 2}\\) restants. Principe multiplicatif : \\(${n} \\times ${n - 1} \\times ${n - 2} = ${texN(v)}\\\\).`,
+      EXPL(`Un podium est une suite ordonnée de 3 coureurs DISTINCTS : c'est un ARRANGEMENT \\(A_n^3 = n(n-1)(n-2)\\).`,
+        `Or : ${n} choix ; argent : \\(${n - 1}\\) restants ; bronze : \\(${n - 2}\\) restants. Principe multiplicatif : \\(${n} \\times ${n - 1} \\times ${n - 2} = ${texN(v)}\\).`,
         `Le même trio dans un ordre différent donne un podium DIFFÉRENT : l'ordre compte. Diviser par \\(3!\\) (réponse \\(${texN(v / 6)}\\)) compterait les COMBINAISONS — les groupes sans ordre. Piège classique podium / comité.`));
   };
 
@@ -128,8 +128,8 @@
       M(`${v}`),
       uniq3(`${v}`, [`${n * (n - 1)}`, `${n * n}`, `${v + n}`]),
       1,
-      EXPL(`Une poignée de main est un groupe de 2 personnes SANS ordre : c'est une COMBINAISON \\(\\binom{n}{2} = \\dfrac{n(n-1)}{2}\\\\).`,
-        `Chaque personne serre \\(${n - 1}\\) mains : \\(${n} \\times ${n - 1}\\) poignées… mais chacune est comptée DEUX fois (une fois par extrémité). D'où \\(\\dfrac{${n} \\times ${n - 1}}{2} = ${v}\\\\).`,
+      EXPL(`Une poignée de main est un groupe de 2 personnes SANS ordre : c'est une COMBINAISON \\(\\binom{n}{2} = \\dfrac{n(n-1)}{2}\\).`,
+        `Chaque personne serre \\(${n - 1}\\) mains : \\(${n} \\times ${n - 1}\\) poignées… mais chacune est comptée DEUX fois (une fois par extrémité). D'où \\(\\dfrac{${n} \\times ${n - 1}}{2} = ${v}\\).`,
         `« Alice serre Bob » et « Bob serre Alice » sont la MÊME paire : ne pas diviser par 2 compte chaque paire deux fois. La division par \\(k!\\) est ce qui distingue la combinaison de l'arrangement.`));
   };
 
@@ -143,7 +143,7 @@
       uniq3(`${v}`, [`${v * 2 - 2}`, `${n * (n - 1) / 2}`, `${Math.pow(2, n - 1)}`]),
       1,
       EXPL(`Chaque élément est « dedans » ou « dehors » : 2 choix par élément, d'où \\(2^n\\) sous-ensembles — c'est la SOMME d'une ligne du triangle de Pascal.`,
-        `\\(\\binom{${n}}{0} + \\binom{${n}}{1} + \\cdots + \\binom{${n}}{${n}} = 2^{${n}} = ${v}\\\\) : les coefficients de la ligne \\(${n}\\) comptent les sous-ensembles de chaque taille.`,
+        `\\(\\binom{${n}}{0} + \\binom{${n}}{1} + \\cdots + \\binom{${n}}{${n}} = 2^{${n}} = ${v}\\) : les coefficients de la ligne \\(${n}\\) comptent les sous-ensembles de chaque taille.`,
         `Retirer l'ensemble vide et l'ensemble complet donnerait \\(${v - 2}\\), pas \\(${v}\\) : l'énoncé les INCLUT. La ligne de Pascal compte TOUTES les tailles, de 0 à \\(${n}\\).`));
   };
 
@@ -158,8 +158,8 @@
       M(`${v}`),
       uniq3(`${v}`, [`${a + b}`, `${a + b - 2 * both}`, `${Math.max(a, b)}`]),
       1,
-      EXPL(`Pour compter « A ou B », on additionne puis on RETIRE l'intersection comptée deux fois : \\(\\text{card}(A \\cup B) = \\text{card}(A) + \\text{card}(B) - \\text{card}(A \\cap B)\\\\).`,
-        `Les ${both} bilingues sont comptés deux fois dans \\(${a} + ${b} = ${a + b}\\) : on les retranche une fois, d'où \\(${a} + ${b} - ${both} = ${v}\\\\).`,
+      EXPL(`Pour compter « A ou B », on additionne puis on RETIRE l'intersection comptée deux fois : \\(\\text{card}(A \\cup B) = \\text{card}(A) + \\text{card}(B) - \\text{card}(A \\cap B)\\).`,
+        `Les ${both} bilingues sont comptés deux fois dans \\(${a} + ${b} = ${a + b}\\) : on les retranche une fois, d'où \\(${a} + ${b} - ${both} = ${v}\\).`,
         `\\(${a + b}\\) surcompte les ${both} bilingues ; \\(${a + b - 2 * both}\\) les soustrait deux fois et les perd complètement. Le crible retranche l'intersection UNE SEULE fois.`));
   };
 
@@ -174,7 +174,7 @@
       uniq3(`${none}`, [`${total - auMoins + 1}`, `${auMoins}`, `${none + total}`]),
       1,
       EXPL(`Face à un « au moins un », on calcule le COMPLÉMENTAIRE : ce qui reste de l'univers une fois la réunion retirée.`,
-        `Zone « au moins un » = \\(${auMoins}\\) élèves ; le reste de la classe n'a voté pour personne : \\(${total} - ${auMoins} = ${none}\\\\). C'est la zone blanche, hors des deux cercles du diagramme.`,
+        `Zone « au moins un » = \\(${auMoins}\\) élèves ; le reste de la classe n'a voté pour personne : \\(${total} - ${auMoins} = ${none}\\). C'est la zone blanche, hors des deux cercles du diagramme.`,
         `Le piège est d'additionner au lieu de soustraire : les électeurs des deux candidats ne se recrutent pas dans les non-votants. « Aucun » = total − « au moins un », TOUJOURS plus simple que d'énumérer.`));
   };
 
@@ -202,7 +202,7 @@
       uniq3(`${v}`, [`${binom(k + p, p)}`, `${binom(k, p)}`, `${k * p}`]),
       1,
       EXPL(`Répartir \\(k\\) objets identiques entre \\(p\\) destinataires se modèle par \\(k\\) étoiles séparées par \\(p-1\\) barres : \\(\\binom{k+p-1}{p-1}\\) placements.`,
-        `${k} étoiles + ${p - 1} barres = \\(${k + p - 1}\\) symboles ; on choisit les places des barres : \\(\\binom{${k + p - 1}}{${p - 1}} = ${v}\\\\). Chaque séquence d'étoiles entre deux barres = le tas d'un enfant.`,
+        `${k} étoiles + ${p - 1} barres = \\(${k + p - 1}\\) symboles ; on choisit les places des barres : \\(\\binom{${k + p - 1}}{${p - 1}} = ${v}\\). Chaque séquence d'étoiles entre deux barres = le tas d'un enfant.`,
         `Les bonbons étant IDENTIQUES, l'ordre dans un tas ne compte pas : on ne multiplie PAS par \\(${k}!\\). Et un enfant peut recevoir 0 bonbon : deux barres peuvent être adjacentes — c'est toute la force du modèle étoiles et barres.`));
   };
 })();
@@ -213,16 +213,16 @@
 Object.assign(FICHES, {
   'denombrement': { titre: '🔢 Dénombrement : compter sans dessiner', html: `
     <p><b>Les quatre questions concrètes (avant tout calcul) :</b> ① l'ordre compte-t-il ? ② les éléments peuvent-ils se répéter ? ③ tout l'univers est-il utilisé ? ④ l'énoncé contient-il « au moins un » ? → passer par le contraire (« aucun »).</p>
-    <p><b>Principe multiplicatif :</b> étapes indépendantes → on MULTIPLIE les choix : \\(n_1 \\times n_2 \\times \\cdots \\times n_k\\\\). Principe additif : cas DISJOINTS → on additionne (attention aux chevauchements !).</p>
+    <p><b>Principe multiplicatif :</b> étapes indépendantes → on MULTIPLIE les choix : \\(n_1 \\times n_2 \\times \\cdots \\times n_k\\). Principe additif : cas DISJOINTS → on additionne (attention aux chevauchements !).</p>
     <p><b>k-uplets (répétition libre) :</b> \\(n^k\\) — codes PIN, plaques. Une position IMPOSÉE n'apporte qu'1 choix, pas \\(n\\).</p>
-    <p><b>Permutations :</b> ranger \\(n\\) objets distincts sur \\(n\\) places : \\(n!\\\\). Avec jumeaux (anagrammes) : \\(\\dfrac{n!}{n_1! \\times n_2! \\times \\cdots}\\\\) (RADAR : \\(\\dfrac{5!}{3!\\,2!} = 10\\)).</p>
-    <p><b>Arrangements (ordre, sans remise) :</b> \\(A_n^k = n(n-1)\\cdots(n-k+1) = \\dfrac{n!}{(n-k)!}\\\\) — un podium or-argent-bronze.</p>
-    <p><b>Combinaisons (sans ordre) :</b> \\(\\binom{n}{k} = \\dfrac{n!}{k!\\,(n-k)!}\\\\) — une poignée de billes, un comité. Symétrie : \\(\\binom{n}{k} = \\binom{n}{n-k}\\) ; chaque combinaison engendre \\(k!\\) arrangements.</p>
+    <p><b>Permutations :</b> ranger \\(n\\) objets distincts sur \\(n\\) places : \\(n!\\). Avec jumeaux (anagrammes) : \\(\\dfrac{n!}{n_1! \\times n_2! \\times \\cdots}\\) (RADAR : \\(\\dfrac{5!}{3!\\,2!} = 10\\)).</p>
+    <p><b>Arrangements (ordre, sans remise) :</b> \\(A_n^k = n(n-1)\\cdots(n-k+1) = \\dfrac{n!}{(n-k)!}\\) — un podium or-argent-bronze.</p>
+    <p><b>Combinaisons (sans ordre) :</b> \\(\\binom{n}{k} = \\dfrac{n!}{k!\\,(n-k)!}\\) — une poignée de billes, un comité. Symétrie : \\(\\binom{n}{k} = \\binom{n}{n-k}\\) ; chaque combinaison engendre \\(k!\\) arrangements.</p>
     <p><b>Triangle de Pascal :</b> \\(\\binom{n}{k} = \\binom{n-1}{k-1} + \\binom{n-1}{k}\\) (les comités qui contiennent Léa + ceux qui ne la contiennent pas). Somme d'une ligne : \\(2^n\\) = nombre de sous-ensembles.</p>
-    <p><b>Inclusion-exclusion :</b> \\(\\text{card}(A \\cup B) = \\text{card}(A) + \\text{card}(B) - \\text{card}(A \\cap B)\\\\) ; à 3 ensembles : somme des cartes − somme des paires + le cœur. Complémentaire : « au moins un » = Total − « aucun ».</p>
+    <p><b>Inclusion-exclusion :</b> \\(\\text{card}(A \\cup B) = \\text{card}(A) + \\text{card}(B) - \\text{card}(A \\cap B)\\) ; à 3 ensembles : somme des cartes − somme des paires + le cœur. Complémentaire : « au moins un » = Total − « aucun ».</p>
     <p><b>Principe des tiroirs :</b> \\(n+1\\) objets dans \\(n\\) tiroirs → un tiroir contient au moins 2 objets. On raisonne sur le PIRE CAS.</p>
     <p><b>Étoiles et barres :</b> répartir \\(k\\) objets identiques entre \\(p\\) destinataires : \\(\\binom{k+p-1}{p-1}\\) façons (les barres peuvent être adjacentes : un destinataire peut recevoir 0 objet).</p>
-    <p><b>Arbre de décision :</b> suite ordonnée avec répétition → \\(n^k\\) ; sans répétition → arrangement ; rangement complet → \\(n!\\\\) ; groupe sans ordre → combinaison ; « au moins un » → complémentaire ; objets identiques → étoiles et barres.</p>` }
+    <p><b>Arbre de décision :</b> suite ordonnée avec répétition → \\(n^k\\) ; sans répétition → arrangement ; rangement complet → \\(n!\\) ; groupe sans ordre → combinaison ; « au moins un » → complémentaire ; objets identiques → étoiles et barres.</p>` }
 });
 
 /* ------------------------------------------------------------

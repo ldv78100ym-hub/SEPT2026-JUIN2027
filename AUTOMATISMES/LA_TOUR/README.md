@@ -12,7 +12,7 @@ simples**, l'**horodatage de la dernière mise à jour**, la **révision
 personnalisée**, l'**intégration des documents « Évolutions » et
 « Proportions »** et l'**explorateur de liens du programme** — une
 succession de sous-graphes centrés sur une notion ou une zone, où
-l'élève voit que les 196 notions sont toutes reliées, directement
+l'élève voit que les 209 notions sont toutes reliées, directement
 ou indirectement (voir plus bas).
 
 ## Structure
@@ -206,6 +206,65 @@ la-tour-des-maths/
     │                                  « Fractions & puissances », 3
     │                                  notions, 2 sous-catégories → 196
     │                                  étages)
+    ├── 11q-exponentielles-logarithmes.js
+    │                                  ← exponentielles & logarithmes
+    │                                  (documents « Exponentielles »,
+    │                                  « Logarithme décimal » & sections
+    │                                  fonctions des maths
+    │                                  complémentaires) : a^u·a^v,
+    │                                  équation a^x = b, variations,
+    │                                  log & puissances de 10,
+    │                                  log(AB) = log A + log B, seuils
+    │                                  exponentiels, repères
+    │                                  logarithmiques, ln & exp
+    │                                  réciproques, croissances
+    │                                  comparées — 11 générateurs,
+    │                                  fiche « Exponentielles &
+    │                                  logarithmes », 4 notions,
+    │                                  1 catégorie → 200 étages)
+    ├── 11r-fonction-inverse.js     ← fonction inverse (document
+    │                                  T_STI2D « Fonction inverse ») :
+    │                                  image & antécédent, décroissance
+    │                                  par intervalles, équation 1/x = a
+    │                                  & coût moyen, hyperbole &
+    │                                  asymptotes — 4 générateurs,
+    │                                  complément de la fiche
+    │                                  « Fonctions », 1 notion,
+    │                                  1 sous-catégorie → 201 étages)
+    ├── 11s-binomiale-stats.js      ← loi binomiale & statistiques
+    │                                  (documents « Crumble Hall », STS
+    │                                  « Statistiques » & « Statistiques
+    │                                  inférentielles », « Erreurs ») :
+    │                                  schéma de Bernoulli, P(X = k),
+    │                                  événement contraire, espérance np,
+    │                                  variance & écart-type, dispersion,
+    │                                  fluctuation, confiance,
+    │                                  incertitudes, propagation,
+    │                                  justesse & fidélité — 12
+    │                                  générateurs, fiche « Fluctuation,
+    │                                  confiance & incertitudes » +
+    │                                  compléments « Probabilités » /
+    │                                  « Statistiques », 5 notions,
+    │                                  2 sous-catégories → 206 étages)
+    ├── 11t-valeurs-propres.js      ← valeurs & vecteurs propres
+    │                                  (document CPGE « L'Affaire des
+    │                                  Trois Colonnes ») : invariant
+    │                                  « somme des lignes », matrice
+    │                                  triangulaire, trace &
+    │                                  déterminant, sous-espace propre
+    │                                  (A−λI)v = 0 — 4 générateurs,
+    │                                  fiche « Algèbre linéaire », 1
+    │                                  notion, 1 catégorie (CPGE) → 207
+    │                                  étages)
+    ├── 11u-limites-fonctions.js    ← limites de fonctions & continuité
+    │                                  (document maths complémentaires,
+    │                                  sections 1-2) : termes
+    │                                  dominants, croissances comparées,
+    │                                  formes indéterminées, asymptotes,
+    │                                  TVI & corollaire d'unicité — 6
+    │                                  générateurs, fiche « Limites,
+    │                                  continuité & TVI », 2 notions,
+    │                                  1 sous-catégorie → 209 étages)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -257,7 +316,7 @@ la-tour-des-maths/
     fonctions, dérivées, tableaux, suites, proportionnalité, probabilités,
     statistiques, vecteurs, espace, complexes, Python, littéral, logique) —
     ouvertes d'un clic, LaTeX compris.
-  - `GEN_INFO` : pour chacun des 365 générateurs, un **libellé** clair, un
+  - `GEN_INFO` : pour chacun des 402 générateurs, un **libellé** clair, un
     **rappel** court (infobulle au survol) et ses **fiches** associées.
   - Helpers : `tdmGenLabel`, `tdmGenRappel`, `tdmGenFiches`,
     `tdmElemsDeNotion`, `tdmFichesDeNotion`.
@@ -730,6 +789,79 @@ dans le jeu. Seuls les volets inédits — « Facteurs cachés »,
 déductive », « Fractions piégées » et « Techniques de pro » — sont
 devenus des étages.
 
+## Intégration des documents « Exponentielles, Fonction inverse, Statistiques & Valeurs propres »
+
+Deuxième vague d'intégration du dépôt : les notions mathématiques
+restées sans étage sont comblées à partir des documents «
+Exponentielles » (T_STI2D), « Logarithme décimal », des sections
+fonctions et limites des maths complémentaires (TG), « Fonction
+inverse » (T_STI2D), « Crumble Hall — la loi binomiale » (T_STI2D)
+accompagné des documents STS « Statistiques », « Statistiques
+inférentielles » et « Erreurs », et « L'Affaire des Trois Colonnes »
+(valeurs et vecteurs propres, CPGE). **13 nouvelles notions** insérées
+sous le sommet (la tour passe de 196 à **209 étages**), **37
+générateurs**, **4 fiches** (« 🔋 Exponentielles & logarithmes », « 🧪
+Fluctuation, confiance & incertitudes », « 🔬 Valeurs & vecteurs
+propres », « 📏 Limites, continuité & TVI »), 3 fiches enrichies («
+Probabilités », « Statistiques », « Fonctions »), **2 catégories
+nouvelles** dans la progression (« 🔋 Exponentielles & logarithmes »,
+« 🔬 Algèbre linéaire (CPGE) ») et 3 sous-catégories enrichies ( «
+Probabilités & statistiques » : loi binomiale & paramètres, dispersion/
+estimation/incertitudes ; « Fonctions & lectures graphiques » :
+fonction inverse et limites/continuité/TVI). Des fiches-ponts relient
+les nouveaux contenus au reste du programme : binomiale ↔
+probabilités, seuils exponentiels ↔ dénombrement, valeurs propres ↔
+calcul littéral, limites ↔ suites, incertitudes ↔ unités. Tout reste
+lié dans le graphe.
+
+| Notion (étage) | Éléments simples (générateurs) |
+|---|---|
+| 🟩 Fonctions exponentielles de base a | a^u·a^v = a^(u+v) ; (a^u)^v = a^(uv) ; équation a^x = b ⇒ x = log_a b ; variations selon a ≶ 1 |
+| 🟩 Logarithme décimal : définition & propriétés | log x = y ⇔ x = 10^y (log des petits nombres négatif) ; log(AB) = log A + log B, log(A/B) = log A − log B, log A^k = k log A |
+| 🟪 Seuils exponentiels & repères logarithmiques | 2^n > 10^6 ⇔ n log 2 > 6 (premier entier qui convient) ; sur un axe en décades, le milieu de [10^k ; 10^(k+2)] est 10^(k+1) |
+| 🩷 ln & exp : réciproques & croissances | ln(e^a) = a et e^(ln b) = b (aller-retour) ; hiérarchie ln x ≪ x^n ≪ e^x ; x·ln x → 0 en 0⁺ |
+| 🟦 Fonction inverse : variations & asymptotes | image 1/a ≠ opposé ; décroissante sur ]−∞;0[ ET sur [0;+∞[ mais pas sur ℝ* ; 1/x = a ⇔ x = 1/a, coût moyen CM(q) = C/q ; hyperbole, asymptotes x = 0 et y = 0 |
+| 🟦 Loi binomiale : schéma & P(X=k) | épreuve de Bernoulli répétée n fois, chemins comptés par C(n,k) ; P(X=k) = C(n,k)·p^k·(1−p)^(n−k) ; « au moins un » = 1 − (1−p)^n |
+| 🟦 Binomiale : espérance, variance, écart-type | E = np ; V = np(1−p) (pas np !) ; σ = √(np(1−p)), valeurs typiques entre np−2σ et np+2σ |
+| 🟧 Dispersion : variance & écart-type | V = Σ(xᵢ−x̄)²/n puis σ = √V ; même moyenne ≠ même dispersion (séries de pH, contrôle qualité) |
+| 🟩 Fluctuation & confiance : estimer | IF [p − 1/√n ; p + 1/√n] quand p est annoncée (rejet au seuil 5 %) ; IC [f − 1/√n ; f + 1/√n] quand on estime p par la fréquence |
+| 🟪 Incertitudes & calcul d'erreur | incertitude relative u/x × 100 % ; propagation : somme → absolues, produit → relatives ; justesse (moyenne) ≠ fidélité (dispersion), la répétition ne corrige pas un biais |
+| 🟥 Valeurs propres & vecteurs propres | Av = λv (v ≠ 0) ; lignes de somme constante s ⇒ (1,1,1) propre pour s ; triangulaire ⇒ valeurs propres sur la diagonale ; trace = Σλ et det = Πλ ; vecteurs = solutions non nulles de (A−λI)v = 0 |
+| 🟩 Limites de fonctions & asymptotes | termes dominants des fractions rationnelles ; croissances comparées ; formes indéterminées (∞−∞, ∞/∞, 0/0, 0×∞) à lever par factorisation ; lim = L ⇒ y = L, limite infinie en a ⇒ x = a |
+| 🟩 Continuité & théorème des valeurs intermédiaires | TVI : continue + valeurs de signes opposés ⇒ f s'annule (existence, pas unicité) ; corollaire : stricte monotonie + k entre f(a) et f(b) ⇒ solution unique (dichotomie) |
+
+Contenu couvert : la famille exponentielle et le logarithme décimal
+des T_STI2D aux maths complémentaires (propriétés, équations, seuils,
+repères logarithmiques, ln/exp réciproques et hiérarchie des
+croissances comparées), la fonction inverse et ses pièges (décroissance
+par intervalles, valeurs interdite et asymptotes, coût moyen), la loi
+binomiale complète et son triptyque espérance/variance/écart-type, la
+statistique au-delà de la moyenne (dispersion, intervalles de
+fluctuation et de confiance, incertitudes de mesure, propagation,
+justesse et fidélité), l'algèbre linéaire CPGE (valeurs et vecteurs
+propres, invariants trace/déterminant, sous-espaces propres) et
+l'analyse de Terminale (limites de fonctions, formes indéterminées,
+asymptotes, continuité et TVI avec son corollaire d'unicité).
+
+Correctif d'échappement LaTeX : les modules 11m-11p livrés
+précédemment contenaient des séquences à quatre backslashes (rendu
+parasite « \dfrac », « \log »…) et des résidus « <br>e » là où « \neq »
+était attendu. L'ensemble a été normalisé (2 backslashes dans le
+source pour 1 à l'exécution, `<br>` pour les sauts de ligne des
+prompts, `\neq`/`\ne` restaurés), un audit statique
+(`.test/audit-escapes.py`) veille sur la convention et le banc
+d'essai vérifie désormais AUSSI au runtime (section 17quater) qu'aucun
+texte généré ne contient de double backslash parasite ni de « <br>e ».
+
+Documents non intégrés (volontairement) : les enseignements
+scientifiques (cristaux, physique du son), la cinématique des
+véhicules, les documents « politique » et « passation », les
+évaluations et lecteurs externes, les portails d'index et le jeu
+séparé « Opération Zéro Absolu » — soit hors périmètre mathématique
+du jeu, soit déjà couverts par des mécanismes existants. Après cette
+vague, tout le contenu mathématique du dépôt a désormais son étage
+dans la tour.
+
 ## Dossier de présentation « rapport-publication.html »
 
 Document autonome lié à la tour (bouton « 📄 Dossier de présentation »
@@ -737,18 +869,18 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (20 catégories, 196 notions, 365 générateurs, du cycle 3 au
+contenus (22 catégories, 209 notions, 402 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (38 modules, banc d'essai 22 sections, chiffrement
+technique (43 modules, banc d'essai 23 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 ## Progression des notions par catégories
 
-La modale « 📚 Progression des notions » ne liste plus les 196 notions
+La modale « 📚 Progression des notions » ne liste plus les 209 notions
 dans l'ordre de construction de la tour : le nouveau module
-`11f-progression.js` les regroupe en **20 catégories thématiques**,
+`11f-progression.js` les regroupe en **22 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
 « X/Y validées »). Les éléments simples de chaque notion restent
 inchangés (libellé, rappel au survol, statistiques ✓/✗, fiches) ;
@@ -785,7 +917,7 @@ trinôme, polynômes de degré 3 (lycée), équations produit-nul et
 d'inéquations. Chaque notion apparaît dans **une seule**
 sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
-les 196 notions sont classées, vérifié par le banc d'essai).
+les 209 notions sont classées, vérifié par le banc d'essai).
 
 ## Deux animations au choix : tour 3D & balle rebondissante
 
@@ -823,17 +955,17 @@ L'écran d'accueil (et les modales d'identité et de bilan) est désormais
 **responsive** : hauteur plafonnée à celle de l'écran
 (`max-height: calc(100dvh - 36px)` + repli `100vh`), défilement interne,
 version compacte sous 640 px de haut — le bouton COMMENCER L'ASCENSION
-reste toujours visible, et les compteurs de notions (« 196 notions »)
+reste toujours visible, et les compteurs de notions (« 209 notions »)
 sont remplis dynamiquement.
 
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 22 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 23 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
-sommaire décomposé en catégories thématiques (20 catégories,
-196 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 365 générateurs, segments LaTeX
+sommaire décomposé en catégories thématiques (22 catégories,
+209 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
+notions passées, couverture des 402 générateurs, segments LaTeX
 propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
 interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
@@ -850,6 +982,10 @@ principale », vérification des 2 nouvelles sous-catégories), nouvelles
 notions second degré (19 générateurs × 25 tirages, leçon d'erreur →
 fiche « Déterminer un trinôme par ses conditions », vérification de la
 nouvelle sous-catégorie « Sommet, taux de variation & conditions »),
+nouvelles notions maths expertes, factorisation/dénombrement/logique
+& fractions pro puis exponentielles/fonction inverse/binomiale/valeurs
+propres/limites (25 tirages par générateur, options distinctes,
+propreté LaTeX vérifiée au runtime, leçon d'erreur → fiche liée),
 graphe des notions (sous-graphes, drag & drop, survol des liaisons,
 anti-chevauchement), 2ᵉ animation « balle rebondissante » (bascule du
 menu, balle plus grosse, montée heureuse et fêtée — bond, traînée,
@@ -867,7 +1003,7 @@ responsive (hauteur plafonnée, compteurs dynamiques).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 38 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 43 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

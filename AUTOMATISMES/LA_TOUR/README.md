@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 6 feuilles de style et 45 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 48 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -14,7 +14,7 @@ personnalisée**, l'**intégration des documents « Évolutions » et
 tableau croisé** (vue « 🎓 Par niveau » de la progression, filtres par
 niveau de la révision) — une
 succession de sous-graphes centrés sur une notion ou une zone, où
-l'élève voit que les 209 notions sont toutes reliées, directement
+l'élève voit que les 228 notions sont toutes reliées, directement
 ou indirectement (voir plus bas).
 
 ## Structure
@@ -266,15 +266,44 @@ la-tour-des-maths/
     │                                  TVI & corollaire d'unicité — 6
     │                                  générateurs, fiche « Limites,
     │                                  continuité & TVI », 2 notions,
-    │                                  1 sous-catégorie → 209 étages)
+    │                                  1 sous-catégorie → 228 étages)
     ├── 11v-niveaux.js              ← niveaux de classe & tableau croisé :
     │                                  NIVEAUX (7 niveaux : cycle 3, cycle 4,
     │                                  2de, 1re, terminale, maths expertes,
     │                                  CPGE), NOTION_LEVELS (rattachement des
-    │                                  209 notions), tdmCroise() — alimente la
+    │                                  228 notions), tdmCroise() — alimente la
     │                                  vue « 🎓 Par niveau » de la progression,
     │                                  les filtres de la révision et le
     │                                  dossier (aucun nouvel étage, 44ᵉ module)
+    ├── 11w-lois-inference.js        ← audit GitHub : lois continues &
+    │                                  inférence — loi normale (centrer/
+    │                                  réduire, 68-95-99,7), approximations
+    │                                  de Poisson & de la normale, loi
+    │                                  exponentielle, loi uniforme, densité
+    │                                  & répartition, TCL & échantillonnage,
+    │                                  intervalles de confiance, tests
+    │                                  d'hypothèses, cartes de contrôle
+    │                                  (règles de Nelson) : 11 générateurs,
+    │                                  fiches « lois-continues » &
+    │                                  « inference-stats », 9 notions CPGE
+    │                                  (45ᵉ module)
+    ├── 11x-integrales-edo.js        ← audit GitHub : intégration (aire,
+    │                                  linéarité & Chasles, valeur moyenne,
+    │                                  changement de variable, volume de
+    │                                  révolution), ajustements linéarisés
+    │                                  & modèle logistique, équations
+    │                                  différentielles (y' = ay, y' = ay+b,
+    │                                  problème de Cauchy, variables
+    │                                  séparables) : 11 générateurs, fiches
+    │                                  « integration » & « equations-
+    │                                  differentielles », 7 notions (Tle &
+    │                                  CPGE, 46ᵉ module)
+    ├── 11y-automatismes-sts.js       ← audit GitHub : indices base 100,
+    │                                  binaire/hexadécimal & systèmes
+    │                                  positionnels, effectifs &
+    │                                  fréquences cumulés : 3 générateurs,
+    │                                  fiche « statistiques » enrichie,
+    │                                  3 notions CPGE (47ᵉ module)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -333,7 +362,7 @@ la-tour-des-maths/
     fonctions, dérivées, tableaux, suites, proportionnalité, probabilités,
     statistiques, vecteurs, espace, complexes, Python, littéral, logique) —
     ouvertes d'un clic, LaTeX compris.
-  - `GEN_INFO` : pour chacun des 402 générateurs, un **libellé** clair, un
+  - `GEN_INFO` : pour chacun des 427 générateurs, un **libellé** clair, un
     **rappel** court (infobulle au survol) et ses **fiches** associées.
   - Helpers : `tdmGenLabel`, `tdmGenRappel`, `tdmGenFiches`,
     `tdmElemsDeNotion`, `tdmFichesDeNotion`.
@@ -400,11 +429,11 @@ L'élève compose, **pour la session en cours**, un menu de notions à
 réviser :
 
 - bouton « 🎯 Révision personnalisée… » du menu utilitaire → modale avec
-  les **209 notions**, un filtre de recherche, « Tout cocher /
+  les **228 notions**, un filtre de recherche, « Tout cocher /
   Tout décocher » et le décompte en direct ;
 - **des puces de filtrage par niveau de classe** (🌐 Tous, 🌱 Cycle 3 ·
-  15, 🌿 Cycle 4 · 32, 2de · 44, 1re · 75, Tle · 27, 🌟 Expertes · 14,
-  🏛 CPGE · 2) affinent la liste — combinées au filtre de recherche —
+  15, 🌿 Cycle 4 · 32, 2de · 44, 1re · 75, Tle · 29, 🌟 Expertes · 14,
+  🏛 CPGE · 19) affinent la liste — combinées au filtre de recherche —
   et chaque ligne porte son badge de niveau ;
 - une fois lancée, la tour ne pose **que** des questions de la sélection
   (`state.customPool` filtré dans `pickNotion`) — mêmes règles de
@@ -885,15 +914,15 @@ dans la tour.
 
 ## Niveaux de classe, vues « Par niveau » & tableau croisé
 
-Le nouveau module `11v-niveaux.js` rattache chacune des **209 notions**
+Le module `11v-niveaux.js` rattache chacune des **228 notions**
 à un **niveau de classe** conforme aux programmes officiels —
 7 niveaux : 🌱 Cycle 3 (CM1 · CM2 · 6e, 15 notions), 🌿 Cycle 4
 (5e · 4e · 3e, 32), 🎓 Seconde (44), 🎓 Première générale &
-technologique (75), 🎓 Terminale générale & technologique (27),
+technologique (75), 🎓 Terminale générale & technologique (29),
 🌟 Terminale maths expertes & complémentaires (14) et 🏛 Post-bac/CPGE
-(2). Le banc d'essai vérifie que la correspondance couvre exactement
-les 209 notions (aucune oubliée, aucune inconnue) et que les effectifs
-par niveau sont 15 + 32 + 44 + 75 + 27 + 14 + 2 = 209.
+(19). Le banc d'essai vérifie que la correspondance couvre exactement
+les 228 notions (aucune oubliée, aucune inconnue) et que les effectifs
+par niveau sont 15 + 32 + 44 + 75 + 29 + 14 + 19 = 228.
 
 Trois usages :
 
@@ -915,9 +944,9 @@ Trois usages :
   accepte aussi une liste d'ids (cellules cochées du tableau croisé) ;
 - **Dossier de présentation** : nouvelle section « 📊 Tableau croisé :
   niveaux de classe × notions à traiter » (22 lignes × 7 colonnes,
-  calculée depuis les données du jeu, totaux 209) et tous les
-  compteurs actualisés (209 notions, 402 générateurs, 22 catégories,
-  7 niveaux, 45 modules, banc d'essai 25 sections, novembre 2026).
+  calculée depuis les données du jeu, totaux 228) et tous les
+  compteurs actualisés (228 notions, 427 générateurs, 22 catégories,
+  7 niveaux, 48 modules, banc d'essai 26 sections, novembre 2026).
 
 Le rattachement suit les programmes : calcul et fractions au cycle 3-4,
 factorisations, systèmes, fonctions de référence et Python en 2de,
@@ -931,7 +960,7 @@ banc d'essai.
 
 ### 🆕 Modale « Quoi de neuf » à l'ouverture
 
-Un 45ᵉ module (`js/22-nouveautes.js`) affiche automatiquement, à
+Un 48ᵉ module (`js/22-nouveautes.js`) affiche automatiquement, à
 l'ouverture de la page, une modale d'alerte qui présente les mises à
 jour effectuées — et **met en avant la possibilité de cocher
 directement dans le tableau croisé les notions à réviser selon son
@@ -952,6 +981,45 @@ de la révision personnalisée :
 - API de test : `tdmNewsShow(force)`, `tdmNewsClose()`,
   `tdmNewsBox()` (section 21 du banc d'essai).
 
+### 🔍 Audit du dépôt GitHub : couverture totale
+
+L'audit complet du dépôt (annales BTS groupement D 2000-2026, cours
+« Statistiques inférentielles », progressions des classes, cours de
+l'enseignement scientifique, jeux mathématiques et problèmes) a croisé
+chaque notion abordée dans le repo avec les étages de la tour. Trois
+modules comblent les seules lacunes trouvées :
+
+- **`js/11w-lois-inference.js`** — lois continues & inférence : loi
+  normale (centrer/réduire, 68-95-99,7, approximation de la binomiale),
+  approximation de Poisson, loi exponentielle (durées de vie, sans
+  mémoire), loi uniforme, densité & fonction de répartition, théorème
+  central limite & distribution d'échantillonnage, intervalles de
+  confiance, tests d'hypothèses (p-valeur, risques α/β), cartes de
+  contrôle & règles de Nelson — 11 générateurs, fiches « Lois
+  continues » et « Échantillonnage, estimation & tests », 9 notions ;
+- **`js/11x-integrales-edo.js`** — intégration & équations
+  différentielles : aire sous la courbe (Riemann), linéarité & Chasles,
+  valeur moyenne, changement de variable, volume de révolution,
+  ajustements par transformation (linéarisation ln), modèle logistique,
+  `y' = ay`, `y' = ay + b` (solution particulière), problème de Cauchy,
+  variables séparables — 11 générateurs, fiches « Intégration » et
+  « Équations différentielles & modèles », 7 notions (les deux EDO en
+  Terminale, le reste en CPGE) ;
+- **`js/11y-automatismes-sts.js`** — automatismes des annales : indices
+  base 100 (évolutions enchaînées), binaire/hexadécimal & systèmes
+  positionnels, effectifs & fréquences cumulés (classes, médiane par
+  le polygone) — 3 générateurs, fiche « statistiques » enrichie,
+  3 notions CPGE.
+
+Bilan : **19 notions nouvelles, 25 générateurs, 2 fiches créées + 1
+enrichie, 6 sous-catégories** — la tour passe de 209 à **228 étages**
+(15 + 32 + 44 + 75 + 29 + 14 + 19) et de 402 à **427 générateurs**.
+Les contenus sans équivalent direct (enseignement scientifique :
+cristaux et son, jeux : vitesse et proportionnalité, problèmes :
+avions et moto-drone) sont couverts par les notions existantes
+(volumes, proportionnalité, « Isoler une grandeur », Python) — aucun
+doublon créé. Vérifié par la section 22 du banc d'essai.
+
 ## Dossier de présentation « rapport-publication.html »
 
 Document autonome lié à la tour (bouton « 📄 Dossier de présentation »
@@ -959,11 +1027,11 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (22 catégories, 209 notions, 402 générateurs, 7 niveaux de
+contenus (22 catégories, 228 notions, 427 générateurs, 7 niveaux de
 classe, du cycle 3 au post-bac), **tableau croisé niveaux × notions**
 (22 catégories en lignes, 7 niveaux en colonnes, effectifs calculés
 depuis les données du jeu), principes didactiques, architecture
-technique (45 modules, banc d'essai 25 sections, chiffrement
+technique (48 modules, banc d'essai 26 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
@@ -972,7 +1040,7 @@ d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 La modale « 📚 Progression des notions » offre **deux vues au choix**
 (boutons « 📋 Par catégorie » / « 🎓 Par niveau (tableau croisé) »). La
-vue par catégorie ne liste plus les 209 notions dans l'ordre de
+vue par catégorie ne liste plus les 228 notions dans l'ordre de
 construction de la tour : le module `11f-progression.js` les regroupe
 en **22 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
@@ -1011,7 +1079,7 @@ trinôme, polynômes de degré 3 (lycée), équations produit-nul et
 d'inéquations. Chaque notion apparaît dans **une seule**
 sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
-les 209 notions sont classées, vérifié par le banc d'essai).
+les 228 notions sont classées, vérifié par le banc d'essai).
 
 ## Deux animations au choix : tour 3D & balle rebondissante
 
@@ -1049,17 +1117,17 @@ L'écran d'accueil (et les modales d'identité et de bilan) est désormais
 **responsive** : hauteur plafonnée à celle de l'écran
 (`max-height: calc(100dvh - 36px)` + repli `100vh`), défilement interne,
 version compacte sous 640 px de haut — le bouton COMMENCER L'ASCENSION
-reste toujours visible, et les compteurs de notions (« 209 notions »)
+reste toujours visible, et les compteurs de notions (« 228 notions »)
 sont remplis dynamiquement.
 
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 25 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 26 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (22 catégories,
-209 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 402 générateurs, segments LaTeX
+228 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
+notions passées, couverture des 427 générateurs, segments LaTeX
 propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
 interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
@@ -1087,8 +1155,8 @@ menu, balle plus grosse, montée heureuse et fêtée — bond, traînée,
 croissant, plancher coulissant, larmes qui coulent vers le bas, pans de
 murs qui s'écrasent au sol, retour tour 3D), modale d'accueil
 responsive (hauteur plafonnée, compteurs dynamiques) et **niveaux de
-classe & tableau croisé** (7 niveaux, 209 notions couvertes une à une,
-effectifs 15/32/44/75/27/14/2, cellules du tableau croisé = effectifs
+classe & tableau croisé** (7 niveaux, 228 notions couvertes une à une,
+effectifs 15/32/44/75/29/14/19, cellules du tableau croisé = effectifs
 des catégories, bascule des vues de la progression, « Réviser ce
 niveau » pré-coche les notions du niveau, puces de filtrage de la
 révision, chiffres du dossier de présentation, **bulle d'information et
@@ -1098,8 +1166,13 @@ la révision pré-remplie, « ↺ Vider » efface) et **modale « Quoi de
 neuf » à l'ouverture** (affichage automatique au démarrage, contenu :
 coche directe dans le tableau croisé selon le niveau, option « Ne plus
 afficher au démarrage » persistée, réouverture par le bouton du menu,
-« 🎓 Découvrir le tableau croisé » → progression en vue « Par niveau »).
-`node .tests/test-tdm.mjs` → **TOUT PASSE**.
+« 🎓 Découvrir le tableau croisé » → progression en vue « Par niveau ») et
+**audit du dépôt GitHub** (19 notions nouvelles présentes et rattachées :
+17 CPGE + 2 Terminale, 25 générateurs tirant des QCM exploitables avec
+solution pédagogique, GEN_INFO complet, 6 sous-catégories raccrochées,
+fiches « lois-continues », « inference-stats », « integration »,
+« equations-differentielles » créées et fiche « statistiques » enrichie).
+`node .test/test-tdm.mjs` → **TOUT PASSE**.
 
 ## Choix techniques
 
@@ -1109,7 +1182,7 @@ afficher au démarrage » persistée, réouverture par le bouton du menu,
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 45 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 48 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

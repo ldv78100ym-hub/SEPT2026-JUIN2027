@@ -21,7 +21,7 @@ const NIVEAUX = [
   { code: 'cpge', icon: '🏛', nom: 'Post-bac (CPGE & prépa)',                       court: 'CPGE' }
 ];
 
-/* id de notion → code de niveau (les 209 notions de la tour). */
+/* id de notion → code de niveau (les 228 notions de la tour). */
 const NOTION_LEVELS = {};
 (function(){
   const put = function(code, ids){ ids.forEach(function(id){ NOTION_LEVELS[id] = code; }); };
@@ -64,11 +64,12 @@ const NOTION_LEVELS = {};
     'facto-cachees','facto-substitution',
     'den-permutations','den-arrangement','den-combinaisons','den-inclusion',
     'expo-basea','log-decimal','log-outils',
-    'binomiale','binom-parametres','estim-intervalles','incertitudes']);
+    'binomiale','binom-parametres','estim-intervalles','incertitudes',
+    'edo-lineaire','edo-cauchy']);
   put('exp', ['mx-div','mx-premiers','mx-congruence','mx-congruence-ops',
     'cplx-ops','cplx-eq','gr-vocab','gr-structure','gr-euler',
     'facto-complexes','frac-pro','ln-exp','lim-fonctions','continuite-tvi']);
-  put('cpge', ['den-expertes','al-vp']);
+  put('cpge', ['den-expertes','al-vp','loi-normale','approx-poisson','loi-exponentielle','loi-uniforme','densite-proba','tcl-echantillon','estim-moyenne','tests-hyp','carte-controle','integrale-aire','integrale-lineaire','integrale-substitution','volume-revolution','ajustement-logistique','indice-100','systemes-positionnels','freq-cumulees']);
 })();
 
 /* Renvoie le niveau d'une notion (objet NIVEAUX) ; repli neutre si inconnu. */

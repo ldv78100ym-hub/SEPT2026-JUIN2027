@@ -30,10 +30,11 @@
     '<div class="news-list">' +
     '<div class="news-item news-star"><b>⭐ Coche directement dans le tableau croisé ce que tu veux réviser selon ton niveau de classe.</b><br>' +
     'Ouvre <b>📚 Progression des notions → « 🎓 Par niveau »</b> : dans le tableau croisé, <b>survole un numéro</b> pour voir la liste des notions qu’il recouvre (avec leur statut), puis <b>clique pour le cocher</b> (✓) — autant de cases que tu veux, celles de ton niveau d’abord ! Clique enfin <b>« 🎯 Réviser la sélection »</b> : la tour ne posera que ces notions-là. Encore plus rapide : le bouton <b>« 🎯 Réviser ce niveau »</b> de chaque section de niveau pré-coche tout le niveau.</div>' +
-    '<div class="news-item"><b>🎓 Niveaux de classe.</b> Les 209 notions de la tour sont désormais rattachées à un niveau scolaire : 🌱 Cycle 3 (15 notions), 🌿 Cycle 4 (32), 🎓 Seconde (44), 🎓 Première (75), 🎓 Terminale (27), 🌟 Maths expertes &amp; complémentaires (14), 🏛 Post-bac/CPGE (2).</div>' +
+    '<div class="news-item"><b>🎓 Niveaux de classe.</b> Les 228 notions de la tour sont désormais rattachées à un niveau scolaire : 🌱 Cycle 3 (15 notions), 🌿 Cycle 4 (32), 🎓 Seconde (44), 🎓 Première (75), 🎓 Terminale (29), 🌟 Maths expertes &amp; complémentaires (14), 🏛 Post-bac/CPGE (19).</div>' +
     '<div class="news-item"><b>📊 Vue « 🎓 Par niveau ».</b> La progression affiche le tableau croisé des niveaux × 22 catégories (effectifs par case, totaux contrôlés), puis une section dépliable par niveau avec son compteur « X/Y validées ».</div>' +
     '<div class="news-item"><b>🎯 Révision personnalisée.</b> Puces de filtrage par niveau (avec effectifs), badge de niveau sur chaque ligne de notion, et « Réviser ce niveau » depuis la progression.</div>' +
-    '<div class="news-item"><b>📄 Dossier de présentation à jour.</b> Chiffres actualisés (209 notions, 402 générateurs, 44 modules) et tableau croisé complet « niveaux de classe × notions à traiter ».</div>' +
+    '<div class="news-item"><b>🔍 Audit du dépôt GitHub.</b> Tout le programme présent dans le dépôt est désormais couvert : lois continues &amp; inférence (normale, Poisson, échantillonnage, tests, cartes de contrôle), intégration &amp; équations différentielles, indices base 100, binaire/hexadécimal et effectifs cumulés — 19 notions nouvelles, surtout en Terminale et CPGE.</div>' +
+    '<div class="news-item"><b>📄 Dossier de présentation à jour.</b> Chiffres actualisés (228 notions, 427 générateurs, 48 modules) et tableau croisé complet « niveaux de classe × notions à traiter ».</div>' +
     '</div>' +
     '<label class="news-hide"><input type="checkbox" id="newsHide"> Ne plus afficher au démarrage</label>' +
     '<div class="news-actions">' +

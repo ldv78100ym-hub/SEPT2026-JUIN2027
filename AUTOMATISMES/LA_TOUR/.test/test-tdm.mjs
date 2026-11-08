@@ -191,12 +191,12 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(cats5.every(c => /\d+\/\d+ validée/.test(c.children[0].innerHTML)), 'compteur « X/Y validées » par catégorie');
   const items = [];
   cats5.forEach(c => [...c.children].forEach(e => { if(e.innerHTML.includes('tdm-elems')) items.push(e); }));
-  ok(items.length === 209, '209 notions listées (' + items.length + ')');
+  ok(items.length === 228, '228 notions listées (' + items.length + ')');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt')), 'chaque notion est décomposée en éléments simples');
   ok([...items].every(i => i.innerHTML.includes('data-tip=')), 'chaque élément porte son rappel au survol');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt-stats')), 'statistiques ✓/✗ par élément affichées');
   const ids5 = items.map(i => i.getAttribute('data-notion'));
-  ok(ids5.every(Boolean) && new Set(ids5).size === 209 && NOT().every(n => ids5.indexOf(n.id) >= 0),
+  ok(ids5.every(Boolean) && new Set(ids5).size === 228 && NOT().every(n => ids5.indexOf(n.id) >= 0),
      'chaque notion apparaît exactement une fois, toutes catégories confondues');
   const catDeriv = call(`PROG_CATS.filter(c => c.nom.indexOf('Dérivation') === 0)[0]`);
   ok(catDeriv && catDeriv.subs.some(s => s.nom === 'Étude complète sur un intervalle' && s.ids.join() === 'derivee-racines-I,derivee-variations-I'),
@@ -284,7 +284,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const data = call('tdmBuildDonnees()');
   const all = [...(data.notionsTraitees || []), ...(data.notionsATraiter || [])];
   const withElems = all.filter(n => Array.isArray(n.elements) && n.elements.length);
-  ok(withElems.length === 209, 'les 209 notions exportent leurs éléments simples');
+  ok(withElems.length === 228, 'les 228 notions exportent leurs éléments simples');
   const ex = withElems.find(n => n.nom && String(n.nom).includes('Second degré — formes'));
   ok(ex && ex.elements.length === 4 && ex.elements.every(e => e.libelle && e.posees !== undefined && e.reussies !== undefined && e.erreurs !== undefined), 'champs {generateur, libelle, posees, reussies, erreurs} présents');
   const exCanon = ex && ex.elements.find(e => e.generateur === 'canonique');
@@ -300,8 +300,8 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok($('lastSaveInfo').textContent.includes(majTxt.split(' à ')[0]), 'la date du jour apparaît dans le menu');
 
   console.log('== 10. Nouvelles notions « évolutions & proportions » ==');
-  ok(NOT().length === 209, 'la tour compte 209 notions (147 + 25 + 9 + 15 + 13 nouvelles)');
-  ok(vm.runInContext('N_TOT', sandbox) === 209, 'N_TOT = 209 (HUD, altitude, finalisation)');
+  ok(NOT().length === 228, 'la tour compte 228 notions (147 + 25 + 9 + 15 + 13 + 19 audit GitHub)');
+  ok(vm.runInContext('N_TOT', sandbox) === 228, 'N_TOT = 228 (HUD, altitude, finalisation)');
   const NEW_IDS = ['proportions', 'prop-de-prop', 'evol-cm', 'evol-global', 'evol-moyen'];
   const allIds = NOT().map(n => n.id);
   ok(NEW_IDS.every(id => allIds.includes(id)), 'les 5 nouvelles notions sont en sommet de tour');
@@ -344,7 +344,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   console.log('== 11. Révision personnalisée (menu 🎯) ==');
   call('tdmOpenRevision()');
   ok($('revisionModal').classList.contains('open'), 'modale de révision ouverte');
-  ok($('revList').children.length === 209, 'les 209 notions sont proposées à la sélection');
+  ok($('revList').children.length === 228, 'les 228 notions sont proposées à la sélection');
   call(`tdmLaunchRevision(['sd-formes', 'evol-global', 'proportions'])`);
   const stR = ST();
   ok(stR.customPool && stR.customPool.size === 3, 'sélection active : 3 notions au menu de la session');
@@ -377,7 +377,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const DR_IDS = ['droites-fractions', 'droites-axes', 'droites-positions', 'droites-cartesiennes', 'droites-pro', 'triangle-droites'];
   const allIds12 = NOT().map(n => n.id);
   ok(DR_IDS.every(id => allIds12.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-68,-62).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
+  ok(NOT().slice(-87,-81).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
   const DR_GENS = ['dEqFrac2pts','dPointCoeff','dPointOrdo','dDeuxImages','dLectureGraph','dInterAxes','dSigne','dPosition2','dIntersectPt','dParallele','dPerpendiculaire','trouPosition','dVectDir','dDistance','dPointFixe','dSeuilRentabilite','dPointEquilibre','dTolerance','triGravite','triOrthocentre'];
   let drErr = 0;
   for(const g of DR_GENS){
@@ -416,7 +416,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const FP_IDS = ['fractions-egalite', 'fractions-signes', 'fractions-priorites', 'fractions-operations', 'puissances-dix', 'puissances-regles'];
   const allIds13 = NOT().map(n => n.id);
   ok(FP_IDS.every(id => allIds13.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-62,-56).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
+  ok(NOT().slice(-81,-75).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
   const FP_GENS = ['frSimplifie','frFracEgales','frCompare','trouSimplifie','frSigneProduit','frEcritureSignes','frFractionSignee','frPriorites','frPemdasPiege','trouPriorites','frAddSous','frMul','frDiv','frEntierFrac','frPuissanceFrac','frCompose','p10Ops','p10Inverse','pSciExposant','pOrdreGrandeur','puBaseRelative','puMemeExp','puLitteral','puComposee'];
   let fpErr = 0;
   for(const g of FP_GENS){
@@ -455,7 +455,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const ET_IDS = ['derivee-racines-I', 'derivee-variations-I'];
   const allIds14 = NOT().map(n => n.id);
   ok(ET_IDS.every(id => allIds14.includes(id)), 'les 2 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-56,-54).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
+  ok(NOT().slice(-75,-73).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
   const ET_GENS = ['etFacto','etRacinesI','etSigneI','etImages','etVariations','etTangente','trouEtudeDerivee'];
   let etErr = 0;
   for(const g of ET_GENS){
@@ -494,7 +494,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SD_IDS = ['sd-sommet','sd-taux-variation','sd-conditions','sd-metamorphoses'];
   const allIds15 = NOT().map(n => n.id);
   ok(SD_IDS.every(id => allIds15.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-49,-45).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
+  ok(NOT().slice(-68,-64).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
   const SD_GENS = ['sd2Coeffs','sd2Axe','sd2Sommet','sd2Extremum','trouSommet','sd2Taux','sd2TauxMilieu','trouTaux','sd2Systeme3','sd2MemeOrdonnee','sd2Ax2','sd2SommetPoint','sd2Trajectoire','trouConditions','sd2Etirement','sd2Transl','sd2CanoniqueLecture','sd2DevCanon','trouMetamorphe'];
   let sdErr = 0;
   for(const g of SD_GENS){
@@ -537,7 +537,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SU_IDS = ['su-generalites','su-arithmetiques','su-geometriques','su-variation'];
   const allIds16 = NOT().map(n => n.id);
   ok(SU_IDS.every(id => allIds16.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-45,-41).every(n => SU_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets limites');
+  ok(NOT().slice(-64,-60).every(n => SU_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets limites');
   const SU_GENS = ['suListe','suExplicite','suRecurrence','suRang','trouSuitesGen','suArithRecon','suNonArith','suArithVariation','suArithProbleme','trouSuitesArith2','suGeoRecon','suGeoVariation','suGeoCM','suGeoProbleme','trouSuitesGeo2','suVarAffine','suVarQuad','suVarRat','suVarRacine','trouSuitesVar'];
   let suErr = 0;
   for(const g of SU_GENS){
@@ -581,7 +581,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const LIM_IDS = ['su-limites','su-fi','su-comparaison','su-arithmetico'];
   const allIds17 = NOT().map(n => n.id);
   ok(LIM_IDS.every(id => allIds17.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-4).every(n => LIM_IDS.includes(n.id)), 'elles ferment la tour (209 étages)');
+  ok(NOT().slice(-4).every(n => LIM_IDS.includes(n.id)), 'elles ferment la tour (228 étages)');
   const LIM_GENS = ['suLimRef','suLimOps','suConvergence','suEpsilon','trouLimitesRef','suFISomme','suFIQuotient','suFIConjuguee','suFITrigo','trouSuitesFI','suGendarmes','suGendarmesQuot','suComparaison','suMonotone','trouGendarmes','suPointFixe','suAuxiliaire','suArithGeoLimite','suArithGeoProbleme','suSommeGeo'];
   let limErr = 0;
   for(const g of LIM_GENS){
@@ -781,7 +781,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(call(`/fluctuation/i.test(FICHES['statistiques'].html)`), 'fiche « Statistiques » enrichie (dispersion, fluctuation, confiance)');
   ok(call(`/fonction inverse/i.test(FICHES['fonctions'].html)`), 'fiche « Fonctions » enrichie (fonction inverse, hyperbole, coût moyen)');
   const expoCat = call(`PROG_CATS.filter(c => c.nom === 'Exponentielles & logarithmes')[0]`);
-  ok(expoCat && expoCat.subs.length === 3 && expoCat.subs.reduce(function(a,s){ return a + s.ids.length; }, 0) === 4 && expoCat.subs.some(s => s.ids.join() === 'expo-basea') && expoCat.subs.some(s => s.ids.join() === 'log-decimal,log-outils') && expoCat.subs.some(s => s.ids.join() === 'ln-exp'), 'catégorie « Exponentielles & logarithmes » (4 notions, 3 sous-catégories)');
+  ok(expoCat && expoCat.subs.length === 4 && expoCat.subs.reduce(function(a,s){ return a + s.ids.length; }, 0) === 7 && expoCat.subs.some(s => s.ids.join() === 'expo-basea') && expoCat.subs.some(s => s.ids.join() === 'log-decimal,log-outils') && expoCat.subs.some(s => s.ids.join() === 'ln-exp') && expoCat.subs.some(s => s.ids.join() === 'edo-lineaire,edo-cauchy,ajustement-logistique'), 'catégorie « Exponentielles & logarithmes » (7 notions, 4 sous-catégories, dont EDO & modèles)');
   const alCat = call(`PROG_CATS.filter(c => c.nom === 'Algèbre linéaire (CPGE)')[0]`);
   ok(alCat && alCat.subs.length === 1 && alCat.subs[0].ids.join() === 'al-vp', 'catégorie « Algèbre linéaire (CPGE) » (1 notion, valeurs propres)');
   const probCat2 = call(`PROG_CATS.filter(c => c.nom === 'Probabilités & statistiques')[0]`);
@@ -812,7 +812,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   call('tdmOuvreGraphe()');
   const gWrap = call("(function(){ return document.body.children.filter(function(c){ return c.id === 'graphModal'; })[0]; })()");
   ok(gWrap && gWrap.classList.contains('open'), 'graphe : modale injectée et ouverte depuis le menu');
-  ok(call('NOTIONS.length') === 209 && call('PROG_CATS.length') === 22, 'graphe : 209 notions réparties en 22 catégories');
+  ok(call('NOTIONS.length') === 228 && call('PROG_CATS.length') === 22, 'graphe : 228 notions réparties en 22 catégories');
   const gTxt = el => { let s = el.textContent || ''; (el.children || []).forEach(c => { s += ' ' + gTxt(c); }); return s; };
   const gInn = el => { let s = el.innerHTML || ''; (el.children || []).forEach(c => { s += ' ' + gInn(c); }); return s; };
   /* ouverture en cours de partie : centrage direct sur la notion en cours */
@@ -833,9 +833,9 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(gEt.centre && gEt.centre.type === 'notion', 'graphe : notion centrée, sous-grape de liens rendu');
   ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'graphe : titre = nom de la notion centrée');
   ok($('gpBody').innerHTML.includes('Ce que tu vas t’entraîner à faire'), 'graphe : panneau mode élèves (« Ce que tu vas t’entraîner à faire »)');
-  ok($('gpBadges').innerHTML.includes('101 / 209'), 'graphe : badge d’étage (101/209)');
+  ok($('gpBadges').innerHTML.includes('101 / 228'), 'graphe : badge d’étage (101/228)');
   ok($('gReach').innerHTML.indexOf('saut') >= 0, 'graphe : barre de portée (liens directs, 2 sauts, 3 sauts)');
-  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 208, 'graphe : la portée couvre les 208 autres notions (preuve « tout est lié »)');
+  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 227, 'graphe : la portée couvre les 227 autres notions (preuve « tout est lié »)');
   ok($('gLinks').children.length > 0, 'graphe : liens SVG dessinés autour du centre');
   const gLab = gTxt($('gStage'));
   ok(gLab.indexOf('fiche') >= 0 || gLab.indexOf('sous-catégorie') >= 0 || gLab.indexOf('exercice') >= 0, 'graphe : intitulés des liaisons étiquetés (sous-catégorie / exercice / fiches)');
@@ -956,9 +956,9 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(/\.pbox\{[^}]*max-height:calc\(100dvh ?- ?36px\)/.test(cssQid.replace(/\n\s*/g, ' ')), 'modale bilan : garde-fou hauteur écran');
   const idxHtml = fs.readFileSync(ROOT + '/index.html', 'utf8');
   ok(idxHtml.includes('id="welTot"') && idxHtml.includes('id="welTot2"'), 'accueil : compteurs de notions dynamiques présents');
-  ok(idxHtml.includes('0 / 209'), 'HUD : total statique cohérent (0 / 209)');
-  ok(call('$(\'welTot\').textContent') === '209', 'accueil : compteur notions rempli (209)');
-  ok(call('$(\'welTot2\').textContent') === '209', 'accueil : deuxième compteur rempli (209)');
+  ok(idxHtml.includes('0 / 228'), 'HUD : total statique cohérent (0 / 228)');
+  ok(call('$(\'welTot\').textContent') === '228', 'accueil : compteur notions rempli (228)');
+  ok(call('$(\'welTot2\').textContent') === '228', 'accueil : deuxième compteur rempli (228)');
 
   /* l'animation alternative : bascule via le bouton du menu */
   call('state.floor = 0');
@@ -1063,9 +1063,9 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(call(`NIVEAUX.map(v => v.code).join()`) === 'c3,c4,2de,1re,tle,exp,cpge',
      'ordre scolaire : c3 → c4 → 2de → 1re → tle → expertes → CPGE');
   const lvlCounts = JSON.parse(call(`JSON.stringify(NIVEAUX.map(v => NOTIONS.filter(n => NOTION_LEVELS[n.id] === v.code).length))`));
-  ok(JSON.stringify(lvlCounts) === JSON.stringify([15, 32, 44, 75, 27, 14, 2]),
-     'effectifs par niveau : 15 / 32 / 44 / 75 / 27 / 14 / 2 (' + JSON.stringify(lvlCounts) + ')');
-  ok(call('Object.keys(NOTION_LEVELS).length') === 209, 'NOTION_LEVELS couvre exactement 209 notions');
+  ok(JSON.stringify(lvlCounts) === JSON.stringify([15, 32, 44, 75, 29, 14, 19]),
+     'effectifs par niveau : 15 / 32 / 44 / 75 / 29 / 14 / 19 (' + JSON.stringify(lvlCounts) + ')');
+  ok(call('Object.keys(NOTION_LEVELS).length') === 228, 'NOTION_LEVELS couvre exactement 228 notions');
   const lvlUnknown = call(`Object.keys(NOTION_LEVELS).filter(id => !NOTIONS.some(n => n.id === id))`);
   const lvlMissing = call(`NOTIONS.filter(n => !NOTION_LEVELS[n.id]).map(n => n.id).join()`);
   ok(lvlUnknown.length === 0, 'aucune entrée de NOTION_LEVELS inconnue des notions');
@@ -1074,8 +1074,8 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   /* Tableau croisé : cohérence des données */
   const crx = JSON.parse(call('JSON.stringify(tdmCroise())'));
   ok(crx.cats.length === 22, 'tableau croisé : 22 catégories en colonnes');
-  ok(crx.total === 209, 'somme des cellules du tableau croisé = 209');
-  ok(crx.rowTot.join() === '15,32,44,75,27,14,2', 'totaux par ligne = effectifs des niveaux');
+  ok(crx.total === 228, 'somme des cellules du tableau croisé = 228');
+  ok(crx.rowTot.join() === '15,32,44,75,29,14,19', 'totaux par ligne = effectifs des niveaux');
   const colCount = call(`PROG_CATS.map(c => [].concat(c.ids || [], ...(c.subs || []).map(s => s.ids)).length)`);
   ok(JSON.stringify(colCount) === JSON.stringify(crx.colTot), 'chaque colonne = nombre de notions de la catégorie');
 
@@ -1130,7 +1130,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok($('revisionModal').classList.contains('open'), '« Réviser la sélection » ouvre la modale de révision');
   ok($('revStatus').textContent.includes('22 notions cochées'),
      'les 22 notions des cellules cochées sont pré-cochées (' + $('revStatus').textContent + ')');
-  ok($('revList').children.length === 209, 'aucun filtre de niveau imposé : les 209 notions restent listées');
+  ok($('revList').children.length === 228, 'aucun filtre de niveau imposé : les 228 notions restent listées');
   call('tdmCloseRevision()');
   const clearBtn = selBar.children.find(c => c.classList.contains('croise-sel-clear'));
   (clearBtn.listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
@@ -1141,7 +1141,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(nivBoxes.every(b => b.children[1] && b.children[1].className.includes('rev-niveau-btn')),
      'chaque niveau a son bouton « 🎯 Réviser ce niveau »');
   const nivItems = nivBoxes.reduce((a, b) => a + b.children.filter(c => c.className.includes('notion-item')).length, 0);
-  ok(nivItems === 209, 'les 7 sections listent 209 notions au total (' + nivItems + ')');
+  ok(nivItems === 228, 'les 7 sections listent 228 notions au total (' + nivItems + ')');
   call("$('notionsList').children.length = 0");
   $('progViewCat').listeners.click.forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
   ok(call('PROG_VIEW') === 'cat' && $('notionsList').children.length === 22,
@@ -1170,19 +1170,19 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
     fake.setAttribute('data-lvl', '');
     ($('revLevels').listeners.click || []).forEach(f => f({ target: fake, stopPropagation(){}, preventDefault(){} }));
   })()`);
-  ok($('revList').children.length === 209, 'puce « 🌐 Tous » : les 209 notions reviennent');
+  ok($('revList').children.length === 228, 'puce « 🌐 Tous » : les 228 notions reviennent');
   call('tdmCloseRevision()');
   call("$('revList').children.length = 0");
   call('tdmOpenRevision()');
-  ok($('revList').children.length === 209, 'ouverture classique (sans niveau) : 209 notions, aucun filtre');
+  ok($('revList').children.length === 228, 'ouverture classique (sans niveau) : 228 notions, aucun filtre');
   call('tdmCloseRevision()');
 
   /* Dossier de présentation : chiffres à jour + section tableau croisé */
   const dossier = fs.readFileSync(ROOT + '/rapport-publication.html', 'utf8');
-  ok(dossier.includes('209'), 'dossier : compteur 209 présent');
-  ok(dossier.includes('402'), 'dossier : compteur 402 générateurs présent');
+  ok(dossier.includes('228'), 'dossier : compteur 228 présent');
+  ok(dossier.includes('427'), 'dossier : compteur 427 générateurs présent');
   ok(dossier.includes('22 catégories'), 'dossier : 22 catégories mentionnées');
-  ok(dossier.includes('45 modules'), 'dossier : 45 modules mentionnés');
+  ok(dossier.includes('48 modules'), 'dossier : 48 modules mentionnés');
   ok(dossier.includes('Tableau croisé'), 'dossier : section « tableau croisé niveaux × notions »');
   ok(dossier.includes('CPGE'), 'dossier : la colonne CPGE du tableau croisé figure bien');
   ok(dossier.includes('Réviser la sélection'), 'dossier : l’interactivité du tableau (bulles, cases cochables) est décrite');
@@ -1221,6 +1221,36 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   call('tdmNewsShow()');
   ok($('newsModal').classList.contains('open'), 'l’alerte se montre à nouveau à l’ouverture');
   call('tdmNewsClose()');
+
+  /* ================================================================
+     22. Audit du dépôt GitHub : couverture totale des notions du repo
+     ================================================================ */
+  console.log('== 22. Audit du dépôt GitHub : lois continues, intégration & EDO ==');
+  const AUDIT_IDS = ['loi-normale','approx-poisson','loi-exponentielle','loi-uniforme','densite-proba','tcl-echantillon','estim-moyenne','tests-hyp','carte-controle','integrale-aire','integrale-lineaire','integrale-substitution','volume-revolution','edo-lineaire','edo-cauchy','ajustement-logistique','indice-100','systemes-positionnels','freq-cumulees'];
+  ok(AUDIT_IDS.length === 19 && AUDIT_IDS.every(id => NOT().some(n => n.id === id)), 'les 19 notions de l’audit GitHub sont présentes');
+  const audLvl = call(`(function(){ const ids = ${JSON.stringify(AUDIT_IDS)}; return ids.map(id => id + ':' + (NOTION_LEVELS[id] || '??')).join(','); })()`);
+  ok(audLvl === 'loi-normale:cpge,approx-poisson:cpge,loi-exponentielle:cpge,loi-uniforme:cpge,densite-proba:cpge,tcl-echantillon:cpge,estim-moyenne:cpge,tests-hyp:cpge,carte-controle:cpge,integrale-aire:cpge,integrale-lineaire:cpge,integrale-substitution:cpge,volume-revolution:cpge,edo-lineaire:tle,edo-cauchy:tle,ajustement-logistique:cpge,indice-100:cpge,systemes-positionnels:cpge,freq-cumulees:cpge',
+     'niveaux : 17 notions CPGE + 2 en Terminale (équations différentielles)');
+  const AUDIT_GENS = ['normaleStd','normaleProb','approxNormale','poissonApprox','expoLoi','uniformeLoi','densiteRep','tclEchant','icMoyenne','testHyp','carteNelson','riemannAire','integChasles','integTfaVm','integSubstitution','volumeRevolution','ajustLinLog','modeleLogistique','edoLineaire','edoParticuliere','edoCauchy','edoSeparables','indice100','binaireHexa','freqCumulees'];
+  ok(AUDIT_GENS.length === 25 && AUDIT_GENS.every(g => call(`!!GEN.${g}`)), 'les 25 nouveaux générateurs existent (402 + 25 = 427)');
+  let audErr = 0;
+  for(const g of AUDIT_GENS){
+    try {
+      const q = call(`GEN.${g}()`);
+      if(!q.options || q.options.filter(o => o.ok).length !== 1 || !q.explain) audErr++;
+    } catch(e){ audErr++; }
+  }
+  ok(audErr === 0, 'les 25 générateurs tirent des QCM exploitables (options + solution pédagogique)');
+  ok(AUDIT_GENS.every(g => call(`!!GEN_INFO.${g}`)), 'chaque nouveau générateur a son élément simple (GEN_INFO : label + fiches + rappel)');
+  const audSubs = call(`(function(){
+    const want = [['Probabilités & statistiques','Lois continues & inférence statistique'],['Dérivation, primitives & Euler','Intégration : aires, moyennes & volumes'],['Exponentielles & logarithmes','Équations différentielles & modèles'],['Pourcentages, proportions & évolutions','Indices & bases'],['Nombres, fractions & puissances','Binaire, hexadécimal & systèmes positionnels'],['Probabilités & statistiques','Séries statistiques : classes & cumuls']];
+    return want.every(w => PROG_CATS.some(c => c.nom === w[0] && c.subs.some(s => s.nom === w[1])));
+  })()`);
+  ok(audSubs, 'les 6 sous-catégories de l’audit sont raccrochées à leurs catégories');
+  ok(call(`!!FICHES['lois-continues'] && !!FICHES['inference-stats'] && !!FICHES['integration'] && !!FICHES['equations-differentielles']`),
+     'fiches : lois continues, inférence, intégration & équations différentielles créées');
+  ok(call(`FICHES['statistiques'].html.includes('Indices (base 100)')`),
+     'fiche « statistiques » enrichie (indices base 100, systèmes positionnels, classes & cumuls)');
 
 console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
   process.exit(fail === 0 ? 0 : 1);

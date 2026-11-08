@@ -210,6 +210,34 @@ svg{vertical-align:-2px}
 @keyframes pggrow{to{transform:scaleX(1)}}
 .wlegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:11px;line-height:1.6;color:#5a6b85}
 .wdot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* ---- cours & lexique ---- */
+.modal.wide{max-width:640px}
+.ctoc{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.ctocbtn{display:inline-flex;align-items:center;border:1px solid rgba(29,91,184,.25);background:rgba(255,255,255,.75);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:600;color:#1d5bb8}
+.ctocbtn:hover{background:#eef4fd}
+.chead{margin:22px 0 4px;font-size:15px;color:#15263f}
+.cillus{margin-top:12px;border:1px solid rgba(31,58,110,.15);background:linear-gradient(180deg,#f6faff,#edf3fb);border-radius:14px;padding:14px 12px 10px}
+.cillus svg{display:block;width:100%;height:auto}
+.cillus .ccap{margin:10px 4px 2px;font-size:11px;font-style:italic;text-align:center;color:#7488a3}
+.cok{border:1px solid rgba(15,122,92,.3);background:rgba(209,250,229,.45);border-radius:12px;padding:12px 16px;margin-top:12px}
+.cok p{margin:6px 0 0;font-size:13px;line-height:1.65;color:#14532d}
+.cok .rlabel{color:#0f7a5c}
+.cwarn{border:1px solid rgba(190,42,85,.3);background:rgba(253,164,175,.12);border-radius:12px;padding:12px 16px;margin-top:12px}
+.cwarn p{margin:6px 0 0;font-size:13px;line-height:1.65;color:#831843}
+.cwarn .rlabel{color:#be2a55}
+.cwrow{display:flex;align-items:center;gap:10px;margin-top:10px}
+.cwlab{width:96px;font-size:11px;font-weight:700;color:#40536f;text-align:right;flex:none}
+.cwbar{flex:1;height:22px;border-radius:7px;overflow:hidden;border:1px solid rgba(31,58,110,.15);background:#eaf1f9;position:relative}
+.cwbar .fill{position:absolute;inset:0;transform:scaleX(0);transform-origin:left}
+.cwbar .fill.v{background:linear-gradient(90deg,#5fd3a5,#0f9d6e)}
+.cwbar .fill.f{background:linear-gradient(90deg,#fb8aa4,#d6405f)}
+.cwbar .fill.mix{background:linear-gradient(90deg,#0f9d6e 55%,#d6405f 55%)}
+.play .cwbar .fill{animation:pggrow .9s ease-out forwards;animation-delay:var(--d)}
+.cwtxt{width:92px;font-size:10px;color:#7488a3;flex:none}
+.clx{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.clx .lx{border:1px solid rgba(31,58,110,.12);background:rgba(255,255,255,.75);border-radius:12px;padding:11px 14px}
+.clx .lx b{display:block;font-size:13px;color:#1d4f8b}
+.clx .lx p{margin:4px 0 0;font-size:12.5px;line-height:1.6;color:#40536f}
 @keyframes lpshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 .shake{animation:lpshake .35s ease}
 @media(prefers-reduced-motion:reduce){
@@ -4449,6 +4477,8 @@ const state = {
   minerLog: [],
   rulesOpen: false,
   copyrightOpen: false,
+  courseOpen: false,
+  lexiqueOpen: false,
   showKinds: loadKindsPref(),
 };
 function mined() {
@@ -4533,6 +4563,10 @@ function renderHome() {
     '<button class="btn sky" onclick="openMiner()">' +
     ICON.globe("i16") +
     " Le fouilleur</button>";
+  h +=
+    '<button class="btn" title="Tout le savoir-faire pour résoudre les enquêtes" onclick="openCourse()">' +
+    ICON.brain("i16") +
+    " Cours</button>";
   h += "</div>";
   h += '<div class="chips">';
   h += "<span>" + solved + " / " + PUZZLES.length + " niveaux résolus</span>";
@@ -5216,6 +5250,289 @@ function copyrightHtml() {
     "</div></div>"
   );
 }
+
+/* ---- Cours : illustrations animées et contenu ---- */
+function goToSection(id) {
+  const el = document.getElementById(id);
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function courseBox(kind, label, html) {
+  return (
+    '<div class="' +
+    kind +
+    '">' +
+    (label ? '<p class="rlabel">' + label + "</p>" : "") +
+    html +
+    "</div>"
+  );
+}
+function illusBox(svg, cap) {
+  return '<div class="cillus">' + svg + '<p class="ccap">' + cap + "</p></div>";
+}
+function courseNodeSvg(n, fill, stroke, txt, tcol, delay, ring) {
+  const x = n.x - n.size.w / 2, y = n.y - n.size.h / 2;
+  let h = '<g class="pg-node" style="--d:' + delay + 's">';
+  if (ring) {
+    h +=
+      '<rect class="pg-target-ring" x="' + (x - 5) + '" y="' + (y - 5) + '" width="' +
+      (n.size.w + 10) + '" height="' + (n.size.h + 10) +
+      '" rx="19" fill="none" stroke="#d97706" stroke-width="1.6"/>';
+  }
+  h +=
+    '<rect x="' + x + '" y="' + y + '" width="' + n.size.w + '" height="' + n.size.h +
+    '" rx="16" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.6"/>';
+  h +=
+    '<text x="' + n.x + '" y="' + (n.y + 4.5) + '" text-anchor="middle" font-size="13" font-weight="700" fill="' +
+    tcol + '">' + txt + "</text>";
+  h += "</g>";
+  return h;
+}
+function courseEdgeSvg(a, b, color, delay, bow) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const s = pgTrim(a, ux, uy);
+  const e = pgTrim(b, -ux, -uy);
+  let px = -uy, py = ux;
+  if (py > 0) { px = -px; py = -py; }
+  const k = bow === undefined ? Math.min(len * 0.22, 30) : Math.abs(bow);
+  if (bow !== undefined && bow < 0) { px = -px; py = -py; }
+  const cx = (s.x + e.x) / 2 + px * k;
+  const cy = (s.y + e.y) / 2 + py * k;
+  return (
+    '<g class="pg-edge" style="--d:' + delay + 's">' +
+    '<path pathLength="1" d="M ' + s.x.toFixed(1) + " " + s.y.toFixed(1) +
+    " Q " + cx.toFixed(1) + " " + cy.toFixed(1) + " " + e.x.toFixed(1) + " " + e.y.toFixed(1) +
+    '" fill="none" stroke="' + color + '" stroke-width="2"/>' +
+    pgArrow(e.x, e.y, e.x - cx, e.y - cy, color) +
+    "</g>"
+  );
+}
+function mpSvg() {
+  const P = { x: 42, y: 48, size: { w: 40, h: 32 } };
+  const Q = { x: 278, y: 48, size: { w: 40, h: 32 } };
+  return (
+    '<svg class="play" viewBox="0 0 320 100" role="img" aria-label="Modus ponens : de P posé et P implique Q, on conclut Q">' +
+    courseNodeSvg(P, "#fffbeb", "#ca8a04", "P", "#92610e", ".25") +
+    courseEdgeSvg(P, Q, "#5b7fb5", ".9", 14) +
+    courseNodeSvg(Q, "#f0f9ff", "#38a3d8", "Q", "#075985", "1.45") +
+    '<g class="pg-fade" style="--d:1.85s">' +
+    '<text x="160" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#27548f">P → Q</text>' +
+    '<text x="42" y="92" text-anchor="middle" font-size="10" fill="#8a5a05">fait posé</text>' +
+    '<text x="278" y="92" text-anchor="middle" font-size="10" fill="#0f7a5c">donc : Q est établi</text>' +
+    "</g></svg>"
+  );
+}
+function eqSvg() {
+  const P = { x: 42, y: 60, size: { w: 40, h: 32 } };
+  const Q = { x: 278, y: 60, size: { w: 40, h: 32 } };
+  return (
+    '<svg class="play" viewBox="0 0 320 124" role="img" aria-label="Équivalence parcourue dans les deux sens">' +
+    courseNodeSvg(P, "#f5f3ff", "#7c3aed", "P", "#5b21b6", ".25") +
+    courseNodeSvg(Q, "#f5f3ff", "#7c3aed", "Q", "#5b21b6", ".25") +
+    courseEdgeSvg(P, Q, "#7c3aed", ".7", 42) +
+    courseEdgeSvg(Q, P, "#7c3aed", "1.9", -42) +
+    '<g class="pg-fade" style="--d:1.3s"><text x="160" y="26" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">aller : P donne Q</text></g>' +
+    '<g class="pg-fade" style="--d:2.7s"><text x="160" y="102" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5b21b6">retour : Q donne P</text></g>' +
+    "</svg>"
+  );
+}
+function chainSvg() {
+  const C = { x: 55, y: 62, size: { w: 40, h: 32 } };
+  const M = { x: 215, y: 32, size: { w: 40, h: 32 } };
+  const A = { x: 400, y: 76, size: { w: 40, h: 32 } };
+  return (
+    '<svg class="play" viewBox="0 0 460 118" role="img" aria-label="Chaîne de déduction : C donne M, M donne A">' +
+    courseNodeSvg(C, "#fffbeb", "#ca8a04", "C", "#92610e", ".25") +
+    courseEdgeSvg(C, M, "#5b7fb5", ".8", 18) +
+    courseNodeSvg(M, "#f0f9ff", "#38a3d8", "M", "#075985", "1.35") +
+    courseEdgeSvg(M, A, "#5b7fb5", "1.85", 18) +
+    courseNodeSvg(A, "#f0f9ff", "#d97706", "A", "#075985", "2.4", true) +
+    "</svg>"
+  );
+}
+function fallacySvg() {
+  const P = { x: 42, y: 60, size: { w: 40, h: 32 } };
+  const Q = { x: 278, y: 60, size: { w: 40, h: 32 } };
+  return (
+    '<svg class="play" viewBox="0 0 320 124" role="img" aria-label="Erreur : de Q établi et P implique Q, rien ne suit sur P">' +
+    courseNodeSvg(Q, "#fffbeb", "#ca8a04", "Q", "#92610e", ".25") +
+    '<g class="pg-fade" style="--d:.8s">' +
+    '<rect x="22" y="44" width="40" height="32" rx="16" fill="rgba(255,255,255,.55)" stroke="#8fa2bd" stroke-width="1.6" stroke-dasharray="5 4"/>' +
+    '<text x="42" y="64.5" text-anchor="middle" font-size="13" font-weight="700" fill="#8fa2bd">P</text>' +
+    '<text x="42" y="94" text-anchor="middle" font-size="10" fill="#8fa2bd">non établi</text>' +
+    '<text x="278" y="94" text-anchor="middle" font-size="10" fill="#8a5a05">établi</text>' +
+    "</g>" +
+    courseEdgeSvg(P, Q, "#8fa2bd", "1.2", 18) +
+    '<g class="pg-fade" style="--d:1.9s">' +
+    '<path d="M 254 74 Q 160 98 66 74" fill="none" stroke="#be2a55" stroke-width="2" stroke-dasharray="6 5"/>' +
+    '<polygon points="66,74 76,70 76,78" fill="#be2a55"/>' +
+    '<line x1="150" y1="77" x2="170" y2="95" stroke="#be2a55" stroke-width="3" stroke-linecap="round"/>' +
+    '<line x1="170" y1="77" x2="150" y2="95" stroke="#be2a55" stroke-width="3" stroke-linecap="round"/>' +
+    "</g></svg>"
+  );
+}
+function worldsIlluHtml() {
+  return (
+    '<div class="play">' +
+    '<div class="cwrow"><span class="cwlab">VRAI</span><div class="cwbar"><span class="fill v" style="--d:.3s"></span></div><span class="cwtxt">vraie partout</span></div>' +
+    '<div class="cwrow"><span class="cwlab">FAUX</span><div class="cwbar"><span class="fill f" style="--d:.55s"></span></div><span class="cwtxt">fausse partout</span></div>' +
+    '<div class="cwrow"><span class="cwlab">INDÉTERMINÉ</span><div class="cwbar"><span class="fill mix" style="--d:.8s"></span></div><span class="cwtxt">selon le monde</span></div>' +
+    "</div>"
+  );
+}
+function openCourse() {
+  state.courseOpen = true;
+  renderModals();
+}
+function closeCourse() {
+  state.courseOpen = false;
+  state.lexiqueOpen = false;
+  renderModals();
+}
+function openLexique() {
+  state.lexiqueOpen = true;
+  renderModals();
+}
+function closeLexique() {
+  state.lexiqueOpen = false;
+  renderModals();
+}
+function courseHtml() {
+  return (
+    '<div class="mback" onclick="closeCourse()"><div class="modal mrules wide" onclick="event.stopPropagation()">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">' +
+    '<h3 class="mtitle serif"><span style="color:#6d28d9">' +
+    ICON.brain("i20") +
+    "</span> Cours de logique déductive</h3>" +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+    '<button class="btn sm" title="Ouvrir le lexique" onclick="openLexique()">' +
+    ICON.sparkle("i14") +
+    " Lexique</button>" +
+    '<button class="btn icon" onclick="closeCourse()">' +
+    ICON.x("i16") +
+    "</button></div></div>" +
+    '<p class="mpintro" style="margin-top:14px">Tout ce qu\'il faut savoir pour résoudre chaque enquête de ce site : les trois formes d\'énoncés, la règle unique qui fait avancer les preuves, la négation, la construction des chaînes, la théorie des mondes compatibles qui fonde le verdict — et les pièges à éviter.</p>' +
+    '<div class="ctoc">' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-1\')">1 · Les énoncés</button>' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-2\')">2 · Le modus ponens</button>' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-3\')">3 · La négation</button>' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-4\')">4 · La chaîne</button>' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-5\')">5 · Le verdict</button>' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-6\')">6 · Les pièges</button>' +
+    '<button class="ctocbtn" onclick="goToSection(\'cours-7\')">7 · La méthode</button>' +
+    "</div>" +
+    /* 1 */
+    '<h4 class="chead" id="cours-1">1 · Les trois sortes d\'énoncés</h4>' +
+    "<p>Chaque enquête fournit des énoncés d'exactement trois formes. Savoir ce que chacune <b>autorise</b> — et ce qu'elle <b>interdit</b> — est la moitié du métier.</p>" +
+    courseBox("rbox", "", kindBadge("aff") + "<p><b>Affirmation</b> — un fait posé d'emblée comme vrai : « Minet est un chat. » Rien à prouver : cliquez, et le fait rejoint les faits établis. C'est un <b>point de départ</b>.</p>") +
+    courseBox("rbox", "", kindBadge("imp") + "<p><b>Implication</b> — « Si P, alors Q » : à chaque fois que P est vrai, Q l'est nécessairement. Elle ne dit rien lorsque P est faux, et rien de Q vers P.</p>") +
+    courseBox("rbox", "", kindBadge("eq") + "<p><b>Équivalence</b> — « P si et seulement si Q » : deux implications en une. P entraîne Q, et Q entraîne P.</p>") +
+    illusBox(eqSvg(), "L'équivalence se parcourt dans les deux sens : l'aller P → Q, puis le retour Q → P.") +
+    /* 2 */
+    '<h4 class="chead" id="cours-2">2 · Le modus ponens, l\'unique moteur</h4>' +
+    "<p>Toute déduction de ce site repose sur une règle unique, déjà formulée par les stoïciens :</p>" +
+    courseBox("cok", "Modus ponens", "<p>Des deux prémisses « <b>P est établi</b> » et « <b>P → Q</b> », on conclut : « <b>Q est établi</b> ». C'est le seul moyen d'activer une implication.</p>") +
+    illusBox(mpSvg(), "Le fait P est posé ; l'implication P → Q devient applicable ; le fait Q est établi.") +
+    "<p>Trois précisions rigoureuses :</p>" +
+    '<ul class="rlist">' +
+    "<li>Une implication est <b>applicable</b> ou non, jamais « vraie » ou « fausse » en soi : sans sa prémisse, elle attend.</li>" +
+    "<li>De « Q est établi » et « P → Q », on ne conclut <b>rien</b> sur P : c'est l'affirmation du conséquent, une faute classique.</li>" +
+    "<li>De « P → Q » et « P est faux », on ne conclut <b>rien</b> sur Q : nier l'antécédent ne nie pas le conséquent.</li>" +
+    "</ul>" +
+    illusBox(fallacySvg(), "Erreur à ne pas commettre : Q est établi, mais la flèche est à sens unique — P reste hors de portée.") +
+    /* 3 */
+    '<h4 class="chead" id="cours-3">3 · La négation, ou comment prouver FAUX</h4>' +
+    "<p>À chaque proposition P correspond sa <b>négation</b> ¬P : « P est faux ». En logique classique, P et ¬P ne peuvent être ni vraies ensemble, ni fausses ensemble — exactement l'une des deux l'est.</p>" +
+    '<ul class="rlist">' +
+    "<li>Pour prononcer <b>FAUX</b> sur la question « S ? », établissez <b>¬S</b> — par exemple avec un énoncé « R → ¬S » dont R est établi.</li>" +
+    "<li>Établir ¬S suffit : c'est la définition même de FAUX.</li>" +
+    "<li>Un simple doute, ou l'impossibilité momentanée de conclure, ne suffisent jamais à prononcer FAUX.</li>" +
+    "</ul>" +
+    /* 4 */
+    '<h4 class="chead" id="cours-4">4 · Bâtir une chaîne de déduction</h4>' +
+    "<p>Une preuve est une suite de pas où chaque énoncé s'applique parce que sa prémisse est déjà établie. L'ordre n'est pas un détail : <b>c'est la preuve</b>.</p>" +
+    illusBox(chainSvg(), "Trois pas, une conclusion : C est posé, C donne M, M donne A — la cible est atteinte.") +
+    '<ul class="rlist">' +
+    "<li><b>Partez des affirmations</b> : elles sont les seules sources de faits.</li>" +
+    "<li>Après chaque pas, cherchez les implications devenues applicables : chaque application ajoute un fait.</li>" +
+    "<li>Une équivalence se parcourt aussi <b>à rebours</b> : Q établi redonne P.</li>" +
+    "<li>Un énoncé inapplicable maintenant deviendra peut-être applicable plus tard : repassez-y.</li>" +
+    "</ul>" +
+    courseBox("cok", "L'élégance récompensée", "<p>Chaque enquête a une chaîne exemplaire, la plus courte possible. L'atteindre vaut trois étoiles : ne cliquez que les pas nécessaires.</p>") +
+    /* 5 */
+    '<h4 class="chead" id="cours-5">5 · Le verdict : raisonner en mondes compatibles</h4>' +
+    "<p>Un <b>monde compatible</b> est une attribution de vrai ou faux à chaque proposition qui respecte <b>tous</b> les énoncés. Le verdict se lit sur l'ensemble de ces mondes :</p>" +
+    illusBox(worldsIlluHtml(), "Vert : mondes où la cible est vraie · rose : mondes où elle est fausse.") +
+    '<ul class="rlist">' +
+    "<li><b>VRAI</b> — la cible est vraie dans <b>tous</b> les mondes compatibles : c'est une nécessité logique.</li>" +
+    "<li><b>FAUX</b> — elle est fausse dans tous : sa négation est une nécessité.</li>" +
+    "<li><b>INDÉTERMINÉ</b> — certains mondes la disent vraie, d'autres fausse : les énoncés ne tranchent pas.</li>" +
+    "</ul>" +
+    "<p>Conséquence pratique : si aucune chaîne n'établit la cible ni sa négation, soupçonnez l'indétermination. Mais seule l'énumération des mondes donne la certitude — <b>l'absence de preuve n'est pas la preuve de l'absence</b>.</p>" +
+    /* 6 */
+    '<h4 class="chead" id="cours-6">6 · Cinq pièges classiques</h4>' +
+    courseBox("cwarn", "Piège 1 — L'effet ne prouve pas la cause", "<p>« Les chaussures sont sales » et « si le chemin est boueux, elles sont sales » ne prouvent pas que le chemin est boueux : le van du centre de loisirs salit aussi. C'est l'affirmation du conséquent.</p>") +
+    courseBox("cwarn", "Piège 2 — Le sens unique", "<p>« Si P alors Q » ne donne jamais « si Q alors P ». Ne rebroussez chemin que devant une équivalence explicite.</p>") +
+    courseBox("cwarn", "Piège 3 — L'énoncé inapplicable n'est pas faux", "<p>Une implication sans sa prémisse attend ; elle n'est ni fausse ni inutile. Revérifiez-la après chaque nouveau fait.</p>") +
+    courseBox("cwarn", "Piège 4 — La fausse équivalence", "<p>Transformer « si… alors… » en « si et seulement si » fabrique des conclusions illégitimes. L'équivalence doit être énoncée telle quelle.</p>") +
+    courseBox("cwarn", "Piège 5 — FAUX sans négation", "<p>Prononcer FAUX exige d'avoir établi la négation de la cible — jamais un simple doute ou une impasse apparente.</p>") +
+    /* 7 */
+    '<h4 class="chead" id="cours-7">7 · La méthode complète en six pas</h4>' +
+    '<ol class="rlist" style="padding-left:22px">' +
+    "<li>Lisez la question et <b>tous</b> les énoncés avant le premier clic.</li>" +
+    "<li>Repérez les affirmations : vos points de départ.</li>" +
+    "<li>Suivez les flèches depuis les faits établis, vers la cible — ou sa négation.</li>" +
+    "<li>Vérifiez chaque pas : la prémisse doit être <b>déjà</b> établie.</li>" +
+    "<li>Cible ou négation atteinte ? Prononcez le verdict. Sinon, demandez-vous si un autre monde reste possible : c'est l'indétermination.</li>" +
+    "<li>Visez l'élégance : le moins de pas, le plus d'étoiles.</li>" +
+    "</ol>" +
+    '<button class="btn" style="width:100%;justify-content:center;margin-top:22px" onclick="closeCourse()">Cours terminé — à vos énigmes</button>' +
+    "</div></div>"
+  );
+}
+function lexiqueHtml() {
+  const LEX = [
+    ["Affirmation", "Énoncé qui pose un fait comme vrai, sans condition. Point de départ de toute chaîne."],
+    ["Antécédent", "Dans « P → Q », la proposition P : la condition qui déclenche l'implication."],
+    ["Atome", "Proposition élémentaire, vraie ou fausse, notée par une lettre (C, P, Φ…)."],
+    ["Chaînage avant", "Méthode qui applique les règles applicables aux faits établis, pas à pas, jusqu'à ne plus progresser."],
+    ["Conclusion", "Proposition obtenue à l'issue d'un pas de raisonnement."],
+    ["Conséquent", "Dans « P → Q », la proposition Q : ce que l'implication garantit quand l'antécédent est vrai."],
+    ["Contradiction", "Conflit rendant les énoncés insatisfaisables ensemble : aucun monde compatible n'existe."],
+    ["Énoncé", "Matériau de base d'une enquête : affirmation, implication ou équivalence."],
+    ["Équivalence", "« P si et seulement si Q » : P entraîne Q, et Q entraîne P."],
+    ["Fait établi", "Proposition (ou sa négation) prouvée dans la chaîne en cours."],
+    ["Implication", "« Si P, alors Q » : chaque fois que P est vrai, Q est vrai aussi."],
+    ["Indéterminé", "Verdict lorsque les mondes compatibles se partagent entre cible vraie et cible fausse."],
+    ["Inférence", "Pas de raisonnement produisant une conclusion à partir de prémisses."],
+    ["Littéral", "Un atome P, ou sa négation ¬P."],
+    ["Modèle", "Synonyme de monde compatible : une attribution cohérente de vrai ou faux à toutes les propositions."],
+    ["Modus ponens", "Règle unique du jeu : de « P » établi et « P → Q », conclure « Q »."],
+    ["Négation", "¬P : la proposition « P est faux ». Établir ¬P, c'est réfuter P."],
+    ["Prémisse", "Proposition déjà établie qui rend une règle applicable."],
+    ["Syllogisme", "Raisonnement classique en deux prémisses et une conclusion — comme l'immortalité de Socrate."],
+    ["Tautologie", "Proposition vraie dans tous les mondes possibles, quel que soit le contenu."],
+    ["Valide", "Se dit d'un raisonnement dont les prémisses garantissent la conclusion, quel que soit le sujet."],
+    ["Verdict", "Réponse à la question posée : VRAI, FAUX ou INDÉTERMINÉ."],
+  ];
+  let h = '<div class="mback" onclick="closeLexique()"><div class="modal mrules wide" onclick="event.stopPropagation()">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">' +
+    '<h3 class="mtitle serif"><span style="color:#b45309">' +
+    ICON.sparkle("i20") +
+    "</span> Lexique</h3>" +
+    '<button class="btn icon" onclick="closeLexique()">' +
+    ICON.x("i16") +
+    "</button></div>" +
+    '<p class="mpintro" style="margin-top:14px">Les vingt-deux notions du cours, de l\'affirmation au verdict.</p>' +
+    '<div class="clx">';
+  LEX.forEach(function (e) {
+    h += '<div class="lx"><b>' + e[0] + "</b><p>" + e[1] + "</p></div>";
+  });
+  h +=
+    '</div><button class="btn" style="width:100%;justify-content:center;margin-top:22px" onclick="closeLexique()">Retour au cours</button></div></div>';
+  return h;
+}
 /* ---- Illustration des solutions : graphes animés ---- */
 function replayGraphAnim() {
   const box = document.getElementById("pgbox");
@@ -5499,6 +5816,8 @@ function renderModals() {
   let h = "";
   if (state.rulesOpen) h += rulesHtml();
   if (state.copyrightOpen) h += copyrightHtml();
+  if (state.courseOpen) h += courseHtml();
+  if (state.lexiqueOpen) h += lexiqueHtml();
   if (state.game && state.game.result) h += resultHtml(state.game);
   document.getElementById("modals").innerHTML = h;
 }

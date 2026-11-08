@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 6 feuilles de style et 34 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 38 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -12,7 +12,7 @@ simples**, l'**horodatage de la dernière mise à jour**, la **révision
 personnalisée**, l'**intégration des documents « Évolutions » et
 « Proportions »** et l'**explorateur de liens du programme** — une
 succession de sous-graphes centrés sur une notion ou une zone, où
-l'élève voit que les 181 notions sont toutes reliées, directement
+l'élève voit que les 196 notions sont toutes reliées, directement
 ou indirectement (voir plus bas).
 
 ## Structure
@@ -66,7 +66,7 @@ la-tour-des-maths/
     │                                  « Fractions & puissances », 6 notions →
     │                                  153 étages au total)
     ├── 11f-progression.js          ← catégories thématiques de la
-    │                                  progression (18 catégories, ex. équations
+    │                                  progression (20 catégories, ex. équations
     │                                  en 4 sous-catégories : 1er degré, 2nd
     │                                  degré, produit, lecture graphique)
     ├── 11g-derivation.js           ← étude d'une fonction polynôme sur un
@@ -164,6 +164,48 @@ la-tour-des-maths/
     │                                  modulo n », « Théorie des graphes »
     │                                  + complément « Complexes », 2
     │                                  catégories nouvelles → 181 étages)
+    ├── 11m-factorisation.js        ← factorisation (document « La
+    │                                  Factorisation du Primaire à la
+    │                                  Terminale ») : facteur caché « 1 »,
+    │                                  signe opposé (a−x) = −(x−a),
+    │                                  somme-produit, racines évidentes,
+    │                                  x²+a² dans ℂ, bicarrée,
+    │                                  substitution X = e^x et cos x — 8
+    │                                  générateurs, fiche « Factorisation »,
+    │                                  4 notions, 1 sous-catégorie → 185
+    │                                  étages)
+    ├── 11n-denombrement.js        ← dénombrement (document « Le
+    │                                  Dénombrement du Primaire à la
+    │                                  Terminale ») : k-uplets, case fixe,
+    │                                  principe additif, permutations,
+    │                                  anagrammes, arrangements,
+    │                                  combinaisons, triangle de Pascal,
+    │                                  inclusion-exclusion, complémentaire,
+    │                                  tiroirs, étoiles et barres — 12
+    │                                  générateurs, fiche « Dénombrement »,
+    │                                  6 notions, 1 catégorie → 191 étages)
+    ├── 11o-logique.js              ← logique (document « La Logique
+    │                                  du Primaire à la Terminale ») :
+    │                                  modus ponens, chaînage avant,
+    │                                  négation forcée (verdict FAUX),
+    │                                  verdict indéterminé, équivalence —
+    │                                  5 générateurs, complément de la
+    │                                  fiche « Logique », 2 notions,
+    │                                  1 catégorie (accueille
+    │                                  « sets-logic ») → 193 étages)
+    ├── 11p-fractions-pro.js        ← fractions avancées (document « Le
+    │                                  Calcul avec des Fractions du
+    │                                  Primaire à la Terminale ») : faux
+    │                                  théorème, simplification abusive,
+    │                                  signes cachés, division inversée,
+    │                                  rationnalisation, équation
+    │                                  fractionnaire, télescopique,
+    │                                  couples, comparaison croisée — 9
+    │                                  générateurs, fiche « Fractions
+    │                                  avancées » + avertissement dans
+    │                                  « Fractions & puissances », 3
+    │                                  notions, 2 sous-catégories → 196
+    │                                  étages)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -215,7 +257,7 @@ la-tour-des-maths/
     fonctions, dérivées, tableaux, suites, proportionnalité, probabilités,
     statistiques, vecteurs, espace, complexes, Python, littéral, logique) —
     ouvertes d'un clic, LaTeX compris.
-  - `GEN_INFO` : pour chacun des 331 générateurs, un **libellé** clair, un
+  - `GEN_INFO` : pour chacun des 365 générateurs, un **libellé** clair, un
     **rappel** court (infobulle au survol) et ses **fiches** associées.
   - Helpers : `tdmGenLabel`, `tdmGenRappel`, `tdmGenFiches`,
     `tdmElemsDeNotion`, `tdmFichesDeNotion`.
@@ -282,7 +324,7 @@ L'élève compose, **pour la session en cours**, un menu de notions à
 réviser :
 
 - bouton « 🎯 Révision personnalisée… » du menu utilitaire → modale avec
-  les **181 notions**, un filtre de recherche, « Tout cocher /
+  les **196 notions**, un filtre de recherche, « Tout cocher /
   Tout décocher » et le décompte en direct ;
 - une fois lancée, la tour ne pose **que** des questions de la sélection
   (`state.customPool` filtré dans `pickNotion`) — mêmes règles de
@@ -616,6 +658,78 @@ continuité, TVI, ln/exp) et « MATHS_COMP_STATS-PROBA — projet
 élections » (intervalles de fluctuation/confiance, loi binomiale)
 relèvent d'une tour suivante.
 
+## Intégration des documents « Factorisation, Dénombrement, Logique & Fractions »
+
+Quatre documents interactifs fournis (« La Factorisation du Primaire
+à la Terminale », « Le Dénombrement du Primaire à la Terminale »,
+« La Logique du Primaire à la Terminale » et « Le Calcul avec des
+Fractions du Primaire à la Terminale » — chacun 150+ situations
+dynamiques avec corrections pas à pas colorées et quizz de synthèse)
+sont intégrés au format de la tour : **15 nouvelles notions** insérées
+sous le sommet (la tour passe de 181 à **196 étages**), **34
+générateurs**, **2 fiches** (« ✖️ Factorisation : du facteur commun
+aux identités remarquables », « 🎱 Dénombrement & combinatoire »), la
+fiche « 🧠 Logique » enrichie (modus ponens, chaînage, verdicts,
+équivalence), la fiche « 🧪 Fractions avancées » (pièges,
+rationnalisation, techniques de pro) plus un avertissement du « faux
+théorème » dans « Fractions & puissances », **2 catégories
+nouvelles** dans la progression (« 🎱 Dénombrement & combinatoire »,
+« 🧠 Logique & raisonnement » — cette dernière accueille aussi
+« sets-logic », retirée de sa sous-catégorie d'origine pour éviter
+tout doublon) et 3 sous-catégories enrichies (« Calcul littéral &
+factorisation », « Nombres, fractions & puissances »). Des
+fiches-ponts relient les nouveaux contenus au reste du programme :
+factorisation ↔ complexes, second degré, suites et trigonométrie ;
+dénombrement ↔ probabilités et logique ; fractions ↔ suites et
+algèbre. Tout reste lié dans le graphe.
+
+| Notion (étage) | Éléments simples (générateurs) |
+|---|---|
+| 🟦 Facteurs cachés : 1 implicite & signes | facteur caché « 1 » ((x−a)(x+b) + (x−a) = (x−a)(x+b+1)) ; signe opposé (a−x) = −(x−a) |
+| 🟦 Somme-produit & racines évidentes | deux entiers de produit P et somme S ; racine évidente + produit des racines (x₂ = c/a ÷ x₁, sans discriminant) |
+| 🩷 Factoriser dans ℂ : x² + a² | x² + a² = (x−ia)(x+ia) car (ia)² = −a² |
+| 🟪 Changement de variable pour factoriser | bicarrée (X = x²) ; substitution X = e^x (e^(2x) = (e^x)²) ; A² − B² avec A = 2cos x |
+| 🟦 Principes multiplicatif & additif | k-uplets n^k (code PIN) ; case fixe (10^(k−1)) ; principe additif (cas disjoints) |
+| 🟦 Permutations & anagrammes | n! rangements ; anagrammes à lettres répétées (n!/(n₁!n₂!)) |
+| 🟦 Arrangements : ordre sans remise | A_n^k = n(n−1)…(n−k+1) (podium ≠ comité) |
+| 🟦 Combinaisons & triangle de Pascal | C(n,k) = n!/(k!(n−k)!) ; somme d'une ligne = 2^n ; relation de Pascal |
+| 🟦 Inclusion-exclusion & complémentaire | card(A∪B) = card(A)+card(B)−card(A∩B) ; « au moins un » = total − « aucun » |
+| 🟦 Tiroirs & étoiles-barres | principe des tiroirs (n+1 objets, n tiroirs) ; étoiles et barres C(k+p−1, p−1) |
+| 🟪 Modus ponens & chaînage | fait + règle = nouveau fait ; chaînage avant (chaîne de déductions) ; négation forcée (verdict FAUX) |
+| 🟪 VRAI, FAUX ou indéterminé | effet constaté ≠ cause prouvée (verdict INDÉTERMINÉ) ; équivalence P ⇔ Q (sens retour légitime) |
+| 🟧 Fractions piégées | faux théorème de l'addition croisée ; simplification abusive (facteurs oui, termes non) ; signes cachés (−a)/(−b) = a/b ; division (inverser la seconde fraction seulement) |
+| 🟩 Fractions rationnelles & radicaux | rationnalisation (1/√a = √a/a ; conjugué 1/(√m−√n)) ; équation fractionnaire & condition d'existence |
+| 🟪 Techniques de pro : télescopique & couples | somme télescopique 1/(n(n+1)) = 1/n − 1/(n+1) ; astuce des couples (x + 1/x = s ⇒ x² + 1/x² = s² − 2) ; comparaison croisée (ad contre bc) |
+
+Contenu couvert : la factorisation du facteur commun au changement
+de variable (facteur caché « 1 », signe opposé, somme-produit,
+racines évidentes, factorisation dans ℂ, bicarrée, substitution
+exponentielle et trigonométrique), le dénombrement complet du
+principe multiplicatif aux techniques expertes (k-uplets,
+permutations, anagrammes, arrangements, combinaisons, triangle de
+Pascal, inclusion-exclusion, complémentaire, principe des tiroirs,
+étoiles et barres — avec les pièges des doubles comptages), la
+logique formelle du primaire au lycée (modus ponens, chaînage avant,
+négation forcée, verdicts VRAI/FAUX/INDÉTERMINÉ sur des scénarios
+concrets, équivalences) et le calcul fractionnaire avancé (le « faux
+théorème » de l'addition croisée, la simplification abusive, les
+signes cachés, la division mal inversée, la rationnalisation des
+radicaux, les équations fractionnaires avec conditions d'existence,
+les sommes télescopiques, l'astuce des couples et la comparaison
+croisée).
+
+Documents non intégrés (volontairement) : les onglets « Primaire »,
+« Collège » et « Quizz » des quatre documents, dont les situations
+dynamiques (30 par onglet, corrections colorées pas à pas) couvrent
+des mécanismes déjà présents dans la tour (fractions simples :
+module 11e ; calcul mental et équations : modules existants), et les
+visualisations interactives propres au format document (curseurs,
+aires rectangulaires, disques partagés) qui n'ont pas d'équivalent
+dans le jeu. Seuls les volets inédits — « Facteurs cachés »,
+« Changement de variable », « Dénombrement » (tous volets), « Logique
+déductive », « Fractions piégées » et « Techniques de pro » — sont
+devenus des étages.
+
 ## Dossier de présentation « rapport-publication.html »
 
 Document autonome lié à la tour (bouton « 📄 Dossier de présentation »
@@ -623,18 +737,18 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (18 catégories, 181 notions, 331 générateurs, du cycle 3 au
+contenus (20 catégories, 196 notions, 365 générateurs, du cycle 3 au
 lycée général et technologique), principes didactiques, architecture
-technique (34 modules, banc d'essai 21 sections, chiffrement
+technique (38 modules, banc d'essai 22 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 ## Progression des notions par catégories
 
-La modale « 📚 Progression des notions » ne liste plus les 181 notions
+La modale « 📚 Progression des notions » ne liste plus les 196 notions
 dans l'ordre de construction de la tour : le nouveau module
-`11f-progression.js` les regroupe en **18 catégories thématiques**,
+`11f-progression.js` les regroupe en **20 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
 « X/Y validées »). Les éléments simples de chaque notion restent
 inchangés (libellé, rappel au survol, statistiques ✓/✗, fiches) ;
@@ -671,7 +785,7 @@ trinôme, polynômes de degré 3 (lycée), équations produit-nul et
 d'inéquations. Chaque notion apparaît dans **une seule**
 sous-catégorie ; une éventuelle notion non référencée tomberait dans
 un groupe de secours « Autres » en fin de modale (aucune à ce jour :
-les 181 notions sont classées, vérifié par le banc d'essai).
+les 196 notions sont classées, vérifié par le banc d'essai).
 
 ## Deux animations au choix : tour 3D & balle rebondissante
 
@@ -709,17 +823,17 @@ L'écran d'accueil (et les modales d'identité et de bilan) est désormais
 **responsive** : hauteur plafonnée à celle de l'écran
 (`max-height: calc(100dvh - 36px)` + repli `100vh`), défilement interne,
 version compacte sous 640 px de haut — le bouton COMMENCER L'ASCENSION
-reste toujours visible, et les compteurs de notions (« 181 notions »)
+reste toujours visible, et les compteurs de notions (« 196 notions »)
 sont remplis dynamiquement.
 
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 21 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 22 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
-sommaire décomposé en catégories thématiques (18 catégories,
-181 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
-notions passées, couverture des 331 générateurs, segments LaTeX
+sommaire décomposé en catégories thématiques (20 catégories,
+196 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
+notions passées, couverture des 365 générateurs, segments LaTeX
 propres (aucun trou ni `<`/`>` nu dans `\( ... \)` : tout doit être
 interprétable par MathJax 3), export enseignant
 (avec date de dernière mise à jour), horodatage du menu, nouvelles
@@ -753,7 +867,7 @@ responsive (hauteur plafonnée, compteurs dynamiques).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 34 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 38 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

@@ -186,17 +186,17 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   console.log('== 5. Sommaire « Progression des notions » : catégories & éléments ==');
   call('openNotions()');
   const cats5 = [...$('notionsList').children];
-  ok(cats5.length === 18, '18 catégories thématiques (' + cats5.length + ')');
+  ok(cats5.length === 20, '20 catégories thématiques (' + cats5.length + ')');
   ok(cats5.every(c => c.children.length && c.children[0].innerHTML.includes('prog-cat-title')), 'chaque catégorie a son en-tête cliquable');
   ok(cats5.every(c => /\d+\/\d+ validée/.test(c.children[0].innerHTML)), 'compteur « X/Y validées » par catégorie');
   const items = [];
   cats5.forEach(c => [...c.children].forEach(e => { if(e.innerHTML.includes('tdm-elems')) items.push(e); }));
-  ok(items.length === 181, '181 notions listées (' + items.length + ')');
+  ok(items.length === 196, '196 notions listées (' + items.length + ')');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt')), 'chaque notion est décomposée en éléments simples');
   ok([...items].every(i => i.innerHTML.includes('data-tip=')), 'chaque élément porte son rappel au survol');
   ok([...items].every(i => i.innerHTML.includes('tdm-elt-stats')), 'statistiques ✓/✗ par élément affichées');
   const ids5 = items.map(i => i.getAttribute('data-notion'));
-  ok(ids5.every(Boolean) && new Set(ids5).size === 181 && NOT().every(n => ids5.indexOf(n.id) >= 0),
+  ok(ids5.every(Boolean) && new Set(ids5).size === 196 && NOT().every(n => ids5.indexOf(n.id) >= 0),
      'chaque notion apparaît exactement une fois, toutes catégories confondues');
   const catDeriv = call(`PROG_CATS.filter(c => c.nom.indexOf('Dérivation') === 0)[0]`);
   ok(catDeriv && catDeriv.subs.some(s => s.nom === 'Étude complète sur un intervalle' && s.ids.join() === 'derivee-racines-I,derivee-variations-I'),
@@ -284,7 +284,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const data = call('tdmBuildDonnees()');
   const all = [...(data.notionsTraitees || []), ...(data.notionsATraiter || [])];
   const withElems = all.filter(n => Array.isArray(n.elements) && n.elements.length);
-  ok(withElems.length === 181, 'les 181 notions exportent leurs éléments simples');
+  ok(withElems.length === 196, 'les 196 notions exportent leurs éléments simples');
   const ex = withElems.find(n => n.nom && String(n.nom).includes('Second degré — formes'));
   ok(ex && ex.elements.length === 4 && ex.elements.every(e => e.libelle && e.posees !== undefined && e.reussies !== undefined && e.erreurs !== undefined), 'champs {generateur, libelle, posees, reussies, erreurs} présents');
   const exCanon = ex && ex.elements.find(e => e.generateur === 'canonique');
@@ -300,8 +300,8 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok($('lastSaveInfo').textContent.includes(majTxt.split(' à ')[0]), 'la date du jour apparaît dans le menu');
 
   console.log('== 10. Nouvelles notions « évolutions & proportions » ==');
-  ok(NOT().length === 181, 'la tour compte 181 notions (147 + 25 + 9 nouvelles)');
-  ok(vm.runInContext('N_TOT', sandbox) === 181, 'N_TOT = 181 (HUD, altitude, finalisation)');
+  ok(NOT().length === 196, 'la tour compte 196 notions (147 + 25 + 9 + 15 nouvelles)');
+  ok(vm.runInContext('N_TOT', sandbox) === 196, 'N_TOT = 196 (HUD, altitude, finalisation)');
   const NEW_IDS = ['proportions', 'prop-de-prop', 'evol-cm', 'evol-global', 'evol-moyen'];
   const allIds = NOT().map(n => n.id);
   ok(NEW_IDS.every(id => allIds.includes(id)), 'les 5 nouvelles notions sont en sommet de tour');
@@ -344,7 +344,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   console.log('== 11. Révision personnalisée (menu 🎯) ==');
   call('tdmOpenRevision()');
   ok($('revisionModal').classList.contains('open'), 'modale de révision ouverte');
-  ok($('revList').children.length === 181, 'les 181 notions sont proposées à la sélection');
+  ok($('revList').children.length === 196, 'les 196 notions sont proposées à la sélection');
   call(`tdmLaunchRevision(['sd-formes', 'evol-global', 'proportions'])`);
   const stR = ST();
   ok(stR.customPool && stR.customPool.size === 3, 'sélection active : 3 notions au menu de la session');
@@ -377,7 +377,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const DR_IDS = ['droites-fractions', 'droites-axes', 'droites-positions', 'droites-cartesiennes', 'droites-pro', 'triangle-droites'];
   const allIds12 = NOT().map(n => n.id);
   ok(DR_IDS.every(id => allIds12.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-40,-34).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
+  ok(NOT().slice(-55,-49).every(n => DR_IDS.includes(n.id)), 'les 6 notions « droites » précèdent les sommets récents');
   const DR_GENS = ['dEqFrac2pts','dPointCoeff','dPointOrdo','dDeuxImages','dLectureGraph','dInterAxes','dSigne','dPosition2','dIntersectPt','dParallele','dPerpendiculaire','trouPosition','dVectDir','dDistance','dPointFixe','dSeuilRentabilite','dPointEquilibre','dTolerance','triGravite','triOrthocentre'];
   let drErr = 0;
   for(const g of DR_GENS){
@@ -416,7 +416,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const FP_IDS = ['fractions-egalite', 'fractions-signes', 'fractions-priorites', 'fractions-operations', 'puissances-dix', 'puissances-regles'];
   const allIds13 = NOT().map(n => n.id);
   ok(FP_IDS.every(id => allIds13.includes(id)), 'les 6 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-34,-28).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
+  ok(NOT().slice(-49,-43).every(n => FP_IDS.includes(n.id)), 'les 6 notions « fractions & puissances » précèdent le nouveau sommet');
   const FP_GENS = ['frSimplifie','frFracEgales','frCompare','trouSimplifie','frSigneProduit','frEcritureSignes','frFractionSignee','frPriorites','frPemdasPiege','trouPriorites','frAddSous','frMul','frDiv','frEntierFrac','frPuissanceFrac','frCompose','p10Ops','p10Inverse','pSciExposant','pOrdreGrandeur','puBaseRelative','puMemeExp','puLitteral','puComposee'];
   let fpErr = 0;
   for(const g of FP_GENS){
@@ -455,7 +455,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const ET_IDS = ['derivee-racines-I', 'derivee-variations-I'];
   const allIds14 = NOT().map(n => n.id);
   ok(ET_IDS.every(id => allIds14.includes(id)), 'les 2 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-28,-26).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
+  ok(NOT().slice(-43,-41).every(n => ET_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets trigonométriques');
   const ET_GENS = ['etFacto','etRacinesI','etSigneI','etImages','etVariations','etTangente','trouEtudeDerivee'];
   let etErr = 0;
   for(const g of ET_GENS){
@@ -494,7 +494,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SD_IDS = ['sd-sommet','sd-taux-variation','sd-conditions','sd-metamorphoses'];
   const allIds15 = NOT().map(n => n.id);
   ok(SD_IDS.every(id => allIds15.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-21,-17).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
+  ok(NOT().slice(-36,-32).every(n => SD_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets suites');
   const SD_GENS = ['sd2Coeffs','sd2Axe','sd2Sommet','sd2Extremum','trouSommet','sd2Taux','sd2TauxMilieu','trouTaux','sd2Systeme3','sd2MemeOrdonnee','sd2Ax2','sd2SommetPoint','sd2Trajectoire','trouConditions','sd2Etirement','sd2Transl','sd2CanoniqueLecture','sd2DevCanon','trouMetamorphe'];
   let sdErr = 0;
   for(const g of SD_GENS){
@@ -537,7 +537,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const SU_IDS = ['su-generalites','su-arithmetiques','su-geometriques','su-variation'];
   const allIds16 = NOT().map(n => n.id);
   ok(SU_IDS.every(id => allIds16.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-17,-13).every(n => SU_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets limites');
+  ok(NOT().slice(-32,-28).every(n => SU_IDS.includes(n.id)), 'elles précèdent les nouveaux sommets limites');
   const SU_GENS = ['suListe','suExplicite','suRecurrence','suRang','trouSuitesGen','suArithRecon','suNonArith','suArithVariation','suArithProbleme','trouSuitesArith2','suGeoRecon','suGeoVariation','suGeoCM','suGeoProbleme','trouSuitesGeo2','suVarAffine','suVarQuad','suVarRat','suVarRacine','trouSuitesVar'];
   let suErr = 0;
   for(const g of SU_GENS){
@@ -581,7 +581,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const LIM_IDS = ['su-limites','su-fi','su-comparaison','su-arithmetico'];
   const allIds17 = NOT().map(n => n.id);
   ok(LIM_IDS.every(id => allIds17.includes(id)), 'les 4 nouvelles notions sont en sommet de tour');
-  ok(NOT().slice(-4).every(n => LIM_IDS.includes(n.id)), 'elles ferment la tour (181 étages)');
+  ok(NOT().slice(-4).every(n => LIM_IDS.includes(n.id)), 'elles ferment la tour (196 étages)');
   const LIM_GENS = ['suLimRef','suLimOps','suConvergence','suEpsilon','trouLimitesRef','suFISomme','suFIQuotient','suFIConjuguee','suFITrigo','trouSuitesFI','suGendarmes','suGendarmesQuot','suComparaison','suMonotone','trouGendarmes','suPointFixe','suAuxiliaire','suArithGeoLimite','suArithGeoProbleme','suSommeGeo'];
   let limErr = 0;
   for(const g of LIM_GENS){
@@ -676,12 +676,75 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   call('closeLesson()');
   await sleep(1200);
 
+  /* ================= NOUVEAUTÉS 11m-11p : factorisation, dénombrement, logique, fractions pro ================= */
+  console.log('== 17ter. Nouvelles notions « factorisation, dénombrement, logique & fractions pro » ==');
+  const NEW4_IDS = ['facto-cachees','facto-sommeproduit','facto-complexes','facto-substitution',
+                    'den-multiplicatif','den-permutations','den-arrangement','den-combinaisons','den-inclusion','den-expertes',
+                    'log-deduction','log-verdicts',
+                    'frac-pieges','frac-rationnelles','frac-pro'];
+  const allIds4 = NOT().map(n => n.id);
+  ok(NEW4_IDS.every(id => allIds4.includes(id)), 'les 15 nouvelles notions sont dans la tour');
+  ok(NEW4_IDS.every(id => allIds4.indexOf(id) === allIds4.lastIndexOf(id)), 'aucun identifiant en double');
+  ok(NOT().slice(-4).every(n => n.id.startsWith('su-')), 'le sommet de la tour reste fermé par les notions « limites »');
+  const NEW4_GENS = ['factoCacheUn','factoSigneOppose','factoSommeProduit','factoRacinesEvidentes','factoComplexeC','factoBicarree','factoExpSubst','factoTrigoSubst',
+                     'denKuplet','denContrainte','denAdditif','denPermutation','denAnagramme','denArrangement','denCombinaison','denPascal','denInclusion','denComplementaire','denTiroirs','denEtoilesBarres',
+                     'logModusPonens','logChainage','logNegationForcee','logVerdictIndetermine','logEquivalence',
+                     'fracFauxTheoreme','fracSimplTermes','fracSignesCaches','fracDivInversion','fracRationnaliser','fracEqFractionnaire','fracTelescopique','fracCouples','fracCroisee'];
+  let n4Err = 0;
+  for(const g of NEW4_GENS){
+    for(let i = 0; i < 25; i++){
+      try {
+        const q = vm.runInContext(`GEN['${g}']()`, sandbox);
+        if(q.options){
+          const nOk = q.options.filter(o => o.ok).length;
+          if(nOk !== 1) { n4Err++; console.log('    ' + g + ' → ' + nOk + ' bonnes réponses'); }
+          if(!q.explain) n4Err++;
+          const set = new Set(q.options.map(o => o.t));
+          if(set.size !== q.options.length) { n4Err++; console.log('    ' + g + ' → options en double'); }
+        } else n4Err++;
+      } catch(e){ n4Err++; console.log('    ' + g + ' → ' + e.message); }
+    }
+  }
+  ok(n4Err === 0, 'les 34 nouveaux générateurs : 25 tirages chacun, 1 seule bonne réponse, leçon présente, options distinctes');
+  ok(call(`FICHES['factorisation'] ? /somme-produit/i.test(FICHES['factorisation'].html) && /identit/i.test(FICHES['factorisation'].html) && /bicarr/i.test(FICHES['factorisation'].html) : false`), 'fiche « Factorisation » créée (somme-produit, identités remarquables, bicarrée)');
+  ok(call(`FICHES['denombrement'] ? /k-uplet/i.test(FICHES['denombrement'].html) && /Pascal/i.test(FICHES['denombrement'].html) && /tiroirs/i.test(FICHES['denombrement'].html) : false`), 'fiche « Dénombrement » créée (k-uplets, Pascal, tiroirs)');
+  ok(call(`FICHES['logique'].html.includes('Modus ponens') && /indéterminé/i.test(FICHES['logique'].html) && /équivalence/i.test(FICHES['logique'].html)`), 'fiche « Logique » enrichie (modus ponens, verdict indéterminé, équivalence)');
+  ok(call(`FICHES['fractions-avancees'] ? /faux théorème/i.test(FICHES['fractions-avancees'].html) && /télescopique/i.test(FICHES['fractions-avancees'].html) && /conjugu/i.test(FICHES['fractions-avancees'].html) : false`), 'fiche « Fractions avancées » créée (faux théorème, télescopique, conjugué)');
+  ok(call(`/faux théorème/i.test(FICHES['fractions-puissances'].html)`), 'fiche « Fractions & puissances » enrichie de l\'avertissement du faux théorème');
+  const denCat = call(`PROG_CATS.filter(c => c.nom === 'Dénombrement & combinatoire')[0]`);
+  ok(denCat && denCat.subs.length === 3 && denCat.subs.reduce(function(a,s){ return a + s.ids.length; }, 0) === 6 && denCat.subs.some(s => s.ids.join() === 'den-multiplicatif') && denCat.subs.some(s => s.ids.join() === 'den-permutations,den-arrangement,den-combinaisons') && denCat.subs.some(s => s.ids.join() === 'den-inclusion,den-expertes'), 'catégorie « Dénombrement & combinatoire » (6 notions, 3 sous-catégories)');
+  const logCat = call(`PROG_CATS.filter(c => c.nom === 'Logique & raisonnement')[0]`);
+  ok(logCat && logCat.subs.some(s => s.ids.join() === 'sets-logic') && logCat.subs.some(s => s.ids.join() === 'log-deduction') && logCat.subs.some(s => s.ids.join() === 'log-verdicts'), 'catégorie « Logique & raisonnement » (sets-logic + 2 notions)');
+  ok(call(`PROG_CATS.every(c => (c.subs || []).every(s => (s.ids || []).indexOf('sets-logic') < 0 || c.nom === 'Logique & raisonnement'))`), '« sets-logic » n\'apparaît plus dans son ancienne catégorie (aucun doublon)');
+  const facCat = call(`PROG_CATS.filter(c => c.nom === 'Calcul littéral & factorisation')[0]`);
+  ok(facCat && facCat.subs.some(s => s.ids.join() === 'facto-cachees,facto-sommeproduit,facto-complexes,facto-substitution'), 'catégorie « Calcul littéral & factorisation » enrichie (4 notions)');
+  const frCat = call(`PROG_CATS.filter(c => c.nom === 'Nombres, fractions & puissances')[0]`);
+  ok(frCat && frCat.subs.some(s => s.ids.join() === 'frac-pieges') && frCat.subs.some(s => s.ids.join() === 'frac-rationnelles,frac-pro'), 'catégorie « Nombres, fractions & puissances » enrichie (3 notions, 2 sous-catégories)');
+  ok(call(`GEN_INFO['factoComplexeC'] && GEN_INFO['factoComplexeC'].fiches.indexOf('complexes') >= 0 && GEN_INFO['denComplementaire'].fiches.indexOf('probabilites') >= 0 && GEN_INFO['fracTelescopique'].fiches.indexOf('suites') >= 0 && GEN_INFO['denInclusion'].fiches.indexOf('logique') >= 0`),
+     'fiches-ponts : factorisation ↔ complexes, dénombrement ↔ probabilités & logique, fractions ↔ suites');
+  /* Erreur sur un nouveau générateur → leçon + fiche dénombrement */
+  call(`
+    (function(){
+      const q = GEN['denCombinaison']();
+      q._notionId = 'den-combinaisons'; q._gen = 'denCombinaison';
+      state.lastGen = 'denCombinaison';
+      SAV.logQuestion(q, ['mauvaise'], false);
+      resolveAnswer(false, q);
+    })()
+  `);
+  await sleep(1300);
+  const body11 = $('lessonBody').innerHTML;
+  ok(body11.toLowerCase().includes('combinaisons'), 'leçon d\'erreur : décomposition de la notion « Combinaisons & triangle de Pascal »');
+  ok(body11.includes('data-fiche="denombrement"'), 'boutons vers la fiche « Dénombrement » dans la leçon');
+  call('closeLesson()');
+  await sleep(1200);
+
   /* ================= GRAPHE 3D DES NOTIONS (module 20) ================= */
   console.log('== 18. Graphe des notions (menu 🕸️) ==');
   call('tdmOuvreGraphe()');
   const gWrap = call("(function(){ return document.body.children.filter(function(c){ return c.id === 'graphModal'; })[0]; })()");
   ok(gWrap && gWrap.classList.contains('open'), 'graphe : modale injectée et ouverte depuis le menu');
-  ok(call('NOTIONS.length') === 181 && call('PROG_CATS.length') === 18, 'graphe : 181 notions réparties en 18 catégories');
+  ok(call('NOTIONS.length') === 196 && call('PROG_CATS.length') === 20, 'graphe : 196 notions réparties en 20 catégories');
   const gTxt = el => { let s = el.textContent || ''; (el.children || []).forEach(c => { s += ' ' + gTxt(c); }); return s; };
   const gInn = el => { let s = el.innerHTML || ''; (el.children || []).forEach(c => { s += ' ' + gInn(c); }); return s; };
   /* ouverture en cours de partie : centrage direct sur la notion en cours */
@@ -702,9 +765,9 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(gEt.centre && gEt.centre.type === 'notion', 'graphe : notion centrée, sous-grape de liens rendu');
   ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'graphe : titre = nom de la notion centrée');
   ok($('gpBody').innerHTML.includes('Ce que tu vas t’entraîner à faire'), 'graphe : panneau mode élèves (« Ce que tu vas t’entraîner à faire »)');
-  ok($('gpBadges').innerHTML.includes('101 / 181'), 'graphe : badge d’étage (101/181)');
+  ok($('gpBadges').innerHTML.includes('101 / 196'), 'graphe : badge d’étage (101/196)');
   ok($('gReach').innerHTML.indexOf('saut') >= 0, 'graphe : barre de portée (liens directs, 2 sauts, 3 sauts)');
-  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 180, 'graphe : la portée couvre les 180 autres notions (preuve « tout est lié »)');
+  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 195, 'graphe : la portée couvre les 195 autres notions (preuve « tout est lié »)');
   ok($('gLinks').children.length > 0, 'graphe : liens SVG dessinés autour du centre');
   const gLab = gTxt($('gStage'));
   ok(gLab.indexOf('fiche') >= 0 || gLab.indexOf('sous-catégorie') >= 0 || gLab.indexOf('exercice') >= 0, 'graphe : intitulés des liaisons étiquetés (sous-catégorie / exercice / fiches)');
@@ -825,9 +888,9 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(/\.pbox\{[^}]*max-height:calc\(100dvh ?- ?36px\)/.test(cssQid.replace(/\n\s*/g, ' ')), 'modale bilan : garde-fou hauteur écran');
   const idxHtml = fs.readFileSync(ROOT + '/index.html', 'utf8');
   ok(idxHtml.includes('id="welTot"') && idxHtml.includes('id="welTot2"'), 'accueil : compteurs de notions dynamiques présents');
-  ok(idxHtml.includes('0 / 181'), 'HUD : total statique cohérent (0 / 181)');
-  ok(call('$(\'welTot\').textContent') === '181', 'accueil : compteur notions rempli (181)');
-  ok(call('$(\'welTot2\').textContent') === '181', 'accueil : deuxième compteur rempli (181)');
+  ok(idxHtml.includes('0 / 196'), 'HUD : total statique cohérent (0 / 196)');
+  ok(call('$(\'welTot\').textContent') === '196', 'accueil : compteur notions rempli (196)');
+  ok(call('$(\'welTot2\').textContent') === '196', 'accueil : deuxième compteur rempli (196)');
 
   /* l'animation alternative : bascule via le bouton du menu */
   call('state.floor = 0');

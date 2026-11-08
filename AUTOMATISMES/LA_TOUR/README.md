@@ -892,14 +892,20 @@ Trois usages :
 
 - **Progression, vue « 🎓 Par niveau (tableau croisé) »** : deux boutons
   (« 📋 Par catégorie » / « 🎓 Par niveau ») en tête de la modale. La vue
-  par niveau affiche d'abord le **tableau croisé** (lignes = niveaux,
-  colonnes = 22 catégories, cellules = effectifs, totaux contrôlés),
-  puis une section dépliable par niveau (compteur « X/Y validées »,
-  cartes de notions inchangées) avec un bouton **« 🎯 Réviser ce
-  niveau »** qui ouvre la révision personnalisée pré-remplie ;
+  par niveau affiche d'abord le **tableau croisé interactif** (lignes =
+  niveaux, colonnes = 22 catégories, cellules = effectifs, totaux
+  contrôlés) : le survol d'un numéro ouvre une **bulle d'information**
+  (data-tip) listant les notions exactes de l'intersection et leur
+  statut, et **chaque numéro se coche d'un clic** pour composer un menu
+  ciblé — la barre « 🎯 Réviser la sélection (n notions) » / « ↺ Vider »
+  lance la révision personnalisée pré-remplie avec ces notions
+  uniquement. Suivent une section dépliable par niveau (compteur
+  « X/Y validées », cartes de notions inchangées) avec un bouton
+  **« 🎯 Réviser ce niveau »** ;
 - **Révision personnalisée** : puces de filtrage par niveau (avec
   effectifs) combinées à la recherche, badge de niveau par ligne, et
-  `tdmOpenRevision(code)` pré-coche tout un niveau ;
+  `tdmOpenRevision(code)` pré-coche tout un niveau — `tdmOpenRevision(ids)`
+  accepte aussi une liste d'ids (cellules cochées du tableau croisé) ;
 - **Dossier de présentation** : nouvelle section « 📊 Tableau croisé :
   niveaux de classe × notions à traiter » (22 lignes × 7 colonnes,
   calculée depuis les données du jeu, totaux 209) et tous les
@@ -1055,7 +1061,10 @@ classe & tableau croisé** (7 niveaux, 209 notions couvertes une à une,
 effectifs 15/32/44/75/27/14/2, cellules du tableau croisé = effectifs
 des catégories, bascule des vues de la progression, « Réviser ce
 niveau » pré-coche les notions du niveau, puces de filtrage de la
-révision, chiffres du dossier de présentation).
+révision, chiffres du dossier de présentation, **bulle d'information et
+cases cochables du tableau croisé** — chaque numéro actif porte son
+data-tip, se coche/décoche au clic, « 🎯 Réviser la sélection » ouvre
+la révision pré-remplie, « ↺ Vider » efface).
 `node .tests/test-tdm.mjs` → **TOUT PASSE**.
 
 ## Choix techniques

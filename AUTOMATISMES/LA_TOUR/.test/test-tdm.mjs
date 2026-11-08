@@ -1086,8 +1086,55 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(call('PROG_VIEW') === 'niveau', 'bascule vers la vue « Par niveau »');
   const nvKids = [...$('notionsList').children];
   ok(nvKids.length === 8, 'vue « Par niveau » : tableau croisé + 7 sections de niveau (' + nvKids.length + ')');
-  ok(nvKids[0].innerHTML.includes('croise-table') && nvKids[0].innerHTML.includes('croise-note'),
-     'tableau croisé rendu en tête de la vue');
+  const croiseWrap = nvKids[0];
+  const croiseTable = croiseWrap.children.find(c => c.tagName === 'table');
+  ok(croiseTable && croiseTable.classList.contains('croise-table'), 'tableau croisé rendu en tête de la vue');
+  ok(croiseWrap.children.some(c => c.classList.contains('croise-note')), 'note explicative sous le tableau');
+
+  /* Tableau croisé INTERACTIF : bulle au survol + numéros cochables */
+  const selBar = croiseWrap.children.find(c => c.classList.contains('croise-selbar'));
+  ok(selBar, 'barre de sélection : « 🎯 Réviser la sélection » + « ↺ Vider »');
+  const tbody2 = croiseTable.children.find(c => c.tagName === 'tbody');
+  const bodyRows = [...tbody2.children].filter(r => !r.classList.contains('croise-sum'));
+  const nbOn = call('tdmCroise().cells.flat().filter(x => x > 0).length');
+  let seenOn = 0, tipOk = true;
+  bodyRows.forEach(r => [...r.children].forEach(td => {
+    if(td.classList.contains('on')){
+      seenOn++;
+      const tip = td.getAttribute('data-tip') || '';
+      if(!(td.getAttribute('data-cell') && td.getAttribute('data-k') &&
+           tip.includes('<b>') && tip.includes('Clique pour cocher'))) tipOk = false;
+    }
+  }));
+  ok(seenOn === nbOn, 'les ' + nbOn + ' intersections non vides sont autant de numéros actifs (' + seenOn + ')');
+  ok(tipOk, 'chaque numéro actif porte sa bulle (data-tip : niveau × catégorie, liste des notions, invitation à cocher)');
+  const clickCell = td => (td.listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  const tdEq = bodyRows[3].children[1 + 3];
+  ok(tdEq.classList.contains('on') && tdEq.getAttribute('data-tip').includes('Équations'),
+     'cellule « 1re × Équations & inéquations » trouvée avec sa bulle');
+  clickCell(tdEq);
+  ok(tdEq.classList.contains('checked') && tdEq.textContent === '✓ 14', 'un clic coche la cellule (✓ 14)');
+  const tdFn = bodyRows[2].children[1 + 4];
+  ok(tdFn.classList.contains('on') && tdFn.getAttribute('data-tip').includes('Fonctions'),
+     'cellule « 2de × Fonctions & lectures graphiques » trouvée avec sa bulle');
+  clickCell(tdFn);
+  const barTxt = selBar.children.find(c => c.classList.contains('croise-sel-txt'));
+  ok(barTxt.innerHTML.includes('<b>22</b>'), 'barre : 14 + 8 = 22 notions cochées (' + barTxt.innerHTML + ')');
+  clickCell(tdFn);
+  ok(!tdFn.classList.contains('checked') && tdFn.textContent === '8', 'un nouveau clic décoche la cellule (retour au numéro simple)');
+  clickCell(tdFn);
+  call("$('revList').children.length = 0");
+  const launchBtn = selBar.children.find(c => c.classList.contains('croise-sel-launch'));
+  ok(launchBtn && (launchBtn.listeners.click || []).length > 0, 'bouton « 🎯 Réviser la sélection » câblé');
+  (launchBtn.listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok($('revisionModal').classList.contains('open'), '« Réviser la sélection » ouvre la modale de révision');
+  ok($('revStatus').textContent.includes('22 notions cochées'),
+     'les 22 notions des cellules cochées sont pré-cochées (' + $('revStatus').textContent + ')');
+  ok($('revList').children.length === 209, 'aucun filtre de niveau imposé : les 209 notions restent listées');
+  call('tdmCloseRevision()');
+  const clearBtn = selBar.children.find(c => c.classList.contains('croise-sel-clear'));
+  (clearBtn.listeners.click || []).forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('tdmCroiseSelIds().length') === 0, '« ↺ Vider » efface la sélection du tableau');
   const nivBoxes = nvKids.slice(1);
   ok(nivBoxes.every(b => b.className.includes('niveau-box')), 'les 7 sections portent la classe niveau-box');
   ok(nivBoxes.every(b => /\d+\/\d+ validée/.test(b.children[0].innerHTML)), 'compteur « X/Y validées » par niveau');
@@ -1138,6 +1185,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(dossier.includes('44 modules'), 'dossier : 44 modules mentionnés');
   ok(dossier.includes('Tableau croisé'), 'dossier : section « tableau croisé niveaux × notions »');
   ok(dossier.includes('CPGE'), 'dossier : la colonne CPGE du tableau croisé figure bien');
+  ok(dossier.includes('Réviser la sélection'), 'dossier : l’interactivité du tableau (bulles, cases cochables) est décrite');
 
   console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
   process.exit(fail === 0 ? 0 : 1);

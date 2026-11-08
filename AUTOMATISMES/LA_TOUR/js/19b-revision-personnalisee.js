@@ -111,10 +111,17 @@
   function tdmOpenRevision(levelCode){
     /* La sélection en édition repart de la sélection active, s'il y en a une. */
     revSel = state.customPool ? new Set(state.customPool) : new Set();
-    /* Un code de niveau (clic « 🎯 Réviser ce niveau ») pré-coche
-       toutes les notions de ce niveau et active le filtre associé. */
+    /* Trois appels possibles :
+       – sans argument : sélection en cours ;
+       – un code de niveau (« 🎯 Réviser ce niveau ») : pré-coche toutes
+         les notions de ce niveau et active le filtre associé ;
+       – un tableau d'ids (cellules cochées du tableau croisé,
+         « 🎯 Réviser la sélection ») : pré-coche exactement ces notions. */
     revLvl = null;
-    if(levelCode && typeof NOTION_LEVELS !== 'undefined'){
+    if(Array.isArray(levelCode)){
+      const valid = new Set(NOTIONS.map(function(n){ return n.id; }));
+      revSel = new Set(levelCode.filter(function(id){ return valid.has(id); }));
+    } else if(levelCode && typeof NOTION_LEVELS !== 'undefined'){
       revSel = new Set(NOTIONS
         .filter(function(n){ return NOTION_LEVELS[n.id] === levelCode; })
         .map(function(n){ return n.id; }));

@@ -12,10 +12,11 @@ simples**, l'**horodatage de la dernière mise à jour**, la **révision
 personnalisée**, l'**intégration des documents « Évolutions » et
 « Proportions »** et l'**explorateur de liens du programme**, les **niveaux de classe et le
 tableau croisé** (vue « 🎓 Par niveau » de la progression, filtres par
-niveau de la révision) — une
-succession de sous-graphes centrés sur une notion ou une zone, où
-l'élève voit que les 228 notions sont toutes reliées, directement
-ou indirectement (voir plus bas).
+niveau de la révision), et le **graphe des notions refondu** :
+une **constellation 3D générale** où les 228 notions se lisent d'un
+coup d'œil (couleurs = zones, hauteur = niveau de classe, liaisons
+🔗 ⚙ 📘), puis des **sous-graphes 2D centrés** pour explorer de
+proche en proche (voir plus bas).
 
 ## Structure
 
@@ -35,8 +36,9 @@ la-tour-des-maths/
 │   ├── 05-revision-maj.css          ← menu utilitaire (date MAJ), modale de
 │   │                                  révision personnalisée, badge, rev-list
 │   └── 06-graphe-notions.css        ← modale 🕸️ « Graphe des notions » :
-│                                      sous-graphes centrés, étiquettes,
-│                                      panneau de détail, fil du chemin
+│                                      constellation 3D (canvas, commandes,
+│                                      infobulle), sous-graphes centrés,
+│                                      étiquettes, panneau, fil du chemin
 └── js/
     ├── 01-outils.js                 ← helpers, formatage, QCM, leçons, SVG
     ├── 02-banque-qcm.js             ← générateurs QCM « GEN » (2nd degré, dérivées…)
@@ -320,14 +322,16 @@ la-tour-des-maths/
     ├── 19b-revision-personnalisee.js← modale 🎯 révision personnalisée
     │                                  (sélection de notions pour la session)
     ├── 20-graphe-notions.js          ← modale 🕸️ « Graphe des notions » :
-    │                                  sous-graphes centrés, élèves & enseignants
+    │                                  constellation 3D générale + sous-graphes
+    │                                  2D centrés, élèves & enseignants
     ├── 21-monde-balle.js             ← 2ᵉ animation « balle rebondissante » :
     │                                  deux murs, paliers, traînée, écrasement,
     │                                  plancher coulissant, gerbes & larmes
     └── 22-nouveautes.js               ← modale 🆕 « Quoi de neuf » à
                                        l'ouverture : mises à jour présentées
-                                       (mise en avant de la coche directe dans
-                                       le tableau croisé selon le niveau),
+                                       (mise en avant du graphe des notions
+                                       en constellation 3D, puis de la coche
+                                       directe dans le tableau croisé),
                                        option « Ne plus afficher au
                                        démarrage », bouton « 🎓 Découvrir le
                                        tableau croisé »
@@ -336,13 +340,18 @@ la-tour-des-maths/
 ## Interconnexions
 
 - `index.html` charge les 6 feuilles CSS **dans l'ordre 01 → 06** puis les
-  34 scripts **dans l'ordre 01 → 21** (l'ordre de chargement est l'ordre
-  d'exécution).
-- L'objet `GEN` (générateurs de questions, **315 clés**) est déclaré dans
+  48 scripts **dans l'ordre de `index.html`** (01 → 22, les modules de
+  notions `11w`/`11x`/`11y` entre `11v-niveaux.js` et `12-etat-jeu.js` ;
+  l'ordre de chargement est l'ordre d'exécution).
+- L'objet `GEN` (générateurs de questions, **427 clés**) est déclaré dans
   `01-outils.js`, alimenté par `02`, `03`, `04`, complété par l'inscription
-  de la banque `G` dans `10-adaptateurs-banque.js` puis par les **18
-  générateurs d'évolutions/proportions** de `11c` ; `11-notions.js` et
-  `11c` associent chaque étage à ses générateurs.
+  de la banque `G` dans `10-adaptateurs-banque.js` puis enrichi par les
+  modules de notions `11c` → `11y` (évolutions/proportions, droites,
+  fractions & puissances, dérivation, trigonométrie, second degré,
+  maths expertes, exponentielles & limites, lois continues & inférence,
+  intégration & équations différentielles, automatismes STS) ;
+  `11-notions.js` et les modules de notions associent chaque étage à ses
+  générateurs.
 - L'objet `G` (banque « fichier fusionné » en Unicode) est découpé en 4
   volets thématiques reliés par `Object.assign(G, { … })` : le volet 05 le
   déclare, les volets 06-08 l'enrichissent.
@@ -372,14 +381,31 @@ la-tour-des-maths/
   `tdmRepAttendue`, `tdmDecompoHTML` (élément raté mis en évidence),
   `tdmRappelsHTML`.
 - **`js/20-graphe-notions.js`** : modale 🕸️ « Graphe des notions »
-  (menu utilitaire, entrée `#grapheBtn`) — un explorateur de
-  **sous-graphes centrés** (DOM + SVG, sans physique, très léger) :
-  écran de départ (16 zones cliquables, ou reprise de la position en
-  cours), puis chaque clic fait du nœud choisi le **centre** d'un
-  sous-graphe : ses satellites directs (même sous-catégorie 🔗,
-  même élément d'entraînement ⚙, fiches partagées 📘) sont disposés
-  en anneaux, les liaisons sont **étiquetées** et cliquer un satellite
-  relance l'exploration. **Chaque nœud est déplaçable** à la souris
+  (menu utilitaire, entrée `#grapheBtn`) — deux étages de lecture
+  du programme (sans physique ni bundler, très léger) :
+  1. **la constellation 3D générale** (vue par défaut) : les 228
+     notions placées dans l'espace — 22 secteurs colorés par zone
+     autour d'un axe vertical, la **hauteur = le niveau de classe**
+     (🌱 cycle 3 en bas → 🏛 CPGE au sommet), anneaux de niveau et
+     noms des zones en repères. Les liaisons **🔗 même
+     sous-catégorie**, **⚙ même élément d'entraînement** et les
+     **ponts 📘 fiches partagées** (les 2 plus fortes de chaque
+     notion) traversent la constellation : les ponts entre zones se
+     voient d'un coup d'œil. **Glisser fait pivoter** (rotation
+     automatique douce, arrêtée dès qu'on prend la main), la
+     **molette zoome** (bornes 0,5 → 2,8), **un clic sélectionne
+     une notion** (ses liens 📘 les plus forts passent en pointillés,
+     le panneau détaille et propose « 🧭 Ouvrir le sous-graphe 2D »),
+     le survol affiche une infobulle, et des **filtres niveau /
+     zone / types de liaisons** (menus + cases à cocher)
+     concentrent la vue. Moteur canvas 2D à projection perspective
+     maison.
+  2. **les sous-graphes 2D centrés** (étage de détail, DOM + SVG) :
+     chaque clic fait du nœud choisi le **centre** d'un
+     sous-graphe : ses satellites directs (même sous-catégorie 🔗,
+     même élément d'entraînement ⚙, fiches partagées 📘) sont disposés
+     en anneaux, les liaisons sont **étiquetées** et cliquer un satellite
+     relance l'exploration. **Chaque nœud est déplaçable** à la souris
   ou au doigt (glisser-déposer : les liaisons suivent, un clic reste
   un clic), et **chaque liaison ouvre au survol une étiquette
   explicative** (modale flottante : sous-catégorie commune, exercice
@@ -399,9 +425,12 @@ la-tour-des-maths/
   et mode 👩‍🏫 enseignant (identifiants, rappels LaTeX via
   `tdmGenRappel` + MathJax, notions liées), intitulé du lien suivi,
   statuts ✔/⏭ synchronisés sur l'état du jeu.
-  API : `tdmOuvreGraphe`, `tdmFermeGraphe`, `tdmGrapheCentre`,
-  `tdmGrapheDepart`, `tdmGrapheMode`, `tdmGrapheVoisins`,
-  `tdmGrapheEtat`.
+  API : `tdmOuvreGraphe`, `tdmFermeGraphe`, `tdmGrapheMonde`,
+  `tdmGrapheCentre`, `tdmGrapheDepart`, `tdmGrapheMode`,
+  `tdmGrapheVoisins`, `tdmGrapheSelect`, `tdmGrapheProjeter`,
+  `tdmGrapheNoeuds3D`, `tdmGrapheLiens3D`, `tdmGrapheCamera`,
+  `tdmGrapheAuto`, `tdmGrapheFiltreNiveau`, `tdmGrapheFiltreCat`,
+  `tdmGrapheToggles`, `tdmGrapheEtat`.
 - **Trois lieux décomposés** : sommaire « 📚 Progression des notions »,
   modale « ⏭ Notions passées » (mode mini), leçon d'erreur
   (✅ réponse attendue → cours/méthode/piège → 🧩 décomposition →
@@ -1148,8 +1177,11 @@ nouvelles notions maths expertes, factorisation/dénombrement/logique
 & fractions pro puis exponentielles/fonction inverse/binomiale/valeurs
 propres/limites (25 tirages par générateur, options distinctes,
 propreté LaTeX vérifiée au runtime, leçon d'erreur → fiche liée),
-graphe des notions (sous-graphes, drag & drop, survol des liaisons,
-anti-chevauchement), 2ᵉ animation « balle rebondissante » (bascule du
+graphe des notions refondu (constellation 3D : 228 nœuds projetés,
+614 liaisons générales 🔗 ⚙ 📘, rotation au glisser, zoom borné,
+sélection au clic + liens 📘 en pointillés, filtres niveau & zone,
+toggles de liaisons, retour 🌍 ; sous-graphes 2D : satellites,
+drag & drop, survol des liaisons, anti-chevauchement), 2ᵉ animation « balle rebondissante » (bascule du
 menu, balle plus grosse, montée heureuse et fêtée — bond, traînée,
 étincelles de joie, gerbe, chute ∝ pénalité avec écrasement d'arrivée
 croissant, plancher coulissant, larmes qui coulent vers le bas, pans de

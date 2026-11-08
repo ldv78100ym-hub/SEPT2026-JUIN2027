@@ -1,10 +1,11 @@
 /* ============================================================
    22. NOUVEAUTÉS — modale d'alerte à l'ouverture de la page
    Au chargement, une modale « 🆕 Quoi de neuf » présente les
-   dernières mises à jour de la tour (niveaux de classe, vue
-   « Par niveau », révision filtrée) et met EN PARTICULIER en
-   avant la possibilité de cocher directement dans le tableau
-   croisé les notions à réviser selon son niveau de classe.
+   dernières mises à jour de la tour et met EN PARTICULIER en
+   avant le graphe des notions refondu (constellation 3D
+   générale + sous-graphes 2D centrés), puis la possibilité de
+   cocher directement dans le tableau croisé les notions à
+   réviser selon son niveau de classe.
    • Affichage automatique à chaque ouverture, sauf si l'élève
      coche « Ne plus afficher au démarrage » (localStorage) ;
    • Bouton « 🆕 Nouveautés » du menu utilitaire pour la rouvrir ;
@@ -28,7 +29,9 @@
     '<h2 id="newsTitle">🆕 Quoi de neuf — novembre 2026</h2>' +
     '<div class="news-sub">La Tour des Maths vient d’être enrichie. Voici les mises à jour les plus utiles — et surtout une nouvelle façon de réviser exactement ce qui correspond à ton niveau de classe.</div>' +
     '<div class="news-list">' +
-    '<div class="news-item news-star"><b>⭐ Coche directement dans le tableau croisé ce que tu veux réviser selon ton niveau de classe.</b><br>' +
+    '<div class="news-item news-star"><b>⭐ Le graphe des notions devient une constellation 3D.</b><br>' +
+    'Ouvre <b>🕸️ Graphe des notions</b> : les 228 notions s’affichent d’abord en <b>vue générale 3D</b> — les couleurs sont les 22 zones du programme, la hauteur est le niveau de classe (🌱 cycle 3 en bas → 🏛 CPGE au sommet), et les liaisons 🔗, ⚙ et les ponts 📘 montrent d’un coup d’œil comment tout est relié. <b>Glisse pour faire tourner</b>, zoome à la molette, <b>clique un point pour sélectionner une notion</b>, filtre par niveau ou par zone, puis plonge dans le <b>sous-graphe 2D</b> pour l’explorer de proche en proche.</div>' +
+    '<div class="news-item"><b>✅ Coche directement dans le tableau croisé ce que tu veux réviser selon ton niveau de classe.</b>' +
     'Ouvre <b>📚 Progression des notions → « 🎓 Par niveau »</b> : dans le tableau croisé, <b>survole un numéro</b> pour voir la liste des notions qu’il recouvre (avec leur statut), puis <b>clique pour le cocher</b> (✓) — autant de cases que tu veux, celles de ton niveau d’abord ! Clique enfin <b>« 🎯 Réviser la sélection »</b> : la tour ne posera que ces notions-là. Encore plus rapide : le bouton <b>« 🎯 Réviser ce niveau »</b> de chaque section de niveau pré-coche tout le niveau.</div>' +
     '<div class="news-item"><b>🎓 Niveaux de classe.</b> Les 228 notions de la tour sont désormais rattachées à un niveau scolaire : 🌱 Cycle 3 (15 notions), 🌿 Cycle 4 (32), 🎓 Seconde (44), 🎓 Première (75), 🎓 Terminale (29), 🌟 Maths expertes &amp; complémentaires (14), 🏛 Post-bac/CPGE (19).</div>' +
     '<div class="news-item"><b>📊 Vue « 🎓 Par niveau ».</b> La progression affiche le tableau croisé des niveaux × 22 catégories (effectifs par case, totaux contrôlés), puis une section dépliable par niveau avec son compteur « X/Y validées ».</div>' +

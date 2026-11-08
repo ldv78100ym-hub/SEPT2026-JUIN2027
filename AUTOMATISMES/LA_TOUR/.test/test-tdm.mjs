@@ -808,56 +808,152 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   await sleep(1200);
 
   /* ================= GRAPHE 3D DES NOTIONS (module 20) ================= */
-  console.log('== 18. Graphe des notions (menu 🕸️) ==');
+  console.log('== 18. Graphe des notions : constellation 3D + sous-graphes (menu 🕸️) ==');
+  const gPtr = (el, t, ev) => ((el.listeners || {})[t] || []).forEach(fn => fn(Object.assign({ stopPropagation(){}, preventDefault(){} }, ev || {})));
+  const gTxt = el => { let s = el.textContent || ''; (el.children || []).forEach(c => { s += ' ' + gTxt(c); }); return s; };
+  const gInn = el => { let s = el.innerHTML || ''; (el.children || []).forEach(c => { s += ' ' + gInn(c); }); return s; };
   call('tdmOuvreGraphe()');
   const gWrap = call("(function(){ return document.body.children.filter(function(c){ return c.id === 'graphModal'; })[0]; })()");
   ok(gWrap && gWrap.classList.contains('open'), 'graphe : modale injectée et ouverte depuis le menu');
-  ok(call('NOTIONS.length') === 228 && call('PROG_CATS.length') === 22, 'graphe : 228 notions réparties en 22 catégories');
-  const gTxt = el => { let s = el.textContent || ''; (el.children || []).forEach(c => { s += ' ' + gTxt(c); }); return s; };
-  const gInn = el => { let s = el.innerHTML || ''; (el.children || []).forEach(c => { s += ' ' + gInn(c); }); return s; };
-  /* ouverture en cours de partie : centrage direct sur la notion en cours */
+  ok(call('NOTIONS.length') === 228 && call('PROG_CATS.length') === 22, 'graphe : 228 notions réparties en 22 zones');
+  /* --- vue générale 3D « constellation » : vue par défaut --- */
   const gEt0 = call('tdmGrapheEtat()');
-  ok(gEt0.centre && gEt0.centre.type === 'notion', 'graphe : ouverture centrée sur la position en cours dans la tour');
-  /* retour à l’écran de départ via le bouton 🏠 du fil du chemin */
-  const gHome = $('gTrail').children[0];
-  ((gHome.listeners || {}).click || []).forEach(fn => fn({ stopPropagation(){}, preventDefault(){} }));
-  ok($('gStage').children.length === 1 && gTxt($('gStage')).indexOf('Tout est lié') >= 0, 'graphe : écran de départ « tout est lié » accessible via 🏠');
-  ok($('gStage').children[0].children.some(c => (c.className || '').indexOf('gcat') >= 0), 'graphe : cartes de catégories cliquables au départ');
-  /* vue catégorie puis notion */
-  call('tdmGrapheDepart(0)');
-  let gEt = call('tdmGrapheEtat()');
-  ok(gEt.centre && gEt.centre.type === 'cat', 'graphe : départ par catégorie, la catégorie devient le centre');
-  ok($('gStage').children.length === call('PROG_CATS[0].subs.length') + 1, 'graphe : sous-catégories en satellites autour du centre');
+  ok(gEt0.vue === 'monde' && gEt0.centre.type === 'monde', 'constellation : ouverture directe sur la vue générale 3D');
+  ok(gEt0.visibles.noeuds === 228, 'constellation : les 228 notions placées dans l’espace');
+  const gLiens0 = call('tdmGrapheLiens3D()');
+  ok(gLiens0.length > 500, 'constellation : liaisons générales tracées (' + gLiens0.length + ')');
+  ok(gLiens0.some(l => l.type === 'sub') && gLiens0.some(l => l.type === 'fiche'),
+    'constellation : liaisons 🔗 (familles) et ponts 📘 (fiches partagées) entre zones');
+  ok(gEt0.g3d && gEt0.g3d.yaw === -0.65 && gEt0.g3d.auto === true, 'constellation : caméra initiale + rotation automatique active');
+  const gPj = call('tdmGrapheProjeter(NOTIONS[100].id)');
+  ok(gPj && gPj.visible && gPj.x >= 0 && gPj.x <= 1280 && gPj.y >= 0 && gPj.y <= 800,
+    'constellation : projection 3D → écran cohérente pour la notion « ' + call('NOTIONS[100].name') + ' »');
+  const gCv = $('gStage').children.find(c => c.id === 'gCv3d');
+  ok(!!gCv, 'constellation : canvas plein cadre présent');
+  const gHud = $('gStage').children.find(c => c.id === 'g3dHud');
+  ok(gHud && (gHud.innerHTML.indexOf('228') >= 0) && (gHud.innerHTML.indexOf('liaison') >= 0),
+    'constellation : bandeau compteurs (notions + liaisons affichées)');
+  const gCtl = $('gStage').children.find(c => c.id === 'g3dCtl');
+  ok(gCtl && ['g3dZo', 'g3dZi', 'g3dAuto', 'g3dNiv', 'g3dCat'].every(id => gCtl.children.some(c => c.id === id)),
+    'constellation : commandes zoom, rotation auto et filtres niveau/zone');
+  /* rotation au glisser + arrêt de la rotation automatique */
+  const gYaw0 = call('tdmGrapheEtat().g3d.yaw');
+  gPtr(gCv, 'pointerdown', { clientX: 400, clientY: 300, pointerId: 3 });
+  gPtr(gCv, 'pointermove', { clientX: 520, clientY: 330, pointerId: 3 });
+  gPtr(gCv, 'pointerup', {});
+  ok(call('tdmGrapheEtat().g3d.yaw') !== gYaw0, 'constellation : glisser = rotation de la constellation');
+  ok(call('tdmGrapheEtat().g3d.auto') === false, 'constellation : la rotation automatique s’arrête dès qu’on prend la main');
+  /* zoom molette + bornes */
+  const gZ0 = call('tdmGrapheEtat().g3d.zoom');
+  gPtr(gCv, 'wheel', { deltaY: -240 });
+  ok(call('tdmGrapheEtat().g3d.zoom') > gZ0, 'constellation : molette vers l’avant = zoom avant');
+  gPtr(gCv, 'wheel', { deltaY: 2400 });
+  gPtr(gCv, 'wheel', { deltaY: 2400 });
+  gPtr(gCv, 'wheel', { deltaY: 2400 });
+  ok(call('tdmGrapheEtat().g3d.zoom') >= 0.5 && call('tdmGrapheEtat().g3d.zoom') < gZ0 + 0.001,
+    'constellation : zoom borné (0,5 → 2,8), retour possible');
+  /* sélection d’une notion : panneau détaillé + liens 📘 mis en avant */
+  call('tdmGrapheSelect(NOTIONS[100].id)');
+  ok(call('tdmGrapheSelection()') === call('NOTIONS[100].id'), 'constellation : sélection d’une notion (API)');
+  ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'constellation : panneau = fiche de la notion sélectionnée');
+  ok($('gpBadges').innerHTML.includes('101 / 228'), 'constellation : badge d’étage (101/228)');
+  ok($('gpBody').innerHTML.includes('sous-graphe 2D'), 'constellation : bouton « Ouvrir le sous-graphe 2D » proposé');
+  const gNf = call('tdmGrapheVoisins(NOTIONS[100].id).filter(v => v.type === "fiche").length');
+  const gInc = call('tdmGrapheLiens3D().filter(l => l.type === "fiche" && (l.a === NOTIONS[100].id || l.b === NOTIONS[100].id)).length');
+  ok(gInc >= Math.min(12, gNf), 'constellation : sélection → ses liens 📘 par fiches partagées apparaissent (' + gInc + ')');
+  /* sélection au clic sur le canvas (sur un point, pas un glisser) */
+  call('tdmGrapheSelect(null)');
+  const gPj2 = call('tdmGrapheProjeter(NOTIONS[100].id)');
+  gPtr(gCv, 'pointerdown', { clientX: gPj2.x, clientY: gPj2.y, pointerId: 4 });
+  gPtr(gCv, 'pointerup', { clientX: gPj2.x, clientY: gPj2.y });
+  ok(call('tdmGrapheSelection()') === call('NOTIONS[100].id'),
+    'constellation : clic sur un point = sélection de la notion visée');
+  gPtr(gCv, 'pointerdown', { clientX: 30, clientY: 30, pointerId: 5 });
+  gPtr(gCv, 'pointerup', { clientX: 30, clientY: 30 });
+  ok(call('tdmGrapheSelection()') === null, 'constellation : clic dans le vide = désélection');
+  /* filtres niveau / zone (commandes réelles + API) */
+  const gSelN = gCtl.children.find(c => c.id === 'g3dNiv');
+  const gSelC = gCtl.children.find(c => c.id === 'g3dCat');
+  gSelN.value = '2de';
+  gPtr(gSelN, 'change');
+  ok(call('tdmGrapheNoeuds3D().length') === 44 && call('tdmGrapheEtat().g3d.niv') === '2de',
+    'constellation : filtre « 2de » → 44 notions visibles');
+  call("tdmGrapheFiltreNiveau('*')");
+  ok(call('tdmGrapheNoeuds3D().length') === 228, 'constellation : retrait du filtre → les 228 notions reviennent');
+  call('tdmGrapheFiltreCat(0)');
+  const gCat0 = call('(PROG_CATS[0].subs || []).reduce((a, s) => a + s.ids.length, 0)');
+  ok(call('tdmGrapheNoeuds3D().length') === gCat0, 'constellation : filtre par zone → seules ses ' + gCat0 + ' notions restent');
+  call("tdmGrapheFiltreCat('*')");
+  /* types de liaisons pilotables */
+  ok($('gTypes').children.length === 3 && $('gTypes').children.every(c => (c.className || '').indexOf('gtgl') >= 0),
+    'constellation : légende = cases à cocher 🔗 / ⚙ / 📘');
+  call('tdmGrapheToggles({ sub: false })');
+  ok(call('tdmGrapheLiens3D().filter(l => l.type === "sub").length') === 0, 'constellation : liaisons 🔗 désactivables');
+  call('tdmGrapheToggles({ sub: true, fiche: false })');
+  ok(call('tdmGrapheLiens3D().filter(l => l.type === "fiche").length') === 0, 'constellation : ponts 📘 désactivables');
+  call('tdmGrapheToggles({ fiche: true })');
+  /* panneau général : guide + notions les plus connectées + zones + niveaux */
+  call('tdmGrapheSelect(null)');
+  const gPg = $('gpBody').innerHTML;
+  ok(gPg.includes('connectées') && gPg.includes('Piloter la constellation'), 'constellation : panneau général (guide + notions les plus connectées)');
+  ok(gPg.includes('data-gcat="') && gPg.includes('data-gniv="') && gPg.includes('data-gnotion="'),
+    'constellation : zones, niveaux et notions phares cliquables depuis le panneau');
+  ok(gPg.includes('ponts 📘'), 'constellation : statistiques des liaisons (🔗, ⚙, ponts 📘)');
+  /* bouton rotation auto */
+  const gAu = gCtl.children.find(c => c.id === 'g3dAuto');
+  gPtr(gAu, 'click');
+  ok(call('tdmGrapheEtat().g3d.auto') === true && (gAu.className || '').indexOf('on') >= 0,
+    'constellation : bouton 🔄 Auto réactivable (état allumé visible)');
+  gPtr(gAu, 'click');
+  ok(call('tdmGrapheEtat().g3d.auto') === false, 'constellation : bouton 🔄 Auto ré-arrêtable');
+  /* --- bascule vers le sous-graphe 2D centré : l’étage de détail --- */
   call('tdmGrapheCentre(NOTIONS[100].id)');
-  gEt = call('tdmGrapheEtat()');
-  ok(gEt.centre && gEt.centre.type === 'notion', 'graphe : notion centrée, sous-grape de liens rendu');
-  ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'graphe : titre = nom de la notion centrée');
-  ok($('gpBody').innerHTML.includes('Ce que tu vas t’entraîner à faire'), 'graphe : panneau mode élèves (« Ce que tu vas t’entraîner à faire »)');
-  ok($('gpBadges').innerHTML.includes('101 / 228'), 'graphe : badge d’étage (101/228)');
-  ok($('gReach').innerHTML.indexOf('saut') >= 0, 'graphe : barre de portée (liens directs, 2 sauts, 3 sauts)');
-  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 227, 'graphe : la portée couvre les 227 autres notions (preuve « tout est lié »)');
-  ok($('gLinks').children.length > 0, 'graphe : liens SVG dessinés autour du centre');
+  let gEt = call('tdmGrapheEtat()');
+  ok(gEt.centre && gEt.centre.type === 'notion' && gEt.vue === 'notion', 'sous-graphe 2D : notion centrée depuis la constellation');
+  ok($('gStage').children.every(c => c.id !== 'gCv3d'), 'sous-graphe 2D : le canvas 3D laisse la place aux nœuds DOM');
+  /* le bouton « Ouvrir le sous-graphe 2D » du panneau constellation route aussi vers la vue notion */
+  call('tdmGrapheMonde()');
+  call('tdmGrapheSelect(NOTIONS[100].id)');
+  $('gPanel').listeners.click.forEach(fn => fn({ target: { closest: sel => sel.indexOf('data-gnotion') >= 0 ? { getAttribute: () => call('NOTIONS[100].id') } : null }, stopPropagation(){}, preventDefault(){} }));
+  ok(call('tdmGrapheEtat()').vue === 'notion', 'sous-graphe 2D : le bouton « 🧭 Ouvrir le sous-graphe 2D » navigue vers la vue centrée');
+  ok($('gpTitre').textContent.indexOf(call('NOTIONS[100].name')) >= 0, 'sous-graphe 2D : titre = nom de la notion centrée');
+  ok($('gpBody').innerHTML.includes('Ce que tu vas t’entraîner à faire'), 'sous-graphe 2D : panneau mode élèves (« Ce que tu vas t’entraîner à faire »)');
+  ok($('gpBadges').innerHTML.includes('101 / 228'), 'sous-graphe 2D : badge d’étage (101/228)');
+  ok($('gReach').innerHTML.indexOf('saut') >= 0, 'sous-graphe 2D : barre de portée (liens directs, 2 sauts, 3 sauts)');
+  ok(gEt.portee && (gEt.portee.d1 + gEt.portee.d2 + gEt.portee.d3 + gEt.portee.reste) === 227, 'sous-graphe 2D : la portée couvre les 227 autres notions (preuve « tout est lié »)');
+  ok($('gLinks').children.length > 0, 'sous-graphe 2D : liens SVG dessinés autour du centre');
   const gLab = gTxt($('gStage'));
-  ok(gLab.indexOf('fiche') >= 0 || gLab.indexOf('sous-catégorie') >= 0 || gLab.indexOf('exercice') >= 0, 'graphe : intitulés des liaisons étiquetés (sous-catégorie / exercice / fiches)');
+  ok(gLab.indexOf('fiche') >= 0 || gLab.indexOf('sous-catégorie') >= 0 || gLab.indexOf('exercice') >= 0, 'sous-graphe 2D : intitulés des liaisons étiquetés (sous-catégorie / exercice / fiches)');
   ok(Array.isArray(call('tdmGrapheVoisins(NOTIONS[100].id)')) && call('tdmGrapheVoisins(NOTIONS[100].id)').length > 0, 'graphe : voisins directs accessibles (API tdmGrapheVoisins)');
+  /* vue catégorie (depuis le panneau ou l’API) */
+  call('tdmGrapheDepart(0)');
+  gEt = call('tdmGrapheEtat()');
+  ok(gEt.centre && gEt.centre.type === 'cat', 'sous-graphe 2D : départ par catégorie, la catégorie devient le centre');
+  ok($('gStage').children.length === call('PROG_CATS[0].subs.length') + 1, 'sous-graphe 2D : sous-catégories en satellites autour du centre');
+  call('tdmGrapheCentre(NOTIONS[100].id)');
   /* navigation : clic sur un satellite → nouveau centre + saut */
   const gAv = call('tdmGrapheEtat()').hops;
   const gSat = $('gStage').children.find(c => (c.className || '').indexOf('gnode') >= 0 && (c.className || '').indexOf('centre') < 0);
-  ok(!!gSat, 'graphe : satellite cliquable présent');
-  ((gSat.listeners || {}).click || []).forEach(fn => fn({ stopPropagation(){}, preventDefault(){} }));
+  ok(!!gSat, 'sous-graphe 2D : satellite cliquable présent');
+  gPtr(gSat, 'click');
   gEt = call('tdmGrapheEtat()');
-  ok(gEt.hops > gAv, 'graphe : clic sur un satellite → il devient le centre (+' + (gEt.hops - gAv) + ' saut)');
-  ok($('gpBody').innerHTML.includes('Lien suivi'), 'graphe : intitulé du lien suivi affiché après le saut');
-  ok(gInn($('gTrail')).indexOf('saut') >= 0, 'graphe : fil du chemin + compteur de sauts');
+  ok(gEt.hops > gAv, 'sous-graphe 2D : clic sur un satellite → il devient le centre (+' + (gEt.hops - gAv) + ' saut)');
+  ok($('gpBody').innerHTML.includes('Lien suivi'), 'sous-graphe 2D : intitulé du lien suivi affiché après le saut');
+  ok(gInn($('gTrail')).indexOf('saut') >= 0, 'sous-graphe 2D : fil du chemin + compteur de sauts');
+  /* retour à la constellation via le bouton 🌍 du fil du chemin */
+  const gHome = $('gTrail').children[0];
+  gPtr(gHome, 'click');
+  ok(call('tdmGrapheEtat()').vue === 'monde' && call('tdmGrapheNoeuds3D().length') === 228,
+    'retour à la constellation : bouton 🌍 du fil du chemin');
+  call('tdmGrapheCentre(NOTIONS[100].id)');
   /* mode enseignant */
   call("tdmGrapheMode('prof')");
   const gProf = $('gpBody').innerHTML;
-  ok(gProf.includes('class="gid"') && gProf.includes('Éléments simples'), 'graphe : mode enseignant (identifiants + éléments simples)');
-  ok(gProf.includes('data-gsub="') || gProf.includes('data-fiche="') || gProf.includes('data-gcat="'), 'graphe : liens internes (catégorie / notions liées / fiches) dans le panneau');
+  ok(gProf.includes('class="gid"') && gProf.includes('Éléments simples'), 'sous-graphe 2D : mode enseignant (identifiants + éléments simples)');
+  ok(gProf.includes('data-gsub="') || gProf.includes('data-fiche="') || gProf.includes('data-gcat="'), 'sous-graphe 2D : liens internes (catégorie / notions liées / fiches) dans le panneau');
   call("tdmGrapheMode('eleve')");
-  ok($('gpBody').innerHTML.indexOf('class="gid"') < 0, 'graphe : retour au mode élèves');
+  ok($('gpBody').innerHTML.indexOf('class="gid"') < 0, 'sous-graphe 2D : retour au mode élèves');
   /* nœuds déplaçables : glisser-déposer, les liaisons suivent, le clic reste un clic */
-  const gPtr = (el, t, ev) => ((el.listeners || {})[t] || []).forEach(fn => fn(Object.assign({ stopPropagation(){}, preventDefault(){} }, ev || {})));
   call('tdmGrapheCentre(NOTIONS[100].id)');
   const gSatD = $('gStage').children.find(c => (c.className || '').indexOf('gnode') >= 0 && (c.className || '').indexOf('centre') < 0);
   const gL0 = gSatD.style.left, gT0 = gSatD.style.top;
@@ -867,28 +963,28 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   gPtr(gSatD, 'pointerdown', { clientX: 500, clientY: 400, pointerId: 7 });
   gPtr(gSatD, 'pointermove', { clientX: 560, clientY: 450, pointerId: 7 });
   gPtr(gSatD, 'pointerup', {});
-  ok(gSatD.style.left !== gL0, 'graphe : nœud déplacé au glisser-déposer (' + gL0 + ' → ' + gSatD.style.left + ')');
-  ok(gHitSat && gHitSat.getAttribute('x2') !== gX2av, 'graphe : la liaison suit le nœud déplacé');
+  ok(gSatD.style.left !== gL0, 'sous-graphe 2D : nœud déplacé au glisser-déposer (' + gL0 + ' → ' + gSatD.style.left + ')');
+  ok(gHitSat && gHitSat.getAttribute('x2') !== gX2av, 'sous-graphe 2D : la liaison suit le nœud déplacé');
   const gHav = call('tdmGrapheEtat()').hops;
   gPtr(gSatD, 'click');
-  ok(call('tdmGrapheEtat()').hops === gHav, 'graphe : un déplacement ne déclenche pas la navigation (clic neutralisé)');
+  ok(call('tdmGrapheEtat()').hops === gHav, 'sous-graphe 2D : un déplacement ne déclenche pas la navigation (clic neutralisé)');
   gPtr(gSatD, 'click');
-  ok(call('tdmGrapheEtat()').hops > gHav, 'graphe : un vrai clic sur le nœud navigue toujours');
+  ok(call('tdmGrapheEtat()').hops > gHav, 'sous-graphe 2D : un vrai clic sur le nœud navigue toujours');
   /* survol d'une liaison : étiquette explicative en modale flottante */
   const gHits = $('gLinks').children.filter(l => (l.getAttribute('class') || '').indexOf('ghit') >= 0);
-  ok(gHits.length > 0, 'graphe : zones de survol invisibles sur chaque liaison (' + gHits.length + ')');
-  ok($('gPop').style.display === 'none', 'graphe : étiquette explicative fermée par défaut');
+  ok(gHits.length > 0, 'sous-graphe 2D : zones de survol invisibles sur chaque liaison (' + gHits.length + ')');
+  ok($('gPop').style.display === 'none', 'sous-graphe 2D : étiquette explicative fermée par défaut');
   gPtr(gHits[0], 'mouseenter', { clientX: 300, clientY: 300 });
-  ok($('gPop').style.display !== 'none' && $('gPop').innerHTML.indexOf('gpop-t') >= 0, 'graphe : survol d’une liaison → étiquette explicative ouverte');
-  ok($('gPop').innerHTML.length > 80, 'graphe : l’étiquette explique le lien (sous-catégorie / exercice / fiches communes)');
+  ok($('gPop').style.display !== 'none' && $('gPop').innerHTML.indexOf('gpop-t') >= 0, 'sous-graphe 2D : survol d’une liaison → étiquette explicative ouverte');
+  ok($('gPop').innerHTML.length > 80, 'sous-graphe 2D : l’étiquette explique le lien (sous-catégorie / exercice / fiches communes)');
   gPtr(gHits[0], 'mouseleave');
-  ok($('gPop').style.display === 'none', 'graphe : étiquette refermée quand la souris quitte la liaison');
+  ok($('gPop').style.display === 'none', 'sous-graphe 2D : étiquette refermée quand la souris quitte la liaison');
   /* panneau repliable : le graphe occupe toute la place */
-  ok($('gPanel').classList.contains('open'), 'graphe : panneau de détail ouvert par défaut');
+  ok($('gPanel').classList.contains('open'), 'sous-graphe 2D : panneau de détail ouvert par défaut');
   gPtr($('gpMin'), 'click');
-  ok(!$('gPanel').classList.contains('open') && $('gpMax').style.display !== 'none', 'graphe : panneau réduit (⤡) → bouton « Détails » proposé, graphe plein cadre');
+  ok(!$('gPanel').classList.contains('open') && $('gpMax').style.display !== 'none', 'sous-graphe 2D : panneau réduit (⤡) → bouton « Détails » proposé, graphe plein cadre');
   gPtr($('gpMax'), 'click');
-  ok($('gPanel').classList.contains('open'), 'graphe : panneau rouvert depuis « Détails »');
+  ok($('gPanel').classList.contains('open'), 'sous-graphe 2D : panneau rouvert depuis « Détails »');
   /* anti-chevauchement : les cadres des nœuds ne se recouvrent pas,
      ni entre eux, ni avec les étiquettes des liaisons */
   const gTailleTest = el => {
@@ -922,8 +1018,8 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   };
   call('tdmGrapheCentre(NOTIONS[100].id)');
   let cv = gChevauche();
-  ok(cv.nn === 0, 'graphe : aucun cadre de nœud ne se chevauche (vue notion)');
-  ok(cv.ln === 0, 'graphe : aucune étiquette ne recouvre un nœud (vue notion)');
+  ok(cv.nn === 0, 'sous-graphe 2D : aucun cadre de nœud ne se chevauche (vue notion)');
+  ok(cv.ln === 0, 'sous-graphe 2D : aucune étiquette ne recouvre un nœud (vue notion)');
   /* dépôt d'un nœud sur un autre : séparation automatique au relâcher */
   const nds2 = $('gStage').children.filter(c => (c.className || '').indexOf('gnode') >= 0);
   const aDrag = nds2.find(c => (c.className || '').indexOf('centre') < 0);
@@ -932,17 +1028,16 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   gPtr(aDrag, 'pointermove', { clientX: parseFloat(bCible.style.left), clientY: parseFloat(bCible.style.top), pointerId: 9 });
   gPtr(aDrag, 'pointerup', {});
   cv = gChevauche();
-  ok(cv.nn === 0, 'graphe : nœud relâché sur un autre → les cadres se séparent automatiquement');
-  ok(cv.ln === 0, 'graphe : les étiquettes se replacent hors des nœuds après le dépôt');
+  ok(cv.nn === 0, 'sous-graphe 2D : nœud relâché sur un autre → les cadres se séparent automatiquement');
+  ok(cv.ln === 0, 'sous-graphe 2D : les étiquettes se replacent hors des nœuds après le dépôt');
   /* statut de progression */
   call('state.validated.add(NOTIONS[100].id)');
   call('tdmGrapheCentre(NOTIONS[100].id)');
-  ok($('gpBadges').innerHTML.includes('✔'), 'graphe : statut validé (✔) visible dans le sous-graphe');
+  ok($('gpBadges').innerHTML.includes('✔'), 'sous-graphe 2D : statut validé (✔) visible dans le sous-graphe');
   call('state.validated.delete(NOTIONS[100].id)');
   call('tdmFermeGraphe()'); call('tdmOuvreGraphe()');
-  ok(true, 'graphe : fermeture/réouverture propres, statut de progression rafraîchi');
+  ok(call('tdmGrapheEtat()').vue === 'monde', 'graphe : fermeture/réouverture propres → retour sur la constellation');
   call('tdmFermeGraphe()');
-  call('state.validated.delete(NOTIONS[100].id)');
 
   /* ================================================================ */
   console.log('== 19. Animation « balle rebondissante » & modale d\'accueil ==');
@@ -1195,6 +1290,7 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   const newsBox = call('tdmNewsBox()');
   ok(newsBox.innerHTML.includes('Quoi de neuf'), 'titre « Quoi de neuf »');
   ok(newsBox.innerHTML.includes('tableau croisé') && newsBox.innerHTML.includes('cocher'), 'mise en avant : cocher directement dans le tableau croisé');
+  ok(newsBox.innerHTML.includes('constellation 3D') && newsBox.innerHTML.includes('sous-graphe 2D'), 'mise en avant : graphe refondu (constellation 3D + sous-graphes 2D)');
   ok(newsBox.innerHTML.includes('Réviser la sélection') && newsBox.innerHTML.includes('niveau de classe'), 'la révision selon le niveau de classe est précisée');
   ok(newsBox.innerHTML.includes('Ne plus afficher au démarrage'), 'option « Ne plus afficher au démarrage » proposée');
   ok(($('newsOk').listeners.click || []).length > 0 && ($('newsDiscover').listeners.click || []).length > 0, 'boutons « J’ai compris » et « Découvrir le tableau croisé » câblés');

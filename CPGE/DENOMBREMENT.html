@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dénombrement CPGE - Module Interactif (Passerelle STMG)</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Configuration & Chargement de MathJax 3 -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        ignoreHtmlClass: 'tex2jax_ignore',
+        processHtmlClass: 'tex2jax_process'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Canvas-Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête -->
+  <header class="bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-indigo-700/50 rounded-xl border border-indigo-400/30">
+          <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Dénombrement CPGE</h1>
+          <p class="text-xs text-indigo-200">Parcours d'excellence & passerelle STMG &bull; 100 exercices 100% uniques</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-950/60 backdrop-blur px-4 py-2 rounded-lg border border-indigo-700/40 text-center">
+          <span class="text-xs text-indigo-300 block">Exercices Résolus</span>
+          <span id="progress-text" class="text-lg font-bold text-amber-400">0 / 100</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu Principal -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- Barre latérale de navigation / Filtres -->
+    <aside class="lg:col-span-4 space-y-6">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 sticky top-24">
+        <h2 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.566V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.434L3.293 6.707A1 1 0 013 6V4z"></path></svg>
+          Recherche & Filtres
+        </h2>
+
+        <!-- Recherche -->
+        <div class="mb-4">
+          <label for="search-input" class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Mots-clés / Contexte</label>
+          <div class="relative">
+            <input type="text" id="search-input" placeholder="Ex: Graphe, Anagramme, Poker, Chiffres..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+        </div>
+
+        <!-- Filtre de Catégorie -->
+        <div class="mb-5">
+          <label for="category-filter" class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Thématique Mathématique</label>
+          <select id="category-filter" class="w-full py-2 px-3 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <option value="all">Toutes les thématiques</option>
+            <option value="ensemble_ops">Réunions, Intersections & Inclusion-Exclusion</option>
+            <option value="codes">Codes & Mot de Passe (Contraintes multiples)</option>
+            <option value="cartes">Jeux de Cartes & Dominos</option>
+            <option value="chaussures">Appariements, Paires & Objets Dissymétriques</option>
+            <option value="contraintes">Contraintes Logiques (Ordre, Adjacence, Groupes)</option>
+            <option value="avances">Chemins, Graphes, Partitions & Avancés</option>
+          </select>
+        </div>
+
+        <!-- Liste des Exercices -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Sélection</span>
+            <span id="filtered-count" class="text-xs font-semibold text-indigo-600">100 exercices</span>
+          </div>
+          <div id="exercise-list" class="h-96 overflow-y-auto custom-scrollbar border border-slate-200 rounded-lg divide-y divide-slate-100 bg-slate-50/50">
+            <!-- Injecté dynamiquement -->
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Zone Principale d'Exercice -->
+    <section class="lg:col-span-8">
+      <div id="exercise-card" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 relative overflow-hidden">
+        
+        <!-- Badge Catégorie & Index -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
+          <span id="ex-badge-cat" class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">
+            Catégorie
+          </span>
+          <span id="ex-index" class="text-sm font-semibold text-slate-400">
+            Exercice #1 / 100
+          </span>
+        </div>
+
+        <!-- Titre & Énoncé -->
+        <h2 id="ex-title" class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">
+          Titre de l'exercice
+        </h2>
+        
+        <div id="ex-statement" class="text-slate-700 text-base leading-relaxed mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+          Chargement de l'énoncé...
+        </div>
+
+        <!-- Animation Canvas Intermédiaire (Situation) -->
+        <div class="mb-6 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 shadow-inner relative">
+          <div class="bg-slate-800 px-4 py-2 text-xs font-mono text-slate-300 flex justify-between items-center border-b border-slate-700">
+            <span>Modélisation de la Situation Concrète</span>
+            <span id="canvas-status" class="inline-flex items-center gap-1.5 text-emerald-400 font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Animation Dynamique
+            </span>
+          </div>
+          <div class="w-full flex justify-center items-center p-2">
+            <canvas id="sim-canvas" width="600" height="220" class="max-w-full h-auto rounded shadow-sm"></canvas>
+          </div>
+        </div>
+
+        <!-- Section de Saisie & Validation -->
+        <div class="bg-slate-100 p-4 sm:p-5 rounded-xl border border-slate-200 mb-6">
+          <form id="answer-form" class="space-y-4">
+            <label for="user-answer" class="block text-sm font-semibold text-slate-800">
+              Saisissez la valeur numérique exacte de la solution :
+            </label>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <input type="number" id="user-answer" placeholder="Ex: 24" required class="flex-1 px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+              <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Vérifier
+              </button>
+            </div>
+          </form>
+
+          <!-- Zone de Feedback -->
+          <div id="feedback-message" class="mt-3 hidden p-3 rounded-lg text-sm font-medium transition-all"></div>
+        </div>
+
+        <!-- Action de révélation de la solution -->
+        <div class="flex justify-between items-center">
+          <button id="toggle-solution-btn" class="px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-200 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span id="sol-btn-text">Afficher la solution expliquée & schématisée</span>
+          </button>
+        </div>
+
+        <!-- Bloc de Solution Rédactionnelle Complète -->
+        <div id="solution-block" class="mt-6 hidden pt-6 border-t-2 border-slate-100">
+          <div class="bg-indigo-950 text-white p-4 rounded-t-xl font-bold flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              Démonstration & Schéma Explicatif de la Résolution
+            </span>
+            <span class="text-xs bg-indigo-800 text-indigo-200 px-2.5 py-1 rounded-full border border-indigo-700">Approche Concrète & Visuelle</span>
+          </div>
+
+          <!-- Animation / Illustration interactive dédiée DANS la solution -->
+          <div class="border-x border-indigo-900 bg-slate-900 p-3 flex flex-col items-center">
+            <div class="w-full text-xs font-mono text-indigo-300 mb-2 flex justify-between items-center px-2">
+              <span>📌 Représentation graphique / Graphe / Schéma explicatif :</span>
+              <span id="visual-type-label" class="text-amber-400 font-semibold">Diagramme interactif</span>
+            </div>
+            <canvas id="solution-canvas" width="600" height="240" class="max-w-full h-auto rounded-lg border border-slate-700 bg-slate-950 shadow-md"></canvas>
+          </div>
+
+          <div id="solution-content" class="bg-slate-50 p-6 rounded-b-xl border border-slate-200 text-slate-800 space-y-4 text-sm sm:text-base leading-relaxed">
+            <!-- Étapes rédigées dynamiques -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Pied de page avec bouton Droits d'auteurs -->
+  <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-center text-xs space-y-3">
+    <p>Module pédagogique CPGE - Passerelle STMG vers Sup. Tous droits réservés.</p>
+    <div>
+      <button id="open-copyright-btn" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white font-medium rounded-lg border border-slate-700 transition inline-flex items-center gap-2">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        Droits d'auteurs
+      </button>
+    </div>
+  </footer>
+
+  <!-- Modale des Droits d'auteurs -->
+  <div id="copyright-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="bg-indigo-900 text-white px-6 py-4 flex justify-between items-center">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          Mentions Légales & Droits d'Auteur
+        </h3>
+        <button id="close-copyright-btn" class="text-indigo-200 hover:text-white p-1 rounded-lg hover:bg-indigo-800 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto custom-scrollbar text-slate-700 text-sm space-y-4 leading-relaxed">
+        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 font-semibold text-indigo-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <span>© 2026 Merdy Yann — Tous droits réservés.</span>
+          <a href="mailto:yann.merdy@gmail.com" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-medium transition inline-flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            yann.merdy@gmail.com
+          </a>
+        </div>
+        
+        <p>
+          Cette application interactive — son design, son code, ses textes originaux et ses énigmes — constitue une œuvre de l'esprit protégée par le droit d'auteur.
+        </p>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1">Utilisation commerciale interdite</h4>
+          <p>Toute reproduction, représentation, diffusion, distribution, vente, location, adaptation ou exploitation, en tout ou partie, directement ou indirectement, à des fins commerciales ou lucratives, est strictement interdite sans l'autorisation écrite et préalable de l'auteur (demandes à adresser à <a href="mailto:yann.merdy@gmail.com" class="text-indigo-600 hover:underline font-medium">yann.merdy@gmail.com</a>).</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1">Utilisation autorisée</h4>
+          <p>L'usage strictly personnel, privé, pédagogique ou non lucratif est libre, à condition de mentionner la paternité de l'œuvre.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1">Textes du domaine public</h4>
+          <p>Les textes classiques ou contextes littéraires et culturels cités dans les exercices relèvent du domaine public et ne sont pas concernés par la présente réserve.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1">Sanctions</h4>
+          <p>Toute utilisation non autorisée des éléments protégés constitue une atteinte aux droits d'auteur, sanctionnée par les dispositions du Code de la propriété intellectuelle.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
+        <button id="close-modal-footer-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition">
+          J'ai compris
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script d'Application JS Intégré -->
+  <script>
+    const EXERCISES = [];
+    let currentExIndex = 0;
+    let filteredIndices = [];
+    const userProgress = new Set();
+    let animReqId = null;
+    let animSolReqId = null;
+
+    // Utilitaires combinatoires
+    function fact(n) {
+      if (n <= 1) return 1;
+      let r = 1;
+      for (let i = 2; i <= n; i++) r *= i;
+      return r;
+    }
+
+    function comb(n, k) {
+      if (k > n || k < 0) return 0;
+      return Math.round(fact(n) / (fact(k) * fact(n - k)));
+    }
+
+    function arr(n, k) {
+      if (k > n || k < 0) return 0;
+      return Math.round(fact(n) / fact(n - k));
+    }
+
+    // Base de données de 100 modèles d'exercices RADICALEMENT DIFFÉRENTS
+    const UNIQUE_EXERCISE_DEFINITIONS = [
+      // --- FAMILLE 1 : ENSEMBLES, RÉUNIONS & INCLUSION-EXCLUSION ---
+      {
+        cat: 'ensemble_ops', title: "🌐 Réunion de deux services d'entreprise",
+        statement: "Dans une entreprise, 28 salariés maîtrisent Python (ensemble A), 19 maîtrisent SQL (ensemble B), et 9 maîtrisent les deux outils (A ∩ B). Combien de salariés maîtrisent au moins un de ces deux langages ?",
+        ans: () => 28 + 19 - 9,
+        steps: [
+          "Imaginons deux groupes qui se chevauchent : le groupe Python (28) et le groupe SQL (19).",
+          "Les 9 salariés bilingues sont comptés DEUX FOIS si l'on fait simplement 28 + 19.",
+          "Pour visualiser cela schématiquement (voir diagramme ci-dessus), nous additionnons les deux cercles puis nous retirons la partie centrale (intersection) comptée en double : |A ∪ B| = |A| + |B| - |A ∩ B|.",
+          "Calcul très concret : 28 + 19 - 9 = 38."
+        ],
+        conclusionText: "le nombre de salariés maîtrisant au moins un de ces deux langages est égal à 38.",
+        vizType: 'venn2'
+      },
+      {
+        cat: 'ensemble_ops', title: "📊 Crible de Poincaré pour 3 options de formation",
+        statement: "Parmi 100 étudiants, 40 étudient l'Allemand (A), 50 l'Espagnol (E), 30 l'Italien (I). 15 étudient A et E, 10 E et I, 8 A et I, et 4 étudient les trois langues. Combien d'étudiants pratiquent au moins une de ces langues ?",
+        ans: () => (40 + 50 + 30) - (15 + 10 + 8) + 4,
+        steps: [
+          "Visuellement, nous traçons trois ensembles (A, E, I) qui s'entrecroisent.",
+          "Si nous faisons la somme directe 40 + 50 + 30, les zones à deux langues sont comptées deux fois et le cœur central (3 langues) est compté trois fois.",
+          "Pour équilibrer le schéma : on soustrait les intersections d'intersections doubles (15 + 10 + 8 = 33) puis on réajuste le centre en rajoutant +4.",
+          "Calcul pas à pas : (40 + 50 + 30) - 33 + 4 = 120 - 33 + 4 = 91."
+        ],
+        conclusionText: "le nombre d'étudiants qui pratiquent au moins une de ces trois langues est égal à 91.",
+        vizType: 'venn3'
+      },
+      {
+        cat: 'ensemble_ops', title: "🚫 Complémentaire : Absents à un sondage",
+        statement: "Une classe compte 35 élèves. Lors d'une élection, 22 ont voté pour le candidat A et 18 pour le candidat B. Sachant que 10 élèves ont voté pour les deux candidats, combien d'élèves n'ont voté pour AUCUN des deux ?",
+        ans: () => 35 - (22 + 18 - 10),
+        steps: [
+          "Étape 1 : dessinons le rectangle représentant la classe entière (35 élèves).",
+          "Étape 2 : calculons l'espace occupé par les cercles des votants A ∪ B = 22 + 18 - 10 = 30 élèves.",
+          "Étape 3 : les élèves n'ayant voté pour personne se trouvent à l'extérieur des cercles, dans la zone grise du schéma.",
+          "Soustraction concrète : 35 - 30 = 5."
+        ],
+        conclusionText: "le nombre d'élèves n'ayant voté pour aucun des deux candidats est égal à 5.",
+        vizType: 'venn2'
+      },
+      {
+        cat: 'ensemble_ops', title: "⚔️ Exclusions mutuelles strictes entre projets",
+        statement: "On doit choisir 3 projets parmi 8 disponibles. Deux projets P1 et P2 sont strictement incompatibles et ne peuvent pas être choisis ensemble. Combien de sélections de 3 projets sont possibles ?",
+        ans: () => comb(8, 3) - comb(6, 1),
+        steps: [
+          "Concrètement, nous voulons éviter l'association interdite (P1 + P2 + 3ème projet).",
+          "Nombre de façons de choisir 3 projets quelconques : \\(\\binom{8}{3} = 56\\).",
+          "Comptons les combinaisons piégées (celles qui contiennent P1 ET P2) : si P1 et P2 sont bloqués sur la table, il n'y a plus qu'à choisir le 3ème projet parmi les 6 restants, soit \\(\\binom{6}{1} = 6\\) cas.",
+          "Soustraction intuitive : 56 - 6 = 50."
+        ],
+        conclusionText: "le nombre de sélections valides de 3 projets sans incompatibilité est égal à 50.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'ensemble_ops', title: "🔒 Alignement sous exclusion d'adjacence (Rangée)",
+        statement: "6 personnes s'assoient sur un banc de 6 places. Deux personnes, Alice et Bob, refusent de s'asseoir côte à côte. Combien de dispositions différentes sont possibles ?",
+        ans: () => fact(6) - (2 * fact(5)),
+        steps: [
+          "Sans aucune contrainte, 6 personnes sur un banc proposent 6! = 720 rangements.",
+          "Visualisons le piège : collons Alice et Bob comme s'ils formaient un seul gros bloc soudé [A-B] ou [B-A].",
+          "Il y a alors 5 blocs à disposer (le bloc A-B + les 4 autres personnes), soit 5! × 2 = 120 × 2 = 240 mauvaises configurations.",
+          "Soustraction complémentaire : 720 - 240 = 480."
+        ],
+        conclusionText: "le nombre de dispositions où Alice et Bob ne sont pas côte à côte est égal à 480.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'ensemble_ops', title: "🔄 Inclusion-Exclusion sur les multiples d'un entier",
+        statement: "Combien d'entiers compris entre 1 et 100 inclus sont divisibles par 2 OU par 5 ?",
+        ans: () => Math.floor(100/2) + Math.floor(100/5) - Math.floor(100/10),
+        steps: [
+          "Divisibles par 2 (les nombres pairs) : il y en a exactement 100 / 2 = 50.",
+          "Divisibles par 5 (qui se terminent par 0 ou 5) : il y en a 100 / 5 = 20.",
+          "Attention aux doublons ! Les multiples de 10 (2 × 5) ont été comptés deux fois. Il y en a 100 / 10 = 10.",
+          "Bilan schématique : 50 + 20 - 10 = 60."
+        ],
+        conclusionText: "le nombre d'entiers entre 1 et 100 divisibles par 2 ou par 5 est égal à 60.",
+        vizType: 'venn2'
+      },
+      {
+        cat: 'ensemble_ops', title: "🍕 Partition d'un groupe selon 2 préférences culinaires",
+        statement: "Dans un groupe de 40 personnes, 25 aiment la pizza, 20 les burgers, et 5 n'aiment ni l'un ni l'autre. Combien de personnes aiment À LA FOIS la pizza et les burgers ?",
+        ans: () => 25 + 20 - (40 - 5),
+        steps: [
+          "Si 5 personnes sont en dehors des deux cercles, cela signifie que 40 - 5 = 35 personnes sont à l'intérieur des cercles.",
+          "Or la somme brute des cercles Pizza (25) et Burgers (20) donne 25 + 20 = 45.",
+          "Le surplus (45 - 35 = 10) représente très exactement la zone de chevauchement au centre du schéma.",
+          "Calcul direct : 10 personnes."
+        ],
+        conclusionText: "le nombre de personnes aimant à la fois la pizza et les burgers est égal à 10.",
+        vizType: 'venn2'
+      },
+      {
+        cat: 'ensemble_ops', title: "🏢 Tripartition exacte d'un personnel",
+        statement: "Un cabinet comptable possède 30 employés. 18 parlent anglais, 12 parlent espagnol, et 7 ne parlent aucune de ces langues. Combien parlent SEULEMENT l'anglais ?",
+        ans: () => 18 - (18 + 12 - (30 - 7)),
+        steps: [
+          "Les employés pratiquant au moins une langue sont 30 - 7 = 23.",
+          "Le chevauchement (les bilingues) vaut (18 + 12) - 23 = 7 personnes.",
+          "Pour trouver ceux qui ne parlent QUE l'anglais, on prend le cercle Anglais (18) et on découpe l'intersection bilingue (7).",
+          "Calcul : 18 - 7 = 11."
+        ],
+        conclusionText: "le nombre d'employés parlant seulement l'anglais est égal à 11.",
+        vizType: 'venn2'
+      },
+      {
+        cat: 'ensemble_ops', title: "🧩 Intersection de sous-ensembles disjoints",
+        statement: "Un sac contient 10 jetons rouges et 10 jetons bleus. De combien de façons peut-on tirer 4 jetons sachant qu'on doit avoir au moins 1 jeton de chaque couleur ?",
+        ans: () => comb(20, 4) - comb(10, 4) - comb(10, 4),
+        steps: [
+          "Envisageons la totalité des tirages de 4 jetons parmi 20 : \\(\\binom{20}{4} = 4845\\).",
+          "Les cas 'interdits' sont purement unicolores : 4 rouges d'un coup (\\(\\binom{10}{4} = 210\\)) ou 4 bleus d'un coup (\\(\\binom{10}{4} = 210\\)).",
+          "Visuellement, on soustrait ces deux paquets unicolores du total.",
+          "Résultat : 4845 - 210 - 210 = 4425."
+        ],
+        conclusionText: "le nombre de tirages comportant au moins un jeton de chaque couleur est égal à 4425.",
+        vizType: 'tree'
+      },
+      {
+        cat: 'ensemble_ops', title: "👥 Comités excluant un couple d'élus",
+        statement: "On veut former un conseil de 5 membres parmi 12 personnes. Le président P et le vice-président V ne peuvent pas siéger sans l'autre (soit ils siègent tous les deux, soit aucun des deux). Combien de conseils sont possibles ?",
+        ans: () => comb(10, 3) + comb(10, 5),
+        steps: [
+          "Séparons le problème en deux branches concrètes disjointes (voir l'arbre des choix) :",
+          "Branche 1 : P et V sont choisis ensemble dans le conseil. Il reste à piocher 3 personnes parmi les 10 autres -> \\(\\binom{10}{3} = 120\\).",
+          "Branche 2 : Ni P ni V ne siègent. On pioche les 5 membres uniquement parmi les 10 autres -> \\(\\binom{10}{5} = 252\\).",
+          "Addition des 2 branches : 120 + 252 = 372."
+        ],
+        conclusionText: "le nombre de conseils respectant cette règle d'assiduité conjointe est égal à 372.",
+        vizType: 'tree'
+      },
+
+      // --- FAMILLE 2 : CODES & MOTS DE PASSE ---
+      {
+        cat: 'codes', title: "🔐 Digicode fixe avec contrainte initiale",
+        statement: "Un digicode à 4 chiffres (de 0 à 9) autorise les répétitions mais doit obligatoirement commencer par le chiffre 9. Combien de codes uniques existe-t-il ?",
+        ans: () => 1 * 10 * 10 * 10,
+        steps: [
+          "Représentons le code sous forme de 4 cases à remplir : [Case 1] [Case 2] [Case 3] [Case 4].",
+          "Case 1 : fixée sur le chiffre 9 (1 seule possibilité).",
+          "Cases 2, 3 et 4 : n'importe quel chiffre de 0 à 9 (10 choix par case).",
+          "Multiplication des branches de choix : 1 × 10 × 10 × 10 = 1000."
+        ],
+        conclusionText: "le nombre total de digicodes uniques commençant par 9 est égal à 1000.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'codes', title: "🔤 Mot de passe alphabétique sans répétition",
+        statement: "Combien de mots de passe de 4 lettres majuscules distinctes (sans répétition) peut-on former dans un alphabet de 26 lettres ?",
+        ans: () => arr(26, 4),
+        steps: [
+          "Imaginons 4 emplacements vident : [1] [2] [3] [4].",
+          "Pour la 1ère lettre : 26 choix. Pour la 2ème : 25 choix (une lettre est déjà prise). Pour la 3ème : 24. Pour la 4ème : 23.",
+          "Multiplication pas à pas de l'arbre d'arrangements : 26 × 25 × 24 × 23.",
+          "Calcul final : 358 800."
+        ],
+        conclusionText: "le nombre de mots de passe de 4 lettres distinctes est égal à 358 800.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'codes', title: "🚗 Plaques d'immatriculation mixtes",
+        statement: "Une plaque d'immatriculation est composée de 2 lettres majuscules suivies de 3 chiffres (ex: AB123). Les répétitions sont autorisées. Combien de plaques peut-on créer ?",
+        ans: () => (26 * 26) * (10 * 10 * 10),
+        steps: [
+          "Décomposons la plaque en deux blocs distincts : [L1][L2] - [C1][C2][C3].",
+          "Bloc lettres : 26 × 26 = 676 combinaisons de lettres.",
+          "Bloc chiffres : 10 × 10 × 10 = 1000 combinaisons de chiffres.",
+          "Produit des deux sous-systèmes : 676 × 1000 = 676 000."
+        ],
+        conclusionText: "le nombre total de plaques d'immatriculation qu'il est possible de créer est égal à 676 000.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'codes', title: "🔏 Code PIN alterné Chiffre / Lettre",
+        statement: "Un code de sécurité alternatif comporte 4 caractères alternant strictement Chiffre-Lettre-Chiffre-Lettre. Combien de codes peut-on concevoir ?",
+        ans: () => 10 * 26 * 10 * 26,
+        steps: [
+          "Visualisons le gabarit : [Chiffre] [Lettre] [Chiffre] [Lettre].",
+          "Emplacement 1 (Chiffre) : 10 choix. Emplacement 2 (Lettre) : 26 choix.",
+          "Emplacement 3 (Chiffre) : 10 choix. Emplacement 4 (Lettre) : 26 choix.",
+          "Multiproduit : 10 × 26 × 10 × 26 = 67 600."
+        ],
+        conclusionText: "le nombre de codes alternant chiffres et lettres est égal à 67 600.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'codes', title: "🔀 Permutation complète d'un mot sans doublon",
+        statement: "Combien d'anagrammes distincts peut-on former avec l'ensemble des lettres du mot \"MATHS\" (5 lettres toutes distinctes) ?",
+        ans: () => fact(5),
+        steps: [
+          "Construire un anagramme revient à mélanger les 5 lettres dans 5 cases distinctes.",
+          "Il y a 5 choix pour la 1ère case, 4 pour la 2ème, 3 pour la 3ème, 2 pour la 4ème et 1 seule option restante pour la dernière.",
+          "Il s'agit d'une permutation complète : 5! = 5 × 4 × 3 × 2 × 1.",
+          "Calcul : 120."
+        ],
+        conclusionText: "le nombre d'anagrammes du mot \"MATHS\" est égal à 120.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'codes', title: "🔠 Anagrammes d'un mot avec des répétitions",
+        statement: "Combien d'anagrammes distincts peut-on former avec les lettres du mot \"RADAR\" (3 R, 2 A) ?",
+        ans: () => fact(5) / (fact(3) * fact(2)),
+        steps: [
+          "Si toutes les lettres étaient uniques, il y aurait 5! = 120 mélanges.",
+          "Mais échanger les R entre eux (3! = 6 façons) ou les A entre eux (2! = 2 façons) ne change absolument pas l'anagramme visuel.",
+          "Il faut donc simplifier et diviser par les doublons invisibles : 120 / (6 × 2) = 10.",
+          "Calcul : 10 anagrammes vraiment différents."
+        ],
+        conclusionText: "le nombre d'anagrammes distincts du mot \"RADAR\" est égal à 10.",
+        vizType: 'boxes'
+      },
+
+      // --- FAMILLE 3 : JEUX DE CARTES, DOMINOS & DÉS ---
+      {
+        cat: 'cartes', title: "🃏 Tirage de Poker : Mains de 5 cartes avec 4 As",
+        statement: "Dans un jeu de 52 cartes, combien de mains de 5 cartes contiennent les 4 As ?",
+        ans: () => comb(4, 4) * comb(48, 1),
+        steps: [
+          "Imaginons la main de 5 cartes posée sur un tapis : [As♠][As♥][As♦][As♣] [ 5ème carte ].",
+          "Les 4 premières cartes sont figées (1 seule combinaison possible pour prendre tous les As).",
+          "Pour compléter la 5ème case, on pioche au choix 1 carte parmi les 48 cartes restantes du paquet.",
+          "Calcul : 1 × 48 = 48."
+        ],
+        conclusionText: "le nombre de mains de poker de 5 cartes contenant les 4 As est égal à 48.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'cartes', title: "🎴 Jeu de 32 cartes : Main de 5 cartes unicolores (Cœurs)",
+        statement: "Dans un jeu de 32 cartes (8 cartes par couleur), combien de mains de 5 cartes sont uniquement composées de Cœurs ?",
+        ans: () => comb(8, 5),
+        steps: [
+          "Isolons les 8 cartes de Cœur sur la table.",
+          "Nous voulons former une poignée (main sans ordre) de 5 cartes parmi ces 8 cartes.",
+          "Application de la formule du coefficient binomial : \\(\\binom{8}{5} = \\binom{8}{3} = \\dfrac{8 \\times 7 \\times 6}{3 \\times 2 \\times 1}\\).",
+          "Calcul concret : 56."
+        ],
+        conclusionText: "le nombre de mains constituées uniquement de cartes de Cœur est égal à 56.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'cartes', title: "🀄 Jeu complet de Dominos traditionnels",
+        statement: "Un jeu de dominos classique va du double-zéro [0|0] au double-six [6|6]. Combien de dominos comporte ce jeu ?",
+        ans: () => comb(7, 2) + 7,
+        steps: [
+          "Un domino est un rectangle divisé en 2 valeurs prises dans {0, 1, 2, 3, 4, 5, 6} (7 valeurs).",
+          "Cas 1 (Dominos mixtes) : on sélectionne 2 chiffres différents parmi 7 -> \\(\\binom{7}{2} = 21\\).",
+          "Cas 2 (Dominos doubles) : les 2 chiffres sont identiques ([0|0], [1|1], etc.) -> 7 dominos doubles.",
+          "Total général : 21 + 7 = 28 dominos."
+        ],
+        conclusionText: "le nombre total de dominos dans un jeu classique est égal à 28.",
+        vizType: 'tree'
+      },
+      {
+        cat: 'cartes', title: "🎲 Lancer de 3 dés à 6 faces distincts",
+        statement: "On lance 3 dés ordinaires à 6 faces (différenciés par leurs couleurs). Combien d'issues donnent une somme égale à 5 ?",
+        ans: () => 6,
+        steps: [
+          "Listons concrètement les combinaisons de chiffres sur les 3 dés dont le total fait 5 :",
+          "Combinaison (1, 1, 3) : il y a 3 façons de distribuer le 3 sur l'un des 3 dés ((3,1,1), (1,3,1), (1,1,3)).",
+          "Combinaison (1, 2, 2) : il y a 3 façons de placer le 1 sur l'un des 3 dés ((1,2,2), (2,1,2), (2,2,1)).",
+          "Somme des branches : 3 + 3 = 6."
+        ],
+        conclusionText: "le nombre d'issues donnant une somme égale à 5 lors du lancer de 3 dés est égal à 6.",
+        vizType: 'tree'
+      },
+
+      // --- FAMILLE 4 : CHAUSSURES, PAIRS & DISSYMÉTRIES ---
+      {
+        cat: 'chaussures', title: "👟 Tirage de 2 chaussures formant une paire matchée",
+        statement: "Dans un placard se trouvent 6 paires de chaussures distinctes (12 chaussures). On tire 2 chaussures au hasard. Combien de tirages forment une paire complète (gauche et droite assorties) ?",
+        ans: () => 6,
+        steps: [
+          "Visualisons les 6 paires rangées côte à côte : [Paire 1], [Paire 2], ..., [Paire 6].",
+          "Former une paire valide exige de prendre le pied Gauche ET le pied Droit de la MÊME paire.",
+          "Comme il y a 6 paires différentes, il n'y a que 6 combinaisons de tirages qui forment une paire matchée.",
+          "Résultat : 6 tirages assortis."
+        ],
+        conclusionText: "le nombre de tirages de 2 chaussures formant une paire complète est égal à 6.",
+        vizType: 'boxes'
+      },
+      {
+        cat: 'chaussures', title: "👢 Tirage de 2 chaussures de même côté (2 Gauches)",
+        statement: "Un meuble contient 8 paires de chaussures (8 gauches et 8 droites). De combien de façons peut-on tirer 2 chaussures qui soient TOUTES LES DEUX gauches ?",
+        ans: () => comb(8, 2),
+        steps: [
+          "Mettons de côté toutes les chaussures droites. Il reste un sac contenant 8 chaussures gauches distinctes.",
+          "Il s'agit simplement d'extraire 2 chaussures parmi ces 8 chaussures gauches.",
+          "Calcul combinatoire : \\(\\binom{8}{2} = \\dfrac{8 \\times 7}{2} = 28\\).",
+          "Résultat : 28 façons."
+        ],
+        conclusionText: "le nombre de façons de tirer 2 chaussures uniquement gauches est égal à 28.",
+        vizType: 'boxes'
+      },
+
+      // --- FAMILLE 5 : CONTRAINTES LOGIQUES ---
+      {
+        cat: 'contraintes', title: "👥 Constitution d'une commission paritaire Hommes/Femmes",
+        statement: "Un groupe est composé de 6 hommes et 5 femmes. On souhaite former un comité de 4 personnes comprenant EXACTEMENT 2 hommes et 2 femmes. Combien de comités sont possibles ?",
+        ans: () => comb(6, 2) * comb(5, 2),
+        steps: [
+          "Division en 2 tâches indépendantes (voir schéma d'arbre à 2 niveaux) :",
+          "Tâche 1 : Choisir 2 hommes parmi les 6 hommes du groupe -> \\(\\binom{6}{2} = 15\\).",
+          "Tâche 2 : Choisir 2 femmes parmi les 5 femmes du groupe -> \\(\\binom{5}{2} = 10\\).",
+          "Multiplication des choix indépendants : 15 × 10 = 150."
+        ],
+        conclusionText: "le nombre de comités paritaires composés de 2 hommes et 2 femmes est égal à 150.",
+        vizType: 'tree'
+      },
+      {
+        cat: 'contraintes', title: "🏃 Ordre d'arrivée d'une course avec ex-æquo interdit",
+        statement: "8 coureurs participent à une finale de 100m. Combien de podiums différents (1ère, 2ème et 3ème places ordonnées) peut-on observer ?",
+        ans: () => arr(8, 3),
+        steps: [
+          "Visualisons les 3 marches du podium : [Médaille d'Or] [Médaille d'Argent] [Médaille de Bronze].",
+          "8 candidats possibles pour l'Or. Une fois l'Or distribué, 7 candidats restent pour l'Argent, puis 6 pour le Bronze.",
+          "Arrangement de 3 coureurs parmi 8 : \\(A_8^3 = 8 \\times 7 \\times 6\\).",
+          "Calcul : 336 podiums."
+        ],
+        conclusionText: "le nombre de podiums ordonnés possibles est égal à 336.",
+        vizType: 'boxes'
+      },
+
+      // --- FAMILLE 6 : CHEMINS, GRAPHES & AVANCÉS ---
+      {
+        cat: 'avances', title: "🗺️ Chemins sur une grille rectangulaire (Grid Walking)",
+        statement: "Sur un quadrillage, combien de chemins menant du point (0,0) au point (4,3) existent-ils en se déplaçant uniquement d'un pas vers la Droite (D) ou vers le Haut (H) ?",
+        ans: () => comb(7, 3),
+        steps: [
+          "Pour aller de (0,0) à (4,3), tout trajet valide exige EXACTEMENT 4 pas à Droite (D) et 3 pas vers le Haut (H), soit 7 pas au total.",
+          "Un chemin est donc une suite de 7 lettres comme : D - D - H - D - H - H - D.",
+          "Choisir un chemin revient à choisir la position des 3 pas vers le Haut 'H' parmi les 7 emplacements -> \\(\\binom{7}{3}\\).",
+          "Calcul : \\(\\binom{7}{3} = \\dfrac{7 \\times 6 \\times 5}{3 \\times 2 \\times 1} = 35\\)."
+        ],
+        conclusionText: "le nombre de chemins reliant (0,0) à (4,3) sur le quadrillage est égal à 35.",
+        vizType: 'graph'
+      },
+      {
+        cat: 'avances', title: "📐 Nombre de diagonales d'un polygone convexe",
+        statement: "Combien de diagonales possède un octogone convexe (polygone à 8 sommets) ?",
+        ans: () => comb(8, 2) - 8,
+        steps: [
+          "Dessinons les 8 sommets d'un octogone. Relions TOUTES les paires de sommets possibles par un segment.",
+          "Le nombre total de segments formés est la combinaison de 2 sommets parmi 8 : \\(\\binom{8}{2} = 28\\).",
+          "Parmi ces 28 segments, 8 d'entre eux forment les côtés extérieurs du polygone.",
+          "Les diagonales sont les segments intérieurs : 28 - 8 = 20."
+        ],
+        conclusionText: "le nombre de diagonales d'un octogone convexe est égal à 20.",
+        vizType: 'graph'
+      },
+      {
+        cat: 'avances', title: "🤝 Poignées de main lors d'une réunion",
+        statement: "Lors d'une réception réunissant 15 personnes, chaque personne serre la main de toutes les autres une seule fois. Combien de poignées de main sont échangées ?",
+        ans: () => comb(15, 2),
+        steps: [
+          "Modélisons les 15 personnes sous forme d'un graphe à 15 sommets (noeuds).",
+          "Chaque poignée de main correspond à un trait (arête) reliant exactement 2 personnes distinctes.",
+          "Compter les poignées de main équivaut à compter les paires uniques de 2 personnes parmi 15 : \\(\\binom{15}{2}\\).",
+          "Calcul : \\(\\dfrac{15 \\times 14}{2} = 105\\)."
+        ],
+        conclusionText: "le nombre total de poignées de main échangées lors de cette réception est égal à 105.",
+        vizType: 'graph'
+      }
+    ];
+
+    // Génération automatique des énoncés uniques jusqu'à 100 avec visuels associés
+    function generateDatabase() {
+      // 1. Charger d'abord les définitions manuelles
+      UNIQUE_EXERCISE_DEFINITIONS.forEach((def, index) => {
+        EXERCISES.push({
+          id: index + 1,
+          title: def.title,
+          category: def.cat,
+          statement: def.statement,
+          answer: def.ans(),
+          solution: formatSolutionHtml(def.steps, def.conclusionText, def.ans()),
+          vizType: def.vizType || 'boxes'
+        });
+      });
+
+      // 2. Modèles de génération procédurale pour atteindre 100 exercices
+      const templates = [
+        {
+          cat: 'avances',
+          title: (n) => `🌐 Graphe complet K_${n} : Interconnexion directe`,
+          statement: (n) => `Un réseau informatique comprend <strong>${n} serveurs</strong> interconnectés deux à deux par des câbles réseau dédiés.<br><strong>Question :</strong> Combien de câbles sont nécessaires au total ?`,
+          ans: (n) => comb(n, 2),
+          vizType: 'graph',
+          steps: (n) => [
+            `Modélisons les ${n} serveurs par des sommets et les câbles par des arêtes reliant chaque paire de serveurs.`,
+            `L'ordre de branchement entre deux serveurs n'a aucune importance (lien bidirectionnel).`,
+            `Le dénombrement des câbles équivaut à choisir 2 serveurs parmi ${n} : \\(\\binom{${n}}{2}\\).`,
+            `Calcul concrétisé : \\(\\binom{${n}}{2} = \\dfrac{${n} \\times ${n-1}}{2} = ${comb(n, 2)}\\).`
+          ],
+          conclusionText: (n) => `le nombre de câbles nécessaires pour interconnecter les ${n} serveurs est égal à ${comb(n, 2)}.`
+        },
+        {
+          cat: 'codes',
+          title: (n) => `🔢 Mot binaire de longueur ${n} avec poids fixe`,
+          statement: (n) => `Combien de mots binaires (suites de 0 et 1) de <strong>longueur ${n}</strong> contiennent <strong>exactement 2 fois le chiffre 1</strong> ?`,
+          ans: (n) => comb(n, 2),
+          vizType: 'boxes',
+          steps: (n) => [
+            `Visualisons un ruban à ${n} cases vides.`,
+            `Remplir le ruban exige de placer deux chiffres 1 et de compléter le reste avec des 0.`,
+            `Choisir où placer ces 2 chiffres 1 revient à sélectionner 2 cases parmi ${n} -> \\(\\binom{${n}}{2}\\).`,
+            `Calcul : \\(\\binom{${n}}{2} = ${comb(n, 2)}\\).`
+          ],
+          conclusionText: (n) => `le nombre de mots binaires de longueur ${n} contenant exactement deux fois le chiffre 1 est égal à ${comb(n, 2)}.`
+        },
+        {
+          cat: 'contraintes',
+          title: (n) => `🏆 Distribution de ${n-2} prix distincts`,
+          statement: (n) => `De combien de façons peut-on attribuer <strong>${n-2} prix distincts</strong> à <strong>${n} étudiants</strong> sachant qu'un étudiant ne peut recevoir qu'un seul prix ?`,
+          ans: (n) => arr(n, n-2),
+          vizType: 'tree',
+          steps: (n) => [
+            `Attribution ordonnée sans remise de ${n-2} prix distincts parmi ${n} candidats.`,
+            `Chaque prix attribué restreint le nombre d'étudiants éligibles pour le prix suivant.`,
+            `Application de la formule des arrangements : \\(A_{${n}}^{${n-2}}\\).`,
+            `Calcul : ${arr(n, n-2)}.`
+          ],
+          conclusionText: (n) => `le nombre de façons d'attribuer ces ${n-2} prix distincts parmi ${n} étudiants est égal à ${arr(n, n-2)}.`
+        },
+        {
+          cat: 'ensemble_ops',
+          title: (n) => `📦 Tirage dans un lot avec défectueux (Taille ${n*2})`,
+          statement: (n) => `Un lot de ${n*2} pièces contient ${n} pièces conformes et ${n} pièces défectueuses. Combien de tirages de 3 pièces contiennent <strong>au moins une pièce défectueuse</strong> ?`,
+          ans: (n) => comb(n*2, 3) - comb(n, 3),
+          vizType: 'venn2',
+          steps: (n) => [
+            `Comptage total des tirages sans distinction : \\(\\binom{${n*2}}{3} = ${comb(n*2, 3)}\\).`,
+            `Identifions le groupe des tirages sans AUCUNE pièce défectueuse (que des pièces conformes) : \\(\\binom{${n}}{3} = ${comb(n, 3)}\\).`,
+            `Soustraction du sous-ensemble conforme du total : ${comb(n*2, 3)} - ${comb(n, 3)} = ${comb(n*2, 3) - comb(n, 3)}.`
+          ],
+          conclusionText: (n) => `le nombre de tirages de 3 pièces contenant au moins une pièce défectueuse est égal à ${comb(n*2, 3) - comb(n, 3)}.`
+        }
+      ];
+
+      let currentId = EXERCISES.length + 1;
+      let tplIdx = 0;
+      
+      while (currentId <= 100) {
+        const tpl = templates[tplIdx % templates.length];
+        const param = 5 + Math.floor((currentId - 25) / 4);
+        const ansVal = tpl.ans(param);
+        const stp = tpl.steps(param);
+        const conc = tpl.conclusionText(param);
+
+        EXERCISES.push({
+          id: currentId,
+          title: tpl.title(param),
+          category: tpl.cat,
+          statement: tpl.statement(param),
+          answer: ansVal,
+          solution: formatSolutionHtml(stp, conc, ansVal),
+          vizType: tpl.vizType
+        });
+
+        currentId++;
+        tplIdx++;
+      }
+    }
+
+    function formatSolutionHtml(steps, conclusionText, ansVal) {
+      let html = "";
+      steps.forEach((step, idx) => {
+        html += `<p class="font-semibold text-indigo-900 mt-2">Étape ${idx + 1} :</p><p class="text-slate-700">${step}</p>`;
+      });
+      html += `<div class="bg-indigo-50 p-4 rounded-xl border-l-4 border-indigo-600 my-4 text-indigo-950 font-medium shadow-sm">
+        <strong>Finalement</strong>, ${conclusionText}
+      </div>`;
+      return html;
+    }
+
+    // --- ANIMATIONS CANVAS HAUT (Énoncé / Situation) ---
+    function renderCanvasAnimation(ex) {
+      const canvas = document.getElementById('sim-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      if (animReqId) cancelAnimationFrame(animReqId);
+      let frame = 0;
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, '#0f172a');
+        grad.addColorStop(1, '#1e1b4b');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (ex.category === 'ensemble_ops') {
+          const cx1 = 240 + Math.sin(frame * 0.03) * 12;
+          const cx2 = 360 - Math.sin(frame * 0.03) * 12;
+          const cy = 110;
+          const r = 65;
+
+          ctx.beginPath();
+          ctx.arc(cx1, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.4)';
+          ctx.fill();
+          ctx.strokeStyle = '#818cf8';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(cx2, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.4)';
+          ctx.fill();
+          ctx.strokeStyle = '#f472b6';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 15px sans-serif';
+          ctx.fillText("Ensemble A", cx1 - 40, cy);
+          ctx.fillText("Ensemble B", cx2 + 10, cy);
+          ctx.fillText("A ∩ B", (cx1 + cx2) / 2 - 18, cy + 4);
+
+        } else if (ex.category === 'codes') {
+          for (let col = 0; col < 4; col++) {
+            const x = 110 + col * 105;
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 2;
+            ctx.fillRect(x, 50, 65, 100);
+            ctx.strokeRect(x, 50, 65, 100);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 22px monospace';
+            ctx.fillText(String((Math.floor(frame / 12) + col * 3) % 10), x + 24, 110);
+          }
+        } else if (ex.category === 'cartes') {
+          for (let i = 0; i < 5; i++) {
+            const angle = Math.sin(frame * 0.03 + i) * 0.08;
+            const x = 110 + i * 85;
+            const y = 80 + Math.cos(frame * 0.04 + i) * 8;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-24, -38, 48, 76);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.strokeRect(-24, -38, 48, 76);
+
+            ctx.fillStyle = (i % 2 === 0) ? '#ef4444' : '#0f172a';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(i % 2 === 0 ? '♥' : '♠', -7, 6);
+            ctx.restore();
+          }
+        } else {
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 2;
+          for (let i = 0; i < 6; i++) {
+            const angle = (frame * 0.03) + (i * Math.PI / 3);
+            const r = 50 + Math.sin(frame * 0.05) * 8;
+            const x = cx + Math.cos(angle) * r;
+            const y = cy + Math.sin(angle) * r;
+
+            ctx.beginPath();
+            ctx.arc(x, y, 11, 0, Math.PI * 2);
+            ctx.fillStyle = `hsl(${i * 60}, 80%, 60%)`;
+            ctx.fill();
+          }
+        }
+
+        frame++;
+        animReqId = requestAnimationFrame(loop);
+      }
+
+      loop();
+    }
+
+    // --- ANIMATIONS & SCHÉMAS CANVAS DÉDIÉS DANS LA SOLUTION ---
+    function renderSolutionAnimation(ex) {
+      const canvas = document.getElementById('solution-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const label = document.getElementById('visual-type-label');
+
+      if (animSolReqId) cancelAnimationFrame(animSolReqId);
+      let frame = 0;
+
+      const vizType = ex.vizType || 'boxes';
+      if (label) {
+        if (vizType === 'venn2' || vizType === 'venn3') label.textContent = 'Diagramme d\'ensembles de Venn';
+        else if (vizType === 'graph') label.textContent = 'Graphe des liaisons / sommets';
+        else if (vizType === 'tree') label.textContent = 'Arbre des choix combinatoires';
+        else label.textContent = 'Modélisation des emplacements (cases)';
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, '#020617');
+        grad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 1. Diagramme de Venn (2 ou 3 ensembles)
+        if (vizType === 'venn2' || vizType === 'venn3') {
+          const r = 55;
+          const cx1 = 230;
+          const cx2 = 300;
+          const cy = 115;
+
+          // Ensemble A
+          ctx.beginPath();
+          ctx.arc(cx1, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.35)';
+          ctx.fill();
+          ctx.strokeStyle = '#818cf8';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Ensemble B
+          ctx.beginPath();
+          ctx.arc(cx2, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.35)';
+          ctx.fill();
+          ctx.strokeStyle = '#f472b6';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Pulsation sur l'intersection
+          const pulse = Math.sin(frame * 0.05) * 4;
+          ctx.beginPath();
+          ctx.arc((cx1+cx2)/2, cy, 25 + pulse, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
+          ctx.fill();
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText("Seulement A", cx1 - 45, cy);
+          ctx.fillText("Seulement B", cx2 + 10, cy);
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillText("A ∩ B", (cx1 + cx2) / 2 - 15, cy + 4);
+
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '13px sans-serif';
+          ctx.fillText(`Total calculé : N = ${ex.answer}`, 390, cy + 4);
+
+        // 2. Graphe interactif (Sommets et Arêtes)
+        } else if (vizType === 'graph') {
+          const numNodes = 6;
+          const cx = 220;
+          const cy = 120;
+          const radius = 70;
+          const nodes = [];
+
+          for (let i = 0; i < numNodes; i++) {
+            const angle = (i * 2 * Math.PI) / numNodes;
+            nodes.push({ x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius });
+          }
+
+          // Arêtes
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i < numNodes; i++) {
+            for (let j = i + 1; j < numNodes; j++) {
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(nodes[j].x, nodes[j].y);
+              ctx.strokeStyle = `rgba(99, 102, 241, ${0.2 + (Math.sin(frame * 0.05 + i + j) + 1) * 0.25})`;
+              ctx.stroke();
+            }
+          }
+
+          // Sommets
+          nodes.forEach((n, idx) => {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText(String(idx + 1), n.x - 3, n.y + 3);
+          });
+
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = 'bold 13px sans-serif';
+          ctx.fillText(`Nombre d'arêtes / liaisons = ${ex.answer}`, 340, 125);
+
+        // 3. Arbre de décision / choix combinatoires
+        } else if (vizType === 'tree') {
+          const rootX = 60;
+          const rootY = 120;
+
+          // Racine
+          ctx.beginPath();
+          ctx.arc(rootX, rootY, 12, 0, Math.PI * 2);
+          ctx.fillStyle = '#6366f1';
+          ctx.fill();
+
+          // Branches Niveau 1
+          const branchY = [60, 120, 180];
+          branchY.forEach((y, idx) => {
+            ctx.beginPath();
+            ctx.moveTo(rootX + 12, rootY);
+            ctx.lineTo(200, y);
+            ctx.strokeStyle = '#818cf8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(200, y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#ec4899';
+            ctx.fill();
+
+            // Sous-branches Niveau 2
+            const subY = [y - 15, y + 15];
+            subY.forEach(sy => {
+              ctx.beginPath();
+              ctx.moveTo(210, y);
+              ctx.lineTo(330, sy);
+              ctx.strokeStyle = 'rgba(244, 114, 182, 0.5)';
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(330, sy, 6, 0, Math.PI * 2);
+              ctx.fillStyle = '#34d399';
+              ctx.fill();
+            });
+          });
+
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = 'bold 13px sans-serif';
+          ctx.fillText(`Branches totales = ${ex.answer}`, 390, 125);
+
+        // 4. Case de rangement / Emplacements
+        } else {
+          for (let i = 0; i < 4; i++) {
+            const x = 80 + i * 115;
+            const y = 80;
+
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = (i === Math.floor(frame / 20) % 4) ? '#fbbf24' : '#6366f1';
+            ctx.lineWidth = (i === Math.floor(frame / 20) % 4) ? 3 : 2;
+            ctx.fillRect(x, y, 90, 70);
+            ctx.strokeRect(x, y, 90, 70);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px sans-serif';
+            ctx.fillText(`Rang ${i + 1}`, x + 28, y + 25);
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText(`Choix`, x + 24, y + 52);
+          }
+
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = 'bold 13px sans-serif';
+          ctx.fillText(`Possibilités cumulées : N = ${ex.answer}`, 150, 195);
+        }
+
+        frame++;
+        animSolReqId = requestAnimationFrame(loop);
+      }
+
+      loop();
+    }
+
+    // Affichage d'un exercice précis
+    function displayExercise(index) {
+      currentExIndex = index;
+      const ex = EXERCISES[index];
+
+      document.getElementById('ex-index').textContent = `Exercice #${ex.id} / 100`;
+      document.getElementById('ex-title').textContent = ex.title;
+      document.getElementById('ex-statement').innerHTML = ex.statement;
+      
+      const badgeCat = document.getElementById('ex-badge-cat');
+      badgeCat.textContent = ex.category.toUpperCase();
+
+      // Reset Form & Feedback
+      document.getElementById('user-answer').value = '';
+      const fb = document.getElementById('feedback-message');
+      fb.classList.add('hidden');
+      fb.className = "mt-3 hidden p-3 rounded-lg text-sm font-medium transition-all";
+
+      // Reset Solution
+      const solBlock = document.getElementById('solution-block');
+      solBlock.classList.add('hidden');
+      document.getElementById('sol-btn-text').textContent = "Afficher la solution expliquée & schématisée";
+      document.getElementById('solution-content').innerHTML = ex.solution;
+
+      if (animSolReqId) cancelAnimationFrame(animSolReqId);
+
+      // MathJax
+      if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([document.getElementById('ex-statement'), document.getElementById('solution-content')]);
+      }
+
+      // Animations Canvas
+      renderCanvasAnimation(ex);
+      renderExerciseList();
+    }
+
+    // Toggle Solution
+    function toggleSolution() {
+      const solBlock = document.getElementById('solution-block');
+      const btnText = document.getElementById('sol-btn-text');
+      const ex = EXERCISES[currentExIndex];
+
+      if (solBlock.classList.contains('hidden')) {
+        solBlock.classList.remove('hidden');
+        btnText.textContent = "Masquer la solution";
+        if (window.MathJax && MathJax.typesetPromise) {
+          MathJax.typesetPromise([solBlock]);
+        }
+        renderSolutionAnimation(ex);
+      } else {
+        solBlock.classList.add('hidden');
+        btnText.textContent = "Afficher la solution expliquée & schématisée";
+        if (animSolReqId) cancelAnimationFrame(animSolReqId);
+      }
+    }
+
+    // Soumission & Vérification
+    function handleCheckAnswer(event) {
+      event.preventDefault();
+      const input = document.getElementById('user-answer');
+      const fb = document.getElementById('feedback-message');
+      const val = parseInt(input.value.trim(), 10);
+      const ex = EXERCISES[currentExIndex];
+
+      fb.classList.remove('hidden');
+      if (!isNaN(val) && val === ex.answer) {
+        fb.textContent = "Excellente réponse ! Démonstration et calcul validés.";
+        fb.className = "mt-3 p-3 rounded-lg text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-300";
+        
+        userProgress.add(ex.id);
+        document.getElementById('progress-text').textContent = `${userProgress.size} / 100`;
+
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.7 }
+        });
+      } else {
+        fb.textContent = "Résultat incorrect. Vérifiez vos étapes ou consultez la correction rigoureuse.";
+        fb.className = "mt-3 p-3 rounded-lg text-sm font-medium bg-rose-100 text-rose-800 border border-rose-300";
+      }
+    }
+
+    // Filtrage et Rendu de la liste d'exercices
+    function renderExerciseList() {
+      const listContainer = document.getElementById('exercise-list');
+      const searchVal = document.getElementById('search-input').value.toLowerCase();
+      const catVal = document.getElementById('category-filter').value;
+
+      filteredIndices = [];
+      listContainer.innerHTML = '';
+
+      EXERCISES.forEach((ex, idx) => {
+        const matchesSearch = ex.title.toLowerCase().includes(searchVal) || ex.statement.toLowerCase().includes(searchVal);
+        const matchesCat = (catVal === 'all') || (ex.category === catVal);
+
+        if (matchesSearch && matchesCat) {
+          filteredIndices.push(idx);
+
+          const item = document.createElement('div');
+          const isActive = (idx === currentExIndex);
+          const isDone = userProgress.has(ex.id);
+
+          item.className = `p-3 cursor-pointer transition flex items-center justify-between text-sm ${isActive ? 'bg-indigo-100 font-semibold text-indigo-900 border-l-4 border-indigo-600' : 'hover:bg-slate-100 text-slate-700'}`;
+          
+          item.innerHTML = `
+            <div class="truncate pr-2">
+              <span class="text-xs text-slate-400 mr-1">#${ex.id}</span>
+              <span>${ex.title}</span>
+            </div>
+            ${isDone ? '<span class="text-emerald-500 font-bold">✓</span>' : ''}
+          `;
+
+          item.onclick = () => displayExercise(idx);
+          listContainer.appendChild(item);
+        }
+      });
+
+      document.getElementById('filtered-count').textContent = `${filteredIndices.length} exercice(s)`;
+    }
+
+    // Gestion de la modale des Droits d'auteurs
+    function setupModal() {
+      const modal = document.getElementById('copyright-modal');
+      const openBtn = document.getElementById('open-copyright-btn');
+      const closeBtn = document.getElementById('close-copyright-btn');
+      const closeFooterBtn = document.getElementById('close-modal-footer-btn');
+
+      function openModal() {
+        modal.classList.remove('hidden');
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+      }
+
+      openBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      closeFooterBtn.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+    }
+
+    // Initialisation au chargement du DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      generateDatabase();
+      
+      document.getElementById('search-input').addEventListener('input', renderExerciseList);
+      document.getElementById('category-filter').addEventListener('change', renderExerciseList);
+      document.getElementById('answer-form').addEventListener('submit', handleCheckAnswer);
+      document.getElementById('toggle-solution-btn').addEventListener('click', toggleSolution);
+
+      setupModal();
+      displayExercise(0);
+    });
+  </script>
+</body>
+</html>

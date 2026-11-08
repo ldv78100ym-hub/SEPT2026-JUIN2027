@@ -29,6 +29,7 @@
     '<button type="button" class="rev-mini" id="revAll">Tout cocher</button>' +
     '<button type="button" class="rev-mini" id="revNone">Tout décocher</button>' +
     '</div>' +
+    '<div class="rev-levels" id="revLevels"></div>' +
     '<div class="rev-list" id="revList"></div>' +
     '<div class="rev-status" id="revStatus"></div>' +
     '<div class="rev-actions">' +
@@ -46,26 +47,51 @@
 
   /* ---------- Sélection en cours d'édition (avant lancement) ---------- */
   let revSel = new Set();
+  /* Filtre de niveau actif (code NIVEAUX) ou null = tous niveaux. */
+  let revLvl = null;
 
   function $(id){ return document.getElementById(id); }
   function esc(s){ return window.esc ? window.esc(s) : String(s); }
+
+  /* ---------- Puces de filtrage par niveau de classe ---------- */
+  function tdmRevChips(){
+    const box = $('revLevels');
+    if(!box) return;
+    if(typeof NIVEAUX === 'undefined' || typeof NOTION_LEVELS === 'undefined'){
+      box.innerHTML = '';
+      return;
+    }
+    let h = '<button type="button" class="rev-chip' + (revLvl ? '' : ' on') + '" data-lvl="">🌐 Tous</button>';
+    NIVEAUX.forEach(function(v){
+      const nb = NOTIONS.filter(function(n){ return NOTION_LEVELS[n.id] === v.code; }).length;
+      if(!nb) return;
+      h += '<button type="button" class="rev-chip' + (revLvl === v.code ? ' on' : '') +
+           '" data-lvl="' + esc(v.code) + '" title="' + esc(v.nom) + '">' +
+           v.icon + ' ' + esc(v.court) + ' · ' + nb + '</button>';
+    });
+    box.innerHTML = h;
+  }
 
   /* ---------- Construction de la liste des notions ---------- */
   function tdmRevRender(){
     const list = $('revList');
     list.innerHTML = '';
+    tdmRevChips();
     const q = ($('revSearch').value || '').trim().toLowerCase();
     NOTIONS.forEach(function(n, i){
-      const visible = !q || (n.name + ' ' + n.id).toLowerCase().indexOf(q) >= 0;
+      const visible = (!q || (n.name + ' ' + n.id).toLowerCase().indexOf(q) >= 0)
+        && (!revLvl || (typeof NOTION_LEVELS !== 'undefined' && NOTION_LEVELS[n.id] === revLvl));
       if(!visible) return;
       const isValidated = state.validated.has(n.id);
       const isPassed = !isValidated && state.passed.has(n.id);
+      const nv = (typeof tdmNiveauDe === 'function') ? tdmNiveauDe(n.id) : null;
       const el = document.createElement('label');
       el.className = 'rev-item' + (isValidated ? ' done' : '') + (isPassed ? ' passed' : '');
       el.innerHTML =
         '<input type="checkbox" data-id="' + esc(n.id) + '"' + (revSel.has(n.id) ? ' checked' : '') + '>' +
         '<span class="rev-num">' + (i + 1) + '</span>' +
         '<span class="rev-name">' + esc(n.name) + '</span>' +
+        (nv && nv.code !== '?' ? '<span class="rev-lvl" title="' + esc(nv.nom) + '">' + nv.icon + ' ' + esc(nv.court) + '</span>' : '') +
         '<span class="rev-st">' + (isValidated ? '✔ Validée' : (isPassed ? '⏭ Passée' : '⏳ À valider')) + '</span>';
       list.appendChild(el);
     });
@@ -82,9 +108,18 @@
   }
 
   /* ---------- Ouverture / fermeture ---------- */
-  function tdmOpenRevision(){
+  function tdmOpenRevision(levelCode){
     /* La sélection en édition repart de la sélection active, s'il y en a une. */
     revSel = state.customPool ? new Set(state.customPool) : new Set();
+    /* Un code de niveau (clic « 🎯 Réviser ce niveau ») pré-coche
+       toutes les notions de ce niveau et active le filtre associé. */
+    revLvl = null;
+    if(levelCode && typeof NOTION_LEVELS !== 'undefined'){
+      revSel = new Set(NOTIONS
+        .filter(function(n){ return NOTION_LEVELS[n.id] === levelCode; })
+        .map(function(n){ return n.id; }));
+      revLvl = levelCode;
+    }
     $('revSearch').value = '';
     tdmRevRender();
     $('revEnd').style.display = state.customPool ? '' : 'none';
@@ -151,6 +186,13 @@
     if(e.target === this) tdmCloseRevision();
   });
   $('revSearch').addEventListener('input', tdmRevRender);
+  /* Puces de niveau : filtrer la liste (combiné avec la recherche). */
+  $('revLevels').addEventListener('click', function(e){
+    const b = e.target;
+    if(!b || !b.getAttribute || b.getAttribute('data-lvl') === null) return;
+    revLvl = b.getAttribute('data-lvl') || null;
+    tdmRevRender();
+  });
   $('revList').addEventListener('change', function(e){
     const c = e.target;
     if(c && c.getAttribute && c.getAttribute('data-id')){

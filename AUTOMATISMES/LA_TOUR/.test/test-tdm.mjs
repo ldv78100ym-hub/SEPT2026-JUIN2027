@@ -1057,6 +1057,88 @@ const ok = (cond, msg) => { if(cond){ console.log('  ✔ ' + msg); } else { fail
   ok(call('state.visualFloor') === call('state.floor'), 'balle : au retour, la tour reprend l\'étage courant');
   call('localStorage.removeItem(\'tdm-anim\')');
 
+  console.log('== 20. Niveaux de classe & tableau croisé ==');
+  /* Données du module 11v */
+  ok(call('NIVEAUX.length') === 7, 'NIVEAUX : 7 niveaux, du cycle 3 au post-bac');
+  ok(call(`NIVEAUX.map(v => v.code).join()`) === 'c3,c4,2de,1re,tle,exp,cpge',
+     'ordre scolaire : c3 → c4 → 2de → 1re → tle → expertes → CPGE');
+  const lvlCounts = JSON.parse(call(`JSON.stringify(NIVEAUX.map(v => NOTIONS.filter(n => NOTION_LEVELS[n.id] === v.code).length))`));
+  ok(JSON.stringify(lvlCounts) === JSON.stringify([15, 32, 44, 75, 27, 14, 2]),
+     'effectifs par niveau : 15 / 32 / 44 / 75 / 27 / 14 / 2 (' + JSON.stringify(lvlCounts) + ')');
+  ok(call('Object.keys(NOTION_LEVELS).length') === 209, 'NOTION_LEVELS couvre exactement 209 notions');
+  const lvlUnknown = call(`Object.keys(NOTION_LEVELS).filter(id => !NOTIONS.some(n => n.id === id))`);
+  const lvlMissing = call(`NOTIONS.filter(n => !NOTION_LEVELS[n.id]).map(n => n.id).join()`);
+  ok(lvlUnknown.length === 0, 'aucune entrée de NOTION_LEVELS inconnue des notions');
+  ok(lvlMissing === '', 'aucune notion sans niveau (' + lvlMissing + ')');
+
+  /* Tableau croisé : cohérence des données */
+  const crx = JSON.parse(call('JSON.stringify(tdmCroise())'));
+  ok(crx.cats.length === 22, 'tableau croisé : 22 catégories en colonnes');
+  ok(crx.total === 209, 'somme des cellules du tableau croisé = 209');
+  ok(crx.rowTot.join() === '15,32,44,75,27,14,2', 'totaux par ligne = effectifs des niveaux');
+  const colCount = call(`PROG_CATS.map(c => [].concat(c.ids || [], ...(c.subs || []).map(s => s.ids)).length)`);
+  ok(JSON.stringify(colCount) === JSON.stringify(crx.colTot), 'chaque colonne = nombre de notions de la catégorie');
+
+  /* Vue « 🎓 Par niveau » de la progression */
+  ok(($('progViewNiveau').listeners.click || []).length > 0, 'progression : bouton « 🎓 Par niveau » câblé');
+  call("$('notionsList').children.length = 0");   /* le stub ne vide pas children via innerHTML */
+  $('progViewNiveau').listeners.click.forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('PROG_VIEW') === 'niveau', 'bascule vers la vue « Par niveau »');
+  const nvKids = [...$('notionsList').children];
+  ok(nvKids.length === 8, 'vue « Par niveau » : tableau croisé + 7 sections de niveau (' + nvKids.length + ')');
+  ok(nvKids[0].innerHTML.includes('croise-table') && nvKids[0].innerHTML.includes('croise-note'),
+     'tableau croisé rendu en tête de la vue');
+  const nivBoxes = nvKids.slice(1);
+  ok(nivBoxes.every(b => b.className.includes('niveau-box')), 'les 7 sections portent la classe niveau-box');
+  ok(nivBoxes.every(b => /\d+\/\d+ validée/.test(b.children[0].innerHTML)), 'compteur « X/Y validées » par niveau');
+  ok(nivBoxes.every(b => b.children[1] && b.children[1].className.includes('rev-niveau-btn')),
+     'chaque niveau a son bouton « 🎯 Réviser ce niveau »');
+  const nivItems = nivBoxes.reduce((a, b) => a + b.children.filter(c => c.className.includes('notion-item')).length, 0);
+  ok(nivItems === 209, 'les 7 sections listent 209 notions au total (' + nivItems + ')');
+  call("$('notionsList').children.length = 0");
+  $('progViewCat').listeners.click.forEach(f => f({ stopPropagation(){}, preventDefault(){} }));
+  ok(call('PROG_VIEW') === 'cat' && $('notionsList').children.length === 22,
+     'retour à la vue « Par catégorie » (22 blocs)');
+
+  /* Révision : ouverture ciblée sur un niveau + puces de filtre */
+  call("$('revList').children.length = 0");
+  call(`tdmOpenRevision('c4')`);
+  ok($('revisionModal').classList.contains('open'), '« Réviser ce niveau » : modale de révision ouverte');
+  ok($('revStatus').textContent.includes('32 notions cochées'),
+     'ouverture sur un niveau : ses notions sont pré-cochées (' + $('revStatus').textContent + ')');
+  ok($('revList').children.length === 32, 'liste filtrée sur le niveau demandé (32 notions)');
+  ok($('revLevels').innerHTML.includes('rev-chip') && $('revLevels').innerHTML.includes('Cycle 4'),
+     'puces de niveau rendues (Tous + 7 niveaux avec effectifs)');
+  call("$('revList').children.length = 0");
+  call(`(function(){
+    const fake = document.createElement('button');
+    fake.setAttribute('data-lvl', '2de');
+    ($('revLevels').listeners.click || []).forEach(f => f({ target: fake, stopPropagation(){}, preventDefault(){} }));
+  })()`);
+  ok($('revList').children.length === 44, 'puce « 2de » : la liste se filtre à 44 notions');
+  ok([...$('revList').children].every(el => el.innerHTML.includes('rev-lvl')), 'chaque ligne porte son badge de niveau');
+  call("$('revList').children.length = 0");
+  call(`(function(){
+    const fake = document.createElement('button');
+    fake.setAttribute('data-lvl', '');
+    ($('revLevels').listeners.click || []).forEach(f => f({ target: fake, stopPropagation(){}, preventDefault(){} }));
+  })()`);
+  ok($('revList').children.length === 209, 'puce « 🌐 Tous » : les 209 notions reviennent');
+  call('tdmCloseRevision()');
+  call("$('revList').children.length = 0");
+  call('tdmOpenRevision()');
+  ok($('revList').children.length === 209, 'ouverture classique (sans niveau) : 209 notions, aucun filtre');
+  call('tdmCloseRevision()');
+
+  /* Dossier de présentation : chiffres à jour + section tableau croisé */
+  const dossier = fs.readFileSync(ROOT + '/rapport-publication.html', 'utf8');
+  ok(dossier.includes('209'), 'dossier : compteur 209 présent');
+  ok(dossier.includes('402'), 'dossier : compteur 402 générateurs présent');
+  ok(dossier.includes('22 catégories'), 'dossier : 22 catégories mentionnées');
+  ok(dossier.includes('44 modules'), 'dossier : 44 modules mentionnés');
+  ok(dossier.includes('Tableau croisé'), 'dossier : section « tableau croisé niveaux × notions »');
+  ok(dossier.includes('CPGE'), 'dossier : la colonne CPGE du tableau croisé figure bien');
+
   console.log(fail === 0 ? '\n✅ BANC D\'ESSAI : TOUT PASSE' : '\n❌ ' + fail + ' test(s) en échec');
   process.exit(fail === 0 ? 0 : 1);
 })().catch(e => { console.error('EXCEPTION : ' + e.stack); process.exit(1); });

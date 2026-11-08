@@ -2,7 +2,7 @@
 
 Optimisation du document monolithique `la-tour-des-maths-eleve.html` (≈ 459 Ko,
 6 249 lignes) en une **série de sous-documents interconnectés** : 1 point
-d'entrée, 1 dossier de présentation, 6 feuilles de style et 38 modules
+d'entrée, 1 dossier de présentation, 6 feuilles de style et 44 modules
 JavaScript.
 
 **Le comportement du jeu est identique** à l'original pour tout ce qui
@@ -10,7 +10,9 @@ existait — vérifié par exécution côte à côte (machines virtuelles Node, 
 déterministe). Cette version ajoute : la **décomposition en éléments
 simples**, l'**horodatage de la dernière mise à jour**, la **révision
 personnalisée**, l'**intégration des documents « Évolutions » et
-« Proportions »** et l'**explorateur de liens du programme** — une
+« Proportions »** et l'**explorateur de liens du programme**, les **niveaux de classe et le
+tableau croisé** (vue « 🎓 Par niveau » de la progression, filtres par
+niveau de la révision) — une
 succession de sous-graphes centrés sur une notion ou une zone, où
 l'élève voit que les 209 notions sont toutes reliées, directement
 ou indirectement (voir plus bas).
@@ -265,6 +267,14 @@ la-tour-des-maths/
     │                                  générateurs, fiche « Limites,
     │                                  continuité & TVI », 2 notions,
     │                                  1 sous-catégorie → 209 étages)
+    ├── 11v-niveaux.js              ← niveaux de classe & tableau croisé :
+    │                                  NIVEAUX (7 niveaux : cycle 3, cycle 4,
+    │                                  2de, 1re, terminale, maths expertes,
+    │                                  CPGE), NOTION_LEVELS (rattachement des
+    │                                  209 notions), tdmCroise() — alimente la
+    │                                  vue « 🎓 Par niveau » de la progression,
+    │                                  les filtres de la révision et le
+    │                                  dossier (aucun nouvel étage, 44ᵉ module)
     ├── 12-etat-jeu.js                ← état global (customPool), références DOM, $
     ├── 13-tour-3d.js                 ← moteur canvas, caméra, rendu
     ├── 14-formes-3d.js               ← une forme 3D par notion
@@ -383,8 +393,12 @@ L'élève compose, **pour la session en cours**, un menu de notions à
 réviser :
 
 - bouton « 🎯 Révision personnalisée… » du menu utilitaire → modale avec
-  les **196 notions**, un filtre de recherche, « Tout cocher /
+  les **209 notions**, un filtre de recherche, « Tout cocher /
   Tout décocher » et le décompte en direct ;
+- **des puces de filtrage par niveau de classe** (🌐 Tous, 🌱 Cycle 3 ·
+  15, 🌿 Cycle 4 · 32, 2de · 44, 1re · 75, Tle · 27, 🌟 Expertes · 14,
+  🏛 CPGE · 2) affinent la liste — combinées au filtre de recherche —
+  et chaque ligne porte son badge de niveau ;
 - une fois lancée, la tour ne pose **que** des questions de la sélection
   (`state.customPool` filtré dans `pickNotion`) — mêmes règles de
   probabilités, de notions passées et de leçons d'erreur ; seule la source
@@ -862,6 +876,46 @@ du jeu, soit déjà couverts par des mécanismes existants. Après cette
 vague, tout le contenu mathématique du dépôt a désormais son étage
 dans la tour.
 
+## Niveaux de classe, vues « Par niveau » & tableau croisé
+
+Le nouveau module `11v-niveaux.js` rattache chacune des **209 notions**
+à un **niveau de classe** conforme aux programmes officiels —
+7 niveaux : 🌱 Cycle 3 (CM1 · CM2 · 6e, 15 notions), 🌿 Cycle 4
+(5e · 4e · 3e, 32), 🎓 Seconde (44), 🎓 Première générale &
+technologique (75), 🎓 Terminale générale & technologique (27),
+🌟 Terminale maths expertes & complémentaires (14) et 🏛 Post-bac/CPGE
+(2). Le banc d'essai vérifie que la correspondance couvre exactement
+les 209 notions (aucune oubliée, aucune inconnue) et que les effectifs
+par niveau sont 15 + 32 + 44 + 75 + 27 + 14 + 2 = 209.
+
+Trois usages :
+
+- **Progression, vue « 🎓 Par niveau (tableau croisé) »** : deux boutons
+  (« 📋 Par catégorie » / « 🎓 Par niveau ») en tête de la modale. La vue
+  par niveau affiche d'abord le **tableau croisé** (lignes = niveaux,
+  colonnes = 22 catégories, cellules = effectifs, totaux contrôlés),
+  puis une section dépliable par niveau (compteur « X/Y validées »,
+  cartes de notions inchangées) avec un bouton **« 🎯 Réviser ce
+  niveau »** qui ouvre la révision personnalisée pré-remplie ;
+- **Révision personnalisée** : puces de filtrage par niveau (avec
+  effectifs) combinées à la recherche, badge de niveau par ligne, et
+  `tdmOpenRevision(code)` pré-coche tout un niveau ;
+- **Dossier de présentation** : nouvelle section « 📊 Tableau croisé :
+  niveaux de classe × notions à traiter » (22 lignes × 7 colonnes,
+  calculée depuis les données du jeu, totaux 209) et tous les
+  compteurs actualisés (209 notions, 402 générateurs, 22 catégories,
+  7 niveaux, 44 modules, banc d'essai 24 sections, novembre 2026).
+
+Le rattachement suit les programmes : calcul et fractions au cycle 3-4,
+factorisations, systèmes, fonctions de référence et Python en 2de,
+second degré, dérivation, suites et littéral STI2D en 1re, complexes,
+probabilités conditionnelles, lois binomiales et estimation en
+Terminale, arithmétique, graphes et ln/exp en maths expertes,
+dénombrement expert et valeurs propres au-delà. Aucune notion n'a
+changé d'étage, de catégorie, de fiche ou de générateur : le module
+n'est que **données de classement**, vérifiées par la section 20 du
+banc d'essai.
+
 ## Dossier de présentation « rapport-publication.html »
 
 Document autonome lié à la tour (bouton « 📄 Dossier de présentation »
@@ -869,18 +923,22 @@ du menu utilitaire, ouvert dans un onglet séparé) : dossier type
 publication en revue pédagogique ou journalistique présentant l'ensemble
 du projet — résumé, problématique et objectifs, dispositif (tour,
 probabilités adaptatives, leçons d'erreur, éléments simples, fiches),
-contenus (22 catégories, 209 notions, 402 générateurs, du cycle 3 au
-lycée général et technologique), principes didactiques, architecture
-technique (43 modules, banc d'essai 23 sections, chiffrement
+contenus (22 catégories, 209 notions, 402 générateurs, 7 niveaux de
+classe, du cycle 3 au post-bac), **tableau croisé niveaux × notions**
+(22 catégories en lignes, 7 niveaux en colonnes, effectifs calculés
+depuis les données du jeu), principes didactiques, architecture
+technique (44 modules, banc d'essai 24 sections, chiffrement
 RSA-2048 + AES-256 de l'export), publics et usages, limites et
 perspectives, fiche projet. Même style visuel que les documents
 d'exercices, même notice de licence (Yann Merdy, usage non commercial).
 
 ## Progression des notions par catégories
 
-La modale « 📚 Progression des notions » ne liste plus les 209 notions
-dans l'ordre de construction de la tour : le nouveau module
-`11f-progression.js` les regroupe en **22 catégories thématiques**,
+La modale « 📚 Progression des notions » offre **deux vues au choix**
+(boutons « 📋 Par catégorie » / « 🎓 Par niveau (tableau croisé) »). La
+vue par catégorie ne liste plus les 209 notions dans l'ordre de
+construction de la tour : le module `11f-progression.js` les regroupe
+en **22 catégories thématiques**,
 chacune **repliable d'un clic** (le titre affiche son compteur
 « X/Y validées »). Les éléments simples de chaque notion restent
 inchangés (libellé, rappel au survol, statistiques ✓/✗, fiches) ;
@@ -961,7 +1019,7 @@ sont remplis dynamiquement.
 ## Banc d'essai
 
 `.tests/test-tdm.mjs` (machine virtuelle Node, DOM stubbé, PRNG
-déterministe) — 23 sections : identité et démarrage, erreur QCM → solution
+déterministe) — 24 sections : identité et démarrage, erreur QCM → solution
 pédagogique, erreur à trous → raisonnement complet, fiches de rappel,
 sommaire décomposé en catégories thématiques (22 catégories,
 209 notions, plier/déplier, aucun titre ne mentionne « automatisme »),
@@ -991,8 +1049,13 @@ anti-chevauchement), 2ᵉ animation « balle rebondissante » (bascule du
 menu, balle plus grosse, montée heureuse et fêtée — bond, traînée,
 étincelles de joie, gerbe, chute ∝ pénalité avec écrasement d'arrivée
 croissant, plancher coulissant, larmes qui coulent vers le bas, pans de
-murs qui s'écrasent au sol, retour tour 3D) et modale d'accueil
-responsive (hauteur plafonnée, compteurs dynamiques).
+murs qui s'écrasent au sol, retour tour 3D), modale d'accueil
+responsive (hauteur plafonnée, compteurs dynamiques) et **niveaux de
+classe & tableau croisé** (7 niveaux, 209 notions couvertes une à une,
+effectifs 15/32/44/75/27/14/2, cellules du tableau croisé = effectifs
+des catégories, bascule des vues de la progression, « Réviser ce
+niveau » pré-coche les notions du niveau, puces de filtrage de la
+révision, chiffres du dossier de présentation).
 `node .tests/test-tdm.mjs` → **TOUT PASSE**.
 
 ## Choix techniques
@@ -1003,7 +1066,7 @@ responsive (hauteur plafonnée, compteurs dynamiques).
 - Les enrichissements (`11c`, `19b`) respectent le même contrat : pas
   d'intrusion dans les modules existants, tout passe par `Object.assign`,
   `NOTIONS.push` avant le calcul de `N_TOT` et des listeners différés.
-- Syntaxe vérifiée par `node --check` sur les 43 modules ; comportement
+- Syntaxe vérifiée par `node --check` sur les 44 modules ; comportement
   vérifié par le banc d'essai VM.
 
 ## Utilisation

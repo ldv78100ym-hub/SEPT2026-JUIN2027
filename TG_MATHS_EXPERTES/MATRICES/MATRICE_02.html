@@ -1,0 +1,1894 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le produit matriciel</title>
+<style>
+:root{
+  --bleu:#1969c8; --vert:#008246; --rouge:#cd2d2d;
+  --bleu-bg:#e8f1fc; --vert-bg:#e9f5ef; --rouge-bg:#fdeeee;
+  --encre:#1c2033; --papier:#fbfaf7;
+  --serif:"Latin Modern Math","Cambria Math",Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--serif);color:var(--encre);background:var(--papier);margin:0;line-height:1.6}
+.page{max-width:950px;margin:0 auto;padding:1.4em 1.4em 4em}
+header.head{text-align:center;margin-bottom:.6em}
+header.head h1{font-size:2em;color:#24305e;margin:.2em 0;font-weight:700}
+header.head .sous{font-size:1.02em;color:#4a5578;margin:.4em auto .2em;max-width:40em}
+header.head .auteur{font-family:var(--sans);font-size:.9em;color:#8a91a5;margin:.3em 0 0}
+.resetbar{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;
+  background:#fff;border:1px solid #e4e7f0;border-radius:12px;padding:10px 14px;margin:1em 0;
+  box-shadow:0 2px 8px rgba(25,50,90,.06)}
+.resetbar .hint{flex-basis:100%;margin:2px 0 0}
+
+/* ---------- Sommaire ---------- */
+nav.toc{background:#fff;border:1px solid #e4e7f0;border-radius:12px;padding:.9em 1.3em;margin:1.4em 0;box-shadow:0 2px 8px rgba(25,50,90,.05)}
+nav.toc .toc-t{font-family:var(--sans);font-weight:700;color:var(--bleu);font-size:.95em;margin-bottom:.35em}
+nav.toc ol{margin:0;padding-left:1.4em;columns:2;column-gap:2.5em}
+nav.toc li{font-size:.95em;margin:.18em 0}
+nav.toc a{color:#2c3866;text-decoration:none;border-bottom:1px dotted #aab4d0}
+nav.toc a:hover{color:var(--bleu)}
+@media (max-width:640px){nav.toc ol{columns:1}}
+
+/* ---------- Numérotation ---------- */
+body{counter-reset:sec}
+h2{font-size:1.45em;color:#24305e;border-bottom:2px solid #dde5f3;padding-bottom:.22em;margin:2.1em 0 .7em;
+   counter-increment:sec;counter-reset:defi exe rem prop sub}
+h2::before{content:counter(sec) ".\00a0\00a0";color:#8fa8cc}
+h3{font-size:1.14em;color:#33406b;margin:1.5em 0 .5em;counter-increment:sub}
+h3::before{content:counter(sec) "." counter(sub) ".\00a0\00a0";color:#8fa8cc}
+
+/* ---------- Encadrés Définition / Exemple / Remarque / Propriété ---------- */
+.dbox{background:#fff;border:1px solid #e4e7f0;border-left:4px solid var(--bleu);border-radius:10px;
+      padding:.65em 1em .7em;margin:1.15em 0;box-shadow:0 2px 8px rgba(25,50,90,.05)}
+.d-head{font-family:var(--sans);font-weight:700;font-size:.88em;margin-bottom:.35em;color:var(--bleu);
+        text-transform:uppercase;letter-spacing:.02em}
+.d-defi{counter-increment:defi}
+.d-defi .d-head::before{content:"Définition " counter(sec) "." counter(defi) ". "}
+.d-exe{border-left-color:var(--vert)} .d-exe .d-head{color:var(--vert)}
+.d-exe{counter-increment:exe}
+.d-exe .d-head::before{content:"Exemple " counter(sec) "." counter(exe) ". "}
+.d-rem{border-left-color:#98a0b5} .d-rem .d-head{color:#5a6072}
+.d-rem{counter-increment:rem}
+.d-rem .d-head::before{content:"Remarque " counter(sec) "." counter(rem) ". "}
+.d-prop{border-left-color:#7c5cbf} .d-prop .d-head{color:#6a4bb3}
+.d-prop{counter-increment:prop}
+.d-prop .d-head::before{content:"Propriété " counter(sec) "." counter(prop) ". "}
+
+/* ---------- Encadrés colorés ---------- */
+.note{border-radius:10px;padding:.8em 1.1em;margin:1.25em auto}
+.note.attention{background:var(--rouge-bg);border-left:5px solid var(--rouge)}
+.note.idee{background:var(--vert-bg);border-left:5px solid var(--vert)}
+.note.methode{background:#e9f1fc;border-left:5px solid var(--bleu)}
+.note .nt{font-family:var(--sans);font-weight:700;font-size:.9em;margin:0 0 .3em;display:block}
+.note.attention .nt{color:var(--rouge)}
+.note.idee .nt{color:var(--vert)}
+.note.methode .nt{color:var(--bleu)}
+.note ol,.note ul{margin:.3em 0 .2em;padding-left:1.5em}
+.note li{margin:.25em 0}
+
+/* ---------- Math rendu ---------- */
+.mth{font-family:var(--serif);font-style:normal;white-space:nowrap}
+.mth i{font-style:italic}
+.mth sub,.mth sup{font-size:.68em}
+.mth .txt{font-style:normal}
+.mth .bb{font-weight:600}
+.frac{display:inline-block;vertical-align:-.7em;text-align:center;font-size:.95em;margin:0 .1em}
+.frac>span{display:block;padding:0 .25em}
+.frac>span:first-child{border-bottom:1.2px solid currentColor}
+.mtx{display:inline-grid;column-gap:.4em;row-gap:.15em;padding:.15em .55em;position:relative;
+     margin:0 .15em;vertical-align:middle}
+.mtx::before,.mtx::after{content:"";position:absolute;top:.05em;bottom:.05em;width:.34em;border:.08em solid #45507a}
+.mtx::before{left:0;border-right:none;border-radius:.16em .02em .02em .16em}
+.mtx::after{right:0;border-left:none;border-radius:.02em .16em .16em .02em}
+.mtx>.mc{display:flex;align-items:center;justify-content:center;min-width:.9em;min-height:1.05em}
+.disp{display:block;text-align:center;margin:1em auto;font-size:1.12em;overflow-x:auto;overflow-y:hidden;padding:.15em 0}
+
+/* ---------- Panneaux d'animation ---------- */
+.demo{background:#fff;border:1px solid #e4e6ee;border-radius:14px;padding:16px 14px 12px;margin:1.3em auto;
+      box-shadow:0 3px 14px rgba(25,50,90,.07);text-align:center}
+.demo .demo-t{font-family:var(--sans);font-size:.78em;font-weight:700;letter-spacing:.08em;
+      text-transform:uppercase;color:#8a93ad;margin-bottom:6px}
+.demo .controls{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px 0}
+.demo .stage{display:flex;gap:24px;justify-content:center;align-items:center;flex-wrap:wrap;
+      position:relative;margin:14px 0 4px}
+.readout{min-height:1.7em;font-size:1.03em;margin-top:10px}
+.hint{font-family:var(--sans);font-size:.85em;color:#7b8296;margin-top:4px}
+.legende{text-align:center;font-size:.88em;font-style:italic;color:#666d80;margin:.6em auto .4em;max-width:44em}
+.lrow{display:flex;gap:20px;align-items:center;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.dimrow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:10px 0;font-size:1.25em}
+.dimchip{font-family:var(--serif);background:#fff;border:1.5px solid #d5d9e8;border-radius:10px;
+  padding:.12em .45em;margin:0 .1em;white-space:nowrap}
+.dimchip .inr{display:inline-block;border:2px solid var(--rouge);border-radius:6px;padding:0 .18em;
+  margin:0 .08em;transition:background .3s,box-shadow .3s}
+.dimchip .inr.hl{background:var(--rouge-bg);box-shadow:0 0 0 3px rgba(205,45,45,.2)}
+.dimchip .inr.ok{border-color:var(--vert);background:var(--vert-bg)}
+table.dimtab{border-collapse:collapse;margin:0.8em auto;font-size:.97em}
+table.dimtab th,table.dimtab td{border:1px solid #c9cfdf;padding:.35em .7em;text-align:center}
+table.dimtab th{background:#f0f3fa;font-family:var(--sans);font-size:.86em}
+table.dimtab td.okc{color:var(--vert);font-weight:700}
+table.dimtab td.badc{color:var(--rouge);font-weight:700}
+.coefflines{display:flex;gap:2.4em;justify-content:center;flex-wrap:wrap;margin:.8em auto;text-align:left}
+.coefflines .cl-col{display:flex;flex-direction:column;gap:.55em}
+
+/* ---------- Matrices DOM ---------- */
+.dmat{display:inline-grid;gap:5px;position:relative;padding:9px 15px;vertical-align:middle}
+.dmat::before,.dmat::after{content:"";position:absolute;top:2px;bottom:2px;width:9px;border:2.5px solid #45507a}
+.dmat::before{left:1px;border-right:none;border-radius:7px 1px 1px 7px}
+.dmat::after{right:1px;border-left:none;border-radius:1px 7px 7px 1px}
+.dcell{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:2px 8px;
+      border-radius:8px;background:#fbfcff;border:1.5px solid #d5d9e8;font-size:1.02em;
+      transition:background .25s,border-color .25s,transform .25s,box-shadow .25s,color .25s,opacity .3s}
+.dcell .frac{font-size:.8em;line-height:1.05}
+.dcell.mid{font-size:.8em;color:#445}
+.dcell.rl{background:var(--bleu-bg);border-color:var(--bleu)}
+.dcell.cl{background:var(--rouge-bg);border-color:var(--rouge)}
+.dcell.cc{background:#fff3bf;border-color:#e6a700;box-shadow:0 0 0 3px rgba(230,166,0,.25)}
+.dcell.ok{background:var(--vert-bg);border-color:var(--vert);box-shadow:0 0 0 3px rgba(0,130,70,.18)}
+.dcell.bad{background:var(--rouge-bg);border-color:var(--rouge);box-shadow:0 0 0 3px rgba(205,45,45,.22);animation:shake .45s}
+.dcell.ghost{background:transparent;border-style:dashed;color:#aab}
+.dcell.jaune{background:#fff3bf;border-color:#e6a700}
+.dcell.faded{opacity:.15}
+.dcell.p0{background:#fff3bf;border-color:#e6a700}
+.dcell.p1{background:#ffe0b3;border-color:#e08a00}
+.dcell.p2{background:#ffd6e0;border-color:#d6336c}
+.dcell.p3{background:#c8f0e8;border-color:#0a8f70}
+.dcell.clone{position:absolute;margin:0;z-index:5}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes pop{0%{transform:scale(.55)}60%{transform:scale(1.13)}100%{transform:scale(1)}}
+.pop{animation:pop .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fadein{animation:fadein .5s ease both}
+
+/* ---------- Boutons, badges, curseurs ---------- */
+.btn{font-family:var(--sans);background:var(--bleu);color:#fff;border:none;border-radius:999px;
+     padding:.5em 1.15em;font-size:.93rem;cursor:pointer;box-shadow:0 2px 6px rgba(25,105,200,.3);
+     transition:transform .15s,box-shadow .15s,background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.55;cursor:default;transform:none}
+.btn.verte{background:var(--vert);box-shadow:0 2px 6px rgba(0,130,70,.28)}
+.btn.grise{background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);box-shadow:none}
+.btn.on{background:var(--vert)}
+.badge{display:inline-block;padding:.28em .8em;border-radius:999px;background:#eef1f8;border:1px solid #d5daea;
+       font-family:var(--sans);font-size:.88em;transition:background .25s,border-color .25s,transform .25s}
+.badge.bleu{background:var(--bleu-bg);border-color:var(--bleu);color:var(--bleu)}
+.badge.rouge{background:var(--rouge-bg);border-color:var(--rouge);color:var(--rouge);animation:shake .45s}
+.badge.vertf{background:var(--vert-bg);border-color:var(--vert);color:var(--vert)}
+.lbl{font-family:var(--sans);font-size:.92em;color:#3c4768}
+.verdict{font-size:1.7em;font-weight:700;min-width:1.3em;display:inline-block}
+.verdict.ok{color:var(--vert)}
+.verdict.bad{color:var(--rouge)}
+.opv{font-size:1.5em;color:#45507a;margin:0 .12em}
+.matlbl{font-family:var(--sans);font-size:.85em;font-weight:700;color:#3c4768;text-align:center;margin-top:8px}
+.wrap-rel{position:relative;display:inline-block}
+.croix{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);pointer-events:none}
+.croix line{stroke:var(--rouge);stroke-width:7;stroke-linecap:round;
+      stroke-dasharray:160;stroke-dashoffset:160;transition:stroke-dashoffset .45s ease}
+.drawn .croix line{stroke-dashoffset:0}
+.drawn .croix line:nth-child(2){transition-delay:.25s}
+.cas{border:1px solid #e6e9f2;border-radius:10px;padding:12px 10px 10px;margin:10px 0;background:#fdfdff}
+.cas-t{font-family:var(--sans);font-size:.88em;font-weight:700;color:#3c4768;margin-bottom:6px}
+.cas-note{font-family:var(--sans);font-size:.84em;color:#5a6178;margin-top:8px;min-height:1.2em}
+.copyrightbar{display:flex;justify-content:center;margin-top:1.6em}
+.copyright-box{background:#fff;border:1px solid #e4e7f0;border-left:4px solid #98a0b5;border-radius:10px;
+  padding:.9em 1.3em;margin:1em auto;max-width:46em;text-align:center;font-size:.95em;
+  box-shadow:0 2px 8px rgba(25,50,90,.05)}
+.copyright-box p{margin:.35em 0}
+.copyright-box a{color:var(--bleu)}
+footer{margin-top:3em;text-align:center;font-family:var(--sans);font-size:.82em;color:#8a91a5}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:640px){
+  .page{padding:1em .7em 3em}
+  .demo .stage{gap:14px}
+  .coefflines{gap:1.2em}
+}
+@media print{.btn,.controls,.hint,.resetbar{display:none}.demo,.dbox,.note{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="head">
+  <h1>Le produit matriciel</h1>
+  <p class="sous">Définition, règle « ligne <span data-tex="\times"></span> colonne », exemples pas à pas et non-commutativité du produit</p>
+  <p class="auteur">Yann Merdy : fiche interactive (version web animée)</p>
+</header>
+
+<div class="resetbar">
+  <button id="btn-reinit" class="btn verte">&#127922; Réinitialiser les valeurs</button>
+  <span id="badge-form" class="badge"></span>
+  <span class="hint">Toutes les valeurs numériques de la fiche sont aléatoires, comprises entre &minus;100 et 100. Leur forme (entiers relatifs, décimaux relatifs ou fractions) est homogène dans tout le document et change, de manière équiprobable, à chaque réinitialisation.</span>
+</div>
+
+<nav class="toc">
+  <div class="toc-t">Sommaire</div>
+  <ol>
+    <li><a href="#s1">Pourquoi ce produit ? Un exemple de motivation</a></li>
+    <li><a href="#s2">Quand le produit AB existe-t-il ? La règle des dimensions</a></li>
+    <li><a href="#s3">La règle de calcul : ligne × colonne</a></li>
+    <li><a href="#s4">Un produit 2×2 calculé pas à pas</a></li>
+    <li><a href="#s5">D'autres exemples pour se former</a></li>
+    <li><a href="#s6">Propriétés du produit matriciel</a></li>
+    <li><a href="#s7">Le produit matriciel n'est pas commutatif</a></li>
+    <li><a href="#s8">Méthode et synthèse</a></li>
+  </ol>
+</nav>
+
+<div class="note idee">
+  <span class="nt">À retenir :</span>
+  Multiplier deux matrices n'est <b>pas</b> multiplier leurs coefficients deux à deux ! Le produit <span data-tex="AB"></span> n'existe que si les dimensions s'emboîtent : le nombre de <i>colonnes</i> de <span data-tex="A"></span> doit égaler le nombre de <i>lignes</i> de <span data-tex="B"></span>. Il se calcule ensuite <b>ligne par colonne</b>. Et surtout, <b>l'ordre des facteurs compte</b> : <span data-tex="AB"></span> et <span data-tex="BA"></span> sont en général deux produits différents, quand les deux existent !
+</div>
+
+<!-- ================================================================= -->
+<section id="s1">
+<h2>Pourquoi ce produit ? Un exemple de motivation</h2>
+
+<p>Deux clients passent commande dans une boulangerie. Le premier prend des baguettes, des croissants et des pains au chocolat ; le second en prend d'autres quantités. Chaque article a son prix affiché.</p>
+
+<p>Rangeons les commandes dans une matrice <span data-tex="A"></span> (une ligne par client, une colonne par article) et les prix dans une matrice colonne <span data-tex="B"></span> (une ligne par article) :</p>
+<div class="disp" id="disp-motiv-AB"></div>
+<p>Les colonnes de <span data-tex="A"></span> sont, dans l'ordre : baguette, croissant, pain au chocolat. Le total à payer par chaque client se calcule en croisant la ligne du client avec la colonne des prix :</p>
+<div class="disp" id="disp-motiv"></div>
+<p id="p-motiv-result"></p>
+
+<div class="demo" id="demo-motivation">
+  <div class="demo-t">Animation interactive : les totaux de la boulangerie</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+  <div class="hint">La ligne du client (bleu) rencontre la colonne des prix (rouge) : on multiplie deux à deux puis on additionne.</div>
+</div>
+<p class="legende">La règle générale décrite dans cette fiche ne fait rien d'autre que généraliser ce calcul de totaux croisés.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="s2">
+<h2>Quand le produit <span data-tex="AB"></span> existe-t-il ? La règle des dimensions</h2>
+
+<div class="dbox d-defi">
+  <div class="d-head">Produit de deux matrices : condition d'existence</div>
+  <p>Soient <span data-tex="A"></span> une matrice de dimension <span data-tex="n\times p"></span> et <span data-tex="B"></span> une matrice de dimension <span data-tex="q\times r"></span>. Le produit <span data-tex="AB"></span> est <b>défini</b> si et seulement si le nombre de colonnes de <span data-tex="A"></span> est égal au nombre de lignes de <span data-tex="B"></span> : <span data-tex="p=q"></span>. Dans ce cas, <span data-tex="AB"></span> est une matrice de dimension <span data-tex="n\times r"></span>.</p>
+</div>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  On n'écrit jamais deux matrices au hasard l'une derrière l'autre ! Avant tout calcul, on <b>aligne les dimensions</b> : <span data-tex="(n\times p)\,(p\times r)"></span>. Les <b>nombres intérieurs</b> doivent coïncider ; le résultat prend les <b>nombres extérieurs</b> <span data-tex="n\times r"></span>.
+</div>
+
+<div class="demo" id="demo-dimensions">
+  <div class="demo-t">Atelier : la règle d'alignement des dimensions</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+  <div class="hint">Les nombres intérieurs sont encadrés en rouge. Chaque sens du produit se vérifie séparément.</div>
+</div>
+<p class="legende">Schéma 1 : la règle d'alignement des dimensions. Dans <span data-tex="(n\times p)\times(p\times r)"></span>, les nombres intérieurs encadrés doivent coïncider : le produit existe alors et sa dimension est <span data-tex="n\times r"></span>, les nombres extérieurs. S'ils diffèrent, le produit n'est pas défini.</p>
+
+<div class="dbox d-exe">
+  <div class="d-head">Tester des dimensions</div>
+  <p>Pour chaque produit, vérifions les nombres intérieurs :</p>
+  <div id="dim-table"></div>
+</div>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  Le fait que <span data-tex="AB"></span> existe ne dit <b>rien</b> sur <span data-tex="BA"></span> ! Dans le tableau ci-dessus, certains produits existent dans les deux sens, d'autres dans un seul. Chaque sens se vérifie séparément : <b>la position des facteurs compte</b>, comme pour le scalaire (<span data-tex="\lambda A"></span> existe toujours, <span data-tex="A\times\lambda"></span> n'a pas de sens).
+</div>
+
+<div class="note methode">
+  <span class="nt">Méthode.</span>
+  Avant de calculer un produit <span data-tex="AB"></span> :
+  <ol>
+    <li>écrire les dimensions : <span data-tex="A"></span> est <span data-tex="n\times p"></span>, <span data-tex="B"></span> est <span data-tex="q\times r"></span> ;</li>
+    <li>comparer les nombres intérieurs : si <span data-tex="p\neq q"></span>, le produit est <b>impossible</b>, on s'arrête ;</li>
+    <li>sinon, le résultat <span data-tex="AB"></span> est de dimension <span data-tex="n\times r"></span> (nombres extérieurs), et l'on passe au calcul.</li>
+  </ol>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s3">
+<h2>La règle de calcul : ligne <span data-tex="\times"></span> colonne</h2>
+
+<p>Supposons <span data-tex="A"></span> de dimension <span data-tex="n\times p"></span> et <span data-tex="B"></span> de dimension <span data-tex="p\times r"></span> : le produit <span data-tex="AB"></span> (dimension <span data-tex="n\times r"></span>) existe. Comment remplir chaque coefficient ?</p>
+
+<div class="dbox d-defi">
+  <div class="d-head">Coefficient général du produit</div>
+  <p>Le coefficient de <span data-tex="AB"></span> situé en position <span data-tex="(i,j)"></span> s'obtient en croisant la <b>ligne <i>i</i></b> de <span data-tex="A"></span> avec la <b>colonne <i>j</i></b> de <span data-tex="B"></span> : on multiplie les coefficients deux à deux, dans l'ordre, puis on additionne :</p>
+  <div class="disp" data-tex="(AB)_{ij} = a_{i1}b_{1j} + a_{i2}b_{2j} + \dots + a_{ip}b_{pj} = \sum_{k=1}^{p} a_{ik}\, b_{kj}"></div>
+</div>
+
+<div class="demo" id="demo-cij">
+  <div class="demo-t">Atelier interactif : un coefficient ligne × colonne</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+  <div class="hint">Survolez (ou touchez) une case du résultat <span data-tex="C=AB"></span> : la ligne de <span data-tex="A"></span> s'affiche en bleu, la colonne de <span data-tex="B"></span> en rouge, et la formule du coefficient apparaît.</div>
+</div>
+<p class="legende">Schéma 2 : pour obtenir le coefficient <span data-tex="c_{ij}"></span> (case jaune), on fait glisser la <b>ligne <i>i</i></b> de <span data-tex="A"></span> (bleu) le long de la <b>colonne <i>j</i></b> de <span data-tex="B"></span> (rouge) : chaque coefficient se multiplie avec celui de même rang, puis on additionne. Le résultat se place à l'intersection : position <span data-tex="(i,j)"></span>.</p>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  Le produit matriciel n'est <b>pas</b> un produit coefficient par coefficient ! <span id="eq-cex"></span>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Un seul coefficient, à la main</div>
+  <p id="p-ligne-intro"></p>
+  <div class="disp" id="disp-ligne"></div>
+  <p id="p-ligne-sol"></p>
+</div>
+
+<div class="note methode">
+  <span class="nt">Méthode.</span>
+  Pour calculer le coefficient <span data-tex="(i,j)"></span> de <span data-tex="AB"></span> :
+  <ol>
+    <li>poser un doigt sur la <b>ligne <i>i</i></b> de <span data-tex="A"></span> : il n'en bougera plus ;</li>
+    <li>parcourir la <b>colonne <i>j</i></b> de <span data-tex="B"></span>, en multipliant chaque coefficient rencontré par celui de la ligne, pris dans le même ordre ;</li>
+    <li><b>additionner</b> les produits obtenus : le total est le coefficient <span data-tex="(AB)_{ij}"></span>.</li>
+  </ol>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s4">
+<h2>Un produit <span data-tex="2\times 2"></span> calculé pas à pas</h2>
+
+<div class="dbox d-exe">
+  <div class="d-head">Produit pas à pas</div>
+  <p id="p-pp-intro"></p>
+</div>
+
+<div class="demo" id="demo-pasapas">
+  <div class="demo-t">Animation pas à pas : les quatre coefficients</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+  <div class="hint">À chaque étape, la ligne de <span data-tex="A"></span> et la colonne de <span data-tex="B"></span> se rencontrent (même couleur) ; on multiplie dans l'ordre puis on additionne.</div>
+</div>
+<p class="legende">Schéma 3 : les quatre étapes du produit. Le coefficient obtenu se range à la position correspondante du résultat.</p>
+
+<p>En rangeant les quatre coefficients, on détaille le calcul matriciel global :</p>
+<div class="disp" id="disp-pp-full"></div>
+
+<div class="dbox d-rem">
+  <div class="d-head">Où l'on retrouve la position des facteurs</div>
+  <p>Le coefficient <span data-tex="c_{11}"></span> vient de la ligne 1 de <span data-tex="A"></span> et de la colonne 1 de <span data-tex="B"></span> : <b>la matrice de gauche fournit la ligne, celle de droite fournit la colonne</b>. Échanger les facteurs échangerait les rôles : c'est déjà une raison de ne jamais permuter.</p>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s5">
+<h2>D'autres exemples pour se former</h2>
+
+<div class="dbox d-exe">
+  <div class="d-head">Produit <span data-tex="(2\times 3)\times(3\times 2)"></span></div>
+  <p id="p-ex1-intro"></p>
+  <div class="coefflines" id="disp-ex1"></div>
+  <p>D'où l'écriture matricielle complète :</p>
+  <div class="disp" id="disp-ex1-full"></div>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Produit impossible</div>
+  <p id="p-imp-intro"></p>
+  <p>Les nombres intérieurs diffèrent : <b>ce produit n'existe pas</b>, il n'y a rien à calculer.</p>
+</div>
+
+<div class="demo" id="demo-impossible">
+  <div class="demo-t">Animation : un produit aux dimensions incompatibles</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Même contenu, sens différents : <span data-tex="(1\times 2)\times(2\times 1)"></span> ou l'inverse</div>
+  <p id="p-lc-intro"></p>
+  <div class="disp" id="disp-lc"></div>
+  <div class="disp" id="disp-cl"></div>
+</div>
+
+<div class="demo" id="demo-lc">
+  <div class="demo-t">Animation : même contenu, deux sens</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+<p class="legende">Schéma 4 : <span data-tex="LC"></span> est une matrice <span data-tex="1\times 1"></span> (un simple total), alors que <span data-tex="CL"></span> est une matrice <span data-tex="2\times 2"></span>. Le sens du produit change tout : dimensions du résultat et coefficients.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="s6">
+<h2>Propriétés du produit matriciel</h2>
+
+<div class="dbox d-prop">
+  <div class="d-head">Propriétés (admises, sans démonstration)</div>
+  <ul>
+    <li><b>Associativité</b> : lorsque les produits existent, <span data-tex="(AB)C=A(BC)"></span> : on peut grouper, mais <i>jamais</i> changer l'ordre des facteurs ;</li>
+    <li><b>Distributivité</b> : <span data-tex="A(B+C)=AB+AC"></span> et <span data-tex="(A+B)C=AC+BC"></span> : attention, la factorisation se fait du côté où la multiplication est autorisée ;</li>
+    <li><b>Scalaire</b> : pour tout scalaire <span data-tex="\lambda"></span> (toujours écrit à gauche de la matrice qu'il multiplie), <span data-tex="\lambda(AB)=(\lambda A)B=A(\lambda B)"></span> ;</li>
+    <li><b>Transposée</b> : <span data-tex="(AB)^{T}=B^{T}A^{T}"></span> : l'ordre des facteurs <i>s'inverse</i> ;</li>
+    <li><b>Identité</b> : la matrice identité <span data-tex="I_n"></span> (coefficients 1 sur la diagonale, 0 ailleurs) vérifie <span data-tex="I_nA=A"></span> pour toute matrice <span data-tex="A"></span> de dimension <span data-tex="n\times p"></span>, et <span data-tex="AI_p=A"></span>.</li>
+  </ul>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">L'identité ne change rien</div>
+  <p id="p-id-intro"></p>
+  <div class="disp" id="disp-id1"></div>
+  <p>et inversement :</p>
+  <div class="disp" id="disp-id2"></div>
+</div>
+
+<div class="demo" id="demo-identite">
+  <div class="demo-t">Animation : la matrice identité ne change rien</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+
+<div class="dbox d-rem">
+  <div class="d-head">L'ordre des facteurs se conserve</div>
+  <p>Dans un produit de trois matrices, on peut calculer <span data-tex="(AB)C"></span> ou <span data-tex="A(BC)"></span> : même ordre, groupement libre. Mais <span data-tex="ABC"></span>, <span data-tex="ACB"></span>, <span data-tex="BAC"></span>, <span data-tex="BCA"></span>, <span data-tex="CAB"></span>, <span data-tex="CBA"></span> sont en général <b>six produits différents</b> (quand ils existent) !</p>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s7">
+<h2>Le produit matriciel n'est pas commutatif</h2>
+
+<div class="dbox d-defi">
+  <div class="d-head">Commutativité</div>
+  <p>Une opération est <b>commutative</b> si échanger les facteurs ne change pas le résultat : <span data-tex="A\star B=B\star A"></span> pour tous <span data-tex="A"></span> et <span data-tex="B"></span>. C'est le cas de l'addition de matrices (<span data-tex="A+B=B+A"></span>). Le produit matriciel, lui, <b>n'est pas commutatif</b> : en général, <span data-tex="AB\neq BA"></span>.</p>
+</div>
+
+<p>Trois obstacles se succèdent, du plus grossier au plus subtil.</p>
+
+<h3>Premier obstacle : <span data-tex="BA"></span> peut ne pas exister</h3>
+
+<div class="demo" id="demo-obs1">
+  <div class="demo-t">Animation : AB existe, BA non</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+<p class="legende">Schéma 5 : le produit dans un sens existe (résultat aux dimensions extérieures), mais pas dans l'autre : la commutativité n'a même pas de sens ici, l'un des deux produits n'existe pas.</p>
+
+<h3>Deuxième obstacle : <span data-tex="AB"></span> et <span data-tex="BA"></span> de dimensions différentes</h3>
+
+<div class="dbox d-exe">
+  <div class="d-head">Deux produits, deux formes</div>
+  <p id="p-obs2-intro"></p>
+  <div class="disp" id="disp-obs2-AB"></div>
+  <div class="disp" id="disp-obs2-BA"></div>
+</div>
+
+<div class="demo" id="demo-obs2">
+  <div class="demo-t">Animation : deux produits, deux dimensions</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+<p class="legende">Schéma 6 : même quand <span data-tex="AB"></span> et <span data-tex="BA"></span> existent tous les deux, ils n'ont pas la même dimension. Or deux matrices égales doivent avoir la même dimension : <span data-tex="AB"></span> et <span data-tex="BA"></span> ne peuvent donc pas être égaux.</p>
+
+<h3>Troisième obstacle : même dimension, coefficients différents</h3>
+
+<p>Le cas le plus subtil : <span data-tex="A"></span> et <span data-tex="B"></span> carrées de même dimension <span data-tex="n\times n"></span>. Alors <span data-tex="AB"></span> et <span data-tex="BA"></span> existent tous les deux, avec la même dimension <span data-tex="n\times n"></span>. Et pourtant, les coefficients diffèrent en général.</p>
+
+<div class="dbox d-exe">
+  <div class="d-head">Contre-exemple <span data-tex="2\times 2"></span> complet</div>
+  <p id="p-obs3-intro"></p>
+  <div class="disp" id="disp-obs3-BA"></div>
+</div>
+
+<div class="demo" id="demo-obs3">
+  <div class="demo-t">Animation : même dimension, coefficients différents</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+<p class="legende">Schéma 7 : le contre-exemple type de la non-commutativité. <span data-tex="AB"></span> et <span data-tex="BA"></span> existent, ont la même dimension <span data-tex="2\times 2"></span>, mais leurs coefficients diffèrent : le produit matriciel n'est pas commutatif.</p>
+
+<h3>Conséquences : les identités remarquables se compliquent</h3>
+
+<div class="dbox d-prop">
+  <div class="d-head">Identités « remarquables » pour matrices carrées</div>
+  <p>Pour des matrices carrées <span data-tex="A"></span>, <span data-tex="B"></span> de même dimension <span data-tex="n\times n"></span> :</p>
+  <div class="disp" data-tex="(A+B)^2 = A^2+AB+BA+B^2, \qquad (A-B)^2 = A^2-AB-BA+B^2"></div>
+  <div class="disp" data-tex="(A+B)(A-B) = A^2-AB+BA-B^2"></div>
+  <p>En général, <b>on ne peut pas simplifier</b> ces expressions en <span data-tex="A^2+2AB+B^2"></span> ou <span data-tex="A^2-B^2"></span> : ce serait supposer <span data-tex="AB=BA"></span>, ce qui est faux en général.</p>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Vérification numérique</div>
+  <p id="p-idr-intro"></p>
+  <div class="disp" id="disp-idr-sum"></div>
+  <div class="disp" id="disp-idr-1"></div>
+  <p>Or <span id="p-idr-parts"></span>, donc :</p>
+  <div class="disp" id="disp-idr-2"></div>
+  <p>En revanche :</p>
+  <div class="disp" id="disp-idr-3"></div>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Surprise : <span data-tex="A^2=0"></span> alors que <span data-tex="A\neq 0"></span></div>
+  <p id="p-nil-intro"></p>
+  <div class="disp" id="disp-nil"></div>
+  <p>Avec les nombres, un produit nul force un facteur nul ; avec les matrices, plus du tout : c'est encore une conséquence de la non-commutativité.</p>
+</div>
+
+<div class="dbox d-rem">
+  <div class="d-head">Quand les matrices commutent quand même</div>
+  <p>Dans certains cas particuliers, <span data-tex="AB=BA"></span> : l'identité (<span data-tex="I_nA=AI_n=A"></span>), les matrices diagonales entre elles, les puissances d'une même matrice (<span data-tex="A\times A^2=A^2\times A"></span>). La non-commutativité dit seulement que l'égalité n'est <i>pas garantie en général</i> : chaque paire se teste.</p>
+</div>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  Retenir la règle d'or du produit matriciel : <b>l'ordre des facteurs se conserve</b> (associativité : groupement libre) et <b>ne s'échange jamais</b> (pas de commutativité). Écrire <span data-tex="AB"></span> puis calculer <span data-tex="BA"></span>, c'est calculer autre chose !
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s8">
+<h2>Méthode et synthèse</h2>
+
+<div class="note methode">
+  <span class="nt">Méthode.</span>
+  Calculer un produit <span data-tex="AB"></span> sans se tromper :
+  <ol>
+    <li><b>Dimensions</b> : écrire <span data-tex="(n\times p)(p\times r)"></span> ; si les nombres intérieurs diffèrent, le produit est impossible ; sinon le résultat est <span data-tex="n\times r"></span> ;</li>
+    <li><b>Position</b> : la matrice de gauche donne la ligne, celle de droite donne la colonne ;</li>
+    <li><b>Calcul</b> : coefficient <span data-tex="(i,j)"></span> = ligne <i>i</i> de <span data-tex="A"></span> <span data-tex="\times"></span> colonne <i>j</i> de <span data-tex="B"></span> (produits dans l'ordre, puis somme) ;</li>
+    <li><b>Ordre</b> : ne jamais permuter les facteurs ; <span data-tex="AB"></span> et <span data-tex="BA"></span> sont deux produits distincts.</li>
+  </ol>
+</div>
+
+<div class="note idee">
+  <span class="nt">À retenir :</span>
+  <ul>
+    <li><span data-tex="AB"></span> existe si et seulement si <b>colonnes de <span data-tex="A"></span> = lignes de <span data-tex="B"></span></b> ; le résultat prend les dimensions extérieures.</li>
+    <li>Le coefficient <span data-tex="(AB)_{ij}"></span> se calcule en croisant la <b>ligne <i>i</i> de <span data-tex="A"></span></b> avec la <b>colonne <i>j</i> de <span data-tex="B"></span></b> : produits dans le même ordre, puis somme.</li>
+    <li>Le produit matriciel <b>n'est pas commutatif</b> : <span data-tex="BA"></span> peut ne pas exister, avoir une autre dimension que <span data-tex="AB"></span>, ou donner d'autres coefficients.</li>
+    <li>Les identités remarquables se compliquent : <span data-tex="(A+B)^2=A^2+AB+BA+B^2"></span>, sans simplification possible si <span data-tex="AB\neq BA"></span>.</li>
+    <li>Exceptions où tout commute : identité, matrices diagonales, puissances d'une même matrice.</li>
+  </ul>
+</div>
+
+<footer>Fiche « Le produit matriciel » : version web interactive et animée de la fiche LaTeX originale.</footer>
+
+<div class="copyrightbar">
+  <button id="btn-copyright" class="btn grise">&#169; Droits d&#8217;auteur</button>
+</div>
+
+<div id="copyright-box" class="copyright-box" style="display:none">
+  <p><b>&#169; 2026 Yann Merdy : tous droits réservés.</b></p>
+  <p>Cette fiche interactive « Le produit matriciel » est une version web animée de la fiche LaTeX du même nom. Elle est protégée par le droit d'auteur et ne peut être reproduite, diffusée ou modifiée sans l'autorisation écrite de son auteur.</p>
+  <p>Contact : <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a></p>
+</div>
+
+</div>
+<script>
+/* ============================================================
+   Mini moteur de rendu LaTeX (équivalent MathJax embarqué)
+   ============================================================ */
+/*MATH-ENGINE-START*/
+var SYMR = {lambda:'\u03BB', mu:'\u03BC', times:'\u00D7', neq:'\u2260', cdots:'\u22EF',
+  vdots:'\u22EE', ddots:'\u22F1', dots:'\u2026', cdot:'\u00B7', checkmark:'\u2713',
+  in:'\u2208', prime:'\u2032', quad:' ', ',':' ', ';':' ', ' ':' ', star:'\u2217'};
+
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function charHtml(c){
+  if(/[a-zA-Z]/.test(c)) return '<i>'+c+'</i>';
+  if(c==='-') return '\u2212';
+  if(c==='*') return '\u2217';
+  return esc(c);
+}
+function tokenize(src){
+  var out=[], i=0;
+  while(i<src.length){
+    var c=src[i];
+    if(c==='\\'){
+      if(src[i+1]==='\\'){ out.push({t:'rb'}); i+=2; continue; }
+      var m=/^\\([a-zA-Z]+|[^a-zA-Z])/.exec(src.slice(i));
+      if(m){ out.push({t:'cmd', v:m[1]}); i+=m[0].length; continue; }
+      i++; continue;
+    }
+    if(c==='{'){ out.push({t:'{'}); i++; continue; }
+    if(c==='}'){ out.push({t:'}'}); i++; continue; }
+    if(c==='&'){ out.push({t:'&'}); i++; continue; }
+    if(c==='_'){ out.push({t:'_'}); i++; continue; }
+    if(c==='^'){ out.push({t:'^'}); i++; continue; }
+    if(/\s/.test(c)){ out.push({t:'sp'}); i++; continue; }
+    out.push({t:'ch', v:c}); i++;
+  }
+  return out;
+}
+function rawGroup(toks,i){
+  if(!toks[i]) return {text:'',i:i};
+  if(toks[i].t!=='{'){
+    var tk=toks[i], txt='';
+    if(tk.t==='ch') txt=tk.v;
+    else if(tk.t==='sp') txt=' ';
+    else if(tk.t==='cmd') txt=SYMR[tk.v]||'';
+    return {text:txt, i:i+1};
+  }
+  i++; var depth=1, text='';
+  while(i<toks.length){
+    var tk2=toks[i];
+    if(tk2.t==='{'){ depth++; text+='{'; }
+    else if(tk2.t==='}'){ depth--; if(depth===0){ i++; break; } text+='}'; }
+    else if(tk2.t==='ch') text+=tk2.v;
+    else if(tk2.t==='sp') text+=' ';
+    else if(tk2.t==='cmd') text+=(SYMR[tk2.v]!==undefined?SYMR[tk2.v]:'');
+    else if(tk2.t==='rb') text+=' ';
+    i++;
+  }
+  return {text:text, i:i};
+}
+function matrixHTML(rows){
+  var nc=0, r, c;
+  for(r=0;r<rows.length;r++) nc=Math.max(nc,rows[r].length);
+  var cells='';
+  for(r=0;r<rows.length;r++){
+    for(c=0;c<nc;c++){
+      cells+='<span class="mc">'+(rows[r][c]!==undefined?rows[r][c]:'')+'</span>';
+    }
+  }
+  return '<span class="mtx" style="grid-template-columns:repeat('+nc+',auto)">'+cells+'</span>';
+}
+function parseArg(toks,i){
+  if(!toks[i]) return {h:'',i:i};
+  if(toks[i].t==='{'){
+    var r=parseSeq(toks,i+1,['}']);
+    return {h:r.h, i:r.i+1};
+  }
+  if(toks[i].t==='ch') return {h:charHtml(toks[i].v), i:i+1};
+  if(toks[i].t==='cmd'){ var rc=parseCmd(toks,i); return {h:rc.h, i:rc.i}; }
+  return {h:'', i:i+1};
+}
+function parseCmd(toks,i){
+  var name=toks[i].v; i++;
+  var simple={lambda:'<i>\u03BB</i>', mu:'<i>\u03BC</i>', times:'\u00D7', neq:'\u2260',
+    cdots:'\u22EF', vdots:'\u22EE', ddots:'\u22F1', dots:'\u2026', cdot:'\u00B7',
+    checkmark:'\u2713', in:'\u2208', quad:'\u2003', qquad:'\u2003\u2003', to:'\u2192',
+    sum:'\u2211', star:'\u2217'};
+  if(simple[name]!==undefined) return {h:simple[name], i:i};
+  if(name===','||name===';') return {h:'\u2009', i:i};
+  if(name===' '||name==='!'||name==='left'||name==='right') return {h:'', i:i};
+  if(name==='text'){ var g=rawGroup(toks,i); return {h:'<span class="txt">'+esc(g.text)+'</span>', i:g.i}; }
+  if(name==='mathbf'){ var gb=rawGroup(toks,i); return {h:'<b>'+esc(gb.text)+'</b>', i:gb.i}; }
+  if(name==='mathbb'){ var gg=rawGroup(toks,i);
+    var map={R:'\u211D', N:'\u2115', Z:'\u2124', C:'\u2102', Q:'\u211A'};
+    return {h:'<span class="bb">'+(map[gg.text]||esc(gg.text))+'</span>', i:gg.i}; }
+  if(name==='frac'){ var a=parseArg(toks,i); var b=parseArg(toks,a.i);
+    return {h:'<span class="frac"><span>'+a.h+'</span><span>'+b.h+'</span></span>', i:b.i}; }
+  if(name==='begin'){
+    var env=rawGroup(toks,i); i=env.i;
+    if(env.text==='pmatrix'||env.text==='bmatrix'){
+      var rows=[], cur=[];
+      var guard=0;
+      while(i<toks.length && guard<400){
+        guard++;
+        var rs=parseSeq(toks,i,['&','rb','end','}']);
+        cur.push(rs.h); i=rs.i;
+        var tk=toks[i];
+        if(!tk) break;
+        if(tk.t==='&'){ i++; continue; }
+        if(tk.t==='rb'){ i++; rows.push(cur); cur=[]; continue; }
+        if(tk.t==='cmd'&&tk.v==='end'){
+          if(!(cur.length===1&&cur[0]==='')) rows.push(cur);
+          cur=[];
+          var g2=rawGroup(toks,i+1); i=g2.i;
+          break;
+        }
+        if(tk.t==='}'){ i++; continue; }
+        break;
+      }
+      return {h:matrixHTML(rows), i:i};
+    }
+    return {h:'', i:rawGroup(toks,i).i};
+  }
+  if(name==='end') return {h:'', i:i};
+  return {h:esc(name), i:i};
+}
+function parseSeq(toks,i,stop){
+  var h='';
+  while(i<toks.length){
+    var tk=toks[i];
+    if(stop.indexOf(tk.t)>=0) break;
+    if(tk.t==='cmd'&&tk.v==='end'&&(stop.indexOf('end')>=0)) break;
+    if(tk.t==='sp'){ h+=' '; i++; }
+    else if(tk.t==='ch'){ h+=charHtml(tk.v); i++; }
+    else if(tk.t==='{'){ var r=parseSeq(toks,i+1,['}']); h+=r.h; i=r.i+1; }
+    else if(tk.t==='}'){ i++; }
+    else if(tk.t==='_'){ var a=parseArg(toks,i+1); h+='<sub>'+a.h+'</sub>'; i=a.i; }
+    else if(tk.t==='^'){ var b=parseArg(toks,i+1); h+='<sup>'+b.h+'</sup>'; i=b.i; }
+    else if(tk.t==='cmd'){ var rc=parseCmd(toks,i); h+=rc.h; i=rc.i; }
+    else i++;
+  }
+  return {h:h, i:i};
+}
+function M(src){
+  var toks=tokenize(src);
+  var r=parseSeq(toks,0,[]);
+  return '<span class="mth">'+r.h+'</span>';
+}
+/*MATH-ENGINE-END*/
+
+/* ============================================================
+   Outils DOM et animations
+   ============================================================ */
+function el(tag,cls,html){
+  var e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(html!=null) e.innerHTML=html;
+  return e;
+}
+function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+function popEl(e){
+  e.classList.remove('pop');
+  void e.offsetWidth;
+  e.classList.add('pop');
+}
+function dmat(rows,opts){
+  opts=opts||{};
+  var wrap=el('div','dmat '+(opts.cls||''));
+  var nr=rows.length, nc=rows[0].length, r, c;
+  wrap.style.gridTemplateColumns='repeat('+nc+',auto)';
+  var cells=[];
+  for(r=0;r<nr;r++){
+    cells.push([]);
+    for(c=0;c<nc;c++){
+      var d=rows[r][c]||{};
+      var cell=el('div','dcell '+(d.cls||''), d.tex!=null?M(d.tex):(d.txt!=null?d.txt:''));
+      if(d.ghost) cell.classList.add('ghost');
+      wrap.appendChild(cell);
+      cells[r].push(cell);
+    }
+  }
+  wrap._cells=cells;
+  return wrap;
+}
+function matLbl(parent,txt){
+  parent.appendChild(el('div','matlbl',txt));
+}
+function badge(parent,cls,html){
+  var b=el('span','badge '+(cls||''),html);
+  parent.appendChild(b);
+  return b;
+}
+function clearCls(mat,classes){
+  mat._cells.forEach(function(row){
+    row.forEach(function(cell){ cell.classList.remove.apply(cell.classList,classes); });
+  });
+}
+
+/* ============================================================
+   Valeurs aléatoires (entre -100 et 100) et arithmétique exacte
+   Forme homogène dans tout le document : entiers, décimaux ou
+   fractions. La forme est tirée équiprobablement à chaque
+   réinitialisation. Les bornes garantissent que les résultats
+   des calculs restent aussi entre -100 et 100.
+   ============================================================ */
+var State={form:'ent', data:null};
+function ri(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a; }
+function rat(n,d){
+  if(d<0){ n=-n; d=-d; }
+  if(n===0) return {n:0,d:1};
+  var g=gcd(n,d)||1;
+  return {n:Math.round(n/g), d:Math.round(d/g)};
+}
+function rAdd(a,b){ return rat(a.n*b.d + b.n*a.d, a.d*b.d); }
+function rSub(a,b){ return rat(a.n*b.d - b.n*a.d, a.d*b.d); }
+function rMul(a,b){ return rat(a.n*b.n, a.d*b.d); }
+function rNeg(a){ return {n:-a.n, d:a.d}; }
+function rEq(a,b){ return a.n===b.n && a.d===b.d; }
+function rAbs(a){ return Math.abs(a.n/a.d); }
+function rIsInt(a){ return a.d===1; }
+function decStr(r){
+  var d=r.d, k=0, b=0;
+  while(d%2===0){ d/=2; k++; }
+  while(d%5===0){ d/=5; b++; }
+  if(d!==1) return null;
+  k=Math.max(k,b);
+  var v=Math.abs(r.n)*Math.pow(10,k)/r.d;
+  var s=String(v);
+  if(k>0){
+    while(s.length<=k) s='0'+s;
+    s=s.slice(0,s.length-k)+'.'+s.slice(s.length-k);
+  }
+  return (r.n<0?'-':'')+s;
+}
+function texOf(r){
+  if(State.form==='frac'){
+    if(r.d===1) return String(r.n);
+    return (r.n<0?'-':'')+'\\frac{'+Math.abs(r.n)+'}{'+r.d+'}';
+  }
+  if(State.form==='dec'){
+    var s=decStr(r);
+    if(s!==null) return s;
+  }
+  if(r.d===1) return String(r.n);
+  return (r.n<0?'-':'')+'\\frac{'+Math.abs(r.n)+'}{'+r.d+'}';
+}
+function genRatRange(lo,hi,allowNeg){
+  var t=0;
+  while(t<600){
+    t++;
+    if(State.form==='ent'){
+      var m=ri(lo,hi);
+      var sg=(allowNeg && Math.random()<.5)?-1:1;
+      return {n:sg*m, d:1};
+    }
+    if(State.form==='dec'){
+      var n=ri(lo*10,hi*10);
+      if(n%10===0) continue;
+      var r=rat(n,10);
+      var sg2=(allowNeg && Math.random()<.5)?-1:1;
+      return {n:sg2*r.n, d:r.d};
+    }
+    var den=ri(2,12);
+    var num=ri(lo*den,hi*den);
+    if(num===0) continue;
+    var fr=rat(num,den);
+    if(fr.d===1) continue;
+    var v=Math.abs(fr.n/fr.d);
+    if(v<lo-1e-9 || v>hi+1e-9) continue;
+    var sg3=(allowNeg && Math.random()<.5)?-1:1;
+    return {n:sg3*fr.n, d:fr.d};
+  }
+  return {n:(allowNeg?-1:1)*lo, d:1};
+}
+function genRat(maxAbs){ return genRatRange(0,maxAbs,true); }
+function genMat(nr,nc,maxAbs){
+  var m=[];
+  for(var r=0;r<nr;r++){
+    var row=[];
+    for(var c=0;c<nc;c++) row.push(genRat(maxAbs));
+    m.push(row);
+  }
+  return m;
+}
+
+/* ============================================================
+   Opérations matricielles exactes
+   ============================================================ */
+function matMul(X,Y){
+  var n=X.length, p=Y.length, r=Y[0].length, out=[], i, k, j;
+  for(i=0;i<n;i++){
+    var row=[];
+    for(j=0;j<r;j++){
+      var s={n:0,d:1};
+      for(k=0;k<p;k++) s=rAdd(s, rMul(X[i][k],Y[k][j]));
+      row.push(s);
+    }
+    out.push(row);
+  }
+  return out;
+}
+function matAdd(X,Y){
+  return X.map(function(row,i){ return row.map(function(v,j){ return rAdd(v,Y[i][j]); }); });
+}
+function matSub(X,Y){
+  return X.map(function(row,i){ return row.map(function(v,j){ return rSub(v,Y[i][j]); }); });
+}
+function matScale(k,X){
+  return X.map(function(row){ return row.map(function(v){ return rMul(k,v); }); });
+}
+function matEq(X,Y){
+  if(X.length!==Y.length || X[0].length!==Y[0].length) return false;
+  for(var i=0;i<X.length;i++)
+    for(var j=0;j<X[0].length;j++)
+      if(!rEq(X[i][j],Y[i][j])) return false;
+  return true;
+}
+function matMaxAbs(X){
+  var m=0;
+  X.forEach(function(row){ row.forEach(function(v){ m=Math.max(m,rAbs(v)); }); });
+  return m;
+}
+
+/* ---------- helpers tex ---------- */
+function pmTex(rows){
+  return '\\begin{pmatrix} '+rows.map(function(r){ return r.join(' & '); }).join(' \\\\ ')+' \\end{pmatrix}';
+}
+function ratRows(mats){
+  return mats.map(function(row){ return row.map(texOf); });
+}
+function ratMatTex(m){ return pmTex(ratRows(m)); }
+function sTex(r){ /* scalaire entre parenthèses si négatif */
+  return r.n<0 ? '('+texOf(r)+')' : texOf(r);
+}
+function termTex(a,b){ return sTex(a)+'\\times '+sTex(b); }
+function detailTex(A,B){ /* matrice des produits détaillés ligne × colonne */
+  var rows=[], i, k, j;
+  for(i=0;i<A.length;i++){
+    var row=[];
+    for(j=0;j<B[0].length;j++){
+      var terms=[];
+      for(k=0;k<B.length;k++) terms.push(termTex(A[i][k],B[k][j]));
+      row.push(terms.join(' + '));
+    }
+    rows.push(row);
+  }
+  return pmTex(rows);
+}
+function coefLine(A,B,i,j){ /* c_ij = t1+t2+t3 = v1+v2+v3 = total */
+  var terms=[], vals=[], s={n:0,d:1}, k;
+  for(k=0;k<B.length;k++){
+    terms.push(termTex(A[i][k],B[k][j]));
+    var v=rMul(A[i][k],B[k][j]);
+    vals.push(texOf(v));
+    s=rAdd(s,v);
+  }
+  return 'c_{'+(i+1)+(j+1)+'} = '+terms.join(' + ')+' = '+vals.join(' + ')+' = '+texOf(s);
+}
+function prodEq(name,A,B){ /* name = [detail] = [résultat] */
+  var P=matMul(A,B);
+  return M(name+'='+detailTex(A,B)+'='+ratMatTex(P));
+}
+
+/* ============================================================
+   Génération des données de la fiche
+   ============================================================ */
+function genData(){
+  var D={};
+  /* S1 : commandes (2×3) et prix (3×1), totaux bornés à 100 */
+  D.MOT=(function(){
+    var Q,P,t1,t2,g=0;
+    do{
+      Q=genMat(2,3,9).map(function(row){ return row.map(function(v){
+        return v.n===0?{n:1,d:1}:(v.n<0?rNeg(v):v); }); });
+      P=genMat(3,1,9).map(function(row){ return row.map(function(v){
+        return v.n===0?{n:1,d:1}:(v.n<0?rNeg(v):v); }); });
+      t1=matMul(Q,P)[0][0]; t2=matMul(Q,P)[1][0];
+      g++;
+    }while((rAbs(t1)>100 || rAbs(t2)>100) && g<500);
+    return {Q:Q, P:P, T:matMul(Q,P)};
+  })();
+  /* S2 : atelier des dimensions */
+  D.DIMCHK=(function(){
+    function d(){ return {n:ri(1,6), p:ri(1,6), q:ri(1,6), r:ri(1,6)}; }
+    var ab=d(), tries=0;
+    while((ab.p===ab.q)===(ab.r===ab.n) && tries<300){ ab=d(); tries++; }
+    /* on s'arrange pour qu'un des deux sens existe et l'autre non */
+    if(ab.p===ab.q && ab.r===ab.n){ ab.r=(ab.n===6)?1:ab.n+1; }
+    else if(ab.p!==ab.q && ab.r!==ab.n){ ab.q=ab.p; }
+    return ab;
+  })();
+  /* S2 : tableau des dimensions, motifs possible/possible/impossible/... */
+  D.DIMT=(function(){
+    var rows=[], k;
+    for(k=0;k<6;k++){
+      var ok=(k===2||k===5)?false:true;
+      var n=ri(1,6), p=ri(1,6), q, r=ri(1,6), tries=0;
+      if(ok){ q=p; }
+      else{ do{ q=ri(1,6); tries++; }while(q===p && tries<100); }
+      rows.push({n:n,p:p,q:q,r:r,ok:ok});
+    }
+    return rows;
+  })();
+  /* S3 : atelier c_ij sur des matrices 3×3 (résultats ≤ 75) */
+  D.CIJ={A:genMat(3,3,5), B:genMat(3,3,5)};
+  /* S3 : contre-exemple coefficient par coefficient */
+  D.CEX=(function(){
+    var a=genRatRange(1,7,false);
+    return {a:a, A:[[a,a],[a,a]]};
+  })();
+  /* S3 : produit ligne × colonne 1×3 par 3×1 (résultat ≤ 75) */
+  D.LIGNE={A:genMat(1,3,5), B:genMat(3,1,5)};
+  /* S4 : produit 2×2 pas à pas (résultats ≤ 98) */
+  D.PP={A:genMat(2,2,7), B:genMat(2,2,7)};
+  /* S5 : (2×3)×(3×2) (résultats ≤ 75) */
+  D.EX1={A:genMat(2,3,5), B:genMat(3,2,5)};
+  /* S5 : produit impossible (2×2)×(3×2), pas de calcul */
+  D.IMP={A:genMat(2,2,100), B:genMat(3,2,100)};
+  /* S5 : L (1×2) et C (2×1), produits ≤ 98 */
+  D.LC={L:genMat(1,2,7), C:genMat(2,1,7)};
+  /* S6 : identité */
+  D.IDA=genMat(2,2,20);
+  /* S7 obstacle 1 : A 2×3, B 3×4 (AB ≤ 75, BA impossible) */
+  D.OBS1={A:genMat(2,3,5), B:genMat(3,4,5)};
+  /* S7 obstacle 2 : A 2×3, B 3×2 (AB 2×2, BA 3×3, ≤ 75) */
+  D.OBS2={A:genMat(2,3,5), B:genMat(3,2,5)};
+  /* S7 obstacle 3 : A, B 2×2 avec AB ≠ BA, si possible dès le (1,1) */
+  D.OBS3=(function(){
+    var A,B,AB,BA,t=0;
+    do{
+      A=genMat(2,2,7); B=genMat(2,2,7);
+      AB=matMul(A,B); BA=matMul(B,A); t++;
+    }while(t<600 && (matEq(AB,BA) || rEq(AB[0][0],BA[0][0])));
+    if(matEq(AB,BA)){ /* filet de sécurité très improbable */
+      B=[[{n:0,d:1},{n:1,d:1}],[{n:1,d:1},{n:0,d:1}]];
+      AB=matMul(A,B); BA=matMul(B,A);
+    }
+    return {A:A, B:B, AB:AB, BA:BA};
+  })();
+  /* S7 : identités remarquables, matrices petites pour rester ≤ 100 */
+  D.IDR=(function(){
+    var A,B,g=0,APB,ok;
+    do{
+      A=genMat(2,2,3); B=genMat(2,2,3);
+      APB=matAdd(A,B);
+      ok = matMaxAbs(matMul(APB,APB))<=100 &&
+           matMaxAbs(matMul(A,B))<=100 && matMaxAbs(matMul(B,A))<=100 &&
+           matMaxAbs(matMul(A,A))<=100 && matMaxAbs(matMul(B,B))<=100;
+      g++;
+    }while(!ok && g<300);
+    return {A:A, B:B};
+  })();
+  /* S7 : A^2 = 0 avec A non nulle */
+  D.NIL=(function(){
+    var a=genRatRange(1,100,true);
+    return {a:a, A:[[{n:0,d:1},a],[{n:0,d:1},{n:0,d:1}]]};
+  })();
+  return D;
+}
+
+/* ============================================================
+   Contenu statique (exemples du cours, rempli à chaque tirage)
+   ============================================================ */
+function renderStatic(){
+  var D=State.data;
+  document.getElementById('badge-form').textContent =
+    'Forme des nombres : ' + (State.form==='ent' ? 'entiers relatifs'
+      : State.form==='dec' ? 'd\u00e9cimaux relatifs' : 'fractions');
+
+  /* --- S1 : motivation boulangerie --- */
+  var MOT=D.MOT;
+  document.getElementById('disp-motiv-AB').innerHTML = M(
+    'A='+ratMatTex(MOT.Q)+'\\quad (2\\times 3),\\qquad '+
+    'B='+ratMatTex(MOT.P)+'\\quad (3\\times 1).');
+  var t1=[], t2=[];
+  var k;
+  for(k=0;k<3;k++) t1.push(termTex(MOT.Q[0][k],MOT.P[k][0]));
+  var v1=[], s1={n:0,d:1};
+  for(k=0;k<3;k++){ var w1=rMul(MOT.Q[0][k],MOT.P[k][0]); v1.push(texOf(w1)); s1=rAdd(s1,w1); }
+  for(k=0;k<3;k++) t2.push(termTex(MOT.Q[1][k],MOT.P[k][0]));
+  var v2=[], s2={n:0,d:1};
+  for(k=0;k<3;k++){ var w2=rMul(MOT.Q[1][k],MOT.P[k][0]); v2.push(texOf(w2)); s2=rAdd(s2,w2); }
+  document.getElementById('disp-motiv').innerHTML =
+    '<div>Client 1\u00a0: '+M(t1.join(' + ')+' = '+v1.join(' + ')+' = '+texOf(s1)+'\\ \\text{\u20ac}')+'</div>'+
+    '<div>Client 2\u00a0: '+M(t2.join(' + ')+' = '+v2.join(' + ')+' = '+texOf(s2)+'\\ \\text{\u20ac}')+'</div>';
+  document.getElementById('p-motiv-result').innerHTML =
+    'On range ces deux totaux dans une matrice colonne '+M(ratMatTex(MOT.T))+
+    ' : c\'est <b>exactement</b> le produit matriciel '+M('AB')+' !';
+
+  /* --- S2 : tableau des dimensions --- */
+  var rowsHtml='';
+  D.DIMT.forEach(function(d){
+    rowsHtml+='<tr><td>'+M('('+d.n+'\\times '+d.p+')\\,('+d.q+'\\times '+d.r+')')+'</td>'+
+      '<td>'+d.p+' et '+d.q+'</td>'+
+      '<td class="'+(d.ok?'okc':'badc')+'">'+(d.ok?'oui \u2713':'non \u00d7')+'</td>'+
+      '<td>'+(d.ok?M(d.n+'\\times '+d.r):'(aucun)')+'</td></tr>';
+  });
+  document.getElementById('dim-table').innerHTML =
+    '<table class="dimtab"><tr><th>Produit</th><th>Nombres int\u00e9rieurs</th><th>Existe ?</th>'+
+    '<th>Dimension du r\u00e9sultat</th></tr>'+rowsHtml+'</table>';
+
+  /* --- S3 : contre-exemple coefficient par coefficient --- */
+  var CX=D.CEX;
+  var deuxa=rAdd(rMul(CX.a,CX.a),rMul(CX.a,CX.a));
+  document.getElementById('eq-cex').innerHTML =
+    'Pour '+M('A=B='+ratMatTex(CX.A))+', on aurait tort de r\u00e9pondre '+M(ratMatTex(CX.A))+
+    ' : le vrai r\u00e9sultat est '+M('AB='+pmTex([[texOf(deuxa)+' & '+texOf(deuxa)],[texOf(deuxa)+' & '+texOf(deuxa)]]))+
+    ', car chaque coefficient est une <i>somme</i> de produits (ici '+
+    M(texOf(CX.a)+'\\times '+texOf(CX.a)+'+'+texOf(CX.a)+'\\times '+texOf(CX.a)+'='+texOf(deuxa))+').';
+
+  /* --- S3 : un seul coefficient à la main --- */
+  var LG=D.LIGNE;
+  var lterms=[], lvals=[], ls={n:0,d:1};
+  for(k=0;k<3;k++){
+    lterms.push(termTex(LG.A[0][k],LG.B[k][0]));
+    var lv=rMul(LG.A[0][k],LG.B[k][0]);
+    lvals.push(texOf(lv)); ls=rAdd(ls,lv);
+  }
+  document.getElementById('p-ligne-intro').innerHTML =
+    'Soient '+M('A='+ratMatTex(LG.A))+' (ligne) et '+M('B='+ratMatTex(LG.B))+
+    ' (colonne). Dimensions : '+M('(1\\times 3)(3\\times 1)')+
+    ', nombres int\u00e9rieurs \u00e9gaux, r\u00e9sultat de dimension '+M('1\\times 1')+' :';
+  document.getElementById('disp-ligne').innerHTML = M(
+    'AB = \\begin{pmatrix} '+lterms.join(' + ')+' \\end{pmatrix} = '+
+    '\\begin{pmatrix} '+lvals.join(' + ')+' \\end{pmatrix} = \\begin{pmatrix} '+texOf(ls)+' \\end{pmatrix}.');
+  document.getElementById('p-ligne-sol').innerHTML =
+    'La ligne rencontre la colonne : '+M(lterms.join(' + ')+' = '+lvals.join(' + ')+' = '+texOf(ls))+'.';
+
+  /* --- S4 : pas à pas --- */
+  var PP=D.PP;
+  document.getElementById('p-pp-intro').innerHTML =
+    'Soient '+M('A='+ratMatTex(PP.A))+' et '+M('B='+ratMatTex(PP.B))+
+    ', toutes deux de dimension '+M('2\\times 2')+
+    ' : le produit '+M('AB')+' existe et sera de dimension '+M('2\\times 2')+
+    '. Calculons les quatre coefficients, un par un.';
+  document.getElementById('disp-pp-full').innerHTML = M(
+    'AB='+ratMatTex(PP.A)+'\\,'+ratMatTex(PP.B)+'='+detailTex(PP.A,PP.B)+
+    '='+ratMatTex(matMul(PP.A,PP.B))+'.');
+
+  /* --- S5 : (2×3)×(3×2) --- */
+  var E1=D.EX1;
+  document.getElementById('p-ex1-intro').innerHTML =
+    M('A='+ratMatTex(E1.A)+'\\quad (2\\times 3),\\qquad '+
+      'B='+ratMatTex(E1.B)+'\\quad (3\\times 2).')+
+    ' Nombres int\u00e9rieurs : 3 et 3 : le produit existe et '+M('AB')+
+    ' est de dimension '+M('2\\times 2')+'. D\u00e9taillons le calcul des quatre coefficients :';
+  document.getElementById('disp-ex1').innerHTML =
+    '<div class="cl-col">'+M(coefLine(E1.A,E1.B,0,0)+',')+M(coefLine(E1.A,E1.B,1,0)+',')+'</div>'+
+    '<div class="cl-col">'+M(coefLine(E1.A,E1.B,0,1)+',')+M(coefLine(E1.A,E1.B,1,1)+',')+'</div>';
+  document.getElementById('disp-ex1-full').innerHTML = M(
+    'AB='+detailTex(E1.A,E1.B)+'='+ratMatTex(matMul(E1.A,E1.B))+'.');
+
+  /* --- S5 : produit impossible --- */
+  var IM=D.IMP;
+  document.getElementById('p-imp-intro').innerHTML =
+    M(ratMatTex(IM.A)+'\\ (2\\times 2)\\quad\\times\\quad '+ratMatTex(IM.B)+'\\ (3\\times 2)\\quad :\\quad 2\\neq 3.');
+
+  /* --- S5 : LC et CL --- */
+  var LC=D.LC;
+  document.getElementById('p-lc-intro').innerHTML =
+    'Avec '+M('L='+ratMatTex(LC.L)+'\\ (1\\times 2)')+' et '+M('C='+ratMatTex(LC.C)+'\\ (2\\times 1)')+
+    ', les deux produits existent, mais :';
+  var lcv=matMul(LC.L,LC.C);
+  document.getElementById('disp-lc').innerHTML = M(
+    'LC = '+ratMatTex(LC.L)+'\\,'+ratMatTex(LC.C)+
+    ' = \\begin{pmatrix} '+termTex(LC.L[0][0],LC.C[0][0])+' + '+termTex(LC.L[0][1],LC.C[1][0])+
+    ' \\end{pmatrix} = \\begin{pmatrix} '+texOf(lcv[0][0])+' \\end{pmatrix} \\quad (1\\times 1),');
+  document.getElementById('disp-cl').innerHTML = M(
+    'CL = '+ratMatTex(LC.C)+'\\,'+ratMatTex(LC.L)+
+    ' = '+detailTex(LC.C,LC.L)+' = '+ratMatTex(matMul(LC.C,LC.L))+' \\quad (2\\times 2).');
+
+  /* --- S6 : identité --- */
+  var IDA=D.IDA;
+  var I2=[[{n:1,d:1},{n:0,d:1}],[{n:0,d:1},{n:1,d:1}]];
+  document.getElementById('p-id-intro').innerHTML =
+    'Avec '+M('A='+ratMatTex(IDA))+' :';
+  document.getElementById('disp-id1').innerHTML = M(
+    ratMatTex(I2)+ratMatTex(IDA)+'='+detailTex(I2,IDA)+'='+ratMatTex(matMul(I2,IDA))+',');
+  document.getElementById('disp-id2').innerHTML = M(
+    ratMatTex(IDA)+ratMatTex(I2)+'='+detailTex(IDA,I2)+'='+ratMatTex(matMul(IDA,I2))+'.');
+
+  /* --- S7 obstacle 2 --- */
+  var O2=D.OBS2;
+  document.getElementById('p-obs2-intro').innerHTML =
+    'Soient '+M('A='+ratMatTex(O2.A)+'\\ (2\\times 3)')+' et '+M('B='+ratMatTex(O2.B)+'\\ (3\\times 2)')+
+    '. Les deux produits existent :';
+  document.getElementById('disp-obs2-AB').innerHTML = M(
+    'AB='+detailTex(O2.A,O2.B)+'='+ratMatTex(matMul(O2.A,O2.B))+' \\quad (2\\times 2),');
+  document.getElementById('disp-obs2-BA').innerHTML = M(
+    'BA='+detailTex(O2.B,O2.A)+'='+ratMatTex(matMul(O2.B,O2.A))+' \\quad (3\\times 3).');
+
+  /* --- S7 obstacle 3 --- */
+  var O3=D.OBS3;
+  document.getElementById('p-obs3-intro').innerHTML =
+    'Reprenons '+M('A='+ratMatTex(O3.A))+' et '+M('B='+ratMatTex(O3.B))+
+    ' : nous avons d\u00e9j\u00e0 calcul\u00e9 '+M('AB='+ratMatTex(O3.AB))+
+    '. Dans l\'autre sens :';
+  document.getElementById('disp-obs3-BA').innerHTML = M(
+    'BA='+ratMatTex(O3.B)+'\\,'+ratMatTex(O3.A)+'='+detailTex(O3.B,O3.A)+'='+ratMatTex(O3.BA)+
+    '. Donc '+M('AB\\neq BA')+' : d\u00e8s le premier coefficient, '+
+    M(texOf(O3.AB[0][0])+'\\neq '+texOf(O3.BA[0][0]))+'.');
+
+  /* --- S7 : identités remarquables --- */
+  var IR=D.IDR;
+  document.getElementById('p-idr-intro').innerHTML =
+    'Avec encore '+M('A='+ratMatTex(IR.A))+' et '+M('B='+ratMatTex(IR.B))+' :';
+  var APB=matAdd(IR.A,IR.B);
+  var APB2=matMul(APB,APB);
+  var A2=matMul(IR.A,IR.A), B2=matMul(IR.B,IR.B);
+  var AB=matMul(IR.A,IR.B), BA=matMul(IR.B,IR.A);
+  document.getElementById('disp-idr-sum').innerHTML =
+    'D\u2019abord '+M('A+B='+ratMatTex(APB))+', donc :';
+  document.getElementById('disp-idr-1').innerHTML = M(
+    '(A+B)^2='+ratMatTex(APB2)+'.');
+  document.getElementById('p-idr-parts').innerHTML =
+    'Or '+M('A^2='+ratMatTex(A2))+', '+
+    M('2AB='+ratMatTex(matScale({n:2,d:1},AB)))+' et '+
+    M('B^2='+ratMatTex(B2))+',';
+  var faux=matAdd(matAdd(A2,matScale({n:2,d:1},AB)),B2);
+  document.getElementById('disp-idr-2').innerHTML = M(
+    'A^2+2AB+B^2='+ratMatTex(faux)+' \\neq (A+B)^2.');
+  var vrai=matAdd(matAdd(matAdd(A2,AB),BA),B2);
+  document.getElementById('disp-idr-3').innerHTML = M(
+    'A^2+AB+BA+B^2='+ratMatTex(vrai)+' = (A+B)^2 \\ \\checkmark.');
+
+  /* --- S7 : A^2 = 0 --- */
+  var NL=D.NIL;
+  var Z=[[{n:0,d:1},{n:0,d:1}],[{n:0,d:1},{n:0,d:1}]];
+  document.getElementById('p-nil-intro').innerHTML =
+    'Soit '+M('A='+ratMatTex(NL.A)+'\\neq 0')+'. Alors :';
+  document.getElementById('disp-nil').innerHTML = M(
+    'A^2='+detailTex(NL.A,NL.A)+'='+ratMatTex(matMul(NL.A,NL.A))+'.');
+}
+
+/* Rendu des maths statiques symboliques du document */
+document.querySelectorAll('[data-tex]').forEach(function(n){
+  n.innerHTML=M(n.getAttribute('data-tex'));
+});
+
+/* ============================================================
+   Registre des panneaux reconstruits à chaque réinitialisation
+   ============================================================ */
+var RENDERERS=[];
+function rebuildAll(){
+  renderStatic();
+  RENDERERS.forEach(function(f){ f(); });
+}
+function randomizeAll(){
+  State.form=['ent','dec','frac'][ri(0,2)];
+  State.data=genData();
+  rebuildAll();
+}
+
+/* ============================================================
+   S1 : animation des totaux de la boulangerie
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-motivation');
+  if(!root) return;
+  function build(){
+    var D=State.data, MOT=D.MOT;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : les totaux de la boulangerie'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var matA=dmat(MOT.Q.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var matB=dmat(MOT.P.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var matR=dmat([[{ghost:true}],[{ghost:true}]]);
+    var wrapA=el('div'); wrapA.appendChild(matA);
+    matLbl(wrapA,'A : commandes, une ligne par client<br>(colonnes : baguette, croissant, pain au chocolat)');
+    var wrapB=el('div'); wrapB.appendChild(matB);
+    matLbl(wrapB,'B : prix (en €)');
+    var wrapR=el('div'); wrapR.appendChild(matR);
+    matLbl(wrapR,'AB : totaux (en €)');
+    stage.appendChild(wrapA); stage.appendChild(el('div','opv','×'));
+    stage.appendChild(wrapB); stage.appendChild(el('div','opv','='));
+    stage.appendChild(wrapR);
+    var btn=el('button','btn','Calculer les totaux');
+    controls.appendChild(btn);
+    readout.innerHTML='Une ligne par client, une colonne par prix : le produit existe (3 = 3).';
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      var i,k;
+      for(i=0;i<2;i++){
+        clearCls(matA,['rl']); clearCls(matB,['cl']);
+        for(k=0;k<3;k++) matA._cells[i][k].classList.add('rl');
+        matB._cells[0][0].classList.add('cl'); matB._cells[1][0].classList.add('cl'); matB._cells[2][0].classList.add('cl');
+        var terms=[], vals=[], s={n:0,d:1};
+        for(k=0;k<3;k++){
+          var w=rMul(MOT.Q[i][k],MOT.P[k][0]);
+          terms.push(termTex(MOT.Q[i][k],MOT.P[k][0]));
+          vals.push(texOf(w)); s=rAdd(s,w);
+        }
+        readout.innerHTML='Client '+(i+1)+' : '+M(terms.join(' + ')+' = '+vals.join(' + ')+' = '+texOf(s))+' €';
+        popEl(readout);
+        await sleep(1600);
+        var cell=matR._cells[i][0];
+        cell.classList.remove('ghost');
+        cell.innerHTML=M(texOf(s));
+        popEl(cell);
+        await sleep(450);
+      }
+      clearCls(matA,['rl']); clearCls(matB,['cl']);
+      readout.innerHTML='Les deux totaux forment la matrice colonne '+M('AB='+ratMatTex(MOT.T))+' : c’est exactement le produit matriciel !';
+      busy=false; btn.disabled=false; btn.textContent='Rejouer le calcul';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S2 : atelier de la règle d'alignement des dimensions
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-dimensions');
+  if(!root) return;
+  function build(){
+    var DC=State.data.DIMCHK;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Atelier : la règle d’alignement des dimensions'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var dimrow=el('div','dimrow');
+    var chipA=el('span','dimchip');
+    chipA.innerHTML='(<span class="inr aN">'+DC.n+'</span> × <span class="inr aP">'+DC.p+'</span>)';
+    var chipB=el('span','dimchip');
+    chipB.innerHTML='(<span class="inr bQ">'+DC.q+'</span> × <span class="inr bR">'+DC.r+'</span>)';
+    var colA=el('div'); colA.appendChild(chipA);
+    colA.appendChild(el('div','case-lbl','A'));
+    var colB=el('div'); colB.appendChild(chipB);
+    colB.appendChild(el('div','case-lbl','B'));
+    dimrow.appendChild(colA); dimrow.appendChild(el('div','opv','×')); dimrow.appendChild(colB);
+    stage.appendChild(dimrow);
+    var inrs=dimrow.querySelectorAll('.inr');
+    function resetInrs(){ inrs.forEach(function(s){ s.classList.remove('hl','ok'); }); }
+    var bAB=badge(readout,'','Produit AB : à vérifier…');
+    var bBA=badge(readout,'','Produit BA : à vérifier…');
+    bAB.style.marginRight='8px';
+    var busyAB=false, busyBA=false;
+    var btnAB=el('button','btn','Vérifier AB');
+    var btnBA=el('button','btn','Vérifier BA');
+    controls.appendChild(btnAB); controls.appendChild(btnBA);
+    readout.appendChild(el('div','hint','Les nombres intérieurs (encadrés) doivent coïncider ; le résultat prend les nombres extérieurs.'));
+    btnAB.addEventListener('click',async function(){
+      if(busyAB) return;
+      busyAB=true; btnAB.disabled=true;
+      resetInrs();
+      var ap=dimrow.querySelector('.aP'), bq=dimrow.querySelector('.bQ');
+      ap.classList.add('hl'); bq.classList.add('hl');
+      bAB.className='badge bleu';
+      bAB.innerHTML='AB : nombres intérieurs '+DC.p+' et '+DC.q+'…';
+      await sleep(900);
+      if(DC.p===DC.q){
+        ap.classList.add('ok'); bq.classList.add('ok');
+        bAB.className='badge vertf';
+        bAB.innerHTML='\u2713 '+DC.p+' = '+DC.q+' : AB existe, de dimension '+DC.n+' × '+DC.r;
+      }else{
+        bAB.className='badge rouge';
+        bAB.innerHTML='\u00d7 '+DC.p+' \u2260 '+DC.q+' : le produit AB est impossible';
+      }
+      busyAB=false; btnAB.disabled=false;
+    });
+    btnBA.addEventListener('click',async function(){
+      if(busyBA) return;
+      busyBA=true; btnBA.disabled=true;
+      resetInrs();
+      var br=dimrow.querySelector('.bR'), an=dimrow.querySelector('.aN');
+      br.classList.add('hl'); an.classList.add('hl');
+      bBA.className='badge bleu';
+      bBA.innerHTML='BA : nombres intérieurs '+DC.r+' et '+DC.n+'…';
+      await sleep(900);
+      if(DC.r===DC.n){
+        br.classList.add('ok'); an.classList.add('ok');
+        bBA.className='badge vertf';
+        bBA.innerHTML='\u2713 '+DC.r+' = '+DC.n+' : BA existe, de dimension '+DC.q+' × '+DC.p;
+      }else{
+        bBA.className='badge rouge';
+        bBA.innerHTML='\u00d7 '+DC.r+' \u2260 '+DC.n+' : le produit BA est impossible';
+      }
+      busyBA=false; btnBA.disabled=false;
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S3 : atelier interactif du coefficient c_ij
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-cij');
+  if(!root) return;
+  function build(){
+    var CJ=State.data.CIJ;
+    var C=matMul(CJ.A,CJ.B);
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Atelier : le coefficient c<sub>ij</sub>, ligne × colonne'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matA=rmat(CJ.A), matB=rmat(CJ.B);
+    var rowsC=[];
+    for(var r=0;r<3;r++){
+      var rr=[];
+      for(var c=0;c<3;c++) rr.push({ghost:true});
+      rowsC.push(rr);
+    }
+    var matC=dmat(rowsC);
+    var wrapA=el('div'); wrapA.appendChild(matA); matLbl(wrapA,'A : 3×3');
+    var wrapB=el('div'); wrapB.appendChild(matB); matLbl(wrapB,'B : 3×3');
+    var wrapC=el('div'); wrapC.appendChild(matC); matLbl(wrapC,'C = AB : 3×3');
+    stage.appendChild(wrapA); stage.appendChild(el('div','opv','×'));
+    stage.appendChild(wrapB); stage.appendChild(el('div','opv','='));
+    stage.appendChild(wrapC);
+    var running=false;
+    function hl(i,j){
+      clearCls(matA,['rl']); clearCls(matB,['cl']); clearCls(matC,['cc']);
+      for(var k=0;k<3;k++) matA._cells[i][k].classList.add('rl');
+      for(var k2=0;k2<3;k2++) matB._cells[k2][j].classList.add('cl');
+      var cell=matC._cells[i][j];
+      cell.classList.add('cc');
+      if(cell.classList.contains('ghost')){
+        cell.classList.remove('ghost');
+        cell.innerHTML=M(texOf(C[i][j]));
+        popEl(cell);
+      }
+      readout.innerHTML=M(coefLine(CJ.A,CJ.B,i,j))+
+        ' : ligne '+(i+1)+' de A × colonne '+(j+1)+' de B.';
+    }
+    matC._cells.forEach(function(row,i){
+      row.forEach(function(cell,j){
+        cell.addEventListener('pointerenter',function(){ if(!running) hl(i,j); });
+        cell.addEventListener('click',function(){ if(!running) hl(i,j); });
+      });
+    });
+    var btn=el('button','btn','Lancer une démonstration');
+    controls.appendChild(btn);
+    btn.addEventListener('click',async function(){
+      if(running) return;
+      running=true; btn.disabled=true;
+      var t;
+      for(t=0;t<3;t++){
+        var i=Math.floor(Math.random()*3), j=Math.floor(Math.random()*3);
+        hl(i,j);
+        await sleep(1700);
+      }
+      running=false; btn.disabled=false;
+      btn.textContent='Rejouer la démonstration';
+    });
+    readout.innerHTML='Survolez une case du résultat C = AB.';
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S4 : produit 2×2 pas à pas
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-pasapas');
+  if(!root) return;
+  function build(){
+    var PP=State.data.PP;
+    var P=matMul(PP.A,PP.B);
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation pas à pas : les quatre coefficients'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matA=rmat(PP.A), matB=rmat(PP.B), matR=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var wrapA=el('div'); wrapA.appendChild(matA); matLbl(wrapA,'A');
+    var wrapB=el('div'); wrapB.appendChild(matB); matLbl(wrapB,'B');
+    var wrapR=el('div'); wrapR.appendChild(matR); matLbl(wrapR,'AB');
+    stage.appendChild(wrapA); stage.appendChild(el('div','opv','×'));
+    stage.appendChild(wrapB); stage.appendChild(el('div','opv','='));
+    stage.appendChild(wrapR);
+    var btn=el('button','btn','Calculer pas à pas');
+    controls.appendChild(btn);
+    readout.innerHTML='Quatre coefficients à calculer : ligne de A × colonne de B.';
+    var busy=false;
+    var steps=[[0,0],[0,1],[1,0],[1,1]];
+    var allCls=['rl','p0','p1','p2','p3'];
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      matR._cells.forEach(function(row){ row.forEach(function(c){
+        c.className='dcell ghost'; c.innerHTML='';
+      }); });
+      var s,i,j;
+      for(s=0;s<4;s++){
+        i=steps[s][0]; j=steps[s][1];
+        clearCls(matA,allCls); clearCls(matB,allCls);
+        var k;
+        for(k=0;k<2;k++) matA._cells[i][k].classList.add('p'+s);
+        for(k=0;k<2;k++) matB._cells[k][j].classList.add('p'+s);
+        readout.innerHTML='Étape '+(s+1)+'/4 : '+M(coefLine(PP.A,PP.B,i,j));
+        popEl(readout);
+        await sleep(1700);
+        var cell=matR._cells[i][j];
+        cell.className='dcell p'+s;
+        cell.innerHTML=M(texOf(P[i][j]));
+        popEl(cell);
+        await sleep(450);
+      }
+      clearCls(matA,allCls); clearCls(matB,allCls);
+      readout.innerHTML='Produit terminé : '+M('AB='+ratMatTex(P))+'.';
+      busy=false; btn.disabled=false; btn.textContent='Rejouer le calcul';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S5 : produit impossible (croix sur l'opérateur)
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-impossible');
+  if(!root) return;
+  var CROIX='<svg class="croix" viewBox="0 0 100 100" preserveAspectRatio="none">'+
+    '<line x1="4" y1="4" x2="96" y2="96"/><line x1="96" y1="4" x2="4" y2="96"/></svg>';
+  function build(){
+    var IM=State.data.IMP;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : un produit aux dimensions incompatibles'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matA=rmat(IM.A), matB=rmat(IM.B);
+    var wrapA=el('div'); wrapA.appendChild(matA); matLbl(wrapA,'A : 2 lignes, 2 colonnes');
+    var wx=el('div','wrap-rel');
+    wx.innerHTML='<span class="opv">×</span>'+CROIX;
+    var wrapB=el('div'); wrapB.appendChild(matB); matLbl(wrapB,'B : 3 lignes, 2 colonnes');
+    stage.appendChild(wrapA); stage.appendChild(wx); stage.appendChild(wrapB);
+    var btn=el('button','btn','Vérifier les dimensions');
+    controls.appendChild(btn);
+    readout.innerHTML='Alignons les dimensions : (2 × 2) (3 × 2).';
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      wx.classList.remove('drawn');
+      clearCls(matA,['cl']); clearCls(matB,['rl']);
+      readout.innerHTML='Nombre intérieur côté A : <b>2</b> (colonnes de A).';
+      await sleep(1000);
+      matA._cells[0][1].classList.add('cl'); matA._cells[1][1].classList.add('cl');
+      readout.innerHTML='Nombre intérieur côté B : <b>3</b> (lignes de B).';
+      await sleep(1000);
+      for(var k=0;k<3;k++) matB._cells[k][0].classList.add('rl');
+      await sleep(500);
+      wx.classList.add('drawn');
+      await sleep(800);
+      var b=badge(readout,'rouge','2 ≠ 3 : le produit AB n’existe pas, il n’y a rien à calculer !');
+      busy=false; btn.disabled=false; btn.textContent='Rejouer la vérification';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S5 : LC et CL, même contenu deux sens
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-lc');
+  if(!root) return;
+  function build(){
+    var LC=State.data.LC;
+    var LCv=matMul(LC.L,LC.C), CLv=matMul(LC.C,LC.L);
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : même contenu, deux sens'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matL=rmat(LC.L), matC=rmat(LC.C), matC2=rmat(LC.C), matL2=rmat(LC.L);
+    var resLC=dmat([[{ghost:true}]]);
+    var resCL=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var cas1=el('div','cas');
+    cas1.appendChild(el('div','cas-t','LC : (1×2) × (2×1) → 1×1'));
+    var st1=el('div','stage'); st1.style.margin='0';
+    cas1.appendChild(st1);
+    st1.appendChild(matL); st1.appendChild(el('div','opv','×'));
+    st1.appendChild(matC); st1.appendChild(el('div','opv','='));
+    st1.appendChild(resLC);
+    var cas2=el('div','cas');
+    cas2.appendChild(el('div','cas-t','CL : (2×1) × (1×2) → 2×2'));
+    var st2=el('div','stage'); st2.style.margin='0';
+    cas2.appendChild(st2);
+    st2.appendChild(matC2); st2.appendChild(el('div','opv','×'));
+    st2.appendChild(matL2); st2.appendChild(el('div','opv','='));
+    st2.appendChild(resCL);
+    stage.appendChild(cas1); stage.appendChild(cas2);
+    var b1=el('div','cas-note'), b2=el('div','cas-note');
+    cas1.appendChild(b1); cas2.appendChild(b2);
+    var btn1=el('button','btn','Calculer LC');
+    var btn2=el('button','btn','Calculer CL');
+    controls.appendChild(btn1); controls.appendChild(btn2);
+    var busy1=false, busy2=false;
+    btn1.addEventListener('click',async function(){
+      if(busy1) return;
+      busy1=true; btn1.disabled=true;
+      clearCls(matL,['rl']); clearCls(matC,['cl']);
+      var k;
+      for(k=0;k<2;k++) matL._cells[0][k].classList.add('rl');
+      for(k=0;k<2;k++) matC._cells[k][0].classList.add('cl');
+      b1.innerHTML=M(termTex(LC.L[0][0],LC.C[0][0])+' + '+termTex(LC.L[0][1],LC.C[1][0])+
+        ' = '+texOf(LCv[0][0]));
+      await sleep(1400);
+      var cell=resLC._cells[0][0];
+      cell.className='dcell ok';
+      cell.innerHTML=M(texOf(LCv[0][0]));
+      popEl(cell);
+      b1.innerHTML+=' : une matrice 1×1, un simple total.';
+      busy1=false; btn1.disabled=false;
+    });
+    btn2.addEventListener('click',async function(){
+      if(busy2) return;
+      busy2=true; btn2.disabled=true;
+      var i,j;
+      for(i=0;i<2;i++){
+        for(j=0;j<2;j++){
+          var cell=resCL._cells[i][j];
+          cell.className='dcell';
+          cell.innerHTML=M(texOf(CLv[i][j]));
+          popEl(cell);
+          await sleep(500);
+        }
+      }
+      b2.innerHTML='Quatre coefficients : une matrice 2×2. Mêmes nombres, deux sens : deux résultats très différents !';
+      busy2=false; btn2.disabled=false;
+    });
+    readout.innerHTML='Les deux produits existent, mais rien à voir entre eux.';
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S6 : la matrice identité ne change rien
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-identite');
+  if(!root) return;
+  function build(){
+    var IDA=State.data.IDA;
+    var I2=[[{n:1,d:1},{n:0,d:1}],[{n:0,d:1},{n:1,d:1}]];
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : la matrice identité ne change rien'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matI=rmat(I2), matA=rmat(IDA), matA2=rmat(IDA), matI2=rmat(I2);
+    var res1=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var res2=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var g1=el('div'); g1.appendChild(matI); g1.appendChild(el('div','opv','×'));
+    g1.appendChild(matA); g1.appendChild(el('div','opv','=')); g1.appendChild(res1);
+    var g2=el('div'); g2.appendChild(matA2); g2.appendChild(el('div','opv','×'));
+    g2.appendChild(matI2); g2.appendChild(el('div','opv','=')); g2.appendChild(res2);
+    stage.appendChild(g1); stage.appendChild(g2);
+    var btn=el('button','btn','Vérifier les deux sens');
+    controls.appendChild(btn);
+    readout.innerHTML='I<sub>2</sub> : des 1 sur la diagonale, des 0 ailleurs.';
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      var i,j;
+      for(i=0;i<2;i++){
+        for(j=0;j<2;j++){
+          var c1=res1._cells[i][j];
+          c1.className='dcell'; c1.innerHTML=M(texOf(IDA[i][j])); popEl(c1);
+          var c2=res2._cells[i][j];
+          c2.className='dcell'; c2.innerHTML=M(texOf(IDA[i][j])); popEl(c2);
+          await sleep(380);
+        }
+      }
+      var b=badge(readout,'vertf','I<sub>2</sub>A = AI<sub>2</sub> = A : l’identité ne change rien.');
+      busy=false; btn.disabled=false; btn.textContent='Rejouer la vérification';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S7 obstacle 1 : AB existe, BA non
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-obs1');
+  if(!root) return;
+  var CROIX='<svg class="croix" viewBox="0 0 100 100" preserveAspectRatio="none">'+
+    '<line x1="4" y1="4" x2="96" y2="96"/><line x1="96" y1="4" x2="4" y2="96"/></svg>';
+  function build(){
+    var O1=State.data.OBS1;
+    var AB=matMul(O1.A,O1.B);
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : AB existe, BA non'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matA=rmat(O1.A), matB=rmat(O1.B), matB2=rmat(O1.B), matA2=rmat(O1.A);
+    var rowsR=[];
+    for(var r=0;r<2;r++){ var rr=[]; for(var c=0;c<4;c++) rr.push({ghost:true}); rowsR.push(rr); }
+    var resAB=dmat(rowsR);
+    var wA=el('div'); wA.appendChild(matA); matLbl(wA,'A : 2×3');
+    var wB=el('div'); wB.appendChild(matB); matLbl(wB,'B : 3×4');
+    var wR=el('div'); wR.appendChild(resAB); matLbl(wR,'AB : 2×4');
+    var row1=el('div','lrow');
+    row1.appendChild(wA); row1.appendChild(el('div','opv','×'));
+    row1.appendChild(wB); row1.appendChild(el('div','opv','='));
+    row1.appendChild(wR);
+    var wB2=el('div'); wB2.appendChild(matB2); matLbl(wB2,'B : 3×4');
+    var wx=el('div','wrap-rel');
+    wx.innerHTML='<span class="opv">×</span>'+CROIX;
+    var wA2=el('div'); wA2.appendChild(matA2); matLbl(wA2,'A : 2×3');
+    var row2=el('div','lrow');
+    row2.appendChild(wB2); row2.appendChild(wx); row2.appendChild(wA2);
+    stage.appendChild(row1); stage.appendChild(row2);
+    var btn1=el('button','btn','Calculer AB');
+    var btn2=el('button','btn','Tenter BA');
+    controls.appendChild(btn1); controls.appendChild(btn2);
+    var busy1=false, busy2=false;
+    btn1.addEventListener('click',async function(){
+      if(busy1) return;
+      busy1=true; btn1.disabled=true;
+      var i,j;
+      for(i=0;i<2;i++){
+        for(j=0;j<4;j++){
+          var cell=resAB._cells[i][j];
+          cell.className='dcell';
+          cell.innerHTML=M(texOf(AB[i][j]));
+          popEl(cell);
+          await sleep(360);
+        }
+      }
+      var b=badge(readout,'vertf','AB existe : 3 = 3, résultat de dimension 2×4.');
+      busy1=false; btn1.disabled=false;
+    });
+    btn2.addEventListener('click',async function(){
+      if(busy2) return;
+      busy2=true; btn2.disabled=true;
+      wx.classList.remove('drawn');
+      readout.innerHTML='BA : (3×4) × (2×3) → nombres intérieurs 4 et 2…';
+      await sleep(1100);
+      wx.classList.add('drawn');
+      await sleep(800);
+      var b=badge(readout,'rouge','BA impossible : 4 ≠ 2. L’un des deux produits n’existe pas : la commutativité n’a même pas de sens ici.');
+      busy2=false; btn2.disabled=false;
+    });
+    readout.innerHTML='Mêmes matrices, deux sens : vérifions chaque produit séparément.';
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S7 obstacle 2 : AB et BA de dimensions différentes
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-obs2');
+  if(!root) return;
+  function build(){
+    var O2=State.data.OBS2;
+    var AB=matMul(O2.A,O2.B), BA=matMul(O2.B,O2.A);
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : deux produits, deux dimensions'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matA=rmat(O2.A), matB=rmat(O2.B), matB2=rmat(O2.B), matA2=rmat(O2.A);
+    var resAB=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var rowsR=[];
+    for(var r=0;r<3;r++){ var rr=[]; for(var c=0;c<2;c++) rr.push({ghost:true}); rowsR.push(rr); }
+    var resBA=dmat(rowsR);
+    var wA=el('div'); wA.appendChild(matA); matLbl(wA,'A : 2×3');
+    var wB=el('div'); wB.appendChild(matB); matLbl(wB,'B : 3×2');
+    var wR=el('div'); wR.appendChild(resAB); matLbl(wR,'AB : 2×2');
+    var row1=el('div','lrow');
+    row1.appendChild(wA); row1.appendChild(el('div','opv','×'));
+    row1.appendChild(wB); row1.appendChild(el('div','opv','='));
+    row1.appendChild(wR);
+    var wB2=el('div'); wB2.appendChild(matB2); matLbl(wB2,'B : 3×2');
+    var wA2=el('div'); wA2.appendChild(matA2); matLbl(wA2,'A : 2×3');
+    var wR2=el('div'); wR2.appendChild(resBA); matLbl(wR2,'BA : 3×3');
+    var row2=el('div','lrow');
+    row2.appendChild(wB2); row2.appendChild(el('div','opv','×'));
+    row2.appendChild(wA2); row2.appendChild(el('div','opv','='));
+    row2.appendChild(wR2);
+    stage.appendChild(row1); stage.appendChild(row2);
+    var btn=el('button','btn','Calculer les deux produits');
+    controls.appendChild(btn);
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      var i,j;
+      for(i=0;i<2;i++){
+        for(j=0;j<2;j++){
+          var c1=resAB._cells[i][j];
+          c1.className='dcell'; c1.innerHTML=M(texOf(AB[i][j])); popEl(c1);
+          await sleep(420);
+        }
+      }
+      var b1=badge(readout,'vertf','AB est une matrice 2×2.');
+      b1.style.marginRight='8px';
+      await sleep(700);
+      for(i=0;i<3;i++){
+        for(j=0;j<2;j++){
+          var c2=resBA._cells[i][j];
+          c2.className='dcell'; c2.innerHTML=M(texOf(BA[i][j])); popEl(c2);
+          await sleep(420);
+        }
+      }
+      var b2=badge(readout,'rouge','BA est une matrice 3×3 : dimensions différentes, donc AB ≠ BA.');
+      busy=false; btn.disabled=false; btn.textContent='Rejouer le calcul';
+    });
+    readout.innerHTML='Les deux produits existent, mais tout oppose leurs dimensions.';
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   S7 obstacle 3 : même dimension, coefficients différents
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-obs3');
+  if(!root) return;
+  function build(){
+    var O3=State.data.OBS3;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : même dimension, coefficients différents'));
+    var controls=el('div','controls'), stage=el('div','stage'), readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    function rmat(m){
+      return dmat(m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    }
+    var matA=rmat(O3.A), matB=rmat(O3.B), matB2=rmat(O3.B), matA2=rmat(O3.A);
+    var resAB=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var resBA=dmat([[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]]);
+    var g1=el('div');
+    g1.appendChild(matA); g1.appendChild(el('div','opv','×'));
+    g1.appendChild(matB); g1.appendChild(el('div','opv','='));
+    g1.appendChild(resAB);
+    var g2=el('div');
+    g2.appendChild(matB2); g2.appendChild(el('div','opv','×'));
+    g2.appendChild(matA2); g2.appendChild(el('div','opv','='));
+    g2.appendChild(resBA);
+    stage.appendChild(g1); stage.appendChild(g2);
+    var btn=el('button','btn','Calculer AB puis BA');
+    controls.appendChild(btn);
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      var i,j;
+      for(i=0;i<2;i++){
+        for(j=0;j<2;j++){
+          var c1=resAB._cells[i][j];
+          c1.className='dcell'; c1.innerHTML=M(texOf(O3.AB[i][j])); popEl(c1);
+          var c2=resBA._cells[i][j];
+          c2.className='dcell'; c2.innerHTML=M(texOf(O3.BA[i][j])); popEl(c2);
+          await sleep(420);
+        }
+      }
+      resAB._cells[0][0].classList.add('cc');
+      resBA._cells[0][0].classList.add('cc');
+      var b=badge(readout,'rouge','Même dimension (2×2), mais dès le premier coefficient : '+
+        M(texOf(O3.AB[0][0])+' \\neq '+texOf(O3.BA[0][0]))+' donc AB ≠ BA.');
+      busy=false; btn.disabled=false; btn.textContent='Rejouer le calcul';
+    });
+    readout.innerHTML='Carrées de même dimension : AB et BA existent tous les deux. Pourtant…';
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Initialisation
+   ============================================================ */
+document.getElementById('btn-reinit').addEventListener('click',function(){
+  randomizeAll();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+randomizeAll();
+
+/* ============================================================
+   Droits d'auteur
+   ============================================================ */
+(function(){
+  var btn=document.getElementById('btn-copyright');
+  var box=document.getElementById('copyright-box');
+  if(!btn||!box) return;
+  btn.addEventListener('click',function(){
+    var show=(box.style.display==='none'||box.style.display==='');
+    if(show){
+      box.style.display='block';
+      box.classList.remove('fadein');
+      void box.offsetWidth;
+      box.classList.add('fadein');
+      btn.innerHTML='Masquer les droits d\u2019auteur';
+      box.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }else{
+      box.style.display='none';
+      btn.innerHTML='\u00A9 Droits d\u2019auteur';
+    }
+  });
+})();
+</script>
+</body>
+</html>

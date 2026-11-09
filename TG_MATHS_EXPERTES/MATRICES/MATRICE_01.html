@@ -1,0 +1,1843 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les matrices : premières notions</title>
+<style>
+:root{
+  --bleu:#1969c8; --vert:#008246; --rouge:#cd2d2d;
+  --bleu-bg:#e8f1fc; --vert-bg:#e9f5ef; --rouge-bg:#fdeeee;
+  --encre:#1c2033; --papier:#fbfaf7;
+  --serif:"Latin Modern Math","Cambria Math",Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--serif);color:var(--encre);background:var(--papier);margin:0;line-height:1.6}
+.page{max-width:950px;margin:0 auto;padding:1.4em 1.4em 4em}
+header.head{text-align:center;margin-bottom:.6em}
+header.head h1{font-size:2em;color:#24305e;margin:.2em 0;font-weight:700}
+header.head .sous{font-size:1.02em;color:#4a5578;margin:.4em auto .2em;max-width:40em}
+header.head .auteur{font-family:var(--sans);font-size:.9em;color:#8a91a5;margin:.3em 0 0}
+.resetbar{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;
+  background:#fff;border:1px solid #e4e7f0;border-radius:12px;padding:10px 14px;margin:1em 0;
+  box-shadow:0 2px 8px rgba(25,50,90,.06)}
+.resetbar .hint{flex-basis:100%;margin:2px 0 0}
+
+/* ---------- Sommaire ---------- */
+nav.toc{background:#fff;border:1px solid #e4e7f0;border-radius:12px;padding:.9em 1.3em;margin:1.4em 0;box-shadow:0 2px 8px rgba(25,50,90,.05)}
+nav.toc .toc-t{font-family:var(--sans);font-weight:700;color:var(--bleu);font-size:.95em;margin-bottom:.35em}
+nav.toc ol{margin:0;padding-left:1.4em;columns:2;column-gap:2.5em}
+nav.toc li{font-size:.95em;margin:.18em 0}
+nav.toc a{color:#2c3866;text-decoration:none;border-bottom:1px dotted #aab4d0}
+nav.toc a:hover{color:var(--bleu)}
+@media (max-width:640px){nav.toc ol{columns:1}}
+
+/* ---------- Numérotation ---------- */
+body{counter-reset:sec}
+h2{font-size:1.45em;color:#24305e;border-bottom:2px solid #dde5f3;padding-bottom:.22em;margin:2.1em 0 .7em;
+   counter-increment:sec;counter-reset:defi exe rem prop sub}
+h2::before{content:counter(sec) ".\00a0\00a0";color:#8fa8cc}
+h3{font-size:1.14em;color:#33406b;margin:1.5em 0 .5em;counter-increment:sub}
+h3::before{content:counter(sec) "." counter(sub) ".\00a0\00a0";color:#8fa8cc}
+
+/* ---------- Encadrés Définition / Exemple / Remarque / Propriété ---------- */
+.dbox{background:#fff;border:1px solid #e4e7f0;border-left:4px solid var(--bleu);border-radius:10px;
+      padding:.65em 1em .7em;margin:1.15em 0;box-shadow:0 2px 8px rgba(25,50,90,.05)}
+.d-head{font-family:var(--sans);font-weight:700;font-size:.88em;margin-bottom:.35em;color:var(--bleu);
+        text-transform:uppercase;letter-spacing:.02em}
+.d-defi{counter-increment:defi}
+.d-defi .d-head::before{content:"Définition " counter(sec) "." counter(defi) ". "}
+.d-exe{border-left-color:var(--vert)} .d-exe .d-head{color:var(--vert)}
+.d-exe{counter-increment:exe}
+.d-exe .d-head::before{content:"Exemple " counter(sec) "." counter(exe) ". "}
+.d-rem{border-left-color:#98a0b5} .d-rem .d-head{color:#5a6072}
+.d-rem{counter-increment:rem}
+.d-rem .d-head::before{content:"Remarque " counter(sec) "." counter(rem) ". "}
+.d-prop{border-left-color:#7c5cbf} .d-prop .d-head{color:#6a4bb3}
+.d-prop{counter-increment:prop}
+.d-prop .d-head::before{content:"Propriété " counter(sec) "." counter(prop) ". "}
+
+/* ---------- Encadrés colorés ---------- */
+.note{border-radius:10px;padding:.8em 1.1em;margin:1.25em auto}
+.note.attention{background:var(--rouge-bg);border-left:5px solid var(--rouge)}
+.note.idee{background:var(--vert-bg);border-left:5px solid var(--vert)}
+.note.methode{background:#e9f1fc;border-left:5px solid var(--bleu)}
+.note .nt{font-family:var(--sans);font-weight:700;font-size:.9em;margin:0 0 .3em;display:block}
+.note.attention .nt{color:var(--rouge)}
+.note.idee .nt{color:var(--vert)}
+.note.methode .nt{color:var(--bleu)}
+
+/* ---------- Math rendu ---------- */
+.mth{font-family:var(--serif);font-style:normal;white-space:nowrap}
+.mth i{font-style:italic}
+.mth sub,.mth sup{font-size:.68em}
+.mth .txt{font-style:normal}
+.frac{display:inline-block;vertical-align:-.7em;text-align:center;font-size:.95em;margin:0 .1em}
+.frac>span{display:block;padding:0 .25em}
+.frac>span:first-child{border-bottom:1.2px solid currentColor}
+.mtx{display:inline-grid;column-gap:.4em;row-gap:.15em;padding:.15em .55em;position:relative;
+     margin:0 .15em;vertical-align:middle}
+.mtx::before,.mtx::after{content:"";position:absolute;top:.05em;bottom:.05em;width:.34em;border:.08em solid #45507a}
+.mtx::before{left:0;border-right:none;border-radius:.16em .02em .02em .16em}
+.mtx::after{right:0;border-left:none;border-radius:.02em .16em .16em .02em}
+.mtx>.mc{display:flex;align-items:center;justify-content:center;min-width:.9em;min-height:1.05em}
+.disp{display:block;text-align:center;margin:1em auto;font-size:1.12em;overflow-x:auto;overflow-y:hidden;padding:.15em 0}
+
+/* ---------- Panneaux d'animation ---------- */
+.demo{background:#fff;border:1px solid #e4e6ee;border-radius:14px;padding:16px 14px 12px;margin:1.3em auto;
+      box-shadow:0 3px 14px rgba(25,50,90,.07);text-align:center}
+.demo .demo-t{font-family:var(--sans);font-size:.78em;font-weight:700;letter-spacing:.08em;
+      text-transform:uppercase;color:#8a93ad;margin-bottom:6px}
+.demo .controls{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px 0}
+.demo .stage{display:flex;gap:24px;justify-content:center;align-items:center;flex-wrap:wrap;
+      position:relative;margin:14px 0 4px}
+.readout{min-height:1.7em;font-size:1.03em;margin-top:10px}
+.hint{font-family:var(--sans);font-size:.85em;color:#7b8296;margin-top:4px}
+.legende{text-align:center;font-size:.88em;font-style:italic;color:#666d80;margin:.6em auto .4em;max-width:44em}
+
+/* ---------- Matrices DOM ---------- */
+.dmat{display:inline-grid;gap:5px;position:relative;padding:9px 15px;vertical-align:middle}
+.dmat::before,.dmat::after{content:"";position:absolute;top:2px;bottom:2px;width:9px;border:2.5px solid #45507a}
+.dmat::before{left:1px;border-right:none;border-radius:7px 1px 1px 7px}
+.dmat::after{right:1px;border-left:none;border-radius:1px 7px 7px 1px}
+.dcell{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:2px 8px;
+      border-radius:8px;background:#fbfcff;border:1.5px solid #d5d9e8;font-size:1.02em;
+      transition:background .25s,border-color .25s,transform .25s,box-shadow .25s,color .25s,opacity .3s}
+.dcell .frac{font-size:.8em;line-height:1.05}
+.dcell.mid{font-size:.8em;color:#445}
+.dcell.rl{background:var(--bleu-bg);border-color:var(--bleu)}
+.dcell.cl{background:var(--rouge-bg);border-color:var(--rouge)}
+.dcell.cc{background:#fff3bf;border-color:#e6a700;box-shadow:0 0 0 3px rgba(230,166,0,.25)}
+.dcell.ok{background:var(--vert-bg);border-color:var(--vert);box-shadow:0 0 0 3px rgba(0,130,70,.18)}
+.dcell.bad{background:var(--rouge-bg);border-color:var(--rouge);box-shadow:0 0 0 3px rgba(205,45,45,.22);animation:shake .45s}
+.dcell.ghost{background:transparent;border-style:dashed;color:#aab}
+.dcell.jaune{background:#fff3bf;border-color:#e6a700}
+.dcell.faded{opacity:.15}
+.dcell.p0{background:#fff3bf;border-color:#e6a700}
+.dcell.p1{background:#ffe0b3;border-color:#e08a00}
+.dcell.p2{background:#ffd6e0;border-color:#d6336c}
+.dcell.p3{background:#c8f0e8;border-color:#0a8f70}
+.dcell.p4{background:#e5dbfa;border-color:#7048b6}
+.dcell.p5{background:#e7f8c8;border-color:#5c940f}
+.dcell.clone{position:absolute;margin:0;z-index:5}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes pop{0%{transform:scale(.55)}60%{transform:scale(1.13)}100%{transform:scale(1)}}
+.pop{animation:pop .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fadein{animation:fadein .5s ease both}
+
+/* ---------- Boutons, badges, curseurs ---------- */
+.btn{font-family:var(--sans);background:var(--bleu);color:#fff;border:none;border-radius:999px;
+     padding:.5em 1.15em;font-size:.93rem;cursor:pointer;box-shadow:0 2px 6px rgba(25,105,200,.3);
+     transition:transform .15s,box-shadow .15s,background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.55;cursor:default;transform:none}
+.btn.verte{background:var(--vert);box-shadow:0 2px 6px rgba(0,130,70,.28)}
+.btn.grise{background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);box-shadow:none}
+.btn.on{background:var(--vert)}
+.btn.grise.on{color:#fff}
+.badge{display:inline-block;padding:.28em .8em;border-radius:999px;background:#eef1f8;border:1px solid #d5daea;
+       font-family:var(--sans);font-size:.88em;transition:background .25s,border-color .25s,transform .25s}
+.badge.bleu{background:var(--bleu-bg);border-color:var(--bleu);color:var(--bleu)}
+.badge.rouge{background:var(--rouge-bg);border-color:var(--rouge);color:var(--rouge);animation:shake .45s}
+.badge.vertf{background:var(--vert-bg);border-color:var(--vert);color:var(--vert)}
+input[type=range]{accent-color:var(--bleu);width:170px;vertical-align:middle}
+.lbl{font-family:var(--sans);font-size:.92em;color:#3c4768}
+.verdict{font-size:1.7em;font-weight:700;min-width:1.3em;display:inline-block}
+.verdict.ok{color:var(--vert)}
+.verdict.bad{color:var(--rouge)}
+.opv{font-size:1.5em;color:#45507a;margin:0 .12em}
+.fly{position:absolute;font-family:var(--sans);font-size:.82em;font-weight:700;padding:.25em .55em;
+     border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(25,50,90,.18);white-space:nowrap;z-index:6}
+.fly.lb{color:var(--bleu);border:1.5px solid var(--bleu)}
+.fly.lr{color:var(--rouge);border:1.5px solid var(--rouge)}
+.matlbl{font-family:var(--sans);font-size:.85em;font-weight:700;color:#3c4768;text-align:center;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:.2em .7em;border-radius:999px;border:1px solid #dde;
+      font-family:var(--sans);font-size:.84em;margin:3px;background:#fff}
+.dot{width:13px;height:13px;border-radius:4px;display:inline-block}
+.dot.p0{background:#e6a700}.dot.p1{background:#e08a00}.dot.p2{background:#d6336c}
+.dot.p3{background:#0a8f70}.dot.p4{background:#7048b6}.dot.p5{background:#5c940f}
+.cas{border:1px solid #e6e9f2;border-radius:10px;padding:12px 10px 10px;margin:10px 0;background:#fdfdff}
+.cas-t{font-family:var(--sans);font-size:.88em;font-weight:700;color:#3c4768;margin-bottom:6px}
+.cas-note{font-family:var(--sans);font-size:.84em;color:#5a6178;margin-top:8px;min-height:1.2em}
+.wrap-rel{position:relative;display:inline-block}
+.croix{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);pointer-events:none}
+.croix line{stroke:var(--rouge);stroke-width:7;stroke-linecap:round;
+      stroke-dasharray:160;stroke-dashoffset:160;transition:stroke-dashoffset .45s ease}
+.drawn .croix line{stroke-dashoffset:0}
+.drawn .croix line:nth-child(2){transition-delay:.25s}
+.okmark{font-size:1.25em;color:var(--vert);font-weight:700}
+.mc2{width:44px;height:44px;min-width:0;min-height:0;position:absolute;left:0;top:0;
+     box-sizing:border-box;font-size:.95em}
+.stage2{position:relative;height:330px;margin:10px auto}
+.case-lbl{font-family:var(--sans);font-size:.8em;color:#7b8296;margin-top:6px}
+.copyrightbar{display:flex;justify-content:center;margin-top:1.6em}
+.copyright-box{background:#fff;border:1px solid #e4e7f0;border-left:4px solid #98a0b5;border-radius:10px;
+  padding:.9em 1.3em;margin:1em auto;max-width:46em;text-align:center;font-size:.95em;
+  box-shadow:0 2px 8px rgba(25,50,90,.05)}
+.copyright-box p{margin:.35em 0}
+.copyright-box a{color:var(--bleu)}
+footer{margin-top:3em;text-align:center;font-family:var(--sans);font-size:.82em;color:#8a91a5}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:640px){
+  .page{padding:1em .7em 3em}
+  .demo .stage{gap:14px}
+}
+@media print{.btn,.controls,.hint,.resetbar{display:none}.demo,.dbox,.note{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="head">
+  <h1>Les matrices : premières notions</h1>
+  <p class="sous">Définition, dimension, égalité, matrices lignes et colonnes, addition, soustraction et produit par un scalaire</p>
+  <p class="auteur">Yann Merdy : fiche interactive (version web animée)</p>
+</header>
+
+<div class="resetbar">
+  <button id="btn-reinit" class="btn verte">&#127922; Réinitialiser les valeurs</button>
+  <span id="badge-form" class="badge"></span>
+  <span class="hint">Toutes les valeurs numériques de la fiche sont aléatoires, comprises entre &minus;100 et 100. Leur forme (entiers relatifs, décimaux relatifs ou fractions) est homogène dans tout le document et change, de manière équiprobable, à chaque réinitialisation.</span>
+</div>
+
+<nav class="toc">
+  <div class="toc-t">Sommaire</div>
+  <ol>
+    <li><a href="#s1">Qu'est-ce qu'une matrice ?</a></li>
+    <li><a href="#s2">La dimension d'une matrice</a></li>
+    <li><a href="#s3">Ne pas confondre n×p et p×n</a></li>
+    <li><a href="#s4">Nombre de coefficients et dimension</a></li>
+    <li><a href="#s5">Égalité de deux matrices</a></li>
+    <li><a href="#s6">Matrices lignes et colonnes</a></li>
+    <li><a href="#s7">Addition et soustraction</a></li>
+    <li><a href="#s8">Multiplication par un scalaire</a></li>
+    <li><a href="#s9">À retenir</a></li>
+  </ol>
+</nav>
+
+<div class="note idee">
+  <span class="nt">À retenir :</span>
+  Une <b>matrice</b> est un <b>tableau de nombres</b> : chaque nombre y est repéré par sa <b>ligne</b> et sa <b>colonne</b>. Toute la fiche repose sur quatre idées : la <b>dimension</b> (le couple lignes <span data-tex="\times"></span> colonnes), l'<b>égalité</b> (même dimension et mêmes coefficients), l'<b>addition</b> (possible seulement entre matrices de <i>même dimension</i>, en additionnant coefficient par coefficient), et la <b>multiplication par un scalaire</b> (le nombre, écrit à gauche de la matrice, multiplie tous les coefficients).
+</div>
+
+<!-- ================================================================= -->
+<section id="s1">
+<h2>Qu'est-ce qu'une matrice ?</h2>
+
+<div class="dbox d-defi">
+  <div class="d-head">Matrice</div>
+  <p>Une <b>matrice</b> est un tableau rectangulaire de nombres, disposés en <b>lignes</b> (les bandes horizontales) et en <b>colonnes</b> (les bandes verticales). Les nombres du tableau sont appelés les <b>coefficients</b> (ou <b>éléments</b>) de la matrice.</p>
+</div>
+
+<h3>Conventions de numérotation</h3>
+<p>Les lignes sont numérotées de haut en bas : 1, 2, …, <i>n</i>. Les colonnes sont numérotées de gauche à droite : 1, 2, …, <i>p</i>. Le coefficient situé à l'intersection de la ligne <i>i</i> et de la colonne <i>j</i> se note <span data-tex="a_{ij}"></span> : <b>le premier indice est le numéro de ligne, le second est le numéro de colonne</b>.</p>
+
+<div class="demo" id="demo-lecture">
+  <div class="demo-t">Animation interactive : lire un coefficient</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+  <div class="hint">Survolez (ou touchez) une case du tableau : la ligne s'affiche en bleu, la colonne en rouge.</div>
+</div>
+<p class="legende">Schéma 1 : une matrice générique. Le coefficient <span data-tex="a_{ij}"></span> se trouve à l'intersection de la ligne <i>i</i> (bleu) et de la colonne <i>j</i> (rouge).</p>
+
+<div class="dbox d-exe">
+  <div class="d-head">Lire un coefficient</div>
+  <p>Soit <span data-tex="M=\begin{pmatrix} a_{11} &amp; a_{12} &amp; a_{13} \\ a_{21} &amp; a_{22} &amp; a_{23} \end{pmatrix}"></span>. Le coefficient <span data-tex="a_{23}"></span> est celui de la <b>ligne 2</b> et de la <b>colonne 3</b>.</p>
+</div>
+
+<div class="demo" id="demo-a23">
+  <div class="demo-t">Animation : lecture du coefficient a<sub>23</sub></div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+<p class="legende">Schéma 2 : lecture des indices du coefficient <span data-tex="a_{23}"></span>, situé ligne 2, colonne 3.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="s2">
+<h2>La dimension d'une matrice</h2>
+
+<div class="dbox d-defi">
+  <div class="d-head">Dimension</div>
+  <p>La <b>dimension</b> d'une matrice est le couple formé de son nombre de lignes et de son nombre de colonnes. Si <span data-tex="A"></span> possède <i>n</i> lignes et <i>p</i> colonnes, on dit que <span data-tex="A"></span> est de <b>dimension <span data-tex="n\times p"></span></b> (on lit : <i>n fois p</i>, ou <i>n par p</i>). On dit aussi <b>taille</b> ou <b>format</b> <span data-tex="n\times p"></span>.</p>
+</div>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  On lit toujours la dimension dans l'ordre <b>lignes d'abord, colonnes ensuite</b> : dimension <span data-tex="n\times p"></span> signifie <i>n</i> <b>lignes</b> et <i>p</i> <b>colonnes</b>, jamais l'inverse.
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Lire une dimension</div>
+  <p>Considérons <span id="eq-dim-B"></span> : <span data-tex="B"></span> possède 3 lignes et 4 colonnes, donc <span data-tex="B"></span> est de dimension <span data-tex="3\times 4"></span>.</p>
+</div>
+
+<div class="demo" id="demo-dim"></div>
+<p class="legende">Schéma 3 : comptage des lignes et des colonnes. La dimension de <span data-tex="B"></span> est <span data-tex="3\times 4"></span> : 3 lignes (premier nombre), 4 colonnes (second nombre).</p>
+
+<div class="dbox d-rem">
+  <div class="d-head">Notation</div>
+  <p>L'ensemble des matrices à <i>n</i> lignes et <i>p</i> colonnes à coefficients réels se note <span data-tex="M_{n,p}(\mathbb{R})"></span>. Par exemple, <span data-tex="B"></span> ci-dessus appartient à <span data-tex="M_{3,4}(\mathbb{R})"></span>.</p>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s3">
+<h2>Ne pas confondre : dimension <span data-tex="n\times p"></span> et dimension <span data-tex="p\times n"></span></h2>
+
+<p>Les dimensions <span data-tex="n\times p"></span> et <span data-tex="p\times n"></span> sont <b>différentes dès que <span data-tex="n\neq p"></span></b> : une matrice <span data-tex="n\times p"></span> n'a pas la même forme qu'une matrice <span data-tex="p\times n"></span>.</p>
+
+<div class="dbox d-exe">
+  <div class="d-head">Deux matrices de « même taille » mais de dimensions différentes</div>
+  <p id="eq-p-a23"></p>
+</div>
+
+<div class="demo" id="demo-transpo"></div>
+<p class="legende">Schéma 4 : une matrice <span data-tex="2\times 3"></span> est plate, une matrice <span data-tex="3\times 2"></span> est dressée. Mêmes coefficients, mais <b>dimensions différentes</b> : <span data-tex="2\times 3\neq 3\times 2"></span>. La 1<sup>re</sup> ligne (en jaune) de <span data-tex="A"></span> devient la 1<sup>re</sup> colonne de <span data-tex="A^{T}"></span>.</p>
+
+<div class="dbox d-rem">
+  <div class="d-head"></div>
+  <p>Si <span data-tex="n=p"></span> (matrice <b>carrée</b> de dimension <span data-tex="n\times n"></span>), le couple est symétrique : c'est la seule situation où l'ordre des deux nombres de la dimension ne crée pas de différence.</p>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s4">
+<h2>Nombre de coefficients et dimension : deux choses différentes</h2>
+
+<p>Une matrice de dimension <span data-tex="n\times p"></span> contient <span data-tex="n\times p"></span> coefficients (c'est-à-dire <span data-tex="n\cdot p"></span>, le produit). Mais la <b>dimension</b> n'est pas un nombre : c'est un <b>couple</b> (nombre de lignes, nombre de colonnes).</p>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  Erreur classique : « la matrice <span data-tex="A"></span> contient 6 coefficients, donc sa dimension est 6 ». Non ! Si <span id="eq-attn4"></span>, sa <b>dimension</b> est <span data-tex="2\times 3"></span> (2 lignes, 3 colonnes) et son <b>nombre de coefficients</b> est <span data-tex="2\times 3=6"></span>. Ce sont deux informations distinctes.
+</div>
+
+<div class="note idee">
+  <span class="nt">À retenir :</span>
+  Dimension = forme du tableau (combien de lignes, combien de colonnes). Nombre de coefficients = nombre total de cases du tableau, égal au <b>produit</b> <span data-tex="n\cdot p"></span>.
+</div>
+
+<div class="demo" id="demo-morph"></div>
+<p class="legende">Schéma 5 : ces quatre matrices contiennent toutes <b>6 coefficients</b>, mais aucune n'a la même <b>dimension</b> que les autres. Le nombre de coefficients ne suffit pas à connaître la dimension.</p>
+</section>
+
+<!-- ================================================================= -->
+<section id="s5">
+<h2>Égalité de deux matrices</h2>
+
+<div class="dbox d-defi">
+  <div class="d-head">Égalité de deux matrices</div>
+  <p>Deux matrices <span data-tex="A=(a_{ij})"></span> et <span data-tex="B=(b_{ij})"></span> sont <b>égales</b> (on note <span data-tex="A=B"></span>) si et seulement si :</p>
+  <ol>
+    <li>elles ont la <b>même dimension</b> ;</li>
+    <li>leurs coefficients situés à la <b>même position</b> sont égaux : <span data-tex="a_{ij}=b_{ij}"></span> pour tous les indices <i>i</i> et <i>j</i>.</li>
+  </ol>
+</div>
+
+<p>Autrement dit : deux matrices sont égales lorsqu'elles décrivent <b>exactement le même tableau</b>. Il faut vérifier les deux conditions, dans cet ordre.</p>
+
+<div class="demo" id="demo-egalite"></div>
+<p class="legende">Schéma 6 : trois situations. En haut, <span data-tex="A=B"></span> (tout coïncide). Au milieu, un seul coefficient suffit à empêcher l'égalité. En bas, des dimensions différentes suffisent : les matrices ne sont pas égales.</p>
+
+<div class="dbox d-exe">
+  <div class="d-head">Utiliser l'égalité pour trouver des inconnues</div>
+  <p>Déterminer <i>x</i> et <i>y</i> tels que</p>
+  <div class="disp" id="disp-eqx"></div>
+  <p id="p-eqx-sol"></p>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s6">
+<h2>Matrices lignes et matrices colonnes</h2>
+
+<div class="dbox d-defi">
+  <div class="d-head">Matrice ligne, matrice colonne</div>
+  <ul>
+    <li>Une <b>matrice ligne</b> est une matrice comportant une seule ligne : sa dimension est <span data-tex="1\times p"></span>.</li>
+    <li>Une <b>matrice colonne</b> est une matrice comportant une seule colonne : sa dimension est <span data-tex="n\times 1"></span>.</li>
+  </ul>
+</div>
+
+<div class="demo" id="demo-lc"></div>
+<p class="legende">Schéma 7 : une matrice ligne est plate, une matrice colonne est verticale. Les deux matrices ci-dessus contiennent les mêmes coefficients, mais l'une a pour dimension <span data-tex="1\times 4"></span> et l'autre <span data-tex="4\times 1"></span> : elles ne sont donc pas égales.</p>
+
+<div class="dbox d-rem">
+  <div class="d-head">Lien avec la géométrie</div>
+  <p>Les coordonnées d'un vecteur ou d'un point se rangent naturellement dans une matrice colonne : le point <span id="eq-rem-geo1"></span> peut être représenté par la matrice colonne <span id="eq-rem-geo2"></span>, de dimension <span data-tex="2\times 1"></span>.</p>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s7">
+<h2>Addition et soustraction de matrices</h2>
+
+<h3>Condition nécessaire : la même dimension</h3>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  Pour additionner ou soustraire deux matrices, il faut qu'elles aient <b>exactement la même dimension</b>. Sinon, l'opération est <b>impossible</b> : elle n'est pas définie.
+</div>
+
+<p>Pourquoi ? Parce qu'on additionne « coefficient avec coefficient », <b>à la même position</b> : chaque coefficient de <span data-tex="A"></span> doit avoir son homologue exactement en face dans <span data-tex="B"></span>. Si les tableaux n'ont pas la même forme, des positions restent sans correspondance.</p>
+
+<div class="demo" id="demo-impossible"></div>
+<p class="legende">Schéma 8 : on ne peut pas additionner des matrices de dimensions différentes. La 1<sup>re</sup> matrice a une colonne de plus : certains coefficients n'auraient pas de partenaire.</p>
+
+<h3>Somme et différence : définitions</h3>
+
+<div class="dbox d-defi">
+  <div class="d-head">Somme de deux matrices</div>
+  <p>Soient <span data-tex="A=(a_{ij})"></span> et <span data-tex="B=(b_{ij})"></span> deux matrices de <b>même dimension</b> <span data-tex="n\times p"></span>. La <b>somme</b> <span data-tex="A+B"></span> est la matrice de <b>même dimension</b> <span data-tex="n\times p"></span> définie par</p>
+  <div class="disp" data-tex="(A+B)_{ij}=a_{ij}+b_{ij}\quad\text{pour toutes les positions }(i,j)"></div>
+  <p>Autrement dit : on additionne les coefficients <b>position par position</b>.</p>
+</div>
+
+<div class="dbox d-defi">
+  <div class="d-head">Différence de deux matrices</div>
+  <p>De même, la <b>différence</b> <span data-tex="A-B"></span> est la matrice de même dimension <span data-tex="n\times p"></span> définie par</p>
+  <div class="disp" data-tex="(A-B)_{ij}=a_{ij}-b_{ij}\quad\text{pour toutes les positions }(i,j)"></div>
+  <p>On soustrait les coefficients de <span data-tex="B"></span> à ceux de <span data-tex="A"></span>, <b>position par position</b>.</p>
+</div>
+
+<div class="demo" id="demo-somme"></div>
+<p class="legende">Schéma 9 : addition coefficient par coefficient. Chaque case du résultat additionne les deux cases qui portent la même couleur, c'est-à-dire qui occupent la même position <span data-tex="(i,j)"></span>.</p>
+
+<h3>Exemples calculés</h3>
+
+<div class="dbox d-exe">
+  <div class="d-head">Une somme</div>
+  <p id="p-somme-intro"></p>
+  <div class="disp" id="disp-somme"></div>
+  <p>qui est encore une matrice de dimension <span data-tex="2\times 3"></span>.</p>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Une différence</div>
+  <p id="p-diff-intro"></p>
+  <div class="disp" id="disp-diff"></div>
+</div>
+
+<div class="dbox d-prop">
+  <div class="d-head">Propriétés de l'addition</div>
+  <p>Pour toutes matrices <span data-tex="A"></span>, <span data-tex="B"></span>, <span data-tex="C"></span> de même dimension :</p>
+  <ul>
+    <li><b>commutativité</b> : <span data-tex="A+B=B+A"></span> ;</li>
+    <li><b>associativité</b> : <span data-tex="(A+B)+C=A+(B+C)"></span> ;</li>
+    <li><b>élément neutre</b> : <span data-tex="A+0=A"></span>, où <span data-tex="0"></span> désigne la matrice nulle (tous les coefficients sont nuls), de même dimension que <span data-tex="A"></span> ;</li>
+    <li>la somme <span data-tex="A+B"></span> et la différence <span data-tex="A-B"></span> ont <b>la même dimension</b> que <span data-tex="A"></span> et <span data-tex="B"></span>.</li>
+  </ul>
+</div>
+
+<div class="note methode">
+  <span class="nt">Méthode : additionner (ou soustraire) deux matrices</span>
+  <ol>
+    <li><b>Vérifier les dimensions</b> : si elles sont différentes, l'opération est impossible ;</li>
+    <li><b>Additionner (ou soustraire) position par position</b>, sans changer l'ordre des lignes et des colonnes ;</li>
+    <li><b>Conclure</b> : le résultat a exactement la même dimension que les matrices de départ.</li>
+  </ol>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s8">
+<h2>Multiplication d'une matrice par un scalaire</h2>
+
+<p>Nous savons combiner des matrices <i>entre elles</i> par addition ou soustraction. Nous allons maintenant multiplier une matrice par un simple <i>nombre</i>, que l'on appelle un <b>scalaire</b>.</p>
+
+<h3>Définition</h3>
+
+<div class="dbox d-defi">
+  <div class="d-head">Produit d'une matrice par un scalaire</div>
+  <p>Soient <span data-tex="\lambda"></span> un nombre réel (appelé <b>scalaire</b>) et <span data-tex="A=(a_{ij})"></span> une matrice de dimension <span data-tex="n\times p"></span>. Le produit de <span data-tex="A"></span> par <span data-tex="\lambda"></span> est la matrice de <b>même dimension</b> <span data-tex="n\times p"></span>, notée <span data-tex="\lambda A"></span> (le scalaire étant écrit <b>à gauche</b>), dont chaque coefficient est le produit de <span data-tex="\lambda"></span> par le coefficient de <span data-tex="A"></span> situé à la même position :</p>
+  <div class="disp" data-tex="(\lambda A)_{ij}=\lambda\, a_{ij}\quad\text{pour toutes les positions }(i,j)"></div>
+  <p>Autrement dit : <b>le scalaire multiplie tous les coefficients</b>, sans changer la disposition du tableau.</p>
+</div>
+
+<div class="demo" id="demo-scal-gen">
+  <div class="demo-t">Schéma général</div>
+  <div class="stage"></div>
+</div>
+<p class="legende">Schéma 10 : le scalaire <span data-tex="\lambda"></span> multiplie le coefficient qui occupe la même position (même couleur). Chaque case devient <span data-tex="\lambda a_{ij}"></span> et la matrice <span data-tex="\lambda A"></span> garde la dimension de <span data-tex="A"></span>.</p>
+
+<div class="dbox d-exe">
+  <div class="d-head">Multiplier par un scalaire</div>
+  <p id="p-scal-intro"></p>
+  <div class="disp" id="disp-scal"></div>
+  <p>qui est encore une matrice de dimension <span data-tex="2\times 3"></span>.</p>
+</div>
+
+<div class="demo" id="demo-scalaire"></div>
+<p class="legende">Schéma 11 : produit de la matrice <span data-tex="A"></span> par le scalaire <span data-tex="\lambda"></span>. Chaque case est multipliée par <span data-tex="\lambda"></span>, et la dimension <span data-tex="2\times 3"></span> est inchangée.</p>
+
+<h3>La position du scalaire : toujours à gauche, jamais ailleurs</h3>
+
+<div class="note attention">
+  <span class="nt">Attention !</span>
+  Le scalaire s'écrit <b>toujours à gauche</b> de la matrice : <span data-tex="\lambda A"></span>. L'écriture <span data-tex="A\times\lambda"></span>, avec le scalaire à droite, <b>n'a aucun sens</b>, et c'est une question de <b>dimensions</b> : dans un produit de matrices <span data-tex="A\times B"></span>, le facteur de droite doit avoir autant de <i>lignes</i> que le facteur de gauche a de <i>colonnes</i>. Une matrice de dimension <span data-tex="n\times p"></span> ne peut donc être multipliée, à droite, que par une matrice ayant <i>p</i> lignes. Or un scalaire n'est pas une matrice : <span data-tex="A\times\lambda"></span> n'est pas défini (même en voyant <span data-tex="\lambda"></span> comme une matrice <span data-tex="1\times 1"></span>, il faudrait <span data-tex="p=1"></span>). La multiplication par un scalaire n'est <i>pas</i> un produit de matrices, c'est une opération externe : seule l'écriture <span data-tex="\lambda A"></span>, avec le scalaire à gauche, a un sens.
+</div>
+
+<div class="demo" id="demo-position">
+  <div class="demo-t">Animation : les (in)correctes positions du scalaire</div>
+  <div class="controls"></div>
+  <div class="stage"></div>
+  <div class="readout"></div>
+</div>
+<p class="legende">Schéma 12 : position du scalaire par rapport à la matrice. Le scalaire se place à <b>gauche</b>, en dehors des crochets : <span data-tex="\lambda A"></span> est la seule écriture valable. À droite, <span data-tex="A\times\lambda"></span> n'a aucun sens (problème de dimensions), et le scalaire ne s'écrit jamais à l'intérieur du tableau.</p>
+
+<div class="dbox d-rem">
+  <div class="d-head">Ne pas confondre</div>
+  <p>Multiplier une matrice par un <b>scalaire</b> (<span data-tex="\lambda A"></span>) n'est pas la même opération que multiplier <b>deux matrices entre elles</b> (produit matriciel, noté simplement <span data-tex="AB"></span>, qui exigera des conditions de dimensions subtiles). D'où l'importance de la position : dans <span data-tex="\lambda A"></span>, le <span data-tex="\lambda"></span> est un nombre placé en dehors des crochets, et il multiplie tous les coefficients.</p>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Opposée d'une matrice, retour sur la soustraction</div>
+  <p>Multiplier par <span data-tex="-1"></span> change le signe de tous les coefficients : la matrice <span data-tex="-A=(-1)A"></span> est l'<b>opposée</b> de <span data-tex="A"></span>. On retrouve ainsi la soustraction :</p>
+  <div class="disp" data-tex="A-B=A+(-B)=A+(-1)B"></div>
+  <p id="p-opp"></p>
+</div>
+
+<div class="dbox d-prop">
+  <div class="d-head">Propriétés du produit par un scalaire</div>
+  <p>Pour tous scalaires <span data-tex="\lambda"></span>, <span data-tex="\mu"></span> et toutes matrices <span data-tex="A"></span>, <span data-tex="B"></span> de <b>même dimension</b> :</p>
+  <ul>
+    <li>distributivité sur les scalaires : <span data-tex="(\lambda+\mu)A=\lambda A+\mu A"></span> ;</li>
+    <li>distributivité sur les matrices : <span data-tex="\lambda(A+B)=\lambda A+\lambda B"></span> ;</li>
+    <li>associativité des scalaires : <span data-tex="(\lambda\mu)A=\lambda(\mu A)"></span> ;</li>
+    <li><span data-tex="1A=A"></span>, et <span data-tex="0A"></span> est la matrice nulle, de même dimension que <span data-tex="A"></span>.</li>
+  </ul>
+</div>
+
+<div class="dbox d-exe">
+  <div class="d-head">Combinaison linéaire</div>
+  <p id="p-comb-intro"></p>
+  <div class="disp" id="disp-comb"></div>
+</div>
+
+<div class="demo" id="demo-combinaison"></div>
+<p class="legende" id="p-comb-legende"></p>
+
+<div class="note methode">
+  <span class="nt">Méthode : multiplier une matrice par un scalaire λ</span>
+  <ol>
+    <li><b>Positionner le scalaire</b> à gauche de la matrice, en dehors des crochets : <span data-tex="\lambda A"></span> (jamais <span data-tex="A\times\lambda"></span>, qui n'a aucun sens) ;</li>
+    <li><b>Multiplier tous les coefficients</b> par <span data-tex="\lambda"></span>, position par position ;</li>
+    <li><b>Conclure</b> : le résultat a la même dimension que la matrice de départ.</li>
+  </ol>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="s9">
+<h2>À retenir</h2>
+
+<div class="note idee">
+  <span class="nt">À retenir :</span>
+  <ul style="margin:.2em 0 0;padding-left:1.2em">
+    <li>Une <b>matrice</b> est un tableau de nombres ; le coefficient <span data-tex="a_{ij}"></span> est à l'intersection de la ligne <i>i</i> et de la colonne <i>j</i>.</li>
+    <li>La <b>dimension</b> est le couple (lignes <span data-tex="\times"></span> colonnes) : <i>toujours dans cet ordre</i>. Une matrice <span data-tex="n\times p"></span> et une matrice <span data-tex="p\times n"></span> sont de dimensions différentes si <span data-tex="n\neq p"></span>.</li>
+    <li>Le <b>nombre de coefficients</b> d'une matrice <span data-tex="n\times p"></span> est le produit <span data-tex="n\cdot p"></span> : ce n'est pas la dimension, et il ne la détermine pas seul.</li>
+    <li><b>Égalité</b> : deux matrices sont égales si elles ont la même dimension et les mêmes coefficients aux mêmes positions.</li>
+    <li><b>Matrice ligne</b> : dimension <span data-tex="1\times p"></span> ; <b>matrice colonne</b> : dimension <span data-tex="n\times 1"></span>.</li>
+    <li><b>Addition et soustraction</b> : uniquement entre matrices de même dimension ; on opère position par position, et le résultat garde cette dimension.</li>
+    <li><b>Produit par un scalaire</b> : le scalaire s'écrit toujours à gauche, en dehors des crochets : <span data-tex="\lambda A"></span> ; l'écriture <span data-tex="A\times\lambda"></span> n'a aucun sens (problème de dimensions). Le scalaire multiplie tous les coefficients et la dimension ne change pas.</li>
+  </ul>
+</div>
+
+<footer>Fiche adaptée du document LaTeX « MATRICES_01 » de Yann Merdy : version web autonome, mathématiques et animations embarquées, valeurs aléatoires réinitialisables.</footer>
+
+<div class="copyrightbar">
+  <button id="btn-copyright" class="btn grise">&#169; Droits d&#8217;auteur</button>
+</div>
+<div id="copyright-box" class="copyright-box" style="display:none">
+  <p><b>&#169; 2026 Yann Merdy</b> : tous droits r&#233;serv&#233;s.</p>
+  <p>Fiche &#171;&#160;Les matrices&#160;: premi&#232;res notions&#160;&#187;, adapt&#233;e du document LaTeX &#171;&#160;MATRICES_01&#160;&#187; : version web interactive autonome (math&#233;matiques et animations embarqu&#233;es, valeurs al&#233;atoires r&#233;initialisables).</p>
+  <p>Contact&#160;: <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a></p>
+  <p class="hint">Toute reproduction, diffusion ou adaptation de ce document, m&#234;me partielle, est soumise &#224; l&#8217;autorisation pr&#233;alable de l&#8217;auteur.</p>
+</div>
+</section>
+
+</div>
+
+<script>
+/* ============================================================
+   Mini moteur de rendu LaTeX (équivalent MathJax embarqué)
+   ============================================================ */
+/*MATH-ENGINE-START*/
+var SYMR = {lambda:'\u03BB', mu:'\u03BC', times:'\u00D7', neq:'\u2260', cdots:'\u22EF',
+  vdots:'\u22EE', ddots:'\u22F1', dots:'\u2026', cdot:'\u00B7', checkmark:'\u2713',
+  in:'\u2208', prime:'\u2032', quad:' ', ',':' ', ';':' ', ' ':' '};
+
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function charHtml(c){
+  if(/[a-zA-Z]/.test(c)) return '<i>'+c+'</i>';
+  if(c==='-') return '\u2212';
+  if(c==='*') return '\u2217';
+  return esc(c);
+}
+function tokenize(src){
+  var out=[], i=0;
+  while(i<src.length){
+    var c=src[i];
+    if(c==='\\'){
+      if(src[i+1]==='\\'){ out.push({t:'rb'}); i+=2; continue; }
+      var m=/^\\([a-zA-Z]+|[^a-zA-Z])/.exec(src.slice(i));
+      if(m){ out.push({t:'cmd', v:m[1]}); i+=m[0].length; continue; }
+      i++; continue;
+    }
+    if(c==='{'){ out.push({t:'{'}); i++; continue; }
+    if(c==='}'){ out.push({t:'}'}); i++; continue; }
+    if(c==='&'){ out.push({t:'&'}); i++; continue; }
+    if(c==='_'){ out.push({t:'_'}); i++; continue; }
+    if(c==='^'){ out.push({t:'^'}); i++; continue; }
+    if(/\s/.test(c)){ out.push({t:'sp'}); i++; continue; }
+    out.push({t:'ch', v:c}); i++;
+  }
+  return out;
+}
+function rawGroup(toks,i){
+  if(!toks[i]) return {text:'',i:i};
+  if(toks[i].t!=='{'){
+    var tk=toks[i], txt='';
+    if(tk.t==='ch') txt=tk.v;
+    else if(tk.t==='sp') txt=' ';
+    else if(tk.t==='cmd') txt=SYMR[tk.v]||'';
+    return {text:txt, i:i+1};
+  }
+  i++; var depth=1, text='';
+  while(i<toks.length){
+    var tk2=toks[i];
+    if(tk2.t==='{'){ depth++; text+='{'; }
+    else if(tk2.t==='}'){ depth--; if(depth===0){ i++; break; } text+='}'; }
+    else if(tk2.t==='ch') text+=tk2.v;
+    else if(tk2.t==='sp') text+=' ';
+    else if(tk2.t==='cmd') text+=(SYMR[tk2.v]!==undefined?SYMR[tk2.v]:'');
+    else if(tk2.t==='rb') text+=' ';
+    i++;
+  }
+  return {text:text, i:i};
+}
+function matrixHTML(rows){
+  var nc=0, r, c;
+  for(r=0;r<rows.length;r++) nc=Math.max(nc,rows[r].length);
+  var cells='';
+  for(r=0;r<rows.length;r++){
+    for(c=0;c<nc;c++){
+      cells+='<span class="mc">'+(rows[r][c]!==undefined?rows[r][c]:'')+'</span>';
+    }
+  }
+  return '<span class="mtx" style="grid-template-columns:repeat('+nc+',auto)">'+cells+'</span>';
+}
+function parseArg(toks,i){
+  if(!toks[i]) return {h:'',i:i};
+  if(toks[i].t==='{'){
+    var r=parseSeq(toks,i+1,['}']);
+    return {h:r.h, i:r.i+1};
+  }
+  if(toks[i].t==='ch') return {h:charHtml(toks[i].v), i:i+1};
+  if(toks[i].t==='cmd'){ var rc=parseCmd(toks,i); return {h:rc.h, i:rc.i}; }
+  return {h:'', i:i+1};
+}
+function parseCmd(toks,i){
+  var name=toks[i].v; i++;
+  var simple={lambda:'<i>\u03BB</i>', mu:'<i>\u03BC</i>', times:'\u00D7', neq:'\u2260',
+    cdots:'\u22EF', vdots:'\u22EE', ddots:'\u22F1', dots:'\u2026', cdot:'\u00B7',
+    checkmark:'\u2713', in:'\u2208', quad:'\u2003', qquad:'\u2003\u2003', to:'\u2192'};
+  if(simple[name]!==undefined) return {h:simple[name], i:i};
+  if(name===','||name===';') return {h:'\u2009', i:i};
+  if(name===' '||name==='!'||name==='left'||name==='right') return {h:'', i:i};
+  if(name==='text'){ var g=rawGroup(toks,i); return {h:'<span class="txt">'+esc(g.text)+'</span>', i:g.i}; }
+  if(name==='mathbf'){ var gb=rawGroup(toks,i); return {h:'<b>'+esc(gb.text)+'</b>', i:gb.i}; }
+  if(name==='mathbb'){ var gg=rawGroup(toks,i);
+    var map={R:'\u211D', N:'\u2115', Z:'\u2124', C:'\u2102', Q:'\u211A'};
+    return {h:'<span class="bb">'+(map[gg.text]||esc(gg.text))+'</span>', i:gg.i}; }
+  if(name==='frac'){ var a=parseArg(toks,i); var b=parseArg(toks,a.i);
+    return {h:'<span class="frac"><span>'+a.h+'</span><span>'+b.h+'</span></span>', i:b.i}; }
+  if(name==='begin'){
+    var env=rawGroup(toks,i); i=env.i;
+    if(env.text==='pmatrix'||env.text==='bmatrix'){
+      var rows=[], cur=[];
+      var guard=0;
+      while(i<toks.length && guard<400){
+        guard++;
+        var rs=parseSeq(toks,i,['&','rb','end','}']);
+        cur.push(rs.h); i=rs.i;
+        var tk=toks[i];
+        if(!tk) break;
+        if(tk.t==='&'){ i++; continue; }
+        if(tk.t==='rb'){ i++; rows.push(cur); cur=[]; continue; }
+        if(tk.t==='cmd'&&tk.v==='end'){
+          if(!(cur.length===1&&cur[0]==='')) rows.push(cur);
+          cur=[];
+          var g2=rawGroup(toks,i+1); i=g2.i;
+          break;
+        }
+        if(tk.t==='}'){ i++; continue; }
+        break;
+      }
+      return {h:matrixHTML(rows), i:i};
+    }
+    return {h:'', i:rawGroup(toks,i).i};
+  }
+  if(name==='end') return {h:'', i:i};
+  return {h:esc(name), i:i};
+}
+function parseSeq(toks,i,stop){
+  var h='';
+  while(i<toks.length){
+    var tk=toks[i];
+    if(stop.indexOf(tk.t)>=0) break;
+    if(tk.t==='cmd'&&tk.v==='end'&&(stop.indexOf('end')>=0)) break;
+    if(tk.t==='sp'){ h+=' '; i++; }
+    else if(tk.t==='ch'){ h+=charHtml(tk.v); i++; }
+    else if(tk.t==='{'){ var r=parseSeq(toks,i+1,['}']); h+=r.h; i=r.i+1; }
+    else if(tk.t==='}'){ i++; }
+    else if(tk.t==='_'){ var a=parseArg(toks,i+1); h+='<sub>'+a.h+'</sub>'; i=a.i; }
+    else if(tk.t==='^'){ var b=parseArg(toks,i+1); h+='<sup>'+b.h+'</sup>'; i=b.i; }
+    else if(tk.t==='cmd'){ var rc=parseCmd(toks,i); h+=rc.h; i=rc.i; }
+    else i++;
+  }
+  return {h:h, i:i};
+}
+function M(src){
+  var toks=tokenize(src);
+  var r=parseSeq(toks,0,[]);
+  return '<span class="mth">'+r.h+'</span>';
+}
+/*MATH-ENGINE-END*/
+
+/* ============================================================
+   Outils DOM et animations
+   ============================================================ */
+function el(tag,cls,html){
+  var e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(html!=null) e.innerHTML=html;
+  return e;
+}
+function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+function popEl(e){
+  e.classList.remove('pop');
+  void e.offsetWidth;
+  e.classList.add('pop');
+}
+function dmat(rows,opts){
+  opts=opts||{};
+  var wrap=el('div','dmat '+(opts.cls||''));
+  var nr=rows.length, nc=rows[0].length, r, c;
+  wrap.style.gridTemplateColumns='repeat('+nc+',auto)';
+  var cells=[];
+  for(r=0;r<nr;r++){
+    cells.push([]);
+    for(c=0;c<nc;c++){
+      var d=rows[r][c]||{};
+      var cell=el('div','dcell '+(d.cls||''), d.tex!=null?M(d.tex):(d.txt!=null?d.txt:''));
+      if(d.ghost) cell.classList.add('ghost');
+      wrap.appendChild(cell);
+      cells[r].push(cell);
+    }
+  }
+  wrap._cells=cells;
+  return wrap;
+}
+function matLbl(parent,txt){
+  parent.appendChild(el('div','matlbl',txt));
+}
+
+/* ============================================================
+   Valeurs aléatoires (entre -100 et 100) et arithmétique exacte
+   Forme homogène dans tout le document : entiers, décimaux ou
+   fractions. La forme est tirée équiprobablement à chaque
+   réinitialisation.
+   ============================================================ */
+var State={form:'ent', data:null};
+function ri(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a; }
+function rat(n,d){
+  if(d<0){ n=-n; d=-d; }
+  if(n===0) return {n:0,d:1};
+  var g=gcd(n,d)||1;
+  return {n:Math.round(n/g), d:Math.round(d/g)};
+}
+function rAdd(a,b){ return rat(a.n*b.d + b.n*a.d, a.d*b.d); }
+function rSub(a,b){ return rat(a.n*b.d - b.n*a.d, a.d*b.d); }
+function rMul(a,b){ return rat(a.n*b.n, a.d*b.d); }
+function rNeg(a){ return {n:-a.n, d:a.d}; }
+function rEq(a,b){ return a.n===b.n && a.d===b.d; }
+function rAbs(a){ return Math.abs(a.n/a.d); }
+function decStr(r){
+  var d=r.d, k=0, b=0;
+  while(d%2===0){ d/=2; k++; }
+  while(d%5===0){ d/=5; b++; }
+  if(d!==1) return null;
+  k=Math.max(k,b);
+  var v=Math.abs(r.n)*Math.pow(10,k)/r.d;
+  var s=String(v);
+  if(k>0){
+    while(s.length<=k) s='0'+s;
+    s=s.slice(0,s.length-k)+'.'+s.slice(s.length-k);
+  }
+  return (r.n<0?'-':'')+s;
+}
+/* tex d'un rationnel selon la forme courante */
+function texOf(r){
+  if(State.form==='frac'){
+    if(r.d===1) return String(r.n);
+    return (r.n<0?'-':'')+'\\frac{'+Math.abs(r.n)+'}{'+r.d+'}';
+  }
+  if(State.form==='dec'){
+    var s=decStr(r);
+    if(s!==null) return s;
+  }
+  if(r.d===1) return String(r.n);
+  return (r.n<0?'-':'')+'\\frac{'+Math.abs(r.n)+'}{'+r.d+'}';
+}
+/* valeur aléatoire de module dans [lo,hi] (0 accepté si lo=0) */
+function genRatRange(lo,hi,allowNeg){
+  var t=0;
+  while(t<600){
+    t++;
+    if(State.form==='ent'){
+      var m=ri(lo,hi);
+      var sg=(allowNeg && Math.random()<.5)?-1:1;
+      return {n:sg*m, d:1};
+    }
+    if(State.form==='dec'){
+      var n=ri(lo*10,hi*10);
+      if(n%10===0) continue;
+      var r=rat(n,10);
+      var sg2=(allowNeg && Math.random()<.5)?-1:1;
+      return {n:sg2*r.n, d:r.d};
+    }
+    var den=ri(2,12);
+    var num=ri(lo*den,hi*den);
+    if(num===0) continue;
+    var fr=rat(num,den);
+    if(fr.d===1) continue;
+    var v=Math.abs(fr.n/fr.d);
+    if(v<lo-1e-9 || v>hi+1e-9) continue;
+    var sg3=(allowNeg && Math.random()<.5)?-1:1;
+    return {n:sg3*fr.n, d:fr.d};
+  }
+  return {n:(allowNeg?-1:1)*lo, d:1};
+}
+/* coefficient d'une matrice : module <= maxAbs (0 possible en forme entière) */
+function genRat(maxAbs){ return genRatRange(0,maxAbs,true); }
+function genMat(nr,nc,maxAbs){
+  var m=[];
+  for(var r=0;r<nr;r++){
+    var row=[];
+    for(var c=0;c<nc;c++) row.push(genRat(maxAbs));
+    m.push(row);
+  }
+  return m;
+}
+function genArr(n,maxAbs){
+  var a=[];
+  for(var k=0;k<n;k++) a.push(genRat(maxAbs));
+  return a;
+}
+function genScalar(){ return genRatRange(1,9,true); }
+
+function genData(){
+  var D={};
+  D.DIM=genMat(3,4,100);
+  D.T6=genArr(6,100);
+  D.EQC1=genMat(2,2,100);
+  D.EQC2A=genMat(2,2,100);
+  D.EQC2B=D.EQC2A.map(function(row){ return row.slice(); });
+  var t=0;
+  do{ D.EQC2B[1][1]=genRat(100); t++; }while(rEq(D.EQC2B[1][1],D.EQC2A[1][1]) && t<200);
+  D.EQC3A=genMat(2,2,100);
+  D.EQC3B=genMat(2,3,100);
+  D.IMPA=genMat(2,3,100);
+  D.IMPB=genMat(2,2,100);
+  D.LC=genArr(4,100);
+  D.SUMA=genMat(2,3,50);
+  D.SUMB=genMat(2,3,50);
+  D.DIFFA=genMat(2,2,50);
+  D.DIFFB=genMat(2,2,50);
+  D.SCAL=(function(){
+    var lam=genScalar();
+    var bound=Math.max(1,Math.min(100,Math.floor(100/rAbs(lam))));
+    return {lam:lam, A:genMat(2,3,bound)};
+  })();
+  D.OPP=genMat(2,2,100);
+  D.COMB=(function(){
+    return {lam:genRatRange(1,9,false), nu:genRatRange(1,9,false),
+            A:genMat(2,2,5), B:genMat(2,2,5)};
+  })();
+  D.EQX=(function(){
+    var d=genRat(50), x=genRat(50), a=genRat(100), b=genRat(100), y=genRat(100);
+    return {d:d, x:x, a:a, b:b, y:y, v11:rAdd(x,d)};
+  })();
+  return D;
+}
+
+/* ---------- helpers tex ---------- */
+function pmTex(rows){
+  return '\\begin{pmatrix} '+rows.map(function(r){ return r.join(' & '); }).join(' \\\\ ')+' \\end{pmatrix}';
+}
+function ratRows(mats){
+  return mats.map(function(row){ return row.map(texOf); });
+}
+function ratMatTex(m){ return pmTex(ratRows(m)); }
+function sTex(r){ /* scalaire entre parenthèses si négatif */
+  return r.n<0 ? '('+texOf(r)+')' : texOf(r);
+}
+function pairTex(a,b){ /* a + b avec parenthèses si besoin */
+  return texOf(a)+'+'+sTex(b);
+}
+function diffTex(a,b){ /* a - b avec parenthèses si besoin */
+  return texOf(a)+'-'+sTex(b);
+}
+
+/* ============================================================
+   Contenu statique dynamique (exemples du cours)
+   ============================================================ */
+function renderStatic(){
+  var D=State.data;
+  document.getElementById('badge-form').textContent =
+    'Forme des nombres : ' + (State.form==='ent' ? 'entiers relatifs'
+      : State.form==='dec' ? 'd\u00e9cimaux relatifs' : 'fractions');
+  document.getElementById('eq-dim-B').innerHTML = M('B='+ratMatTex(D.DIM));
+  var T63=[D.T6.slice(0,3),D.T6.slice(3,6)];
+  var T62=[[D.T6[0],D.T6[3]],[D.T6[1],D.T6[4]],[D.T6[2],D.T6[5]]];
+  document.getElementById('eq-p-a23').innerHTML =
+    M('A='+ratMatTex(T63))+' est de dimension '+M('2\\times 3')+
+    ', tandis que '+M('A^{T}='+ratMatTex(T62))+' est de dimension '+M('3\\times 2')+'.';
+  document.getElementById('eq-attn4').innerHTML = M('A='+ratMatTex(T63));
+  /* égalité avec inconnues */
+  var E=D.EQX;
+  var dPart = E.d.n<0 ? 'x-('+texOf(rNeg(E.d))+')' : 'x+'+texOf(E.d);
+  document.getElementById('disp-eqx').innerHTML = M(
+    '\\begin{pmatrix} '+dPart+' & '+texOf(E.a)+' \\\\ '+texOf(E.b)+' & y \\end{pmatrix}'+
+    '=\\begin{pmatrix} '+texOf(E.v11)+' & '+texOf(E.a)+' \\\\ '+texOf(E.b)+' & '+texOf(E.y)+' \\end{pmatrix}');
+  document.getElementById('p-eqx-sol').innerHTML =
+    'Les deux matrices sont de m\u00eame dimension '+M('2\\times 2')+
+    '. L\u2019\u00e9galit\u00e9 des coefficients de m\u00eame position donne : '+
+    M(dPart+'='+texOf(E.v11))+' donc '+M('x='+texOf(rSub(E.v11,E.d)))+
+    ', puis '+M('y='+texOf(E.y))+'.';
+  /* ligne / colonne */
+  document.getElementById('eq-rem-geo1').innerHTML =
+    M('M('+texOf(D.LC[0])+'\\,;'+texOf(D.LC[1])+')');
+  document.getElementById('eq-rem-geo2').innerHTML =
+    M('\\begin{pmatrix} '+texOf(D.LC[0])+' \\\\ '+texOf(D.LC[1])+' \\end{pmatrix}');
+  /* somme */
+  var sumI=[], sumR=[], r, c;
+  for(r=0;r<2;r++){ var ri1=[], ro1=[];
+    for(c=0;c<3;c++){ ri1.push(pairTex(D.SUMA[r][c],D.SUMB[r][c])); ro1.push(texOf(rAdd(D.SUMA[r][c],D.SUMB[r][c]))); }
+    sumI.push(ri1); sumR.push(ro1);
+  }
+  document.getElementById('p-somme-intro').innerHTML =
+    'Soient '+M('A='+ratMatTex(D.SUMA))+' et '+M('B='+ratMatTex(D.SUMB))+
+    ', toutes deux de dimension '+M('2\\times 3')+' : la somme est possible.';
+  document.getElementById('disp-somme').innerHTML =
+    M('A+B='+pmTex(sumI)+'='+pmTex(sumR));
+  /* différence */
+  var difI=[], difR=[];
+  for(r=0;r<2;r++){ var ri2=[], ro2=[];
+    for(c=0;c<2;c++){ ri2.push(diffTex(D.DIFFA[r][c],D.DIFFB[r][c])); ro2.push(texOf(rSub(D.DIFFA[r][c],D.DIFFB[r][c]))); }
+    difI.push(ri2); difR.push(ro2);
+  }
+  document.getElementById('p-diff-intro').innerHTML =
+    'Soient '+M('C='+ratMatTex(D.DIFFA))+' et '+M('D='+ratMatTex(D.DIFFB))+
+    ', toutes deux de dimension '+M('2\\times 2')+' :';
+  document.getElementById('disp-diff').innerHTML =
+    M('C-D='+pmTex(difI)+'='+pmTex(difR));
+  /* produit par un scalaire */
+  var S=D.SCAL, lam=S.lam;
+  var scI=[], scR=[];
+  for(r=0;r<2;r++){ var ri3=[], ro3=[];
+    for(c=0;c<3;c++){
+      ri3.push(sTex(lam)+'\\times '+sTex(S.A[r][c]));
+      ro3.push(texOf(rMul(lam,S.A[r][c])));
+    }
+    scI.push(ri3); scR.push(ro3);
+  }
+  document.getElementById('p-scal-intro').innerHTML =
+    'Avec '+M('\\lambda='+texOf(lam))+' et '+M('A='+ratMatTex(S.A))+
+    ' (dimension '+M('2\\times 3')+') :';
+  document.getElementById('disp-scal').innerHTML =
+    M(sTex(lam)+'A='+pmTex(scI)+'='+pmTex(scR));
+  /* opposée */
+  var oppNeg=D.OPP.map(function(row){ return row.map(rNeg); });
+  document.getElementById('p-opp').innerHTML =
+    'Exemple : si '+M('A='+ratMatTex(D.OPP))+', alors '+M('-A='+ratMatTex(oppNeg))+'.';
+  /* combinaison linéaire */
+  var CB=D.COMB;
+  var lamA=[], nuB=[], res=[];
+  for(r=0;r<2;r++){ var la=[], nb=[], rr=[];
+    for(c=0;c<2;c++){
+      la.push(texOf(rMul(CB.lam,CB.A[r][c])));
+      nb.push(texOf(rMul(CB.nu,CB.B[r][c])));
+      rr.push(texOf(rSub(rMul(CB.lam,CB.A[r][c]), rMul(CB.nu,CB.B[r][c]))));
+    }
+    lamA.push(la); nuB.push(nb); res.push(rr);
+  }
+  document.getElementById('p-comb-intro').innerHTML =
+    'Soient '+M('A='+ratMatTex(CB.A))+' et '+M('B='+ratMatTex(CB.B))+
+    ', de m\u00eame dimension '+M('2\\times 2')+' :';
+  document.getElementById('disp-comb').innerHTML =
+    M(texOf(CB.lam)+'A-'+texOf(CB.nu)+'B='+pmTex(lamA)+'-'+pmTex(nuB)+'='+pmTex(res));
+  /* légende de l'atelier */
+  var lg;
+  if(CB.lam.d===1 && CB.nu.d===1 && CB.lam.n>=-5 && CB.lam.n<=5 && CB.nu.n>=1 && CB.nu.n<=5){
+    lg='Atelier : faites glisser '+M('\\lambda')+' et '+M('\\mu')+
+       '. Avec '+M('\\lambda='+texOf(CB.lam))+' et '+M('\\mu='+texOf(rNeg(CB.nu)))+
+       ', on retrouve l\u2019exemple ci-dessus ('+M(texOf(CB.lam)+'A-'+texOf(CB.nu)+'B')+
+       '). Le r\u00e9sultat garde toujours la dimension '+M('2\\times 2')+'.';
+  }else{
+    lg='Atelier : faites glisser '+M('\\lambda')+' et '+M('\\mu')+
+       ' pour explorer la combinaison lin\u00e9aire '+M('\\lambda A+\\mu B')+
+       '. Le r\u00e9sultat garde toujours la dimension '+M('2\\times 2')+'.';
+  }
+  document.getElementById('p-comb-legende').innerHTML=lg;
+}
+
+/* Rendu des maths statiques symboliques du document */
+document.querySelectorAll('[data-tex]').forEach(function(n){
+  n.innerHTML=M(n.getAttribute('data-tex'));
+});
+
+/* ============================================================
+   Registre des panneaux reconstruits à chaque réinitialisation
+   ============================================================ */
+var RENDERERS=[];
+function rebuildAll(){
+  renderStatic();
+  RENDERERS.forEach(function(f){ f(); });
+}
+function randomizeAll(){
+  State.form=['ent','dec','frac'][ri(0,2)];
+  State.data=genData();
+  rebuildAll();
+}
+
+/* ============================================================
+   Schéma 1 : lecture interactive d'un coefficient (statique)
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-lecture');
+  if(!root) return;
+  var stage=root.querySelector('.stage');
+  var readout=root.querySelector('.readout');
+  var rows=[];
+  for(var r=1;r<=4;r++){
+    var rr=[];
+    for(var c=1;c<=3;c++) rr.push({tex:'a_{'+r+''+c+'}'});
+    rows.push(rr);
+  }
+  var mat=dmat(rows);
+  stage.appendChild(mat);
+  var running=false;
+  function hl(r,c){
+    unhl();
+    var cells=mat._cells;
+    for(var k=0;k<3;k++) cells[r-1][k].classList.add('rl');
+    for(var k2=0;k2<4;k2++) cells[k2][c-1].classList.add('cl');
+    cells[r-1][c-1].classList.add('cc');
+    popEl(cells[r-1][c-1]);
+    readout.innerHTML=M('a_{'+r+''+c+'}')+' : ligne '+r+', colonne '+c+
+      ' (premier indice = ligne, second = colonne).';
+  }
+  function unhl(){
+    mat._cells.forEach(function(row){
+      row.forEach(function(cell){ cell.classList.remove('rl','cl','cc'); });
+    });
+  }
+  mat._cells.forEach(function(row,ri){
+    row.forEach(function(cell,ci){
+      cell.addEventListener('pointerenter',function(){ if(!running) hl(ri+1,ci+1); });
+      cell.addEventListener('click',function(){ if(!running) hl(ri+1,ci+1); });
+    });
+  });
+  mat.addEventListener('pointerleave',function(){ if(!running){ unhl(); readout.innerHTML=''; } });
+  var btn=el('button','btn','Lancer une démonstration');
+  root.querySelector('.controls').appendChild(btn);
+  btn.addEventListener('click',async function(){
+    if(running) return;
+    running=true; btn.disabled=true; unhl();
+    var seq=[[1,1],[2,3],[4,2],[3,1],[2,2]];
+    for(var k=0;k<seq.length;k++){
+      unhl(); hl(seq[k][0],seq[k][1]);
+      await sleep(850);
+    }
+    unhl(); readout.innerHTML='';
+    running=false; btn.disabled=false;
+    btn.textContent='Rejouer la démonstration';
+  });
+})();
+
+/* ============================================================
+   Schéma 2 : lecture guidée de a_23 (statique)
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-a23');
+  if(!root) return;
+  var stage=root.querySelector('.stage');
+  var readout=root.querySelector('.readout');
+  var rows=[
+    [{tex:'a_{11}'},{tex:'a_{12}'},{tex:'a_{13}'}],
+    [{tex:'a_{21}'},{tex:'a_{22}'},{tex:'a_{23}'}]
+  ];
+  var mat=dmat(rows);
+  stage.appendChild(mat);
+  var btn=el('button','btn','Lire le coefficient a<sub>23</sub>');
+  root.querySelector('.controls').appendChild(btn);
+  var busy=false;
+  function reset(){
+    mat._cells.forEach(function(row){
+      row.forEach(function(c){ c.classList.remove('rl','cl','cc'); });
+    });
+    stage.querySelectorAll('.fly').forEach(function(f){ f.remove(); });
+  }
+  btn.addEventListener('click',async function(){
+    if(busy) return;
+    busy=true; btn.disabled=true; reset();
+    readout.innerHTML='Étape 1 : je repère la <b>ligne 2</b> (en bleu).';
+    for(var c=0;c<3;c++){ mat._cells[1][c].classList.add('rl'); popEl(mat._cells[1][c]); await sleep(140); }
+    await sleep(800);
+    readout.innerHTML='Étape 2 : puis la <b>colonne 3</b> (en rouge).';
+    for(var r=0;r<2;r++){ mat._cells[r][2].classList.add('cl'); popEl(mat._cells[r][2]); await sleep(160); }
+    await sleep(800);
+    var cell=mat._cells[1][2];
+    cell.classList.add('cc'); popEl(cell);
+    var sr=stage.getBoundingClientRect(), cr=cell.getBoundingClientRect();
+    var l1=el('div','fly lb','2 = numéro de la ligne');
+    l1.style.left=(cr.right-sr.left+12)+'px';
+    l1.style.top=(cr.top-sr.top-10)+'px';
+    var l2=el('div','fly lr','3 = numéro de la colonne');
+    l2.style.left=(cr.right-sr.left+12)+'px';
+    l2.style.top=(cr.bottom-sr.top-6)+'px';
+    stage.appendChild(l1); stage.appendChild(l2);
+    l1.classList.add('fadein'); l2.classList.add('fadein');
+    readout.innerHTML='Le coefficient '+M('a_{23}')+' est à l\u2019intersection : <b>ligne 2, colonne 3</b>.';
+    busy=false; btn.disabled=false;
+    btn.textContent='Rejouer la lecture';
+  });
+})();
+
+/* ============================================================
+   Schéma 3 : compter les lignes puis les colonnes
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-dim');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : compter les lignes et les colonnes'));
+    var controls=el('div','controls');
+    var stage=el('div','stage');
+    var readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var mat=dmat(D.DIM.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    stage.appendChild(mat);
+    var badge=el('span','badge','Combien de lignes ? Combien de colonnes ?');
+    readout.appendChild(badge);
+    var btn=el('button','btn','Compter les lignes et les colonnes');
+    controls.appendChild(btn);
+    var busy=false;
+    function clear(){
+      mat._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('rl','cl'); }); });
+    }
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true; clear();
+      badge.className='badge bleu';
+      for(var r=0;r<3;r++){
+        for(var c=0;c<4;c++) mat._cells[r][c].classList.add('rl');
+        popEl(mat._cells[r][0]);
+        badge.innerHTML=(r+1)+(r===0?'<sup>re</sup>':'<sup>e</sup>')+' ligne\u2026';
+        await sleep(620);
+      }
+      badge.className='badge bleu'; badge.innerHTML='3 lignes';
+      await sleep(600); clear();
+      badge.className='badge rouge';
+      for(var c2=0;c2<4;c2++){
+        for(var r2=0;r2<3;r2++) mat._cells[r2][c2].classList.add('cl');
+        popEl(mat._cells[0][c2]);
+        badge.innerHTML=(c2+1)+(c2===0?'<sup>re</sup>':'<sup>e</sup>')+' colonne\u2026';
+        await sleep(620);
+      }
+      badge.className='badge rouge'; badge.innerHTML='4 colonnes';
+      await sleep(700); clear();
+      badge.className='badge vertf';
+      badge.innerHTML='Dimension : '+M('3\\times 4')+' (3 lignes, 4 colonnes)';
+      popEl(badge);
+      busy=false; btn.disabled=false;
+      btn.textContent='Rejouer le comptage';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 4 : animation de transposition (2×3 vers 3×2)
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-transpo');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : la transposition change la dimension'));
+    var controls=el('div','controls');
+    var stage=el('div','stage');
+    var readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var T6=D.T6;
+    var A=[[T6[0],T6[1],T6[2]],[T6[3],T6[4],T6[5]]];
+    var matA=dmat(A.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    matA._cells[0].forEach(function(c){ c.classList.add('jaune'); });
+    var wrapA=el('div'); wrapA.appendChild(matA);
+    matLbl(wrapA,'A : 2 lignes, 3 colonnes<br>dimension '+M('2\\times 3'));
+    var arrow=el('div','', '<span class="opv">\u2192</span><div class="case-lbl">transposition</div>');
+    var wrapT=el('div');
+    var rowsT=[[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}],[{ghost:true},{ghost:true}]];
+    var matT=dmat(rowsT);
+    wrapT.appendChild(matT);
+    matLbl(wrapT,'A<sup>T</sup> : 3 lignes, 2 colonnes<br>dimension '+M('3\\times 2'));
+    stage.appendChild(wrapA); stage.appendChild(arrow); stage.appendChild(wrapT);
+    var btn=el('button','btn','Transposer A');
+    controls.appendChild(btn);
+    readout.innerHTML='Les dimensions '+M('2\\times 3')+' et '+M('3\\times 2')+' sont diff\u00e9rentes.';
+    var transposed=false, busy=false;
+    function cloneOf(src,stageRect){
+      var s=src.getBoundingClientRect();
+      var cl=el('div','dcell clone',src.innerHTML);
+      if(src.classList.contains('jaune')) cl.classList.add('jaune');
+      cl.style.left=(s.left-stageRect.left)+'px';
+      cl.style.top=(s.top-stageRect.top)+'px';
+      cl.style.width=s.width+'px';
+      cl.style.height=s.height+'px';
+      return {cl:cl, s:s};
+    }
+    async function fly(forward){
+      var stageRect=stage.getBoundingClientRect();
+      var n=0;
+      var landings=[];
+      for(var r=0;r<2;r++){
+        for(var c=0;c<3;c++){
+          var src=forward?matA._cells[r][c]:matT._cells[c][r];
+          var dst=forward?matT._cells[c][r]:matA._cells[r][c];
+          var mc=cloneOf(src,stageRect);
+          stage.appendChild(mc.cl);
+          src.classList.add('faded');
+          var d=dst.getBoundingClientRect();
+          var dx=d.left-mc.s.left, dy=d.top-mc.s.top;
+          (function(cl,dst2,src2,dx2,dy2,delay){
+            landings.push(new Promise(function(res){
+              setTimeout(function(){
+                cl.style.transition='transform .8s cubic-bezier(.5,.05,.3,1)';
+                requestAnimationFrame(function(){
+                  cl.style.transform='translate('+dx2+'px,'+dy2+'px)';
+                });
+                setTimeout(function(){
+                  dst2.classList.remove('ghost','faded');
+                  dst2.innerHTML=cl.innerHTML;
+                  if(src2.classList.contains('jaune')) dst2.classList.add('jaune');
+                  popEl(dst2);
+                  cl.remove();
+                  res();
+                },880);
+              },delay);
+            }));
+          })(mc.cl,dst,src,dx,dy,n*90);
+          n++;
+          await sleep(60);
+        }
+      }
+      await Promise.all(landings);
+    }
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      if(!transposed){
+        await fly(true);
+        transposed=true;
+        readout.innerHTML='La 1<sup>re</sup> ligne (jaune) de A est devenue la 1<sup>re</sup> colonne de '+M('A^{T}')+' : m\u00eames coefficients, mais dimension '+M('3\\times 2')+'\u2260'+M('2\\times 3')+'.';
+        btn.textContent='Revenir à A';
+      }else{
+        await fly(false);
+        transposed=false;
+        matT._cells.forEach(function(row){
+          row.forEach(function(c){
+            c.classList.add('ghost'); c.classList.remove('jaune','faded'); c.innerHTML='';
+          });
+        });
+        matA._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('faded'); }); });
+        readout.innerHTML='Retour à la matrice A, de dimension '+M('2\\times 3')+'.';
+        btn.textContent='Transposer A';
+      }
+      busy=false; btn.disabled=false;
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 5 : les mêmes 6 coefficients, 4 dimensions
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-morph');
+  if(!root) return;
+  var morphTimer=null;
+  function build(){
+    var D=State.data;
+    if(morphTimer){ clearInterval(morphTimer); morphTimer=null; }
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : les mêmes 6 coefficients, quatre dimensions'));
+    var controls=el('div','controls');
+    var stage=el('div','stage stage2');
+    var readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var S=44, GAP=6;
+    var LAYOUTS=[[1,6],[6,1],[2,3],[3,2]];
+    var cellEls=[];
+    D.T6.forEach(function(v){
+      var c=el('div','dcell mc2');
+      c.innerHTML=M(texOf(v));
+      stage.appendChild(c);
+      cellEls.push(c);
+    });
+    var badge=el('span','badge');
+    readout.appendChild(badge);
+    var btns=[];
+    var cur=2;
+    function place(idx,animate){
+      var n=LAYOUTS[idx][0], p=LAYOUTS[idx][1];
+      var W=stage.clientWidth, H=stage.clientHeight;
+      var w=n*S+(n-1)*GAP, h=p*S+(p-1)*GAP;
+      var x0=(W-w)/2, y0=(H-h)/2;
+      cellEls.forEach(function(c,ci2){
+        var r=Math.floor(ci2/n), cc=ci2%n;
+        var x=x0+cc*(S+GAP), y=y0+r*(S+GAP);
+        if(!animate){ c.style.transition='none'; }
+        c.style.transform='translate('+x+'px,'+y+'px)';
+        if(!animate){ void c.offsetWidth; c.style.transition=''; }
+      });
+      badge.className='badge bleu';
+      badge.innerHTML='dimension '+M(n+'\\times '+p)+' : 6 coefficients, forme diff\u00e9rente';
+      btns.forEach(function(b,bi){ b.classList.toggle('on',bi===idx); });
+    }
+    function stopAuto(){ if(morphTimer){ clearInterval(morphTimer); morphTimer=null; autoBtn.classList.remove('on'); autoBtn.textContent='Cycle automatique'; } }
+    LAYOUTS.forEach(function(L,i){
+      var b=el('button','btn grise');
+      b.innerHTML=M(L[0]+'\\times '+L[1]);
+      b.addEventListener('click',function(){ stopAuto(); cur=i; place(i,true); });
+      controls.appendChild(b); btns.push(b);
+    });
+    var autoBtn=el('button','btn verte','Cycle automatique');
+    controls.appendChild(autoBtn);
+    autoBtn.addEventListener('click',function(){
+      if(morphTimer){ stopAuto(); return; }
+      autoBtn.classList.add('on'); autoBtn.textContent='Arrêter le cycle';
+      morphTimer=setInterval(function(){ cur=(cur+1)%LAYOUTS.length; place(cur,true); },1400);
+    });
+    place(2,false);
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 6 : vérification d'égalité, trois cas
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-egalite');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : vérifier une égalité, case par case'));
+    var container=el('div');
+    root.appendChild(container);
+    function ratCellRows(m){ return m.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }); }
+    var specs=[
+      {t:'Cas 1 : tout coïncide', A:D.EQC1, B:D.EQC1, op:'=',
+       ok:true, note:'M\u00eames dimensions et m\u00eames coefficients aux m\u00eames positions : A = B.'},
+      {t:'Cas 2 : un coefficient diffère', A:D.EQC2A, B:D.EQC2B, op:'\\neq',
+       fail:[1,1],
+       note:'Un seul coefficient suffit : en position (2,2), '+M(texOf(D.EQC2B[1][1])+'\\neq'+texOf(D.EQC2A[1][1]))+', donc A \u2260 B.'},
+      {t:'Cas 3 : dimensions différentes', A:D.EQC3A, B:D.EQC3B, op:'\\neq',
+       dimsDiff:true,
+       note:'Dimensions 2\u00d72 et 2\u00d73 : aucune comparaison possible, A \u2260 B.'}
+    ];
+    specs.forEach(function(sp){
+      var cas=el('div','cas');
+      cas.appendChild(el('div','cas-t',sp.t));
+      var inner=el('div');
+      inner.style.cssText='display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap';
+      var colA=el('div');
+      var badgeA=el('div','case-lbl');
+      var matA=dmat(ratCellRows(sp.A));
+      colA.appendChild(matA); colA.appendChild(badgeA);
+      var op=el('span','opv',M(sp.op));
+      var colB=el('div');
+      var badgeB=el('div','case-lbl');
+      var matB=dmat(ratCellRows(sp.B));
+      colB.appendChild(matB); colB.appendChild(badgeB);
+      var verdict=el('span','verdict','?');
+      inner.appendChild(colA); inner.appendChild(op); inner.appendChild(colB); inner.appendChild(verdict);
+      cas.appendChild(inner);
+      var note=el('div','cas-note','');
+      cas.appendChild(note);
+      var btn=el('button','btn','Vérifier');
+      cas.appendChild(btn);
+      container.appendChild(cas);
+      var busy=false;
+      btn.addEventListener('click',async function(){
+        if(busy) return;
+        busy=true; btn.disabled=true;
+        verdict.textContent='?'; verdict.className='verdict';
+        note.innerHTML='';
+        matA._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('ok','bad'); }); });
+        matB._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('ok','bad'); }); });
+        badgeA.className='case-lbl'; badgeB.className='case-lbl';
+        badgeA.innerHTML='dimension '+M(sp.A.length+'\\times '+sp.A[0].length);
+        badgeB.innerHTML='dimension '+M(sp.B.length+'\\times '+sp.B[0].length);
+        if(sp.dimsDiff){
+          badgeA.className='badge rouge'; badgeB.className='badge rouge';
+          await sleep(900);
+          verdict.textContent='\u2717'; verdict.classList.add('bad'); popEl(verdict);
+          note.innerHTML=sp.note;
+          busy=false; btn.disabled=false; btn.textContent='Rejouer';
+          return;
+        }
+        var nr=sp.A.length, nc=sp.A[0].length, fail=sp.fail||null;
+        outer:
+        for(var r=0;r<nr;r++){
+          for(var c=0;c<nc;c++){
+            await sleep(220);
+            var isFail=fail&&fail[0]===r&&fail[1]===c;
+            matA._cells[r][c].classList.add(isFail?'bad':'ok');
+            matB._cells[r][c].classList.add(isFail?'bad':'ok');
+            popEl(matB._cells[r][c]);
+            if(isFail){
+              await sleep(500);
+              verdict.textContent='\u2717'; verdict.classList.add('bad'); popEl(verdict);
+              break outer;
+            }
+          }
+        }
+        if(!fail){
+          verdict.textContent='\u2713'; verdict.classList.add('ok'); popEl(verdict);
+        }
+        note.innerHTML=sp.note;
+        busy=false; btn.disabled=false; btn.textContent='Rejouer';
+      });
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 7 : ligne 1×4 et colonne 4×1
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-lc');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Comparer les deux formats'));
+    var stage=el('div','stage');
+    root.appendChild(stage);
+    var vals=D.LC;
+    var colL=el('div');
+    var L=dmat([vals.map(function(v){ return {tex:texOf(v)}; })]);
+    colL.appendChild(L);
+    matLbl(colL,'L : matrice <b>ligne</b><br>1 ligne, 4 colonnes<br>dimension '+M('1\\times 4'));
+    var colC=el('div');
+    var C=dmat(vals.map(function(v){ return [ {tex:texOf(v)} ]; }));
+    colC.appendChild(C);
+    matLbl(colC,'C : matrice <b>colonne</b><br>4 lignes, 1 colonne<br>dimension '+M('4\\times 1'));
+    stage.appendChild(colL); stage.appendChild(colC);
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 8 : addition impossible (2×3 + 2×2)
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-impossible');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : une addition impossible'));
+    var controls=el('div','controls');
+    var stage=el('div','stage');
+    var readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var matA=dmat(D.IMPA.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var matB=dmat(D.IMPB.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var q=el('div','dcell ghost','?');
+    q.style.fontSize='1.5em'; q.style.minWidth='54px';
+    var wrapA=el('div'); wrapA.appendChild(matA);
+    matLbl(wrapA,'dimension '+M('2\\times 3'));
+    var wrapB=el('div'); wrapB.appendChild(matB);
+    matLbl(wrapB,'dimension '+M('2\\times 2'));
+    stage.appendChild(wrapA);
+    stage.appendChild(el('span','opv','+'));
+    stage.appendChild(wrapB);
+    stage.appendChild(el('span','opv','='));
+    stage.appendChild(q);
+    var btn=el('button','btn','Tenter l\u2019addition');
+    controls.appendChild(btn);
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      matA._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('ok','bad'); }); });
+      matB._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('ok','bad'); }); });
+      q.className='dcell ghost'; q.textContent='?';
+      for(var j=0;j<2;j++){
+        for(var i=0;i<2;i++){
+          matA._cells[i][j].classList.add('ok');
+          matB._cells[i][j].classList.add('ok');
+          popEl(matB._cells[i][j]);
+          await sleep(260);
+        }
+      }
+      await sleep(300);
+      readout.innerHTML='';
+      for(var r=0;r<2;r++){
+        var cA=matA._cells[r][2];
+        cA.classList.remove('ok'); cA.classList.add('bad'); popEl(cA);
+        await sleep(300);
+      }
+      q.className='dcell bad'; q.style.fontSize='1.7em';
+      popEl(q);
+      readout.innerHTML='<b style="color:var(--rouge)">Op\u00e9ration impossible</b> : la 1<sup>re</sup> matrice a une colonne de plus ('+M('2\\times 3')+' contre '+M('2\\times 2')+'), certains coefficients n\u2019ont pas de partenaire.';
+      busy=false; btn.disabled=false;
+      btn.textContent='Rejouer la tentative';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 9 : addition coefficient par coefficient
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-somme');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation : additionner coefficient par coefficient'));
+    var gen=el('div','stage');
+    var ctrl=el('div','controls');
+    var numStage=el('div','stage');
+    var read=el('div','readout');
+    root.appendChild(gen); root.appendChild(ctrl);
+    root.appendChild(numStage); root.appendChild(read);
+    /* partie générique symbolique */
+    var gA=dmat([[{tex:'a_{11}',cls:'p0'},{tex:'a_{12}',cls:'p1'}],[{tex:'a_{21}',cls:'p2'},{tex:'a_{22}',cls:'p3'}]]);
+    var gB=dmat([[{tex:'b_{11}',cls:'p0'},{tex:'b_{12}',cls:'p1'}],[{tex:'b_{21}',cls:'p2'},{tex:'b_{22}',cls:'p3'}]]);
+    var gC=dmat([[{tex:'a_{11}{+}b_{11}',cls:'p0'},{tex:'a_{12}{+}b_{12}',cls:'p1'}],[{tex:'a_{21}{+}b_{21}',cls:'p2'},{tex:'a_{22}{+}b_{22}',cls:'p3'}]]);
+    gen.appendChild(gA); gen.appendChild(el('span','opv','+'));
+    gen.appendChild(gB); gen.appendChild(el('span','opv','='));
+    gen.appendChild(gC);
+    /* partie numérique : mêmes matrices que l'exemple du cours */
+    var A=D.SUMA, B=D.SUMB;
+    var matA=dmat(A.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var matB=dmat(B.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var rowsC=[[{ghost:true},{ghost:true},{ghost:true}],[{ghost:true},{ghost:true},{ghost:true}]];
+    var matC=dmat(rowsC);
+    numStage.appendChild(matA); numStage.appendChild(el('span','opv','+'));
+    numStage.appendChild(matB); numStage.appendChild(el('span','opv','='));
+    numStage.appendChild(matC);
+    var legend=el('div');
+    legend.style.marginTop='8px';
+    legend.innerHTML='<span class="chip"><span class="dot p0"></span>même couleur = même position</span> <span class="chip">on additionne deux à deux</span>';
+    legend.classList.add('fadein'); legend.style.display='none';
+    read.after(legend);
+    var btn=el('button','btn verte','Additionner pas à pas (les matrices de l\u2019exemple ci-dessus)');
+    ctrl.appendChild(btn);
+    var busy=false;
+    btn.addEventListener('click',async function(){
+      if(busy) return;
+      busy=true; btn.disabled=true;
+      legend.style.display='none';
+      matA._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('p0','p1','p2','p3','p4','p5'); }); });
+      matB._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('p0','p1','p2','p3','p4','p5'); }); });
+      matC._cells.forEach(function(row){ row.forEach(function(c){ c.classList.remove('p0','p1','p2','p3','p4','p5'); c.classList.add('ghost'); c.innerHTML=''; }); });
+      read.innerHTML='';
+      for(var r=0;r<2;r++){
+        for(var c=0;c<3;c++){
+          var idx=r*3+c, pc='p'+idx;
+          var ca=matA._cells[r][c], cb=matB._cells[r][c], cc=matC._cells[r][c];
+          ca.classList.add(pc); cb.classList.add(pc);
+          cc.classList.remove('ghost'); cc.classList.add(pc,'mid');
+          cc.innerHTML=M(pairTex(A[r][c],B[r][c]));
+          popEl(cc);
+          read.innerHTML='Position ('+(r+1)+','+(c+1)+') : '+M(pairTex(A[r][c],B[r][c]))+
+            ' = '+M(texOf(rAdd(A[r][c],B[r][c])));
+          await sleep(650);
+          cc.classList.remove('mid');
+          cc.innerHTML=M(texOf(rAdd(A[r][c],B[r][c])));
+          popEl(cc);
+          await sleep(300);
+        }
+      }
+      read.innerHTML='R\u00e9sultat : une matrice de dimension '+M('2\\times 3')+', comme A et B.';
+      legend.style.display='';
+      busy=false; btn.disabled=false;
+      btn.textContent='Rejouer le calcul';
+    });
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 10 (statique symbolique) : λ multiplie chaque case
+   ============================================================ */
+(function(){
+  var stageRoot=document.getElementById('demo-scal-gen');
+  if(!stageRoot) return;
+  var stage=stageRoot.querySelector('.stage');
+  var gA=dmat([[{tex:'a_{11}',cls:'p0'},{tex:'a_{12}',cls:'p1'}],[{tex:'a_{21}',cls:'p2'},{tex:'a_{22}',cls:'p3'}]]);
+  var gC=dmat([[{tex:'\\lambda a_{11}',cls:'p0'},{tex:'\\lambda a_{12}',cls:'p1'}],[{tex:'\\lambda a_{21}',cls:'p2'},{tex:'\\lambda a_{22}',cls:'p3'}]]);
+  var lam=el('span','opv',M('\\lambda'));
+  stage.appendChild(lam); stage.appendChild(gA);
+  stage.appendChild(el('span','opv','='));
+  stage.appendChild(gC);
+})();
+
+/* ============================================================
+   Schéma 11 : λ variable, produit en direct
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-scalaire');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Animation interactive : faire varier le scalaire λ'));
+    var controls=el('div','controls');
+    var stage=el('div','stage');
+    var readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var A=D.SCAL.A;
+    var lamEx=D.SCAL.lam;
+    var defLam=(lamEx.d===1 && lamEx.n>=-4 && lamEx.n<=5)?lamEx.n:3;
+    var matA=dmat(A.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var rowsR=[[{},{}],[{},{},{}]];
+    rowsR=[[{},{},{}],[{},{},{}]];
+    var matR=dmat(rowsR);
+    var lamDisp=el('span','opv');
+    var wrapA=el('div'); wrapA.appendChild(matA);
+    matLbl(wrapA,'A : dimension '+M('2\\times 3'));
+    var wrapR=el('div'); wrapR.appendChild(matR);
+    matLbl(wrapR,M('\\lambda A')+' : dimension '+M('2\\times 3'));
+    stage.appendChild(lamDisp); stage.appendChild(wrapA);
+    stage.appendChild(el('span','opv','='));
+    stage.appendChild(wrapR);
+    controls.appendChild(el('span','lbl',M('\\lambda')+' ='));
+    var range=document.createElement('input');
+    range.type='range'; range.min=-4; range.max=5; range.step=1; range.value=defLam;
+    controls.appendChild(range);
+    var detail=document.createElement('input');
+    detail.type='checkbox';
+    var dl=el('label','lbl');
+    dl.appendChild(detail); dl.appendChild(document.createTextNode(' afficher les produits '));
+    controls.appendChild(dl);
+    function update(pop){
+      var l=parseInt(range.value,10);
+      lamDisp.innerHTML=M('\\lambda='+l);
+      for(var r=0;r<2;r++){
+        for(var c=0;c<3;c++){
+          var cell=matR._cells[r][c];
+          var lr={n:l,d:1};
+          var prod=rMul(lr,A[r][c]);
+          if(detail.checked){
+            cell.innerHTML=M(texOf(lr)+'\\times '+sTex(A[r][c]));
+          }else{
+            cell.innerHTML=M(texOf(prod));
+          }
+          cell.classList.toggle('mid',detail.checked);
+          if(pop) popEl(cell);
+        }
+      }
+      readout.innerHTML=detail.checked
+        ?'Chaque case affiche le produit, puis on simplifie : la dimension reste '+M('2\\times 3')+'.'
+        :'Le scalaire '+M('\\lambda')+' multiplie <b>tous les coefficients</b> : la dimension reste '+M('2\\times 3')+'.';
+    }
+    range.addEventListener('input',function(){ update(true); });
+    detail.addEventListener('change',function(){ update(true); });
+    update(false);
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Schéma 12 : position du scalaire (statique symbolique)
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-position');
+  if(!root) return;
+  var stage=root.querySelector('.stage');
+  var readout=root.querySelector('.readout');
+  var col1=el('div','cas');
+  col1.style.maxWidth='250px';
+  col1.appendChild(el('div','cas-t','Le scalaire à gauche'));
+  var w1=el('div','wrap-rel');
+  w1.innerHTML='<span class="opv" style="font-size:1.3em">'+M('\\lambda A')+'</span>';
+  var okm=el('div','okmark',''); okm.style.display='none';
+  col1.appendChild(w1); col1.appendChild(okm);
+  col1.appendChild(el('div','cas-note','\u2713 \u00e0 gauche : la seule \u00e9criture valable'));
+  var col2=el('div','cas');
+  col2.style.maxWidth='250px';
+  col2.appendChild(el('div','cas-t','Le scalaire à droite'));
+  var w2=el('div','wrap-rel');
+  w2.innerHTML='<span class="opv" style="font-size:1.3em">'+M('A\\times\\lambda')+'</span>'+
+    '<svg class="croix" viewBox="0 0 100 100" preserveAspectRatio="none">'+
+    '<line x1="4" y1="4" x2="96" y2="96"/><line x1="96" y1="4" x2="4" y2="96"/></svg>';
+  col2.appendChild(w2);
+  col2.appendChild(el('div','cas-note','\u2717 aucun sens : probl\u00e8me de dimensions !'));
+  var col3=el('div','cas');
+  col3.style.maxWidth='250px';
+  col3.appendChild(el('div','cas-t','Le scalaire dans le tableau'));
+  var w3=el('div','wrap-rel');
+  var mW=dmat([[{tex:'\\lambda',cls:'bad'},{tex:'a_{12}'}],[{tex:'a_{21}'},{tex:'a_{22}'}]]);
+  w3.appendChild(mW);
+  var c00=mW._cells[0][0];
+  c00.style.position='relative';
+  c00.insertAdjacentHTML('beforeend',
+    '<svg class="croix" viewBox="0 0 100 100" preserveAspectRatio="none">'+
+    '<line x1="4" y1="4" x2="96" y2="96"/><line x1="96" y1="4" x2="4" y2="96"/></svg>');
+  col3.appendChild(w3);
+  col3.appendChild(el('div','cas-note','\u2717 le scalaire n\u2019est jamais un coefficient : il se place en dehors du tableau'));
+  [col1,col2,col3].forEach(function(c){ stage.appendChild(c); });
+  var btn=el('button','btn','Barrer les fausses \u00e9critures');
+  root.querySelector('.controls').appendChild(btn);
+  var busy=false;
+  btn.addEventListener('click',async function(){
+    if(busy) return;
+    busy=true; btn.disabled=true;
+    w2.classList.remove('drawn'); w3.classList.remove('drawn');
+    okm.style.display='none'; okm.textContent='';
+    await sleep(150);
+    w2.classList.add('drawn');
+    await sleep(500);
+    w3.classList.add('drawn');
+    await sleep(650);
+    okm.style.display=''; okm.textContent='\u2713'; popEl(okm);
+    readout.innerHTML='Seule l\u2019\u00e9criture '+M('\\lambda A')+' (scalaire \u00e0 gauche, hors du tableau) est d\u00e9finie.';
+    busy=false; btn.disabled=false;
+    btn.textContent='Rejouer';
+  });
+})();
+
+/* ============================================================
+   Atelier : combinaison linéaire λA + μB
+   ============================================================ */
+(function(){
+  var root=document.getElementById('demo-combinaison');
+  if(!root) return;
+  function build(){
+    var D=State.data;
+    root.innerHTML='';
+    root.appendChild(el('div','demo-t','Atelier interactif : combinaison linéaire λA + μB'));
+    var controls=el('div','controls');
+    var stage=el('div','stage');
+    var readout=el('div','readout');
+    root.appendChild(controls); root.appendChild(stage); root.appendChild(readout);
+    var A=D.COMB.A, B=D.COMB.B;
+    var lamEx=D.COMB.lam, nuEx=D.COMB.nu;
+    var exLam=(lamEx.d===1 && lamEx.n>=-5 && lamEx.n<=5)?lamEx.n:null;
+    var exMu=(nuEx.d===1 && nuEx.n>=1 && nuEx.n<=5)?-nuEx.n:null;
+    var matA=dmat(A.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var matB=dmat(B.map(function(row){ return row.map(function(v){ return {tex:texOf(v)}; }); }));
+    var rowsLA=[[{},{}],[{},{}]], rowsMB=[[{},{}],[{},{}]], rowsR=[[{},{}],[{},{}]];
+    var matLA=dmat(rowsLA), matMB=dmat(rowsMB), matR=dmat(rowsR);
+    var lamV=exLam!=null?exLam:2, muV=exMu!=null?exMu:-3;
+    var lamDisp=el('span','opv'), muDisp=el('span','opv');
+    function update(pop){
+      lamDisp.innerHTML=M('\\lambda='+lamV);
+      muDisp.innerHTML=M('\\mu='+muV);
+      var lr={n:lamV,d:1}, mr={n:muV,d:1};
+      for(var r=0;r<2;r++){
+        for(var c=0;c<2;c++){
+          var la=rMul(lr,A[r][c]), mb=rMul(mr,B[r][c]), rr=rAdd(la,mb);
+          matLA._cells[r][c].innerHTML=M(texOf(la));
+          matMB._cells[r][c].innerHTML=M(texOf(mb));
+          matR._cells[r][c].innerHTML=M(texOf(rr));
+          if(pop){ popEl(matLA._cells[r][c]); popEl(matMB._cells[r][c]); popEl(matR._cells[r][c]); }
+        }
+      }
+      if(exLam!=null && exMu!=null && lamV===exLam && muV===exMu){
+        readout.innerHTML='Avec '+M('\\lambda='+lamV)+' et '+M('\\mu='+muV)+
+          ', on retrouve l\u2019exemple du cours ('+M(texOf(lamEx)+'A-'+texOf(nuEx)+'B')+').';
+      }else{
+        readout.innerHTML='Combinaison lin\u00e9aire '+M('\\lambda A+\\mu B')+
+          ' : le r\u00e9sultat garde la dimension '+M('2\\times 2')+'.';
+      }
+    }
+    controls.appendChild(el('span','lbl',M('\\lambda')+' ='));
+    var r1=document.createElement('input');
+    r1.type='range'; r1.min=-5; r1.max=5; r1.step=1; r1.value=lamV;
+    r1.addEventListener('input',function(){ lamV=parseInt(r1.value,10); update(true); });
+    controls.appendChild(r1);
+    controls.appendChild(el('span','lbl',M('\\mu')+' ='));
+    var r2=document.createElement('input');
+    r2.type='range'; r2.min=-5; r2.max=5; r2.step=1; r2.value=muV;
+    r2.addEventListener('input',function(){ muV=parseInt(r2.value,10); update(true); });
+    controls.appendChild(r2);
+    var g1=el('div'); g1.appendChild(lamDisp); g1.appendChild(matA);
+    var g2=el('div'); g2.appendChild(el('span','opv','+')); g2.appendChild(muDisp); g2.appendChild(matB);
+    var g3=el('div'); g3.appendChild(el('span','opv','='));
+    var g4=el('div'); g4.appendChild(matLA); g4.appendChild(el('span','opv','+')); g4.appendChild(matMB);
+    var g5=el('div'); g5.appendChild(el('span','opv','=')); g5.appendChild(matR);
+    [g1,g2,g3,g4,g5].forEach(function(g){ stage.appendChild(g); });
+    update(false);
+  }
+  RENDERERS.push(build);
+})();
+
+/* ============================================================
+   Initialisation
+   ============================================================ */
+document.getElementById('btn-reinit').addEventListener('click',function(){
+  randomizeAll();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+randomizeAll();
+
+/* ============================================================
+   Droits d'auteur
+   ============================================================ */
+(function(){
+  var btn=document.getElementById('btn-copyright');
+  var box=document.getElementById('copyright-box');
+  if(!btn||!box) return;
+  btn.addEventListener('click',function(){
+    var show=(box.style.display==='none'||box.style.display==='');
+    if(show){
+      box.style.display='block';
+      box.classList.remove('fadein');
+      void box.offsetWidth;
+      box.classList.add('fadein');
+      btn.innerHTML='Masquer les droits d\u2019auteur';
+      box.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }else{
+      box.style.display='none';
+      btn.innerHTML='\u00A9 Droits d\u2019auteur';
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecteur — Annalyse données Second degré (enseignant)</title>
+<style>
+  :root{--ink:#111;--accent:#1a4f8f;--ok:#1c7a2c;--ko:#b01515;--paper:#fff;--bg:#eef1f6;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(--ink);font-size:15.5px;line-height:1.45;padding:18px;}
+  header{max-width:1100px;margin:0 auto 14px;}
+  header h1{font-size:1.25em;margin:0 0 6px;color:var(--accent);}
+  header p{margin:3px 0;font-size:.92em;}
+  .warn{color:#8a4b00;background:#fff4e0;border:1px solid #e0b060;padding:6px 10px;border-radius:5px;font-size:.88em;}
+  .zone{max-width:1100px;margin:0 auto 14px;border:2px dashed var(--accent);border-radius:8px;background:#fff;padding:22px;text-align:center;font-size:.98em;}
+  .zone.drag{background:#e8f0fb;}
+  .zone input{display:none;}
+  .zone label{cursor:pointer;color:var(--accent);font-weight:700;text-decoration:underline;}
+  #actions{max-width:1100px;margin:0 auto 12px;display:flex;gap:10px;flex-wrap:wrap;}
+  .btn{font-family:inherit;font-size:.9em;border:1.4px solid var(--ink);background:#f1eee4;padding:6px 14px;cursor:pointer;border-radius:4px;}
+  .btn:hover{background:#e3dfd2;}
+  .btn:disabled{opacity:.45;cursor:default;}
+  #out{max-width:1100px;margin:0 auto;}
+  .card{background:var(--paper);border:1.4px solid var(--ink);border-radius:6px;margin:0 0 18px;overflow:hidden;}
+  .card > .chead{background:var(--accent);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+  .card > .chead h2{margin:0;font-size:1.05em;}
+  .card > .cbody{padding:12px 16px;}
+  .synth{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;}
+  .chip{border:1px solid #999;border-radius:14px;padding:3px 11px;font-size:.86em;background:#f7f6f1;}
+  .chip b{color:var(--accent);}
+  h3.exo{font-size:.98em;margin:14px 0 6px;border-bottom:1.2px solid #999;padding-bottom:2px;}
+  h4.q{font-size:.94em;margin:12px 0 4px;color:var(--accent);}
+  table.t{border-collapse:collapse;margin:6px 0 10px;width:100%;font-size:.88em;}
+  table.t th,table.t td{border:1px solid #888;padding:4px 7px;text-align:center;}
+  table.t th{background:#f1eee4;}
+  .ok{color:var(--ok);font-weight:700;}
+  .ko{color:var(--ko);font-weight:700;}
+  .err{color:var(--ko);}
+  .enonce{background:#fbfaf4;border:1px solid #bbb;border-radius:5px;padding:8px 12px;font-size:.88em;margin:4px 0 10px;}
+  .enonce code{background:#fff;border:1px solid #ddd;padding:1px 5px;border-radius:3px;font-size:.95em;}
+  .flag{font-size:.85em;margin:2px 0;}
+  .bbtn{font-family:inherit;font-size:.86em;border:1.2px solid #fff;background:rgba(255,255,255,.16);color:#fff;padding:4px 12px;cursor:pointer;border-radius:4px;}
+  .bbtn:hover{background:rgba(255,255,255,.3);}
+  .bilanbox{background:#fbfaf4;border:1.4px solid var(--accent);border-radius:6px;padding:12px 16px;margin:0 0 14px;}
+  .bhead{font-size:.86em;color:#555;margin:0 0 8px;}
+  .bhead b{color:var(--accent);}
+  .note24{font-size:1.12em;margin:2px 0 8px;}
+  .note24 b{color:var(--accent);font-size:1.35em;}
+  .note24 span{font-size:.72em;color:#666;font-weight:normal;}
+  .qchips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;align-items:center;}
+  .qchip{border:1px solid #999;border-radius:12px;padding:2px 10px;font-size:.82em;background:#fff;}
+  .qchip.ok{border-color:var(--ok);color:var(--ok);font-weight:700;}
+  .qchip.ko{border-color:var(--ko);color:var(--ko);font-weight:700;}
+  .qstar{font-size:.75em;color:#777;}
+  .comp{border-top:1px solid #ccc;padding:8px 0 4px;margin:2px 0;}
+  .comp h4{margin:0 0 3px;font-size:.95em;color:var(--accent);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .comp p{margin:3px 0 0;font-size:.9em;text-align:justify;}
+  .lvl{font-size:.72em;font-weight:700;border-radius:10px;padding:2px 10px;white-space:nowrap;}
+  .lv-a{background:#dff0dc;color:#1c7a2c;} .lv-b{background:#e4f0d9;color:#3f6f1f;}
+  .lv-c{background:#fdf0d5;color:#9a6b00;} .lv-d{background:#f8dcdc;color:#b01515;}
+  .lv-n{background:#eee;color:#777;}
+  .bconcl{border-top:1.6px solid var(--accent);margin-top:10px;padding-top:8px;font-size:.93em;text-align:justify;}
+  .bconcl b{color:var(--accent);}
+  footer{max-width:1100px;margin:10px auto 0;font-size:.8em;color:#555;font-style:italic;text-align:center;}
+  @media print{ body{background:#fff;padding:0;} .zone,#actions{display:none;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔑 Lecteur d'analyses — Second degré (usage enseignant)</h1>
+  <p>Chargez un ou plusieurs fichiers <code>&lt;NOM&gt;_&lt;Prenom&gt;_&lt;Classe&gt;_ANNALYSE_DONNEES_2ND_DEGRE.json</code> produits par le document élève : le déchiffrement s'effectue localement, en lot, par clé privée.</p>
+  <p class="warn">⚠️ Ce fichier contient la <b>clé privée</b> de déchiffrement. Ne le distribuez pas aux élèves : quiconque le détient peut lire leurs données.</p>
+  <p>📋 Cliquez sur <b>« Bilan rédigé »</b> dans la fiche d'un élève : le lecteur génère une évaluation rédigée selon les six compétences du programme (chercher, modéliser, représenter, raisonner, calculer, communiquer), conclue par une note sur 24 (1 point par bonne réponse).</p>
+</header>
+<div class="zone" id="drop">
+  Glisser-déposer ici les fichiers .json des élèves, ou <label for="files">parcourir…</label>
+  <input type="file" id="files" multiple accept=".json,application/json">
+</div>
+<div id="actions">
+  <button type="button" class="btn" id="exportAll" disabled>⬇ Tout exporter (JSON en clair)</button>
+  <button type="button" class="btn" id="exportCsv" disabled>⬇ Exporter toutes les réponses (CSV)</button>
+</div>
+<div id="out"></div>
+<footer>Lecture locale uniquement : aucun fichier n'est envoyé sur un réseau.</footer>
+<script>
+/*CRYPT-START*/
+'use strict';
+const PRIVKEY_JWK={"kty":"RSA","n":"kKcFdzNqwx_Xvq7kYC45uUxd2UClb_j1YQ6C0CGB-kWjuVWoASh8hC9Yhp2sxSBg9jWuDwMsgNg_7BlnnTUGMUz9xSrqJP9yiMRAGHNbRtnqOQrpNVym5OHtCz7dcFNky1BAXc6IR1wwgcTqVrIBghKsPl_J9oKR-uDwFuRmZ-Y0XOZAi-bvyE0goISw186GLy_zmOuUc2eAkpQeoU7fqFgxS62PEVKtbiQopiKxAkI9EBrn3sOfhM_dvp0JnxY2JxIFpsd4VGMjNiSTpZVjTB9Hl11dG7N3WnprGd9gthoTfoh1Bwf45GF1y1PSJhC3nCgi4PRM5T-4r99g2yNabQ","e":"AQAB","d":"BDByHhOlIeWIMAOMpaRxE4a8qRAQOn_xS1BKRZDS3NareTCb3vy3LnTYkX17hXH8nOTNF6412b1pjILn10uz1DWwm8c0ZMHpJUDZwluE5zZkbCZ-vobiZnqMjOjTLO-dWa4HTzAuDjMDTJ7RUpVxKb00s9G-XZ9GbweYrHEM7jFXZedexq6E261W8vKcvk5h77DK-v7cK2l9YyTLvoEgPkwwGMYEjaZAdDPSI0PCAzevJv1UmXSf69yTwb5wecwL-6HeWRCGx-fgT5mhZjLcWbuaMiM-yEDVhxrnpSwmxTEDLidSbqP1X2oxscOjFZv1bQNsOIgGB2N2rcnfRFXOgQ","p":"ykDqfxD2UVkP9beGYqN3E4JT5kApb3We_n8hxNFq6KDlSmaLol_XidLAEDc41Gu599gDVUewQB8JchqDG_8Ix1yVWGlxMZS06SipD2059CNUKyD7V-xPXTrBRb5gXDq_PQcwm46zifpe51CYYmNfivAZcfeU2dbCIajAvrli070","q":"txeQTPAcHKeXc7S4Nc1pfS-X-5I8_zBGG3uMZcaZ81SKlmCqg0NPsbVAK_qpfLFHeopNlF9XKnWfoHhfxAz2zYTo2inL6Vqz3MmC71ZD5Cdzcxb2zWm13j707lEAx1XjSPS2dJXzUZhU8-n2ZiahqKEnEpHwO9Xo8cRqSvjftHE","dp":"j1Sp2hq_NK8VLGE_DzAg9uZpZscZli-Y2WpnGAAA75L2a194nT2mlbmQ-uznjUI6rHWdBxaixQ45t28qcvCt2_q0q88ttKFaA9IY3SHe7DENOPNKq-h_5eX5id98kl_fnvQ1ckgS3DlegDcRhsg9sUyt-6IlDquvMANTdNYUP1E","dq":"M4ZLEovDrYCwS1yBNore897P63kE91-TayqCoSWZr3OMKLN9aMEpjT4PmBDLX47YKbEAEhAejJFbYaJeeOKZFc8gZDy86Keg1DJVSZtCMdO0VqAQxk_IYYngDaz4BiCyfJZ5PifwuHag-Z9OuwKGHdl0EHLHY19YValLrFuLQNE","qi":"BsyftKE6KcLZR2Y100oB5ZC_U86yN3kPCUq_me10KYQpsnfkUni05LA9hSyD6pTtIVhFcROneT2xa2mjMxAUcsrrRmygL2YkOs4EkNdrEOZw23jkgVsmHEdWAZFTtFN8_v1qWgi5cHE2iLAK6Y45D1u9EQEhQqY2FzdGc_CTrzI","alg":"RSA-OAEP-256","key_ops":["decrypt"],"ext":true};
+function b64ToBuf(s){
+  const bin=atob(s); const u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return u;
+}
+async function decryptEnvelope(env){
+  const c=crypto.subtle;
+  const sk=await c.importKey('jwk',PRIVKEY_JWK,{name:'RSA-OAEP',hash:'SHA-256'},false,['decrypt']);
+  const unwrapped=await c.decrypt({name:'RSA-OAEP'},sk,b64ToBuf(env.cle));
+  const aes=await c.importKey('raw',unwrapped,{name:'AES-GCM'},false,['decrypt']);
+  const pt=await c.decrypt({name:'AES-GCM',iv:b64ToBuf(env.iv)},aes,b64ToBuf(env.donnees));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function readAny(json){
+  if(json&&json.format==='ANNALYSE_DONNEES_2ND_DEGRE'){
+    if(typeof json.donnees==='string') return await decryptEnvelope(json);
+    return json.donnees||json;          /* repli : fichier non chiffré */
+  }
+  throw new Error('format non reconnu');
+}
+/*CRYPT-END*/
+const RESULTS=[];   /* {nomFichier, payload|erreur} */
+const OUT=document.getElementById('out');
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function fmtMs(ms){
+  ms=ms||0; const s=Math.round(ms/1000);
+  if(s<60) return s+' s';
+  const m=Math.floor(s/60), r=s%60;
+  return m+' min '+(r<10?'0':'')+r+' s';
+}
+function fmtDate(iso){ try{ return new Date(iso).toLocaleString('fr-FR'); }catch(e){ return String(iso); } }
+
+function renderEleve(p,nomFichier,ri){
+  const el=p.eleve||{};
+  let h='<section class="card" data-r="'+ri+'"><div class="chead"><h2>'
+    +esc((el.nom||'?')+' '+(el.prenom||''))+' — '+(el.classe||'?')
+    +'</h2><span style="font-size:.85em">Fichier : '+esc(nomFichier)
+    +(p.genereLe?' · généré le '+fmtDate(p.genereLe):'')
+    +'</span><button type="button" class="bbtn" data-bilan="1">📋 Bilan rédigé</button></div><div class="cbody">'
+    +'<div class="bilanbox" hidden></div>';
+  const sy=p.synthese||{};
+  h+='<div class="synth">'
+    +'<span class="chip">Exercices : <b>'+(sy.exercicesGeneres||0)+'</b></span>'
+    +'<span class="chip">Réponses : <b>'+(sy.reponsesEnregistrees||0)+'</b></span>'
+    +'<span class="chip">Vérifications : <b>'+(sy.verifications||0)+'</b></span>'
+    +'<span class="chip">Corrections : <b>'+(sy.correctionsAffichees||0)+'</b></span>'
+    +'<span class="chip">Justifications : <b>'+(sy.justificationsConsultees||0)+'</b></span>'
+    +'<span class="chip">Régénérations : <b>'+(sy.regenerations||0)+'</b></span>'
+    +'<span class="chip">Temps actif : <b>'+fmtMs(sy.tempsTotalActifMs)+'</b></span>'
+    +'<span class="chip">Cumul horodatages : <b>'+fmtMs(p.cumulHorodatagesMs)+'</b></span>'
+    +'</div>';
+  (p.exercices||[]).forEach((exo,xi)=>{
+    h+='<h3 class="exo">Exercice '+(exo.id||xi+1)+(exo.debut?' — commencé le '+fmtDate(exo.debut):'')+'</h3>';
+    (exo.questions||[]).forEach(q=>{
+      if(!q) return;
+      h+='<h4 class="q">Question '+(q.question||'?')+' — '+esc(q.titre||'')+'</h4>';
+      h+='<div class="flag">Énoncés proposés : <b>'+((q.enonces||[]).length)+'</b>'
+        +(q.regenerations?' · régénéré '+q.regenerations+' fois':'')
+        +' · temps actif : '+fmtMs(q.tempsActifMs)
+        +(q.correctionAffichee?' · <b>correction affichée</b> le '+fmtDate(q.correctionAffichee.horodatage):'')
+        +(q.justificationsConsultees?' · justifications consultées '+q.justificationsConsultees+' fois':'')
+        +'</div>';
+      const en=(q.enonces||[])[(q.enonces||[]).length-1];
+      if(en&&en.donnees&&en.donnees[0]){
+        h+='<div class="enonce"><b>Dernier énoncé.</b> Données : '
+          +en.donnees.map(d=>'<code>'+esc(d.label)+' : '+esc(d.fonction.dev)+'</code>').join(' &nbsp; ')
+          +'<br>Formes de la première donnée : <code>Dév. '+esc(en.donnees[0].fonction.dev)+'</code>'
+          +' <code>Can. '+esc(en.donnees[0].fonction.can)+'</code>'
+          +' <code>Fac. '+esc(en.donnees[0].fonction.fac)+'</code>'
+          +' <code>Δ = '+esc(en.donnees[0].fonction.delta)+'</code></div>';
+      }
+      if((q.reponses||[]).length){
+        h+='<table class="t"><tr><th>Donnée</th><th>Catégorie</th><th>Choix</th><th>Résultat</th><th>Horodatage</th><th>Cumul</th><th>Temps de réponse</th></tr>';
+        q.reponses.forEach(r=>{
+          h+='<tr><td>'+esc(r.donnee)+'</td><td>'+esc(r.categorie)+'</td>'
+            +'<td>'+(r.choix?esc(r.choix):'<i>(sans réponse)</i>')+'</td>'
+            +'<td class="'+(r.correct?'ok':'ko')+'">'+(r.correct?'✓':'✗')+'</td>'
+            +'<td>'+fmtDate(r.horodatage)+'</td><td>'+fmtMs(r.cumulMs)+'</td><td>'+fmtMs(r.tempsReponseMs)+'</td></tr>';
+        });
+        h+='</table>';
+      }
+      if((q.verifications||[]).length){
+        h+='<table class="t"><tr><th>Vérification</th><th>Score</th><th>Durée (onglet actif)</th><th>Horodatage</th></tr>';
+        q.verifications.forEach((v,vi)=>{
+          h+='<tr><td>n° '+(vi+1)+'</td><td><b>'+v.score+' / '+v.sur+'</b></td>'
+            +'<td>'+fmtMs(v.dureeMs)+'</td><td>'+fmtDate(v.horodatage)+'</td></tr>';
+        });
+        h+='</table>';
+      }
+    });
+  });
+  h+='</div></section>';
+  return h;
+}
+
+/* ======================= BILAN RÉDIGÉ DES COMPÉTENCES ======================= */
+/* Structure du document élève : 4 questions × 2 données × 3 registres = 24 points */
+const QMETA=[
+  {starts:['P1','P2'],cats:['sign','var','expr']},
+  {starts:['S5','S6'],cats:['curve','var','expr']},
+  {starts:['W9','W10'],cats:['curve','sign','expr']},
+  {starts:['G13','G14'],cats:['curve','sign','var']}
+];
+const CATFR={curve:'courbes',sign:'signes',var:'variations',expr:'expressions'};
+const REGFR={curve:'graphique (courbes)',sign:'tableaux de signes',var:'tableaux de variations',expr:'algébrique (formes)'};
+function median(arr){ if(!arr||!arr.length) return null;
+  const s=[...arr].filter(x=>typeof x==='number'&&!isNaN(x)).sort((a,b)=>a-b);
+  if(!s.length) return null; const m=Math.floor(s.length/2);
+  return s.length%2?s[m]:Math.round((s[m-1]+s[m])/2); }
+function pickExo(p){
+  const exos=(p.exercices||[]);
+  if(!exos.length) return null;
+  const hasData=x=>((x&&x.questions)||[]).some(q=>q&&((q.reponses||[]).length>0||(q.verifications||[]).length>0));
+  for(let i=exos.length-1;i>=0;i--) if(hasData(exos[i])) return {exo:exos[i],idx:i};
+  return {exo:exos[exos.length-1],idx:exos.length-1};
+}
+/* Dernier état des réponses de la question, restreint au dernier énoncé en date */
+function finalAnswers(q){
+  const res={map:new Map(),stale:false};
+  if(!q) return res;
+  const nbEn=(q.enonces||[]).length||1;
+  let list=(q.reponses||[]).filter(r=>r&&r.numeroEnonce===nbEn);
+  if(!list.length&&(q.reponses||[]).length){ list=q.reponses||[]; res.stale=true; }
+  list.forEach(r=>res.map.set(r.donnee+'/'+r.categorie,r));
+  return res;
+}
+function bilanData(p){
+  const exos=(p.exercices||[]);
+  const pk=pickExo(p); const exo=pk?pk.exo:null; const exoIdx=pk?pk.idx:0;
+  const D={exoIdx,nbExos:exos.length,debutExo:exo?(exo.debut||null):null,
+    note:0,perQ:[],cat:{curve:{ok:0,tot:0},sign:{ok:0,tot:0},var:{ok:0,tot:0},expr:{ok:0,tot:0}},
+    answered:0,nonRep:0,matched:0,verifs:0,verifiedQ:0,improvements:0,autre:0,
+    beforeCorr:0,corrQ:0,justifs:0,regens:0,times:[],tempsActif:0};
+  for(let qi=0;qi<4;qi++){
+    const meta=QMETA[qi]; const q=(exo&&(exo.questions||[])[qi])||null;
+    const fa=finalAnswers(q);
+    const rec={recon:0,score:0,base:'rien',nonRep:0,rows:{},verifs:(q&&q.verifications)||[],stale:fa.stale};
+    let answered=0;
+    meta.starts.forEach(st=>{
+      const row={ok:0,tot:meta.cats.length}; rec.rows[st]=row;
+      meta.cats.forEach(c=>{
+        const r=fa.map.get(st+'/'+c);
+        if(r&&r.choix){
+          answered++;
+          D.cat[c].tot++;
+          if(r.correct){ rec.recon++; row.ok++; D.cat[c].ok++; }
+          if(r.choix==='AUTRE') D.autre++;
+          if(typeof r.tempsReponseMs==='number'&&r.tempsReponseMs>0) D.times.push(r.tempsReponseMs);
+        } else rec.nonRep++;
+      });
+    });
+    D.answered+=answered; D.nonRep+=rec.nonRep;
+    if(answered>0){
+      meta.starts.forEach(st=>{ if(rec.rows[st].tot>0&&rec.rows[st].ok===rec.rows[st].tot) D.matched++; });
+    }
+    const bestV=rec.verifs.length?Math.max.apply(null,rec.verifs.map(v=>v.score||0)):null;
+    const cand=[];
+    if(answered>0) cand.push({s:rec.recon,b:'rep'});
+    if(bestV!=null) cand.push({s:bestV,b:'verif'});
+    cand.sort((a,b)=>b.s-a.s);
+    const win=cand[0]||{s:0,b:'rien'};
+    rec.score=win.s; rec.base=win.b;
+    D.note+=win.s;
+    D.verifs+=rec.verifs.length; if(rec.verifs.length) D.verifiedQ++;
+    for(let j=1;j<rec.verifs.length;j++)
+      if((rec.verifs[j].score||0)>(rec.verifs[j-1].score||0)) D.improvements++;
+    if(q){
+      D.justifs+=q.justificationsConsultees||0;
+      D.regens+=q.regenerations||0;
+      D.tempsActif+=q.tempsActifMs||0;
+      const reps=q.reponses||[];
+      const corrH=(q.correctionAffichee&&q.correctionAffichee.horodatage)||null;
+      if(reps.some(r=>corrH?(r.horodatage&&r.horodatage<corrH):!!(r&&r.choix))) D.beforeCorr++;
+      if(q.correctionAffichee) D.corrQ++;
+    }
+    D.perQ.push(rec);
+  }
+  return D;
+}
+/* Niveaux d'acquisition */
+function lvl(r){ if(r==null||isNaN(r)) return {cls:'n',txt:'Non évalué'};
+  if(r>=0.75) return {cls:'a',txt:'Acquis'};
+  if(r>=0.55) return {cls:'b',txt:'En bonne voie'};
+  if(r>=0.35) return {cls:'c',txt:'À consolider'};
+  return {cls:'d',txt:'À retravailler'}; }
+function lvlHTML(r){ const l=lvl(r); return '<span class="lvl lv-'+l.cls+'">'+l.txt+'</span>'; }
+/* Paragraphes rédigés par compétence */
+function compChercher(D){
+  const s=[];
+  if(D.beforeCorr>0) s.push(`Avant toute consultation de correction, l'élève a formulé ses propres réponses sur ${D.beforeCorr} question(s) sur 4 : il émet des conjectures personnelles au lieu d'attendre la solution.`);
+  else s.push(`Aucune réponse n'a été formulée avant consultation de la correction : la démarche de conjecture personnelle reste à engager.`);
+  if(D.verifs>0){
+    s.push(`Le travail a été soumis ${D.verifs} fois à la vérification (${D.verifiedQ} question(s) vérifiée(s) sur 4).`);
+    if(D.improvements>0) s.push(`Après ajustement de certains choix, le score s'est amélioré ${D.improvements} fois : l'élève expérimente, exploite le retour de la vérification et affine ses hypothèses.`);
+    else s.push(`Aucune amélioration de score n'a suivi la ou les vérifications : les réponses ont été figées au moment de la vérification (l'exercice se verrouille ensuite).`);
+  } else s.push(`La vérification n'a jamais été utilisée : les conjectures émises ne sont pas mises à l'épreuve.`);
+  if(D.autre>0) s.push(`L'option « Autre » a été choisie ${D.autre} fois, signe d'une conjecture mise à l'épreuve des propositions plutôt que d'un choix par élimination.`);
+  if(D.regens>0) s.push(`Les valeurs ont été régénérées ${D.regens} fois, ce qui a offert l'occasion d'expérimenter sur de nouvelles configurations.`);
+  return s.join(' ');
+}
+function compModeliser(D){
+  const s=[];
+  s.push(`L'activité repose sur un modèle unique, la fonction du second degré, déclinée simultanément dans plusieurs registres. Sur les 8 fonctions proposées (2 par question), ${D.matched} ont été reconnues dans l'intégralité des registres demandés.`);
+  const pr=Math.round(100*D.note/24);
+  if(D.note>0) s.push(`Dans ${pr} % des associations, l'élève a correctement relié la représentation proposée au modèle de départ : il valide ainsi qu'un même objet mathématique peut être modélisé de plusieurs manières${D.note<24?', et les confusions restantes invalident encore certaines associations':''}.`);
+  else s.push(`Aucune association correcte n'a été relevée : le lien entre les différents habillages d'un même trinôme reste à construire.`);
+  return s.join(' ');
+}
+function compRepresenter(D){
+  const s=[];
+  const regs=['curve','sign','var','expr'].filter(c=>D.cat[c].tot>0);
+  if(!regs.length) return `Aucun changement de registre n'a été observé : aucune association n'a été renseignée.`;
+  s.push(`Changement de registre : `+regs.map(c=>`${CATFR[c]} ${D.cat[c].ok}/${D.cat[c].tot}`).join(' · ')+`.`);
+  regs.sort((a,b)=>(D.cat[b].ok/D.cat[b].tot)-(D.cat[a].ok/D.cat[a].tot));
+  const best=regs[0], worst=regs[regs.length-1];
+  if(regs.length>1&&best!==worst) s.push(`Le passage par le registre ${REGFR[best]} est le plus réussi, tandis que le registre ${REGFR[worst]} demeure le plus fragile.`);
+  else s.push(`Les registres abordés sont traités avec une réussite homogène.`);
+  if(worst==='curve') s.push(`La lecture graphique (orientation, racines, sommet) gagnera à être systématisée.`);
+  if(worst==='sign') s.push(`Le lien entre racines et tableau de signes (signe de a à l'extérieur, signe de −a entre les racines) pourra être repris.`);
+  if(worst==='var') s.push(`Le passage du sommet au tableau de variations (sens de a, abscisse du sommet) pourra être retravaillé.`);
+  if(worst==='expr') s.push(`La reconnaissance des formes développée, canonique et factorisée demandera davantage d'automatismes.`);
+  return s.join(' ');
+}
+function compRaisonner(D){
+  const s=[];
+  if(D.justifs>0) s.push(`Les justifications détaillées ont été consultées ${D.justifs} fois : l'élève cherche le pourquoi de chaque réponse et reconstitue la démonstration (discriminant, racines, sommet, signe, variations).`);
+  else s.push(`Les justifications détaillées n'ont pas été consultées : la démarche s'appuie uniquement sur le verdict de la vérification, sans accès à la démonstration.`);
+  if(D.improvements>0) s.push(`Des résultats partiels ont été mis en perspective : ${D.improvements} remise(s) en cause d'un choix erroné a (ont) abouti à un score amélioré lors d'une re-vérification.`);
+  else if(D.verifs>0&&D.note<24) s.push(`Aucune erreur n'a été reprise après vérification : des résultats partiels sont restés en l'état, sans mise en perspective.`);
+  return s.join(' ');
+}
+function compCalculer(D){
+  const s=[];
+  const e=D.cat.expr;
+  s.push(`Registre algébrique (formes développée, canonique, factorisée) : ${e.ok}/${e.tot} association(s) exacte(s).`);
+  const med=median(D.times);
+  if(med!=null){
+    if(med<45000) s.push(`Temps médian par association : ${fmtMs(med)}, ce qui traduit des techniques de reconnaissance bien installées.`);
+    else if(med<120000) s.push(`Temps médian par association : ${fmtMs(med)} : les techniques sont en cours d'automatisation.`);
+    else s.push(`Temps médian par association : ${fmtMs(med)} : la mise en œuvre des techniques (calcul du discriminant, des racines ou du sommet) n'est pas encore réflexe.`);
+  }
+  if(D.autre>0) s.push(`Le recours à « Autre » a pu traduire un contrôle par le calcul, pour vérifier qu'aucune proposition ne convenait.`);
+  return s.join(' ');
+}
+function compCommuniquer(D,p){
+  const s=[];
+  s.push(`L'élève a renseigné ${D.answered} association(s) sur 24 et soumis ${D.verifiedQ} question(s) sur 4 à la vérification : le travail livré est ${(D.answered>=22&&D.verifiedQ>=4)?'complet et vérifiable':(D.answered>=12?'partiel':'très incomplet')}.`);
+  if(D.nonRep>0) s.push(`${D.nonRep} réponse(s) n'ont pas été formulées.`);
+  if(D.corrQ>0) s.push(`La correction a été consultée sur ${D.corrQ} question(s)${D.justifs>0?', accompagnée des justifications':''}.`);
+  s.push(`Temps de travail actif sur l'exercice évalué : ${fmtMs(D.tempsActif)}.`);
+  s.push((p.eleve&&p.eleve.nom)?`L'identité est renseignée, au format attendu, ce qui permet d'attribuer sans ambiguïté le travail remis.`:`L'identité n'est pas renseignée : le travail ne peut pas être attribué à un élève.`);
+  return s.join(' ');
+}
+const COMPSHORT={chercher:'chercher',modeliser:'modéliser',representer:'représenter',raisonner:'raisonner',calculer:'calculer',communiquer:'communiquer'};
+const ADVICE={chercher:'systématiser la démarche « conjecturer, vérifier, ajuster, re-vérifier » avant de consulter la correction',
+  modeliser:"consolider l'idée qu'une même fonction du second degré se lit indifféremment dans ses différentes écritures et représentations",
+  representer:"travailler en priorité le registre le plus fragile, en s'entraînant à passer systématiquement d'un registre à l'autre",
+  raisonner:'consulter et reformuler les justifications détaillées de chaque question pour ancrer la démarche de preuve',
+  calculer:'réentraîner les techniques : calcul du discriminant, recherche des racines, forme canonique et factorisation',
+  communiquer:'veiller à renseigner et à vérifier chaque question avant de conclure, pour livrer un travail complet et vérifiable'};
+function bilanHTML(p){
+  try{
+    if(!p) return '<p class="err">Payload manquant.</p>';
+    const D=bilanData(p);
+    const head=`<div class="bhead"><b>Bilan établi sur l'exercice n°${D.exoIdx+1}`
+      +(D.nbExos>1?` (sur ${D.nbExos} exercices générés, le plus récent comportant des données)`:'')
+      +(D.debutExo?`, commencé le ${fmtDate(D.debutExo)}`:'')
+      +`.</b> Note retenue par question : état final des réponses, ou meilleure vérification si elle est supérieure.</div>`;
+    if(D.answered===0&&D.verifs===0)
+      return head+'<p>Données insuffisantes pour rédiger un bilan : aucune réponse ni vérification n\'est enregistrée.</p>';
+    const chercherR=(D.answered||D.verifs)?Math.min(1,D.beforeCorr/4)*0.4+Math.min(1,D.verifs/4)*0.3+Math.min(1,D.improvements/2)*0.2+(D.autre?0.1:0):null;
+    const modelR=(D.answered||D.verifs)?0.6*(D.note/24)+0.4*(D.matched/8):null;
+    const regs=['curve','sign','var','expr'].filter(c=>D.cat[c].tot>0);
+    const reprR=regs.length?regs.reduce((sm,c)=>sm+D.cat[c].ok/D.cat[c].tot,0)/regs.length:null;
+    const raisR=(D.justifs||D.improvements)?0.5*Math.min(1,D.justifs/4)+0.3*Math.min(1,D.improvements/2)+0.2*(D.note/24):null;
+    const calcR=D.cat.expr.tot>0?0.7*(D.cat.expr.ok/D.cat.expr.tot)+0.3*(D.note/24):(D.answered?D.note/24:null);
+    const comR=(D.answered||D.verifs)?0.5*Math.min(1,D.answered/24)+0.3*Math.min(1,D.verifiedQ/4)+0.2*((p.eleve&&p.eleve.nom)?1:0):null;
+    const comps=[
+      {key:'chercher',titre:'Chercher, expérimenter, émettre des conjectures',r:chercherR,txt:compChercher(D)},
+      {key:'modeliser',titre:"Modéliser, valider ou invalider un modèle (ici : une même fonction déclinée en plusieurs registres)",r:modelR,txt:compModeliser(D)},
+      {key:'representer',titre:"Représenter, changer de cadre et de registre (graphique, signes, variations, algébrique)",r:reprR,txt:compRepresenter(D)},
+      {key:'raisonner',titre:'Raisonner, démontrer, trouver des résultats partiels et les mettre en perspective',r:raisR,txt:compRaisonner(D)},
+      {key:'calculer',titre:'Calculer, appliquer des techniques et mettre en œuvre des algorithmes',r:calcR,txt:compCalculer(D)},
+      {key:'communiquer',titre:'Communiquer un résultat, expliquer une démarche (travail livré, complet et vérifiable)',r:comR,txt:compCommuniquer(D,p)}
+    ];
+    const star=D.perQ.some(rec=>rec.base==='verif');
+    const noteH=`<div class="note24">Note : <b>${D.note} / 24</b> <span>(1 point par bonne réponse ; 24 associations : 4 questions × 2 données × 3 registres)</span></div>`
+      +`<div class="qchips">`
+      +D.perQ.map((rec,i)=>`<span class="qchip ${rec.score>=5?'ok':(rec.score<=2?'ko':'')}" title="Question ${i+1}">Q${i+1} : ${rec.score}/6${rec.base==='verif'?' *':''}</span>`).join('')
+      +(star?`<span class="qstar">* meilleure vérification enregistrée (aucun état de réponses exploitable pour cette question)</span>`:'')
+      +`</div>`;
+    const compsH=comps.map(c=>`<div class="comp"><h4>${c.titre} ${lvlHTML(c.r)}</h4><p>${c.txt}</p></div>`).join('');
+    const ev=comps.filter(c=>c.r!=null).sort((a,b)=>b.r-a.r);
+    let concl=`<p class="bconcl"><b>Conclusion.</b> Note finale : <b>${D.note} / 24</b>.`;
+    if(ev.length>=2) concl+=` Compétences les plus réussies : ${COMPSHORT[ev[0].key]} et ${COMPSHORT[ev[1].key]}.`;
+    if(ev.length&&ev[ev.length-1].r<0.55) concl+=` Piste de progression : ${ADVICE[ev[ev.length-1].key]}.`;
+    concl+='</p>';
+    return head+noteH+compsH+concl;
+  }catch(e){ return '<p class="err">Erreur à la génération du bilan : '+esc((e&&e.message)||String(e))+'</p>'; }
+}
+/* Affichage à la demande d'un bilan par fiche élève */
+OUT.addEventListener('click',e=>{
+  const b=e.target.closest('[data-bilan]'); if(!b) return;
+  const card=b.closest('.card'); const box=card&&card.querySelector('.bilanbox'); if(!box) return;
+  if(box.hidden){
+    if(!box.dataset.done){
+      const r=RESULTS[parseInt(card.dataset.r,10)];
+      box.innerHTML=bilanHTML(r&&r.payload);
+      box.dataset.done='1';
+    }
+    box.hidden=false; b.textContent='▲ Masquer le bilan';
+  } else { box.hidden=true; b.textContent='📋 Bilan rédigé'; }
+});
+function render(){
+  if(!RESULTS.length){ OUT.innerHTML=''; return; }
+  let h='';
+  RESULTS.forEach((r,ri)=>{
+    if(r.erreur) h+='<section class="card"><div class="chead"><h2>Fichier illisible</h2></div><div class="cbody"><p class="err">'+esc(r.nomFichier)+' — '+esc(r.erreur)+'</p></div></section>';
+    else h+=renderEleve(r.payload,r.nomFichier,ri);
+  });
+  OUT.innerHTML=h;
+  document.getElementById('exportAll').disabled=false;
+  document.getElementById('exportCsv').disabled=false;
+}
+
+async function handleFiles(list){
+  for(const f of list){
+    try{
+      const txt=await f.text();
+      const payload=await readAny(JSON.parse(txt));
+      RESULTS.push({nomFichier:f.name,payload});
+    }catch(e){
+      RESULTS.push({nomFichier:f.name,erreur:(e&&e.message)||String(e)});
+    }
+  }
+  render();
+}
+function download(name,content,type){
+  const blob=new Blob([content],{type:type});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>{ try{ URL.revokeObjectURL(a.href); }catch(e){} },4000);
+}
+document.getElementById('files').addEventListener('change',e=>handleFiles(e.target.files));
+const drop=document.getElementById('drop');
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('drag');}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('drag');}));
+drop.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
+document.getElementById('exportAll').addEventListener('click',()=>download('ANNALYSE_DONNEES_2ND_DEGRE_lot.json',JSON.stringify(RESULTS.filter(r=>!r.erreur).map(r=>r.payload),null,1),'application/json'));
+document.getElementById('exportCsv').addEventListener('click',()=>{
+  const L='Nom;Prenom;Classe;Exercice;Question;Donnee;Categorie;Choix;Correct;Horodatage;CumulMs;TempsReponseMs\n';
+  let csv=L;
+  RESULTS.filter(r=>!r.erreur).forEach(r=>{ const p=r.payload;
+    (p.exercices||[]).forEach((exo,xi)=>(exo.questions||[]).forEach(q=>{ if(!q) return;
+      (q.reponses||[]).forEach(rep=>{
+        csv+=[p.eleve.nom,p.eleve.prenom,p.eleve.classe,exo.id||xi+1,q.question,rep.donnee,rep.categorie,
+          rep.choix,rep.correct?'oui':'non',rep.horodatage,rep.cumulMs,rep.tempsReponseMs].join(';')+'\n';
+      });
+    }));
+  });
+  download('ANNALYSE_DONNEES_2ND_DEGRE_reponses.csv',csv,'\uFEfftext/csv;charset=utf-8');
+});
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="0SApQKx8XFRdcxPx5qf4xw==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

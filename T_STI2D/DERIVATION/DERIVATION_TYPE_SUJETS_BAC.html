@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Devoir surveillé : étude complète de fonctions (Terminale STI2D, valeurs dynamiques)</title>
+<style>
+:root{--ink:#111827;--accent:#1d4ed8;--line:#374151}
+*{box-sizing:border-box}
+body{font-family:Georgia,'Times New Roman',serif;color:var(--ink);background:#fff;max-width:900px;margin:0 auto;padding:0 20px 60px;line-height:1.6}
+.toolbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #d1d5db;padding:10px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:system-ui,sans-serif;font-size:.9rem}
+.btn{font-family:system-ui,sans-serif;font-size:.9rem;padding:6px 12px;border:1px solid #9ca3af;border-radius:6px;background:#f9fafb;cursor:pointer}
+.btn:hover{background:#eef2ff;border-color:var(--accent)}
+.seedlab{display:flex;align-items:center;gap:6px}
+.seedlab input{width:90px;padding:5px 8px;border:1px solid #9ca3af;border-radius:6px;font-size:.9rem}
+.hint{color:#6b7280;font-size:.8rem}
+.entete{text-align:center;margin-top:18px}
+h1{font-size:1.45rem;margin:.2em 0}
+.entete .sub{font-size:1.05rem;margin:.2em 0}
+.entete .meta{font-size:.85rem;color:#4b5563;font-style:italic}
+hr{border:none;border-top:1px solid #333;margin:14px 0}
+.exo{margin-top:30px}
+.exo h2{display:flex;justify-content:space-between;align-items:baseline;font-size:1.12rem;border-bottom:1px solid #9ca3af;padding-bottom:4px}
+.exo h2 .pts{font-size:.82rem;font-style:italic;font-weight:normal;color:#4b5563}
+.centre{text-align:center;font-size:1.08rem;margin:.6em 0}
+ol.qs{margin:.4em 0;padding-left:1.7em}
+ol.qs>li{margin:8px 0}
+ol.qs.subq{margin:4px 0;padding-left:1.3em;font-size:.96em}
+.consigne{font-weight:bold;margin-bottom:2px}
+var{font-style:italic;font-family:Georgia,'Times New Roman',serif}
+sup{font-size:.72em}
+sub{font-size:.72em}
+/* Fractions : centrées sur la ligne de texte (pas de décalage vers le bas) */
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .14em;line-height:1.15;font-size:.96em}
+.fr>.nu{border-bottom:1px solid currentColor;padding:0 4px}
+.fr>.de{padding:0 4px}
+.sq{white-space:nowrap}
+.sq>.sy{margin-right:-2px}
+.sq>.rd{border-top:1.2px solid currentColor;padding:1px 3px 0 2px}
+/* Limites : indice centré sous « lim », alignement sur la ligne */
+.lm{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 .12em}
+.lm>.li{font-style:normal}
+.lm>.ls{font-size:.7em;margin-top:1px;white-space:nowrap}
+/* Hôtes des tableaux rendus sur canvas */
+.tabhost{margin:10px 0 6px}
+.tabhost canvas{display:block;margin:0 auto}
+.signcanvas-wrap,.vartable-wrap{overflow-x:auto;padding:6px 0 2px}
+details.corr{margin-top:14px;border:1px solid #cbd5e1;border-left:4px solid var(--accent);background:#f8fafc;border-radius:6px;padding:10px 16px}
+details.corr summary{cursor:pointer;font-weight:bold;font-family:system-ui,sans-serif;color:var(--accent)}
+body:not(.corrige-on) details.corr{display:none}
+.tiny{font-size:.72em;color:#6b7280}
+.fin{text-align:center;font-style:italic;margin-top:26px}
+@media print{
+ .toolbar{display:none}
+ body{max-width:none;padding:0}
+ .exo{margin-top:18px}
+ details.corr{page-break-inside:avoid}
+ .tabhost{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button class="btn" id="btnNew">🎲 Nouveau tirage</button>
+  <label class="seedlab">Graine <input id="seed" type="number" min="1" max="999999" step="1"></label>
+  <button class="btn" id="btnCorr">👁 Afficher le corrigé</button>
+  <button class="btn" id="btnPrint">🖨️ Imprimer</button>
+  <span class="hint">Chaque tirage régénère toutes les valeurs numériques (y compris les coefficients dominants) avec son corrigé. Imprimer n'imprime que ce qui est affiché.</span>
+</div>
+<main id="doc"></main>
+
+<script>
+'use strict';
+/* ================= RNG & utilitaires ================= */
+function mulberry32(seed){let s=seed>>>0;return function(){s+=0x6D2B79F5;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+const pk=(r,arr)=>arr[Math.floor(r()*arr.length)];
+function gcd2(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function Q(n,d){if(d===undefined)d=1;if(d<0){n=-n;d=-d;}const g=gcd2(n,d);return{n:n/g,d:d/g};}
+const qneg=x=>Q(-x.n,x.d);
+function qNum(x){if(x.d===1)return (x.n<0?'\u2212':'')+Math.abs(x.n);const s=FR(Math.abs(x.n),x.d);return x.n<0?'\u2212'+s:s;}
+function qPlain(x){if(x.d===1)return (x.n<0?'\u2212':'')+Math.abs(x.n);return (x.n<0?'\u2212':'')+Math.abs(x.n)+'/'+x.d;}
+function FR(nu,de){return '<span class="fr"><span class="nu">'+nu+'</span><span class="de">'+de+'</span></span>';}
+function SQ(x){return '<span class="sq"><span class="sy">\u221A</span><span class="rd">'+x+'</span></span>';}
+function LIM(sub){return '<span class="lm"><span class="li">lim</span><span class="ls">'+sub+'</span></span>';}
+/* nombre entier -> écriture typographique française (moins U+2212) */
+function num(v){return String(v).replace(/-/g,'\u2212');}
+const INFp='+\u221E', INFn='\u2212\u221E';
+const CF='<i>C</i><sub>f</sub>', CG='<i>C</i><sub>g</sub>', CH='<i>C</i><sub>h</sub>', CK='<i>C</i><sub>k</sub>', CP='<i>C</i><sub>\u03C6</sub>';
+const XH='<var>x</var>';
+function addTerm(v,suf){if(v===0)return'';return v>0?' + '+v+suf:' \u2212 '+(-v)+suf;}
+function pw(c,e,first){if(c===0)return'';let s=c<0?(first?'\u2212':' \u2212 '):(first?'':' + ');const ac=Math.abs(c);if(!(ac===1&&e>0))s+=ac;if(e>0)s+='<var>x</var>';if(e>1)s+='<sup>'+e+'</sup>';return s;}
+function poly(terms){let out='',first=true;for(const t of terms){const seg=pw(t[0],t[1],first);if(seg){out+=seg;first=false;}}return out||'0';}
+function linF(root,pow){if(root===0){let s='<var>x</var>';if(pow>1)s+='<sup>'+pow+'</sup>';return s;}let s='(x'+(root>0?'\u2212'+root:'+'+(-root))+')';if(pow>1)s+='<sup>'+pow+'</sup>';return s;}
+function lin(A,B){if(A.n===0)return 'y = '+qNum(B);let s='y = ';if(A.n===1&&A.d===1)s+='<var>x</var>';else if(A.n===-1&&A.d===1)s+='\u2212<var>x</var>';else s+=qNum(A)+'<var>x</var>';if(B.n!==0){s+=B.n>0?' + '+qNum(B):' \u2212 '+qNum(qneg(B));}return s;}
+/* écriture décimale EXACTE d'un rationnel (denominateur 2^a5^b) */
+function decStr(x){
+  const neg=x.n<0;
+  let n=Math.abs(x.n),d=x.d;
+  const ip=Math.floor(n/d);
+  let rem=n%d,frac='';
+  while(rem!==0&&frac.length<12){rem*=10;frac+=Math.floor(rem/d);rem%=d;}
+  frac=frac.replace(/0+$/,'');
+  return (neg?'\u2212':'')+ip+(frac?','+frac:'');
+}
+function sqp(d){return d===1?'1':'\u221A'+d;}
+function twoSqp(d){return d===1?'2':'2\u221A'+d;}
+
+/* =========================================================
+   TABLEAUX RENDUS SUR CANVAS (style tkz-tab, adapté de DEGRE2.html)
+========================================================= */
+let tabCfgs=[];
+function regTab(kind,cfg){cfg.kind=kind;tabCfgs.push(cfg);return '<div class="tabhost" data-tab="'+(tabCfgs.length-1)+'"></div>';}
+const tabVar=cfg=>regTab('var',cfg);
+const tabSign=cfg=>regTab('sign',cfg);
+function measCtx(){return document.createElement('canvas').getContext('2d');}
+function plainTxt(s){return String(s===undefined||s===null?'':s).replace(/<[^>]*>/g,'');}
+
+/* ----- Tableau de signes : values[i] aux colonnes, line[2i]=marqueur ('' | 'z' | 'd' | 't'), line[2i+1]=signe ----- */
+function renderSignTable(host,cfg){
+  const {values=[],line=[],name='f'}=cfg;
+  const dpr=window.devicePixelRatio||1;
+  const plain=values.map(plainTxt);
+  const meas=measCtx();
+  meas.font='16px Georgia';
+  const widths=plain.map(v=>meas.measureText(v).width);
+  const rowH=32,padX=16,padTop=10,padBottom=10,labelW=64,n=plain.length;
+  const w=[];for(let i=0;i<n-1;i++)w.push(96);
+  for(let i=0;i<n-1;i++){
+    let need=widths[i]/2+widths[i+1]/2+64;
+    if(i===0)need=Math.max(need,widths[0]+40+widths[1]/2);
+    if(i===n-2)need=Math.max(need,widths[n-1]+40+widths[n-2]/2+60);
+    w[i]=Math.max(w[i],need);
+  }
+  /* pôle (double barre) : la valeur est placée à gauche de la barre, élargir l'intervalle précédent */
+  for(let i=1;i<n-1;i++){
+    if((line[2*i]||'')==='d'){
+      w[i-1]=Math.max(w[i-1],widths[i-1]/2+widths[i]+36);
+    }
+  }
+  const xPos=[];let curX=padX+labelW;
+  for(let i=0;i<n;i++){xPos.push(curX);if(i<n-1)curX+=w[i];}
+  const tableW=curX-padX+12, tableH=2*rowH;
+  const W=padX+tableW+padX, H=padTop+tableH+padBottom;
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.ceil(W*dpr);canvas.height=Math.ceil(H*dpr);
+  canvas.style.width=Math.ceil(W)+'px';canvas.style.height=Math.ceil(H)+'px';
+  const wrap=document.createElement('div');wrap.className='signcanvas-wrap';wrap.appendChild(canvas);host.appendChild(wrap);
+  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  const x0=padX,y0=padTop;
+  ctx.fillStyle='#ffffff';ctx.fillRect(x0,y0,tableW,tableH);
+  /* traits verticaux : séparateur d'étiquettes + doubles barres aux pôles */
+  ctx.strokeStyle='#334155';ctx.lineWidth=1.15;
+  for(let i=0;i<n;i++){
+    const marker=line[2*i]||'';
+    const x=xPos[i];
+    if(marker==='d'){
+      ctx.beginPath();
+      ctx.moveTo(x-2.2,y0+rowH);ctx.lineTo(x-2.2,y0+tableH);
+      ctx.moveTo(x+2.2,y0+rowH);ctx.lineTo(x+2.2,y0+tableH);
+      ctx.stroke();
+    }else if(marker==='t'){
+      ctx.save();ctx.lineWidth=2.4;
+      ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y0+tableH);ctx.stroke();ctx.restore();
+    }else if(i===0){
+      ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y0+tableH);ctx.stroke();
+    }
+  }
+  ctx.beginPath();ctx.moveTo(x0,y0+rowH);ctx.lineTo(x0+tableW,y0+rowH);ctx.stroke();
+  ctx.strokeStyle='#334155';ctx.lineWidth=1.3;ctx.strokeRect(x0,y0,tableW,tableH);
+  /* étiquettes */
+  ctx.fillStyle='#0f172a';ctx.textBaseline='middle';
+  ctx.font='italic 16px Georgia';ctx.textAlign='center';
+  ctx.fillText('x',x0+labelW/2,y0+rowH/2);
+  const fw=(ctx.font='italic 16px Georgia',ctx.measureText(name).width);
+  const pxw=(ctx.font='16px Georgia',ctx.measureText('(x)').width);
+  const startX=x0+labelW/2-(fw+pxw+1)/2;
+  ctx.font='italic 16px Georgia';ctx.fillText(name,startX+fw/2,y0+rowH+rowH/2);
+  ctx.font='16px Georgia';ctx.fillText('(x)',startX+fw+1+pxw/2,y0+rowH+rowH/2);
+  ctx.font='16px Georgia';ctx.fillStyle='#0f172a';
+  for(let i=0;i<n;i++){
+    if(i===0){ctx.textAlign='left';ctx.fillText(plain[i],xPos[i]+6,y0+rowH/2+1);}
+    else if(i===n-1){ctx.textAlign='right';ctx.fillText(plain[i],x0+tableW-6,y0+rowH/2+1);}
+    else if((line[2*i]||'')==='d'){ctx.textAlign='right';ctx.fillText(plain[i],xPos[i]-10,y0+rowH/2+1);}
+    else{ctx.textAlign='center';ctx.fillText(plain[i],xPos[i],y0+rowH/2+1);}
+  }
+  /* zéros */
+  for(let i=0;i<n;i++){
+    if((line[2*i]||'')==='z'){
+      const x=xPos[i],cy=y0+rowH+rowH/2;
+      ctx.fillStyle='#ffffff';ctx.fillRect(x-8,cy-11,16,22);
+      ctx.fillStyle='#b91c1c';ctx.font='bold 15.5px Georgia';ctx.textAlign='center';
+      ctx.fillText('0',x,cy+1);
+    }
+  }
+  /* signes */
+  ctx.font='bold 19px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let i=0;i<n-1;i++){
+    const content=line[2*i+1]||'';
+    const cx=(xPos[i]+xPos[i+1])/2, cy=y0+rowH+rowH/2;
+    if(content==='+'){ctx.fillStyle='#15803d';ctx.fillText('+',cx,cy+1);}
+    else if(content==='\u2212'||content==='-'){ctx.fillStyle='#b91c1c';ctx.fillText('\u2212',cx,cy+1);}
+    else if(content==='h'){
+      ctx.save();ctx.beginPath();ctx.rect(xPos[i]+1,y0+rowH+1,w[i]-2,rowH-2);ctx.clip();
+      ctx.strokeStyle='#64748b';ctx.lineWidth=.9;
+      for(let d=-rowH;d<w[i]+rowH;d+=5){ctx.beginPath();ctx.moveTo(xPos[i]+d,y0+rowH);ctx.lineTo(xPos[i]+d+rowH,y0+rowH+rowH);ctx.stroke();}
+      ctx.restore();
+    }else if(content){ctx.fillStyle='#0f172a';ctx.fillText(content,cx,cy+1);}
+  }
+}
+
+/* ----- Tableau de variations : points = bornes, segs = intervalles ----- */
+/* points[i] : {x, kind:'edge'|'crit'|'pole', val, pos:'+'|'-', left, right (limites du pôle)} */
+/* segs[i]  : {sign:'+'|'−'|'', p0:'+'|'-', p1:'+'|'-'}  (p0/p1 = hauteur départ/arrivée de la flèche) */
+function renderVarTable(host,cfg){
+  const {name='f',points=[],segs=[]}=cfg;
+  const n=points.length;
+  if(n<2)return;
+  const dpr=window.devicePixelRatio||1;
+  const meas=measCtx();meas.font='17px Georgia';
+  const xTxt=points.map(p=>plainTxt(p.x));
+  const xW=xTxt.map(t=>meas.measureText(t).width);
+  const vW=points.map(p=>{
+    if(p.kind==='pole')return Math.max(meas.measureText(plainTxt(p.left)).width,meas.measureText(plainTxt(p.right)).width);
+    return meas.measureText(plainTxt(p.val)).width;
+  });
+  const rowX=40,rowD=30,rowF=118,labelW=76,padX=14,padTop=10,padBottom=10;
+  /* colonnes des points intérieurs */
+  const pw=[];
+  for(let i=0;i<n;i++){
+    if(i===0||i===n-1){pw.push(0);continue;}
+    if(points[i].kind==='pole'){pw.push(Math.max(76,2*vW[i]+34,xW[i]+22));continue;}
+    pw.push(Math.max(56,xW[i]+22,vW[i]+26));
+  }
+  /* largeurs des intervalles */
+  const sw=[];
+  for(let i=0;i<n-1;i++){
+    let need=110;
+    need=Math.max(need,xW[i]/2+xW[i+1]/2+80);
+    if(i===0)need=Math.max(need,xW[0]+46+xW[1]/2);
+    if(i===n-2)need=Math.max(need,xW[n-1]+46+xW[n-2]/2+30);
+    sw.push(need);
+  }
+  const tableW=labelW+sw.reduce((a,b)=>a+b,0)+pw.reduce((a,b)=>a+b,0);
+  const tableH=rowX+rowD+rowF;
+  const W=padX*2+tableW, H=padTop+padBottom+tableH;
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.ceil(W*dpr);canvas.height=Math.ceil(H*dpr);
+  canvas.style.width=Math.ceil(W)+'px';canvas.style.height=Math.ceil(H)+'px';
+  const wrap=document.createElement('div');wrap.className='vartable-wrap';wrap.appendChild(canvas);host.appendChild(wrap);
+  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  const x0=padX,y0=padTop;
+  const yMidX=y0+rowX, yMidD=y0+rowX+rowD, yBot=y0+tableH;
+  const xLab=x0+labelW, xRight=x0+tableW;
+  /* centres des points et bornes des intervalles */
+  const pCx=[];pCx[0]=xLab;
+  const segB=[];let cur=xLab;
+  for(let i=0;i<n-1;i++){
+    const l=cur;cur+=sw[i];segB.push({l:l,r:cur});
+    if(i<n-2){cur+=pw[i+1];pCx[i+1]=cur-pw[i+1]/2;}
+  }
+  pCx[n-1]=cur;
+  /* fond */
+  ctx.fillStyle='#ffffff';ctx.fillRect(x0,y0,tableW,tableH);
+  /* traits horizontaux */
+  ctx.strokeStyle='#1e293b';ctx.lineWidth=1.4;
+  ctx.beginPath();
+  ctx.moveTo(x0,y0+.7);ctx.lineTo(xRight,y0+.7);
+  ctx.moveTo(x0,yMidX);ctx.lineTo(xRight,yMidX);
+  ctx.moveTo(x0,yMidD);ctx.lineTo(xRight,yMidD);
+  ctx.moveTo(x0,yBot-.7);ctx.lineTo(xRight,yBot-.7);
+  ctx.stroke();
+  /* séparateur d'étiquettes */
+  ctx.beginPath();ctx.moveTo(xLab,y0);ctx.lineTo(xLab,yBot);ctx.stroke();
+  /* points intérieurs : trait fin (crit) ou double barre (pôle) */
+  ctx.strokeStyle='#334155';ctx.lineWidth=1.15;
+  for(let i=1;i<n-1;i++){
+    if(points[i].kind==='pole'){
+      ctx.beginPath();
+      ctx.moveTo(pCx[i]-2.2,yMidX);ctx.lineTo(pCx[i]-2.2,yBot);
+      ctx.moveTo(pCx[i]+2.2,yMidX);ctx.lineTo(pCx[i]+2.2,yBot);
+      ctx.stroke();
+    }else{
+      ctx.beginPath();ctx.moveTo(pCx[i],y0);ctx.lineTo(pCx[i],yBot);ctx.stroke();
+    }
+  }
+  ctx.strokeRect(x0,y0,tableW,tableH);
+  /* étiquettes de la ligne x */
+  ctx.fillStyle='#0f172a';ctx.textBaseline='middle';
+  ctx.font='italic 17px Georgia';ctx.textAlign='center';
+  ctx.fillText('x',x0+labelW/2,y0+rowX/2);
+  ctx.font='17px Georgia';ctx.fillStyle='#0f172a';
+  for(let i=0;i<n;i++){
+    if(i===0){ctx.textAlign='left';ctx.fillText(xTxt[i],xLab+12,y0+rowX/2+1);}
+    else if(i===n-1){ctx.textAlign='right';ctx.fillText(xTxt[i],xRight-12,y0+rowX/2+1);}
+    else{ctx.textAlign='center';ctx.fillText(xTxt[i],pCx[i],y0+rowX/2+1);}
+  }
+  /* étiquette f(x) */
+  const cyLab=yMidD+rowF/2;
+  ctx.textAlign='left';
+  ctx.font='italic 17px Georgia';
+  const fw=ctx.measureText(name).width;
+  ctx.font='17px Georgia';
+  const pxw=ctx.measureText('(x)').width;
+  const sx=x0+labelW/2-(fw+pxw+1)/2;
+  ctx.fillStyle='#0f172a';
+  ctx.font='italic 17px Georgia';ctx.fillText(name,sx,cyLab);
+  ctx.font='17px Georgia';ctx.fillText('(x)',sx+fw+1,cyLab);
+  /* niveaux verticaux de la ligne f(x) */
+  const yTopVal=yMidD+26, yBotVal=yBot-28;
+  const yVal=p=>p==='-'?yBotVal:yTopVal;
+  /* flèches */
+  function drawArrow(xa,ya,xb,yb){
+    ctx.beginPath();ctx.moveTo(xa,ya);ctx.lineTo(xb,yb);ctx.stroke();
+    const ang=Math.atan2(yb-ya,xb-xa),s=9;
+    ctx.beginPath();ctx.moveTo(xb,yb);
+    ctx.lineTo(xb-s*Math.cos(ang-.42),yb-s*Math.sin(ang-.42));
+    ctx.lineTo(xb-s*Math.cos(ang+.42),yb-s*Math.sin(ang+.42));
+    ctx.closePath();ctx.fill();
+  }
+  ctx.strokeStyle='#1e293b';ctx.fillStyle='#1e293b';ctx.lineWidth=2.2;ctx.lineCap='round';
+  /* ancrages d'étiquettes : bord droit (départ de flèche) et bord gauche (arrivée) */
+  function labR(i){
+    const p=points[i];
+    if(p.kind==='pole')return {x:pCx[i]+10+vW[i],y:yVal((segs[i]||{}).p0||'+')};
+    if(i===0)return {x:xLab+12+vW[0],y:yVal(p.pos||'+')};
+    return {x:pCx[i]+vW[i]/2,y:yVal(p.pos||'+')};
+  }
+  function labL(i){
+    const p=points[i];
+    if(p.kind==='pole')return {x:pCx[i]-10-vW[i],y:yVal((segs[i-1]||{}).p1||'+')};
+    if(i===n-1)return {x:xRight-12-vW[n-1],y:yVal(p.pos||'+')};
+    return {x:pCx[i]-vW[i]/2,y:yVal(p.pos||'+')};
+  }
+  for(let i=0;i<n-1;i++){
+    const sg=segs[i]||{};
+    if(!sg.p0||!sg.p1)continue;
+    /* la flèche monte si f' > 0, descend si f' < 0 ; elle part à côté de
+       l'étiquette de départ et s'arrête juste avant l'étiquette d'arrivée */
+    const up=!(sg.sign==='\u2212'||sg.sign==='-');
+    const a=labR(i),b=labL(i+1);
+    const ya=up?(yBot-9):(yMidD+9);
+    const xa=Math.min(Math.max(a.x+5,segB[i].l+8),segB[i].r-30);
+    const xb=Math.max(Math.min(b.x-8,segB[i].r-8),segB[i].l+30);
+    drawArrow(xa,ya,xb,b.y);
+  }
+  /* ligne f' : signes et zéros */
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='bold 17px Georgia';
+  for(let i=0;i<n-1;i++){
+    const sg=segs[i]||{};
+    if(sg.sign==='+'){ctx.fillStyle='#15803d';ctx.fillText('+',(segB[i].l+segB[i].r)/2,yMidX+rowD/2+1);}
+    else if(sg.sign==='\u2212'||sg.sign==='-'){ctx.fillStyle='#b91c1c';ctx.fillText('\u2212',(segB[i].l+segB[i].r)/2,yMidX+rowD/2+1);}
+    else if(sg.sign){ctx.fillStyle='#0f172a';ctx.fillText(sg.sign,(segB[i].l+segB[i].r)/2,yMidX+rowD/2+1);}
+  }
+  for(let i=1;i<n-1;i++){
+    if(points[i].kind==='crit'){
+      const cy=yMidX+rowD/2;
+      ctx.fillStyle='#ffffff';ctx.fillRect(pCx[i]-8,cy-11,16,22);
+      ctx.fillStyle='#b91c1c';ctx.font='bold 15.5px Georgia';
+      ctx.fillText('0',pCx[i],cy+1);
+      ctx.font='bold 17px Georgia';
+    }
+  }
+  /* valeurs de f(x) */
+  ctx.font='bold 17px Georgia';ctx.fillStyle='#0f172a';
+  for(let i=0;i<n;i++){
+    const p=points[i];
+    if(p.kind==='pole'){
+      /* limites de part et d'autre de la double barre, à la hauteur de leur branche */
+      ctx.fillStyle='#0f172a';
+      const yL=(segs[i-1]&&segs[i-1].p1)?yVal(segs[i-1].p1)+1:(yMidD+rowF/2);
+      const yR=(segs[i]&&segs[i].p0)?yVal(segs[i].p0)+1:(yMidD+rowF/2);
+      ctx.textAlign='right';ctx.fillText(plainTxt(p.left),pCx[i]-10,yL);
+      ctx.textAlign='left';ctx.fillText(plainTxt(p.right),pCx[i]+10,yR);
+      ctx.font='bold 17px Georgia';ctx.fillStyle='#0f172a';
+    }else{
+      const v=plainTxt(p.val);
+      if(!v)continue;
+      const yy=yVal(p.pos)+1;
+      if(i===0){ctx.textAlign='left';ctx.fillText(v,xLab+12,yy);}
+      else if(i===n-1){ctx.textAlign='right';ctx.fillText(v,xRight-12,yy);}
+      else{ctx.textAlign='center';ctx.fillText(v,pCx[i],yy);}
+    }
+  }
+}
+
+function renderTabs(){
+  document.querySelectorAll('#doc .tabhost').forEach(h=>{
+    const cfg=tabCfgs[+h.getAttribute('data-tab')];
+    if(!cfg)return;
+    h.innerHTML='';
+    if(cfg.kind==='sign')renderSignTable(h,cfg);else renderVarTable(h,cfg);
+  });
+}
+
+/* ================= Exercice 1 : cubique à racine double ================= */
+function genEx1(rnd){
+  const a=pk(rnd,[1,2]);
+  const cands=[];
+  for(let r=-3;r<=3;r++){if(r===0)continue;
+    for(let s=-3;s<=3;s++){if(s===r)continue;
+      if((2*s+r)%3!==0)continue;
+      const q=(2*s+r)/3;
+      if(q===r)continue;
+      const fq=a*(q-r)*(q-r)*(q-s);
+      if(Math.abs(fq)<2)continue;
+      cands.push({r:r,s:s,q:q,fq:fq});
+    }}
+  const C=pk(rnd,cands);
+  const r=C.r,s=C.s,q=C.q,fq=C.fq;
+  const c1=Math.min(r,q),c2=Math.max(r,q);
+  const A=a,B=-a*(2*r+s),Cc=a*(r*r+2*r*s),D=-a*r*r*s;
+  const mAbs=pk(rnd,[0.5,1,1.5,2].filter(v=>v<Math.abs(fq)));
+  const m=Q(Math.round(mAbs*2)*(fq>0?1:-1),2);
+  const vmax=(c1===q?fq:0), vmin=(c2===q?fq:0);
+  const fexp=poly([[A,3],[B,2],[Cc,1],[D,0]]);
+  const ffac=(a===1?'':a)+linF(r,2)+linF(s,1);
+  const coef=String(3*a);
+  /* CORRECTION : factorisation lisible aussi lorsque q = 0 */
+  const fderiv=(q===0)?(coef+XH+linF(r,1)):(coef+linF(r,1)+linF(q,1));
+  const fderExp=poly([[3*A,2],[2*B,1],[Cc,0]]);
+  const slope=Q(3*a*r*q), icept=Q(D);
+  const s1=Math.min(s,r), s2=Math.max(s,r);
+  const mid=(s===s1)?'+':'\u2212';
+
+  const enonce=
+  '<p>Soit f la fonction définie sur \u211D par</p>'+
+  '<p class="centre">f(x) = '+fexp+'</p>'+
+  '<p>et '+CF+' sa courbe représentative dans un repère orthonormé.</p>'+
+  '<ol class="qs">'+
+  '<li>Calculer les limites de f en '+INFn+' et en '+INFp+'.</li>'+
+  '<li>Montrer que, pour tout réel x, f\u2032(x) = '+fderiv+'. Étudier le signe de f\u2032(x) et dresser le tableau de variation de f (on précisera f('+num(c1)+') et f('+num(c2)+')).</li>'+
+  '<li>Vérifier que, pour tout réel x, f(x) = '+ffac+'. En déduire le tableau de signes de f sur \u211D et résoudre f(x) = 0.</li>'+
+  '<li>Déterminer l\u2019équation réduite de la tangente T à '+CF+' au point d\u2019abscisse 0.</li>'+
+  '<li>Justifier, à l\u2019aide du tableau de variation, que l\u2019équation f(x) = '+qNum(m)+' admet <b>exactement trois</b> solutions dans \u211D.</li>'+
+  '</ol>'+
+  '<p class="consigne">Tableau de variation à compléter :</p>'+
+  tabVar({name:'f',
+    points:[{x:INFn,kind:'edge'},{x:num(c1),kind:'crit',val:''},{x:num(c2),kind:'crit',val:''},{x:INFp,kind:'edge'}],
+    segs:[{},{},{}]});
+
+  const corrige=
+  '<ol class="qs">'+
+  '<li>Le terme dominant est '+pw(A,3,true)+' : '+LIM('x\u2192'+INFn)+' f(x) = '+INFn+' et '+LIM('x\u2192'+INFp)+' f(x) = '+INFp+' (le coefficient dominant '+a+' est positif).</li>'+
+  '<li>On développe : f(x) = '+fexp+', donc f\u2032(x) = '+fderExp+'. Par ailleurs '+fderiv+' = '+(3*a)+'(x<sup>2</sup>'+addTerm(-(r+q),XH)+addTerm(r*q,'')+') = '+fderExp+' : c\u2019est bien f\u2032(x). '+
+    'Les racines de f\u2032 sont '+num(r)+' et '+num(q)+' ; le coefficient '+(3*a)+' étant positif, f\u2032(x) &gt; 0 sur ]\u2212\u221E,'+num(c1)+'[ \u222A ]'+num(c2)+',+\u221E[ et f\u2032(x) &lt; 0 sur ]'+num(c1)+','+num(c2)+'[. '+
+    'f est croissante sur ]\u2212\u221E,'+num(c1)+'], décroissante sur ['+num(c1)+','+num(c2)+'], croissante sur ['+num(c2)+',+\u221E[ :'+
+    tabVar({name:'f',
+      points:[{x:INFn,kind:'edge',val:INFn,pos:'-'},{x:num(c1),kind:'crit',val:num(vmax),pos:'+'},{x:num(c2),kind:'crit',val:num(vmin),pos:'-'},{x:INFp,kind:'edge',val:INFp,pos:'+'}],
+      segs:[{sign:'+',p0:'-',p1:'+'},{sign:'\u2212',p0:'+',p1:'-'},{sign:'+',p0:'-',p1:'+'}]})+
+    '<p>On précise f('+num(c1)+') = '+num(vmax)+' et f('+num(c2)+') = '+num(vmin)+'.</p></li>'+
+  '<li>On développe : '+ffac+' = '+(a===1?'':a)+'[x<sup>2</sup>'+addTerm(-2*r,XH)+addTerm(r*r,'')+'](x'+addTerm(-s,'')+') = '+fexp+' = f(x). '+
+    'Comme (x'+addTerm(-r,'')+')<sup>2</sup> \u2265 0 pour tout x, f(x) est du signe de (x'+addTerm(-s,'')+'), donc négatif sur ]\u2212\u221E,'+num(s)+'[, nul en '+num(s)+' et en '+num(r)+', positif sur ]'+num(s)+',+\u221E[ :'+
+    tabSign({name:'f',
+      values:[INFn,num(s1)+(s1===r?' (double)':''),num(s2)+(s2===r?' (double)':''),INFp],
+      line:['','\u2212','z',mid,'z','+','']})+
+    '<p>f(x) = 0 \u21D4 x = '+num(s)+' ou x = '+num(r)+' : S = {'+num(s)+' ; '+num(r)+'} (la racine '+num(r)+' est double).</p></li>'+
+  '<li>f(0) = '+num(D)+' et f\u2032(0) = '+num(3*a*r*q)+'. La tangente T a pour équation réduite : '+lin(slope,icept)+'.</li>'+
+  '<li>D\u2019après le tableau de variation, f admet un maximum '+num(vmax)+' atteint en '+num(c1)+' et un minimum '+num(vmin)+' atteint en '+num(c2)+', avec '+num(vmin)+' &lt; '+qNum(m)+' &lt; '+num(vmax)+'. '+
+    'Sur ]\u2212\u221E,'+num(c1)+'], f est continue et strictement croissante de '+INFn+' à '+num(vmax)+' : une seule solution. Sur ['+num(c1)+','+num(c2)+'], f est continue et strictement décroissante de '+num(vmax)+' à '+num(vmin)+' : une seule solution. Sur ['+num(c2)+',+\u221E[, f est continue et strictement croissante de '+num(vmin)+' à '+INFp+' : une seule solution. '+
+    'Bilan : l\u2019équation f(x) = '+qNum(m)+' admet exactement trois solutions dans \u211D.</li>'+
+  '</ol>';
+
+  return {enonce,corrige,d:{a,r,s,q,fq,m,c1,c2,vmax,vmin}};
+}
+
+/* ================= Exercice 2 : homographique ================= */
+function genEx2(rnd){
+  const a=pk(rnd,[2,3,4]);
+  const c=pk(rnd,[2,3,4,5]);
+  const x0=pk(rnd,[-2,-1,1,2].filter(v=>v!==-c));
+  const b=c-(a-1)*x0;
+  const N=(a-1)*(c+x0);
+  const x1=Q((a-1)*x0-c,a);
+  const g0=Q(b,c), gp0=Q(N,c*c);
+  const gx=poly([[a,1],[b,0]]);
+  const den=XH+' + '+c;
+
+  const enonce=
+  '<p>Soit g la fonction définie par</p>'+
+  '<p class="centre">g(x) = '+FR(gx,den)+'</p>'+
+  '<ol class="qs">'+
+  '<li>Déterminer l\u2019ensemble de définition D<sub>g</sub> de g.</li>'+
+  '<li>Calculer les limites de g en '+INFn+' et en '+INFp+', puis les limites de g quand x tend vers \u2212'+c+' par valeurs inférieures et par valeurs supérieures. En déduire les asymptotes à la courbe '+CG+'.</li>'+
+  '<li>Montrer que, pour tout x \u2208 D<sub>g</sub>, g\u2032(x) = '+FR(N,'(x + '+c+')<sup>2</sup>')+'. Dresser le tableau de variation de g sur D<sub>g</sub>.</li>'+
+  '<li>Dresser le tableau de signes de g(x) sur D<sub>g</sub>.</li>'+
+  '<li>Déterminer l\u2019équation réduite de la tangente T à '+CG+' au point d\u2019abscisse 0.</li>'+
+  '<li>Montrer que l\u2019équation g(x) = 1 admet une unique solution dans ]\u2212'+c+' ; +\u221E[ et déterminer cette solution.</li>'+
+  '</ol>';
+
+  const corrige=
+  '<ol class="qs">'+
+  '<li>g(x) existe \u21D4 x + '+c+' \u2260 0 \u21D4 x \u2260 \u2212'+c+' : D<sub>g</sub> = \u211D \\ {\u2212'+c+'}.</li>'+
+  '<li>Pour x \u2260 \u2212'+c+' : g(x) = '+FR(gx,den)+' = '+a+' + '+FR(qNum(Q(b-a*c)),'x + '+c)+' = '+a+' \u2212 '+FR(N,'x + '+c)+'. '+
+    'En \u00B1\u221E, '+FR(N,'x + '+c)+' \u2192 0 : '+LIM('x\u2192\u00B1\u221E')+' g(x) = '+a+'. '+
+    'Quand x \u2192 \u2212'+c+', '+FR(N,'x + '+c)+' tend vers '+INFn+' à gauche (x + '+c+' \u2192 0<sup>\u2212</sup>) et vers '+INFp+' à droite : '+LIM('x\u2192\u2212'+c+'\u207B')+' g(x) = '+INFp+' et '+LIM('x\u2192\u2212'+c+'\u207A')+' g(x) = '+INFn+'. '+
+    'Donc y = '+a+' est asymptote horizontale et x = \u2212'+c+' est asymptote verticale à '+CG+'.</li>'+
+  '<li>Avec u(x) = '+gx+' et v(x) = '+den+' : g\u2032(x) = '+FR('(u\u2032v \u2212 uv\u2032)','v<sup>2</sup>')+' = '+FR('('+a+')(x + '+c+') \u2212 ('+gx+')','(x + '+c+')<sup>2</sup>')+' = '+FR(N,'(x + '+c+')<sup>2</sup>')+'. '+
+    'Ce quotient est strictement positif : g est croissante sur chacun des deux intervalles :'+
+    /* CORRECTION : la 2e branche monte de -∞ vers l'asymptote a */
+    tabVar({name:'g',
+      points:[{x:INFn,kind:'edge',val:String(a),pos:'-'},{x:'\u2212'+c,kind:'pole',left:INFp,right:INFn},{x:INFp,kind:'edge',val:String(a),pos:'+'}],
+      segs:[{sign:'+',p0:'-',p1:'+'},{sign:'+',p0:'-',p1:'+'}]})+'</li>'+
+  '<li>(x + '+c+')<sup>2</sup> &gt; 0 : g(x) est du signe de '+gx+', qui s\u2019annule pour x = '+qPlain(x1)+' :'+
+    /* CORRECTION : sur ]-∞ ; -c[, numérateur et dénominateur sont tous deux négatifs */
+    tabSign({name:'g',
+      values:[INFn,'\u2212'+c,qPlain(x1),INFp],
+      line:['','+','d','\u2212','z','+','']})+'</li>'+
+  '<li>g(0) = '+qNum(g0)+' et g\u2032(0) = '+qNum(gp0)+'. La tangente T a pour équation réduite : '+lin(gp0,g0)+'.</li>'+
+  '<li>Sur ]\u2212'+c+',+\u221E[, g est continue et strictement croissante (g\u2032 &gt; 0), de '+INFn+' (en \u2212'+c+'<sup>+</sup>) à '+a+' (en +\u221E). Comme 1 &lt; '+a+', l\u2019équation g(x) = 1 admet une unique solution dans ]\u2212'+c+',+\u221E[. '+
+    'Résolution : g(x) = 1 \u21D4 '+gx+' = '+den+' \u21D4 '+pw(a-1,1,true)+' = '+qNum(Q(c-b))+' \u21D4 x = '+num(x0)+'. Vérification : g('+num(x0)+') = '+FR(String(x0+c),String(x0+c))+' = 1. S = {'+num(x0)+'}.</li>'+
+  '</ol>';
+
+  return {enonce,corrige,d:{a,b,c,x0,N,x1,g0,gp0}};
+}
+
+/* ================= Exercice 3 : x + d/x ================= */
+function genEx3(rnd){
+  const d=pk(rnd,[1,2,3]);
+  const tmin=Math.ceil(2*Math.sqrt(d))+1;
+  const tcands=[];
+  for(let t=tmin;t<=8;t++){const D=t*t-4*d;const s=Math.round(Math.sqrt(D));if(s*s!==D)tcands.push(t);}
+  const t=pk(rnd,tcands);
+  const alpha=(t+Math.sqrt(t*t-4*d))/2;
+  const n=Math.floor(alpha);
+  const sqd=sqp(d);
+  const twoSq=twoSqp(d);
+  const Dv=t*t-4*d;
+  const hN=Q(n*n+d,n), hN1=Q((n+1)*(n+1)+d,n+1);
+  const T1=lin(Q(1-d),Q(2*d)), T2=lin(Q(4-d,4),Q(d));
+  const hx=XH+' + '+FR(d,XH);
+
+  const enonce=
+  '<p>Soit h la fonction définie sur \u211D* par</p>'+
+  '<p class="centre">h(x) = '+hx+'</p>'+
+  '<ol class="qs">'+
+  '<li>Calculer les limites de h en '+INFn+', en '+INFp+', puis en 0 par valeurs inférieures et par valeurs supérieures.</li>'+
+  '<li>Montrer que la droite \u0394 d\u2019équation y = x est asymptote oblique à '+CH+' en '+INFn+' et en '+INFp+'. Préciser la position relative de '+CH+' et de \u0394.</li>'+
+  '<li>Montrer que, pour tout x \u2260 0, h\u2032(x) = '+FR(poly([[1,2],[-d,0]]),XH+'<sup>2</sup>')+'. Dresser le tableau de variation complet de h sur \u211D*.</li>'+
+  '<li>Déterminer les équations réduites des tangentes à '+CH+' aux points d\u2019abscisses x = 1 et x = 2.</li>'+
+  '<li>Dresser le tableau de signes de h(x) sur \u211D*.</li>'+
+  '<li>Montrer que l\u2019équation h(x) = '+t+' admet une unique solution \u03B1 dans ]'+sqd+' ; +\u221E[, vérifier que '+n+' &lt; \u03B1 &lt; '+(n+1)+', puis déterminer la valeur exacte de \u03B1.</li>'+
+  '</ol>';
+
+  const corrige=
+  '<ol class="qs">'+
+  '<li>'+LIM('x\u2192\u00B1\u221E')+' h(x) = '+LIM('x\u2192\u00B1\u221E')+' x = \u00B1\u221E (car '+FR(d,XH)+' \u2192 0). En 0 : x \u2192 0 et '+FR(d,XH)+' \u2192 \u00B1\u221E, donc '+LIM('x\u21920\u207B')+' h(x) = '+INFn+' et '+LIM('x\u21920\u207A')+' h(x) = '+INFp+'.</li>'+
+  '<li>h(x) \u2212 x = '+FR(d,XH)+' \u2192 0 quand x \u2192 \u00B1\u221E : la droite \u0394 : y = x est asymptote oblique à '+CH+' en \u00B1\u221E. '+
+    'De plus h(x) \u2212 x = '+FR(d,XH)+' : positif pour x &gt; 0 ('+CH+' au-dessus de \u0394) et négatif pour x &lt; 0 ('+CH+' en dessous de \u0394).</li>'+
+  '<li>h\u2032(x) = 1 \u2212 '+FR(d,XH+'<sup>2</sup>')+' = '+FR(poly([[1,2],[-d,0]]),XH+'<sup>2</sup>')+' = '+FR('(x \u2212 '+SQ(d)+')(x + '+SQ(d)+')',XH+'<sup>2</sup>')+'. '+
+    'x<sup>2</sup> \u2212 '+d+' s\u2019annule en \u2212'+SQ(d)+' et en '+SQ(d)+' :'+
+    tabVar({name:'h',
+      points:[{x:INFn,kind:'edge',val:INFn,pos:'-'},{x:'\u2212'+sqd,kind:'crit',val:'\u2212'+twoSq,pos:'+'},{x:'0',kind:'pole',left:INFn,right:INFp},{x:sqd,kind:'crit',val:twoSq,pos:'-'},{x:INFp,kind:'edge',val:INFp,pos:'+'}],
+      segs:[{sign:'+',p0:'-',p1:'+'},{sign:'\u2212',p0:'+',p1:'-'},{sign:'\u2212',p0:'+',p1:'-'},{sign:'+',p0:'-',p1:'+'}]})+'</li>'+
+  '<li>h(1) = '+(1+d)+', h\u2032(1) = '+(1-d)+' : T<sub>1</sub> : '+T1+'. h(2) = '+qNum(Q(4+2*d,2))+', h\u2032(2) = '+qNum(Q(4-d,4))+' : T<sub>2</sub> : '+T2+'.</li>'+
+  '<li>h(x) = '+FR(poly([[1,2],[d,0]]),XH)+' avec '+poly([[1,2],[d,0]])+' &gt; 0 pour tout x \u2260 0 : h(x) est du signe de x :'+
+    tabSign({name:'h',
+      values:[INFn,'0',INFp],
+      line:['','\u2212','d','+','']})+'</li>'+
+  '<li>Sur ]'+SQ(d)+',+\u221E[, h est continue et strictement croissante (h\u2032 &gt; 0), de '+twoSq+' (valeur atteinte en '+SQ(d)+') à '+INFp+'. Comme '+t+' &gt; '+twoSq+', l\u2019équation h(x) = '+t+' admet une unique solution \u03B1 dans ]'+SQ(d)+',+\u221E[. '+
+    'Encadrement : h('+n+') = '+n+' + '+qNum(Q(d,n))+' = '+qNum(hN)+' &lt; '+t+' et h('+(n+1)+') = '+(n+1)+' + '+qNum(Q(d,n+1))+' = '+qNum(hN1)+' &gt; '+t+', donc '+n+' &lt; \u03B1 &lt; '+(n+1)+'. '+
+    'Valeur exacte : h(x) = '+t+' \u21D4 x<sup>2</sup> \u2212 '+t+'x + '+d+' = 0. \u0394 = '+(t*t)+' \u2212 '+(4*d)+' = '+Dv+' &gt; 0 ; les racines sont '+FR(t+' \u00B1 '+SQ(Dv),'2')+', et celle qui appartient à ]'+SQ(d)+',+\u221E[ est \u03B1 = '+FR(t+' + '+SQ(Dv),'2')+' (l\u2019autre racine '+FR(t+' \u2212 '+SQ(Dv),'2')+' est inférieure à '+SQ(d)+').</li>'+
+  '</ol>';
+
+  return {enonce,corrige,d:{d,t,alpha,n,Dv,hN,hN1}};
+}
+
+/* ================= Exercice 4 : cubique strictement croissante ================= */
+function genEx4(rnd){
+  const combos=[];
+  for(const a of [1,2])for(const b of [1,2,3])for(const c of [-3,-2,-1])if(a+b+c>=1)combos.push({a:a,b:b,c:c});
+  const {a,b,c}=pk(rnd,combos);
+  const kx=poly([[a,3],[b,1],[c,0]]);
+  const kMill=p=>a*p*p*p+1000000*b*p+1000000000*c;
+  let M=0;while(kMill(M+1)<0)M++;
+  const d1=Math.floor(M/100), d2=Math.floor(M/10);
+  const kTenth=p=>Q(a*p*p*p+100*b*p+1000*c,1000);
+  const kHund=p=>Q(a*p*p*p+10000*b*p+1000000*c,1000000);
+  const slope1=Q(3*a+b), icept1=Q(c-2*a);
+  const slope0=Q(b), icept0=Q(c);
+
+  const enonce=
+  '<p>Soit k la fonction définie sur \u211D par</p>'+
+  '<p class="centre">k(x) = '+kx+'</p>'+
+  '<ol class="qs">'+
+  '<li>Calculer les limites de k en '+INFn+' et en '+INFp+'. La courbe '+CK+' admet-elle une asymptote ? Justifier.</li>'+
+  '<li>Montrer que k\u2032(x) = '+poly([[3*a,2],[b,0]])+', étudier le signe de k\u2032(x) et dresser le tableau de variation de k sur \u211D.</li>'+
+  '<li>Montrer que l\u2019équation k(x) = 0 admet une unique solution \u03B1 dans \u211D et que \u03B1 \u2208 ]0 ; 1[.'+
+    '<ol class="qs subq"><li>Donner un encadrement de \u03B1 d\u2019amplitude 10<sup>\u22121</sup>.</li><li>Donner un encadrement de \u03B1 d\u2019amplitude 10<sup>\u22122</sup>.</li></ol></li>'+
+  '<li>En déduire le tableau de signes de k(x) sur \u211D.</li>'+
+  '<li>Déterminer les équations réduites des tangentes à '+CK+' aux points d\u2019abscisses 0 et 1.</li>'+
+  '</ol>';
+
+  const corrige=
+  '<ol class="qs">'+
+  '<li>Le terme dominant est '+pw(a,3,true)+' : '+LIM('x\u2192'+INFn)+' k(x) = '+INFn+' et '+LIM('x\u2192'+INFp)+' k(x) = '+INFp+'. '+
+    'Il n\u2019y a donc pas d\u2019asymptote horizontale (limites infinies). Une asymptote oblique y = mx + p demanderait k(x) \u2212 (mx + p) \u2192 0 ; or le terme '+pw(a,3,true)+' est prépondérant et k(x) \u2212 (mx + p) tend vers \u00B1\u221E pour tous m et p. '+CK+' n\u2019admet donc aucune asymptote.</li>'+
+  '<li>k\u2032(x) = '+poly([[3*a,2],[b,0]])+' \u2265 '+b+' &gt; 0 pour tout x : k\u2032 est strictement positive et k est strictement croissante sur \u211D :'+
+    tabVar({name:'k',
+      points:[{x:INFn,kind:'edge',val:INFn,pos:'-'},{x:INFp,kind:'edge',val:INFp,pos:'+'}],
+      segs:[{sign:'+',p0:'-',p1:'+'}]})+'</li>'+
+  '<li>k est continue et strictement croissante sur \u211D ; k(0) = '+num(c)+' &lt; 0 et k(1) = '+(a+b+c)+' &gt; 0. D\u2019après le théorème des valeurs intermédiaires, l\u2019équation k(x) = 0 admet une unique solution \u03B1 dans \u211D, et 0 &lt; \u03B1 &lt; 1. '+
+    '<ol class="qs subq">'+
+    '<li>k('+decStr(Q(d1,10))+') = '+decStr(kTenth(d1))+' &lt; 0 et k('+decStr(Q(d1+1,10))+') = '+decStr(kTenth(d1+1))+' &gt; 0, donc '+decStr(Q(d1,10))+' &lt; \u03B1 &lt; '+decStr(Q(d1+1,10))+'.</li>'+
+    '<li>k('+decStr(Q(d2,100))+') = '+decStr(kHund(d2))+' &lt; 0 et k('+decStr(Q(d2+1,100))+') = '+decStr(kHund(d2+1))+' &gt; 0, donc '+decStr(Q(d2,100))+' &lt; \u03B1 &lt; '+decStr(Q(d2+1,100))+'.</li>'+
+    '</ol></li>'+
+  '<li>k est croissante et s\u2019annule en \u03B1 : k(x) &lt; 0 sur ]\u2212\u221E,\u03B1[ et k(x) &gt; 0 sur ]\u03B1,+\u221E[ :'+
+    tabSign({name:'k',
+      values:[INFn,'\u03B1',INFp],
+      line:['','\u2212','z','+','']})+'</li>'+
+  '<li>k(0) = '+num(c)+', k\u2032(0) = '+b+' : T<sub>0</sub> : '+lin(slope0,icept0)+'. k(1) = '+(a+b+c)+', k\u2032(1) = '+(3*a+b)+' : T<sub>1</sub> : '+lin(slope1,icept1)+'.</li>'+
+  '</ol>';
+
+  return {enonce,corrige,d:{a,b,c,M,d1,d2}};
+}
+
+/* ================= Exercice 5 : (x²+(m+1)x)/(x+1) ================= */
+function genEx5(rnd){
+  const m=pk(rnd,[1,2,3,4]);
+  const numr=poly([[1,2],[m+1,1]]);
+  const den=XH+' + 1';
+  const phi1=Q(m+2,2), phip1=Q(m+4,4);
+  const rac=m+'<sup>2</sup> + 4';
+
+  const enonce=
+  '<p>Soit \u03C6 la fonction définie sur \u211D\\{\u22121} par</p>'+
+  '<p class="centre">\u03C6(x) = '+FR(numr,den)+'</p>'+
+  '<ol class="qs">'+
+  '<li>Déterminer l\u2019ensemble de définition D<sub>\u03C6</sub> de \u03C6.</li>'+
+  '<li>Vérifier que, pour tout x \u2260 \u22121, \u03C6(x) = '+XH+' + '+m+' \u2212 '+FR(m,'x + 1')+'. En déduire :'+
+    '<ol class="qs subq"><li>les limites de \u03C6 en '+INFn+' et en '+INFp+' ainsi que l\u2019asymptote oblique à '+CP+' ;</li>'+
+    '<li>les limites de \u03C6 quand x tend vers \u22121 par valeurs inférieures et par valeurs supérieures, et l\u2019asymptote verticale.</li></ol></li>'+
+  '<li>Montrer que, pour tout x \u2260 \u22121, \u03C6\u2032(x) = '+FR(poly([[1,2],[2,1],[1+m,0]]),'(x + 1)<sup>2</sup>')+'. Justifier que '+poly([[1,2],[2,1],[1+m,0]])+' &gt; 0 pour tout réel x, puis dresser le tableau de variation de \u03C6.</li>'+
+  '<li>Dresser le tableau de signes de \u03C6(x) sur D<sub>\u03C6</sub> (on pourra factoriser le numérateur).</li>'+
+  '<li>Déterminer l\u2019équation réduite de la tangente T à '+CP+' au point d\u2019abscisse 1.</li>'+
+  '<li>Montrer que l\u2019équation \u03C6(x) = 1 admet une unique solution \u03B2 dans ]\u22121 ; +\u221E[, que \u03B2 \u2208 ]0 ; 1[, puis déterminer la valeur exacte de \u03B2.</li>'+
+  '</ol>';
+
+  const corrige=
+  '<ol class="qs">'+
+  '<li>\u03C6(x) existe \u21D4 x + 1 \u2260 0 \u21D4 x \u2260 \u22121 : D<sub>\u03C6</sub> = \u211D \\ {\u22121}.</li>'+
+  '<li>x + '+m+' \u2212 '+FR(m,'x + 1')+' = '+FR('(x + '+m+')(x + 1) \u2212 '+m,'x + 1')+' = '+FR('x<sup>2</sup> + '+XH+' + '+m+'x + '+m+' \u2212 '+m,'x + 1')+' = '+FR(numr,den)+' = \u03C6(x). '+
+    '<ol class="qs subq">'+
+    '<li>'+LIM('x\u2192\u00B1\u221E')+' \u03C6(x) = \u00B1\u221E et \u03C6(x) \u2212 (x + '+m+') = \u2212'+FR(m,'x + 1')+' \u2192 0 : la droite y = x + '+m+' est asymptote oblique à '+CP+' en \u00B1\u221E.</li>'+
+    '<li>Quand x \u2192 \u22121, le terme \u2212'+FR(m,'x + 1')+' domine : '+LIM('x\u2192\u22121\u207B')+' \u03C6(x) = '+INFp+' et '+LIM('x\u2192\u22121\u207A')+' \u03C6(x) = '+INFn+'. La droite x = \u22121 est asymptote verticale à '+CP+'.</li>'+
+    '</ol></li>'+
+  '<li>\u03C6\u2032(x) = 1 + '+FR(m,'(x + 1)<sup>2</sup>')+' = '+FR('(x + 1)<sup>2</sup> + '+m,'(x + 1)<sup>2</sup>')+' = '+FR(poly([[1,2],[2,1],[1+m,0]]),'(x + 1)<sup>2</sup>')+'. '+
+    'Or (x + 1)<sup>2</sup> \u2265 0 et '+m+' &gt; 0, donc (x + 1)<sup>2</sup> + '+m+' &gt; 0 pour tout réel x : \u03C6\u2032(x) &gt; 0 pour tout x \u2260 \u22121. \u03C6 est croissante sur chacun des deux intervalles :'+
+    tabVar({name:'\u03C6',
+      points:[{x:INFn,kind:'edge',val:INFn,pos:'-'},{x:'\u22121',kind:'pole',left:INFp,right:INFn},{x:INFp,kind:'edge',val:INFp,pos:'+'}],
+      segs:[{sign:'+',p0:'-',p1:'+'},{sign:'+',p0:'-',p1:'+'}]})+'</li>'+
+  '<li>x<sup>2</sup> + '+(m+1)+'x = x(x + '+(m+1)+') et (x + 1)<sup>2</sup> &gt; 0 : \u03C6(x) est du signe de x(x + '+(m+1)+') :'+
+    tabSign({name:'\u03C6',
+      values:[INFn,'\u2212'+(m+1),'\u22121','0',INFp],
+      line:['','\u2212','z','+','d','\u2212','z','+','']})+'</li>'+
+  '<li>\u03C6(1) = '+qNum(phi1)+' et \u03C6\u2032(1) = '+qNum(phip1)+'. La tangente T a pour équation réduite : '+lin(phip1,Q(m,4))+'.</li>'+
+  '<li>Sur ]\u22121,+\u221E[, \u03C6 est continue et strictement croissante, de '+INFn+' (en \u22121<sup>+</sup>) à '+INFp+' : l\u2019équation \u03C6(x) = 1 admet une unique solution \u03B2 dans ]\u22121,+\u221E[. '+
+    '\u03C6(0) = 0 &lt; 1 et \u03C6(1) = '+qNum(phi1)+' &gt; 1, donc \u03B2 \u2208 ]0 ; 1[. '+
+    'Résolution : \u03C6(x) = 1 \u21D4 '+numr+' = x + 1 \u21D4 x<sup>2</sup> + '+m+'x \u2212 1 = 0. \u0394 = '+m+'<sup>2</sup> + 4 &gt; 0 : les racines sont '+FR('\u2212'+m+' \u00B1 '+SQ(rac),'2')+' ; celle de ]\u22121,+\u221E[ est \u03B2 = '+FR('\u2212'+m+' + '+SQ(rac),'2')+' (l\u2019autre racine est négative). S = {'+FR('\u2212'+m+' + '+SQ(rac),'2')+'}.</li>'+
+  '</ol>';
+
+  return {enonce,corrige,d:{m}};
+}
+
+/* ================= Assemblage du document ================= */
+function exSection(n,e){
+  return '<section class="exo"><h2><span>Exercice '+n+'</span><span class="pts">(4 points)</span></h2>'+
+         e.enonce+
+         '<details class="corr"><summary>Corrigé de l\u2019exercice '+n+'</summary>'+e.corrige+'</details></section>';
+}
+function buildDoc(seed){
+  tabCfgs=[];
+  const rnd=mulberry32(seed);
+  const gens=[genEx1,genEx2,genEx3,genEx4,genEx5];
+  const parts=[
+  '<header class="entete"><h1>Devoir surveillé : étude complète de fonctions</h1>'+
+  '<p class="sub">Terminale STI2D &nbsp;\u00B7&nbsp; Durée : 50 minutes &nbsp;\u00B7&nbsp; Calculatrice autorisée</p>'+
+  '<p class="meta">Sujet à valeurs numériques dynamiques, tirage n° <b>'+seed+'</b>. Total : 20 points (4 points par exercice).<br>La qualité de la rédaction et des tableaux sera prise en compte.</p></header><hr>'];
+  gens.forEach((g,i)=>parts.push(exSection(i+1,g(rnd))));
+  parts.push('<hr><p class="fin">Fin du sujet</p>');
+  return parts.join('\n');
+}
+
+/* ================= Interface ================= */
+const docEl=document.getElementById('doc');
+const seedEl=document.getElementById('seed');
+const btnNew=document.getElementById('btnNew');
+const btnCorr=document.getElementById('btnCorr');
+const btnPrint=document.getElementById('btnPrint');
+function newSeed(){return 1+Math.floor(Math.random()*999998);}
+let currentSeed=newSeed();
+function render(){
+  currentSeed=Math.min(999999,Math.max(1,parseInt(seedEl.value,10)||currentSeed));
+  seedEl.value=currentSeed;
+  docEl.innerHTML=buildDoc(currentSeed);
+  renderTabs();
+  const on=document.body.classList.contains('corrige-on');
+  document.querySelectorAll('details.corr').forEach(d=>{d.open=on;});
+}
+btnNew.addEventListener('click',function(){seedEl.value=newSeed();render();});
+seedEl.addEventListener('change',render);
+btnPrint.addEventListener('click',function(){window.print();});
+btnCorr.addEventListener('click',function(){
+  const on=document.body.classList.toggle('corrige-on');
+  document.querySelectorAll('details.corr').forEach(d=>{d.open=on;});
+  btnCorr.textContent=on?'\uD83D\uDE48 Masquer le corrigé':'\uD83D\uDC41 Afficher le corrigé';
+});
+render();
+</script>
+</body>
+</html>

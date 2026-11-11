@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS — Fonction inverse — Terminale STI2D</title>
+
+<!-- Configuration MathJax -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' },
+  startup: {
+    ready: () => {
+      MathJax.startup.defaultReady();
+      MathJax.startup.promise.then(() => { if (window.__build) window.__build(); });
+    }
+  }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+  :root{
+    --bleu:#1b3a6b;
+    --bleu2:#2f6fb3;
+    --fond:#eef1f6;
+    --bord:#d5dbe6;
+    --vert:#1a7f4b;
+    --rouge:#c0392b;
+    --ind:#4f46e5;          /* couleur d'accent du site de référence */
+    --ind2:#eef2ff;
+    --line:#e2e8f0;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--fond);color:#1a1a1a;
+    font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.55;
+  }
+  .page{
+    max-width:980px;margin:26px auto;background:#fff;
+    padding:36px 46px 60px;border-radius:10px;
+    box-shadow:0 2px 20px rgba(20,40,80,.10);
+  }
+  header{text-align:center;border-bottom:3px solid var(--bleu);padding-bottom:14px;margin-bottom:18px}
+  header h1{margin:0;font-size:1.75rem;color:var(--bleu);letter-spacing:.3px}
+  header .sub{margin:4px 0 0;font-size:1.05rem;color:#444}
+  header .meta{margin:8px 0 0;font-size:.9rem;color:#666;font-style:italic}
+
+  .identite{display:flex;flex-wrap:wrap;gap:22px;font-size:.95rem;margin:16px 0 14px}
+  .identite span{flex:1 1 200px;border-bottom:1px dotted #777;padding-bottom:3px}
+
+  .consignes{background:#eef3fb;border-left:4px solid var(--bleu2);
+    padding:10px 16px;border-radius:4px;font-size:.95rem;margin:0 0 8px}
+
+  /* ---------- Barre d'outils ---------- */
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    margin:18px 0 26px;padding:12px 14px;background:#eef3fb;border-radius:8px;
+  }
+  .toolbar button{
+    cursor:pointer;border:none;border-radius:6px;padding:9px 16px;
+    font-size:.9rem;font-weight:600;background:var(--bleu2);color:#fff;
+    transition:filter .15s,transform .05s;font-family:inherit;
+  }
+  .toolbar button:hover{filter:brightness(1.12)}
+  .toolbar button:active{transform:translateY(1px)}
+  .toolbar .seed{margin-left:auto;font-size:.82rem;color:#556}
+  .toolbar .seed code{background:#fff;border:1px solid var(--bord);
+    border-radius:4px;padding:1px 6px;font-size:.82rem}
+
+  /* ---------- Titres d'exercice ---------- */
+  h2{
+    font-size:1.18rem;color:var(--bleu);margin:34px 0 12px;
+    padding-bottom:6px;border-bottom:2px solid #cfd9e8;
+  }
+  h2 .pts{font-size:.85rem;color:#6b7a92;font-weight:500}
+
+  .questions{margin:8px 0 0;padding-left:1.6em}
+  .questions > li{margin-bottom:10px}
+  .indication,.aide,.rappel{display:block;font-size:.9rem;color:#5a6b85;
+    font-style:italic;margin-top:4px}
+  .rappel{margin:6px 0 0}
+
+  /* ---------- QCM ---------- */
+  table.qcm{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
+  table.qcm th{background:var(--bleu);color:#fff;padding:9px;text-align:left;font-weight:600}
+  table.qcm td{border:1px solid var(--bord);padding:11px;vertical-align:top}
+  table.qcm tbody tr:nth-child(even) td{background:#fafbfd}
+  .qtext{width:35%}
+  .qrep{width:86px;text-align:center}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px}
+  .opt{display:flex;gap:8px;align-items:flex-start;cursor:pointer;
+    padding:4px 7px;border-radius:5px;transition:background .15s}
+  .opt:hover{background:#eef3fb}
+  .opt input{margin-top:5px;accent-color:var(--bleu2);flex:none}
+  .let{font-weight:700;color:var(--bleu2);min-width:15px}
+  .opt.bon{background:#e3f6ea;outline:1px solid var(--vert)}
+  .opt.mauvais{background:#fdeaea;outline:1px solid var(--rouge)}
+  .repbox{display:inline-block;min-width:36px;padding:4px 8px;border:1px solid var(--bord);
+    border-radius:5px;font-weight:700;color:#8894a8}
+  .repbox.bon{color:var(--vert);border-color:var(--vert);background:#e3f6ea}
+  .repbox.mauvais{color:var(--rouge);border-color:var(--rouge);background:#fdeaea}
+
+  .actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px}
+  .actions button{
+    cursor:pointer;border:none;border-radius:6px;padding:9px 16px;
+    font-size:.9rem;font-weight:600;background:var(--vert);color:#fff;
+    font-family:inherit;transition:filter .15s;
+  }
+  .actions button:hover{filter:brightness(1.12)}
+  .score{display:none;font-weight:700;color:var(--bleu);
+    background:#eef3fb;padding:8px 14px;border-radius:6px;font-size:.92rem}
+
+  /* ---------- Corrigé ---------- */
+  .correction{
+    display:none;background:#f0f8f3;border-left:4px solid var(--vert);
+    padding:12px 18px;border-radius:4px;margin:14px 0;font-size:.94rem;
+  }
+  body.show-corr .correction{display:block}
+  .correction h3{margin:0 0 8px;font-size:.98rem;color:var(--vert)}
+  .correction ol{margin:0;padding-left:1.4em}
+  .correction ol > li{margin-bottom:8px}
+
+  /* =========================================================
+     TABLEAUX DE VARIATIONS — style repris du site de référence
+     ========================================================= */
+  .tblwrap{overflow-x:auto;margin:12px 0}
+  .tv{
+    border-collapse:collapse;
+    margin:.4rem auto;
+    font-family:"Cambria Math","STIX Two Math",Georgia,serif;
+    font-size:1.02rem;
+    background:#fff;
+  }
+  .tv th,.tv td{
+    border:1.6px solid #cbd5e1;
+    padding:.4rem .8rem;
+    text-align:center;
+    min-width:2.9rem;
+  }
+  .tv th{
+    background:var(--ind2);
+    color:#312e81;
+    font-weight:600;
+  }
+  .tv td.pos{color:#15803d;font-weight:800}
+  .tv td.neg{color:#b91c1c;font-weight:800}
+  .tv td.zero{font-weight:800}
+  .tv td .a{font-size:1.28rem;color:#475569;margin:0 .1em}
+  .tv td .l{font-weight:700}
+  .tv td.ext{
+    font-weight:800;
+    color:#be123c;
+    background:#fff1f2;
+  }
+  .cap{text-align:center;font-size:.9rem;color:var(--mut, #475569);margin-top:6px}
+
+  /* ---------- Tableaux de valeurs (images) ---------- */
+  .vals{border-collapse:collapse;margin:.4rem auto;font-size:.95rem}
+  .vals th,.vals td{border:1.4px solid #cbd5e1;padding:.28rem .62rem;text-align:center}
+  .vals th{background:#f8fafc;font-weight:600}
+  .vals td.hl{background:#fff1f2;font-weight:700;color:#be123c}
+
+  /* ---------- Fin de document ---------- */
+  hr.fin{border:none;border-top:1px solid #c8d0de;margin:34px 0 16px}
+  .bareme{font-size:.92rem;color:#3c4a5f}
+  .bareme ul{margin:6px 0;padding-left:1.4em}
+
+  @media (max-width:720px){
+    .page{padding:22px 18px 40px;margin:0;border-radius:0}
+    .opts{grid-template-columns:1fr}
+    .qtext{width:auto}
+    .toolbar .seed{margin-left:0;width:100%}
+  }
+
+  @media print{
+    body{background:#fff;font-size:11.5pt}
+    .page{box-shadow:none;margin:0;max-width:none;padding:0;border-radius:0}
+    .no-print{display:none !important}
+    .correction{display:none !important}
+    table.qcm tbody tr{break-inside:avoid}
+    h2{break-after:avoid}
+    .opt:hover{background:transparent}
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <header>
+    <h1>Devoir surveillé — La fonction inverse</h1>
+    <p class="sub">Terminale STI2D</p>
+    <p class="meta">Durée : 50 minutes — Calculatrice non programmable autorisée</p>
+  </header>
+
+  <div class="identite">
+    <span>Nom : </span>
+    <span>Prénom : </span>
+    <span>Classe : </span>
+  </div>
+
+  <p class="consignes">
+    <strong>Consignes :</strong> La clarté de la rédaction et la justification des réponses
+    seront prises en compte. Les exercices sont indépendants.
+  </p>
+
+  <div class="toolbar no-print">
+    <button id="btn-new" type="button">🎲 Nouveau tirage</button>
+    <button id="btn-corr" type="button">👁 Afficher le corrigé</button>
+    <span class="seed">Graine : <code id="seed-label">—</code></span>
+  </div>
+
+  <!-- ================= EXERCICE 1 ================= -->
+  <section>
+    <h2>Exercice 1 — QCM <span class="pts">(5 points)</span></h2>
+    <p><em>Pour chaque question, une seule réponse est exacte.
+      <strong>Inscrivez la lettre de la bonne réponse dans la dernière colonne.</strong>
+      Aucune justification n'est demandée.</em></p>
+
+    <div id="qcm-zone"></div>
+
+    <div class="actions no-print">
+      <button id="btn-verif" type="button">✔ Vérifier mes réponses</button>
+      <span id="score" class="score"></span>
+    </div>
+  </section>
+
+  <!-- ================= EXERCICE 2 ================= -->
+  <section>
+    <h2>Exercice 2 — Étude d'une fonction <span class="pts">(10 points)</span></h2>
+    <div id="ex2-zone"></div>
+  </section>
+
+  <!-- ================= EXERCICE 3 ================= -->
+  <section>
+    <h2>Exercice 3 — Inverse d'une fonction du second degré <span class="pts">(5 points)</span></h2>
+    <div id="ex3-zone"></div>
+  </section>
+
+  <hr class="fin">
+
+  <div class="bareme">
+    <strong>Barème indicatif :</strong>
+    <ul>
+      <li>Exercice 1 (QCM) : 5 points (1 point par question)</li>
+      <li>Exercice 2 : 10 points</li>
+      <li>Exercice 3 : 5 points</li>
+    </ul>
+    <em>Total : 20 points.</em>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     1. Générateur pseudo-aléatoire reproductible (graine)
+     ========================================================= */
+  let rng = Math.random;
+  let seed = 0;
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  const randInt = (a, b) => a + Math.floor(rng() * (b - a + 1));
+  const pick = arr => arr[randInt(0, arr.length - 1)];
+  function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = randInt(0, i);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const LETTERS = ['A', 'B', 'C', 'D'];
+
+  /* =========================================================
+     2. QCM — construction et rendu
+     ========================================================= */
+  let QCM = [];
+  let verified = false;
+
+  function makeQ(text, options, correctIdx) {
+    const tagged = options.map((t, i) => ({ t, ok: i === correctIdx }));
+    const sh = shuffled(tagged);
+    return { text, options: sh.map(o => o.t), correct: sh.findIndex(o => o.ok) };
+  }
+
+  function buildQCM() {
+    const a = pick([2, 3, 4, 5, 7]);
+
+    QCM = [
+      makeQ('La fonction inverse \\(f(x)=\\dfrac{1}{x}\\) est définie sur :',
+        ['\\(\\mathbb{R}\\)',
+         '\\(\\mathbb{R}^{*}=\\mathbb{R}\\setminus\\{0\\}\\)',
+         '\\([0\\,;\\,+\\infty[\\)',
+         '\\(]0\\,;\\,+\\infty[\\)'], 1),
+
+      makeQ('La courbe de la fonction inverse \\(f(x)=\\dfrac{1}{x}\\) admet :',
+        ['un axe de symétrie horizontal',
+         'un axe de symétrie vertical',
+         'un centre de symétrie : l\u2019origine du repère',
+         'deux axes de symétrie : les axes du repère'], 2),
+
+      makeQ('La dérivée de \\(f(x)=\\dfrac{' + a + '}{x}\\) sur \\(\\mathbb{R}^{*}\\) est :',
+        ['\\(f\'(x)=\\dfrac{' + a + '}{x^2}\\)',
+         '\\(f\'(x)=-\\dfrac{' + a + '}{x^2}\\)',
+         '\\(f\'(x)=-\\dfrac{' + a + '}{x}\\)',
+         '\\(f\'(x)=-\\dfrac{1}{' + a + 'x^2}\\)'], 1),
+
+      makeQ('Sur \\(]0\\,;\\,+\\infty[\\), la fonction inverse est :',
+        ['croissante', 'décroissante', 'constante',
+         'croissante puis décroissante'], 1),
+
+      makeQ('\\(\\displaystyle\\lim_{\\substack{x\\to 0 \\\\ x>0}}\\dfrac{1}{x}\\) est égale à :',
+        ['\\(0\\)', '\\(-\\infty\\)', '\\(+\\infty\\)', '\\(1\\)'], 2)
+    ];
+  }
+
+  function renderQCM() {
+    const rows = QCM.map((q, i) => `
+      <tr>
+        <td class="qtext"><strong>Q${i + 1}.</strong> ${q.text}</td>
+        <td class="qopts">
+          <div class="opts">
+            ${q.options.map((o, j) => `
+              <label class="opt" data-j="${j}">
+                <input type="radio" name="q${i + 1}" value="${j}">
+                <span class="let">${LETTERS[j]}</span><span class="otxt">${o}</span>
+              </label>`).join('')}
+          </div>
+        </td>
+        <td class="qrep"><span class="repbox">?</span></td>
+      </tr>`).join('');
+
+    document.getElementById('qcm-zone').innerHTML = `
+      <table class="qcm">
+        <thead>
+          <tr><th>Question</th><th>Propositions</th><th>Réponse</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function syncQCM() {
+    const show = document.body.classList.contains('show-corr');
+    const rows = document.querySelectorAll('#qcm-zone tbody tr');
+
+    QCM.forEach((q, i) => {
+      const row = rows[i];
+      if (!row) return;
+      const labels = row.querySelectorAll('.opt');
+      const box = row.querySelector('.repbox');
+      labels.forEach(l => l.classList.remove('bon', 'mauvais'));
+      box.classList.remove('bon', 'mauvais');
+
+      const checked = row.querySelector('input:checked');
+      const j = checked ? +checked.value : -1;
+
+      if (show) {
+        labels[q.correct].classList.add('bon');
+        box.textContent = LETTERS[q.correct];
+        box.classList.add('bon');
+      } else if (verified && j >= 0) {
+        labels[j].classList.add(j === q.correct ? 'bon' : 'mauvais');
+        box.textContent = LETTERS[j];
+        box.classList.add(j === q.correct ? 'bon' : 'mauvais');
+      } else {
+        box.textContent = j >= 0 ? LETTERS[j] : '?';
+      }
+    });
+  }
+
+  function verifierQCM() {
+    verified = true;
+    let score = 0, sansReponse = 0;
+    const rows = document.querySelectorAll('#qcm-zone tbody tr');
+
+    QCM.forEach((q, i) => {
+      const checked = rows[i].querySelector('input:checked');
+      if (!checked) { sansReponse++; return; }
+      if (+checked.value === q.correct) score++;
+    });
+
+    syncQCM();
+
+    const el = document.getElementById('score');
+    el.textContent = `Score : ${score} / ${QCM.length}` +
+      (sansReponse ? ` — ${sansReponse} question(s) sans réponse` : '');
+    el.style.display = 'inline-block';
+  }
+
+  /* =========================================================
+     3. Exercice 2 — f(x) = x + b + c/x  avec c carré parfait
+     ========================================================= */
+  function renderEx2() {
+    const c = pick([1, 4, 9, 16]);
+    const b = pick([1, 2, 3, 5]);
+    const rc = Math.sqrt(c);
+    const rcT = (rc === 1) ? '1' : `\\sqrt{${c}}`;
+    const minV = 2 * rc + b;
+
+    document.getElementById('ex2-zone').innerHTML = `
+      <p>On considère la fonction \\(f\\) définie sur \\(]0\\,;\\,+\\infty[\\) par :</p>
+      \\[ f(x)=x+${b}+\\dfrac{${c}}{x}. \\]
+      <p class="rappel"><em>Rappel : la dérivée de \\(\\dfrac{1}{x}\\) est \\(-\\dfrac{1}{x^2}\\).</em></p>
+
+      <ol class="questions">
+        <li>Calculer \\(f'(x)\\) pour \\(x>0\\).</li>
+
+        <li>Montrer que l'on peut écrire :
+          \\[ f'(x)=\\dfrac{x^2-${c}}{x^2}. \\]
+          <span class="indication">Indication : on pourra utiliser
+            \\(x^2-${c}=(x-${rcT})(x+${rcT})\\).</span>
+        </li>
+
+        <li>Étudier le signe de \\(f'(x)\\) sur \\(]0\\,;\\,+\\infty[\\).
+          <span class="aide">Aide : pour \\(x>0\\), le dénominateur \\(x^2\\) est toujours
+            strictement positif.</span>
+        </li>
+
+        <li>Dresser le tableau de variations de \\(f\\) sur \\(]0\\,;\\,+\\infty[\\).</li>
+
+        <li>Calculer les limites suivantes :
+          \\[ \\lim_{\\substack{x\\rightarrow 0 \\\\ x>0}} f(x)
+             \\qquad \\text{et} \\qquad
+             \\lim_{x\\to +\\infty} f(x). \\]
+          <span class="rappel"><em>Rappel :</em>
+            \\(\\displaystyle\\lim_{\\substack{x\\rightarrow 0 \\\\ x>0}}\\frac{1}{x}=+\\infty\\)
+            &nbsp;et&nbsp;
+            \\(\\displaystyle\\lim_{x\\to +\\infty}\\frac{1}{x}=0\\).</span>
+        </li>
+
+        <li>En utilisant le tableau de variations, justifier que \\(f\\) admet un minimum
+          sur \\(]0\\,;\\,+\\infty[\\). Préciser en quelle valeur de \\(x\\) il est atteint
+          et calculer ce minimum.</li>
+      </ol>
+
+      <div class="correction">
+        <h3>Corrigé — Exercice 2 (valeurs du tirage)</h3>
+        <ol>
+          <li>\\(f'(x)=1-\\dfrac{${c}}{x^2}\\) car la dérivée de
+            \\(\\dfrac{${c}}{x}\\) est \\(-\\dfrac{${c}}{x^2}\\).</li>
+
+          <li>En réduisant au même dénominateur :
+            \\(f'(x)=\\dfrac{x^2}{x^2}-\\dfrac{${c}}{x^2}
+              =\\dfrac{x^2-${c}}{x^2}\\).</li>
+
+          <li>Pour \\(x>0\\), \\(x^2>0\\), donc \\(f'(x)\\) a le signe de \\(x^2-${c}\\).
+            Or \\(x^2-${c}=(x-${rcT})(x+${rcT})\\) et \\(x+${rcT}>0\\) pour \\(x>0\\).
+            Donc \\(f'(x)\\) a le signe de \\(x-${rcT}\\) :
+            \\(f'(x)<0\\) sur \\(]0\\,;\\,${rcT}[\\), \\(f'(x)=0\\) en \\(x=${rcT}\\),
+            \\(f'(x)>0\\) sur \\(]${rcT}\\,;\\,+\\infty[\\).</li>
+
+          <li>
+            <div class="tblwrap">
+              <table class="tv">
+                <tr>
+                  <th>\\(x\\)</th>
+                  <td>\\(0\\)</td>
+                  <td></td>
+                  <td>\\(${rcT}\\)</td>
+                  <td></td>
+                  <td>\\(+\\infty\\)</td>
+                </tr>
+                <tr>
+                  <th>\\(f'(x)\\)</th>
+                  <td></td>
+                  <td class="neg">\\(-\\)</td>
+                  <td class="zero">\\(0\\)</td>
+                  <td class="pos">\\(+\\)</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>\\(f\\)</th>
+                  <td>\\(+\\infty\\)</td>
+                  <td><span class="a">↘</span></td>
+                  <td class="ext">\\(${minV}\\)</td>
+                  <td><span class="a">↗</span></td>
+                  <td>\\(+\\infty\\)</td>
+                </tr>
+              </table>
+            </div>
+          </li>
+
+          <li>\\(\\displaystyle\\lim_{\\substack{x\\rightarrow 0 \\\\ x>0}} f(x)=+\\infty\\)
+            (car \\(\\frac{${c}}{x}\\to+\\infty\\)) et
+            \\(\\displaystyle\\lim_{x\\to +\\infty} f(x)=+\\infty\\)
+            (car \\(x+${b}\\to+\\infty\\) et \\(\\frac{${c}}{x}\\to 0\\)).</li>
+
+          <li>Le tableau de variations montre que \\(f\\) décroît puis croît :
+            elle admet donc un <strong>minimum</strong> atteint en \\(x=${rcT}\\).
+            Ce minimum vaut
+            \\(f(${rcT})=${rcT}+${b}+\\dfrac{${c}}{${rcT}}
+              =${rcT}+${b}+${rcT}=${minV}\\).</li>
+        </ol>
+      </div>
+    `;
+  }
+
+  /* =========================================================
+     4. Exercice 3 — u(x) = (x−a)² + k  sur [a−2 ; a+2]
+     ========================================================= */
+  function renderEx3() {
+    const a = pick([2, 3]);
+    const k = pick([1, 2, 3, 4]);
+    const x0 = a - 2, x1 = a, x2 = a + 2;
+    const ux0 = 4 + k, ux1 = k, ux2 = 4 + k;
+
+    document.getElementById('ex3-zone').innerHTML = `
+      <p>On considère la fonction \\(u\\) définie sur l'intervalle \\([${x0}\\,;\\,${x2}]\\) par :</p>
+      \\[ u(x)=x^2-${2 * a}x+${a * a + k}. \\]
+
+      <ol class="questions">
+        <li>Calculer \\(u'(x)\\) et étudier le signe de \\(u'(x)\\) sur \\([${x0}\\,;\\,${x2}]\\).</li>
+
+        <li>Dresser le tableau de variations de \\(u\\) sur \\([${x0}\\,;\\,${x2}]\\).<br>
+          <span class="indication">On calculera les images
+            \\(u(${x0})\\), \\(u(${x1})\\) et \\(u(${x2})\\).</span></li>
+
+        <li>Quel est le minimum de \\(u\\) sur \\([${x0}\\,;\\,${x2}]\\) ?
+          En déduire que \\(u(x)>0\\) pour tout \\(x\\in[${x0}\\,;\\,${x2}]\\).</li>
+
+        <li>On considère la fonction \\(v\\) définie sur \\([${x0}\\,;\\,${x2}]\\) par
+          \\(v(x)=\\dfrac{1}{u(x)}\\).<br>
+          Calculer uniquement les images \\(v(${x0})\\), \\(v(${x1})\\) et \\(v(${x2})\\).</li>
+
+        <li><strong>Sans calculer la dérivée de \\(v\\)</strong>, en déduire le tableau
+          de variations de \\(v\\) sur \\([${x0}\\,;\\,${x2}]\\).<br>
+          <span class="rappel"><em>Rappel :</em> la fonction inverse est strictement
+            décroissante sur \\(]0\\,;\\,+\\infty[\\). Autrement dit, si \\(u\\) est positive
+            et croissante, alors \\(v=1/u\\) est décroissante, et inversement.</span></li>
+      </ol>
+
+      <div class="correction">
+        <h3>Corrigé — Exercice 3 (valeurs du tirage)</h3>
+        <ol>
+          <li>\\(u'(x)=2x-${2 * a}=2(x-${x1})\\).
+            Donc \\(u'(x)<0\\) sur \\([${x0}\\,;\\,${x1}[\\), \\(u'(${x1})=0\\),
+            \\(u'(x)>0\\) sur \\(]${x1}\\,;\\,${x2}]\\).</li>
+
+          <li>
+            <div class="tblwrap">
+              <table class="tv">
+                <tr>
+                  <th>\\(x\\)</th>
+                  <td>\\(${x0}\\)</td>
+                  <td></td>
+                  <td>\\(${x1}\\)</td>
+                  <td></td>
+                  <td>\\(${x2}\\)</td>
+                </tr>
+                <tr>
+                  <th>\\(u'(x)\\)</th>
+                  <td></td>
+                  <td class="neg">\\(-\\)</td>
+                  <td class="zero">\\(0\\)</td>
+                  <td class="pos">\\(+\\)</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>\\(u\\)</th>
+                  <td>\\(${ux0}\\)</td>
+                  <td><span class="a">↘</span></td>
+                  <td class="ext">\\(${ux1}\\)</td>
+                  <td><span class="a">↗</span></td>
+                  <td>\\(${ux2}\\)</td>
+                </tr>
+              </table>
+            </div>
+          </li>
+
+          <li>Le minimum de \\(u\\) sur \\([${x0}\\,;\\,${x2}]\\) est \\(u(${x1})=${ux1}>0\\).
+            Puisque \\(u(x)\\geq ${ux1}\\) sur tout l'intervalle, on a bien
+            \\(u(x)>0\\) pour tout \\(x\\in[${x0}\\,;\\,${x2}]\\) :
+            la fonction \\(v=1/u\\) est donc définie sur tout l'intervalle.</li>
+
+          <li>\\(v(${x0})=\\dfrac{1}{${ux0}}\\), \\(v(${x1})=\\dfrac{1}{${ux1}}\\),
+            \\(v(${x2})=\\dfrac{1}{${ux2}}\\).</li>
+
+          <li>\\(u\\) est positive et décroissante sur \\([${x0}\\,;\\,${x1}]\\),
+            donc \\(v=\\dfrac{1}{u}\\) est <strong>croissante</strong> sur
+            \\([${x0}\\,;\\,${x1}]\\).
+            \\(u\\) est positive et croissante sur \\([${x1}\\,;\\,${x2}]\\),
+            donc \\(v\\) est <strong>décroissante</strong> sur \\([${x1}\\,;\\,${x2}]\\).
+            <div class="tblwrap">
+              <table class="tv">
+                <tr>
+                  <th>\\(x\\)</th>
+                  <td>\\(${x0}\\)</td>
+                  <td></td>
+                  <td>\\(${x1}\\)</td>
+                  <td></td>
+                  <td>\\(${x2}\\)</td>
+                </tr>
+                <tr>
+                  <th>\\(v\\)</th>
+                  <td>\\(\\dfrac{1}{${ux0}}\\)</td>
+                  <td><span class="a">↗</span></td>
+                  <td class="ext">\\(\\dfrac{1}{${ux1}}\\)</td>
+                  <td><span class="a">↘</span></td>
+                  <td>\\(\\dfrac{1}{${ux2}}\\)</td>
+                </tr>
+              </table>
+            </div>
+            \\(v\\) admet donc un <strong>maximum</strong> égal à
+            \\(\\dfrac{1}{${ux1}}\\), atteint en \\(x=${x1}\\).
+          </li>
+        </ol>
+      </div>
+    `;
+  }
+
+  /* =========================================================
+     5. Rendu mathématique et orchestration
+     ========================================================= */
+  function typeset() {
+    if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+      return MathJax.typesetPromise().catch(err => console.warn(err));
+    }
+    return Promise.resolve();
+  }
+
+  function build() {
+    rng = mulberry32(seed);
+
+    document.getElementById('seed-label').textContent = seed;
+    document.body.classList.remove('show-corr');
+    document.getElementById('btn-corr').textContent = '👁 Afficher le corrigé';
+    const sc = document.getElementById('score');
+    sc.style.display = 'none';
+    sc.textContent = '';
+    verified = false;
+
+    buildQCM();
+    renderQCM();
+    renderEx2();
+    renderEx3();
+    syncQCM();
+
+    return typeset();
+  }
+
+  /* =========================================================
+     6. Événements
+     ========================================================= */
+  document.getElementById('btn-verif').addEventListener('click', verifierQCM);
+
+  document.getElementById('qcm-zone').addEventListener('change', syncQCM);
+
+  document.getElementById('btn-corr').addEventListener('click', function () {
+    const show = !document.body.classList.contains('show-corr');
+    document.body.classList.toggle('show-corr', show);
+    this.textContent = show ? '🙈 Masquer le corrigé' : '👁 Afficher le corrigé';
+    syncQCM();
+  });
+
+  document.getElementById('btn-new').addEventListener('click', function () {
+    seed = Math.floor(Math.random() * 1000000);
+    try {
+      history.replaceState(null, '', '?seed=' + seed);
+    } catch (e) { /* file:// — on ignore */ }
+    build();
+  });
+
+  /* =========================================================
+     7. Démarrage
+     ========================================================= */
+  function initSeed() {
+    let s = NaN;
+    try {
+      s = parseInt(new URLSearchParams(location.search).get('seed'), 10);
+    } catch (e) { /* ignore */ }
+    if (!Number.isFinite(s)) s = Math.floor(Math.random() * 1000000);
+    seed = s;
+    try {
+      history.replaceState(null, '', '?seed=' + seed);
+    } catch (e) { /* ignore */ }
+  }
+
+  initSeed();
+  window.__build = build;
+
+  /* Filet de sécurité si MathJax ne charge pas (hors ligne, CDN bloqué…) */
+  setTimeout(function () {
+    if (!document.querySelector('#qcm-zone table')) build();
+  }, 3000);
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2260 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur de tableur (style OpenOffice Calc) — Analyse de données</title>
+<style>
+  :root{ --vert:#18a303; --bleu:#08347a; --grisl:#e8eaec; --bord:#b0b4b8; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#eef0f2; color:#222; font-family:'Segoe UI','Liberation Sans',Arial,sans-serif; }
+  a{ color:#0a56c4; }
+  header.top{ background:linear-gradient(#fdfdfd,#eef1f4); border-bottom:1px solid #b8bcc0; padding:10px 14px 8px; }
+  .brand{ font-weight:700; color:var(--bleu); font-size:17px; display:flex; align-items:center; gap:8px; }
+  .logo{ width:18px; height:18px; border-radius:4px; background:linear-gradient(135deg,#0d5eaf,#18a303); display:inline-block; }
+  .intro{ font-size:12.5px; color:#444; margin:6px 0 0; max-width:1000px; }
+  .toolbar{ margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .fbtn{ background:linear-gradient(#fff,#e8eaec); border:1px solid var(--bord); border-radius:3px; padding:5px 10px; font-weight:600; font-size:12.5px; cursor:pointer; color:#123; }
+  .fbtn:hover{ border-color:var(--vert); box-shadow:0 0 0 1px var(--vert) inset; }
+  .hintbar{ font-size:11.5px; color:#666; font-style:italic; }
+  .status{ background:#e7f3e5; border:1px solid #bfe0b8; margin:10px 14px; padding:8px 12px; border-radius:6px; font-size:13px; display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; }
+  #btnNew{ background:var(--vert); color:#fff; border:none; border-radius:4px; padding:6px 14px; font-weight:700; cursor:pointer; font-size:13px; }
+  #btnNew:hover{ filter:brightness(1.1); }
+  .fbar{ display:flex; gap:8px; align-items:center; margin:0 14px 6px; flex-wrap:wrap; }
+  .namebox{ border:1px solid var(--bord); background:#fff; padding:4px 8px; min-width:72px; text-align:center; font-size:12.5px; font-weight:700; }
+  .fx{ font-style:italic; font-family:Georgia,serif; color:#666; font-weight:700; }
+  #formula{ flex:1; min-width:220px; border:1px solid var(--bord); padding:6px 8px; font:13px 'Liberation Mono',Consolas,monospace; }
+  #feval,#fins{ background:linear-gradient(#fff,#e8eaec); border:1px solid var(--bord); border-radius:3px; padding:6px 12px; font-weight:700; cursor:pointer; }
+  #fresult{ font-size:13px; font-weight:700; }
+  .gridwrap{ margin:0 14px; border:1px solid #b8bcc0; background:#fff; overflow:auto; max-height:430px; }
+  table.sheet{ border-collapse:separate; border-spacing:0; table-layout:fixed; }
+  .sheet th{ background:linear-gradient(#fafafa,#e6e8ea); border-right:1px solid #c8ccd0; border-bottom:1px solid #c8ccd0; font-size:11px; font-weight:600; color:#555; padding:2px 6px; position:sticky; z-index:2; user-select:none; text-align:center; }
+  .sheet th.corner{ left:0; top:0; z-index:5; }
+  .sheet th.colh{ top:0; width:82px; min-width:82px; }
+  .sheet th.rowh{ left:0; width:36px; min-width:36px; z-index:3; }
+  .sheet td{ border-right:1px solid #ededed; border-bottom:1px solid #ededed; height:22px; min-width:82px; padding:1px 5px; font-size:12px; background:#fff; white-space:nowrap; overflow:hidden; cursor:cell; }
+  .sheet td.num{ text-align:right; background:#f4fbf4; font-weight:600; }
+  .sheet td.sel{ outline:2px solid var(--vert); outline-offset:-2px; }
+  .sheet td{ user-select:none; }
+  /* sélection d'une plage (souris ou clavier) */
+  .sheet td.selin{ background-color:#c9ecc9 !important; }
+  .sheet td.sel-t{ border-top:2px solid var(--vert); }
+  .sheet td.sel-b{ border-bottom:2px solid var(--vert); }
+  .sheet td.sel-l{ border-left:2px solid var(--vert); }
+  .sheet td.sel-r{ border-right:2px solid var(--vert); }
+  /* saisie directe dans une cellule (double-clic ou frappe clavier) */
+  .sheet td{ position:relative; }
+  .cellinp{ position:absolute; left:0; top:0; width:100%; height:100%; box-sizing:border-box; border:none; padding:1px 5px; font:12px 'Liberation Mono',Consolas,monospace; background:#fff; outline:2px solid var(--bleu); outline-offset:-2px; z-index:4; }
+  .sheet td.erreval{ color:#c00; font-weight:700; }
+  /* plages des missions : une couleur par mission (aucun marqueur sur la cellule cible) */
+  .sheet td.mrg0{ background-color:#fbe6e3 !important; }
+  .sheet td.mrg1{ background-color:#fdeee0 !important; }
+  .sheet td.mrg2{ background-color:#f1e8f8 !important; }
+  .sheet td.mrg3{ background-color:#e3f3ea !important; }
+  .sheet td.mrg4{ background-color:#e3ecf8 !important; }
+  .dot{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; border:1px solid rgba(0,0,0,.2); }
+  .tabs{ margin:4px 14px 0; display:flex; gap:2px; font-size:12px; }
+  .tab{ padding:3px 16px; background:linear-gradient(#f4f4f4,#e4e4e4); border:1px solid #b8bcc0; border-bottom:none; border-radius:5px 5px 0 0; }
+  .tab.active{ background:#fff; font-weight:700; }
+  /* --- menu vertical rétractable --- */
+  .layout{ display:flex; align-items:flex-start; gap:12px; margin:10px 14px 0; }
+  #sidebar{ flex:0 0 340px; width:340px; background:#fff; border:1px solid #d8dcdf; border-radius:8px; position:sticky; top:8px; max-height:calc(100vh - 16px); overflow:hidden; }
+  #sidebar.closed{ display:none; }
+  .sb-inner{ max-height:calc(100vh - 16px); overflow:auto; }
+  .sb-top{ display:flex; justify-content:space-between; align-items:center; background:linear-gradient(var(--bleu),#0a4aa8); color:#fff; padding:8px 12px; position:sticky; top:0; z-index:2; }
+  .sb-top b{ font-size:13px; }
+  #sbClose{ background:rgba(255,255,255,.2); border:none; color:#fff; border-radius:4px; padding:2px 10px; cursor:pointer; font-weight:700; }
+  .sb-sec{ border-top:1px solid #e8eaec; }
+  .sb-sec:first-of-type{ border-top:none; }
+  .sb-head{ display:flex; justify-content:space-between; align-items:center; width:100%; background:#f6f8fa; border:none; border-bottom:1px solid #e8eaec; padding:8px 12px; font-weight:700; font-size:13px; color:var(--bleu); cursor:pointer; text-align:left; }
+  .sb-head:hover{ background:#e6f0e6; }
+  .sb-head .chev{ transition:transform .2s; display:inline-block; }
+  .sb-sec.closed .chev{ transform:rotate(-90deg); }
+  .sb-body{ padding:10px 12px; }
+  .sb-sec.closed .sb-body{ display:none; }
+  .sb-body section.bloc{ margin:0; }
+  .sb-body .memo{ font-size:11.5px; }
+  .layout .main{ flex:1 1 auto; min-width:0; }
+  .main .status{ margin:0 0 8px; }
+  .main .fbar{ margin:0 0 8px; }
+  .main .gridwrap{ margin:0; }
+  .main .tabs{ margin:4px 0 0; }
+  #sbOpen{ display:none; position:fixed; left:0; top:120px; z-index:40; background:var(--bleu); color:#fff; border:none; border-radius:0 6px 6px 0; padding:14px 7px; cursor:pointer; font-weight:700; writing-mode:vertical-rl; font-size:12px; letter-spacing:1px; box-shadow:2px 2px 6px rgba(0,0,0,.25); }
+  /* onglets exercice / missions : séparation nette au-dessus de la feuille */
+  #tp{ margin:0 0 8px; }
+  .tp-tabs{ display:flex; align-items:stretch; gap:4px; }
+  .tp-tab{ border:1px solid #d8dcdf; border-bottom:none; background:#eef1f5; color:#666; font-weight:700; font-size:13px; padding:8px 16px; cursor:pointer; border-radius:8px 8px 0 0; }
+  .tp-tab:hover{ filter:brightness(1.05); }
+  .tp-tab.miss.on{ background:#f2fff2; border-color:#b3e6a0; border-top:3px solid var(--vert); color:#0a7a00; }
+  .tp-tab.exo.on{ background:#f8fbff; border-color:#c9d4e6; border-top:3px solid var(--bleu); color:var(--bleu); }
+  #tpFold{ margin-left:auto; border:1px solid #d8dcdf; border-bottom:none; background:#eef1f5; border-radius:8px 8px 0 0; padding:8px 12px; font-weight:700; cursor:pointer; color:#555; }
+  #tpFold:hover{ filter:brightness(1.05); }
+  #tp.folded #tpFold{ color:#999; }
+  .tp-body{ border:1px solid #d8dcdf; border-radius:0 8px 8px 8px; background:#fff; padding:10px 12px; }
+  #tp.folded .tp-body{ display:none; }
+  .tp-pane section.bloc{ margin:0; }
+  .tp-pane.miss-pane{ background:#f7fff7; border-radius:6px; padding:8px; }
+  .tp-pane.miss-pane .missions ol{ max-width:680px; }
+  .tp-pane.exo-pane{ background:#f8fbff; border-radius:6px; padding:8px; }
+  .tp-tab.calc.on{ background:#faf7ff; border-color:#d8c8ea; border-top:3px solid #8e44ad; color:#6c3483; }
+  .tp-pane.calc-pane{ background:#fbfaff; border-radius:6px; padding:8px; }
+  /* --- simulateurs de calculatrices --- */
+  .ctabs{ display:flex; gap:8px; margin:4px 0 12px; flex-wrap:wrap; }
+  .ctab{ border:1px solid #d8dcdf; background:#fff; border-radius:16px; padding:6px 16px; font-weight:700; cursor:pointer; font-size:13px; color:#555; }
+  .ctab:hover{ filter:brightness(1.04); }
+  .ctab.on{ background:#8e44ad; color:#fff; border-color:#8e44ad; }
+  .calc-wrap{ display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+  .calc-device{ flex:0 1 400px; max-width:100%; border:1px solid #c4c9cd; border-radius:14px; padding:12px; }
+  .calc-device.dev-casio{ background:linear-gradient(#fdfdfd,#e6e9ee); border-color:#c9ced4; }
+  .calc-device.dev-ti{ background:linear-gradient(#f4f6fa,#d7dce4); border-color:#b7bfca; }
+  .calc-device.dev-nw{ background:linear-gradient(#33333a,#17171b); border-color:#000; }
+  .mach-top{ display:flex; justify-content:space-between; margin-bottom:8px; color:#888; font-weight:700; font-size:10.5px; letter-spacing:.8px; text-transform:uppercase; }
+  .dev-nw .mach-top{ color:#c8ccd4; }
+  .mach-lcd{ border-radius:6px; border:2px solid #8f97a0; min-height:250px; font:13px/1.5 'Liberation Mono',Consolas,monospace; padding:8px 10px; overflow:auto; }
+  .dev-casio .mach-lcd{ background:#e9f1f7; border-color:#7f8b96; }
+  .dev-ti .mach-lcd{ background:#edf0e2; border-color:#93998f; }
+  .dev-nw .mach-lcd{ background:#fff; border-color:#55555c; }
+  .mach-lcd .ln{ white-space:pre; min-height:1.5em; color:#20242a; }
+  .mach-lcd .lt{ font-weight:700; color:#3d4956; border-bottom:1px solid #c8d2dc; margin-bottom:2px; }
+  .dev-ti .mach-lcd .lt{ color:#3a4030; border-color:#c6cab4; }
+  .mach-lcd .cur{ background:#3b6ea5; color:#fff; }
+  .mach-lcd .dim{ color:#98a1ab; font-size:11.5px; }
+  .mach-lcd .sk{ border-top:1px solid #b9c4d0; margin-top:4px; padding-top:3px; color:#2f5e94; font-weight:700; font-size:11px; display:flex; gap:8px; flex-wrap:wrap; }
+  .mach-lcd .ovl{ border:1px solid #2f5e94; background:#e7f0fa; padding:1px 6px; margin-top:3px; display:inline-block; }
+  .mach-keys{ margin-top:10px; }
+  .krow{ display:grid; gap:6px; margin-bottom:6px; }
+  .krow.c2{ grid-template-columns:repeat(2,1fr); } .krow.c3{ grid-template-columns:repeat(3,1fr); }
+  .krow.c4{ grid-template-columns:repeat(4,1fr); } .krow.c5{ grid-template-columns:repeat(5,1fr); } .krow.c6{ grid-template-columns:repeat(6,1fr); }
+  .mach-keys button{ border:1px solid #101014; background:linear-gradient(#3c3c42,#26262c); color:#eceef2; border-radius:6px; padding:8px 2px; font:700 12px 'Liberation Mono',Consolas,monospace; cursor:pointer; }
+  .mach-keys button:hover{ filter:brightness(1.15); }
+  .mach-keys button:active{ transform:scale(.93); }
+  .dev-casio .mach-keys button{ background:linear-gradient(#ffffff,#e3e6ea); color:#333; border-color:#b4bac0; }
+  .dev-ti .mach-keys button{ background:linear-gradient(#f7f9fc,#dde2e9); color:#2c3242; border-color:#a9b0bc; }
+  .mach-keys button.k-fn{ font-size:10px; padding:6px 2px; }
+  .mach-keys button.k-nav{ border-radius:999px; }
+  .dev-casio .mach-keys button.k-acc{ background:linear-gradient(#ffb257,#f08c1a); color:#fff; border-color:#c86f10; }
+  .dev-ti .mach-keys button.k-acc{ background:linear-gradient(#6c9ae0,#4472c4); color:#fff; border-color:#35569b; }
+  .dev-nw .mach-keys button.k-acc{ background:linear-gradient(#ffa040,#f07f1a); color:#fff; border-color:#c4690e; }
+  .calc-actions{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:12.5px; }
+  .calc-side{ flex:1 1 340px; min-width:300px; }
+  .calc-map{ margin-top:0; }
+  .ms-wrap{ margin-top:14px; border-top:1px dashed #d8c8ea; padding-top:10px; }
+  .ms-title{ font-weight:700; font-size:13.5px; color:#6c3483; margin-bottom:8px; }
+  .ms-score{ font-weight:400; color:#0a7a00; font-size:12.5px; }
+  #msList{ margin:0 0 0 18px; padding:0; max-width:780px; }
+  #msList li{ margin:4px 0; font-size:13.5px; color:#666; }
+  #msList li.done{ color:#0a7a00; font-weight:600; }
+  /* --- exercices de laboratoire --- */
+  .lb-wrap{ margin-top:14px; border-top:1px dashed #d8c8ea; padding-top:10px; }
+  .lb-title{ font-weight:700; font-size:13.5px; color:#6c3483; margin-bottom:8px; }
+  .lb-score{ font-weight:400; color:#0a7a00; font-size:12.5px; }
+  .lb-nav{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .lb-nav select{ border:1px solid #d8c8ea; border-radius:8px; padding:6px 10px; font-size:13px; background:#fff; color:#444; flex:1 1 260px; max-width:100%; }
+  .lb-card{ border:1px solid #e0e0e6; border-left:4px solid var(--lbc,#8e44ad); border-radius:8px; padding:12px 14px; background:#fff; }
+  .lb-badge{ display:inline-block; font-size:10.5px; font-weight:700; color:#fff; background:var(--lbc,#8e44ad); border-radius:10px; padding:2px 10px; letter-spacing:.4px; text-transform:uppercase; }
+  .lb-h{ font-weight:700; font-size:14.5px; margin:6px 0 4px; color:#222; }
+  .lb-ctx{ font-size:13px; color:#555; line-height:1.5; margin-bottom:8px; }
+  .lb-data{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px; }
+  .lb-data span{ font:12.5px 'Liberation Mono',Consolas,monospace; background:#f4f2f7; border:1px solid #e2dcee; border-radius:4px; padding:2px 7px; color:#333; }
+  .lb-n{ font-size:12px; color:#777; margin-bottom:8px; }
+  .lb-tip{ font-size:12px; color:#8e44ad; background:#faf7fd; border:1px dashed #d8c8ea; border-radius:6px; padding:6px 10px; margin-bottom:10px; }
+  .lb-qs{ border-collapse:collapse; width:100%; max-width:640px; }
+  .lb-qs td{ padding:4px 6px; font-size:13px; border-bottom:1px solid #f0ecf6; }
+  .lb-qs input{ width:120px; border:1px solid #cfc6dd; border-radius:6px; padding:5px 8px; font:13px 'Liberation Mono',Consolas,monospace; text-align:right; }
+  .lb-qs input.ok{ border-color:#4caf50; background:#f2fff2; }
+  .lb-qs input.ko{ border-color:#e05252; background:#fff2f2; }
+  .lb-act{ padding-top:8px; }
+  .lb-qres{ font-size:12px; color:#0a7a00; white-space:nowrap; }
+  .lb-qres.bad{ color:#c00; }
+  .lb-fb{ margin-top:8px; font-size:13px; line-height:1.5; }
+  .lb-fb .an{ background:#f2fff2; border:1px solid #b3e6a0; border-radius:6px; padding:8px 12px; color:#0a5546; margin-top:6px; }
+
+  #sbOpen.on{ display:block; }
+  @media (max-width:880px){
+    .layout{ flex-direction:column; }
+    #sidebar{ position:static; max-height:none; width:auto; flex-basis:auto; }
+    .sb-inner{ max-height:none; }
+    #sbOpen{ writing-mode:horizontal-tb; padding:8px 12px; top:auto; bottom:16px; }
+  }
+  h2{ font-size:15px; color:var(--bleu); border-bottom:2px solid var(--vert); padding-bottom:3px; margin:22px 14px 8px; }
+  section.bloc{ margin:10px 14px; }
+  .parag{ background:#fff; border:1px solid #d8dcdf; border-radius:6px; padding:10px 14px; font-size:13.5px; line-height:1.55; margin-top:10px; }
+  .memo{ width:100%; border-collapse:collapse; font-size:12.5px; background:#fff; }
+  .memo th,.memo td{ border:1px solid #d8dcdf; padding:5px 8px; text-align:left; }
+  .memo th{ background:#eef1f4; }
+  .memo code{ font-family:'Liberation Mono',Consolas,monospace; background:#f2f6ff; padding:1px 4px; border-radius:3px; }
+  /* --- math embarqué (équivalent MathJax) --- */
+  .math{ font-family:Georgia,'Times New Roman',serif; font-style:italic; font-size:15px; }
+  .frac{ display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.92em; line-height:1.2; margin:0 2px; }
+  .frac .n{ border-bottom:1.2px solid #333; padding:0 5px; }
+  .frac .d{ padding:0 5px; }
+  .sqrt{ white-space:nowrap; }
+  .sqrt .rad{ border-top:1.2px solid #333; padding:1px 3px 0 2px; margin-left:0; }
+  /* --- modale --- */
+  #modal{ position:fixed; z-index:50; width:min(640px,94vw); max-height:84vh; overflow:auto; background:#fff; border:1px solid #b8bcc0; border-radius:8px; box-shadow:0 12px 34px rgba(0,0,0,.3); display:none; }
+  #modal.on{ display:block; }
+  .m-head{ display:flex; justify-content:space-between; align-items:center; background:linear-gradient(var(--bleu),#0a4aa8); color:#fff; padding:8px 12px; font-weight:700; font-size:15px; position:sticky; top:0; z-index:2; }
+  .m-close{ cursor:pointer; background:rgba(255,255,255,.2); border:none; color:#fff; border-radius:4px; padding:1px 8px; font-size:14px; }
+  .m-body{ padding:12px 16px 16px; font-size:13.5px; line-height:1.5; }
+  .m-syntax{ font-family:'Liberation Mono',Consolas,monospace; background:#f2f6ff; border:1px solid #ccd8ee; padding:5px 9px; border-radius:4px; }
+  .m-math{ margin:8px 0; padding:6px 10px; background:#fbfbf7; border-left:3px solid #e0c96a; border-radius:0 4px 4px 0; }
+  .m-demo{ margin-top:10px; border:1px solid #d8dcdf; border-radius:6px; padding:10px; background:#fcfcfd; }
+  .m-demo-head{ display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:12.5px; color:var(--bleu); text-transform:uppercase; letter-spacing:.4px; }
+  #mReplay{ background:linear-gradient(#fff,#e8eaec); border:1px solid var(--bord); border-radius:3px; padding:3px 10px; font-size:12px; font-weight:600; cursor:pointer; }
+  .m-demo-grid{ margin:8px 0; display:flex; flex-wrap:wrap; }
+  .democell{ display:inline-flex; flex-direction:column; align-items:center; margin:3px; }
+  .democell .ref{ font-size:9.5px; color:#888; margin-bottom:1px; }
+  .democell .val{ width:46px; height:24px; border:1px solid #c0c4c8; display:flex; align-items:center; justify-content:center; background:#fff; font-size:12.5px; }
+  .democell.hl .val{ background:#ffe9a8; border-color:#e6a700; font-weight:700; }
+  .democell.ign .val{ background:#fde3e3; border-color:#e08a8a; }
+  .m-steps .step{ animation:fadein .35s ease; margin:7px 0; padding:6px 9px; background:#f6f8fa; border-left:3px solid var(--vert); border-radius:4px; }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
+  .m-res{ margin-top:8px; background:#e7f3e5; border:1px solid #bfe0b8; padding:8px 10px; border-radius:4px; font-weight:700; empty-cells:hide; }
+  .m-res:empty{ display:none; }
+  .m-note{ margin-top:8px; font-size:12.5px; color:#555; background:#f7f7f2; border-radius:4px; padding:6px 9px; }
+  .bar{ display:inline-block; height:11px; background:var(--vert); border-radius:2px; vertical-align:middle; }
+  /* --- exercice --- */
+  .exo{ background:#fff; border:1px solid #d8dcdf; border-radius:8px; padding:14px 16px; }
+  .qgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(225px,1fr)); gap:10px; margin:10px 0; }
+  .q{ background:#fbfcfd; border:1px solid #e2e6ea; border-radius:6px; padding:8px 10px; font-size:12.5px; }
+  .q input{ width:100%; margin-top:5px; border:1px solid var(--bord); padding:4px 6px; font:13px 'Liberation Mono',Consolas,monospace; border-radius:3px; }
+  .q.ok{ border-color:#b3e6a0; background:#f4fff0; }
+  .q.ok input{ border-color:var(--vert); background:#f0fff0; }
+  .q.ko{ border-color:#ecc; background:#fff6f6; }
+  .q.ko input{ border-color:#d33; background:#fff4f4; }
+  .exo .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .exo .actions button{ border:none; border-radius:4px; padding:7px 14px; font-weight:700; cursor:pointer; font-size:13px; }
+  #exoCheck{ background:var(--bleu); color:#fff; }
+  #exoSol{ background:#e8eaec; color:#123; border:1px solid var(--bord); }
+  #exoScore{ font-weight:700; margin-left:6px; }
+  #exoCorr{ display:none; margin-top:12px; border-top:1px dashed #ccc; padding-top:10px; font-size:13.5px; line-height:1.6; }
+  #exoCorr.on{ display:block; }
+  #exoCorr .cstep{ background:#f6f8fa; border-left:3px solid var(--vert); border-radius:4px; padding:8px 11px; margin:8px 0; }
+  /* --- missions de calcul --- */
+  .missions ol{ margin:10px 0 0; padding:0; list-style:none; display:grid; gap:8px; }
+  .missions li{ background:#fbfcfd; border:1px solid #e2e6ea; border-radius:6px; padding:8px 10px; font-size:13px; }
+  .missions li::before{ content:"→ "; color:#888; font-weight:700; }
+  .missions li.ok{ border-color:#b3e6a0; background:#f2fff2; }
+  .missions li.ok::before{ content:"✔ "; color:#0a7a00; }
+  .missions li.ko{ border-color:#e2a2a2; background:#fff6f6; }
+  .missions li.ko::before{ content:"✘ "; color:#c00; }
+  .missions .mdet{ margin-top:5px; font-size:11.5px; color:#555; border-top:1px dashed #e2e6ea; padding-top:4px; line-height:1.5; }
+  .missions li.ok .mdet{ color:#0a7a00; }
+  .missions .mdet code{ font-family:'Liberation Mono',Consolas,monospace; background:#eef2f7; padding:0 3px; border-radius:2px; }
+  .mbtn{ background:var(--bleu); color:#fff; border:none; border-radius:4px; padding:6px 12px; font-weight:700; cursor:pointer; font-size:12.5px; }
+  /* loupe : mission agrandie x2 au survol */
+  #mzoom{ position:fixed; z-index:300; display:none; background:#fff; border:2px solid #d8dcdf; border-radius:8px; box-shadow:0 12px 34px rgba(0,0,0,.35); padding:12px 15px; font-size:26px; line-height:1.45; max-width:min(92vw,1000px); pointer-events:none; }
+  #mzoom .dot{ width:20px; height:20px; border-radius:4px; margin-right:10px; vertical-align:-3px; }
+  #mzoom code{ font-family:'Liberation Mono',Consolas,monospace; background:#eef2f7; padding:0 4px; border-radius:3px; font-size:24px; }
+  #mzoom .mdet{ margin-top:8px; font-size:23px; color:#555; border-top:2px dashed #e2e6ea; padding-top:7px; line-height:1.5; }
+  /* mode d'emploi des missions : affiché au survol de l'intitulé */
+  .mhelpbtn{ cursor:help; color:var(--bleu); border-bottom:2px dotted var(--bleu); font-weight:700; }
+  #mhelp{ position:fixed; z-index:290; display:none; background:#fff; border:2px solid var(--bleu); border-radius:8px; box-shadow:0 12px 34px rgba(0,0,0,.35); padding:14px 18px; font-size:14px; line-height:1.55; max-width:min(92vw,720px); pointer-events:none; }
+  #mhelp p{ margin:0; }
+  .mbtn.alt{ background:linear-gradient(#fff,#e8eaec); color:#123; border:1px solid var(--bord); }
+  #missScore{ font-weight:700; }
+  #missionSol{ display:none; } #missionSol.on{ display:block; }
+  .sheet td.calc{ background:#e8f0fe; font-weight:700; text-align:right; color:#0a3c8c; }
+  footer{ margin:24px 14px 18px; font-size:11.5px; color:#777; border-top:1px solid #d8dcdf; padding-top:10px; line-height:1.5; }
+  .cr-bar{ margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:12.5px; color:#666; }
+  .cr-bar a{ color:#2f5e94; }
+  .cr-panel{ margin-top:10px; border:1px solid #d8dcdf; border-left:4px solid #8e44ad; background:#fbfaff; border-radius:8px; padding:12px 16px; font-size:12px; color:#444; line-height:1.6; }
+  .cr-panel p{ margin:6px 0; }
+  .cr-h{ font-weight:700; color:#6c3483; font-size:13px; margin-bottom:4px; text-transform:uppercase; letter-spacing:.4px; }
+  .cr-panel a{ color:#2f5e94; font-weight:700; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><span class="logo"></span>Simulateur de feuille de calcul — style OpenOffice Calc</div>
+  <p class="intro">À chaque <b>nouvelle simulation</b>, une situation réelle est tirée au hasard parmi <b>50 situations sourcées</b> (probabilité de tirage : <b>1/50</b>). Ses <b>50 valeurs numériques</b> sont placées au hasard : <b>en ligne, en colonne ou en rectangle</b> (choix aléatoire équiprobable), à partir d'une cellule de départ tirée <b>uniformément dans toute la feuille</b> de 150 lignes × 150 colonnes : elle peut donc se trouver n'importe où, pas forcément en A1. Survolez une fonction de la barre d'outils pour afficher son explication et sa démonstration animée ; cliquez pour insérer la formule dans la barre de saisie.</p>
+  <div class="toolbar">
+    <button class="fbtn" data-fn="NB">NB</button>
+    <button class="fbtn" data-fn="MOYENNE">MOYENNE</button>
+    <button class="fbtn" data-fn="ECARTYPE">ECARTYPE</button>
+    <button class="fbtn" data-fn="VARIANCE">VARIANCE</button>
+    <button class="fbtn" data-fn="QUARTILE">QUARTILE</button>
+    <button class="fbtn" data-fn="MODE">MODE</button>
+    <button class="fbtn" data-fn="MODE.SIMPLE">MODE.SIMPLE</button>
+    <button class="fbtn" data-fn="MODE.MULTIPLE">MODE.MULTIPLE</button>
+    <span class="hintbar">Bonus (insertion directe) :</span>
+    <button class="fbtn extra" data-fn="SOMME">SOMME</button>
+    <button class="fbtn extra" data-fn="MIN">MIN</button>
+    <button class="fbtn extra" data-fn="MAX">MAX</button>
+    <button class="fbtn extra" data-fn="MEDIANE">MEDIANE</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside id="sidebar">
+    <div class="sb-inner">
+      <div class="sb-top"><b>▤ Panneau — aide-mémoire</b><button id="sbClose" title="Rétracter le menu">«</button></div>
+      <div class="sb-sec closed">
+        <button class="sb-head">Aide-mémoire des fonctions <span class="chev">▾</span></button>
+        <div class="sb-body">
+<section class="bloc">
+  <table class="memo">
+    <tr><th>Fonction</th><th>Syntaxe</th><th>Rôle</th></tr>
+    <tr><td>NB</td><td><code>=NB(plage)</code></td><td>Effectif : nombre de cellules contenant un nombre.</td></tr>
+    <tr><td>MOYENNE</td><td><code>=MOYENNE(plage)</code></td><td>Moyenne arithmétique : somme ÷ effectif.</td></tr>
+    <tr><td>VARIANCE</td><td><code>=VARIANCE(plage)</code></td><td>Variance d'échantillon (division par n−1).</td></tr>
+    <tr><td>ECARTYPE</td><td><code>=ECARTYPE(plage)</code></td><td>Écart-type d'échantillon : √variance.</td></tr>
+    <tr><td>QUARTILE</td><td><code>=QUARTILE(plage; k)</code></td><td>k = 0 (min), 1 (Q1), 2 (médiane), 3 (Q3), 4 (max).</td></tr>
+    <tr><td>MEDIANE</td><td><code>=MEDIANE(plage)</code></td><td>Valeur centrale de la série triée.</td></tr>
+    <tr><td>MODE</td><td><code>=MODE(plage)</code></td><td>Valeur la plus fréquente (une seule renvoyée).</td></tr>
+    <tr><td>MODE.SIMPLE</td><td><code>=MODE.SIMPLE(plage)</code></td><td>Nom moderne de MODE : un seul mode, le plus petit en cas d'égalité.</td></tr>
+    <tr><td>MODE.MULTIPLE</td><td><code>=MODE.MULTIPLE(plage)</code></td><td>Matrice de tous les modes (à valider en mode matriciel : Ctrl+Maj+Entrée).</td></tr>
+    <tr><td>SOMME, MIN, MAX</td><td><code>=SOMME(plage)</code>…</td><td>Somme, minimum, maximum de la plage.</td></tr>
+  </table>
+</section>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="main">
+<div class="status" id="statusbar">
+  <button id="btnNew">🎲 Nouvelle simulation</button>
+  <span id="situation"></span>
+  <span id="layout"></span>
+</div>
+
+<div id="tp">
+  <div class="tp-tabs">
+    <button class="tp-tab miss on" id="tabMiss">🎯 Missions de calcul</button>
+    <button class="tp-tab exo" id="tabExo">📝 Exercice guidé</button>
+    <button class="tp-tab calc" id="tabCalc">🖩 Calculatrices</button>
+    <button id="tpFold" title="Réduire / afficher ce panneau">▾</button>
+  </div>
+  <div class="tp-body" id="tpBody">
+    <div id="paneMiss" class="tp-pane miss-pane">
+<section class="bloc missions">
+  <p style="font-size:13px;margin:0 0 10px"><span class="mhelpbtn" id="missHelp">❔ Mode d'emploi des missions</span> <span style="color:#888">(survolez ce titre)</span></p>
+  <p style="font-size:12px;margin:0 0 10px;color:#0a7a00;background:#f2fff2;border:1px solid #b3e6a0;border-radius:6px;padding:6px 9px">🎯 À faire <b>sur la grande feuille de calcul</b> (cellule cible indiquée dans chaque mission, ex. <b>AS49</b>). Ces missions sont <b>indépendantes de l'exercice guidé</b> (onglet bleu 📝) et des <b>simulateurs de calculatrices</b> (onglet violet 🖩) à côté.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+    <button class="mbtn" id="btnMiss">🎲 Nouvelles missions</button>
+    <button class="mbtn" id="missCheck">Vérifier les cellules</button>
+    <button class="mbtn alt" id="missSol">Afficher les solutions</button>
+    <span id="missScore"></span>
+  </div>
+  <ol id="missionList"></ol>
+  <div id="missionSol" class="parag"></div>
+</section>
+    </div>
+    <div id="paneExo" class="tp-pane exo-pane" style="display:none">
+<section class="bloc exo">
+  <p id="exoIntro"></p>
+  <p><b>Exercice autonome</b> : les 30 données sont <b>déjà saisies dans la feuille de calcul</b>, plage <b>B2:F7</b> (dès que cet onglet est actif, la feuille est <b>indépendante des missions</b> : les 50 données et les plages colorées des missions sont momentanément retirées, elles réapparaissent dès votre retour sur l'onglet « Missions de calcul »). Remplissez librement les cellules : <b>double-cliquez</b> sur une cellule (ou tapez directement au clavier dès qu'elle est active), ou passez par la <b>barre fx</b> ; chaque cellule accepte une <b>valeur alphanumérique</b> ou une <b>formule commençant par « = »</b> (ex. <code>=MOYENNE(B2:F7)</code>) — le résultat s'affiche dans la cellule et <b>se recalcule automatiquement</b> si les données changent. Répondez ensuite aux questions : valeur numérique, ou formule <code>=…</code> évaluée sur la feuille (réponses vérifiées). Arrondis demandés : moyenne, variance et écart-type à <b>0,01 près</b> ; quartiles exacts.</p>
+  <div class="qgrid" id="qgrid"></div>
+  <div class="actions">
+    <button id="exoCheck">Vérifier mes réponses</button>
+    <button id="exoSol">Voir la correction détaillée</button>
+    <span id="exoScore"></span>
+  </div>
+  <div id="exoCorr"></div>
+</section>
+    </div>
+    <div id="paneCalc" class="tp-pane calc-pane" style="display:none">
+<section class="bloc calc">
+  <p id="calcIntro"></p>
+  <div class="ctabs">
+    <button class="ctab on" id="ctCasio">Casio Graph 90+E</button>
+    <button class="ctab" id="ctTI">TI-83 Premium CE</button>
+    <button class="ctab" id="ctNW">NumWorks</button>
+  </div>
+  <div class="calc-wrap">
+    <div class="calc-device dev-casio" id="calcDev">
+      <div class="mach-top"><span id="machName"></span><span>Statistiques</span></div>
+      <div class="mach-lcd" id="machLcd"></div>
+      <div class="mach-keys" id="machKeys"></div>
+      <div class="calc-actions">
+        <button class="mbtn alt" id="machReset">↻ Réinitialiser la machine</button>
+      </div>
+    </div>
+    <div class="calc-side">
+      <div class="calc-map" id="calcMap"></div>
+    </div>
+  </div>
+  <div class="ms-wrap">
+    <div class="ms-title">🎯 Missions — <span id="msName"></span> <span class="ms-score" id="msScore"></span></div>
+    <ol id="msList"></ol>
+  </div>
+  <div class="lb-wrap">
+    <div class="lb-title">🧪 50 exercices de laboratoire — analyses et contrôle qualité <span class="lb-score" id="lbScore"></span></div>
+    <div class="lb-nav">
+      <button class="mbtn" id="lbPrev">‹ Précédent</button>
+      <select id="lbSel"></select>
+      <button class="mbtn" id="lbNext">Suivant ›</button>
+      <button class="mbtn alt" id="lbRand">🎲 Au hasard</button>
+    </div>
+    <div id="lbBody"></div>
+  </div>
+</section>
+
+    </div>
+  </div>
+</div>
+
+<div class="fbar" id="fbar">
+  <div class="namebox" id="namebox">A1</div>
+  <span class="fx">fx</span>
+  <input id="formula" placeholder="Cliquez sur une cellule, tapez =NB(D8:L16) puis Entrée : le résultat s'inscrit dans la cellule" spellcheck="false">
+  <button id="fins" title="Insérer la plage sélectionnée dans la formule (ou Ctrl+Espace)">⇩ Plage</button>
+  <button id="feval">= Évaluer</button>
+  <span id="fresult"></span>
+</div>
+
+<div class="gridwrap" id="gridwrap"><table class="sheet" id="sheet"></table></div>
+<div class="tabs"><span class="tab active">Feuille1</span></div>
+
+  </div>
+</div>
+<button id="sbOpen" title="Déployer le menu">Panneau ▸</button>
+<footer>
+  <b>Note sur les données.</b> Les 50 situations s'appuient sur des données réelles publiées par les organismes cités (source affichée avec chaque tirage). Certaines valeurs sont arrondies ou légèrement approximées à des fins pédagogiques : vérifiez les valeurs exactes auprès de la source citée. Les démonstrations des modales utilisent des données fictives (notes d'élèves, exemples numériques) indépendantes des 50 situations.
+  <div class="cr-bar">
+    <button class="mbtn alt" id="crBtn">© Droits d'auteurs</button>
+  </div>
+  <div id="crInfo" class="cr-panel" style="display:none">
+    <div class="cr-h">Mentions légales — protection de la propriété intellectuelle</div>
+    <p><b>© 2026 Yann Merdy. Tous droits réservés.</b></p>
+    <p>Le présent document — textes, énoncés, exercices et situations, données présentées, code des simulateurs de calculatrices, mise en page et éléments graphiques — constitue une œuvre de l'esprit protégée par le Code de la propriété intellectuelle (articles L. 111-1, L. 112-1 et L. 113-1). Les données publiques citées demeurent la propriété de leurs organismes d'origine.</p>
+    <p><b>Interdiction de commercialisation.</b> Toute commercialisation, vente, location, sous-licence, distribution onéreuse ou exploitation commerciale de <b>tout ou partie du document</b>, directement ou indirectement, y compris dans un offre groupée ou un service payant, est <b>strictement interdite sans l'accord écrit préalable de l'auteur</b>.</p>
+    <p><b>Utilisations soumises à autorisation écrite.</b> Toute reproduction, représentation, modification, adaptation, traduction, extraction ou réutilisation de tout ou partie du document, ainsi que toute diffusion publique ou mise à disposition sur un autre support, site ou service, requièrent l'autorisation écrite préalable de l'auteur. Sont autorisés l'usage strictement personnel et privé ainsi que l'utilisation pédagogique en classe à titre gratuit, à condition de conserver intégralement la présente mention et le nom de l'auteur.</p>
+    <p><b>Droits moraux.</b> Conformément à l'article L. 121-1 du Code de la propriété intellectuelle, l'auteur bénéficie de droits moraux perpétuels, inaliénables et imprescriptibles : toute suppression ou altération de la mention de paternité, comme toute dénaturation, mutilation ou modification de l'œuvre, est interdite.</p>
+    <p><b>Sanctions.</b> Toute utilisation non autorisée constitue une contrefaçon, sanctionnée par les articles L. 335-1 à L. 335-4 du Code de la propriété intellectuelle (jusqu'à trois ans d'emprisonnement et 300 000 € d'amende), sans préjudice des dommages et intérêts pouvant être dus à l'auteur.</p>
+    <p><b>Durée de protection.</b> Les droits patrimoniaux sont protégés pendant toute la vie de l'auteur et soixante-dix ans après son décès (article L. 123-1).</p>
+    <p><b>Droit applicable.</b> Le présent document est soumis au droit français ; tout litige relatif à son utilisation relève de la compétence exclusive des tribunaux français.</p>
+    <p><b>Toute demande d'autorisation écrite doit être adressée à :</b> <a href="mailto:yann.merdy@gmail.com">yann.merdy@gmail.com</a></p>
+  </div>
+</footer>
+
+<div id="mzoom" aria-hidden="true"></div>
+<div id="mhelp">
+  <p>Entre 3 et 5 fonctions sont tirées au hasard parmi NB, MOYENNE, ECARTYPE, VARIANCE, QUARTILE, MODE, MODE.SIMPLE et MODE.MULTIPLE. Pour chaque mission : cliquez sur la <b>cellule cible</b> indiquée dans la feuille, saisissez la formule dans la barre fx (ex. : <code>=NB(D8:L16)</code>) puis appuyez sur Entrée : le résultat s'inscrit dans la cellule sélectionnée. Vous pouvez aussi remplir n'importe quelle cellule libre en <b>double-cliquant dessus</b> (ou en tapant directement au clavier dès qu'elle est active) : chaque cellule accepte une <b>valeur alphanumérique</b> ou une <b>formule commençant par « = »</b> ; seules les cellules de donnée de la situation ne peuvent pas être écrasées. La plage à traiter est soit <b>toute la plage des données</b>, soit <b>une sous-plage</b> (tout ou partie des données), à définir dans la formule. Chaque plage demandée est <b>mise en évidence en couleur sur la feuille</b> (même couleur que le pastillon de la mission) ; la cellule cible est indiquée dans l'énoncé de chaque mission (ex. : « affichez en AS49 »). <b>Pour choisir une plage</b> : cliquez-glissez à la souris, ou cliquez la première cellule puis <b>Maj + clic</b> sur la dernière, ou déplacez la sélection avec les <b>flèches</b> du clavier et étendez-la avec <b>Maj + flèches</b>. Le bouton <b>⇩ Plage</b> (ou Ctrl+Espace) insère la plage sélectionnée dans la barre fx ; en outre, pendant la saisie d'une formule (ex. <code>=NB(</code>), la plage sélectionnée à la souris ou aux flèches s'y insère automatiquement. <b>La vérification porte à la fois sur la bonne cellule cible, sur la formule utilisée (fonction et plage exactes) et sur la valeur obtenue.</b></p>
+</div>
+<div id="modal">
+  <div class="m-head"><span id="mTitle"></span><button class="m-close" id="mClose">✕</button></div>
+  <div class="m-body" id="mBody">
+    <p class="m-syntax" id="mSyntax"></p>
+    <p id="mDef"></p>
+    <div class="m-math" id="mMath"></div>
+    <div class="m-demo">
+      <div class="m-demo-head"><span>Démonstration dynamique</span><button id="mReplay">↻ Rejouer</button></div>
+      <div class="m-demo-grid" id="mDemoGrid"></div>
+      <div class="m-steps" id="mSteps"></div>
+      <div class="m-res" id="mRes"></div>
+    </div>
+    <p class="m-note" id="mNote"></p>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const COLS = 150, ROWS = 150;
+
+/* ---------- outils ---------- */
+function colName(n){ let s=""; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); } return s; }
+function colIdx(s){ let v=0; for(const ch of s) v=v*26+(ch.charCodeAt(0)-64); return v; }
+const ri = n => Math.floor(Math.random()*n);
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=ri(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function fmt(x, dec){
+  if(x===null||x===undefined||Number.isNaN(x)) return "—";
+  if(!isFinite(x)) return String(x);
+  const a=Math.abs(x);
+  if(dec===undefined) dec = a>=10000?0 : a>=100?1 : 2;
+  return x.toLocaleString('fr-FR',{minimumFractionDigits:0, maximumFractionDigits:dec});
+}
+function nf(x){ return x.toLocaleString('fr-FR',{maximumFractionDigits:4}); }
+
+/* ---------- statistiques (méthodes du tableur) ---------- */
+function quantile(sorted,k){
+  const n=sorted.length; if(!n) return null;
+  const pos = 1 + (n-1)*k/4, lo = Math.floor(pos), f = pos-lo;
+  if(lo>=n) return sorted[n-1];
+  return sorted[lo-1] + f*(sorted[lo]-sorted[lo-1]);
+}
+function statsOf(arr){
+  const n=arr.length, sum=arr.reduce((a,b)=>a+b,0);
+  const mean=n?sum/n:null;
+  let s2=null,s=null;
+  if(n>1){ s2=arr.reduce((a,x)=>a+(x-mean)*(x-mean),0)/(n-1); s=Math.sqrt(s2); }
+  const sorted=[...arr].sort((a,b)=>a-b);
+  const freq=new Map(); arr.forEach(x=>freq.set(x,(freq.get(x)||0)+1));
+  let maxf=0; freq.forEach(f=>{ if(f>maxf) maxf=f; });
+  const modes=[]; freq.forEach((f,x)=>{ if(f===maxf && maxf>1) modes.push(x); });
+  modes.sort((a,b)=>a-b);
+  return {n,sum,mean,s2,s,sorted,freq,maxf,modes,mode:modes.length?modes[0]:null,
+          min:sorted[0],max:sorted[n-1],q1:quantile(sorted,1),q2:quantile(sorted,2),q3:quantile(sorted,3)};
+}
+
+/* ---------- 50 situations réelles sourcées (50 valeurs chacune) ---------- */
+const SITUATIONS=[
+{t:"Population des 50 pays les plus peuplés (2023)",u:"millions d'habitants",s:"ONU — World Population Prospects 2024",l:"https://population.un.org/wpp/",v:[1428,1412,340,278,240,223,216,144,128,126,124,117,112,102,98,89,86,84,76,72,68,67,67,60,59,55,54,52,48,48,48,46,45,45,39,37,37,37,36,36,35,34,34,34,34,33,31,30,28,26]},
+{t:"Superficie de 50 pays du monde",u:"km²",s:"Banque mondiale",l:"https://data.worldbank.org/",v:[17098246,9984670,9596960,9833517,8515767,7692024,3287263,2780400,2724900,2381741,2344858,2149690,1964375,1904569,1886068,1759540,1648195,1564116,1285216,1284000,1267000,1246700,1240192,1221037,1141748,1104300,1098581,1030700,1002450,945087,923768,916445,881912,825615,801590,783562,756102,752612,676578,652230,637657,622984,644329,603500,587041,581730,580367,551695,527968,513120]},
+{t:"Population des 50 communes les plus peuplées de France (2022)",u:"milliers d'habitants",s:"INSEE — populations légales",l:"https://www.insee.fr",v:[2131,873,523,504,343,323,299,291,261,234,222,182,180,175,169,159,159,158,156,148,147,147,145,139,137,134,132,130,121,119,116,116,113,112,110,110,108,106,105,103,98,97,96,95,93,92,91,90,89,88]},
+{t:"Superficie de 50 départements français",u:"km²",s:"INSEE",l:"https://www.insee.fr",v:[10000,9243,9060,8763,8735,8575,7970,7433,7282,7166,7369,6817,6775,6733,6878,6864,6823,6817,6720,6671,6777,6528,6343,6277,6206,6170,6128,6035,5999,5956,5860,5857,5795,5762,5726,5565,5548,5520,5246,5234,5229,5176,4999,4755,4388,4300,4243,4000,3600,3000]},
+{t:"Population des 50 États des États-Unis (2023)",u:"milliers d'habitants",s:"US Census Bureau",l:"https://www.census.gov",v:[38965,30503,22611,19618,12961,12549,11803,11029,10828,10037,9290,8715,7815,7431,7123,7099,6852,6196,6187,5911,5877,5737,5373,5108,4574,4526,4238,4105,3617,3417,3207,3196,3068,2940,2915,2116,1969,1965,1770,1445,1435,1402,1129,1096,1032,923,783,733,647,584]},
+{t:"Altitude des 50 plus hauts sommets des Alpes",u:"mètres",s:"IGN",l:"https://www.ign.fr",v:[4808,4634,4609,4563,4554,4545,4527,4506,4479,4478,4357,4314,4274,4223,4193,4175,4158,4153,4147,4122,4107,4098,4087,4072,4063,4052,4049,4042,4035,4027,4013,4009,4003,3998,3987,3973,3962,3954,3945,3937,3933,3925,3919,3908,3902,3899,3893,3887,3883,3870]},
+{t:"Altitude de 50 sommets des Pyrénées",u:"mètres",s:"IGN",l:"https://www.ign.fr",v:[3404,3375,3355,3328,3298,3269,3251,3228,3204,3195,3182,3177,3166,3152,3145,3131,3122,3111,3103,3096,3089,3081,3072,3063,3055,3049,3042,3035,3028,3021,3015,3010,3010,3005,3000,2998,2992,2988,2983,2977,2972,2968,2964,2960,2955,2951,2947,2942,2938,2933]},
+{t:"Hauteur des 50 plus hauts immeubles du monde",u:"mètres",s:"CTBUH — The Skyscraper Center",l:"https://www.skyscrapercenter.com",v:[828,679,632,601,599,555,541,530,530,528,508,492,484,462,452,450,449,443,441,439,432,426,426,425,415,413,412,410,404,404,397,396,396,393,390,390,389,388,386,385,381,380,380,379,375,374,373,370,367,366]},
+{t:"Température moyenne annuelle de 50 capitales du monde",u:"°C",s:"Relevés climatologiques (OMM)",l:"https://public.wmo.int",v:[27.7,27,26.6,26.5,26.3,25.9,25.6,25.2,25,24.9,24.6,24.5,24.3,24.1,24,23.8,23.6,23.5,23.2,23,22.7,22.5,22.2,22,21.9,21.4,21,20.7,20.3,20,19.7,19.2,18.9,18.6,18.2,17.9,17.3,17,16.6,16.2,15.8,15.4,15.1,14.7,14.2,13.9,13.4,12.9,11.3,10.5]},
+{t:"Précipitations annuelles moyennes de 50 villes",u:"mm",s:"Climate-Data.org",l:"https://fr.climate-data.org",v:[11871,11777,8179,7115,6687,5943,5576,5357,5216,4971,4807,4648,4429,4266,4113,3984,3847,3702,3601,3522,3422,3300,3200,3081,2969,2860,2750,2681,2601,2523,2340,2286,2210,2121,2040,1961,1880,1811,1750,1690,1605,1500,1420,1310,1210,1110,1005,940,640,25]},
+{t:"Distances routières de Paris à 50 villes",u:"km",s:"Calculs d'itinéraires (Google Maps)",l:"https://www.google.com/maps",v:[130,135,145,200,225,240,240,250,280,300,315,330,340,360,370,375,385,400,420,425,460,465,480,500,510,540,540,575,585,590,640,660,680,680,700,720,750,760,775,790,840,850,850,870,930,1000,1050,1060,1100,1250]},
+{t:"Espérance de vie à la naissance dans 50 pays",u:"années",s:"OMS",l:"https://www.who.int",v:[84.3,84.1,83.9,83.8,83.6,83.4,83.2,83.1,82.9,82.8,82.7,82.6,82.5,82.4,82.3,82.2,82.1,82,81.9,81.8,81.6,81.4,81.2,81,80.8,80.6,80.4,80.1,79.9,79.7,79.4,79.1,78.8,78.5,78.2,77.9,77.5,77,76.5,76,75.4,74.8,74,73.2,72,70.5,68.9,67.2,65.3,61.5]},
+{t:"PIB nominal de 50 pays (2023)",u:"milliards USD",s:"FMI",l:"https://www.imf.org",v:[27360,17795,4456,4213,3550,3340,3031,2255,2174,2140,2021,1789,1724,1713,1581,1371,1118,1108,1068,885,811,760,632,593,545,516,510,504,497,437,430,430,427,404,396,385,375,366,350,344,338,320,305,290,275,260,250,240,225,215]},
+{t:"Prix du Big Mac dans 50 pays (2024)",u:"USD",s:"The Economist — indice Big Mac",l:"https://www.economist.com",v:[7.05,6.85,6.35,6.25,5.99,5.95,5.75,5.7,5.69,5.55,5.45,5.35,5.29,5.25,5.19,5.15,5.1,5.05,4.98,4.95,4.89,4.85,4.75,4.69,4.65,4.58,4.52,4.48,4.42,4.39,4.35,4.29,4.25,4.19,4.1,4.05,3.98,3.92,3.85,3.75,3.69,3.65,3.58,3.49,3.42,3.35,3.25,3.1,2.95,2.85]},
+{t:"Buts des 50 meilleurs buteurs en sélection nationale",u:"buts",s:"FIFA",l:"https://www.fifa.com",v:[135,112,108,94,89,85,84,79,78,77,75,73,71,69,68,67,67,66,65,64,62,62,61,60,59,58,58,57,56,56,55,54,54,53,52,51,51,50,50,49,48,48,47,47,46,45,44,43,42,41]},
+{t:"Longueur de 50 grands fleuves du monde",u:"km",s:"Encyclopædia Britannica",l:"https://www.britannica.com",v:[6650,6400,6300,6275,5539,5464,5410,4444,4400,4371,4350,4241,4200,4180,4100,3977,3900,3800,3700,3672,3600,3531,3400,3300,3200,3100,3000,2900,2826,2760,2700,2600,2510,2400,2348,2252,2200,2100,2047,1950,1900,1860,1770,1650,1600,1500,1450,1400,1300,1250]},
+{t:"Profondeur maximale de 50 lacs",u:"mètres",s:"Encyclopædia Britannica",l:"https://www.britannica.com",v:[1642,1470,1025,836,806,774,732,706,686,630,614,600,589,540,513,505,480,465,450,420,410,406,393,380,360,350,340,320,310,300,295,280,270,260,250,240,230,220,210,200,195,190,185,180,175,170,165,160,155,150]},
+{t:"Capacité de 50 grands stades du monde",u:"places",s:"StadiumDB",l:"https://www.stadiumdb.com",v:[114000,107601,100024,99354,94736,90000,89800,88308,87523,87411,85000,84819,83000,82800,82723,82250,82000,81000,80678,80000,79800,79000,78932,78296,78000,77500,77000,76500,76000,75650,75000,75000,74500,74000,73500,73000,72500,72000,71500,71000,70500,70000,70000,69500,69000,68500,68000,67500,67000,66500]},
+{t:"Vitesse de pointe de 50 animaux",u:"km/h",s:"National Geographic",l:"https://www.nationalgeographic.com",v:[389,120,110,100,88,88,85,84,80,80,80,78,76,75,72,72,70,70,68,65,65,64,64,62,60,60,60,58,56,56,55,55,54,52,50,50,49,48,47,45,45,44,43,42,41,40,40,39,38,37]},
+{t:"Durée de gestation de 50 mammifères",u:"jours",s:"Encyclopædia Britannica",l:"https://www.britannica.com",v:[660,645,548,480,450,420,400,380,360,340,330,320,310,300,290,280,270,260,250,240,230,225,220,215,210,205,200,195,190,185,180,175,170,165,160,155,150,145,140,135,130,125,120,115,110,105,100,95,40,13]},
+{t:"Masse atomique de 50 éléments chimiques",u:"u",s:"IUPAC",l:"https://iupac.org",v:[1.008,4.003,6.94,9.012,10.81,12.011,14.007,15.999,18.998,20.18,22.99,24.305,26.982,28.085,30.974,32.06,35.45,39.948,39.098,40.078,44.956,47.867,50.942,51.996,54.938,55.845,58.933,58.693,63.546,65.38,69.723,72.63,74.922,78.971,79.904,83.798,85.468,87.62,88.906,91.224,92.906,95.95,98,101.07,102.906,106.42,107.868,112.414,114.818,118.71]},
+{t:"Densité de 50 éléments chimiques",u:"g/cm³",s:"WebElements (CRC Handbook)",l:"https://www.webelements.com",v:[22.59,22.56,21.45,19.3,19.25,19.1,16.69,13.53,12.02,11.34,10.49,8.96,8.91,7.87,7.31,7.19,6.68,6.23,6.15,6.01,5.91,5.78,5.32,4.93,4.81,4.51,4.47,3.62,3.51,3.34,3.11,2.7,2.34,2.33,2.07,1.93,1.85,1.82,1.74,1.55,1.53,1.24,0.97,0.86,0.71,0.68,0.63,0.59,0.54,0.5]},
+{t:"Point de fusion de 50 éléments chimiques",u:"°C",s:"WebElements (CRC Handbook)",l:"https://www.webelements.com",v:[3550,3422,3186,3033,3017,2623,2477,2446,2334,2233,2157,1910,1907,1768,1750,1668,1538,1495,1455,1414,1287,1246,1132,1085,842,727,660,650,617,444,420,327,271,232,221,180,157,115,98,63,44,30,28,25,20,15,10,5,0,-39]},
+{t:"Température d'ébullition de 50 éléments chimiques",u:"°C",s:"WebElements (CRC Handbook)",l:"https://www.webelements.com",v:[5596,5555,5458,5012,4744,4639,4603,4150,4130,3927,3642,3409,3287,3265,2927,2913,2861,2856,2833,2562,2470,2403,2360,2250,2162,2050,1930,1837,1749,1587,1484,1382,1342,1275,1180,1091,961,883,759,685,445,357,281,184,104,67,45,20,5,-183]},
+{t:"Recettes mondiales de 50 films",u:"millions USD",s:"Box Office Mojo",l:"https://www.boxofficemojo.com",v:[2923,2799,2319,2264,2071,2052,1921,1671,1663,1520,1519,1495,1454,1445,1342,1300,1284,1272,1250,1215,1150,1121,1113,1108,1090,1061,1043,1036,1007,1006,977,959,954,939,937,930,922,919,913,895,880,876,872,863,859,852,841,837,832,828]},
+{t:"Budget de production de 50 films",u:"millions USD",s:"The Numbers (budgets de production)",l:"https://www.the-numbers.com",v:[465,447,417,400,395,392,379,378,364,360,356,350,348,340,330,329,325,320,315,313,310,308,306,300,300,297,295,293,290,289,285,281,280,278,276,275,270,268,265,263,261,260,258,256,255,254,252,250,248,247]},
+{t:"Médailles d'or par délégation aux JO de Paris 2024",u:"médailles d'or",s:"CIO (Comité international olympique)",l:"https://olympics.com",v:[40,40,20,18,16,15,14,13,12,12,11,10,9,9,9,8,8,8,7,7,7,6,6,6,5,5,5,4,4,4,4,4,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,1,1,1]},
+{t:"Les 50 chronos les plus rapides sur marathon (hommes)",u:"secondes",s:"World Athletics",l:"https://worldathletics.org",v:[7235,7269,7301,7303,7357,7357,7377,7385,7389,7393,7399,7405,7409,7413,7418,7422,7427,7432,7437,7441,7446,7450,7454,7459,7463,7467,7472,7476,7481,7485,7489,7494,7498,7502,7507,7511,7516,7520,7525,7529,7534,7538,7543,7547,7552,7556,7561,7565,7570,7574]},
+{t:"Production d'automobiles de 50 pays (2023)",u:"millions de véhicules",s:"OICA",l:"https://www.oica.net",v:[30.2,10.6,9,6.1,4.1,3.9,3.8,2.9,2.8,2.6,2.4,2.2,2.1,2,1.9,1.8,1.8,1.7,1.6,1.6,1.5,1.5,1.4,1.3,1.2,1.2,1.1,1.1,1,1,0.9,0.9,0.8,0.8,0.7,0.7,0.6,0.6,0.5,0.5,0.4,0.4,0.3,0.3,0.3,0.2,0.2,0.2,0.2,0.1]},
+{t:"PIB par habitant de 50 pays",u:"USD",s:"Banque mondiale",l:"https://data.worldbank.org/",v:[128000,103000,99900,94800,84700,81700,77600,68300,64500,62800,62400,58200,57400,55700,54600,52100,50500,49200,48800,45900,44900,43800,42600,41500,40900,39900,38400,37100,36400,35200,33800,32500,31200,30100,29500,28200,27600,26400,25500,24600,23300,22400,21300,20500,19600,18800,17900,16900,16100,15200]},
+{t:"Émissions de CO₂ par habitant de 50 pays",u:"tonnes",s:"Global Carbon Project — Our World in Data",l:"https://ourworldindata.org",v:[35.6,26.3,22.9,20.6,18.4,17.8,16.5,15.9,15.1,14.2,13.6,12.9,12.1,11.4,10.8,10.1,9.6,9,8.6,8.1,7.7,7.2,6.8,6.4,6,5.6,5.2,4.9,4.5,4.2,3.9,3.6,3.3,3,2.8,2.5,2.3,2.1,1.9,1.7,1.5,1.3,1.2,1,0.9,0.8,0.7,0.6,0.5,0.4]},
+{t:"Population des 50 plus grandes aires urbaines du monde",u:"millions d'habitants",s:"ONU-Habitat",l:"https://unhabitat.org",v:[37.1,33.4,33.2,29.2,23.2,22.6,22.3,22.2,21.6,21.3,21,19,18.8,17.2,17,16,15.5,15.4,15.2,15,14.7,14.2,14,13.6,13.6,13.5,13.1,12.7,12.5,11.9,11.5,11.2,11,10.8,10.7,10.3,10,9.7,9.5,9.3,9,8.8,8.6,8.4,8.2,8,7.8,7.6,7.4,7.2]},
+{t:"Superficie de 50 îles du monde",u:"km²",s:"Encyclopædia Britannica",l:"https://www.britannica.com",v:[2166086,785753,748168,587041,507451,473481,227960,217291,209331,183965,174600,150437,132159,108831,105806,103000,97530,84421,83424,76192,72413,61022,55800,47000,43200,38400,35808,35640,33920,30000,28300,26600,25400,24600,23500,22400,21300,20100,19400,18600,17800,17000,16200,15400,14600,13800,13000,12300,11600,10900]},
+{t:"Portée des 50 plus grands ponts suspendus",u:"mètres",s:"Structurae",l:"https://structurae.net",v:[2023,1991,1700,1650,1624,1550,1490,1408,1377,1310,1280,1219,1176,1108,1090,1024,1012,1000,988,972,960,950,935,920,905,890,876,863,850,840,826,811,798,787,775,762,750,738,725,712,700,688,677,665,652,640,629,617,605,592]},
+{t:"Altitude de 50 stations de ski françaises",u:"mètres",s:"Ski France",l:"https://www.ski-france.com",v:[2300,2050,1850,1850,1830,1800,1740,1650,1600,1560,1550,1520,1500,1500,1450,1450,1440,1400,1380,1350,1350,1330,1300,1300,1280,1270,1250,1230,1220,1200,1200,1180,1160,1150,1150,1130,1120,1100,1100,1080,1070,1060,1050,1050,1030,1020,1000,1000,990,980]},
+{t:"Températures maximales journalières à Paris, juillet-août 2023",u:"°C",s:"Météo-France — station Paris-Montsouris",l:"https://meteofrance.com",v:[24,26,25,27,28,26,25,23,22,21,23,25,27,30,31,32,31,29,28,27,26,25,24,26,28,30,31,33,34,35,35,33,30,28,27,26,25,24,23,22,21,23,25,26,28,29,30,32,31,29]},
+{t:"Durée d'ensoleillement annuelle de 50 villes",u:"heures",s:"Données climatologiques (liste Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_cities_by_sunshine_duration",v:[4015,3978,3851,3760,3650,3555,3490,3400,3320,3250,3180,3100,3030,2960,2900,2840,2780,2725,2670,2620,2570,2520,2470,2425,2380,2340,2300,2260,2220,2180,2140,2100,2065,2030,1995,1960,1930,1900,1870,1840,1810,1780,1755,1730,1705,1680,1660,1640,1620,1600]},
+{t:"Prix d'un cappuccino dans 50 villes du monde",u:"€",s:"Numbeo",l:"https://www.numbeo.com",v:[5.8,5.5,5.2,5,4.85,4.7,4.6,4.5,4.4,4.3,4.2,4.1,4.05,3.95,3.9,3.85,3.8,3.75,3.7,3.65,3.6,3.55,3.5,3.45,3.4,3.35,3.3,3.28,3.25,3.2,3.15,3.12,3.1,3.05,3,2.95,2.92,2.9,2.85,2.8,2.75,2.72,2.7,2.68,2.65,2.6,2.58,2.55,2.52,2.5]},
+{t:"Tarif d'un trajet de métro dans 50 villes",u:"€",s:"Liste des réseaux de métro (Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_metro_systems",v:[3.25,3.1,3,2.9,2.85,2.8,2.75,2.7,2.6,2.55,2.5,2.5,2.45,2.4,2.3,2.25,2.2,2.15,2.1,2.05,2,2,1.95,1.9,1.85,1.8,1.75,1.7,1.65,1.6,1.55,1.5,1.5,1.45,1.4,1.35,1.3,1.25,1.2,1.15,1.1,1.05,1,0.95,0.9,0.85,0.8,0.75,0.7,0.6]},
+{t:"Distance de 50 étoiles parmi les plus brillantes",u:"années-lumière",s:"Liste des étoiles les plus brillantes (Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_brightest_stars",v:[8.6,74,4.4,37,25,43,860,11,550,139,390,17,320,65,550,250,34,25,2615,280,79,430,51,570,89,250,130,110,2000,101,1260,83,123,510,1600,143,104,300,610,81,390,109,180,433,500,177,66,130,96,228]},
+{t:"Hauteur des 50 plus grands arbres du monde",u:"mètres",s:"Liste des plus grands arbres (Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_tallest_trees",v:[116.1,114.7,114.1,113.1,112.6,112.1,111.7,111.4,111,110.7,110.4,110,109.6,109.2,108.9,108.5,108.1,107.8,107.4,107.1,106.7,106.3,106,105.6,105.2,104.9,104.5,104.2,103.9,103.5,103.2,102.9,102.5,102.2,101.9,101.5,101.2,100.9,100.6,100.3,100,99.7,99.4,99.1,98.8,98.5,98.2,97.9,97.6,97.3]},
+{t:"50 temps de finales olympiques du 100 m (s)",u:"secondes",s:"World Athletics",l:"https://worldathletics.org",v:[9.79,9.79,9.8,9.81,9.84,9.84,9.89,9.89,9.91,9.91,9.92,9.93,9.94,9.94,9.95,9.95,9.96,9.96,9.98,9.98,9.99,9.99,10,10,10.01,10.02,10.02,10.03,10.04,10.05,10.05,10.06,10.07,10.08,10.08,10.09,10.09,10.1,10.11,10.12,10.12,10.13,10.14,10.15,10.16,10.17,10.18,10.19,10.2,10.21]},
+{t:"Fréquentation annuelle de 50 musées",u:"millions de visiteurs",s:"Liste des musées les plus visités (Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_most_visited_museums",v:[8.9,6.8,6.1,5.8,5.5,5.3,5.2,4.9,4.7,4.5,4.3,4.1,4,3.9,3.8,3.7,3.6,3.5,3.4,3.3,3.2,3.1,3,2.9,2.8,2.7,2.6,2.5,2.4,2.3,2.2,2.1,2,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3]},
+{t:"Passagers annuels de 50 aéroports",u:"millions de passagers",s:"ACI World",l:"https://www.aci.aero",v:[104.7,82.9,81.8,79.2,77.8,75.4,74.9,71.9,70.3,68.9,66.4,65.6,63.3,62.2,61.6,61.4,60.5,59.9,59.2,58.5,57.5,56.9,56.1,55.5,54.9,54.2,53.4,52.9,52.1,51.3,50.9,50.2,49.6,48.7,48.2,47.5,46.9,46,45.5,44.9,44.1,43.6,42.9,42.2,41.5,40.9,40.1,39.5,38.9,38.2]},
+{t:"Longueur de 50 réseaux de métro",u:"km",s:"Liste des réseaux de métro (Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_metro_systems",v:[803,795,785,760,745,730,715,700,690,680,670,660,650,640,630,620,610,600,590,580,570,560,550,540,530,520,510,500,493,482,471,460,450,441,432,424,415,402,394,386,377,369,361,353,345,338,330,323,316,309]},
+{t:"Superficie de 50 parcs nationaux des États-Unis",u:"km²",s:"National Park Service",l:"https://www.nps.gov",v:[53421,34287,24468,19451,14745,13628,13487,13062,12188,11842,10908,10554,9760,8991,8508,8251,7914,7450,7084,6905,6650,6335,6050,5805,5550,5320,5100,4890,4690,4520,4340,4180,4020,3880,3720,3590,3440,3320,3190,3080,2970,2860,2750,2650,2550,2450,2350,2270,2180,2100]},
+{t:"Âge estimé de 50 arbres parmi les plus anciens",u:"années",s:"Liste des arbres les plus anciens (Wikipédia)",l:"https://en.wikipedia.org/wiki/List_of_oldest_trees",v:[4855,4550,4300,4100,4000,4000,3800,3650,3500,3300,3200,3100,3000,3000,2900,2800,2750,2650,2600,2500,2450,2400,2350,2300,2250,2200,2150,2100,2050,2000,2000,1950,1900,1850,1800,1750,1700,1650,1600,1550,1500,1450,1400,1350,1300,1250,1200,1150,1100,1050]},
+{t:"Points des équipes de Premier League et Ligue 1 (2023-2024)",u:"points",s:"Premier League / LFP",l:"https://www.premierleague.com",v:[91,89,82,68,66,63,60,60,52,49,48,48,47,46,40,39,32,26,24,16,95,85,81,76,68,60,57,53,49,41,76,67,61,59,55,53,52,50,47,46,43,42,40,39,36,33,32,29,26,17]},
+{t:"Buts marqués par match, Coupe du monde 2022 (50 premiers matchs)",u:"buts",s:"FIFA — Coupe du monde Qatar 2022",l:"https://www.fifa.com",v:[2,8,0,0,5,3,3,7,1,4,3,2,0,6,3,1,4,2,5,1,2,3,6,2,1,0,3,4,2,2,3,1,2,4,5,2,3,0,1,2,2,4,1,3,2,5,1,2,3,2]},
+{t:"Taux de chômage de 50 pays",u:"%",s:"OIT — ILOSTAT",l:"https://ilostat.ilo.org",v:[32.1,27.2,25.6,23,21.8,20.5,19.8,18.9,17.6,16.8,16,15.3,14.9,14.1,13.6,13,12.4,11.9,11.5,11.1,10.7,10.3,10,9.6,9.3,8.9,8.6,8.3,8,7.7,7.4,7.1,6.9,6.6,6.3,6.1,5.8,5.5,5.3,5,4.8,4.5,4.3,4.1,3.8,3.6,3.4,3.2,3,2.8]}
+];
+
+/* ---------- construction de la feuille ---------- */
+function buildSheet(){
+  let h = "<thead><tr><th class='corner'></th>";
+  for(let c=1;c<=COLS;c++) h += "<th class='colh'>" + colName(c) + "</th>";
+  h += "</tr></thead><tbody>";
+  for(let r=1;r<=ROWS;r++){
+    h += "<tr><th class='rowh'>" + r + "</th>";
+    for(let c=1;c<=COLS;c++) h += "<td id='c_"+r+"_"+c+"' data-r='"+r+"' data-c='"+c+"'></td>";
+    h += "</tr>";
+  }
+  $("sheet").innerHTML = h + "</tbody>";
+}
+buildSheet();
+
+/* ---------- simulation ---------- */
+let sit=null, cells=[], dataRange="", layoutLabel="";
+let missions=[], computedCells=[], selAnchor=null, selFocus=null, blockInfo=null, dataKeys=new Set();
+function newSim(){
+  if(exoMode){ /* relance d'une simulation depuis l'onglet exercice : on quitte d'abord le mode exercice */
+    exoMode=false;
+    EXO.forEach((v,i)=>{
+      const r=2+Math.floor(i/5), c=2+(i%5), el=$("c_"+r+"_"+c);
+      el.textContent=""; el.classList.remove("num"); delete el.dataset.v;
+    });
+  }
+  cells.forEach(cl=>{ const el=$("c_"+cl.r+"_"+cl.c); el.textContent=""; el.classList.remove("num"); delete el.dataset.v; });
+  const k = ri(SITUATIONS.length);
+  sit = Object.assign({}, SITUATIONS[k], {idx:k+1});
+  const vals = shuffle([...sit.v]);
+  // Disposition tirée équiprobablement (exactement 1 chance sur 3), puis cellule de départ
+  // tirée uniformément parmi toutes les positions de la feuille où les 50 valeurs tiennent.
+  const layout = ["ligne","colonne","rectangle"][ri(3)];
+  cells=[]; let r0,c0,nr,nc;
+  if(layout==="ligne"){ r0=1+ri(ROWS); c0=1+ri(COLS-49); nr=1; nc=50; layoutLabel="en ligne"; }
+  else if(layout==="colonne"){ r0=1+ri(ROWS-49); c0=1+ri(COLS); nr=50; nc=1; layoutLabel="en colonne"; }
+  else{
+    const dims=[[5,10],[10,5],[2,25],[25,2]][ri(4)];
+    nr=dims[0]; nc=dims[1]; r0=1+ri(ROWS-nr+1); c0=1+ri(COLS-nc+1);
+    layoutLabel = "en rectangle ("+nr+" lignes × "+nc+" colonnes)";
+  }
+  vals.forEach((v,i)=>{ const r=r0+Math.floor(i/nc), c=c0+i%nc; cells.push({r,c,v}); });
+  cells.forEach(cl=>{
+    const el=$("c_"+cl.r+"_"+cl.c);
+    el.textContent = nf(cl.v); el.classList.add("num"); el.dataset.v=String(cl.v);
+  });
+  dataRange = colName(c0)+r0+":"+colName(c0+nc-1)+(r0+nr-1);
+  $("situation").innerHTML = "Situation tirée : <b>n°"+sit.idx+"/50</b> (probabilité 1/50) — <b>"+sit.t+"</b> ["+sit.u+"] — Source : <a href='"+sit.l+"' target='_blank' rel='noopener'>"+sit.s+"</a>";
+  $("layout").innerHTML = "Disposition des 50 données : <b>"+layoutLabel+"</b> (choix équiprobable parmi ligne, colonne, rectangle) — plage : <b>"+dataRange+"</b> — première cellule <b>"+colName(c0)+r0+"</b>, tirée uniformément dans toute la feuille (150 lignes × 150 colonnes), pas forcément A1";
+  requestAnimationFrame(()=>{
+    const first=$("c_"+cells[0].r+"_"+cells[0].c), gw=$("gridwrap");
+    if(first){ gw.scrollLeft=Math.max(0,first.offsetLeft-100); gw.scrollTop=Math.max(0,first.offsetTop-60); }
+  });
+  blockInfo={r0:r0, c0:c0, nr:nr, nc:nc};
+  dataKeys=new Set(cells.map(cl=>cl.r+"_"+cl.c));
+  selAnchor=null; selFocus=null; renderSel();
+  $("formula").value=""; $("fresult").textContent=""; $("namebox").textContent="A1";
+  genMissions();
+}
+
+/* ---------- moteur de formules ---------- */
+function cellNum(r,c){ const el=$("c_"+r+"_"+c); return (el && el.dataset.v!==undefined) ? parseFloat(el.dataset.v) : null; }
+function evaluate(str){
+  str = str.trim();
+  if(!str) return {err:""};
+  if(str[0]!=="=") return {err:"La formule doit commencer par « = »"};
+  const f = str.slice(1);
+  const m = f.match(/^([A-Za-z][A-Za-z.]*)\s*\(([\s\S]*)\)$/);
+  if(!m) return {err:"#NOM ? — fonction non reconnue"};
+  const fn = m[1].toUpperCase();
+  const allArgs = m[2].split(/[;,]/).map(a=>a.trim());
+  let kQuart = null;
+  if(fn==="QUARTILE"){
+    if(allArgs.length<2 || !/^[0-4]$/.test(allArgs[1])) return {err:"#VALEUR ! — QUARTILE exige un 2ᵉ argument : 0, 1, 2, 3 ou 4"};
+    kQuart = +allArgs[1];
+    allArgs.length = 1;
+  }
+  const nums=[];
+  for(const a of allArgs){
+    if(/^\d+(\.\d+)?$/.test(a)){ nums.push(parseFloat(a)); continue; }
+    const rng = a.match(/^([A-Za-z]{1,2})(\d+):([A-Za-z]{1,2})(\d+)$/);
+    if(rng){
+      const c1=colIdx(rng[1].toUpperCase()), r1=+rng[2], c2=colIdx(rng[3].toUpperCase()), r2=+rng[4];
+      for(let r=Math.min(r1,r2); r<=Math.max(r1,r2); r++)
+        for(let c=Math.min(c1,c2); c<=Math.max(c1,c2); c++){
+          const v=cellNum(r,c); if(v!==null) nums.push(v);
+        }
+      continue;
+    }
+    const one = a.match(/^([A-Za-z]{1,2})(\d+)$/);
+    if(one){ const v=cellNum(+one[2], colIdx(one[1].toUpperCase())); if(v!==null) nums.push(v); continue; }
+    return {err:"#VALEUR ! — argument non reconnu : « "+a+" »"};
+  }
+  if(!nums.length) return {err:"#VALEUR ! — aucune donnée numérique dans la plage"};
+  const st = statsOf(nums);
+  switch(fn){
+    case "NB": return {val: st.n};
+    case "SOMME": return {val: st.sum};
+    case "MIN": return {val: st.min};
+    case "MAX": return {val: st.max};
+    case "MOYENNE": return {val: st.mean};
+    case "MEDIANE": return {val: st.q2};
+    case "VARIANCE": return st.n<2 ? {err:"#DIV/0 ! — il faut au moins 2 valeurs"} : {val: st.s2};
+    case "ECARTYPE": return st.n<2 ? {err:"#DIV/0 ! — il faut au moins 2 valeurs"} : {val: st.s};
+    case "QUARTILE": return {val: quantile(st.sorted, kQuart)};
+    case "MODE": case "MODE.SIMPLE":
+      return st.mode===null ? {err:"#N/A — aucune valeur répétée dans la série"} : {val: st.mode};
+    case "MODE.MULTIPLE":
+      return st.modes.length ? {val: st.modes.map(x=>fmt(x)).join(" ; ")} : {err:"#N/A — aucune valeur répétée dans la série"};
+    default: return {err:"#NOM ? — fonction inconnue : "+fn};
+  }
+}
+$("feval").addEventListener("click", runFormula);
+$("formula").addEventListener("keydown", e=>{ if(e.key==="Enter") runFormula(); });
+function runFormula(){
+  const raw = $("formula").value.trim();
+  if(!raw){ $("fresult").textContent=""; return; }
+  if(!selAnchor){
+    /* aucune cellule active : simple évaluation à blanc */
+    const r = evaluate(raw);
+    $("fresult").innerHTML = r.err ? "<span style='color:#c00'>"+r.err+"</span>"
+      : "<span style='color:#0a7a00'>Résultat : "+resTxt(r.val)+"</span> <span style='color:#888'>(sélectionnez une cellule pour y inscrire le résultat)</span>";
+    return;
+  }
+  /* le contenu — valeur alphanumérique ou formule « =… » — est inscrit dans la cellule ancre de la sélection */
+  commitStudentCell(selAnchor.r, selAnchor.c, raw);
+}
+
+/* ---------- remplissage des cellules : valeur alphanumérique ou formule « =… » ---------- */
+const exoEdits={}; /* "r_c" -> contenu brut saisi par l'étudiant en mode exercice (persiste entre les allers-retours d'onglets) */
+const resTxt = v => typeof v==="number" ? fmt(v,4) : String(v);
+function clearOneCell(r,c){
+  const el=$("c_"+r+"_"+c);
+  el.textContent=""; el.classList.remove("calc","erreval");
+  delete el.dataset.v; delete el.dataset.calc; delete el.dataset.src;
+  const i=computedCells.findIndex(x=>x.r===r&&x.c===c); if(i>=0) computedCells.splice(i,1);
+}
+function applyStudentCell(r,c){
+  /* inscrit le contenu brut exoEdits["r_c"] : nombre, texte, ou formule évaluée en direct */
+  const key=r+"_"+c, el=$("c_"+r+"_"+c);
+  el.classList.remove("erreval");
+  const raw=exoEdits[key];
+  if(raw===undefined){ clearOneCell(r,c); return; }
+  if(raw[0]==="="){
+    const res=evaluate(raw);
+    if(res.err){ writeComputed(r,c,res.err,raw); el.classList.add("erreval"); }
+    else writeComputed(r,c,res.val,raw);
+  } else if(/^-?\d+([.,]\d+)?$/.test(raw)){
+    writeComputed(r,c,parseFloat(raw.replace(",",".")),raw);
+  } else {
+    writeComputed(r,c,raw,raw); /* valeur alphanumérique : texte conservé tel quel */
+  }
+}
+function refreshStudentFormulas(){
+  for(let pass=0; pass<2; pass++){ /* 2 passes : une formule peut s'appuyer sur une autre formule */
+    for(const key in exoEdits){
+      if(exoEdits[key][0]==="="){ const p=key.split("_"); applyStudentCell(+p[0],+p[1]); }
+    }
+  }
+}
+function applyAllStudentCells(){
+  for(const key in exoEdits){ const p=key.split("_"); applyStudentCell(+p[0],+p[1]); }
+}
+function commitStudentCell(r,c,raw){
+  /* écrit le contenu dans la cellule ; renvoie false si l'écriture est refusée */
+  if(exoMode){
+    if(raw==="") delete exoEdits[r+"_"+c]; else exoEdits[r+"_"+c]=raw;
+    applyStudentCell(r,c); refreshStudentFormulas();
+    const el=$("c_"+r+"_"+c);
+    if(raw==="") $("fresult").innerHTML="<span style='color:#0a7a00'>Cellule "+cellRef(r,c)+" vidée</span>";
+    else if(el.classList.contains("erreval")) $("fresult").innerHTML="<span style='color:#c00'>"+el.textContent+"</span>";
+    else $("fresult").innerHTML="<span style='color:#0a7a00'>Contenu inscrit en "+cellRef(r,c)+"</span>";
+    return true;
+  }
+  if(dataKeys.has(r+"_"+c)){
+    $("fresult").innerHTML="<span style='color:#c00'>Impossible d'écraser une donnée : sélectionnez une cellule vide.</span>";
+    return false;
+  }
+  if(raw===""){ clearOneCell(r,c); $("fresult").innerHTML="<span style='color:#0a7a00'>Cellule "+cellRef(r,c)+" vidée</span>"; return true; }
+  if(raw[0]==="="){
+    const res=evaluate(raw);
+    if(res.err){ $("fresult").innerHTML="<span style='color:#c00'>"+res.err+"</span>"; return false; }
+    writeComputed(r,c,res.val,raw);
+    $("fresult").innerHTML="<span style='color:#0a7a00'>Résultat : "+resTxt(res.val)+" — inscrit en "+cellRef(r,c)+"</span>";
+    return true;
+  }
+  if(/^-?\d+([.,]\d+)?$/.test(raw)) writeComputed(r,c,parseFloat(raw.replace(",",".")),raw);
+  else writeComputed(r,c,raw,raw); /* valeur alphanumérique acceptée */
+  $("fresult").innerHTML="<span style='color:#0a7a00'>Contenu inscrit en "+cellRef(r,c)+"</span>";
+  return true;
+}
+
+/* ---------- édition directe dans une cellule : double-clic, ou première frappe au clavier ---------- */
+let editing=null;
+function startEdit(r,c,seed){
+  if(editing) endEdit(true);
+  if(!selAnchor || selAnchor.r!==r || selAnchor.c!==c){ selAnchor={r:r,c:c}; selFocus={r:r,c:c}; renderSel(); }
+  const td=$("c_"+r+"_"+c);
+  const inp=document.createElement("input");
+  inp.className="cellinp"; inp.spellcheck=false;
+  const snap={ txt:td.textContent, v:td.dataset.v, calc:td.dataset.calc, src:td.dataset.src, calcCls:td.classList.contains("calc") };
+  inp.value = seed!==undefined ? seed : (td.dataset.src || td.textContent || "");
+  td.textContent=""; td.appendChild(inp);
+  editing={r:r,c:c,inp:inp,snap:snap};
+  inp.focus();
+  inp.addEventListener("blur", ()=>{ if(editing && editing.inp===inp) endEdit(true); });
+  inp.addEventListener("keydown", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); endEdit(true); }
+    else if(e.key==="Escape"){ e.preventDefault(); endEdit(false); }
+  });
+}
+function endEdit(commit){
+  if(!editing) return;
+  const r=editing.r, c=editing.c, inp=editing.inp, snap=editing.snap;
+  editing=null;
+  const td=$("c_"+r+"_"+c);
+  if(inp.parentNode===td) td.removeChild(inp);
+  if(!commit || !commitStudentCell(r,c,inp.value.trim())){
+    /* annulation, ou écriture refusée : le contenu précédent de la cellule est restauré */
+    td.textContent=snap.txt;
+    if(snap.calcCls) td.classList.add("calc"); else td.classList.remove("calc");
+    td.classList.remove("erreval");
+    if(snap.v!==undefined) td.dataset.v=snap.v; else delete td.dataset.v;
+    if(snap.calc!==undefined) td.dataset.calc=snap.calc; else delete td.dataset.calc;
+    if(snap.src!==undefined) td.dataset.src=snap.src; else delete td.dataset.src;
+  }
+}
+$("sheet").addEventListener("dblclick", e=>{
+  const td=e.target.closest("td"); if(!td) return;
+  startEdit(+td.dataset.r, +td.dataset.c);
+});
+
+/* ---------- sélection de plage : souris (glisser, Maj+clic) et clavier (flèches, Maj+flèches) ---------- */
+let dragging=false, lastAuto=null;
+const MCOLORS=["#c0392b","#d35400","#8e44ad","#0e7650","#16548e"];
+const clampI=(v,max)=>Math.max(1,Math.min(max,v));
+function selRect(){
+  if(!selAnchor) return null;
+  return { r1:Math.min(selAnchor.r,selFocus.r), r2:Math.max(selAnchor.r,selFocus.r),
+           c1:Math.min(selAnchor.c,selFocus.c), c2:Math.max(selAnchor.c,selFocus.c) };
+}
+function selRef(){
+  const s=selRect(); if(!s) return "";
+  return (s.r1===s.r2&&s.c1===s.c2) ? colName(s.c1)+s.r1 : colName(s.c1)+s.r1+":"+colName(s.c2)+s.r2;
+}
+function rectsOverlap(a,b){ return !(a.r1>b.r2||a.r2<b.r1||a.c1>b.c2||a.c2<b.c1); }
+function renderSel(){
+  document.querySelectorAll(".sheet td.selin,.sheet td.sel-t,.sheet td.sel-b,.sheet td.sel-l,.sheet td.sel-r")
+    .forEach(x=>x.classList.remove("selin","sel-t","sel-b","sel-l","sel-r"));
+  const s=selRect(); if(!s) return;
+  for(let r=s.r1;r<=s.r2;r++) for(let c=s.c1;c<=s.c2;c++){
+    const el=$("c_"+r+"_"+c); el.classList.add("selin");
+    if(r===s.r1) el.classList.add("sel-t");
+    if(r===s.r2) el.classList.add("sel-b");
+    if(c===s.c1) el.classList.add("sel-l");
+    if(c===s.c2) el.classList.add("sel-r");
+  }
+  $("namebox").textContent=selRef();
+}
+function formulaWantsOperand(){
+  const v=$("formula").value;
+  return v.startsWith("=") && "(;,=+-*/^".includes(v.trim().slice(-1));
+}
+function insertSelRef(){
+  const inp=$("formula"), ref=selRef();
+  if(!ref) return;
+  const v=inp.value;
+  if(!v.trim()){
+    inp.value="=NB("+ref+")";
+    inp.focus(); inp.setSelectionRange(inp.value.length,inp.value.length);
+    $("fresult").textContent="Formule proposée : remplacez NB par la fonction voulue (MOYENNE, ECARTYPE…), complétez, puis Entrée.";
+    lastAuto=null; return;
+  }
+  let pos=(document.activeElement===inp && inp.selectionStart!==null)?inp.selectionStart:v.length;
+  const repl=lastAuto && lastAuto.end===v.length && pos>=lastAuto.start; /* remplace le fragment auto-inséré pour étendre la plage */
+  if(repl) pos=lastAuto.start;
+  inp.value=v.slice(0,pos)+ref+v.slice(repl?lastAuto.end:pos);
+  inp.focus();
+  inp.setSelectionRange(pos+ref.length,pos+ref.length);
+  lastAuto={start:pos,end:pos+ref.length,rect:selRect()};
+}
+function onSelEnd(){
+  if(!selAnchor) return;
+  const v=$("formula").value;
+  if(lastAuto && lastAuto.end===v.length && rectsOverlap(selRect(),lastAuto.rect)){ insertSelRef(); return; }
+  if(formulaWantsOperand()) insertSelRef();
+}
+$("sheet").addEventListener("mousedown", e=>{
+  const td=e.target.closest("td"); if(!td) return;
+  const inp=$("formula");
+  const midFormula = document.activeElement===inp && inp.value.startsWith("=") && "(;,=+-*/^".includes(inp.value.trim().slice(-1));
+  if(midFormula) e.preventDefault(); /* garde le focus et le caret dans la barre fx pendant la saisie */
+  const r=+td.dataset.r, c=+td.dataset.c;
+  if(e.shiftKey && selAnchor){ selFocus={r:r,c:c}; } else { selAnchor={r:r,c:c}; selFocus={r:r,c:c}; }
+  dragging=true;
+  renderSel();
+});
+$("sheet").addEventListener("mousemove", e=>{
+  if(!dragging) return;
+  const td=e.target.closest("td"); if(!td) return;
+  selFocus={r:+td.dataset.r, c:+td.dataset.c};
+  renderSel();
+});
+document.addEventListener("mouseup", ()=>{ if(dragging){ dragging=false; onSelEnd(); } });
+$("formula").addEventListener("input", ()=>{ lastAuto=null; });
+$("fins").addEventListener("click", insertSelRef);
+document.addEventListener("keydown", e=>{
+  if($("paneCalc").style.display==="block") return; /* l'onglet calculatrices capte le clavier : la feuille ne réagit pas */
+  if((e.ctrlKey||e.metaKey) && (e.code==="Space"||e.key===" ")){ e.preventDefault(); insertSelRef(); return; }
+  const tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="textarea"||tag==="select") return; /* les flèches servent alors au champ de saisie */
+  /* première frappe d'une touche imprimable : édition directe de la cellule active */
+  if(selAnchor && e.key.length===1 && !e.ctrlKey && !e.metaKey && !e.altKey){
+    e.preventDefault();
+    startEdit(selAnchor.r, selAnchor.c, e.key);
+    return;
+  }
+  const moves={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+  if(!moves[e.key]) return;
+  e.preventDefault();
+  if(!selAnchor){ selAnchor={r:1,c:1}; selFocus={r:1,c:1}; }
+  const d=moves[e.key];
+  if(e.shiftKey){
+    selFocus.r=clampI(selFocus.r+d[0],ROWS);
+    selFocus.c=clampI(selFocus.c+d[1],COLS);
+    renderSel();
+    onSelEnd();
+  } else {
+    selAnchor.r=clampI(selAnchor.r+d[0],ROWS);
+    selAnchor.c=clampI(selAnchor.c+d[1],COLS);
+    selFocus={r:selAnchor.r,c:selAnchor.c};
+    renderSel();
+  }
+});
+
+/* ---------- insertion des formules ---------- */
+function insertFormula(fn){
+  const f = fn==="QUARTILE" ? "=QUARTILE("+dataRange+";1)" : "="+fn+"("+dataRange+")";
+  $("formula").value = f;
+  $("fresult").textContent = fn==="QUARTILE" ? "Astuce : remplacez le 1 par 2 ou 3 pour la médiane ou Q3, puis Entrée" : "Appuyez sur Entrée pour évaluer";
+  $("formula").focus();
+}
+
+/* ---------- missions de calcul : résultat à afficher dans une cellule donnée ---------- */
+const cellRef=(r,c)=>colName(c)+r;
+function parseRef(s){
+  const m=String(s).match(/^([A-Za-z]{1,2})(\d+)$/);
+  if(!m) return null;
+  return {c:colIdx(m[1].toUpperCase()), r:+m[2]};
+}
+/* Normalise une formule : majuscules, espaces et $ retirés, séparateur « , », bornes de plage réordonnées.
+   Permet d'accepter =moyenne(d8:l16), =MOYENNE(L16:D8) ou =MOYENNE(D8:L16 ; ) indifféremment. */
+function normFormula(f){
+  let s=String(f||"").trim().toUpperCase().replace(/\s+/g,"").replace(/\$/g,"");
+  if(!s) return "";
+  s=s.replace(/;/g,",");
+  s=s.replace(/([A-Z]{1,2}\d+):([A-Z]{1,2}\d+)/g,(mm,a,b)=>{
+    const pa=parseRef(a), pb=parseRef(b);
+    if(!pa||!pb) return mm;
+    return colName(Math.min(pa.c,pb.c))+Math.min(pa.r,pb.r)+":"+colName(Math.max(pa.c,pb.c))+Math.max(pa.r,pb.r);
+  });
+  return s;
+}
+function writeComputed(r,c,val,src){
+  const el=$("c_"+r+"_"+c);
+  if(typeof val==="number" && isFinite(val)){
+    el.textContent=fmt(val,4); el.classList.add("calc"); el.dataset.v=String(val); delete el.dataset.calc;
+  } else {
+    el.textContent=String(val); el.classList.add("calc"); el.dataset.calc=String(val); delete el.dataset.v;
+  }
+  el.dataset.src = String(src||"");
+  if(!computedCells.some(x=>x.r===r&&x.c===c)) computedCells.push({r:r,c:c});
+}
+function clearComputed(){
+  computedCells.forEach(cl=>{ const el=$("c_"+cl.r+"_"+cl.c); el.textContent=""; el.classList.remove("calc"); delete el.dataset.v; delete el.dataset.calc; delete el.dataset.src; });
+  computedCells=[];
+}
+function valuesInRange(rg){ return cells.filter(cl=>cl.r>=rg.r1&&cl.r<=rg.r2&&cl.c>=rg.c1&&cl.c<=rg.c2).map(cl=>cl.v); }
+function rangeStr(rg){ return colName(rg.c1)+rg.r1+":"+colName(rg.c2)+rg.r2; }
+function fullRange(){ return {r1:blockInfo.r0, c1:blockInfo.c0, r2:blockInfo.r0+blockInfo.nr-1, c2:blockInfo.c0+blockInfo.nc-1}; }
+function isFull(rg){ return rg.r1===blockInfo.r0&&rg.c1===blockInfo.c0&&rg.r2===blockInfo.r0+blockInfo.nr-1&&rg.c2===blockInfo.c0+blockInfo.nc-1; }
+function randomSubRange(){
+  for(let t=0;t<60;t++){
+    const a=blockInfo.r0+ri(blockInfo.nr), b=blockInfo.r0+ri(blockInfo.nr);
+    const p=blockInfo.c0+ri(blockInfo.nc), q=blockInfo.c0+ri(blockInfo.nc);
+    const r1=Math.min(a,b), r2=Math.max(a,b), c1=Math.min(p,q), c2=Math.max(p,q);
+    const n=(r2-r1+1)*(c2-c1+1);
+    if(n>=6 && n<=42) return {r1:r1,c1:c1,r2:r2,c2:c2};
+  }
+  return fullRange();
+}
+function genMissions(){
+  clearComputed();
+  $("missionSol").classList.remove("on"); $("missionSol").innerHTML="";
+  $("missScore").innerHTML="";
+  const stAll=statsOf(cells.map(c=>c.v));
+  let pool=["NB","MOYENNE","ECARTYPE","VARIANCE","QUARTILE"];
+  if(stAll.modes.length) pool=pool.concat(["MODE","MODE.SIMPLE","MODE.MULTIPLE"]);
+  const M=3+ri(3); // entre 3 et 5 fonctions tirées au hasard
+  const fns=shuffle([...pool]).slice(0,M);
+  const used=new Set(dataKeys);
+  missions=fns.map(fn=>makeMission(fn, used));
+  renderMissions();
+  paintMissions();
+}
+function makeMission(fn, used){
+  const whole=Math.random()<0.34;
+  let rg=whole?fullRange():randomSubRange();
+  let vals=valuesInRange(rg);
+  if(fn==="MODE"||fn==="MODE.SIMPLE"||fn==="MODE.MULTIPLE"){
+    let tries=0;
+    while(statsOf(vals).modes.length===0 && tries<40){ rg=randomSubRange(); vals=valuesInRange(rg); tries++; }
+    if(statsOf(vals).modes.length===0){ rg=fullRange(); vals=valuesInRange(rg); }
+  }
+  const st=statsOf(vals);
+  let k=0, exp, expKind="num", tol=1e-9, label="";
+  switch(fn){
+    case "NB": exp=st.n; label="le nombre de valeurs <b>NB</b>"; break;
+    case "MOYENNE": exp=st.mean; tol=0.0051; label="la <b>MOYENNE</b> (arrondi à 0,01 près accepté)"; break;
+    case "VARIANCE": exp=st.s2; tol=0.0051; label="la <b>VARIANCE</b> (arrondi à 0,01 près accepté)"; break;
+    case "ECARTYPE": exp=st.s; tol=0.0051; label="l'<b>ECARTYPE</b> (arrondi à 0,01 près accepté)"; break;
+    case "QUARTILE":
+      k=1+ri(3); exp=quantile(st.sorted,k); tol=0.0051;
+      label = k===1 ? "le premier quartile <b>QUARTILE(plage;1)</b>" : k===2 ? "la médiane <b>QUARTILE(plage;2)</b>" : "le troisième quartile <b>QUARTILE(plage;3)</b>";
+      break;
+    case "MODE": exp=st.mode; label="le <b>MODE</b>"; break;
+    case "MODE.SIMPLE": exp=st.mode; label="le <b>MODE.SIMPLE</b>"; break;
+    case "MODE.MULTIPLE": exp=st.modes; expKind="mult"; label="tous les modes <b>MODE.MULTIPLE</b> (valeurs séparées par « ; »)"; break;
+  }
+  let tr, tc;
+  for(let t=0;t<300;t++){
+    const r=blockInfo.r0-2+ri(blockInfo.nr+5), c=blockInfo.c0-2+ri(blockInfo.nc+5);
+    if(r<1||c<1||r>ROWS||c>COLS) continue;
+    if(r>=blockInfo.r0&&r<=blockInfo.r0+blockInfo.nr-1&&c>=blockInfo.c0&&c<=blockInfo.c0+blockInfo.nc-1) continue;
+    const key=r+"_"+c;
+    if(used.has(key)) continue;
+    tr=r; tc=c; used.add(key); break;
+  }
+  if(tr===undefined){ tr=1; tc=1; }
+  const formula = fn==="QUARTILE" ? "=QUARTILE("+rangeStr(rg)+";"+k+")" : "="+fn+"("+rangeStr(rg)+")";
+  return {fn:fn, k:k, rg:rg, tr:tr, tc:tc, exp:exp, expKind:expKind, tol:tol, label:label, nvals:vals.length, formula:formula};
+}
+function renderMissions(){
+  $("missionList").innerHTML=missions.map((m,i)=>
+    "<li id='miss_"+i+"'><span class='dot' style='background:"+MCOLORS[i%5]+"'></span><b>Mission "+(i+1)+" :</b> affichez en <b>"+cellRef(m.tr,m.tc)+"</b> "+m.label+" de la plage <b>"+rangeStr(m.rg)+"</b>"+
+    (isFull(m.rg)?" (toute la plage des données)":" (sous-plage de "+m.nvals+" valeurs, soit une partie des données)")+".</li>"
+  ).join("");
+}
+function paintMissions(){
+  ["mrg0","mrg1","mrg2","mrg3","mrg4","mtgt"].forEach(cl=>
+    document.querySelectorAll(".sheet td."+cl).forEach(x=>x.classList.remove("mrg0","mrg1","mrg2","mrg3","mrg4","mtgt","mtgt0","mtgt1","mtgt2","mtgt3","mtgt4")));
+  missions.forEach((m,i)=>{
+    for(let r=m.rg.r1;r<=m.rg.r2;r++) for(let c=m.rg.c1;c<=m.rg.c2;c++) $("c_"+r+"_"+c).classList.add("mrg"+(i%5));
+  });
+}
+function checkMissions(){
+  let score=0;
+  missions.forEach((m,i)=>{
+    const el=$("c_"+m.tr+"_"+m.tc), li=$("miss_"+i);
+    li.classList.remove("ok","ko");
+    const old=li.querySelector(".mdet"); if(old) old.remove();
+    // a) La bonne cellule cible contient-elle un résultat ?
+    const hasVal = el.dataset.v!==undefined || el.dataset.calc!==undefined;
+    // b) La formule utilisée (fonction et plage) est-elle exactement celle attendue ?
+    const fExp = normFormula(m.formula);
+    const fGot = normFormula(el.dataset.src||"");
+    const fOk = hasVal && fGot===fExp;
+    // c) La valeur affichée est-elle correcte ?
+    let vOk=false;
+    if(hasVal && m.expKind==="num"){
+      const v=el.dataset.v!==undefined?parseFloat(el.dataset.v):null;
+      vOk = v!==null && !Number.isNaN(v) && Math.abs(v-m.exp) <= m.tol+1e-9*Math.max(1,Math.abs(m.exp));
+    } else if(hasVal && m.expKind==="mult"){
+      const got=(el.textContent.match(/-?\d+([.,]\d+)?/g)||[]).map(x=>parseFloat(x.replace(",","."))).sort((a,b)=>a-b);
+      vOk = got.length===m.exp.length && got.every((x,j)=>Math.abs(x-m.exp[j])<1e-9);
+    }
+    // Formule correcte mais placée dans une autre cellule ?
+    let elsewhere=null;
+    if(!fOk){
+      for(const cl of computedCells){
+        const e2=$("c_"+cl.r+"_"+cl.c);
+        if(normFormula(e2.dataset.src||"")===fExp){ elsewhere=cl; break; }
+      }
+    }
+    const ok = fOk && vOk;
+    li.classList.add(ok?"ok":"ko");
+    if(ok) score++;
+    let det;
+    if(ok){
+      det = "cellule ✔ ; formule ✔ (<code>"+m.formula+"</code>) ; valeur ✔";
+    } else if(!hasVal){
+      det = "cellule cible <b>"+cellRef(m.tr,m.tc)+"</b> vide : double-cliquez dessus (ou sélectionnez-la, puis tapez la formule dans la barre fx), saisissez la formule et appuyez sur Entrée.";
+      if(elsewhere) det += " La formule attendue a été trouvée en <b>"+cellRef(elsewhere.r,elsewhere.c)+"</b> : ce n'est pas la bonne cellule cible.";
+    } else {
+      const src = el.dataset.src||"";
+      const gotTxt = src.startsWith("=") ? "<code>"+src+"</code>" : "valeur saisie directement (« "+(src||"—")+" »)";
+      const vExpTxt = m.expKind==="mult" ? "{ "+m.exp.map(x=>fmt(x)).join(" ; ")+" }" : fmt(m.exp,4);
+      det = "formule : "+(fOk?"✔":"✘ attendue <code>"+m.formula+"</code>, trouvée "+gotTxt)
+          + " — valeur : "+(vOk?"✔":"✘ attendue "+vExpTxt);
+      if(elsewhere) det += " — (une formule correcte figure aussi en "+cellRef(elsewhere.r,elsewhere.c)+")";
+    }
+    li.insertAdjacentHTML("beforeend","<div class='mdet'>"+det+"</div>");
+  });
+  $("missScore").innerHTML="Score : <b>"+score+" / "+missions.length+"</b>"+(score===missions.length?" — Parfait : bonnes cellules, bonnes formules, bonnes valeurs !":"");
+}
+window.fillMission=function(i){
+  const m=missions[i];
+  if(m.expKind==="num") writeComputed(m.tr,m.tc,m.exp,m.formula);
+  else if(m.expKind==="mult") writeComputed(m.tr,m.tc,m.exp.map(x=>fmt(x)).join(" ; "),m.formula);
+};
+$("btnMiss").addEventListener("click", genMissions);
+$("missCheck").addEventListener("click", checkMissions);
+/* loupe : mission agrandie x2 au survol de la souris */
+const mz=$("mzoom");
+$("missionList").addEventListener("mouseover", e=>{
+  const li=e.target.closest("li"); if(!li) return;
+  mz.innerHTML=li.innerHTML;
+  const ok=li.classList.contains("ok"), ko=li.classList.contains("ko");
+  mz.style.borderColor = ok?"#b3e6a0" : ko?"#e2a2a2" : "#d8dcdf";
+  mz.style.background  = ok?"#f2fff2" : ko?"#fff6f6" : "#fff";
+  mz.style.display="block";
+  const r=li.getBoundingClientRect();
+  mz.style.left="0px"; mz.style.top="0px"; /* mesure à vide avant placement */
+  const w=mz.offsetWidth||0, h=mz.offsetHeight||0;
+  /* à droite de la mission survolée, au-dessus de la feuille, borné à la fenêtre */
+  const x=Math.max(10, Math.min(r.right+18, window.innerWidth-w-12));
+  const y=Math.max(8, Math.min(r.top-6, window.innerHeight-h-12));
+  mz.style.left=x+"px"; mz.style.top=y+"px";
+});
+$("missionList").addEventListener("mouseleave", ()=>{ mz.style.display="none"; });
+/* mode d'emploi des missions : n'apparaît qu'au survol de l'intitulé */
+const mh=$("mhelp");
+function showHelp(){
+  mh.style.display="block";
+  const r=$("missHelp").getBoundingClientRect();
+  mh.style.left="0px"; mh.style.top="0px"; /* mesure à vide avant placement */
+  const w=mh.offsetWidth||0, h=mh.offsetHeight||0;
+  const x=Math.max(10, Math.min(r.right+18, window.innerWidth-w-12));
+  const y=Math.max(8, Math.min(r.bottom+10, window.innerHeight-h-12));
+  mh.style.left=x+"px"; mh.style.top=y+"px";
+}
+$("missHelp").addEventListener("mouseenter", showHelp);
+$("missHelp").addEventListener("mouseleave", ()=>{ mh.style.display="none"; });
+$("missHelp").addEventListener("click", ()=>{ mh.style.display==="block" ? mh.style.display="none" : showHelp(); });
+$("missSol").addEventListener("click", ()=>{
+  const el=$("missionSol"); el.classList.toggle("on");
+  if(!el.classList.contains("on")){ el.innerHTML=""; return; }
+  el.innerHTML = missions.map((m,i)=>{
+    const resTxt = m.expKind==="mult" ? "{ "+m.exp.map(x=>fmt(x)).join(" ; ")+" }" : fmt(m.exp,4);
+    return "<div style='margin:4px 0'><b>Mission "+(i+1)+"</b> — en "+cellRef(m.tr,m.tc)+" : <code>"+m.formula+"</code> → <b>"+resTxt+"</b> <button class='mbtn alt' style='padding:2px 10px;margin-left:6px' onclick='fillMission("+i+")'>Écrire dans la feuille</button></div>";
+  }).join("");
+});
+
+/* ---------- modales : explication + démonstration dynamique ---------- */
+const NOTES=[12,15,8,15,11,10,15,9];       // démo (notes d'élèves, hors situations)
+const DEMOB=[4,8,6,10,7];                   // démo variance / écart-type
+const DEMOQ=[3,7,8,5,12,14,21,13,18];       // démo quartiles
+const DEMOS=[5,2,7,2,9,7,2];                // démo MODE.SIMPLE
+const DEMOM=[2,5,3,5,2,7,3];                // démo MODE.MULTIPLE
+const FRAC = (n,d) => "<span class='frac'><span class='n'>"+n+"</span><span class='d'>"+d+"</span></span>";
+const SQRT = x => "<span class='sqrt'>√<span class='rad'>"+x+"</span></span>";
+
+function cellsCol(arr, startRow){ return arr.map((v,i)=>({ref:"B"+(startRow+i), v:v})); }
+function gridHTML(list){
+  return list.map((cl,i)=>{
+    const txt = cl.txt!==undefined ? cl.txt : (cl.v!==undefined ? fmt(cl.v) : "");
+    return "<div class='democell' id='dm_"+i+"'><span class='ref'>"+cl.ref+"</span><span class='val'>"+txt+"</span></div>";
+  }).join("");
+}
+function freqLines(freq){
+  return [...freq.entries()].map(([x,f])=>fmt(x)+" → "+f+" fois").join(" ; ");
+}
+function barsHTML(freq){
+  const maxf=Math.max(...freq.values());
+  return [...freq.entries()].sort((a,b)=>a[0]-b[0]).map(([x,f])=>
+    "<div style='margin:2px 0'>"+fmt(x)+" <span class='bar' style='width:"+(f/maxf*90)+"px'></span> "+f+"×</div>").join("");
+}
+
+const MODALS = {
+  NB:{
+    title:"NB — Compter les nombres",
+    syntax:"=NB(plage1; plage2; …)",
+    def:"<b>NB</b> (COUNT en anglais) compte le nombre de cellules contenant un <b>nombre</b> dans les plages données. Les cellules vides et les cellules contenant du texte sont ignorées. NB donne l'effectif n de la série statistique.",
+    math:"n = NB(plage)",
+    demoCells: NOTES.map((v,i)=>({ref:"B"+(2+i), v:v})).concat([{ref:"B10",txt:"abs"},{ref:"B11"}]),
+    steps(){
+      const s=[{h:"On saisit 8 notes dans B2:B9, puis du texte (« abs ») en B10 et une cellule vide en B11.",hl:[0,1,2,3,4,5,6,7,8,9]}];
+      let c=0;
+      NOTES.forEach((v,i)=>{ c++; s.push({h:"B"+(2+i)+" = "+v+" : c'est un nombre → compté. Effectif courant : <b>"+c+"</b>",hl:[i]}); });
+      s.push({h:"B10 contient « abs » (texte) → <b>ignoré</b>.",hl:[8]});
+      s.push({h:"B11 est vide → <b>ignorée</b>.",hl:[9]});
+      return {steps:s, res:"=NB(B2:B11) = <b>8</b>"};
+    },
+    note:"Les formules statistiques de ce document (MOYENNE, ECARTYPE…) ignorent de la même façon les cellules non numériques."
+  },
+  MOYENNE:{
+    title:"MOYENNE — Moyenne arithmétique",
+    syntax:"=MOYENNE(plage)",
+    def:"<b>MOYENNE</b> (AVERAGE) calcule la moyenne arithmétique : la somme des valeurs divisée par leur nombre. Elle est sensible aux valeurs extrêmes ; la médiane (QUARTILE(…;2)) est plus robuste.",
+    math:"x̄ = "+FRAC("x₁ + x₂ + … + x<sub>n</sub>","n")+" = "+FRAC("Σ x<sub>i</sub>","n"),
+    demoCells: cellsCol(NOTES,2),
+    steps(){
+      const sum=NOTES.reduce((a,b)=>a+b,0), st=statsOf(NOTES);
+      return {steps:[
+        {h:"On additionne toutes les notes : 12 + 15 + 8 + 15 + 11 + 10 + 15 + 9 = <b>"+sum+"</b>", hl:[0,1,2,3,4,5,6,7]},
+        {h:"On divise par le nombre de notes (NB) : "+sum+" ÷ "+st.n, hl:[]}
+      ], res:"=MOYENNE(B2:B9) = "+sum+" ÷ "+st.n+" = <b>"+fmt(st.mean,3)+"</b>"};
+    },
+    note:"Exemple fictif (notes d'élèves), indépendant des 50 situations."
+  },
+  VARIANCE:{
+    title:"VARIANCE — Variance d'échantillon",
+    syntax:"=VARIANCE(plage)",
+    def:"<b>VARIANCE</b> (VAR) mesure la dispersion : moyenne des carrés des écarts à la moyenne. Dans OpenOffice, VARIANCE est la variance <b>d'échantillon</b> : la somme est divisée par n−1 (correction de Bessel). Variante : VAR.P (population) divise par n.",
+    math:"s² = "+FRAC("Σ (x<sub>i</sub> − x̄)²","n − 1"),
+    demoCells: cellsCol(DEMOB,2),
+    steps(){
+      const st=statsOf(DEMOB);
+      const dev=DEMOB.map(v=>v-st.mean), sq=dev.map(d=>d*d);
+      const ssq=(st.n-1)*st.s2;
+      return {steps:[
+        {h:"5 valeurs : 4, 8, 6, 10, 7. Moyenne : x̄ = 35 ÷ 5 = <b>"+fmt(st.mean)+"</b>", hl:[0,1,2,3,4]},
+        {h:"Écarts à la moyenne : "+dev.map(d=>fmt(d)).join(" ; "), hl:[0,1,2,3,4]},
+        {h:"Carrés des écarts : "+sq.join(" + ")+" = <b>"+ssq+"</b>", hl:[0,1,2,3,4]},
+        {h:"On divise par n−1 = 4 : "+ssq+" ÷ 4", hl:[]}
+      ], res:"=VARIANCE(B2:B6) = <b>"+fmt(st.s2)+"</b>"};
+    },
+    note:"s² est exprimée dans le carré des unités des données, d'où l'utilité de l'écart-type (sa racine carrée)."
+  },
+  ECARTYPE:{
+    title:"ECARTYPE — Écart-type d'échantillon",
+    syntax:"=ECARTYPE(plage)",
+    def:"<b>ECARTYPE</b> (STDEV) est la racine carrée de la variance d'échantillon. Il est exprimé dans les <b>mêmes unités</b> que les données, donc directement comparable à la moyenne. Variante : ECARTYPE.PE (population) divise par n.",
+    math:"s = "+SQRT(FRAC("Σ (x<sub>i</sub> − x̄)²","n − 1")),
+    demoCells: cellsCol(DEMOB,2),
+    steps(){
+      const st=statsOf(DEMOB);
+      return {steps:[
+        {h:"Variance (démo précédente) : s² = "+fmt(st.s2), hl:[0,1,2,3,4]},
+        {h:"On prend la racine carrée : s = "+SQRT("5"), hl:[]}
+      ], res:"=ECARTYPE(B2:B6) = "+SQRT("5")+" ≈ <b>"+fmt(st.s,4)+"</b>"};
+    },
+    note:"Plus s est grand, plus les valeurs sont étalées autour de la moyenne ; plus il est petit, plus elles sont concentrées."
+  },
+  QUARTILE:{
+    title:"QUARTILE — Quartiles Q1, Q2, Q3",
+    syntax:"=QUARTILE(plage; k)   — k : 0 (min), 1 (Q1), 2 (médiane), 3 (Q3), 4 (max)",
+    def:"<b>QUARTILE</b> découpe la série <b>triée</b> en quatre parts. Q1 : 25 % des valeurs en dessous ; Q2 = médiane ; Q3 : 75 % en dessous. Méthode d'OpenOffice : après tri, position = 1 + (n−1)×k/4, avec interpolation linéaire si la position tombe entre deux valeurs.",
+    math:"position(Q<sub>k</sub>) = 1 + (n − 1) × "+FRAC("k","4"),
+    demoCells: cellsCol(DEMOQ,2),
+    steps(){
+      const st=statsOf(DEMOQ);
+      return {steps:[
+        {h:"n = 9 valeurs. On les trie : "+st.sorted.map(x=>fmt(x)).join(" ; "), hl:[0,1,2,3,4,5,6,7,8]},
+        {h:"Q1 : position = 1 + 8×1/4 = 3 → 3ᵉ valeur triée = <b>"+fmt(st.q1)+"</b>", hl:[]},
+        {h:"Q2 : position = 1 + 8×2/4 = 5 → <b>"+fmt(st.q2)+"</b> (c'est la médiane)", hl:[]},
+        {h:"Q3 : position = 1 + 8×3/4 = 7 → <b>"+fmt(st.q3)+"</b>", hl:[]},
+        {h:"Écart interquartile : Q3 − Q1 = "+fmt(st.q3-st.q1)+" (il contient 50 % des valeurs du centre).", hl:[]}
+      ], res:"=QUARTILE(B2:B10;1) ; 2 ; 3 → Q1 = "+fmt(st.q1)+", Q2 = "+fmt(st.q2)+", Q3 = <b>"+fmt(st.q3)+"</b>"};
+    },
+    note:"Si la position est décimale, on interpole : valeur(k) + fraction × (valeur(k+1) − valeur(k))."
+  },
+  MODE:{
+    title:"MODE — Valeur la plus fréquente",
+    syntax:"=MODE(plage)",
+    def:"<b>MODE</b> renvoie la valeur qui apparaît le <b>plus souvent</b> dans la série. Si plusieurs valeurs ont la même fréquence maximale, un seul mode est renvoyé ; si aucune valeur ne se répète, le tableur renvoie une erreur.",
+    math:"mode = la valeur x dont la fréquence f(x) est maximale",
+    demoCells: cellsCol(NOTES,2),
+    steps(){
+      const st=statsOf(NOTES);
+      return {steps:[
+        {h:"Fréquences : "+freqLines(st.freq), hl:[0,1,2,3,4,5,6,7]},
+        {h:"La valeur 15 apparaît <b>3 fois</b> : fréquence maximale.", hl:[1,3,6]}
+      ], res:"=MODE(B2:B9) = <b>15</b>"};
+    },
+    note:"Le mode est le seul indicateur de position utilisable aussi sur des données non numériques."
+  },
+  "MODE.SIMPLE":{
+    title:"MODE.SIMPLE — Un seul mode",
+    syntax:"=MODE.SIMPLE(plage)",
+    def:"<b>MODE.SIMPLE</b> est l'appellation moderne de MODE (LibreOffice et Excel récents). Elle renvoie <b>une seule</b> valeur, même si plusieurs modes existent : en cas d'égalité de fréquence, c'est la plus petite qui est renvoyée.",
+    math:"MODE.SIMPLE = min{ x : f(x) = max f }",
+    demoCells: cellsCol(DEMOS,2),
+    steps(){
+      const st=statsOf(DEMOS);
+      return {steps:[
+        {h:"Fréquences : "+freqLines(st.freq), hl:[0,1,2,3,4,5,6]},
+        {h:"2 apparaît 3 fois, 7 apparaît 2 fois : la fréquence maximale est 3, atteinte seulement par 2.", hl:[1,3,6]}
+      ], res:"=MODE.SIMPLE(B2:B8) = <b>2</b>"};
+    },
+    note:"Pour obtenir tous les modes en cas d'égalité, utilisez MODE.MULTIPLE."
+  },
+  "MODE.MULTIPLE":{
+    title:"MODE.MULTIPLE — Tous les modes",
+    syntax:"=MODE.MULTIPLE(plage)",
+    def:"<b>MODE.MULTIPLE</b> renvoie la <b>matrice</b> de toutes les valeurs qui atteignent la fréquence maximale (une, deux ou plusieurs). Dans le tableur, la formule doit être validée en mode matriciel (Ctrl+Maj+Entrée) pour afficher toute la liste.",
+    math:"MODE.MULTIPLE = { x : f(x) = max f }",
+    demoCells: cellsCol(DEMOM,2),
+    steps(){
+      const st=statsOf(DEMOM);
+      return {steps:[
+        {h:"Fréquences : "+freqLines(st.freq), hl:[0,1,2,3,4,5,6]},
+        {h:"Fréquence maximale : 2, atteinte par 2, 5 et 3 → les trois sont des modes.", hl:[0,1,2,3,4]},
+        {h:"Diagramme des effectifs :<div style='margin-top:4px'>"+barsHTML(st.freq)+"</div>", hl:[]}
+      ], res:"=MODE.MULTIPLE(B2:B8) → { <b>2 ; 3 ; 5</b> }"};
+    },
+    note:"Si toutes les valeurs sont uniques, MODE.MULTIPLE renvoie une erreur (#N/A)."
+  }
+};
+
+const modalEl=$("modal");
+let modalState={fn:null, timers:[], pinned:false, closeTimer:null};
+
+function openModal(fn, anchor, pin){
+  const M=MODALS[fn]; if(!M) return;
+  if(modalState.closeTimer){ clearTimeout(modalState.closeTimer); modalState.closeTimer=null; }
+  modalState.fn=fn; modalState.pinned=!!pin;
+  $("mTitle").textContent=M.title;
+  $("mSyntax").textContent=M.syntax;
+  $("mDef").innerHTML=M.def;
+  $("mMath").innerHTML="<span class='math'>"+M.math+"</span>";
+  $("mNote").textContent=M.note;
+  $("mDemoGrid").innerHTML=gridHTML(M.demoCells);
+  modalEl.classList.add("on");
+  const r=anchor.getBoundingClientRect();
+  const w=Math.min(640, window.innerWidth*0.94);
+  let left=Math.min(Math.max(8, r.left), window.innerWidth-w-8);
+  modalEl.style.left=left+"px";
+  modalEl.style.top=(r.bottom+8+modalEl.offsetHeight > window.innerHeight-8 && r.top-modalEl.offsetHeight-8>8 ? r.top-modalEl.offsetHeight-8 : r.bottom+8)+"px";
+  runDemo(fn);
+}
+function closeModal(){
+  modalState.timers.forEach(clearTimeout); modalState.timers=[]; modalState.pinned=false;
+  modalEl.classList.remove("on");
+}
+function runDemo(fn){
+  const M=MODALS[fn];
+  modalState.timers.forEach(clearTimeout); modalState.timers=[];
+  $("mSteps").innerHTML=""; $("mRes").innerHTML="";
+  $("mDemoGrid").innerHTML=gridHTML(M.demoCells);
+  const built=M.steps();
+  let i=0;
+  const tick=()=>{
+    if(i>=built.steps.length){ $("mRes").innerHTML=built.res; return; }
+    const st=built.steps[i];
+    document.querySelectorAll(".democell").forEach(d=>d.classList.remove("hl"));
+    (st.hl||[]).forEach(idx=>{ const el=$("dm_"+idx); if(el) el.classList.add("hl"); });
+    const div=document.createElement("div"); div.className="step"; div.innerHTML=st.h;
+    $("mSteps").appendChild(div);
+    modalEl.scrollTop=modalEl.scrollHeight;
+    i++; modalState.timers.push(setTimeout(tick, 850));
+  };
+  tick();
+}
+document.querySelectorAll(".fbtn").forEach(b=>{
+  const fn=b.dataset.fn;
+  b.addEventListener("mouseenter", ()=>{ if(MODALS[fn]) openModal(fn,b,false); });
+  b.addEventListener("mouseleave", ()=>{ if(!modalState.pinned && MODALS[fn]){ modalState.closeTimer=setTimeout(closeModal, 320); } });
+  b.addEventListener("click", ()=>{ insertFormula(fn); if(MODALS[fn]) openModal(fn,b,true); });
+});
+modalEl.addEventListener("mouseenter", ()=>{ if(modalState.closeTimer){ clearTimeout(modalState.closeTimer); modalState.closeTimer=null; } });
+modalEl.addEventListener("mouseleave", ()=>{ if(!modalState.pinned) modalState.closeTimer=setTimeout(closeModal, 320); });
+$("mClose").addEventListener("click", closeModal);
+$("mReplay").addEventListener("click", ()=>{ if(modalState.fn) runDemo(modalState.fn); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+/* ---------- exercice ---------- */
+const EXO_SRC = SITUATIONS[48]; // situation n°49 : Coupe du monde 2022
+const EXO = EXO_SRC.v.slice(0,30);
+const EST = statsOf(EXO);
+
+$("exoIntro").innerHTML = "Exercice tiré de la <b>situation n°49/50</b> : <b>"+EXO_SRC.t+"</b> — source : <a href='"+EXO_SRC.l+"' target='_blank' rel='noopener'>"+EXO_SRC.s+"</a>. Les 30 valeurs (nombre de buts de chaque match) sont <b>déjà saisies dans la feuille de calcul</b>, plage <b>B2:F7</b>. À vous d'exploiter <b>toutes</b> les fonctions : NB, MOYENNE, ECARTYPE, VARIANCE, QUARTILE, MODE, MODE.SIMPLE et MODE.MULTIPLE.";
+
+/* mode exercice : dès que l'onglet Exercice est actif, la GRANDE feuille est dédiée à l'exercice
+   (30 données en B2:F7) et devient indépendante des missions ; le retour à l'onglet Missions
+   restaure les 50 données de la simulation, la peinture des plages et l'analyse. */
+let exoMode=false, savedSit="", savedLayout="";
+function clearMissionPaint(){
+  document.querySelectorAll(".sheet td.mrg0,.sheet td.mrg1,.sheet td.mrg2,.sheet td.mrg3,.sheet td.mrg4,.sheet td.mtgt")
+    .forEach(x=>x.classList.remove("mrg0","mrg1","mrg2","mrg3","mrg4","mtgt","mtgt0","mtgt1","mtgt2","mtgt3","mtgt4"));
+}
+function enterExoMode(){
+  if(exoMode) return;
+  exoMode=true;
+  savedSit=$("situation").innerHTML; savedLayout=$("layout").innerHTML;
+  cells.forEach(cl=>{ const el=$("c_"+cl.r+"_"+cl.c); el.textContent=""; el.classList.remove("num"); delete el.dataset.v; });
+  clearComputed();
+  clearMissionPaint();
+  EXO.forEach((v,i)=>{
+    const r=2+Math.floor(i/5), c=2+(i%5), el=$("c_"+r+"_"+c);
+    el.textContent=nf(v); el.classList.add("num"); el.dataset.v=String(v);
+  });
+  dataKeys=new Set(EXO.map((v,i)=>(2+Math.floor(i/5))+"_"+(2+i%5)));
+  selAnchor=null; selFocus=null; renderSel();
+  $("formula").value=""; $("fresult").textContent=""; $("namebox").textContent="A1";
+  const gw=$("gridwrap"); gw.scrollLeft=0; gw.scrollTop=0;
+  $("situation").innerHTML="Mode <b>exercice guidé</b> — <b>"+EXO_SRC.t+"</b> ["+EXO_SRC.u+"] — source : <a href='"+EXO_SRC.l+"' target='_blank' rel='noopener'>"+EXO_SRC.s+"</a> — les 30 données sont en <b>B2:F7</b> ; la feuille est indépendante des missions.";
+  $("layout").innerHTML="Feuille dédiée à l'exercice : 30 valeurs en <b>B2:F7</b>, le reste de la feuille est libre pour vos calculs. Revenez à l'onglet « Missions de calcul » pour retrouver les 50 données et les plages colorées des missions.";
+  applyAllStudentCells(); /* les saisies de l'étudiant (valeurs, textes, formules) sont reconstituées */
+}
+function exitExoMode(){
+  if(!exoMode) return;
+  exoMode=false;
+  EXO.forEach((v,i)=>{
+    const r=2+Math.floor(i/5), c=2+(i%5), el=$("c_"+r+"_"+c);
+    el.textContent=""; el.classList.remove("num"); delete el.dataset.v;
+  });
+  clearComputed();
+  cells.forEach(cl=>{ const el=$("c_"+cl.r+"_"+cl.c); el.textContent=nf(cl.v); el.classList.add("num"); el.dataset.v=String(cl.v); });
+  dataKeys=new Set(cells.map(cl=>cl.r+"_"+cl.c));
+  paintMissions();
+  $("situation").innerHTML=savedSit; $("layout").innerHTML=savedLayout;
+  requestAnimationFrame(()=>{
+    const first=$("c_"+cells[0].r+"_"+cells[0].c), gw=$("gridwrap");
+    if(first){ gw.scrollLeft=Math.max(0,first.offsetLeft-100); gw.scrollTop=Math.max(0,first.offsetTop-60); }
+  });
+}
+const QUESTIONS=[
+  {id:"nb",   f:"=NB(B2:F7)",            q:"Combien de matchs ? (effectif)", tol:0.001, exp:()=>EST.n},
+  {id:"moy",  f:"=MOYENNE(B2:F7)",       q:"Nombre moyen de buts par match (à 0,01)", tol:0.011, exp:()=>EST.mean},
+  {id:"var",  f:"=VARIANCE(B2:F7)",      q:"Variance de la série (à 0,01)", tol:0.011, exp:()=>EST.s2},
+  {id:"std",  f:"=ECARTYPE(B2:F7)",      q:"Écart-type (à 0,01)", tol:0.011, exp:()=>EST.s},
+  {id:"q1",   f:"=QUARTILE(B2:F7;1)",    q:"Premier quartile Q1", tol:0.051, exp:()=>EST.q1},
+  {id:"q2",   f:"=QUARTILE(B2:F7;2)",    q:"Médiane Q2", tol:0.051, exp:()=>EST.q2},
+  {id:"q3",   f:"=QUARTILE(B2:F7;3)",    q:"Troisième quartile Q3", tol:0.051, exp:()=>EST.q3},
+  {id:"mode", f:"=MODE(B2:F7)",          q:"Mode de la série", tol:0.001, exp:()=>EST.mode},
+  {id:"msimp",f:"=MODE.SIMPLE(B2:F7)",   q:"Résultat de MODE.SIMPLE", tol:0.001, exp:()=>EST.mode},
+  {id:"mult", f:"=MODE.MULTIPLE(B2:F7)", q:"Tous les modes, séparés par « ; »", multi:true, exp:()=>EST.modes}
+];
+$("qgrid").innerHTML = QUESTIONS.map(x=>"<div class='q' id='q_"+x.id+"'><div>"+x.q+"</div><input id='in_"+x.id+"' placeholder='"+(x.multi?"valeurs ou =formule":"valeur ou =formule")+"' spellcheck='false'></div>").join("");
+
+function parseNum(s){ const m=String(s).replace(",",".").trim(); return m==="" ? null : parseFloat(m); }
+$("exoCheck").addEventListener("click", ()=>{
+  let score=0;
+  QUESTIONS.forEach(x=>{
+    const box=$("q_"+x.id), inp=$("in_"+x.id);
+    box.classList.remove("ok","ko");
+    box.title="";
+    const raw=inp.value.trim();
+    let ok=false;
+    if(raw.startsWith("=")){
+      /* réponse par formule : évaluée sur la grande feuille (données d'exercice en B2:F7) */
+      const res=evaluate(raw);
+      if(res.err){ box.title="Formule en erreur : "+res.err; }
+      else if(typeof res.val==="string"){
+        /* MODE.MULTIPLE : renvoie une chaîne « v1 ; v2 ; … » */
+        const got=(res.val.match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).sort((a,b)=>a-b), exp=x.exp();
+        ok = got.length===exp.length && got.every((u,i)=>Math.abs(u-exp[i])<1e-9);
+        box.title="Votre formule donne { "+res.val+" } sur la feuille.";
+      } else {
+        ok = Math.abs(res.val-x.exp())<=x.tol;
+        box.title="Votre formule a été évaluée sur la feuille : "+fmt(res.val,4)+".";
+      }
+    } else if(x.multi){
+      const got=(inp.value.match(/-?\d+(?:[.,]\d+)?/g)||[]).map(Number).sort((a,b)=>a-b);
+      ok = got.length && got.length===x.exp().length && got.every((v,i)=>Math.abs(v-x.exp()[i])<1e-9);
+    } else {
+      const v=parseNum(raw);
+      ok = v!==null && Math.abs(v-x.exp())<=x.tol;
+    }
+    box.classList.add(ok?"ok":"ko");
+    if(ok) score++;
+  });
+  $("exoScore").innerHTML = "Score : <b>"+score+" / "+QUESTIONS.length+"</b>"+(score===QUESTIONS.length?" — Excellent, l'analyse est maîtrisée !":"");
+});
+$("exoSol").addEventListener("click", ()=>{
+  const el=$("exoCorr");
+  el.classList.toggle("on");
+  if(el.classList.contains("on")) el.innerHTML=correction();
+});
+function correction(){
+  const st=EST, cv=100*st.s/st.mean;
+  let h="";
+  h+="<div class='cstep'><b>1. Effectif et moyenne.</b> NB(B2:F7) = <b>"+st.n+"</b> matchs. SOMME = "+st.sum+" buts, donc MOYENNE = "+st.sum+" ÷ "+st.n+" = <b>"+fmt(st.mean,4)+"</b> ≈ "+fmt(st.mean,2)+" buts par match.</div>";
+  h+="<div class='cstep'><b>2. Variance et écart-type.</b> Σxᵢ² = "+EXO.reduce((a,x)=>a+x*x,0)+" ; s² = (Σxᵢ² − n·x̄²) ÷ (n−1) = ("+EXO.reduce((a,x)=>a+x*x,0)+" − "+st.n+"×"+fmt(st.mean*st.mean,4)+") ÷ "+(st.n-1)+" = <b>"+fmt(st.s2,4)+"</b> ≈ "+fmt(st.s2,2)+". ECARTYPE = √"+fmt(st.s2,4)+" = <b>"+fmt(st.s,4)+"</b> ≈ "+fmt(st.s,2)+" buts.</div>";
+  h+="<div class='cstep'><b>3. Quartiles</b> (série triée : "+st.sorted.join(", ")+" ; n = "+st.n+"). Positions : Q1 → 1+29×1/4 = 8,25 → 1 + 0,25×(2−1) = <b>"+fmt(st.q1)+"</b> ; Q2 → position 15,5 → 2 + 0,5×(3−2) = <b>"+fmt(st.q2)+"</b> ; Q3 → position 22,75 → <b>"+fmt(st.q3)+"</b>.</div>";
+  h+="<div class='cstep'><b>4. Modes.</b> Effectifs :<div style='margin:4px 0'>"+barsHTML(st.freq)+"</div>La fréquence maximale ("+st.maxf+") est atteinte par : "+st.modes.map(m=>fmt(m)).join(", ")+". Donc MODE(B2:F7) = MODE.SIMPLE(B2:F7) = <b>"+fmt(st.mode)+"</b>, et MODE.MULTIPLE(B2:F7) → { "+st.modes.map(m=>fmt(m)).join(" ; ")+" }.</div>";
+  h+="<div class='cstep'><b>5. Analyse.</b> En moyenne un match de cette série compte "+fmt(st.mean,2)+" buts ; l'écart-type ("+fmt(st.s,2)+") est comparable à la moyenne (CV ≈ "+fmt(cv,0)+" %) : la dispersion est <b>forte</b>, certains matchs étant très prolifiques (jusqu'à "+st.max+" buts) quand d'autres finissent sans but. La moitié des matchs totalisent entre "+fmt(st.q1)+" et "+fmt(st.q3)+" buts (écart interquartile : "+fmt(st.q3-st.q1)+"). Le mode ("+fmt(st.mode)+" buts) est la seule valeur multimodale potentielle : ici MODE.MULTIPLE renvoie une seule valeur.</div>";
+  return h;
+}
+
+/* ---------- onglet calculatrices : vraies machines simulées (Casio Graph 90+E, TI-83 Premium CE, NumWorks) ---------- */
+/* machines libres, comme entre les mains : seules les fonctions statistiques sont simulées */
+const POP = (()=>{ const p2=EST.s2*(EST.n-1)/EST.n; return { p2:p2, p:Math.sqrt(p2), sum2:EXO.reduce((a,x)=>a+x*x,0) }; })();
+const CM = { n:EST.n, sum:fmt(EST.sum,0), sum2:fmt(POP.sum2,0), mean:fmt(EST.mean,4),
+             s:fmt(EST.s,4), s2:fmt(EST.s2,4), p:fmt(POP.p,4), p2:fmt(POP.p2,4),
+             q1:fmt(EST.q1), q2:fmt(EST.q2), q3:fmt(EST.q3), min:fmt(EST.min,0), max:fmt(EST.max,0),
+             eiq:fmt(EST.q3-EST.q1), mode:fmt(EST.mode), modf:EST.maxf };
+
+/* statistiques d'une liste (moteur commun des trois machines) */
+function machStats(v){
+  const arr=(v||[]).filter(x=>typeof x==="number"&&isFinite(x));
+  const n=arr.length;
+  if(!n) return { n:0 };
+  let sum=0,sum2=0; arr.forEach(x=>{ sum+=x; sum2+=x*x; });
+  const mean=sum/n;
+  const p2=sum2/n-mean*mean, p=Math.sqrt(Math.max(0,p2));
+  const s2=(n>1)?(sum2-n*mean*mean)/(n-1):0, s=Math.sqrt(Math.max(0,s2));
+  const so=[...arr].sort((a,b)=>a-b);
+  const med=(n%2)?so[(n-1)/2]:(so[n/2-1]+so[n/2])/2;
+  const interp=f=>{ const i=(n-1)*f, lo=Math.floor(i), fr=i-lo; return lo>=n-1?so[n-1]:so[lo]+fr*(so[lo+1]-so[lo]); };
+  const q1i=interp(.25), q3i=interp(.75);
+  const h=Math.floor(n/2), medOf=a=>{ const m=a.length; return (m%2)?a[(m-1)/2]:(a[m/2-1]+a[m/2])/2; };
+  const q1x=h?medOf(so.slice(0,h)):so[0], q3x=h?medOf(so.slice(n-h)):so[so.length-1];
+  const freq={}; arr.forEach(x=>{ freq[x]=(freq[x]||0)+1; });
+  const modef=Math.max(...Object.values(freq));
+  const modes=Object.keys(freq).filter(k=>freq[k]===modef).map(Number).sort((a,b)=>a-b);
+  return { n:n, sum:sum, sum2:sum2, mean:mean, p:p, p2:p2, s:s, s2:s2,
+           min:so[0], max:so[n-1], med:med, q1i:q1i, q3i:q3i, q1x:q1x, q3x:q3x,
+           modes:modes, mode:modes[0], modef:modef };
+}
+function mnum(x){ return (x===undefined||x===null||!isFinite(x))?"":String(Math.round(x*1e6)/1e6); }
+function cpad(s,w){ s=String(s); return s.length>=w?s:" ".repeat(w-s.length)+s; }
+function cpadend(s,w){ s=String(s); return s.length>=w?s:s+" ".repeat(w-s.length); }
+function cline(h){ return "<div class='ln'>"+h+"</div>"; }
+function clines(a){ return a.map(h=>cline(h)).join(""); }
+function entryPush(buf,ch){
+  if(ch==="-"){ return buf.startsWith("-")?buf.slice(1):"-"+buf; }
+  const body=buf.replace("-","");
+  if(body.replace(".","").length>=9) return buf;
+  if(ch==="."){ if(body.indexOf(".")>=0) return buf; return body===""?(buf.startsWith("-")?"-0.":"0."):buf+"."; }
+  if(body==="0"||body==="") return buf.startsWith("-")?"-"+ch:ch;
+  return buf+ch;
+}
+function entryVal(buf){ const v=parseFloat(buf); return isNaN(v)?null:v; }
+function serOK(arr){ const st=machStats(arr); return st.n===30&&st.sum===85&&st.sum2===369; }
+
+/* ---------- les trois machines ---------- */
+const EM = {
+/* ===================== CASIO Graph 90+E ===================== */
+casio:{
+  name:"Casio Graph 90+E", cls:"dev-casio",
+  rows:[["F1","F2","F3","F4","F5","F6"],
+        ["SHIFT","OPTN","VARS","MENU","EXIT"],
+        ["◀","▲","▼","▶","EXE"],
+        ["7","8","9","DEL"],
+        ["4","5","6","×","÷"],
+        ["1","2","3","+","−"],
+        ["0",".","(−)","ANS"]],
+  init(){ this.state={ scr:"home", sel:0, lists:[[],[],[]], cc:0, cr:0, buf:"", q13:"std", page:1,
+                    msg:"", prevScr:"home", calcMenu:false, shift:false, opened:false,
+                    done:[false,false,false,false] }; },
+  msg(t){ const st=this.state; st.prevScr=st.scr; st.msg=t; st.scr="msg"; },
+  oneVar(){ const st=this.state; if(!st.lists[0].length) return this.msg("Erreur : List 1 est vide. Saisissez d'abord des valeurs.");
+            st.scr="res"; st.page=1; st.calcMenu=false; },
+  key(k){
+    const st=this.state;
+    if(k==="SHIFT"){ st.shift=!st.shift; return; }
+    if(st.shift){ st.shift=false; if(k==="MENU"){ st.scr="setup"; st.calcMenu=false; } return; }
+    if(k==="MENU"){ st.scr="home"; return; }
+    if(st.scr==="msg"){ st.scr=st.prevScr; return; }
+    if(st.scr==="home"){
+      if(k==="◀") st.sel=Math.max(0,st.sel-1);
+      else if(k==="▶") st.sel=Math.min(7,st.sel+1);
+      else if(k==="▲") st.sel=Math.max(0,st.sel-4);
+      else if(k==="▼") st.sel=Math.min(7,st.sel+4);
+      else if(k==="EXE"){ if(st.sel===2){ st.scr="list"; st.opened=true; } else this.msg("Seule l'application Statistique est simulée."); }
+      return;
+    }
+    if(st.scr==="setup"){
+      if(k==="◀"||k==="▶") st.q13=(st.q13==="std"?"sur":"std");
+      else if(k==="EXIT") st.scr="list";
+      return;
+    }
+    if(st.scr==="res"){
+      if(k==="▼") st.page=2;
+      else if(k==="▲") st.page=1;
+      else if(k==="EXE"||k==="EXIT") st.scr="list";
+      return;
+    }
+    if(st.scr==="list"){
+      const L=st.lists[st.cc];
+      const commit=()=>{ if(st.buf!==""){ const v=entryVal(st.buf); if(v!==null){ if(st.cr<L.length) L[st.cr]=v; else L.push(v); } st.buf=""; } };
+      if(/^[0-9]$/.test(k)||k==="."||k==="−"||k==="(−)"){ st.calcMenu=false; st.buf=entryPush(st.buf,(k==="−"||k==="(−)")?"-":k); return; }
+      if(k==="EXE"){ commit(); st.cr=Math.min(st.cr+1,st.lists[st.cc].length); return; }
+      if(k==="DEL"){ if(st.buf!==""){ st.buf=st.buf.slice(0,-1); } else if(st.cr<L.length){ L.splice(st.cr,1); st.cr=Math.min(st.cr,L.length); } return; }
+      if(k==="▲"){ commit(); st.cr=Math.max(0,st.cr-1); return; }
+      if(k==="▼"){ commit(); st.cr=Math.min(st.cr+1,st.lists[st.cc].length); return; }
+      if(k==="◀"||k==="▶"){ commit(); st.cc=(k==="◀")?Math.max(0,st.cc-1):Math.min(2,st.cc+1); st.cr=Math.min(st.cr,st.lists[st.cc].length); return; }
+      if(st.calcMenu){ if(k==="F1") this.oneVar(); else if(k==="EXIT"||k==="F2") st.calcMenu=false; return; }
+      if(k==="F1") return this.msg("Graphe : non simulé (statistiques à 1 variable uniquement).");
+      if(k==="F2"){ st.calcMenu=true; return; }
+      if(k==="F3") return this.oneVar();
+      if(k==="F4") return this.msg("Somme : non simulé.");
+      if(k==="F5") return this.msg("Distr : non simulé.");
+      if(k==="F6") return this.msg("Tri des listes : non simulé.");
+      if(k==="EXIT"){ st.scr="home"; return; }
+      if(k==="OPTN"||k==="VARS"||k==="ANS") return this.msg("Non simulé : seules les fonctions statistiques le sont.");
+      return;
+    }
+  },
+  lcd(){
+    const st=this.state;
+    if(st.scr==="home"){
+      const names=["Calcul","Graph","Statistique","Tableau","Conique","Équation","Programmes","Finance"];
+      let h=cline(cpadend("MENU principal",26));
+      [[0,1,2,3],[4,5,6,7]].forEach(rg=>{
+        h+=cline(rg.map(i=>{ const lab=cpadend(names[i],12); return i===st.sel?"<span class='cur'>"+lab+"</span>":lab; }).join(""));
+      });
+      return h;
+    }
+    if(st.scr==="msg") return cline("MESSAGE")+cline(st.msg)+cline("<span class='dim'>EXE : retour</span>");
+    if(st.scr==="setup"){
+      return cline("SETUP")+
+        cline(cpadend("Type Q1Q3",14)+": "+(st.q13==="std"?"Std":"SurDonn"))+
+        cline(cpadend("List Fichier",14)+": File1")+
+        cline(cpadend("Stat Wind",14)+": Auto")+
+        cline("<span class='dim'>◀▶ : Std (comme le tableur) / SurDonn · EXIT</span>");
+    }
+    if(st.scr==="res"){
+      const S=machStats(st.lists[0]);
+      const q1=(st.q13==="std")?S.q1i:S.q1x, q3=(st.q13==="std")?S.q3i:S.q3x;
+      const rows=(st.page===1)
+        ? [["x̄",S.mean],["Σx",S.sum],["Σx²",S.sum2],["σx",S.p],["sx",S.s],["n",S.n]]
+        : [["minX",S.min],["maxX",S.max],["Q1",q1],["Med",S.med],["Q3",q3],["Mod",S.mode],["Mod:n=",S.modes.length],["Mod:F=",S.modef]];
+      let h=cline("1-Var"+(st.page===2?" (2/2)":""));
+      h+=clines(rows.map(r=>cpadend(r[0],8)+cpad(mnum(r[1]),10)));
+      h+=cline("<span class='dim'>"+(st.page===2?"▲ page 1":"▼ suite")+"</span>");
+      return h;
+    }
+    /* éditeur de listes */
+    const top=Math.max(0,st.cr-4);
+    let h=cline("  "+[0,1,2].map(c=>cpadend("List "+(c+1),10)).join(""));
+    for(let r=top;r<top+5;r++){
+      const cells=[0,1,2].map(c=>{
+        let txt=(r<st.lists[c].length)?mnum(st.lists[c][r]):"";
+        if(c===st.cc&&r===st.cr) txt=(st.buf!=="")?st.buf:txt;
+        txt=cpad(txt,10);
+        return (c===st.cc&&r===st.cr)?"<span class='cur'>"+txt+"</span>":txt;
+      });
+      h+=cline(cpad(r+1,2)+cells.join(""));
+    }
+    if(st.calcMenu) h+="<div class='ovl'>Calc  F1:1-Var  F2:2-Var</div>";
+    h+="<div class='sk'>F1:Graphe  F2:Calc  F3:1-Var  F4:Somme  F5:Distr  F6:⇒</div>";
+    return h;
+  }
+},
+/* ===================== TI-83 Premium CE ===================== */
+ti:{
+  name:"TI-83 Premium CE", cls:"dev-ti",
+  rows:[["ON","2nde","MODE"],
+        ["STATS","ANNUL"],
+        ["SUPPR","◀","▲","▼","▶","ENTRÉE"],
+        ["7","8","9","÷"],
+        ["4","5","6","×"],
+        ["1","2","3","−"],
+        ["0",".","(−)","+"]],
+  init(){ this.state={ scr:"home", menuIdx:0, L:[[],[],[]], cc:0, cr:0, buf:"", resTop:0, two:false,
+                    msg:"", prevScr:"home", opened:false, done:[false,false,false,false] }; },
+  msg(t){ const st=this.state; st.prevScr=st.scr; st.msg=t; st.scr="msg"; },
+  key(k){
+    const st=this.state;
+    if(k==="2nde"){ st.two=!st.two; return; }
+    if(st.two){ st.two=false; if(k==="MODE"){ st.scr="home"; } return; }
+    if(k==="ON"){ st.scr="home"; return; }
+    if(st.scr==="msg"){ st.scr=st.prevScr; return; }
+    if(k==="STATS"){ st.scr="menu"; st.menuIdx=0; return; }
+    if(k==="MODE") return this.msg("Menu MODE : non simulé.");
+    if(st.scr==="home"){
+      if(/^[0-9]$/.test(k)||[".","−","(−)","+","×","÷"].includes(k))
+        this.msg("Calculatrice non simulée : seules les fonctions statistiques le sont.");
+      return;
+    }
+    if(st.scr==="menu"){
+      const apply=()=>{ if(st.menuIdx===0){ st.scr="edit"; st.opened=true; }
+                        else if(st.menuIdx===2){ st.scr="wiz"; }
+                        else this.msg("Non simulé : statistiques à 1 variable uniquement."); };
+      if(/^[1-4]$/.test(k)){ st.menuIdx=+k-1; apply(); return; }
+      if(k==="▲"){ st.menuIdx=(st.menuIdx+3)%4; return; }
+      if(k==="▼"){ st.menuIdx=(st.menuIdx+1)%4; return; }
+      if(k==="ENTRÉE"){ apply(); return; }
+      if(k==="ANNUL"){ st.scr="home"; return; }
+      return;
+    }
+    if(st.scr==="edit"){
+      const L=st.L[st.cc];
+      const commit=()=>{ if(st.buf!==""){ const v=entryVal(st.buf); if(v!==null){ if(st.cr<L.length) L[st.cr]=v; else L.push(v); } st.buf=""; } };
+      if(/^[0-9]$/.test(k)||k==="."||k==="−"||k==="(−)"){ st.buf=entryPush(st.buf,(k==="−"||k==="(−)")?"-":k); return; }
+      if(k==="ENTRÉE"){ commit(); st.cr=Math.min(st.cr+1,st.L[st.cc].length); return; }
+      if(k==="SUPPR"){ if(st.buf!==""){ st.buf=st.buf.slice(0,-1); } else if(st.cr<L.length){ L.splice(st.cr,1); st.cr=Math.min(st.cr,L.length); } return; }
+      if(k==="ANNUL"){ st.buf=""; return; }
+      if(k==="▲"){ commit(); st.cr=Math.max(0,st.cr-1); return; }
+      if(k==="▼"){ commit(); st.cr=Math.min(st.cr+1,st.L[st.cc].length); return; }
+      if(k==="◀"||k==="▶"){ commit(); st.cc=(k==="◀")?Math.max(0,st.cc-1):Math.min(2,st.cc+1); st.cr=Math.min(st.cr,st.L[st.cc].length); return; }
+      return;
+    }
+    if(st.scr==="wiz"){
+      if(k==="ENTRÉE"){ if(!st.L[0].length) return this.msg("ERR: DIM INVALIDE (L1 vide)");
+                        st.scr="res"; st.resTop=0; }
+      else if(k==="ANNUL"||k==="SUPPR"){ st.scr="menu"; }
+      return;
+    }
+    if(st.scr==="res"){
+      if(k==="▼") st.resTop=Math.min(4,st.resTop+1);
+      else if(k==="▲") st.resTop=Math.max(0,st.resTop-1);
+      else if(k==="ANNUL"){ st.scr="home"; }
+      return;
+    }
+  },
+  lcd(){
+    const st=this.state;
+    const top2=st.two?cline(cpadend("",20)+"<span class='cur'>2nde</span>"):"";
+    if(st.scr==="home") return top2+clines(["","","","","",""])+cline("Fait");
+    if(st.scr==="menu"){
+      const it=["1:Modifier...","2:Régréssions...","3:Stats 1-Var","4:Stats 2-Var"];
+      return top2+cline("STATS")+cline("MODIFIER")+
+        cline(st.menuIdx===0?"<span class='cur'>"+it[0]+"</span>":it[0])+
+        cline(st.menuIdx===1?"<span class='cur'>"+it[1]+"</span>":it[1])+
+        cline("CALC")+
+        cline(st.menuIdx===2?"<span class='cur'>"+it[2]+"</span>":it[2])+
+        cline(st.menuIdx===3?"<span class='cur'>"+it[3]+"</span>":it[3]);
+    }
+    if(st.scr==="edit"){
+      const top=Math.max(0,st.cr-4);
+      let h=top2+cline([0,1,2].map(c=>cpadend("L"+(c+1),8)).join(""));
+      for(let r=top;r<top+5;r++){
+        const cells=[0,1,2].map(c=>{
+          let txt=(r<st.L[c].length)?mnum(st.L[c][r]):"";
+          if(c===st.cc&&r===st.cr) txt=(st.buf!=="")?st.buf:txt;
+          txt=cpad(txt,8);
+          return (c===st.cc&&r===st.cr)?"<span class='cur'>"+txt+"</span>":txt;
+        });
+        h+=cline(cells.join(""));
+      }
+      h+=cline("L"+(st.cc+1)+"("+(st.cr+1)+")="+st.buf);
+      return h;
+    }
+    if(st.scr==="wiz") return top2+cline("Stats 1-Var")+cline("")+cline("Liste: L1")+cline("Fréq: 1")+cline("")+cline("<span class='cur'>"+cpad("OK",26)+"</span>");
+    if(st.scr==="res"){
+      const S=machStats(st.L[0]);
+      const rows=[["x̄",S.mean],["Σx",S.sum],["Σx²",S.sum2],["Sx",S.s],["σx",S.p],["n",S.n],
+                  ["minX",S.min],["Q1",S.q1x],["Med",S.med],["Q3",S.q3x],["maxX",S.max]];
+      let h=top2+clines(rows.slice(st.resTop,st.resTop+7).map(r=>cpadend(r[0],6)+cpad(mnum(r[1]),8)));
+      if(st.resTop>0) h+=cline("<span class='dim'>▲</span>");
+      if(st.resTop<4) h+=cline("<span class='dim'>▼</span>");
+      return h;
+    }
+    if(st.scr==="msg") return top2+cline("MESSAGE")+cline(st.msg)+cline("<span class='dim'>ENTRÉE : retour</span>");
+    return top2;
+  }
+},
+/* ===================== NumWorks ===================== */
+nw:{
+  name:"NumWorks", cls:"dev-nw",
+  rows:[["MAISON","RETOUR"],
+        ["◀","▲","▼","▶","OK"],
+        ["7","8","9","÷"],
+        ["4","5","6","×"],
+        ["1","2","3","−"],
+        ["0",".","(",")"]],
+  init(){ this.state={ scr:"home", sel:0, vals:[], cur:0, buf:"", resTop:0,
+                    msg:"", prevScr:"home", opened:false, done:[false,false,false,false] }; },
+  msg(t){ const st=this.state; st.prevScr=st.scr; st.msg=t; st.scr="msg"; },
+  key(k){
+    const st=this.state;
+    if(st.scr==="msg"){ st.scr=st.prevScr; return; }
+    if(k==="MAISON"){ st.scr="home"; return; }
+    if(st.scr==="home"){
+      if(k==="◀"||k==="▶"){ const c=st.sel%3, r=Math.floor(st.sel/3), nc=(k==="◀")?(c+2)%3:(c+1)%3; st.sel=r*3+nc; }
+      else if(k==="▲") st.sel=Math.max(0,st.sel-3);
+      else if(k==="▼") st.sel=Math.min(5,st.sel+3);
+      else if(k==="OK"){ if(st.sel===2){ st.scr="data"; st.opened=true; st.cur=0; } else this.msg("Application non simulée : cette simulation se limite à l'application Statistiques."); }
+      return;
+    }
+    const commit=()=>{ if(st.buf!==""){ const v=entryVal(st.buf); if(v!==null){ if(st.cur<st.vals.length) st.vals[st.cur]=v; else st.vals.push(v); } st.buf=""; } };
+    const tabs=["data","hist","box","res"];
+    if(k==="◀"||k==="▶"){
+      if(st.scr==="data") commit();
+      st.scr=tabs[(tabs.indexOf(st.scr)+(k==="▶"?1:3))%4];
+      return;
+    }
+    if(k==="RETOUR"){
+      if(st.scr==="data"){ if(st.buf!==""){ st.buf=st.buf.slice(0,-1); }
+                           else if(st.cur<st.vals.length){ st.vals.splice(st.cur,1); st.cur=Math.min(st.cur,st.vals.length); } }
+      else st.scr="data";
+      return;
+    }
+    if(st.scr==="data"){
+      if(/^[0-9]$/.test(k)||k==="."||k==="−"){ st.buf=entryPush(st.buf,k==="−"?"-":k); return; }
+      if(k==="OK"){ commit(); st.cur=Math.min(st.cur+1,st.vals.length); return; }
+      if(k==="▲"){ commit(); st.cur=Math.max(0,st.cur-1); return; }
+      if(k==="▼"){ commit(); st.cur=Math.min(st.cur+1,st.vals.length); return; }
+      return;
+    }
+    if(st.scr==="res"){
+      if(k==="▼") st.resTop=Math.min(7,st.resTop+1);
+      else if(k==="▲") st.resTop=Math.max(0,st.resTop-1);
+      return;
+    }
+  },
+  lcd(){
+    const st=this.state;
+    if(st.scr==="home"){
+      const apps=["Paramètres","Calculs","Statistiques","Probabilités","Équations","Fonctions"];
+      let h="";
+      [[0,1,2],[3,4,5]].forEach(rg=>{
+        h+=cline(rg.map(i=>{ const lab=cpadend(apps[i],13); return i===st.sel?"<span class='cur'>"+lab+"</span>":lab; }).join(""));
+      });
+      return h;
+    }
+    if(st.scr==="msg") return cline(st.msg)+cline("<span class='dim'>OK : retour</span>");
+    const S=machStats(st.vals);
+    const tabbar="<div class='sk'>"+
+      [["Données","data"],["Histogramme","hist"],["Boîte","box"],["Résultats","res"]]
+      .map(t=>"<span class='"+(t[1]===st.scr?"cur":"")+"'>"+t[0]+"</span>").join(" ")+"</div>";
+    if(st.scr==="data"){
+      const top=Math.max(0,st.cur-6);
+      let h=cline("Var1");
+      for(let r=top;r<top+7;r++){
+        let txt=(r<st.vals.length)?mnum(st.vals[r]):"";
+        if(r===st.cur) txt=(st.buf!=="")?st.buf:txt;
+        txt=cpad(txt,8);
+        h+=cline(cpad(r+1,3)+(r===st.cur?"<span class='cur'>"+txt+"</span>":txt));
+      }
+      return h+tabbar;
+    }
+    if(st.scr==="hist"){
+      if(!S.n) return cline("Var1")+cline("Aucune donnée")+tabbar;
+      const lo=Math.floor(S.min), hi=Math.ceil(S.max);
+      const w=Math.max(1,Math.ceil((hi-lo)/9));
+      const cnt={};
+      st.vals.forEach(x=>{ const b=Math.floor(x/w)*w; cnt[b]=(cnt[b]||0)+1; });
+      const keys=Object.keys(cnt).map(Number).sort((a,b)=>a-b);
+      const mx=Math.max(...keys.map(b=>cnt[b]));
+      let h=cline("Var1");
+      keys.forEach(b=>{ const bar="█".repeat(Math.max(1,Math.round(cnt[b]/mx*14)));
+        h+=cline(cpadend(String(b)+(w>1?("–"+(b+w-1)):""),4)+cpadend(bar,16)+String(cnt[b])); });
+      return h+tabbar;
+    }
+    if(st.scr==="box"){
+      if(!S.n) return cline("Var1")+cline("Aucune donnée")+tabbar;
+      const W=25, pos=v=>Math.round((v-S.min)/(S.max-S.min)*W);
+      const line=new Array(W+1).fill("─");
+      const marks=[[pos(S.min),"├"],[pos(S.q1i),"┬"],[pos(S.med),"╪"],[pos(S.q3i),"┬"],[pos(S.max),"┤"]];
+      marks.forEach(m2=>{ line[m2[0]]=m2[1]; });
+      return cline("Var1")+cline("   "+line.join(""))+
+        cline("   min="+mnum(S.min)+"  Q1="+mnum(S.q1i)+"  Med="+mnum(S.med)+"  Q3="+mnum(S.q3i)+"  max="+mnum(S.max))+tabbar;
+    }
+    if(st.scr==="res"){
+      let h=cline("Var1");
+      if(!S.n) return h+cline("Aucune donnée")+tabbar;
+      const rows=[["Effectif total",S.n],["Minimum",S.min],["Maximum",S.max],["Étendue",S.max-S.min],
+                  ["Moyenne",S.mean],["Écart type",S.p],["Variance",S.p2],
+                  ["Écart type échant.",S.s],["Variance échant.",S.s2],
+                  ["Premier quartile",S.q1i],["Médiane",S.med],["Troisième quartile",S.q3i],
+                  ["Mode",S.modes.join(", ")],["Effectif du mode",S.modef]];
+      h+=clines(rows.slice(st.resTop,st.resTop+7).map(r=>cpadend(r[0],18)+cpad(mnum(r[1]),8)));
+      if(st.resTop>0) h+=cline("<span class='dim'>▲</span>");
+      if(st.resTop<7) h+=cline("<span class='dim'>▼</span>");
+      return h+tabbar;
+    }
+    return cline("");
+  }
+}
+};
+
+/* ---------- missions (validées automatiquement) ---------- */
+const MSN = {
+  casio:[
+    { t:"Ouvrir l'application Statistique (MENU, curseur sur l'icône, EXE)", c:st=>st.opened },
+    { t:"Saisir la série des 30 buts dans List 1 (valeur + EXE, ×30)", c:st=>serOK(st.lists[0]) },
+    { t:"Afficher l'écran 1-Var (F3, ou F2 puis F1)", c:st=>st.scr==="res" },
+    { t:"Défiler jusqu'aux quartiles et au mode (▼)", c:st=>st.scr==="res"&&st.page===2 }
+  ],
+  ti:[
+    { t:"Ouvrir l'éditeur de listes (STATS → 1: Modifier...)", c:st=>st.opened },
+    { t:"Saisir la série des 30 buts dans L1 (valeur + ENTRÉE, ×30)", c:st=>serOK(st.L[0]) },
+    { t:"Afficher Stats 1-Var (STATS → 3: Stats 1-Var → ENTRÉE → OK)", c:st=>st.scr==="res" },
+    { t:"Défiler jusqu'à Q1, méthode TI (▼)", c:st=>st.scr==="res"&&st.resTop>=1 }
+  ],
+  nw:[
+    { t:"Ouvrir l'application Statistiques (accueil → OK)", c:st=>st.opened },
+    { t:"Saisir la série des 30 buts dans Var1 (valeur + OK, ×30)", c:st=>serOK(st.vals) },
+    { t:"Ouvrir l'onglet Résultats (▶)", c:st=>st.scr==="res"&&st.vals.length>0 },
+    { t:"Défiler jusqu'au Mode et à son effectif (▼)", c:st=>st.scr==="res"&&st.resTop>=7 }
+  ]
+};
+
+/* ---------- pilotage ---------- */
+let calcCur="casio";
+function renderMissions(){
+  const m=EM[calcCur], st=m.state;
+  $("msName").textContent=m.name;
+  $("msScore").textContent="— "+st.done.filter(Boolean).length+" / 4";
+  $("msList").innerHTML=MSN[calcCur].map((x,i)=>"<li class='"+(st.done[i]?"done":"")+"'>"+(st.done[i]?"✔ ":"○ ")+x.t+"</li>").join("");
+}
+function keyCls(k){
+  if(["EXE","ENTRÉE","OK"].includes(k)) return " class='k-acc'";
+  if(/^F[1-6]$/.test(k)) return " class='k-fn'";
+  if(["▲","▼","◀","▶"].includes(k)) return " class='k-nav'";
+  return "";
+}
+function calcPaint(){
+  const m=EM[calcCur];
+  $("calcDev").className="calc-device "+m.cls;
+  $("machName").textContent=m.name;
+  $("machLcd").innerHTML=m.lcd();
+  $("machKeys").innerHTML=m.rows.map(rw=>"<div class='krow c"+rw.length+"'>"+
+    rw.map(k=>"<button data-k=\""+k+"\""+keyCls(k)+">"+k+"</button>").join("")+"</div>").join("");
+  renderMissions();
+}
+function checkMissions(){
+  const st=EM[calcCur].state;
+  MSN[calcCur].forEach((x,i)=>{ if(!st.done[i]&&x.c(st)) st.done[i]=true; });
+  renderMissions();
+}
+function calcKey(k){ EM[calcCur].key(k); checkMissions(); calcPaint(); }
+function calcSelect(which){
+  calcCur=which;
+  $("ctCasio").classList.toggle("on", which==="casio");
+  $("ctTI").classList.toggle("on", which==="ti");
+  $("ctNW").classList.toggle("on", which==="nw");
+  calcPaint();
+}
+$("ctCasio").addEventListener("click", ()=>calcSelect("casio"));
+$("ctTI").addEventListener("click", ()=>calcSelect("ti"));
+$("ctNW").addEventListener("click", ()=>calcSelect("nw"));
+$("machKeys").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b) calcKey(b.getAttribute("data-k")); });
+$("machReset").addEventListener("click", ()=>{ EM[calcCur].init(); calcPaint(); });
+/* clavier physique utilisable quand l'onglet est affiché */
+document.addEventListener("keydown", e=>{
+  if($("paneCalc").style.display!=="block") return;
+  const key=e.key||"";
+  let k=null;
+  if(/^[0-9]$/.test(key)) k=key;
+  else if(key==="."||key===",") k=".";
+  else if(key==="-") k="−";
+  else if(key==="ArrowUp") k="▲";
+  else if(key==="ArrowDown") k="▼";
+  else if(key==="ArrowLeft") k="◀";
+  else if(key==="ArrowRight") k="▶";
+  else if(/^F[1-6]$/.test(key)&&calcCur==="casio") k=key;
+  else if(key==="Enter") k=(calcCur==="casio")?"EXE":(calcCur==="ti")?"ENTRÉE":"OK";
+  else if(key==="Backspace") k=(calcCur==="casio")?"DEL":(calcCur==="ti")?"SUPPR":"RETOUR";
+  else if(key==="Escape") k=(calcCur==="casio")?"EXIT":(calcCur==="ti")?"ANNUL":"RETOUR";
+  else if((key==="s"||key==="S")&&calcCur==="ti") k="STATS";
+  else if(key==="Home") k=(calcCur==="nw")?"MAISON":"MENU";
+  if(!k) return;
+  e.preventDefault();
+  calcKey(k);
+});
+$("calcIntro").innerHTML = "Trois <b>vraies machines simulées</b>, à manipuler librement comme si vous les aviez entre les mains : Casio Graph 90+E, TI-83 Premium CE et NumWorks. <b>Aucune touche n'est indiquée</b> : ouvrez l'application de statistiques, saisissez la série des <b>30 buts</b> de l'exercice guidé, puis affichez les résultats (moyenne, écart-type, variance, quartiles, mode). Seules les <b>fonctions statistiques</b> sont simulées : les autres applications affichent un message. Le <b>clavier physique</b> est utilisable : chiffres, point, signe −, flèches, Entrée (= EXE / ENTRÉE / OK), Retour arrière (= DEL / SUPPR / RETOUR), Échap (= EXIT / ANNUL / RETOUR), F1–F6 pour la Casio et touche s (= STATS) pour la TI. Les <b>missions</b> en bas de l'onglet se cochent automatiquement à chaque manipulation réussie ; le bouton ↻ remet la machine à zéro. Ensuite, entraînez-vous sur les <b>50 exercices de laboratoire</b> en bas de l'onglet : données réelles d'analyses cliniques, de contrôle qualité pharmaceutique, de métrologie, de microbiologie et de suivi de l'eau, à traiter sur la machine de votre choix.";
+$("calcMap").innerHTML = "<b>Correspondance avec les formules des onglets précédents</b> (valeurs de la série des 30 buts) :<table class='memo'>"+
+  "<tr><td><code>=NB(B2:F7)</code> → "+CM.n+"</td><td>n</td><td>n</td><td>Effectif total</td></tr>"+
+  "<tr><td><code>=MOYENNE(B2:F7)</code> → "+CM.mean+"</td><td>x̄</td><td>x̄</td><td>Moyenne</td></tr>"+
+  "<tr><td><code>=ECARTYPE(B2:F7)</code> → "+CM.s+"</td><td>sx</td><td>Sx</td><td>Écart type échantillon</td></tr>"+
+  "<tr><td><code>=VARIANCE(B2:F7)</code> → "+CM.s2+"</td><td>sx² (à élever au carré)</td><td>Sx² (à élever au carré)</td><td>Variance échantillon</td></tr>"+
+  "<tr><td><code>=QUARTILE(B2:F7;1)</code> → "+CM.q1+"</td><td>Q1 (Type Q1Q3 : Std) ; SurDonn → 1</td><td>Q1 = 1 (méthode différente)</td><td>Premier quartile (identique)</td></tr>"+
+  "<tr><td><code>=QUARTILE(B2:F7;2)</code> → "+CM.q2+"</td><td>Med</td><td>Med</td><td>Médiane</td></tr>"+
+  "<tr><td><code>=QUARTILE(B2:F7;3)</code> → "+CM.q3+"</td><td>Q3</td><td>Q3</td><td>Troisième quartile</td></tr>"+
+  "<tr><td><code>=MODE(B2:F7)</code> → "+CM.mode+"</td><td>Mod ("+CM.modf+" fois)</td><td>— (non affiché)</td><td>Mode et effectif du mode</td></tr>"+
+  "</table>";
+EM.casio.init(); EM.ti.init(); EM.nw.init();
+calcSelect("casio");
+
+
+/* ---------- onglet calculatrices : 50 exercices statistiques de laboratoire ---------- */
+/* données issues des pratiques réelles d'analyses cliniques, de contrôle qualité pharmaceutique,
+   de métrologie, de microbiologie et du suivi de l'eau et de l'environnement */
+const LBT = {
+  clin:{ l:"Analyses cliniques", c:"#0e7490" },
+  pharma:{ l:"Qualité pharmaceutique", c:"#6c3483" },
+  metro:{ l:"Métrologie", c:"#b45309" },
+  micro:{ l:"Microbiologie", c:"#15803d" },
+  env:{ l:"Eau & environnement", c:"#1d4ed8" }
+};
+const LABEXOS = [
+  { th:"clin", t:"Glucose sérique — contrôle niveau 2", unit:"mg/dL", tgt:104,
+    ctx:"Vérification de précision sur automate de biochimie (méthode hexokinase) : 10 dosages successifs du même sérum de contrôle de niveau 2. Le fabricant annonce une cible de 104 mg/dL. Les limites x̄ ± 2s serviront de carte de contrôle mensuelle.",
+    vals:[104.2,103.8,104.5,103.9,104.1,103.6,104.3,104.0,103.7,104.4],
+    qs:["mean","sd","cv","bias","ucl","lcl"] },
+  { th:"clin", t:"Cholestérol total — contrôle intersérie", unit:"g/L", tgt:1.95,
+    ctx:"Contrôle de précision intersérie : 8 déterminations de la valeur cible d'un sérum de contrôle (1,95 g/L) par méthode CHOD-PAP, un dosage par semaine pendant 8 semaines.",
+    vals:[1.94,1.96,1.95,1.93,1.97,1.95,1.94,1.96],
+    qs:["mean","sd","cv","bias"] },
+  { th:"clin", t:"Hémoglobine — contrôle de l'analyseur", unit:"g/dL", tgt:13.6,
+    ctx:"Contrôle quotidien sur automate d'hématologie : 10 mesures du contrôle de niveau 2 pendant 10 jours consécutifs. Cible fabricant : 13,6 g/dL.",
+    vals:[13.4,13.6,13.5,13.7,13.4,13.6,13.5,13.5,13.8,13.4],
+    qs:["mean","sd","cv","med"] },
+  { th:"clin", t:"Créatinine — carte de contrôle", unit:"mg/L", tgt:10,
+    ctx:"Contrôle de justesse de la méthode cinétique de Jaffé : 8 dosages d'un sérum de contrôle certifié à 10,0 mg/L. Les limites de contrôle x̄ ± 2s seront utilisées pour la carte de contrôle du mois.",
+    vals:[9.8,10.2,10.0,9.9,10.1,10.3,9.7,10.0],
+    qs:["mean","sd","cv","ucl","lcl"] },
+  { th:"clin", t:"Potassium — électrode sélective", unit:"mmol/L", tgt:4.50,
+    ctx:"Dosage du potassium sérique par électrode sélective de membrane : 8 répliques du même échantillon, cible 4,50 mmol/L. Un biais au-delà de ± 2 % impose une recalibration.",
+    vals:[4.52,4.48,4.55,4.50,4.47,4.53,4.51,4.49],
+    qs:["mean","sd","bias","med"] },
+  { th:"clin", t:"TSH — immunoanalyse niveau 3", unit:"mUI/L", tgt:4.00,
+    ctx:"Contrôle de qualité de niveau 3 sur un analyseur d'immunoanalyse : 7 déterminations sur 7 jours, méthode immunométrique « sandwich ». Cible fabricant : 4,00 mUI/L.",
+    vals:[4.02,4.11,3.97,4.05,4.08,3.99,4.06],
+    qs:["mean","sd","cv","med"] },
+  { th:"clin", t:"Calcium ionisé — gaz du sang", unit:"mmol/L",
+    ctx:"Mesures du calcium ionisé sur analyseur de gaz du sang à 37 °C : 9 déterminations sur le même échantillon hépariné, avant validation du lot de réactifs.",
+    vals:[1.21,1.19,1.22,1.20,1.18,1.21,1.20,1.19,1.23],
+    qs:["mean","sd","med","q1","q3"] },
+  { th:"clin", t:"ALAT — contrôle niveau 1", unit:"UI/L",
+    ctx:"Répétitions du contrôle bas (niveau 1) pour estimer la variabilité de la méthode ALT (réaction IFCC) à faible activité enzymatique : 7 dosages.",
+    vals:[38.5,39.2,37.8,40.1,39.0,38.2,39.5],
+    qs:["mean","sd","cv","range"] },
+  { th:"clin", t:"Chlorures — titrage coulométrique", unit:"mmol/L", tgt:103,
+    ctx:"Dosage des chlorures sériques par coulométrie : 6 titrations du même calibrateur de référence à 103 mmol/L, pour vérifier la justesse de la chaîne de mesure.",
+    vals:[103.2,102.8,103.5,103.0,103.3,102.9],
+    qs:["mean","sd","cv","bias"] },
+  { th:"clin", t:"Protéines totales — méthode du biuret", unit:"g/L",
+    ctx:"Dosage des protéines totales par la méthode du biuret sur 10 sérums de contrôle d'un même lot, pour caractériser la reproductibilité de la technique.",
+    vals:[70.4,69.8,70.9,70.1,70.6,69.9,70.3,70.5,70.2,70.0],
+    qs:["mean","sd","med","q1","q3"] },
+  { th:"clin", t:"Bilirubine totale — étude de rendement", unit:"mg/L", tgt:15,
+    ctx:"Étude de rendement : 7 dosages d'un matériau de référence enrichi à 15,0 mg/L de bilirubine totale par méthode diazoréactive, pour estimer la récupération de la technique.",
+    vals:[15.2,14.8,15.5,15.0,15.3,14.9,15.1],
+    qs:["mean","sd","cv","rec"] },
+  { th:"clin", t:"Sodium — photométrie de flamme", unit:"mmol/L", tgt:140,
+    ctx:"8 déterminations du sodium sur le même sérum de contrôle par photométrie de flamme en émission ; la cible de 140 mmol/L encadre la zone de décision hyponatrémie / hypernatrémie.",
+    vals:[139.5,140.2,139.8,140.0,139.6,140.4,139.9],
+    qs:["mean","sd","cv","med"] },
+  { th:"pharma", t:"Poids de comprimés — surveillance de compression", unit:"mg", tgt:500,
+    ctx:"Échantillonnage en cours de compression : 20 comprimés prélevés à intervalles réguliers et pesés individuellement sur une balance de contrôle (masse nominale 500 mg). Les limites x̄ ± 2s serviront de surveillance du lot.",
+    vals:[501,498,502,495,499,503,497,500,496,504,499,501,498,502,500,497,503,499,500,496],
+    qs:["mean","sd","cv","ucl","lcl"] },
+  { th:"pharma", t:"Uniformité de teneur des unités de dosage", unit:"%", spec:[95,105], specTxt:"chaque valeur entre 95 et 105 % de la teneur nominale",
+    ctx:"Dosage du principe actif dans 10 unités individuelles par HPLC (essai d'uniformité des unités de dosage de la Pharmacopée européenne) : spécification d'acceptation usuelle, chaque valeur entre 95 et 105 % de la teneur nominale.",
+    vals:[99.2,98.7,100.3,101.1,98.9,99.6,100.5,98.5,99.8,100.0],
+    qs:["mean","sd","cv","med"] },
+  { th:"pharma", t:"Dissolution — profils individualisés", unit:"%", lim:75, limDir:"min", limTxt:"moyenne Q ≥ 75 % en 30 min",
+    ctx:"Essai de dissolution (appareil à palettes, 30 minutes) sur 12 unités d'un lot de comprimés, dosage UV individualisé. Critère d'acceptation : Q = 75 % en 30 minutes.",
+    vals:[86.2,88.5,84.9,87.3,89.0,85.6,87.8,86.4,88.1,85.2,87.0,86.9],
+    qs:["mean","sd","min","q3"] },
+  { th:"pharma", t:"Teneur du principe actif par HPLC-UV", unit:"%", tgt:100,
+    ctx:"Titrage d'un principe actif par HPLC-UV contre étalon de référence : 6 injections indépendantes d'une même préparation d'échantillon. Cible : 100,0 % de la teneur déclarée.",
+    vals:[99.42,99.68,99.35,99.55,99.61,99.48],
+    qs:["mean","sd","cv","bias"] },
+  { th:"pharma", t:"Eau résiduelle — Karl Fischer", unit:"%", lim:0.7, limTxt:"≤ 0,7 %",
+    ctx:"Titrage coulométrique Karl Fischer (Ph. Eur. 2.5.12) sur un même lot de poudre : 7 déterminations. Spécification interne de stabilité : 0,7 % d'eau au maximum.",
+    vals:[0.48,0.51,0.47,0.49,0.52,0.48,0.50],
+    qs:["mean","sd","cv","max"] },
+  { th:"pharma", t:"pH d'une préparation injectable", unit:"pH", tgt:7.40,
+    ctx:"Contrôle du pH d'un lot de solution injectable par pH-mètre calibré contre les tampons 4,00 et 7,00 : 7 lectures sur des flacons différents. pH cible de la formulation : 7,40.",
+    vals:[7.38,7.41,7.39,7.42,7.40,7.37,7.41],
+    qs:["mean","sd","bias","med"] },
+  { th:"pharma", t:"Volume de remplissage de seringues", unit:"mL", tgt:5.00,
+    ctx:"Contrôle gravimétrique du volume de remplissage de 8 seringues préremplies (densité de la solution ≈ 1,0) ; volume nominal : 5,00 mL.",
+    vals:[5.02,4.98,5.01,4.99,5.03,5.00,4.97,5.01],
+    qs:["mean","sd","cv","bias"] },
+  { th:"pharma", t:"Impureté A par HPLC-DAD", unit:"%", lim:0.5, limTxt:"≤ 0,50 %",
+    ctx:"Quantification d'une impureté spécifique sur 6 préparations indépendantes d'un lot par une méthode validée HPLC-DAD ; limite de spécification : 0,50 %.",
+    vals:[0.312,0.298,0.325,0.305,0.318,0.302],
+    qs:["mean","sd","max","cv"] },
+  { th:"pharma", t:"Uniformité de masse des gélules", unit:"mg", tgt:250,
+    ctx:"Pesée individuelle de 10 gélules dures (essai Ph. Eur. 2.9.5) ; masse nominale : 250 mg. L'étude surveille le centrage de la capsuleuse.",
+    vals:[252,249,251,248,250,253,247,250,251,249],
+    qs:["mean","sd","cv","range"] },
+  { th:"pharma", t:"Perte à la dessiccation", unit:"%", lim:3.0, limTxt:"≤ 3,0 %",
+    ctx:"Détermination de la perte à la dessiccation (Ph. Eur. 2.2.32, étuve à 105 °C jusqu'à masse constante) sur 5 prises d'essai d'un même lot ; spécification : 3,0 % au maximum.",
+    vals:[2.45,2.38,2.51,2.42,2.47],
+    qs:["mean","sd","cv"] },
+  { th:"pharma", t:"Désagrégation des comprimés", unit:"s", lim:180, limTxt:"≤ 180 s",
+    ctx:"Temps de désagrégation de 7 comprimés non enrobés (Ph. Eur. 2.9.1, eau à 37 °C) ; la monographie exige un maximum de 180 s.",
+    vals:[182,175,190,178,168,185,172],
+    qs:["mean","sd","med","max"] },
+  { th:"pharma", t:"Endotoxines bactériennes — méthode LAL", unit:"EU/mL", tgt:0.5,
+    ctx:"Quantification des endotoxines par méthode cinétique chromogénique LAL sur un standard reconstitué à 0,50 EU/mL : 8 déterminations indépendantes.",
+    vals:[0.52,0.49,0.51,0.48,0.53,0.50,0.51,0.49],
+    qs:["mean","sd","cv","rec"] },
+  { th:"pharma", t:"Azote total par Kjeldahl", unit:"%", tgt:2.81,
+    ctx:"Dosage de l'azote total après minéralisation Kjeldahl sur 6 prises d'essai d'une même farine ; valeur attendue de la matière première : 2,81 %.",
+    vals:[2.84,2.79,2.86,2.82,2.80,2.85],
+    qs:["mean","sd","cv","bias"] },
+  { th:"pharma", t:"Densité relative d'un sirop", unit:"g/mL",
+    ctx:"Mesures au densimètre numérique d'un même lot de sirop (Ph. Eur. 2.2.5) : 5 déterminations après homogénéisation complète.",
+    vals:[1.284,1.281,1.286,1.283,1.282],
+    qs:["mean","sd","cv","range"] },
+  { th:"metro", t:"Pipette de 1000 µL — contrôle gravimétrique", unit:"µL", tgt:998.2,
+    ctx:"Contrôle d'une micropipette de 1000 µL selon ISO 8655-6 : 8 pesées d'eau distillée converties en volume à 20 °C (correction de poussée de l'air). Volume cible : 998,2 µL.",
+    vals:[998.4,997.9,998.6,998.1,997.8,998.5,998.0,998.3],
+    qs:["mean","sd","cv","bias"] },
+  { th:"metro", t:"Balance analytique — étalon de 20 g", unit:"g",
+    ctx:"Étude de répétabilité d'une balance de lecture 0,1 mg sur une masse étalon de classe E2 de 20,0 g : 7 pesées consécutives après targe.",
+    vals:[20.0001,20.0002,19.9999,20.0000,20.0003,20.0001,20.0002],
+    qs:["mean","sd","range","cv"] },
+  { th:"metro", t:"Thermomètre de contrôle — bain 37 °C", unit:"°C", tgt:37.00,
+    ctx:"Vérification d'une sonde thermométrique dans un bain thermostaté de référence réglé à 37,00 °C (température d'étalonnage des incubateurs) : 8 relevés.",
+    vals:[37.02,36.98,37.01,36.99,37.03,37.00,36.98,37.02],
+    qs:["mean","sd","bias","med"] },
+  { th:"metro", t:"Chronomètre d'essai — 60,00 s", unit:"s", tgt:60.00,
+    ctx:"Vérification d'un chronomètre de laboratoire sur un intervalle nominal de 60,00 s comparé à une référence certifiée : 6 mesures indépendantes.",
+    vals:[60.12,59.95,60.08,60.02,59.91,60.15],
+    qs:["mean","sd","cv","bias"] },
+  { th:"metro", t:"pH-mètre — tampon de vérification 7,00", unit:"pH", tgt:7.00,
+    ctx:"Lectures répétées d'un tampon de vérification pH 7,00 à 25 °C, après calibration, pour estimer la stabilité de l'électrode combinée en verre.",
+    vals:[7.01,6.99,7.00,7.02,6.99,7.01,7.00,7.00],
+    qs:["mean","sd","bias","mode"] },
+  { th:"metro", t:"Spectrophotomètre — filtre neutre 0,500 UA", unit:"UA", tgt:0.500,
+    ctx:"Vérification journalière d'un spectrophotomètre avec un filtre neutre certifié à 0,500 UA à 540 nm : 6 lectures consécutives.",
+    vals:[0.501,0.499,0.500,0.498,0.502,0.500],
+    qs:["mean","sd","cv","bias"] },
+  { th:"micro", t:"E. coli — eau de forage", unit:"CFU/100 mL",
+    ctx:"Dénombrement d'Escherichia coli par filtration sur membrane et culture sur milieu sélectif : 10 échantillons de 100 mL prélevés sur un même forage destiné à l'eau potable.",
+    vals:[24,31,27,22,33,28,25,30,22,26],
+    qs:["mean","sd","med","mode"] },
+  { th:"micro", t:"Flore totale — air de salle blanche", unit:"UFC/m³",
+    ctx:"Contrôle de l'air d'une salle blanche au repos par capteur volumétrique (prélèvement de 1000 L par essai) : 8 prélèvements au même emplacement.",
+    vals:[3,1,4,2,1,3,2,1],
+    qs:["mean","sd","med","mode"] },
+  { th:"micro", t:"Comptage de colonies — reproductibilité", unit:"UFC/boîte",
+    ctx:"Comptage de colonies totales sur une même gélose non sélective par 7 opérateurs différents, pour estimer la reproductibilité inter-opérateurs du comptage.",
+    vals:[152,147,155,150,149,153,151],
+    qs:["mean","sd","cv","med"] },
+  { th:"micro", t:"Efficacité d'un désinfectant", unit:"%",
+    ctx:"Essais d'efficacité bactéricide d'un désinfectant de surfaces sur un inoculum de référence (norme NF EN 1276) : 5 essais indépendants, résultat exprimé en pourcentage d'inactivation.",
+    vals:[99.92,99.88,99.95,99.90,99.87],
+    qs:["mean","sd","range"] },
+  { th:"micro", t:"Levures et moisissures — produit cosmétique", unit:"UFC/g", lim:100, limTxt:"≤ 100 UFC/g",
+    ctx:"Dénombrement de la flore fongique d'un même lot de crème sur 9 boîtes de Pétri (Ph. Eur. 2.6.12) ; spécification du produit : 100 UFC/g au maximum.",
+    vals:[12,15,9,11,14,10,13,12,11],
+    qs:["mean","sd","med","q1"] },
+  { th:"micro", t:"pH des milieux de culture", unit:"pH",
+    ctx:"Contrôle du pH de 6 lots d'un même milieu de culture après stérilisation à l'autoclave ; critère d'acceptation de la préparation : pH 7,2 ± 0,2.",
+    vals:[7.2,7.3,7.1,7.3,7.2,7.2],
+    qs:["mean","sd","mode","med"] },
+  { th:"env", t:"Nitrates — eau potable", unit:"mg/L", lim:50, limTxt:"≤ 50 mg/L",
+    ctx:"Suivi des nitrates d'un captage d'eau potable par méthode colorimétrique automatisée : 7 prélèvements hebdomadaires ; limite de qualité réglementaire : 50 mg/L.",
+    vals:[42.1,39.8,44.5,41.2,43.6,40.9,42.8],
+    qs:["mean","sd","cv","max"] },
+  { th:"env", t:"pH d'une rivière — profil longitudinal", unit:"pH",
+    ctx:"Relevés de pH in situ avec une sonde multiparamètres sur 12 points d'un même tronçon de rivière, de l'amont vers l'aval, dans le cadre d'un suivi de qualité des eaux.",
+    vals:[7.6,7.9,8.1,7.4,7.8,8.0,7.5,7.7,7.9,8.2,7.6,7.8],
+    qs:["mean","sd","med","q1","q3"] },
+  { th:"env", t:"DCO — rejet de station d'épuration", unit:"mg/L", lim:250, limTxt:"≤ 250 mg/L",
+    ctx:"Demande chimique en oxygène des effluents en sortie de station d'épuration (norme NF T90-101) : 10 analyses quotidiennes ; limite de rejet de la convention de déversement : 250 mg/L.",
+    vals:[218,232,205,240,226,214,250,228,219,235],
+    qs:["mean","sd","cv","med"] },
+  { th:"env", t:"Turbidité du réseau d'eau", unit:"NTU",
+    ctx:"Turbidité néphélométrique de l'eau distribuée mesurée sur 8 points du réseau (référence de performance usuelle : 5 NTU) ; les quartiles servent à situer la distribution.",
+    vals:[2.4,3.1,2.8,2.6,3.3,2.9,2.5,2.7],
+    qs:["mean","sd","cv","q3"] },
+  { th:"env", t:"Conductivité d'une eau de source", unit:"µS/cm",
+    ctx:"Conductivité à 25 °C d'une eau de source mesurée par sonde compensée en température : 8 mesures hebdomadaires au même point de prélèvement.",
+    vals:[482,495,476,490,488,493,479,486],
+    qs:["mean","sd","cv","range"] },
+  { th:"env", t:"Plomb dans l'eau du robinet", unit:"µg/L", lim:10, limTxt:"≤ 10 µg/L",
+    ctx:"Dosage du plomb par ICP-MS sur 8 échantillons d'eau du robinet prélevés au robin (1er litre) ; limite de qualité de la directive eau destinée à la consommation humaine : 10 µg/L.",
+    vals:[7.2,8.5,6.9,7.8,8.1,7.4,6.6,7.7],
+    qs:["mean","sd","med","max"] },
+  { th:"env", t:"Ozone troposphérique — jour de pic", unit:"µg/m³",
+    ctx:"Concentrations horaires d'ozone relevées par analyseur photométrique UV dans une station de surveillance de la qualité de l'air, un jour de pic estival (seuil d'information : 130 µg/m³).",
+    vals:[68,75,82,71,90,77,64,85,79,72],
+    qs:["mean","sd","med","q1","q3"] },
+  { th:"env", t:"Mercure total — thon", unit:"mg/kg", lim:0.5, limTxt:"≤ 0,50 mg/kg",
+    ctx:"Dosage du mercure total par spectrométrie d'absorption atomique à vapeur froide dans 7 filets de thon ; limite sanitaire européenne : 0,50 mg/kg.",
+    vals:[0.42,0.38,0.47,0.35,0.51,0.44,0.39],
+    qs:["mean","sd","med","max"] },
+  { th:"env", t:"Chlorophylle a — suivi de lac", unit:"µg/L",
+    ctx:"Dosage de la chlorophylle a par fluorimétrie sur 8 prélèvements de profondeur dans un lac (programme de surveillance de l'eutrophisation).",
+    vals:[12.4,15.2,10.8,14.6,11.9,13.7,16.1,12.8],
+    qs:["mean","sd","cv","q1"] },
+  { th:"env", t:"CO₂ ambiant — air urbain", unit:"ppm",
+    ctx:"Relevés horaires du CO₂ dans l'air d'une rue urbaine par capteur NDIR calibré, sur une journée de semaine (moyenne annuelle mondiale de référence ≈ 420 ppm).",
+    vals:[415,422,418,409,425,412,419,416,421,414],
+    qs:["mean","sd","med","range"] },
+  { th:"env", t:"Résidu de pesticide dans une eau de surface", unit:"µg/L", lim:0.10, limTxt:"≤ 0,10 µg/L",
+    ctx:"Dosage d'un résidu de pesticide par GC-MS/MS dans 8 échantillons d'eau de surface ; limite de qualité environnementale : 0,10 µg/L.",
+    vals:[0.084,0.092,0.078,0.088,0.081,0.089,0.086,0.080],
+    qs:["mean","sd","cv","max"] },
+  { th:"env", t:"Poids de sachets de réactif — remplissage", unit:"g", tgt:100,
+    ctx:"Contrôle final d'un lot de sachets de réactif pesés sur la balance de la remplisseuse : 12 sachets prélevés sur la journée ; masse nominale : 100 g. Étude du centrage de la machine.",
+    vals:[100.2,99.7,100.5,99.9,100.1,99.8,100.3,100.0,99.6,100.4,99.9,100.1],
+    qs:["mean","sd","cv","bias"] }
+];
+const QDEF = {
+  mean:{ l:"Moyenne x̄", u:"val", get:S=>S.mean },
+  sd:{ l:"Écart-type s (échantillon)", u:"val", get:S=>S.s },
+  var:{ l:"Variance s² (échantillon)", u:"unit2", get:S=>S.s2 },
+  cv:{ l:"CV = 100 × s ÷ x̄", u:"%", get:S=>100*S.s/S.mean },
+  med:{ l:"Médiane", u:"val", get:S=>S.med },
+  q1:{ l:"Premier quartile Q1", u:"val", get:S=>S.q1i },
+  q3:{ l:"Troisième quartile Q3", u:"val", get:S=>S.q3i },
+  min:{ l:"Minimum", u:"val", get:S=>S.min },
+  max:{ l:"Maximum", u:"val", get:S=>S.max },
+  range:{ l:"Étendue (max − min)", u:"val", get:S=>S.max-S.min },
+  mode:{ l:"Mode (valeur la plus fréquente)", u:"val", get:S=>S.mode },
+  ucl:{ l:"Limite de contrôle supérieure x̄ + 2s", u:"val", get:S=>S.mean+2*S.s },
+  lcl:{ l:"Limite de contrôle inférieure x̄ − 2s", u:"val", get:S=>S.mean-2*S.s },
+  bias:{ l:"Biais = 100 × (x̄ − cible) ÷ cible", u:"%", get:(S,ex)=>100*(S.mean-ex.tgt)/ex.tgt },
+  rec:{ l:"Rendement = 100 × x̄ ÷ cible", u:"%", get:(S,ex)=>100*S.mean/ex.tgt }
+};
+let lbCur=0;
+const lbDone=new Array(50).fill(false), lbInputs={}, lbMarks={};
+function lbEval(ex,ans){
+  ans=ans||{};
+  const S=machStats(ex.vals);
+  return ex.qs.map(q=>{
+    const d=QDEF[q], e=d.get(S,ex);
+    const a=parseFloat(String(ans[q]||"").replace(",","."));
+    const tol=(q==="mode")?1e-9:Math.max(1e-4,Math.abs(e)*0.005);
+    return { q:q, ok:isFinite(a)&&Math.abs(a-e)<=tol, exp:e };
+  });
+}
+function lbSubmit(i,ans){
+  const res=lbEval(LABEXOS[i],ans);
+  if(res.every(r=>r.ok)) lbDone[i]=true;
+  return res;
+}
+function lbAnalysis(ex){
+  const S=machStats(ex.vals);
+  const h=[];
+  if(ex.spec){ const ok=S.mean>=ex.spec[0]&&S.mean<=ex.spec[1];
+    h.push((ok?"✔ ":"✘ ")+"Conclusion : x̄ = "+mnum(S.mean)+" "+ex.unit+" → "+(ok?"dans":"hors de")+" la spécification ("+ex.specTxt+")."); }
+  if(ex.limTxt){ const ok=(ex.limDir==="min")?(S.mean>=ex.lim):(S.mean<=ex.lim);
+    h.push((ok?"✔ ":"✘ ")+"Conclusion : x̄ = "+mnum(S.mean)+" "+ex.unit+" → "+(ok?"conforme":"non conforme")+" à la limite « "+ex.limTxt+" »."); }
+  if(!h.length&&ex.tgt!==undefined){
+    h.push("✔ Conclusion : x̄ = "+mnum(S.mean)+" "+ex.unit+" pour une cible de "+ex.tgt+" "+ex.unit+
+      " → biais de "+mnum(100*(S.mean-ex.tgt)/ex.tgt)+" % (CV = "+mnum(100*S.s/S.mean)+" %).");
+    if(ex.qs.indexOf("ucl")>=0) h.push("Carte de contrôle : les valeurs futures doivent rester entre LCI = "+mnum(S.mean-2*S.s)+" et LCS = "+mnum(S.mean+2*S.s)+".");
+  }
+  if(!h.length) h.push("✔ x̄ = "+mnum(S.mean)+" "+ex.unit+", s = "+mnum(S.s)+" "+ex.unit+", CV = "+mnum(100*S.s/S.mean)+" % : dispersion cohérente avec les performances attendues de la méthode.");
+  return h.join("<br>");
+}
+function lbLoad(){
+  const ex=LABEXOS[lbCur], st=EM[calcCur].state, vals=ex.vals.slice();
+  if(calcCur==="casio"){ st.lists[0]=vals; st.cc=0; st.cr=0; st.buf=""; st.scr="list"; }
+  else if(calcCur==="ti"){ st.L[0]=vals; st.cc=0; st.cr=0; st.buf=""; st.scr="edit"; }
+  else { st.vals=vals; st.cur=0; st.buf=""; st.scr="data"; }
+  checkMissions(); calcPaint();
+}
+function lbCheck(){ lbMarks[lbCur]=lbSubmit(lbCur, lbInputs[lbCur]||{}); lbPaint(); }
+function lbGoto(i){ lbCur=((i%50)+50)%50; lbPaint(); }
+function lbPaint(){
+  const ex=LABEXOS[lbCur], th=LBT[ex.th];
+  $("lbScore").textContent="— "+lbDone.filter(Boolean).length+" / 50 réussis";
+  $("lbSel").innerHTML=Object.keys(LBT).map(k=>"<optgroup label=\""+LBT[k].l+"\">"+
+    LABEXOS.map((e,i)=>e.th===k?"<option value='"+i+"'"+(i===lbCur?" selected":"")+">"+(lbDone[i]?"✔ ":"")+(i+1)+". "+e.t+"</option>":"").join("")+"</optgroup>").join("");
+  const marks=lbMarks[lbCur], ans=lbInputs[lbCur]||{};
+  $("lbBody").innerHTML=
+    "<div class='lb-card' style='--lbc:"+th.c+"'>"+
+    "<div class='lb-badge'>"+th.l+"</div>"+
+    "<div class='lb-h'>Exercice "+(lbCur+1)+" sur 50 — "+ex.t+"</div>"+
+    "<div class='lb-ctx'>"+ex.ctx+"</div>"+
+    "<div class='lb-data'>"+ex.vals.map(v=>"<span>"+v+"</span>").join("")+"</div>"+
+    "<div class='lb-n'>n = "+ex.vals.length+" · unité : "+ex.unit+
+      (ex.tgt!==undefined?" · cible : "+ex.tgt+" "+ex.unit:"")+
+      (ex.specTxt?" · spécification : "+ex.specTxt:"")+
+      (ex.limTxt?" · limite : "+ex.limTxt:"")+"</div>"+
+    "<div class='lb-tip'>Méthode : saisissez ces "+ex.vals.length+" valeurs dans la machine ci-dessus (ou utilisez « Saisir les données dans la machine »), affichez les résultats statistiques, puis reportez vos réponses ci-dessous (point ou virgule décimaux acceptés).</div>"+
+    "<table class='lb-qs'>"+ex.qs.map(q=>{
+      const d=QDEF[q], usuf=(d.u==="val")?ex.unit:(d.u==="unit2")?"("+ex.unit+")²":"%";
+      const mk=marks?marks.find(r=>r.q===q):null;
+      const cls=mk?(mk.ok?" ok":" ko"):"";
+      const fb=mk?("<span class='lb-qres"+(mk.ok?"":"' bad")+"'>"+(mk.ok?"✔":"✘ attendu : "+mnum(mk.exp))+"</span>"):"";
+      return "<tr><td>"+d.l+"</td><td><input class='lb-in"+cls+"' data-q='"+q+"' value=\""+(ans[q]||"")+"\"> "+usuf+"</td><td>"+fb+"</td></tr>";
+    }).join("")+
+    "<tr><td colspan='3' class='lb-act'><button class='mbtn' data-act='check'>✔ Vérifier mes réponses</button> <button class='mbtn alt' data-act='load'>⤓ Saisir les données dans la machine</button></td></tr>"+
+    "</table>"+
+    "<div class='lb-fb'>"+(marks?(marks.every(r=>r.ok)
+      ? "<b style='color:#0a7a00'>Bravo, exercice réussi !</b><div class='an'>"+lbAnalysis(ex)+"</div>"
+      : "<b style='color:#c00'>"+marks.filter(r=>r.ok).length+" / "+marks.length+" réponses correctes — corrigez puis revérifiez.</b>"):"")+"</div>"+
+    "</div>";
+}
+$("lbPrev").addEventListener("click", ()=>lbGoto(lbCur-1));
+$("lbNext").addEventListener("click", ()=>lbGoto(lbCur+1));
+$("lbRand").addEventListener("click", ()=>lbGoto(Math.floor(Math.random()*50)));
+$("lbSel").addEventListener("change", e=>lbGoto(+e.target.value));
+$("lbBody").addEventListener("input", e=>{
+  if(String(e.target.className||"").indexOf("lb-in")>=0){
+    (lbInputs[lbCur]=lbInputs[lbCur]||{})[e.target.getAttribute("data-q")]=e.target.value;
+  }
+});
+$("lbBody").addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]");
+  if(!b) return;
+  if(b.getAttribute("data-act")==="check") lbCheck(); else lbLoad();
+});
+lbPaint();
+
+/* ---------- menu vertical rétractable ---------- */
+$("sbClose").addEventListener("click", ()=>{
+  $("sidebar").classList.add("closed");
+  $("sbOpen").classList.add("on");
+});
+$("sbOpen").addEventListener("click", ()=>{
+  $("sidebar").classList.remove("closed");
+  $("sbOpen").classList.remove("on");
+});
+document.querySelectorAll(".sb-head").forEach(h=>{
+  h.addEventListener("click", ()=>{ h.parentElement.classList.toggle("closed"); });});
+/* onglets : séparation nette entre missions et exercice */
+function showPane(which){
+  $("paneMiss").style.display = which==="miss" ? "block" : "none";
+  $("paneExo").style.display  = which==="exo"  ? "block" : "none";
+  $("paneCalc").style.display = which==="calc" ? "block" : "none";
+  $("tabMiss").classList.toggle("on", which==="miss");
+  $("tabExo").classList.toggle("on", which==="exo");
+  $("tabCalc").classList.toggle("on", which==="calc");
+  if(which==="exo") enterExoMode(); else exitExoMode(); /* la feuille est dédiée à l'exercice dans l'onglet Exercice */
+  calcSheetVisible(which!=="calc"); /* la feuille de calcul est masquée dans l'onglet Calculatrices */
+}
+function calcSheetVisible(on){
+  ["statusbar","fbar","gridwrap"].forEach(id=>{ const e=$(id); if(e) e.style.display = on ? "" : "none"; });
+}
+$("tabMiss").addEventListener("click", ()=>showPane("miss"));
+$("tabExo").addEventListener("click", ()=>showPane("exo"));
+$("tabCalc").addEventListener("click", ()=>showPane("calc"));
+$("tpFold").addEventListener("click", ()=>{ $("tp").classList.toggle("folded"); });
+
+/* ---------- droits d'auteurs ---------- */
+$("crBtn").addEventListener("click", ()=>{
+  const s=$("crInfo");
+  s.style.display = (s.style.display==="block") ? "none" : "block";
+});
+
+/* ---------- démarrage ---------- */
+$("btnNew").addEventListener("click", newSim);
+newSim();
+</script>
+</body>
+</html>

@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Quête du Code Matriciel — Maths Expertes</title>
+
+<script>
+/* ==================================================================
+   CLÉ PUBLIQUE RSA-OAEP (SPKI, base64)
+   ⚠ Collez ici la clé publique générée dans prof.html.
+   ================================================================== */
+const PUBLIC_KEY_B64 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzHrz2Jkh8QoiVmMUr5H2te7FD63fC7mEnPtXkoGylwyFzMOwJb5sUM/RyjdVc5DbVWKP8v5Oaf1Kiih87ru/AFzXjsFSuSZcbZXuBA6YAIplBBZvK4URgHMvIqBp/K3YA6y1hhMCgDrDNOIoIMyW82y7WSWH0tuW86EeZSjNJe2I5fYbv4QPhwFUl8j8rjX00G3hTtqfswcUl/G/WhQd1Wqe3R+BhwkOXt6j4BujcE0+Gnq9axzEE7v7hPBSuyq8gyakOC0dMSPaFczvqHd7y5vmdkphuv+C6XcRXFUcEyhnqAs1MTr5R9b1ezNjWQrGyeQrg29Jed5Mvm8zAMniywIDAQAB";
+
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']],
+         macros: { tr: '\\operatorname{tr}' } },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{--bleu:#1E50A0;--orange:#DC7814;--vert:#288C3C;--rouge:#B41E1E;--violet:#78288C;--gris:#3C3C3C;--fond:#FAFAF8}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Georgia,'Times New Roman',serif;background:var(--fond);color:var(--gris);margin:0 auto;padding:0 1rem 3rem;max-width:1000px;line-height:1.55}
+header{text-align:center;padding:1.8rem 0 1rem;border-bottom:3px double var(--bleu);margin-bottom:1.5rem}
+header h1{color:var(--bleu);margin:0;font-size:2.1rem}
+header .subtitle{font-style:italic;color:var(--bleu);margin:.3rem 0;font-size:1.15rem}
+header .meta{color:var(--gris);margin:.2rem 0;font-size:.95rem}
+h2{color:var(--bleu)}
+
+/* Form élève */
+.student-form{background:#fff;border:2px solid var(--bleu);border-radius:8px;padding:1rem;margin-bottom:1rem}
+.student-form h3{color:var(--bleu);margin:0 0 .7rem;font-size:1.1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:.2rem}
+.form-group label{font-size:.85rem;font-weight:bold;color:var(--gris)}
+.form-group input{padding:.4rem .6rem;border:1.5px solid var(--bleu);border-radius:4px;font-size:1rem;font-family:inherit}
+.form-group input:focus{outline:2px solid rgba(30,80,160,.4);outline-offset:1px}
+.form-group input:read-only{background:#f5f5f5;color:#666}
+.form-hint{font-size:.85rem;color:#666;font-style:italic;margin:.5rem 0 0}
+
+/* Download */
+.download-section{background:linear-gradient(135deg,#f4fbf6,#e6f7ea);border:2px solid var(--vert);border-radius:8px;padding:1.2rem;margin:2rem 0;text-align:center}
+.download-section h2{color:var(--vert);margin-top:0}
+.download-btn{padding:.7rem 1.5rem;background:var(--vert);color:#fff;border:none;border-radius:6px;font-size:1.05rem;font-family:inherit;cursor:pointer;font-weight:bold}
+.download-btn:hover:not(:disabled){background:#1e6b2e}
+.download-btn:disabled{background:#bbb;cursor:not-allowed}
+.download-note{font-size:.85rem;color:#666;font-style:italic;margin-top:.6rem}
+
+#key-warning{display:none;background:#fbe6e6;border:2px solid var(--rouge);padding:1rem;border-radius:6px;margin-bottom:1rem;color:var(--rouge)}
+
+/* Box générales */
+.section-title{text-align:center;margin:2.5rem 0 1rem;padding:1rem;border-radius:8px;color:#fff}
+.section-title.p1{background:var(--bleu)}
+.section-title.p2{background:var(--rouge)}
+.section-title.pbonus{background:var(--violet)}
+.section-title h2{color:#fff;border:none;margin:0;font-size:1.6rem}
+.section-title p{margin:.3rem 0 0;font-size:.95rem}
+.box{border:1px solid;border-radius:5px;padding:.7rem 1rem;margin:.9rem 0}
+.box>.bt{margin:-.7rem -1rem .6rem;padding:.4rem 1rem;font-weight:bold;font-size:1rem;border-radius:4px 4px 0 0;color:#fff}
+.box.mission{border-color:var(--bleu);background:rgba(30,80,160,.06)} .box.mission>.bt{background:var(--bleu)}
+.box.question{border-color:var(--orange);background:rgba(220,120,20,.06)} .box.question>.bt{background:var(--orange)}
+.box.regle{border-color:var(--vert);background:rgba(40,140,60,.06)} .box.regle>.bt{background:var(--vert)}
+.box.definition{border-color:var(--rouge);background:rgba(180,30,30,.06)} .box.definition>.bt{background:var(--rouge)}
+.box.suspense{border:2px solid var(--violet);background:rgba(120,40,140,.08);border-radius:10px} .box.suspense>.bt{background:var(--violet);font-size:1.1rem}
+.box.recap{border:2px solid #444;background:#f1f1ee} .box.recap>.bt{background:#444;font-style:italic}
+.q-list{list-style:none;padding-left:0;counter-reset:q}
+.q-list li{counter-increment:q;padding-left:2rem;position:relative;margin:.5rem 0}
+.q-list li::before{content:counter(q)".";position:absolute;left:0;font-weight:bold;color:var(--orange)}
+
+/* Reasoning (identique) */
+.reasoning{margin:1rem 0;padding:.8rem;background:#fff;border:1.5px dashed #999;border-radius:6px}
+.reasoning h5{margin:0 0 .3rem;color:var(--bleu);font-size:1rem}
+.reasoning .consigne{font-size:.9rem;color:#666;font-style:italic;margin:0 0 .6rem}
+.reasoning-grid{display:grid;grid-template-columns:minmax(170px,1fr) 2fr;gap:.4rem .9rem;align-items:start;margin:.6rem 0}
+.col-label{font-weight:bold;font-size:.9rem;color:var(--bleu);padding:.2rem 0;border-bottom:1.5px solid var(--bleu);margin-bottom:.2rem}
+@media(max-width:700px){.reasoning-grid{grid-template-columns:1fr}}
+.pool,.target{min-height:52px;padding:.5rem;border-radius:5px}
+.pool{background:rgba(0,0,0,.03);border:1px solid #ddd;display:flex;flex-wrap:wrap;gap:.45rem;align-content:flex-start}
+.target{background:rgba(30,80,160,.05);border:1.5px solid var(--bleu);display:flex;flex-direction:column;gap:.4rem;min-height:70px}
+.target:empty::before{content:"Cliquez sur une clé ci-dessus pour la placer ici…";color:#999;font-style:italic;font-size:.85rem;padding:.3rem}
+.key{display:flex;align-items:center;gap:.4rem;background:#fff;border:1.5px solid var(--bleu);border-radius:5px;padding:.45rem .65rem;font-size:.92rem;cursor:pointer;transition:background .15s;line-height:1.45;user-select:none}
+.key:hover{background:rgba(30,80,160,.06)}
+.key.connector{border-color:var(--violet);background:rgba(120,40,140,.04);font-style:italic;justify-content:center}
+.key.connector:hover{background:rgba(120,40,140,.10)}
+.key.connector[data-group="final"]{border-color:var(--vert);border-width:2px;font-weight:bold}
+.key.dragging{opacity:.45}
+.key.correct{border-color:var(--vert);background:rgba(40,140,60,.12)}
+.key.wrongpos{border-color:var(--orange);background:rgba(220,120,20,.12)}
+.key.incorrect{border-color:var(--rouge);background:rgba(180,30,30,.12)}
+.key.missing{animation:pulse 1s ease-in-out 3}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,120,20,.7)}50%{box-shadow:0 0 0 8px rgba(220,120,20,0)}}
+.key .step-num{display:none;font-weight:bold;color:var(--bleu);flex-shrink:0}
+.key .key-body{flex:1;min-width:0}
+.key .key-controls{display:none;flex-direction:column;gap:2px;flex-shrink:0}
+.key .key-controls button{padding:0 5px;font-size:.7rem;line-height:1.2;border:1px solid #888;background:#f6f6f6;border-radius:3px;cursor:pointer;color:#333}
+.key .key-controls button:hover:not(:disabled){background:#e0e0e0}
+.key .key-controls button:disabled{opacity:.35;cursor:not-allowed}
+.pool .key .step-num,.pool .key .key-controls{display:none}
+.target .key{cursor:grab}
+.target .key .step-num{display:inline-block}
+.target .key .key-controls{display:flex}
+.key-input{display:inline-block;width:3.5em;padding:2px 4px;text-align:center;font-family:inherit;font-size:.95em;border:1.5px solid var(--orange);border-radius:3px;background:#fffdf6;color:#222;margin:0 2px;-moz-appearance:textfield;vertical-align:middle}
+.key-input.mi{width:2.4em;padding:1px 2px;font-size:.9em}
+.key-input.txt{width:3em;font-weight:bold}
+.key-input::-webkit-outer-spin-button,.key-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.key-input.ok{border-color:var(--vert);background:#e6f7ea}
+.key-input.ko{border-color:var(--rouge);background:#fbe6e6}
+.key-input:focus{outline:2px solid rgba(220,120,20,.5);outline-offset:1px}
+.reasoning .actions{margin-top:.7rem;display:flex;gap:.5rem;flex-wrap:wrap}
+.reasoning button{padding:.45rem 1rem;border:none;border-radius:5px;cursor:pointer;font-size:.92rem;font-family:inherit}
+.reasoning button.check{background:var(--bleu);color:#fff} .reasoning button.check:hover{background:#163a75}
+.reasoning button.reset{background:#888;color:#fff} .reasoning button.reset:hover{background:#666}
+.reasoning button.sol{background:var(--violet);color:#fff} .reasoning button.sol:hover:not(:disabled){background:#5c1d6d}
+.reasoning button.sol:disabled{background:#bbb;color:#888;cursor:not-allowed;opacity:.65}
+.feedback{margin-top:.5rem;font-weight:bold;min-height:1.4em;font-size:.93rem}
+.feedback.ok{color:var(--vert)} .feedback.ko{color:var(--rouge)} .feedback.sol{color:var(--violet);font-style:italic;font-weight:normal}
+.feedback .lock{color:#888;font-weight:normal;font-style:italic;font-size:.88rem}
+.progress{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0;padding:.6rem;background:#fff;border:1px solid #ddd;border-radius:5px;font-size:.9rem;align-items:center}
+.progress .label{font-weight:bold;color:var(--bleu)}
+.progress .step{padding:.2rem .6rem;border-radius:3px;background:#eee;color:#999}
+.progress .step.done{background:var(--vert);color:#fff}
+canvas{display:block;margin:1rem auto;max-width:100%}
+.final-message{display:none;text-align:center;margin:1rem 0;padding:1rem;background:linear-gradient(135deg,#fff9d6,#ffe680);border:2px solid var(--vert);border-radius:8px;font-size:1.15rem;color:var(--vert);font-weight:bold}
+@media print{.reasoning .actions,.key-controls,.download-section,.student-form{display:none !important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>La Quête du Code Matriciel</h1>
+  <p class="subtitle">Le Coffre-Fort de la Crypte de Pythagore</p>
+  <p class="meta">Maths Expertes — Terminale Générale — 2 × 50 minutes</p>
+</header>
+
+<div id="key-warning">
+  <b>⚠ Configuration manquante</b><br>
+  La clé publique n'a pas été configurée par votre enseignant. Le téléchargement chiffré ne fonctionnera pas. Contactez votre enseignant.
+</div>
+
+<!-- ===== FORMULAIRE ÉLÈVE ===== -->
+<div class="student-form">
+  <h3>👤 Identification de l'élève</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="nom">Nom (en MAJUSCULES)</label>
+      <input type="text" id="nom" placeholder="DUPONT" maxlength="40" autocomplete="family-name">
+    </div>
+    <div class="form-group">
+      <label for="prenom">Prénom (1ère lettre majuscule)</label>
+      <input type="text" id="prenom" placeholder="Jean" maxlength="40" autocomplete="given-name">
+    </div>
+    <div class="form-group">
+      <label for="classe">Classe</label>
+      <input type="text" id="classe" value="MATHS EXPERTES" readonly>
+    </div>
+  </div>
+  <p class="form-hint">Ces informations seront incluses dans le fichier chiffré téléchargé.</p>
+</div>
+
+<!-- ===== SCÉNARIO ===== -->
+<div class="box mission">
+  <div class="bt">Le scénario</div>
+  Tu es un cryptographe renommé. En explorant les ruines de l'Académie de Pythagore,
+  tu découvres un coffre-fort scellé par un code à 4 chiffres. Chaque partie est
+  une <b>quête à fil conducteur unique</b> : chaque réponse prépare la suivante,
+  et l'ensemble aboutit à la résolution finale.
+</div>
+
+<div class="box regle">
+  <div class="bt">Règles du jeu</div>
+  <b>1.</b> Chaque salle produit une valeur $p$ (somme de tous les coefficients d'une matrice) ; le chiffre est $p \bmod 7$.
+  <br><b>2.</b> Le code complet vérifie $C \equiv 6 \pmod{13}$.
+  <br><b>3.</b> Les connecteurs logiques équivalents sont interchangeables.
+  <br><b>4.</b> <b style="color:var(--vert)">La dernière clé de chaque raisonnement doit obligatoirement être « Finalement »</b>.
+  <br><b>5.</b> <b style="color:var(--violet)">Le bouton « Voir la solution » n'est actif qu'après ton 3<sup>e</sup> échec ou dès que tu réussis.</b>
+</div>
+
+<div class="progress">
+  <span class="label">Progression :</span>
+  <span class="step" data-step="d1">Salle 1</span>
+  <span class="step" data-step="d2">Salle 2</span>
+  <span class="step" data-step="d3">Salle 3</span>
+  <span class="step" data-step="d4">Salle 4</span>
+  <span class="step" data-step="code">Coffre</span>
+  <span class="step" data-step="bonus">Bonus</span>
+  <span class="label" style="margin-left:auto">Résolus : <span id="progress-counter">0</span>/6</span>
+</div>
+
+<!-- ============================================================
+     PARTIE 1
+     ============================================================ -->
+<div class="section-title p1">
+  <h2>PARTIE 1 — L'Antichambre du Coffre</h2>
+  <p>★ 50 minutes ★ — Un seul fil : trouver d₁, puis d₂ (grâce à d₁ et à l'inverse de C).</p>
+</div>
+
+<h2>Salle 1 — Le Premier Chiffre</h2>
+
+<div class="box mission">
+  <div class="bt">Étape 1 : trouver d₁</div>
+  $$A = \begin{pmatrix} 1 & 0 \\ 2 & 1 \end{pmatrix}\qquad\text{et}\qquad B = \begin{pmatrix} 5 & 1 \\ 3 & 4 \end{pmatrix}.$$
+</div>
+
+<div class="box question">
+  <div class="bt">Questions — vers d₁</div>
+  <ol class="q-list">
+    <li>Calculer $A+B$.</li>
+    <li>Calculer la somme de ses coefficients. Vérifier qu'elle est première ; on la note $p_1$.</li>
+    <li>En déduire $d_1 = p_1 \bmod 7$. <i>Ce chiffre sera indispensable à la Salle 2 !</i></li>
+  </ol>
+</div>
+
+<div class="reasoning" data-salle="d1">
+  <h5>🔑 Reconstruire le raisonnement</h5>
+  <p class="consigne">Trois étapes vers <b>d₁</b>. Dernière clé = « Finalement ».</p>
+  <div class="reasoning-grid">
+    <div class="col-label">📚 Connecteurs</div>
+    <div class="col-label">📝 Étapes</div>
+
+    <div class="pool connector-pool">
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Tout d'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">D'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Or</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">En effet</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="final" draggable="true"><span class="step-num"></span><div class="key-body">Finalement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Donc</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Par conséquent</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Ensuite</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="pool content-pool">
+      <div class="key content" data-id="s1a" draggable="true"><span class="step-num"></span><div class="key-body">je calcule $A+B$ puis je fais la somme de ses coefficients : <input class="key-input" type="number" data-expected="17" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s1b" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre est un nombre premier, puisque ses seuls diviseurs sont $1$ et lui-même</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s1c" draggable="true"><span class="step-num"></span><div class="key-body">$p_1 = $ <input class="key-input" type="number" data-expected="17" placeholder="?"> et donc $d_1 = p_1 \bmod 7 = $ <input class="key-input" type="number" data-expected="3" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s1w1" draggable="true"><span class="step-num"></span><div class="key-body">je devrais plutôt calculer $AB$ pour obtenir $p_1$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s1w2" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre n'est pas premier car il est impair</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s1w3" draggable="true"><span class="step-num"></span><div class="key-body">$d_1 = p_1 \bmod 13 = $ <input class="key-input" type="number" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="target connector-target"></div>
+    <div class="target content-target"></div>
+  </div>
+  <div class="actions">
+    <button class="check" type="button">Vérifier</button>
+    <button class="reset" type="button">Recommencer</button>
+    <button class="sol" type="button" disabled>Voir la solution</button>
+  </div>
+  <div class="feedback"></div>
+</div>
+
+<h2>Salle 2 — Le Deuxième Chiffre (inverse 2x2)</h2>
+
+<div class="box mission">
+  <div class="bt">Étape 2 : trouver d₂ — utilise d₁ = 3 et C⁻¹</div>
+  $$C = \begin{pmatrix} 2 & 1 \\ 1 & 1 \end{pmatrix}.$$
+  On pose $D = \begin{pmatrix} d_1+1 & 3 \\ d_1 & 5 \end{pmatrix}$.
+</div>
+
+<div class="box question">
+  <div class="bt">Questions — vers d₂</div>
+  <ol class="q-list">
+    <li>Vérifier que $C$ est inversible et calculer $C^{-1}$.</li>
+    <li>Construire $D$, puis calculer $CD$.</li>
+    <li>Calculer la somme des coefficients de $CD$ ; vérifier qu'elle est première ($p_2$).</li>
+    <li>Vérifier par l'inverse : $C^{-1}(CD) = D$.</li>
+    <li>En déduire $d_2 = p_2 \bmod 7$.</li>
+    <li>Déterminer les 4 codes candidats.</li>
+  </ol>
+</div>
+
+<div class="reasoning" data-salle="d2">
+  <h5>🔑 Reconstruire le raisonnement</h5>
+  <p class="consigne">Cinq étapes. Dernière clé = « Finalement ».</p>
+  <div class="reasoning-grid">
+    <div class="col-label">📚 Connecteurs</div>
+    <div class="col-label">📝 Étapes</div>
+
+    <div class="pool connector-pool">
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Tout d'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Pour commencer</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Ensuite</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Puis</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Alors</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Or</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">En effet</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="final" draggable="true"><span class="step-num"></span><div class="key-body">Finalement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Donc</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="contrast" draggable="true"><span class="step-num"></span><div class="key-body">Néanmoins</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="pool content-pool">
+      <div class="key content" data-id="s2a" draggable="true"><span class="step-num"></span><div class="key-body">je vérifie que $C$ est inversible : $\det(C) = $ <input class="key-input" type="number" data-expected="1" placeholder="?"> $\neq 0$, donc $C^{-1} = \big($ <input class="key-input mi" type="number" data-expected="1" placeholder="?"> <input class="key-input mi" type="number" data-expected="-1" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="-1" placeholder="?"> <input class="key-input mi" type="number" data-expected="2" placeholder="?"> $\big)$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2b" draggable="true"><span class="step-num"></span><div class="key-body">comme $D$ dépend de $d_1$, je construis $D$ et je calcule $CD$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2c" draggable="true"><span class="step-num"></span><div class="key-body">la somme des coefficients de $CD$ vaut <input class="key-input" type="number" data-expected="37" placeholder="?">, et c'est un nombre premier</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2d" draggable="true"><span class="step-num"></span><div class="key-body">je vérifie avec l'inverse : $C^{-1}(CD) = D$ (ce qui confirme le calcul)</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2e" draggable="true"><span class="step-num"></span><div class="key-body">$p_2 = $ <input class="key-input" type="number" data-expected="37" placeholder="?">, donc $d_2 = p_2 \bmod 7 = $ <input class="key-input" type="number" data-expected="2" placeholder="?">. Le code partiel est $32??$.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2w1" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre n'est pas premier car il est impair</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2w2" draggable="true"><span class="step-num"></span><div class="key-body">$C^{-1} = \big($ <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> ; <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> $\big)$ (car $C$ est symétrique, donc $C^{-1} = C$)</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2w3" draggable="true"><span class="step-num"></span><div class="key-body">$d_2 = p_2 \bmod 13 = $ <input class="key-input" type="number" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s2w4" draggable="true"><span class="step-num"></span><div class="key-body">je calcule $C+D$ au lieu de $CD$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="target connector-target"></div>
+    <div class="target content-target"></div>
+  </div>
+  <div class="actions">
+    <button class="check" type="button">Vérifier</button>
+    <button class="reset" type="button">Recommencer</button>
+    <button class="sol" type="button" disabled>Voir la solution</button>
+  </div>
+  <div class="feedback"></div>
+</div>
+
+<!-- ============================================================
+     PARTIE 2
+     ============================================================ -->
+<div class="section-title p2">
+  <h2>PARTIE 2 — Le Cœur du Labyrinthe</h2>
+  <p>★ 50 minutes ★ — Fil conducteur : d₃, puis d₄, puis code validé par inverse 3x3.</p>
+</div>
+
+<div class="box definition">
+  <div class="bt">La trace d'une matrice carrée</div>
+  On appelle <b>trace</b> de $M$, notée $\tr(M)$, la <b>somme des coefficients de la diagonale principale</b> : $\tr(M) = m_{1,1} + m_{2,2} + \cdots + m_{n,n}$.
+  <br><b>Attention :</b> ne pas confondre avec la <i>somme de tous les coefficients</i>.
+</div>
+
+<h2>Salle 3 — Le Troisième Chiffre</h2>
+
+<div class="box mission">
+  <div class="bt">Étape 1 : trouver d₃</div>
+  $$E = \begin{pmatrix} 4 & 3 & 0 \\ 1 & 6 & 1 \\ 0 & 1 & 3 \end{pmatrix}.$$
+</div>
+
+<div class="box question">
+  <div class="bt">Questions — vers d₃</div>
+  <ol class="q-list">
+    <li>Calculer $\tr(E)$.</li>
+    <li>Calculer la somme de tous les coefficients de $E$ ; vérifier qu'elle est première ($p_3$).</li>
+    <li>Comparer $\tr(E)$ et $p_3$.</li>
+    <li>En déduire $d_3 = p_3 \bmod 7$.</li>
+  </ol>
+</div>
+
+<div class="reasoning" data-salle="d3">
+  <h5>🔑 Reconstruire le raisonnement</h5>
+  <p class="consigne">Quatre étapes. Dernière clé = « Finalement ».</p>
+  <div class="reasoning-grid">
+    <div class="col-label">📚 Connecteurs</div>
+    <div class="col-label">📝 Étapes</div>
+
+    <div class="pool connector-pool">
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Tout d'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">D'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Ensuite</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Puis</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Or</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">En effet</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="final" draggable="true"><span class="step-num"></span><div class="key-body">Finalement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Donc</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Enfin</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="contrast" draggable="true"><span class="step-num"></span><div class="key-body">Pourtant</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="pool content-pool">
+      <div class="key content" data-id="s3a" draggable="true"><span class="step-num"></span><div class="key-body">la trace de $E$ vaut $\tr(E) = $ <input class="key-input" type="number" data-expected="13" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s3b" draggable="true"><span class="step-num"></span><div class="key-body">la somme de tous les coefficients de $E$ vaut <input class="key-input" type="number" data-expected="19" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s3c" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre est premier, donc $p_3 = $ <input class="key-input" type="number" data-expected="19" placeholder="?">, et on a bien $\tr(E) < p_3$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s3d" draggable="true"><span class="step-num"></span><div class="key-body">$d_3 = p_3 \bmod 7 = $ <input class="key-input" type="number" data-expected="5" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s3w1" draggable="true"><span class="step-num"></span><div class="key-body">la trace de $E$ est la somme de <i>tous</i> les coefficients</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s3w2" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre n'est pas premier car il est impair</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s3w3" draggable="true"><span class="step-num"></span><div class="key-body">$d_3 = p_3 \bmod 13 = $ <input class="key-input" type="number" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="target connector-target"></div>
+    <div class="target content-target"></div>
+  </div>
+  <div class="actions">
+    <button class="check" type="button">Vérifier</button>
+    <button class="reset" type="button">Recommencer</button>
+    <button class="sol" type="button" disabled>Voir la solution</button>
+  </div>
+  <div class="feedback"></div>
+</div>
+
+<h2>Salle 4 — Le Quatrième Chiffre</h2>
+
+<div class="box mission">
+  <div class="bt">Étape 2 : trouver d₄</div>
+  $$F = \begin{pmatrix} 5 & 8 & 1 \\ 2 & 9 & 2 \\ 1 & 5 & 8 \end{pmatrix}.$$
+</div>
+
+<div class="box question">
+  <div class="bt">Questions — vers d₄</div>
+  <ol class="q-list">
+    <li>Calculer la somme des coefficients de $F$ ; vérifier qu'elle est première ($p_4$).</li>
+    <li>Comparer $p_3$ et $p_4$.</li>
+    <li>Calculer $\tr(F)$ et comparer à $\tr(E)$.</li>
+    <li>En déduire $d_4 = p_4 \bmod 7$.</li>
+  </ol>
+</div>
+
+<div class="reasoning" data-salle="d4">
+  <h5>🔑 Reconstruire le raisonnement</h5>
+  <p class="consigne">Quatre étapes. Dernière clé = « Finalement ».</p>
+  <div class="reasoning-grid">
+    <div class="col-label">📚 Connecteurs</div>
+    <div class="col-label">📝 Étapes</div>
+
+    <div class="pool connector-pool">
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Tout d'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">D'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Or</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">En effet</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Ensuite</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Puis</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="final" draggable="true"><span class="step-num"></span><div class="key-body">Finalement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Donc</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="contrast" draggable="true"><span class="step-num"></span><div class="key-body">Cependant</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="pool content-pool">
+      <div class="key content" data-id="s4a" draggable="true"><span class="step-num"></span><div class="key-body">la somme des coefficients de $F$ vaut <input class="key-input" type="number" data-expected="41" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s4b" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre est premier, donc $p_4 = $ <input class="key-input" type="number" data-expected="41" placeholder="?">. On a bien $p_4 > p_3$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s4c" draggable="true"><span class="step-num"></span><div class="key-body">la trace de $F$ vaut $\tr(F) = $ <input class="key-input" type="number" data-expected="22" placeholder="?">, donc $\tr(E) < \tr(F)$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s4d" draggable="true"><span class="step-num"></span><div class="key-body">$d_4 = p_4 \bmod 7 = $ <input class="key-input" type="number" data-expected="6" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s4w1" draggable="true"><span class="step-num"></span><div class="key-body">$E = F$ car elles ont la même taille</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s4w2" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre n'est pas premier car il est impair</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="s4w3" draggable="true"><span class="step-num"></span><div class="key-body">$d_4 = p_4 \bmod 13 = $ <input class="key-input" type="number" placeholder="?">.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="target connector-target"></div>
+    <div class="target content-target"></div>
+  </div>
+  <div class="actions">
+    <button class="check" type="button">Vérifier</button>
+    <button class="reset" type="button">Recommencer</button>
+    <button class="sol" type="button" disabled>Voir la solution</button>
+  </div>
+  <div class="feedback"></div>
+</div>
+
+<h2 style="color:var(--rouge)">Épreuve Finale — Le Code (inverse 3x3)</h2>
+
+<div class="box mission">
+  <div class="bt">Étape 3 : assembler le code et le vérifier par l'inverse d'une matrice 3x3</div>
+  $$K = \begin{pmatrix} 1 & d_1 & 0 \\ 0 & 1 & d_2 \\ 0 & 0 & 1 \end{pmatrix}.$$
+  Le Gardien a laissé le message encodé $W = \begin{pmatrix} 9 \\ 12 \\ 5 \end{pmatrix}$.
+</div>
+
+<div class="box question">
+  <div class="bt">Questions finales</div>
+  <ol class="q-list">
+    <li>Assembler le code $C = 1000 d_1 + 100 d_2 + 10 d_3 + d_4$.</li>
+    <li>Vérifier que $C \equiv 6 \pmod{13}$.</li>
+    <li>Vérifier que $K$ est inversible et calculer $K^{-1}$.</li>
+    <li>Calculer $K^{-1}W$. Que retrouve-t-on ?</li>
+  </ol>
+</div>
+
+<div class="reasoning" data-salle="code">
+  <h5>🔑 Reconstruire le raisonnement final</h5>
+  <p class="consigne">Cinq étapes. Dernière clé = « Finalement ».</p>
+  <div class="reasoning-grid">
+    <div class="col-label">📚 Connecteurs</div>
+    <div class="col-label">📝 Étapes</div>
+
+    <div class="pool connector-pool">
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Tout d'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">D'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Ensuite</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Puis</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">En effet</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Car</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="final" draggable="true"><span class="step-num"></span><div class="key-body">Finalement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Ainsi</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Donc</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="pool content-pool">
+      <div class="key content" data-id="sfa" draggable="true"><span class="step-num"></span><div class="key-body">j'assemble les quatre chiffres : $C = $ <input class="key-input" type="number" data-expected="3256" placeholder="????" style="width:5.5em"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="sfb" draggable="true"><span class="step-num"></span><div class="key-body">je vérifie que $C \equiv 6 \pmod{13}$ car $C = 13 \times q + $ <input class="key-input" type="number" data-expected="6" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="sfc" draggable="true"><span class="step-num"></span><div class="key-body">$K$ est inversible ($\det K = $ <input class="key-input" type="number" data-expected="1" placeholder="?">) et $K^{-1} = \big($ <input class="key-input mi" type="number" data-expected="1" placeholder="?"> <input class="key-input mi" type="number" data-expected="-3" placeholder="?"> <input class="key-input mi" type="number" data-expected="6" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="1" placeholder="?"> <input class="key-input mi" type="number" data-expected="-2" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="1" placeholder="?"> $\big)$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="sfd" draggable="true"><span class="step-num"></span><div class="key-body">je décode $W = \begin{pmatrix}9\\12\\5\end{pmatrix}$ : $K^{-1}W = \big($ <input class="key-input mi" type="number" data-expected="3" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="2" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="5" placeholder="?"> $\big) = \begin{pmatrix}d_1\\d_2\\d_3\end{pmatrix}$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="sfe" draggable="true"><span class="step-num"></span><div class="key-body">le code est validé par la matrice et le coffre s'ouvre !</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="sfw1" draggable="true"><span class="step-num"></span><div class="key-body">on additionne les chiffres pour obtenir un code</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="sfw2" draggable="true"><span class="step-num"></span><div class="key-body">$H^{-1}(HM) = 47$, donc le code est faux</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="target connector-target"></div>
+    <div class="target content-target"></div>
+  </div>
+  <div class="actions">
+    <button class="check" type="button">Vérifier</button>
+    <button class="reset" type="button">Recommencer</button>
+    <button class="sol" type="button" disabled>Voir la solution</button>
+  </div>
+  <div class="feedback"></div>
+</div>
+
+<canvas id="chest" width="360" height="260"></canvas>
+<div class="final-message" id="final-message">🎉 Bravo, le coffre est ouvert ! 🎉</div>
+
+<!-- ============================================================
+     BONUS
+     ============================================================ -->
+<div class="section-title pbonus">
+  <h2>Défi Bonus — L'Énigme du Sphinx (inverse 4x4)</h2>
+  <p>★ Fil conducteur : matrice 4x4 diagonale par blocs ★</p>
+</div>
+
+<div class="box mission">
+  <div class="bt">Mission bonus</div>
+  $$G = \begin{pmatrix} 3 & 2 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 0 & 0 & 3 & 2 \\ 0 & 0 & 1 & 1 \end{pmatrix}.$$
+</div>
+
+<div class="box question">
+  <div class="bt">Questions bonus</div>
+  <ol class="q-list">
+    <li>Calculer $\tr(G)$.</li>
+    <li>Calculer la somme de tous les coefficients de $G$.</li>
+    <li>Réduire cette somme modulo 7 et en déduire une lettre (1=A, 2=B, …).</li>
+    <li>Vérifier que $G$ est inversible et calculer $G^{-1}$.</li>
+  </ol>
+</div>
+
+<div class="reasoning" data-salle="bonus">
+  <h5>🔑 Reconstruire le raisonnement bonus</h5>
+  <p class="consigne">Cinq étapes. Dernière clé = « Finalement ».</p>
+  <div class="reasoning-grid">
+    <div class="col-label">📚 Connecteurs</div>
+    <div class="col-label">📝 Étapes</div>
+
+    <div class="pool connector-pool">
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">Tout d'abord</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="start" draggable="true"><span class="step-num"></span><div class="key-body">En premier lieu</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Ensuite</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Puis</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="next" draggable="true"><span class="step-num"></span><div class="key-body">Alors</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Or</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="justify" draggable="true"><span class="step-num"></span><div class="key-body">Car</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="final" draggable="true"><span class="step-num"></span><div class="key-body">Finalement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">En somme</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Ainsi</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="conclude" draggable="true"><span class="step-num"></span><div class="key-body">Donc</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="contrast" draggable="true"><span class="step-num"></span><div class="key-body">Toutefois</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="contrast" draggable="true"><span class="step-num"></span><div class="key-body">En revanche</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key connector" data-group="aside" draggable="true"><span class="step-num"></span><div class="key-body">Effectivement</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="pool content-pool">
+      <div class="key content" data-id="ba" draggable="true"><span class="step-num"></span><div class="key-body">la trace de $G$ vaut $\tr(G) = $ <input class="key-input" type="number" data-expected="8" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bb" draggable="true"><span class="step-num"></span><div class="key-body">la somme des coefficients de $G$ vaut <input class="key-input" type="number" data-expected="12" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bc" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre modulo 7 donne <input class="key-input" type="number" data-expected="5" placeholder="?">, donc la lettre est <input class="key-input txt" type="text" data-expected="E" placeholder="?"></div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bd" draggable="true"><span class="step-num"></span><div class="key-body">$G$ est inversible ($\det G = $ <input class="key-input" type="number" data-expected="1" placeholder="?">) et $G^{-1} = \big($ <input class="key-input mi" type="number" data-expected="1" placeholder="?"> <input class="key-input mi" type="number" data-expected="-2" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="-1" placeholder="?"> <input class="key-input mi" type="number" data-expected="3" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="1" placeholder="?"> <input class="key-input mi" type="number" data-expected="-2" placeholder="?"> ; <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="0" placeholder="?"> <input class="key-input mi" type="number" data-expected="-1" placeholder="?"> <input class="key-input mi" type="number" data-expected="3" placeholder="?"> $\big)$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="be" draggable="true"><span class="step-num"></span><div class="key-body">$G \cdot G^{-1}$ redonne bien la matrice identité $I_4$, ce qui valide l'inverse et la clé du Sphinx.</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bw1" draggable="true"><span class="step-num"></span><div class="key-body">la trace de $G$ vaut $\tr(G) = 24$</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bw2" draggable="true"><span class="step-num"></span><div class="key-body">$G = G^{-1}$ puisque $G$ est symétrique</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bw3" draggable="true"><span class="step-num"></span><div class="key-body">ce nombre n'est pas premier car il est impair</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bwd" draggable="true"><span class="step-num"></span><div class="key-body">$G^{-1} = \big($ <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> ; <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> ; <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> ; <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> <input class="key-input mi" type="number" placeholder="?"> $\big)$ (car $G$ est symétrique, donc $G^{-1} = G$)</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+      <div class="key content" data-id="bwe" draggable="true"><span class="step-num"></span><div class="key-body">$12 \bmod 13 = 12$, donc la lettre est L</div><div class="key-controls"><button data-action="up" type="button" draggable="false">▲</button><button data-action="down" type="button" draggable="false">▼</button></div></div>
+    </div>
+
+    <div class="target connector-target"></div>
+    <div class="target content-target"></div>
+  </div>
+  <div class="actions">
+    <button class="check" type="button">Vérifier</button>
+    <button class="reset" type="button">Recommencer</button>
+    <button class="sol" type="button" disabled>Voir la solution</button>
+  </div>
+  <div class="feedback"></div>
+</div>
+
+<!-- ============================================================
+     TÉLÉCHARGEMENT CHIFFRÉ
+     ============================================================ -->
+<div class="download-section">
+  <h2>📥 Télécharger mes résultats</h2>
+  <p>Vos résultats seront <b>chiffrés avec la clé publique</b> de votre enseignant. Seul ce dernier pourra les lire.</p>
+  <button class="download-btn" id="download-btn">📥 Télécharger mon fichier chiffré</button>
+  <p class="download-note">Vérifiez que votre nom et votre prénom sont bien renseignés en haut de la page.</p>
+</div>
+
+<!-- ============================================================
+     SCRIPT
+     ============================================================ -->
+<script>
+/* ==================================================================
+   TRACKER — Enregistrement de toutes les actions de l'élève
+   ================================================================== */
+const Tracker = {
+  data: {
+    version: '1.0',
+    eleve: { nom: '', prenom: '', classe: 'MATHS EXPERTES' },
+    session: { debut: null, fin: null, userAgent: navigator.userAgent, langue: navigator.language },
+    questions: {},
+    actions: [],
+    final: { code: null, reussi: false, coffreOuvert: false }
+  },
+  start() {
+    if (!this.data.session.debut) {
+      this.data.session.debut = new Date().toISOString();
+      this.log('_system', 'session_start', {});
+    }
+  },
+  ensureSalle(salle) {
+    if (!this.data.questions[salle]) {
+      this.data.questions[salle] = { debut: null, fin: null, tentatives: 0, reussi: false, debloqueSolution: false };
+    }
+    return this.data.questions[salle];
+  },
+  log(salle, type, payload = {}) {
+    this.start();
+    const isMeta = salle.startsWith('_');
+    if (!isMeta) {
+      const q = this.ensureSalle(salle);
+      if (!q.debut) q.debut = new Date().toISOString();
+    }
+    this.data.actions.push({ salle, type, time: new Date().toISOString(), ...payload });
+  },
+  logCheck(salle, success, errors, inputs) {
+    const q = this.ensureSalle(salle);
+    q.tentatives++;
+    if (q.tentatives >= 3) q.debloqueSolution = true;
+    if (success) { q.reussi = true; q.fin = new Date().toISOString(); }
+    this.log(salle, 'check', { success, errors, inputs });
+  },
+  logSolutionClick(salle) {
+    const q = this.ensureSalle(salle);
+    q.debloqueSolution = true;
+    this.log(salle, 'solution_click', {});
+  },
+  logMove(salle, keyId, kind, from, to, position) {
+    this.log(salle, 'move', { keyId, kind, from, to, position });
+  },
+  logReorder(salle, keyId, direction, newPosition) {
+    this.log(salle, 'reorder', { keyId, direction, newPosition });
+  },
+  logInput(salle, keyId, fieldIndex, value) {
+    this.log(salle, 'input', { keyId, fieldIndex, value });
+  },
+  setFinal(code, reussi, coffreOuvert) {
+    this.data.final = { code, reussi, coffreOuvert };
+    this.log('_meta', 'final', { code, success: reussi });
+  }
+};
+
+/* ==================================================================
+   CRYPTO (AES-GCM + RSA-OAEP hybride)
+   ================================================================== */
+function b64ToBytes(b64) {
+  const cleaned = b64.replace(/\s+/g, '');
+  const bin = atob(cleaned);
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+function bytesToB64(bytes) {
+  let s = '';
+  const arr = new Uint8Array(bytes);
+  for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+  return btoa(s);
+}
+async function encryptWithPublicKey(publicKeyB64, data) {
+  const publicKey = await crypto.subtle.importKey(
+    'spki', b64ToBytes(publicKeyB64),
+    { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']
+  );
+  const aesKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = new TextEncoder().encode(JSON.stringify(data));
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, plaintext);
+  const aesKeyRaw = await crypto.subtle.exportKey('raw', aesKey);
+  const encryptedKey = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, publicKey, aesKeyRaw);
+  return { version: 1, alg: 'RSA-OAEP-SHA256 + AES-GCM-256',
+    ek: bytesToB64(encryptedKey), iv: bytesToB64(iv), ct: bytesToB64(ciphertext) };
+}
+
+/* ==================================================================
+   FORMULAIRE ÉLÈVE
+   ================================================================== */
+document.getElementById('nom').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase();
+  Tracker.data.eleve.nom = e.target.value;
+  Tracker.log('_info', 'info_update', { field: 'nom', value: e.target.value });
+});
+document.getElementById('prenom').addEventListener('input', e => {
+  let v = e.target.value;
+  if (v) v = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+  e.target.value = v;
+  Tracker.data.eleve.prenom = v;
+  Tracker.log('_info', 'info_update', { field: 'prenom', value: v });
+});
+
+/* ==================================================================
+   LE RESTE DU CODE — Raisonnement, MathJax, Canvas (identique)
+   ================================================================== */
+const REASONINGS = {
+  d1:    { contents: ['s1a','s1b','s1c'], groups:   [['start'],['justify'],['final']] },
+  d2:    { contents: ['s2a','s2b','s2c','s2d','s2e'], groups:   [['start'],['next'],['justify'],['next'],['final']] },
+  d3:    { contents: ['s3a','s3b','s3c','s3d'], groups:   [['start'],['next'],['justify'],['final']] },
+  d4:    { contents: ['s4a','s4b','s4c','s4d'], groups:   [['start'],['justify'],['next'],['final']] },
+  code:  { contents: ['sfa','sfb','sfc','sfd','sfe'], groups:   [['start'],['next'],['justify'],['next'],['final']] },
+  bonus: { contents: ['ba','bb','bc','bd','be'], groups:   [['start'],['next'],['justify'],['next'],['final']] }
+};
+
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;} return a; }
+function renumberColumn(target){
+  if(!target) return;
+  Array.from(target.children).forEach((k,i)=>{
+    const num=k.querySelector('.step-num');
+    if(num) num.textContent=(i+1)+'. ';
+    const up=k.querySelector('[data-action="up"]');
+    const dn=k.querySelector('[data-action="down"]');
+    if(up) up.disabled=(i===0);
+    if(dn) dn.disabled=(i===target.children.length-1);
+  });
+}
+
+function wireColumn(reasoning, pool, target){
+  let dragged=null;
+  function clearMarks(){
+    reasoning.querySelectorAll('.key').forEach(k=>k.classList.remove('correct','wrongpos','incorrect','missing'));
+    reasoning.querySelectorAll('.key-input').forEach(i=>i.classList.remove('ok','ko'));
+    const fb=reasoning.querySelector('.feedback');
+    if(fb){fb.textContent=''; fb.className='feedback';}
+  }
+  function clickMove(e){
+    if(e.target.matches('input,button,textarea')) return;
+    const key=e.target.closest('.key');
+    if(!key || !reasoning.contains(key)) return;
+    const salle = reasoning.dataset.salle;
+    const kind = key.classList.contains('connector') ? 'connector' : 'content';
+    const keyId = key.dataset.id || key.dataset.group;
+    const from = key.parentElement === pool ? 'pool' : 'target';
+    const to = from === 'pool' ? 'target' : 'pool';
+    if(key.parentElement===pool) target.appendChild(key);
+    else pool.appendChild(key);
+    clearMarks();
+    renumberColumn(target);
+    const position = to === 'target' ? Array.from(target.children).indexOf(key) : null;
+    Tracker.logMove(salle, keyId, kind, from, to, position);
+  }
+  pool.addEventListener('click', clickMove);
+  target.addEventListener('click', clickMove);
+  target.addEventListener('click', e=>{
+    const btn=e.target.closest('.key-controls button');
+    if(!btn) return;
+    e.stopPropagation();
+    const key=btn.closest('.key');
+    if(!key) return;
+    const salle = reasoning.dataset.salle;
+    const keyId = key.dataset.id || 'connector';
+    const dir = btn.dataset.action;
+    if(dir==='up' && key.previousElementSibling) target.insertBefore(key, key.previousElementSibling);
+    else if(dir==='down' && key.nextElementSibling) target.insertBefore(key.nextElementSibling, key);
+    clearMarks();
+    renumberColumn(target);
+    const newPos = Array.from(target.children).indexOf(key);
+    Tracker.logReorder(salle, keyId, dir, newPos);
+  });
+  reasoning.addEventListener('dragstart', e=>{
+    if(e.target.matches('input,textarea')) return;
+    const key=e.target.closest('.key');
+    if(!key || !reasoning.contains(key)) return;
+    if(key.closest('.pool')!==pool && key.closest('.target')!==target) return;
+    dragged=key; key.classList.add('dragging');
+    try{e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain','');}catch(err){}
+  });
+  reasoning.addEventListener('dragend', ()=>{ if(dragged) dragged.classList.remove('dragging'); dragged=null; });
+  function getAfter(container,y){
+    const els=Array.from(container.querySelectorAll('.key:not(.dragging)'));
+    let closest={offset:-Infinity,el:null};
+    els.forEach(c=>{const box=c.getBoundingClientRect();const off=y-box.top-box.height/2;if(off<0 && off>closest.offset) closest={offset:off,el:c};});
+    return closest.el;
+  }
+  pool.addEventListener('dragover', e=>{e.preventDefault();});
+  pool.addEventListener('drop', e=>{e.preventDefault(); if(!dragged) return;
+    const isConnSlot=pool.classList.contains('connector-pool');
+    const isConnKey=dragged.classList.contains('connector');
+    if(isConnSlot===isConnKey){ pool.appendChild(dragged); renumberColumn(target); }
+    dragged=null;
+  });
+  target.addEventListener('dragover', e=>{
+    e.preventDefault(); if(!dragged) return;
+    const isConnSlot=target.classList.contains('connector-target');
+    const isConnKey=dragged.classList.contains('connector');
+    if(isConnSlot!==isConnKey) return;
+    const after=getAfter(target,e.clientY);
+    if(after===null) target.appendChild(dragged);
+    else target.insertBefore(dragged,after);
+    renumberColumn(target);
+  });
+  target.addEventListener('drop', e=>{e.preventDefault(); dragged=null;});
+}
+
+function initReasoning(reasoning){
+  const salle = reasoning.dataset.salle;
+  const data = REASONINGS[salle];
+  if(!data) return;
+  const connectorPool = reasoning.querySelector('.connector-pool');
+  const contentPool = reasoning.querySelector('.content-pool');
+  const connectorTarget = reasoning.querySelector('.connector-target');
+  const contentTarget = reasoning.querySelector('.content-target');
+  const feedback = reasoning.querySelector('.feedback');
+  const solBtn = reasoning.querySelector('.sol');
+  if(!connectorPool||!contentPool||!connectorTarget||!contentTarget||!feedback||!solBtn) return;
+
+  let failCount = 0;
+  solBtn.disabled = true;
+
+  shuffleArray(Array.from(connectorPool.children)).forEach(k=>connectorPool.appendChild(k));
+  shuffleArray(Array.from(contentPool.children)).forEach(k=>contentPool.appendChild(k));
+  wireColumn(reasoning, connectorPool, connectorTarget);
+  wireColumn(reasoning, contentPool, contentTarget);
+
+  // Tracking des inputs
+  reasoning.addEventListener('change', e => {
+    if (!e.target.matches('.key-input')) return;
+    const key = e.target.closest('.key');
+    if (!key) return;
+    const inputs = Array.from(key.querySelectorAll('.key-input'));
+    const idx = inputs.indexOf(e.target);
+    Tracker.logInput(salle, key.dataset.id || 'unknown', idx, e.target.value);
+  });
+
+  function clearMarks(){
+    reasoning.querySelectorAll('.key').forEach(k=>k.classList.remove('correct','wrongpos','incorrect','missing'));
+    reasoning.querySelectorAll('.key-input').forEach(i=>i.classList.remove('ok','ko'));
+    feedback.textContent=''; feedback.className='feedback';
+  }
+
+  function handleCheck(){
+    clearMarks();
+    const contents=Array.from(contentTarget.children);
+    const connectors=Array.from(connectorTarget.children);
+    let errPos=0, errContent=0, errConnGroup=0, errInput=0, errMissing=0;
+    let finalMisplaced=false, missingFinal=false;
+    const n=Math.max(data.contents.length, contents.length, connectors.length);
+    const lastIdx = data.groups.length - 1;
+
+    for(let i=0;i<n;i++){
+      const c=contents[i];
+      const expectedId=data.contents[i];
+      if(!c){ if(i<data.contents.length) errMissing++; }
+      else if(c.dataset.id===expectedId){
+        c.classList.add('correct');
+        c.querySelectorAll('.key-input').forEach(inp=>{
+          const v=(inp.value||'').trim();
+          if(v==='' || v!==inp.dataset.expected){ inp.classList.add('ko'); errInput++; }
+          else inp.classList.add('ok');
+        });
+      } else if(data.contents.includes(c.dataset.id)){
+        c.classList.add('wrongpos'); errPos++;
+        c.querySelectorAll('.key-input').forEach(inp=>{
+          const v=(inp.value||'').trim();
+          if(v==='' || v!==inp.dataset.expected){ inp.classList.add('ko'); errInput++; }
+          else inp.classList.add('ok');
+        });
+      } else { c.classList.add('incorrect'); errContent++; }
+      const cn=connectors[i];
+      const expectedGroups=data.groups[i]||[];
+      if(!cn){ if(i<data.groups.length){ errMissing++; if(i===lastIdx) missingFinal=true; } }
+      else {
+        const g=cn.dataset.group;
+        if(expectedGroups.includes(g)){ cn.classList.add('correct'); }
+        else {
+          cn.classList.add('incorrect'); errConnGroup++;
+          if(i===lastIdx && g!=='final') missingFinal=true;
+          if(g==='final' && i!==lastIdx) finalMisplaced=true;
+        }
+      }
+    }
+
+    // Snapshot des inputs pour le tracking
+    const inputsSnapshot = {};
+    contents.forEach(c => {
+      if (!c.dataset.id) return;
+      c.querySelectorAll('.key-input').forEach((inp, i) => {
+        inputsSnapshot[`${c.dataset.id}_${i}`] = inp.value;
+      });
+    });
+
+    data.contents.forEach(id=>{
+      if(!contents.map(c=>c.dataset.id).includes(id)){
+        const k=contentPool.querySelector('.key[data-id="'+id+'"]');
+        if(k){k.classList.add('missing'); setTimeout(()=>k.classList.remove('missing'),3200);}
+      }
+    });
+
+    const ok = (errPos===0 && errContent===0 && errConnGroup===0 && errInput===0 && errMissing===0
+                && contents.length===data.contents.length
+                && connectors.length===data.groups.length);
+
+    // Tracker la vérification
+    Tracker.logCheck(salle, ok, {
+      errPos, errContent, errConnGroup, errInput, errMissing, finalMisplaced, missingFinal
+    }, inputsSnapshot);
+
+    // Si c'est le bloc code et qu'il est réussi, enregistrer le code final
+    if (salle === 'code') {
+      const codeVal = inputsSnapshot['sfa_0'] || null;
+      Tracker.setFinal(codeVal, ok, ok);
+    }
+
+    if(ok){
+      feedback.innerHTML='✓ Parfait ! Raisonnement et calculs entièrement corrects.';
+      feedback.className='feedback ok';
+      reasoning.dataset.solved='true';
+      solBtn.disabled = false;
+      updateProgress();
+      if(salle==='code') openChest();
+    } else {
+      failCount++;
+      if(failCount >= 3) solBtn.disabled = false;
+      const msgs=[];
+      if(errMissing>0) msgs.push(errMissing+' élément(s) manquant(s)');
+      if(errPos>0) msgs.push(errPos+' étape(s) mal placée(s)');
+      if(errContent>0) msgs.push(errContent+' étape(s) erronée(s) à retirer');
+      if(errConnGroup>0) msgs.push(errConnGroup+' connecteur(s) au mauvais rôle logique');
+      if(errInput>0) msgs.push(errInput+' calcul(s) incorrect(s) ou manquant(s)');
+      if(finalMisplaced) msgs.push('⚠ « Finalement » ne peut apparaître qu\'en DERNIÈRE position');
+      if(missingFinal) msgs.push('⚠ la dernière clé doit être « Finalement »');
+      let msg = '✗ Pas encore (' + failCount + '/3 avant déblocage) : ' + msgs.join(', ') + '.';
+      if(failCount >= 3) msg += ' <span class="lock">— le bouton « Voir la solution » est maintenant actif.</span>';
+      else msg += ' <span class="lock">— encore ' + (3 - failCount) + ' échec(s) avant de débloquer la solution.</span>';
+      feedback.innerHTML = msg;
+      feedback.className='feedback ko';
+      reasoning.dataset.solved='false';
+      updateProgress();
+    }
+  }
+
+  function handleReset(){
+    clearMarks();
+    Array.from(connectorTarget.children).forEach(k=>connectorPool.appendChild(k));
+    Array.from(contentTarget.children).forEach(k=>contentPool.appendChild(k));
+    reasoning.querySelectorAll('.key-input').forEach(i=>i.value='');
+    renumberColumn(connectorTarget); renumberColumn(contentTarget);
+    reasoning.dataset.solved='false';
+    updateProgress();
+    Tracker.log(salle, 'reset', { failCount });
+  }
+
+  function handleSolution(){
+    if(solBtn.disabled) return;
+    clearMarks();
+    Array.from(connectorTarget.children).forEach(k=>connectorPool.appendChild(k));
+    Array.from(contentTarget.children).forEach(k=>contentPool.appendChild(k));
+    data.contents.forEach(id=>{
+      const k=contentPool.querySelector('.key[data-id="'+id+'"]');
+      if(k){
+        contentTarget.appendChild(k);
+        k.querySelectorAll('.key-input').forEach(inp=>{
+          if(inp.dataset.expected!==undefined){
+            inp.value=inp.dataset.expected; inp.classList.add('ok');
+          }
+        });
+        k.classList.add('correct');
+      }
+    });
+    data.groups.forEach(acceptable=>{
+      let found=null;
+      Array.from(connectorPool.children).forEach(k=>{
+        if(found) return;
+        if(acceptable.includes(k.dataset.group)) found=k;
+      });
+      if(found){ connectorTarget.appendChild(found); found.classList.add('correct'); }
+    });
+    renumberColumn(connectorTarget); renumberColumn(contentTarget);
+    feedback.textContent='Solution appliquée. Clique sur « Vérifier » pour confirmer.';
+    feedback.className='feedback sol';
+    Tracker.logSolutionClick(salle);
+  }
+
+  reasoning.addEventListener('click', (e) => {
+    if(e.target.closest('.check')){ e.preventDefault(); handleCheck(); return; }
+    if(e.target.closest('.reset')){ e.preventDefault(); handleReset(); return; }
+    if(e.target.closest('.sol')){ e.preventDefault(); handleSolution(); return; }
+  });
+
+  renumberColumn(connectorTarget); renumberColumn(contentTarget);
+}
+
+function updateProgress(){
+  const blocks=document.querySelectorAll('.reasoning');
+  let n=0;
+  blocks.forEach(r=>{
+    const step=document.querySelector('.progress .step[data-step="'+r.dataset.salle+'"]');
+    if(r.dataset.solved==='true'){n++; if(step) step.classList.add('done');}
+    else if(step) step.classList.remove('done');
+  });
+  const counter=document.getElementById('progress-counter');
+  if(counter) counter.textContent=n+'/'+blocks.length;
+}
+function openChest(){
+  drawChest(true);
+  const msg=document.getElementById('final-message');
+  if(msg) msg.style.display='block';
+}
+function drawChest(open){
+  const c=document.getElementById('chest'); if(!c) return;
+  const ctx=c.getContext('2d'); const w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#d9c39a'; ctx.fillRect(0,h*0.82,w,h*0.18);
+  ctx.strokeStyle='#b8a172'; ctx.beginPath(); ctx.moveTo(0,h*0.82); ctx.lineTo(w,h*0.82); ctx.stroke();
+  const cx=w/2, cy=h*0.82, cw=w*0.55, ch=h*0.38;
+  const left=cx-cw/2, top=cy-ch;
+  ctx.fillStyle='rgba(0,0,0,.15)'; ctx.beginPath(); ctx.ellipse(cx,cy+4,cw/2+10,8,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#6b4423'; ctx.fillRect(left,top,cw,ch);
+  ctx.strokeStyle='#2f1a0a'; ctx.lineWidth=3; ctx.strokeRect(left,top,cw,ch);
+  ctx.fillStyle='#c9a227'; ctx.fillRect(left+12,top,10,ch); ctx.fillRect(left+cw-22,top,10,ch);
+  if(open){
+    ctx.save(); ctx.translate(left,top); ctx.rotate(-Math.PI/2.8);
+    ctx.fillStyle='#8b5a2b'; ctx.fillRect(0,-ch*0.55,cw,ch*0.55);
+    ctx.strokeStyle='#2f1a0a'; ctx.strokeRect(0,-ch*0.55,cw,ch*0.55);
+    ctx.fillStyle='#c9a227'; ctx.fillRect(12,-ch*0.55,10,ch*0.55); ctx.fillRect(cw-22,-ch*0.55,10,ch*0.55);
+    ctx.restore();
+    const g=ctx.createRadialGradient(cx,top-5,4,cx,top-5,cw*0.6);
+    g.addColorStop(0,'rgba(255,240,140,0.9)'); g.addColorStop(1,'rgba(255,240,140,0)');
+    ctx.fillStyle=g; ctx.fillRect(cx-cw,top-ch*2,cw*2,ch*2);
+  } else {
+    ctx.fillStyle='#8b5a2b'; ctx.fillRect(left,top-ch*0.45,cw,ch*0.45);
+    ctx.strokeStyle='#2f1a0a'; ctx.strokeRect(left,top-ch*0.45,cw,ch*0.45);
+    ctx.fillStyle='#c9a227'; ctx.fillRect(left+12,top-ch*0.45,10,ch*0.45); ctx.fillRect(left+cw-22,top-ch*0.45,10,ch*0.45);
+  }
+  ctx.fillStyle='#c9a227'; ctx.beginPath(); ctx.arc(cx,top+ch*0.35,11,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#2f1a0a'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#2f1a0a'; ctx.fillRect(cx-2,top+ch*0.30,4,10);
+}
+
+/* ==================================================================
+   TÉLÉCHARGEMENT CHIFFRÉ
+   ================================================================== */
+document.getElementById('download-btn').addEventListener('click', async () => {
+  const nom = (Tracker.data.eleve.nom || '').trim();
+  const prenom = (Tracker.data.eleve.prenom || '').trim();
+  if (!nom || !prenom) {
+    alert('⚠ Veuillez renseigner votre nom et votre prénom avant de télécharger.');
+    return;
+  }
+  if (!PUBLIC_KEY_B64 || PUBLIC_KEY_B64.length < 100) {
+    alert('⚠ La clé publique n\'est pas configurée. Contactez votre enseignant.');
+    return;
+  }
+  if (!window.crypto || !window.crypto.subtle) {
+    alert('⚠ Le chiffrement n\'est pas disponible (Web Crypto). Ouvrez ce fichier via un serveur local (http://localhost), pas en file://.');
+    return;
+  }
+
+  const btn = document.getElementById('download-btn');
+  btn.disabled = true;
+  btn.textContent = '🔒 Chiffrement...';
+
+  try {
+    Tracker.data.session.fin = new Date().toISOString();
+    Tracker.log('_meta', 'download', {});
+
+    const encrypted = await encryptWithPublicKey(PUBLIC_KEY_B64, Tracker.data);
+    const blob = new Blob([JSON.stringify(encrypted, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 16);
+    a.download = `${nom}_${prenom}_${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    btn.textContent = '✅ Fichier téléchargé';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '📥 Télécharger mon fichier chiffré';
+    }, 2500);
+  } catch (err) {
+    console.error(err);
+    alert('Erreur de chiffrement : ' + err.message);
+    btn.disabled = false;
+    btn.textContent = '📥 Télécharger mon fichier chiffré';
+  }
+});
+
+/* ==================================================================
+   BOOT
+   ================================================================== */
+function bootApp(){
+  // Avertissement si clé publique absente
+  if (!PUBLIC_KEY_B64 || PUBLIC_KEY_B64.length < 100) {
+    document.getElementById('key-warning').style.display = 'block';
+  }
+  document.querySelectorAll('.reasoning').forEach(r=>{
+    try { initReasoning(r); } catch(err){ console.error('Erreur init', r.dataset.salle, err); }
+  });
+  updateProgress();
+  drawChest(false);
+}
+function waitForMathJaxThenBoot(){
+  let tries=0;
+  const tryBoot=()=>{
+    if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+      MathJax.startup.promise.then(bootApp).catch(()=>bootApp());
+    } else if(tries++<60){ setTimeout(tryBoot,100); }
+    else { bootApp(); }
+  };
+  tryBoot();
+}
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', waitForMathJaxThenBoot); }
+else { waitForMathJaxThenBoot(); }
+</script>
+
+</body>
+</html>

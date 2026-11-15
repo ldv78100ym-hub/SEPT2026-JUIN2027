@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inversion d'une matrice — Méthode de Gauss-Jordan, pas à pas, sans fractions</title>
+
+<!-- ================= MATHJAX 3 (CDN) ================= -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
+    processEscapes: true
+  },
+  svg: { fontCache: 'none' },
+  options: { renderActions: { addMenu: [] } }
+};
+</script>
+<script async="async" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --bg:#eef2f9; --card:#ffffff; --card2:#f4f8fd; --line:#d9e2ef;
+  --text:#1e293b; --muted:#5b6b82;
+  --pivot:#4d7c0f; --swap:#7c3aed; --scale:#2563eb; --elim:#c2410c;
+  --bad:#dc2626; --ok:#059669; --init:#0284c7;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:
+    radial-gradient(1100px 500px at 75% -10%, #dde7f5 0%, rgba(221,231,245,0) 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height:100vh;
+}
+.wrap{ max-width:1280px; margin:0 auto; padding:22px 20px 48px; }
+header h1{ font-size:1.45rem; margin:0 0 4px; letter-spacing:.2px; }
+header p.sub{ margin:0 0 18px; color:var(--muted); font-size:.93rem; }
+
+#mjWarn{ display:none; background:#fdecec; border:1px solid #f5c2c2; color:#b91c1c;
+  padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:.9rem; }
+
+/* ---------- barre de contrôles ---------- */
+.controls{ display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:12px 14px; margin-bottom:16px;
+  box-shadow:0 1px 3px rgba(30,41,59,.06); }
+label.ctl{ display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.9rem; }
+select, .btn{
+  font:inherit; border-radius:10px; border:1px solid var(--line);
+  background:#ffffff; color:var(--text); padding:8px 12px; cursor:pointer;
+  transition: border-color .15s, transform .15s, filter .15s;
+}
+select:hover, .btn:hover{ border-color:#7aa2e8; }
+.btn:active{ transform:scale(.97); }
+.btn.primary{ background:linear-gradient(135deg,#2563eb,#4f46e5); border:none; font-weight:600; color:#fff; }
+.btn.primary:hover{ filter:brightness(1.1); }
+.btn.nav{ min-width:44px; font-size:1rem; text-align:center; }
+.btn:disabled{ opacity:.35; cursor:default; }
+#counter{ color:var(--muted); font-size:.9rem; min-width:120px; text-align:center; }
+.spacer{ flex:1 1 auto; }
+
+/* ---------- disposition ---------- */
+.layout{ display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:16px; align-items:start; }
+@media (max-width:1000px){ .layout{ grid-template-columns:1fr; } }
+.card{ background:var(--card); border:1px solid var(--line); border-radius:14px;
+  box-shadow:0 1px 3px rgba(30,41,59,.06); }
+
+/* ---------- zone de travail (cliquable) ---------- */
+#workspace{ padding:18px 22px 16px; cursor:pointer; user-select:none; position:relative; overflow:hidden; }
+.banner{ display:flex; flex-direction:column; gap:8px; }
+.chip{ display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; padding:3px 11px; border-radius:999px; border:1px solid; }
+.banner h2{ margin:0; font-size:1.12rem; }
+.opbox{ min-height:70px; display:flex; align-items:center; justify-content:center; }
+#stepOp mjx-container{ font-size:1.3rem; }
+.explain{ color:var(--muted); font-size:.92rem; line-height:1.55; max-width:78ch; }
+#matrixBox{ display:flex; justify-content:center; padding:10px 0 4px; min-height:90px; overflow-x:auto; }
+#matrixBox mjx-container{ font-size:1.55rem; }
+#vizBox{ margin-top:8px; }
+canvas#viz{ width:100%; display:block; border-radius:10px;
+  background:var(--card2); border:1px solid var(--line); }
+.progress{ display:flex; flex-wrap:wrap; gap:5px; margin-top:12px; }
+.dot{ width:9px; height:9px; border-radius:50%; opacity:.45; cursor:pointer;
+  transition:transform .15s; }
+.dot.cur{ transform:scale(1.55); opacity:1; box-shadow:0 0 9px currentColor; }
+.dot:not(.cur):hover{ opacity:.9; }
+.hint{ margin-top:10px; color:var(--muted); font-size:.84rem; text-align:center; }
+
+/* ---------- panneau latéral ---------- */
+.side .card{ padding:14px 16px; margin-bottom:16px; }
+.side h3{ margin:0 0 10px; font-size:.9rem; color:var(--muted); font-weight:600;
+  text-transform:uppercase; letter-spacing:.06em; }
+#origA{ display:flex; justify-content:center; padding:2px 0; }
+#origA mjx-container{ font-size:1.05rem; }
+#logBox{ max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:7px; }
+#logBox::-webkit-scrollbar{ width:8px; }
+#logBox::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:4px; }
+.logline{ display:flex; gap:8px; align-items:baseline; font-size:.88rem; }
+.lognum{ font-size:.72rem; color:var(--muted); min-width:22px; text-align:right; flex:none; }
+.legend{ display:flex; flex-wrap:wrap; gap:9px 14px; }
+.legend span{ display:inline-flex; align-items:center; gap:7px; font-size:.8rem; color:var(--muted); }
+.legend i{ width:11px; height:11px; border-radius:3px; display:inline-block; flex:none; }
+
+footer{ color:#64748b; font-size:.78rem; margin-top:22px; text-align:center; line-height:1.6; }
+footer .btn{ margin-top:14px; font-size:.8rem; padding:7px 14px; }
+
+/* ---------- fenêtre « droits d'auteurs » ---------- */
+.dlgOverlay{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:none;
+  align-items:center; justify-content:center; z-index:50; padding:20px; }
+.dlgOverlay.open{ display:flex; }
+.dlg{ background:var(--card); border:1px solid var(--line); border-radius:14px;
+  max-width:560px; width:100%; padding:22px 26px;
+  box-shadow:0 18px 50px rgba(30,41,59,.25); }
+.dlg h3{ margin:0 0 12px; font-size:1.05rem; display:flex;
+  align-items:center; justify-content:space-between; gap:10px; }
+.dlg p{ margin:9px 0; color:var(--muted); font-size:.92rem; line-height:1.6; text-align:left; }
+.dlg p strong{ color:var(--text); }
+.dlg .mail{ color:var(--text); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Inversion d’une matrice — méthode de Gauss-Jordan, pas à pas</h1>
+  <p class="sub">Coefficients entiers relatifs tirés au hasard · dimensions 2×2 à 4×4 ·
+  <strong>arithmétique entière de Bareiss</strong> : grâce à des divisions toujours exactes,
+  aucune fraction n’apparaît tant que la partie gauche n’est pas diagonale ; les fractions n’arrivent
+  qu’à la normalisation finale. Cliquez dans le cadre pour avancer.</p>
+</header>
+
+<div id="mjWarn">⚠ MathJax n’a pas pu être chargé (connexion internet requise au premier affichage).
+Rechargez la page une fois connecté ; les formules s’afficheront alors correctement.</div>
+
+<div class="controls">
+  <label class="ctl">Dimension
+    <select id="dim">
+      <option value="2">2 × 2</option>
+      <option value="3" selected="selected">3 × 3</option>
+      <option value="4">4 × 4</option>
+    </select>
+  </label>
+  <label class="ctl">Exemple
+    <select id="kind">
+      <option value="any" selected="selected">Aléatoire (inversible ou non)</option>
+      <option value="inv">Inversible</option>
+      <option value="sing">Non inversible</option>
+    </select>
+  </label>
+  <button class="btn primary" id="newBtn" title="Tirage d'une nouvelle matrice (touche N)">🎲 Nouvel exemple</button>
+  <span class="spacer"></span>
+  <button class="btn nav" id="prevBtn" title="Étape précédente (←)">◀</button>
+  <span id="counter">Étape 1 / 1</span>
+  <button class="btn nav" id="nextBtn" title="Étape suivante (Espace ou →)">▶</button>
+</div>
+
+<div class="layout">
+
+  <!-- ============ zone de travail : cliquer pour avancer ============ -->
+  <div id="workspace" class="card">
+    <div class="banner">
+      <div><span class="chip" id="chip">…</span></div>
+      <h2 id="stepTitle">…</h2>
+      <div class="opbox" id="stepOp"></div>
+      <div class="explain" id="stepExplain"></div>
+    </div>
+    <div id="matrixBox"></div>
+    <div id="vizBox"><canvas id="viz"></canvas></div>
+    <div class="progress" id="progress"></div>
+    <div class="hint" id="hint">…</div>
+  </div>
+
+  <!-- ============ panneau latéral ============ -->
+  <div class="side">
+    <div class="card">
+      <h3>Matrice de départ</h3>
+      <div id="origA"></div>
+    </div>
+    <div class="card">
+      <h3>Journal des opérations</h3>
+      <div id="logBox"></div>
+    </div>
+    <div class="card">
+      <h3>Couleurs des combinaisons</h3>
+      <div class="legend">
+        <span><i style="background:var(--pivot)"></i>pivot choisi</span>
+        <span><i style="background:var(--swap)"></i>échange L<sub>i</sub> ⇄ L<sub>j</sub></span>
+        <span><i style="background:var(--scale)"></i>mise à l'échelle L ← (pL)÷g</span>
+        <span><i style="background:var(--elim)"></i>élimination L ← (pL − cL)÷g</span>
+        <span><i style="background:var(--bad)"></i>échec : pas d'inverse</span>
+        <span><i style="background:var(--ok)"></i>résultat A⁻¹</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Les formules sont mises en forme par <strong>MathJax 3</strong> (chargé via CDN, connexion internet requise).<br />
+  Méthode de Gauss-Jordan à coefficients entiers (élimination fraction-free de Bareiss) :
+  chaque ligne est combinaison linéaire entière d’une autre, éventuellement divisée exactement par l’ancien pivot.
+  Les coefficients restent entiers et raisonnables jusqu’à la normalisation finale, où les fractions peuvent apparaître.
+  Arithmétique exacte sur les rationnels : les fractions sont toujours réduites.
+  <div>
+    <button class="btn" id="copyBtn" title="Mentions et conditions d’utilisation">© Droits d’auteurs</button>
+  </div>
+</footer>
+
+<!-- ================= DROITS D'AUTEURS ================= -->
+<div class="dlgOverlay" id="copyDlg">
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="copyTitle">
+    <h3><span id="copyTitle">© Droits d’auteurs</span>
+      <button class="btn nav" id="copyClose" title="Fermer (Échap)">✕</button></h3>
+    <p><strong>© 2026 Yann Merdy. Tous droits réservés.</strong></p>
+    <p>
+      Ce document interactif (code, textes, mise en page, illustrations et contenus pédagogiques)
+      est protégé par le droit d’auteur. Toute reproduction, représentation, modification ou diffusion,
+      en tout ou en partie, est interdite sans autorisation préalable.
+    </p>
+    <p>
+      <strong>Toute utilisation commerciale, en tout ou en partie, est strictement interdite
+      sans mon accord préalable écrit.</strong>
+    </p>
+    <p>
+      Pour toute demande d’autorisation, de licence ou d’usage commercial :
+      <span class="mail">yann.merdy@gmail.com</span>
+    </p>
+    <p>
+      L’usage personnel, éducatif ou de recherche non commercial est librement autorisé.
+    </p>
+  </div>
+</div>
+</div>
+
+<!-- ================= MOTEUR ================= -->
+<script>
+'use strict';
+/* ================================================================
+   1. Arithmétique exacte sur les rationnels (fractions réduites)
+   ================================================================ */
+function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while (b){ const t = a % b; a = b; b = t; } return a || 1; }
+
+class F {
+  constructor(p, q){
+    if (q === undefined) q = 1;
+    if (q === 0) throw new Error('division par zéro');
+    if (q < 0){ p = -p; q = -q; }
+    const g = gcd(p, q);
+    this.p = p / g;       /* numérateur  (entier relatif) */
+    this.q = q / g;       /* dénominateur (entier > 0)   */
+  }
+  static of(x){ return x instanceof F ? x : new F(x); }
+  add(o){ o = F.of(o); return new F(this.p * o.q + o.p * this.q, this.q * o.q); }
+  sub(o){ o = F.of(o); return new F(this.p * o.q - o.p * this.q, this.q * o.q); }
+  mul(o){ o = F.of(o); return new F(this.p * o.p, this.q * o.q); }
+  div(o){ o = F.of(o); return new F(this.p * o.q, this.q * o.p); }
+  neg(){ return new F(-this.p, this.q); }
+  inv(){ return new F(this.q, this.p); }
+  get abs(){ return Math.abs(this.p / this.q); }
+  get isZero(){ return this.p === 0; }
+  get isOne(){ return this.p === 1 && this.q === 1; }
+  get isMOne(){ return this.p === -1 && this.q === 1; }
+  tex(cmd){
+    cmd = cmd || 'frac';
+    if (this.q === 1) return String(this.p);
+    return (this.p < 0 ? '-' : '') + '\\' + cmd + '{' + Math.abs(this.p) + '}{' + this.q + '}';
+  }
+  str(){ return this.q === 1 ? String(this.p) : this.p + '/' + this.q; }
+}
+const C = { init:'#0284c7', pivot:'#4d7c0f', swap:'#7c3aed', scale:'#2563eb',
+            elim:'#c2410c', bad:'#dc2626', ok:'#059669' };
+const Lname = i => 'L_{' + (i + 1) + '}';
+
+/* ================================================================
+   2. Génération d'exemples (entiers relatifs)
+   ================================================================ */
+function randInt(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+
+function randomRows(nRows, nCols){
+  if (!nCols) nCols = nRows;
+  const out = [];
+  for (let i = 0; i < nRows; i++){
+    let r;
+    do { r = []; for (let j = 0; j < nCols; j++) r.push(randInt(-4, 4)); }
+    while (r.every(v => v === 0));
+    out.push(r);
+  }
+  return out;
+}
+
+function isDiag(rows){
+  return rows.every((r, i) => r.every((v, j) => (i === j ? v !== 0 : v === 0)));
+}
+
+/* déterminant exact (élimination de Gauss sur les rationnels) */
+function detOf(rows){
+  const n = rows.length;
+  const M = rows.map(r => r.map(v => new F(v)));
+  let det = new F(1);
+  for (let k = 0; k < n; k++){
+    let p = -1;
+    for (let i = k; i < n; i++) if (!M[i][k].isZero){ p = i; break; }
+    if (p < 0) return new F(0);
+    if (p !== k){ const t = M[k]; M[k] = M[p]; M[p] = t; det = det.neg(); }
+    det = det.mul(M[k][k]);
+    for (let i = k + 1; i < n; i++){
+      if (M[i][k].isZero) continue;
+      const f = M[i][k].div(M[k][k]);
+      for (let j = k; j < n; j++) M[i][j] = M[i][j].sub(f.mul(M[k][j]));
+    }
+  }
+  return det;
+}
+
+/* tirage : 'inv' => inversible, 'sing' => non inversible, 'any' => mélange */
+function genMatrix(n, kind){
+  const wantSing = kind === 'sing' || (kind === 'any' && Math.random() < 0.3);
+  for (let t = 0; t < 600; t++){
+    if (!wantSing){
+      const rows = randomRows(n);
+      if (!detOf(rows).isZero && !isDiag(rows)) return rows;
+    } else {
+      /* n−1 lignes aléatoires, puis une combinaison linéaire => rang < n */
+      const base = randomRows(n - 1, n);
+      let coef;
+      do { coef = []; for (let i = 0; i < n - 1; i++) coef.push(randInt(-2, 2)); }
+      while (coef.every(c => c === 0));
+      const last = [];
+      for (let j = 0; j < n; j++){
+        let s = 0;
+        for (let i = 0; i < n - 1; i++) s += coef[i] * base[i][j];
+        last.push(s);
+      }
+      return base.concat([last]);   /* forcément singulière */
+    }
+  }
+  return [[1, 2], [3, 4]];
+}
+
+/* ================================================================
+   3. Construction de la liste des étapes
+      Gauss-Jordan ENTIERS (Bareiss) sur [A | I]
+      - phase 1 (descente)  : k = 0 .. n−1, pivot ±1 ou plus petit module,
+                               opérations L_i ← (p·L_i − c·L_k) ÷ g   (g = pivot précédent)
+      - phase 2 (remontée)  : k = 1 .. n−1 ascendant, pivot diagonal, mêmes opérations
+      - normalisation finale: L_k ← L_k ÷ d_k  (seule étape où des fractions peuvent apparaître)
+      Toutes les divisions sont exactes : les coefficients restent entiers
+      jusqu'à la normalisation finale.
+   ================================================================ */
+function pmatrixTex(M){
+  return '\\begin{pmatrix}' +
+    M.map(r => r.map(v => v.tex('frac')).join(' & ')).join(' \\\\ ') +
+    '\\end{pmatrix}';
+}
+function augmentedTex(M, hl, color){
+  const n = M.length, rows = [];
+  for (let i = 0; i < n; i++){
+    const cells = [];
+    for (let j = 0; j < 2 * n; j++){
+      let t = M[i][j].tex('frac');
+      if (hl.has(i + '_' + j)) t = '\\textcolor{' + color + '}{' + t + '}';
+      cells.push(t);
+    }
+    rows.push(cells.join(' & '));
+  }
+  const spec = 'c'.repeat(n) + '|' + 'c'.repeat(n);
+  return '\\left[\\begin{array}{' + spec + '}' + rows.join(' \\\\ ') + '\\end{array}\\right]';
+}
+/* L_k ← λ·L_k  (λ rationnel, utilisé pour la normalisation finale) */
+function scaleOpStr(k, inv){
+  let coef;
+  if (inv.isMOne) coef = '-';
+  else {
+    const mag = (inv.q === 1) ? String(Math.abs(inv.p)) : '\\tfrac{' + Math.abs(inv.p) + '}{' + inv.q + '}';
+    coef = (inv.p < 0 ? '-' : '') + mag + '\\,';
+  }
+  return Lname(k) + ' \\leftarrow ' + coef + Lname(k);
+}
+/* terme « p·L_i » en TeX (p entier, signes gérés) */
+function pTerm(p, i){
+  if (p === 1) return Lname(i);
+  if (p === -1) return '-' + Lname(i);
+  return (p < 0 ? '-' : '') + Math.abs(p) + '\\,' + Lname(i);
+}
+/* L_i ← (p·L_i − c·L_k) ÷ g   (division omise si g = 1) */
+function comboOpStr(i, k, p, c, g){
+  const conn = (c < 0) ? '+' : '-';
+  const cterm = (Math.abs(c) === 1) ? Lname(k) : Math.abs(c) + '\\,' + Lname(k);
+  let core = pTerm(p, i) + ' ' + conn + ' ' + cterm;
+  if (g !== 1) core = '\\frac{' + core + '}{' + g + '}';
+  return Lname(i) + ' \\leftarrow ' + core;
+}
+/* L_i ← (p·L_i) ÷ g  (mise à l'échelle Bareiss d'une ligne déjà nulle dans la colonne) */
+function scaleOpStr2(i, p, g){
+  let core = pTerm(p, i);
+  if (g !== 1) core = '\\frac{' + core + '}{' + g + '}';
+  return Lname(i) + ' \\leftarrow ' + core;
+}
+/* étiquette en texte brut pour le canevas */
+function tagCombo(i, k, p, c, g){
+  const co = v => (v === 1 ? '' : (v === -1 ? '−' : String(v).replace('-', '−')));
+  let s = co(p) + 'L' + (i + 1) + ' ' + (c < 0 ? '+' : '−') + ' ' + co(Math.abs(c)) + 'L' + (k + 1);
+  if (g !== 1) s = '(' + s + ')/' + g;
+  return s;
+}
+function tagScale(i, p, g){
+  const co = v => (v === 1 ? '' : (v === -1 ? '−' : String(v).replace('-', '−')));
+  let s = co(p) + 'L' + (i + 1);
+  if (g !== 1) s = '(' + s + ')/' + g;
+  return s;
+}
+function mulMat(A, B){
+  const n = A.length, out = [];
+  for (let i = 0; i < n; i++){
+    const row = [];
+    for (let j = 0; j < n; j++){
+      let s = new F(0);
+      for (let t = 0; t < n; t++) s = s.add(A[i][t].mul(B[t][j]));
+      row.push(s);
+    }
+    out.push(row);
+  }
+  return out;
+}
+
+function buildSteps(A){
+  const n = A.length;
+  const M = A.map((r, i) =>
+    r.map(v => new F(v)).concat(r.map((_, j) => new F(i === j ? 1 : 0))));
+  const steps = [];
+  const push = s => steps.push(Object.assign({
+    M: M.map(r => r.slice()), hl: new Set(), kind: '', title: '',
+    op: '', explain: '', log: '', color: C.init, rows: {}, lambda: null,
+    col: -1, pivRow: -1, tag: ''
+  }, s));
+
+  /* ---- étape 0 : point de départ ---- */
+  push({
+    kind:'init', color:C.init,
+    title:"Point de départ : la matrice augmentée [A | I]",
+    op:'A = ' + pmatrixTex(M.map(r => r.slice(0, n))),
+    explain:"Pour calculer \\(A^{-1}\\), on écrit la matrice augmentée \\([A\\mid I]\\) : " +
+      "la partie gauche (en bleu) est \\(A\\), la partie droite est l'identité \\(I\\). " +
+      "Le principe de Gauss-Jordan : en n'utilisant que des <strong>combinaisons linéaires de lignes</strong>, " +
+      "on transforme la gauche en une matrice diagonale ; les mêmes opérations transforment alors " +
+      "simultanément la droite en \\(A^{-1}\\).<br />" +
+      "<strong>Promesse de cette page</strong> : grâce à l'arithmétique entière de Bareiss, " +
+      "toutes les divisions effectuées en cours de route sont <em>exactes</em> : " +
+      "aucun coefficient ne devient une fraction tant que la partie gauche n'est pas diagonale.",
+    log:'\\text{départ : }[A\\mid I]'
+  });
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) steps[0].hl.add(i + '_' + j);
+
+  let swaps = 0, singCol = -1;
+  let g1 = 1;              /* diviseur Bareiss courant (pivot de la colonne précédente) */
+
+  /* ================== PHASE 1 : descente ================== */
+  for (let k = 0; k < n; k++){
+    /* ---- choix du pivot : ±1 en priorité, sinon plus petit module ---- */
+    let piv = -1;
+    for (let i = k; i < n; i++){
+      const v = M[i][k];
+      if (v.isOne || v.isMOne){ piv = i; break; }
+    }
+    if (piv < 0){
+      let best = null;
+      for (let i = k; i < n; i++){
+        const a = M[i][k].abs;
+        if (a > 0 && (best === null || a < best)){ best = a; piv = i; }
+      }
+      if (piv < 0){ singCol = k; break; }   /* colonne sans pivot => singulière */
+    }
+    push({
+      kind:'pivot', color:C.pivot, col:k, pivRow:piv,
+      title:'Descente : choix du pivot (colonne ' + (k + 1) + ')',
+      op:'\\textcolor{' + C.pivot + '}{a_{' + (piv + 1) + ',' + (k + 1) + '} = ' + M[piv][k].tex('tfrac') + '}',
+      explain:"Dans la colonne " + (k + 1) + ", les candidats pivots sont les coefficients des lignes " +
+        (k + 1) + ' à ' + n + ". Pour que les coefficients restent entiers et petits, on choisit un coefficient " +
+        "<strong>non nul de plus petit module</strong> (un coefficient valant ±1 est privilégié) : ici " +
+        (piv === k ? 'la ligne ' + (piv + 1) + ' est déjà en position de pivot' :
+                     'on retiendra la ligne ' + (piv + 1)) + '.',
+      log:'\\text{pivot } a_{' + (piv + 1) + ',' + (k + 1) + '}=' + M[piv][k].tex('tfrac')
+    });
+    steps[steps.length - 1].hl.add(piv + '_' + k);
+
+    /* ---- échange éventuel ---- */
+    if (piv !== k){
+      const t = M[k]; M[k] = M[piv]; M[piv] = t; swaps++;
+      push({
+        kind:'swap', color:C.swap, rows:{ a:k, b:piv },
+        title:'Descente : échange de lignes',
+        op:'\\textcolor{' + C.swap + '}{' + Lname(k) + ' \\leftrightarrow ' + Lname(piv) + '}',
+        explain:"On échange la ligne " + (k + 1) + " et la ligne " + (piv + 1) +
+          " pour amener le pivot sur la diagonale. Un échange de lignes change le signe du déterminant " +
+          "mais ne modifie ni le rang ni l'inversibilité.",
+        log:Lname(k) + '\\leftrightarrow ' + Lname(piv)
+      });
+    }
+
+    /* ---- éliminations / mises à l'échelle (une étape par ligne modifiée) ---- */
+    const p = M[k][k].p;                 /* pivot entier */
+    for (let i = k + 1; i < n; i++){
+      const c = M[i][k].p;
+      if (c === 0 && p === g1) continue;            /* vraie opération blanche */
+      const old = M[i].slice();
+      for (let j = 0; j < 2 * n; j++)
+        M[i][j] = new F((p * old[j].p - c * M[k][j].p) / g1);
+      const opTex = (c === 0) ? scaleOpStr2(i, p, g1) : comboOpStr(i, k, p, c, g1);
+      const tagTxt = (c === 0) ? tagScale(i, p, g1) : tagCombo(i, k, p, c, g1);
+      if (c === 0){
+        push({
+          kind:'scale', color:C.scale, rows:{ pivot:k, target:i }, col:k, tag:tagTxt,
+          title:'Descente : mise à l’échelle de la ligne ' + (i + 1),
+          op:'\\textcolor{' + C.scale + '}{' + opTex + '}',
+          explain:"La ligne " + (i + 1) + " a déjà un coefficient nul dans la colonne " + (k + 1) +
+            " : rien à annuler. Mais la méthode de Bareiss impose de l'aligner sur les lignes voisines : " +
+            "\\(" + opTex + (g1 !== 1 ? "\\) (division exacte par " + g1 + " : tous les coefficients de la ligne sont divisibles)" : "\\)") +
+            ". Cette opération prépare les divisions exactes des colonnes suivantes, " +
+            "et les coefficients restent entiers.",
+          log:opTex
+        });
+      } else {
+        push({
+          kind:'elim', color:C.elim, rows:{ pivot:k, target:i }, col:k, tag:tagTxt,
+          title:'Descente : élimination dans la colonne ' + (k + 1),
+          op:'\\textcolor{' + C.elim + '}{' + opTex + '}',
+          explain:"On annule le coefficient de la ligne " + (i + 1) + " dans la colonne " + (k + 1) +
+            " par la combinaison linéaire \\\\(" + opTex + "\\\\)" +
+            (g1 !== 1
+              ? ", où la division par " + g1 + " (l'ancien pivot) est <strong>exacte</strong> : " +
+                "chaque coefficient de la nouvelle ligne est bien divisible par " + g1 + ". " +
+                "C'est la garantie de l'arithmétique de Bareiss, qui évite les fractions tout en limitant la taille des nombres."
+              : " : combinaison purement entière, aucune fraction.") +
+            " Seule la ligne " + (i + 1) + " est modifiée ; les coefficients qui changent réellement sont colorés en orange.",
+          log:opTex
+        });
+      }
+    }
+    g1 = p;
+  }
+
+  /* ================== PHASE 2 : remontée ================== */
+  let firstUp = true;
+  if (singCol < 0){
+    let g2 = M[0][0].p;                 /* pivot précédent de la remontée */
+    for (let k = 1; k < n; k++){
+      const p = M[k][k].p;
+      if (p === 0){ singCol = k; break; }   /* (cas théoriquement impossible si det ≠ 0) */
+      for (let i = 0; i < k; i++){
+        const c = M[i][k].p;
+        if (c === 0 && p === g2) continue;
+        const old = M[i].slice();
+        for (let j = 0; j < 2 * n; j++)
+          M[i][j] = new F((p * old[j].p - c * M[k][j].p) / g2);
+        const opTex = (c === 0) ? scaleOpStr2(i, p, g2) : comboOpStr(i, k, p, c, g2);
+        const tagTxt = (c === 0) ? tagScale(i, p, g2) : tagCombo(i, k, p, c, g2);
+        const intro = firstUp
+          ? "La descente est terminée : la partie gauche est <strong>triangulaire supérieure</strong>. " +
+            "La remontée annule maintenant les coefficients situés <strong>au-dessus</strong> de la diagonale, " +
+            "toujours avec des combinaisons entières. "
+          : '';
+        firstUp = false;
+        if (c === 0){
+          push({
+            kind:'scale', color:C.scale, rows:{ pivot:k, target:i }, col:k, tag:tagTxt,
+            title:'Remontée : mise à l’échelle de la ligne ' + (i + 1),
+            op:'\\textcolor{' + C.scale + '}{' + opTex + '}',
+            explain:intro +
+              "La ligne " + (i + 1) + " a déjà un coefficient nul dans la colonne " + (k + 1) +
+              " : la méthode de Bareiss l'aligne quand même sur les autres lignes, " +
+              "par la mise à l'échelle \\\\(" + opTex + "\\\\)" +
+              (g2 !== 1 ? " (division exacte par " + g2 + ")." : ".") +
+              " Les coefficients restent entiers.",
+            log:opTex
+          });
+        } else {
+          push({
+            kind:'elim', color:C.elim, rows:{ pivot:k, target:i }, col:k, tag:tagTxt,
+            title:'Remontée : élimination dans la colonne ' + (k + 1),
+            op:'\\textcolor{' + C.elim + '}{' + opTex + '}',
+            explain:intro +
+              "On annule le coefficient de la ligne " + (i + 1) + " au-dessus de la diagonale, colonne " + (k + 1) +
+              ", par \\\\(" + opTex + "\\\\)" +
+              (g2 !== 1
+                ? " ; la division par " + g2 + " (pivot de la colonne précédente) est <strong>exacte</strong>."
+                : " : combinaison purement entière.") +
+              " Seule la ligne " + (i + 1) + " est modifiée.",
+            log:opTex
+          });
+        }
+      }
+      g2 = p;
+    }
+  }
+
+  /* ================== NORMALISATION FINALE ================== */
+  if (singCol < 0){
+    for (let k = 0; k < n; k++){
+      const d = M[k][k].p;
+      if (d === 1) continue;
+      const inv = new F(1, d);
+      for (let j = 0; j < 2 * n; j++) M[k][j] = M[k][j].div(d);
+      push({
+        kind:'scale', color:C.scale, rows:{ pivot:k }, lambda:inv,
+        title:'Normalisation finale : ligne ' + (k + 1),
+        op:'\\textcolor{' + C.scale + '}{' + scaleOpStr(k, inv) + '}',
+        explain:"La partie gauche est désormais <strong>diagonale</strong> (des zéros partout, sauf sur la diagonale). " +
+          "On peut donc normaliser la ligne " + (k + 1) + " en la divisant par son coefficient diagonal " +
+          "\\\\(" + d + "\\\\). C'est <strong>la seule étape où des fractions peuvent apparaître</strong>, " +
+          "et uniquement dans la partie droite : à gauche, le coefficient diagonal devient simplement 1.",
+        log:scaleOpStr(k, inv)
+      });
+    }
+  }
+
+  /* ================== CONCLUSION ================== */
+  if (singCol >= 0){
+    const st = {
+      kind:'bad', color:C.bad, rows:{}, col:singCol,
+      title:"Échec : A n’est pas inversible",
+      op:'\\det(A)=0 \\;\\Rightarrow\\; \\text{A n\u2019admet pas de matrice inverse}',
+      explain:"Dans la colonne " + (singCol + 1) + ", " +
+        (singCol + 1 === n ? "le coefficient de la ligne " + n : "tous les coefficients des lignes " + (singCol + 1) + ' à ' + n) +
+        " " + (singCol + 1 === n ? "est" : "sont") + " nul" + (singCol + 1 === n ? "" : "s") +
+        " : aucun pivot non nul n'est disponible, et aucune combinaison linéaire " +
+        "des lignes ne peut en créer un. Le procédé s'arrête : cette colonne ne peut pas recevoir de pivot, " +
+        "donc \\(\\operatorname{rang}(A) < " + n + "\\) et \\(\\det(A)=0\\). " +
+        "<strong>A n'est pas inversible : A⁻¹ n'existe pas.</strong>",
+      log:'\\text{échec : }\\det(A)=0'
+    };
+    push(st);
+    for (let i = singCol; i < n; i++) steps[steps.length - 1].hl.add(i + '_' + singCol);
+  } else {
+    const det = detOf(A.map(r => r.map(v => v)));
+    const invM = M.map(r => r.slice(n));
+    const stepR = {
+      kind:'result', color:C.ok, rows:{},
+      title:'Résultat : la gauche est devenue I, la droite est A⁻¹',
+      op:'\\textcolor{' + C.ok + '}{A^{-1} = ' + pmatrixTex(invM) + '}',
+      explain:"La partie gauche est exactement \\(I_{" + n + "}\\) : la partie droite vaut donc \\(A^{-1}\\). " +
+        "Le déterminant calculé directement à partir de \\(A\\) vaut \\(\\det(A)=" + det.tex('frac') +
+        "\\neq 0\\), ce qui confirme l'inversibilité.",
+      log:'A^{-1}\\text{ calculée}'
+    };
+    push(stepR);
+    for (let i = 0; i < n; i++) for (let j = n; j < 2 * n; j++)
+      steps[steps.length - 1].hl.add(i + '_' + j);
+
+    const P = mulMat(A.map(r => r.map(v => new F(v))), invM);
+    push({
+      kind:'verify', color:C.ok, rows:{},
+      title:'Vérification : A · A⁻¹ = I',
+      op:'A\\cdot A^{-1} = ' + pmatrixTex(P) + ' = I_{' + n + '}',
+      explain:"En multipliant la matrice de départ par la matrice calculée, on retrouve bien l'identité : " +
+        "le résultat est correct. (On vérifierait de même que \\(A^{-1}A=I\\).)",
+      log:'A\\cdot A^{-1}=I_{' + n + '}'
+    });
+  }
+  return steps;
+}
+
+/* ================================================================
+   4. État global, rendu MathJax
+   ================================================================ */
+const S = { n:3, kind:'any', A:null, steps:[], cur:0 };
+let stepChangedAt = 0;
+let mjQueue = Promise.resolve();
+
+function setMath(el, tex){
+  mjQueue = mjQueue.then(function(){
+    el.innerHTML = tex || '';
+    if (window.MathJax && MathJax.typesetPromise){
+      return MathJax.typesetPromise([el]).catch(function(){});
+    }
+  });
+}
+
+function diffPositions(idx){
+  const s = new Set();
+  if (idx <= 0) return s;
+  const A = S.steps[idx - 1].M, B = S.steps[idx].M;
+  for (let i = 0; i < B.length; i++)
+    for (let j = 0; j < B[i].length; j++)
+      if (A[i][j].p !== B[i][j].p || A[i][j].q !== B[i][j].q) s.add(i + '_' + j);
+  return s;
+}
+
+const CHIP = { init:'Départ', pivot:'Pivot', swap:'Échange', scale:'Normalisation',
+               elim:'Élimination', bad:'Échec', result:'Résultat', verify:'Vérification' };
+
+function hexA(hex, a){
+  const r = parseInt(hex.slice(1, 3), 16),
+        g = parseInt(hex.slice(3, 5), 16),
+        b = parseInt(hex.slice(5, 7), 16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
+
+function renderAll(fresh){
+  const st = S.steps[S.cur];
+  const chip = document.getElementById('chip');
+  chip.textContent = CHIP[st.kind] || 'Étape';
+  chip.style.color = st.color;
+  chip.style.borderColor = st.color;
+  chip.style.background = hexA(st.color, 0.12);
+
+  document.getElementById('stepTitle').textContent = st.title;
+  setMath(document.getElementById('stepOp'), st.op ? '\\[' + st.op + '\\]' : '');
+  setMath(document.getElementById('stepExplain'), st.explain || '');
+
+  const hl = new Set(st.hl);
+  diffPositions(S.cur).forEach(k => hl.add(k));
+  setMath(document.getElementById('matrixBox'),
+    '\\[' + augmentedTex(st.M, hl, st.color) + '\\]');
+
+  document.getElementById('counter').textContent =
+    'Étape ' + (S.cur + 1) + ' / ' + S.steps.length;
+  document.getElementById('prevBtn').disabled = (S.cur === 0);
+  document.getElementById('nextBtn').disabled = (S.cur >= S.steps.length - 1);
+
+  renderProgress();
+  renderLog();
+
+  const hint = document.getElementById('hint');
+  if (S.cur >= S.steps.length - 1){
+    hint.textContent = st.kind === 'bad'
+      ? '⛔ Terminé : A n\u2019est pas inversible. « Nouvel exemple » pour un autre tirage.'
+      : '🎉 Terminé ! « Nouvel exemple » pour un autre tirage.';
+  } else {
+    hint.textContent = '👆 Cliquez n\u2019importe où dans ce cadre (ou Espace / →) pour passer à l\u2019étape suivante';
+  }
+
+  stepChangedAt = performance.now();
+  const box = document.getElementById('matrixBox');
+  if (box.animate) box.animate(
+    [{ transform:'scale(.985)', filter:'saturate(1.35)' },
+     { transform:'scale(1)',    filter:'saturate(1)' }],
+    { duration:320, easing:'ease-out' });
+
+  if (fresh){
+    setMath(document.getElementById('origA'),
+      '\\[A = ' + pmatrixTex(S.A.map(r => r.map(v => new F(v)))) + '\\]');
+  }
+}
+
+function renderProgress(){
+  const p = document.getElementById('progress');
+  p.innerHTML = '';
+  S.steps.forEach((s, i) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (i === S.cur ? ' cur' : '');
+    d.title = (i + 1) + ' — ' + (CHIP[s.kind] || '');
+    if (i > S.cur){ d.style.background = '#cbd5e1'; d.style.color = '#cbd5e1'; }
+    else { d.style.background = s.color; d.style.color = s.color; }
+    d.addEventListener('click', function(e){
+      e.stopPropagation(); S.cur = i; renderAll(false);
+    });
+    p.appendChild(d);
+  });
+}
+
+function renderLog(){
+  const box = document.getElementById('logBox');
+  let html = '';
+  for (let i = 0; i <= S.cur; i++){
+    const s = S.steps[i];
+    html += '<div class="logline"><span class="lognum">' + (i + 1) + '.</span>' +
+            '<span style="color:' + s.color + '">\\(' + s.log + '\\)</span></div>';
+  }
+  box.innerHTML = html;
+  mjQueue = mjQueue.then(function(){
+    if (window.MathJax && MathJax.typesetPromise)
+      return MathJax.typesetPromise([box]).catch(function(){});
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ================================================================
+   5. Canevas : visualisation animée des combinaisons linéaires
+   ================================================================ */
+let cv, ctx, dpr = 1, CW = 600, CH = 300;
+
+function resizeCanvas(){
+  if (!cv) return;
+  const w = cv.parentElement.clientWidth || 600;
+  CH = 44 + S.n * 54 + 26;
+  CW = Math.max(320, w);
+  cv.style.height = CH + 'px';
+  cv.width = Math.round(CW * dpr);
+  cv.height = Math.round(CH * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function roundRect(c, x, y, w, h, r){
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+function bez(a, b, c, t){ const s = 1 - t; return s * s * a + 2 * s * t * b + t * t * c; }
+
+function drawRowArrow(x, y1, y2, color, now){
+  const mx = 10;
+  ctx.strokeStyle = hexA(color, 0.85); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y1);
+  ctx.quadraticCurveTo(mx, (y1 + y2) / 2, x, y2); ctx.stroke();
+  const dir = y2 > y1 ? 1 : -1;
+  ctx.beginPath(); ctx.moveTo(x, y2);
+  ctx.lineTo(x - 6, y2 - 8 * dir); ctx.lineTo(x + 6, y2 - 8 * dir);
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+  const u = ((now - stepChangedAt) / 650) % 1;
+  const px = bez(x, mx, x, u), py = bez(y1, (y1 + y2) / 2, y2, u);
+  ctx.beginPath(); ctx.arc(px, py, 4, 0, 7); ctx.fillStyle = color; ctx.fill();
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke();
+}
+
+function drawTag(x, y, txt, color){
+  ctx.font = 'bold 12px system-ui';
+  const w = ctx.measureText(txt).width + 12, h = 20;
+  roundRect(ctx, x, y - h / 2, w, h, 10);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText(txt, x + w / 2, y + 4);
+  ctx.textAlign = 'left';
+}
+
+function drawViz(now){
+  if (!S.steps.length) return;
+  const st = S.steps[S.cur];
+  const n = S.n, cols = 2 * n;
+  ctx.clearRect(0, 0, CW, CH);
+
+  const labelX = 56, padX = 14, padTop = 36;
+  const cellW = (CW - labelX - padX) / cols;
+  const cellH = Math.min(46, (CH - padTop - 12) / n);
+  const top = padTop + (CH - padTop - 12 - n * cellH) / 2;
+  const rowY = i => top + i * cellH + cellH / 2;
+  const pulse = 0.5 + 0.5 * Math.sin(now / 280);
+
+  const hl = new Set(st.hl);
+  diffPositions(S.cur).forEach(k => hl.add(k));
+
+  /* en-têtes A / I (ou A⁻¹) */
+  ctx.font = 'italic 15px Georgia,serif';
+  ctx.fillStyle = C.init;
+  ctx.fillText('A', labelX + n * cellW / 2 - 4, top - 11);
+  const done = (st.kind === 'result' || st.kind === 'verify');
+  ctx.fillStyle = done ? C.ok : '#64748b';
+  ctx.fillText(done ? 'A⁻¹' : 'I', labelX + n * cellW + n * cellW / 2 - 6, top - 11);
+
+  /* cellules */
+  for (let i = 0; i < n; i++){
+    for (let j = 0; j < cols; j++){
+      const x = labelX + j * cellW, y = top + i * cellH;
+      const key = i + '_' + j, on = hl.has(key);
+      roundRect(ctx, x + 2, y + 2, cellW - 4, cellH - 4, 7);
+      ctx.fillStyle = on ? hexA(st.color, 0.22 + 0.14 * pulse) : 'rgba(30,41,59,0.045)';
+      ctx.fill();
+      ctx.strokeStyle = on ? st.color : 'rgba(30,41,59,0.14)';
+      ctx.lineWidth = 1; ctx.stroke();
+
+      let s = st.M[i][j].str();
+      let fnt = '12.5px system-ui';
+      if (st.M[i][j].q === 1){
+        if (s.length > 4) fnt = '10.5px system-ui';
+        if (s.length > 6) fnt = '9.5px system-ui';
+      } else if (s.length > 7){
+        s = (st.M[i][j].p / st.M[i][j].q).toFixed(2);
+      }
+      ctx.font = fnt;
+      ctx.fillStyle = on ? st.color : '#3b4a63';
+      ctx.textAlign = 'center';
+      ctx.fillText(s, x + cellW / 2, y + cellH / 2 + 4);
+      ctx.textAlign = 'left';
+    }
+  }
+
+  /* séparateur entre A et la partie droite */
+  ctx.setLineDash([5, 5]);
+  ctx.strokeStyle = 'rgba(30,41,59,0.25)';
+  ctx.beginPath();
+  ctx.moveTo(labelX + n * cellW, top - 6);
+  ctx.lineTo(labelX + n * cellW, top + n * cellH + 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* étiquettes de lignes */
+  for (let i = 0; i < n; i++){
+    const isPiv = (st.rows.pivot === i) || (st.rows.target === i) ||
+                  (st.rows.a === i) || (st.rows.b === i);
+    ctx.font = (isPiv ? 'bold ' : '') + '13px system-ui';
+    ctx.fillStyle = isPiv ? st.color : '#64748b';
+    const lbl = (isPiv ? '▸' : '') + 'L' + (i + 1);
+    ctx.fillText(lbl, labelX - 10 - ctx.measureText(lbl).width, rowY(i) + 4);
+  }
+
+  /* animations spécifiques à l'étape */
+  if (st.kind === 'elim' && st.rows.target != null){
+    const k = st.rows.pivot, i2 = st.rows.target;
+    drawRowArrow(30, rowY(k), rowY(i2), st.color, now);
+    drawTag(2, (rowY(k) + rowY(i2)) / 2, st.tag, st.color);
+  }
+  if (st.kind === 'swap'){
+    const a = st.rows.a, b = st.rows.b;
+    drawRowArrow(30, rowY(a), rowY(b), st.color, now);
+    drawRowArrow(38, rowY(b), rowY(a), st.color, now);
+    drawTag(2, (rowY(a) + rowY(b)) / 2, 'L' + (a + 1) + ' ⇄ L' + (b + 1), st.color);
+  }
+  if (st.kind === 'scale' && st.rows.pivot != null){
+    if (st.rows.target != null){
+      /* mise à l'échelle Bareiss : spirale animée sur la ligne + étiquette entière */
+      const i2 = st.rows.target, cy = rowY(i2), cx = 22;
+      const a0 = now / 300;
+      ctx.strokeStyle = hexA(C.scale, 0.9); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, 10, a0, a0 + 4.2); ctx.stroke();
+      const ae = a0 + 4.2;
+      const hx = cx + 10 * Math.cos(ae), hy = cy + 10 * Math.sin(ae);
+      ctx.save(); ctx.translate(hx, hy); ctx.rotate(ae + Math.PI / 2);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-4, -7); ctx.lineTo(4, -7);
+      ctx.closePath(); ctx.fillStyle = C.scale; ctx.fill(); ctx.restore();
+      drawTag(2, cy - 18, st.tag, C.scale);
+    } else {
+      /* normalisation finale : spirale + division */
+      const k = st.rows.pivot, cy = rowY(k), cx = 22;
+      const a0 = now / 300;
+      ctx.strokeStyle = hexA(C.scale, 0.9); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, 10, a0, a0 + 4.2); ctx.stroke();
+      const ae = a0 + 4.2;
+      const hx = cx + 10 * Math.cos(ae), hy = cy + 10 * Math.sin(ae);
+      ctx.save(); ctx.translate(hx, hy); ctx.rotate(ae + Math.PI / 2);
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-4, -7); ctx.lineTo(4, -7);
+      ctx.closePath(); ctx.fillStyle = C.scale; ctx.fill(); ctx.restore();
+      const d = st.lambda ? Math.round(1 / (st.lambda.p / st.lambda.q)) : 0;
+      drawTag(2, cy - 18, '÷ ' + (d < 0 ? '(−' + Math.abs(d) + ')' : d), C.scale);
+    }
+  }
+  if (st.kind === 'pivot' && st.pivRow >= 0){
+    const x = labelX + st.col * cellW, y = top + st.pivRow * cellH;
+    ctx.strokeStyle = hexA(C.pivot, 0.55 + 0.45 * pulse);
+    ctx.lineWidth = 2.5;
+    roundRect(ctx, x + 1, y + 1, cellW - 2, cellH - 2, 8);
+    ctx.stroke();
+  }
+  if (st.kind === 'bad' && st.col >= 0){
+    const x = labelX + st.col * cellW + cellW / 2;
+    ctx.strokeStyle = hexA(C.bad, 0.85); ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = st.col; i < n; i++){
+      const yy = rowY(i);
+      ctx.moveTo(x - 8, yy - 8); ctx.lineTo(x + 8, yy + 8);
+      ctx.moveTo(x + 8, yy - 8); ctx.lineTo(x - 8, yy + 8);
+    }
+    ctx.stroke();
+    drawTag(x - 26, rowY(n - 1) + 14, 'aucun pivot → det = 0', C.bad);
+  }
+  if (st.kind === 'result' || st.kind === 'verify'){
+    const palette = ['#059669', '#2563eb', '#7c3aed', '#d97706'];
+    for (let i = 0; i < 60; i++){
+      const x = (i * 97.13) % CW;
+      const y = ((i * 53.7) + now / 10 * (1 + (i % 3) / 3)) % CH;
+      ctx.fillStyle = hexA(palette[i % 4], 0.55);
+      ctx.fillRect(x, y, 4, 4);
+    }
+  }
+}
+
+function tick(now){
+  drawViz(now);
+  requestAnimationFrame(tick);
+}
+
+/* ================================================================
+   6. Navigation et amorçage
+   ================================================================ */
+function newExample(){
+  S.n = parseInt(document.getElementById('dim').value, 10);
+  S.kind = document.getElementById('kind').value;
+  S.A = genMatrix(S.n, S.kind);
+  S.steps = buildSteps(S.A);
+  S.cur = 0;
+  resizeCanvas();
+  renderAll(true);
+}
+
+function go(d){
+  const nx = S.cur + d;
+  if (nx < 0 || nx >= S.steps.length){
+    const w = document.getElementById('workspace');
+    if (w.animate) w.animate(
+      [{ transform:'translateX(0)' }, { transform:'translateX(-6px)' },
+       { transform:'translateX(6px)' }, { transform:'translateX(0)' }],
+      { duration:220 });
+    return;
+  }
+  S.cur = nx;
+  renderAll(false);
+}
+
+function bumpNew(){
+  const b = document.getElementById('newBtn');
+  if (b.animate) b.animate(
+    [{ transform:'scale(1)' }, { transform:'scale(1.12)' }, { transform:'scale(1)' }],
+    { duration:260, easing:'ease-out' });
+}
+
+function boot(){
+  cv = document.getElementById('viz');
+  ctx = cv.getContext('2d');
+  dpr = window.devicePixelRatio || 1;
+
+  document.getElementById('newBtn').addEventListener('click', function(e){
+    e.stopPropagation(); bumpNew(); newExample();
+  });
+  document.getElementById('prevBtn').addEventListener('click', function(e){
+    e.stopPropagation(); go(-1);
+  });
+  document.getElementById('nextBtn').addEventListener('click', function(e){
+    e.stopPropagation(); go(1);
+  });
+  document.getElementById('dim').addEventListener('change', newExample);
+  document.getElementById('kind').addEventListener('change', newExample);
+  document.getElementById('workspace').addEventListener('click', function(){ go(1); });
+
+  /* ---- fenêtre droits d'auteurs ---- */
+  const dlg = document.getElementById('copyDlg');
+  document.getElementById('copyBtn').addEventListener('click', function(e){
+    e.stopPropagation(); dlg.classList.add('open');
+  });
+  document.getElementById('copyClose').addEventListener('click', function(e){
+    e.stopPropagation(); dlg.classList.remove('open');
+  });
+  dlg.addEventListener('click', function(e){
+    if (e.target === dlg) dlg.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.code === 'Space' || e.key === 'ArrowRight'){ e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft'){ e.preventDefault(); go(-1); }
+    else if (e.key === 'n' || e.key === 'N'){ newExample(); }
+    else if (e.key === 'Escape'){ dlg.classList.remove('open'); }
+  });
+  window.addEventListener('resize', resizeCanvas);
+
+  setTimeout(function(){
+    if (!(window.MathJax && MathJax.typesetPromise))
+      document.getElementById('mjWarn').style.display = 'block';
+  }, 9000);
+
+  newExample();
+  requestAnimationFrame(tick);
+}
+
+if (typeof document !== 'undefined' && document.getElementById){
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+}
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" nonce="Gk8OZmtBpifLXfU9YAn4zg==" data-cf-beacon='{"version":"2024.11.0","token":"36b4216ae2dc4d5488c249161e71fe1e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

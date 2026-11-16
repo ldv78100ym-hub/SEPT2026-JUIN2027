@@ -1,0 +1,320 @@
+% =====================================================================
+%  LA CRYPTE DE L'ORDRE DES NOMBRES PREMIERS
+%  Sujet ludique — Mathématiques expertes, terminale générale
+%  Quête de calcul matriciel : somme, différence, produit, inversion,
+%  comparaison de matrices 2x2, 3x3, 4x4 — chiffrement modulo 7 et 13.
+%  Compilation : pdflatex (2 passes) ou Overleaf.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=2.1cm,bottom=2.6cm]{geometry}
+\usepackage{booktabs,array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{fancyhdr}
+
+
+% ---------- Couleurs de la quête ----------
+\definecolor{encre}{RGB}{26,32,44}
+\definecolor{or}{RGB}{153,110,20}
+\definecolor{argent}{RGB}{95,112,130}
+\definecolor{emeraude}{RGB}{4,120,87}
+\definecolor{jade}{RGB}{10,90,74}
+\definecolor{parche}{RGB}{253,249,236}
+\definecolor{nuit}{RGB}{24,28,44}
+\definecolor{sang}{RGB}{150,32,32}
+
+% ---------- Boîtes ----------
+\newtcolorbox{missive}[1]{colback=parche,colframe=or,title={\textbf{#1}},
+  coltitle=white,fonttitle=\normalsize,boxrule=1pt,arc=2mm,left=3mm,right=3mm}
+\newtcolorbox{rituel}[1]{colback=white,colframe=argent,title={\textbf{#1}},
+  coltitle=white,fonttitle=\normalsize,boxrule=1pt,arc=2mm,left=3mm,right=3mm}
+\newtcolorbox{piege}{colback=sang!4,colframe=sang!80,boxrule=0.8pt,arc=1mm,
+  left=3mm,right=3mm}
+\newtcolorbox{conseil}{colback=emeraude!5,colframe=emeraude!70,boxrule=0.8pt,
+  arc=1mm,left=3mm,right=3mm}
+\newtcolorbox{precedemment}[1]{colback=argent!6,colframe=nuit!75,
+  title={\textbf{#1}},coltitle=white,fonttitle=\normalsize,boxrule=1pt,
+  arc=2mm,left=3mm,right=3mm}
+
+% ---------- En-têtes ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textsc{La Crypte de l'Ordre des Nombres Premiers}}
+\fancyhead[R]{\small\textit{Maths expertes, terminale générale}}
+\fancyfoot[L]{\small\textit{Quête de calcul matriciel}}
+\fancyfoot[C]{\small\thepage}
+\fancyfoot[R]{\small\textit{Récompense de la quête : /20}}
+\renewcommand{\headrulewidth}{0.6pt}
+
+\setlength{\parindent}{0pt}
+\setlist{itemsep=2pt,topsep=3pt}
+
+% ---------- Raccourcis ----------
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Id}[1]{I_{#1}}
+\newcommand{\Epx}[1]{\textcolor{or}{\textbf{[#1 XP]}}}
+
+\begin{document}
+
+% =====================================================================
+\begin{center}
+  {\LARGE\bfseries\textcolor{nuit}{LA CRYPTE DE L'ORDRE DES NOMBRES PREMIERS}}\\[2mm]
+  {\large\itshape Une quête de calcul matriciel pour apprenti·e cryptographe}\\[2mm]
+  \textbf{Mathématiques expertes, terminale générale}\quad\textbullet\quad
+  Feuilleton en deux épisodes de 50 min\quad\textbullet\quad Barème : 20 XP (10 + 10)
+\end{center}
+
+\vspace{1mm}
+\begin{missive}{Message retrouvé dans le tombeau du dernier Grand Maître}
+\itshape
+Apprenti·e, si tu lis ces lignes, la Crypte t'a accepté·e.
+Des siècles durant, notre Ordre a protégé son trésor derrière trois sceaux
+de matrices. Les nombres premiers en sont l'alphabet, et les restes,
+seuls, disent la vérité : \textbf{seul le reste parle}.
+
+Trois épreuves t'attendent, de plus en plus profondes :
+le \textcolor{argent}{\textbf{Sceau d'argent}} (matrices $2\times 2$, rituel modulo 7),
+le \textcolor{emeraude}{\textbf{Sceau d'émeraude}} (matrices $3\times 3$, rituel modulo 13)
+et le \textcolor{jade}{\textbf{Sanctuaire de jade}} (matrices $4\times 4$, rituel modulo 13).
+
+Chaque épreuve livrera un fragment du message perdu de l'Ordre.
+Assemble-les, et le nom du trésor t'apparaîtra. Mais n'espère pas tout
+traverser en un jour : la Crypte ne s'ouvre que deux fois, cinquante
+minutes à chaque lune, et elle se referme entre les deux plongées.
+Le coffre final ne s'ouvrira qu'avec le code des premiers.
+Que la quête commence !
+\end{missive}
+
+% =====================================================================
+\section*{\textcolor{nuit}{Générique : règles de la quête}}
+
+{\small\itshape (Le générique passe avant chaque épisode : ces rituels
+valent pour toute la saison.)}
+
+\begin{rituel}{Les quatre rituels de l'Ordre}
+\begin{enumerate}[label=\textbf{R\arabic*.},leftmargin=10mm]
+  \item \textbf{Seul le reste parle.} Dans la Crypte, tout est gravé en
+        \emph{nombres premiers}. Chaque nombre premier $p$ gravé sur la pierre
+        doit d'abord être réduit : on ne retient que son reste dans la division
+        euclidienne par le module du sceau (7 ou 13).
+        Par exemple, dans le sanctuaire (module 13) : $61 \equiv 9 \pmod{13}$,
+        car $61 = 4\times 13 + 9$.
+  \item \textbf{Les matrices vivent modulo $n$.} Deux matrices sont
+        \emph{égales dans le sceau} si leurs coefficients sont égaux modulo $n$
+        (7 ou 13). Tous les produits de matrices se réduisent modulo $n$.
+  \item \textbf{L'alphabet du chiffre.} Les messages sont écrits en lettres
+        majuscules non accentuées (l'Ordre a perdu ses accents : É se lit E).
+        \begin{itemize}
+          \item Dans les sceaux \textbf{modulo 13}, chaque nombre $x$
+                ($0\leqslant x \leqslant 12$) code une lettre :
+                $\text{A}=0,\ \text{B}=1,\ \dots,\ \text{M}=12$
+                (alphabet réduit de l'Ordre, annexe B).
+          \item Dans le sceau \textbf{modulo 7}, chaque lettre est portée par un
+                \emph{couple} $(a,b)$ de nombres ($0\leqslant a,b\leqslant 6$) :
+                le rang de la lettre ($\text{A}=0$, $\dots$, $\text{Z}=25$) vaut
+                $a + 7b$ (annexe C).
+        \end{itemize}
+  \item \textbf{La Table de l'Ordre.} Pour ouvrir le coffre final, chaque lettre
+        vaut un nombre premier selon la Table de l'Ordre (annexe A) :
+        $\text{A}=2,\ \text{B}=3,\ \text{C}=5$, etc.
+\end{enumerate}
+\end{rituel}
+
+\begin{conseil}
+\textbf{Mémo du cryptographe} (annexe D) : inverse d'une matrice $2\times 2$,
+produit de matrices, et le grand théorème des voleurs de clés :
+$(M N)^{-1} = N^{-1} M^{-1}$. Les annexes restent à ta disposition
+lors des deux plongées.
+\end{conseil}
+
+% =====================================================================
+\section*{\textcolor{nuit}{Épisode 1 : La Pierre de Voûte}}
+{\small\textbf{Première séance : 50 min}\quad\textbullet\quad
+\textbf{Récompense : 10 XP}\quad\textbullet\quad
+Acte I : rituel d'entrée 10 min\quad\textbullet\quad Acte II : le Sceau
+d'argent 25 min\quad\textbullet\quad Acte III : le parchemin du traître
+15 min}
+
+{\small\itshape (Acte I : lis le générique et jette un œil aux annexes.
+Ensuite, la crypte t'appartient... jusqu'au bout des cinquante minutes.)}
+
+\subsection*{\textcolor{argent}{Acte II : Le Sceau d'argent (épreuve 1)} \normalsize\textcolor{argent}{(niveau 1 : matrices $2\times 2$, rituel modulo 7, 25 min)} : 6 XP}
+
+La Porte d'argent garde la première pierre. Sur elle sont gravées trois
+matrices :
+\[
+A=\begin{pmatrix}3&1\\2&5\end{pmatrix}\qquad
+B=\begin{pmatrix}4&6\\0&4\end{pmatrix}\qquad
+C=\begin{pmatrix}5&4\\1&5\end{pmatrix}.
+\]
+
+\begin{enumerate}[label=\textbf{A.\arabic*.},leftmargin=10mm]
+  \item \textbf{La pierre de voûte.} Calculer la matrice
+        $K_1 = A + B - C$.\Epx{1}
+  \item \textbf{Le faux gravage.} Un vandale a prétendu que la pierre de voûte
+        était l'une de ces trois matrices :
+        \[
+        S_1=\begin{pmatrix}2&3\\1&4\end{pmatrix}\qquad
+        S_2=\begin{pmatrix}3&2\\4&1\end{pmatrix}\qquad
+        S_3=\begin{pmatrix}2&-3\\1&4\end{pmatrix}.
+        \]
+        \textbf{Comparer} $K_1$ avec $S_1$, $S_2$ et $S_3$ : quelle est la vraie
+        pierre ?\Epx{0,5}
+  \item \textbf{La clé s'inverse.} On travaille désormais modulo 7.
+        \begin{enumerate}[label=\alph*)]
+          \item Calculer $\det K_1$, puis vérifier que $3\times 5 - 2\times 7 = 1$.
+                En déduire l'inverse de $5$ modulo 7.\Epx{0,5}
+          \item Montrer que
+                $K_1^{-1} \equiv \begin{pmatrix}5&5\\4&6\end{pmatrix} \pmod 7$,
+                puis \textbf{vérifier} que $K_1 K_1^{-1} \equiv I_2 \pmod 7$.\Epx{1,5}
+        \end{enumerate}
+  \item \textbf{Le premier fragment.} Plus profond dans la crypte, un
+        linteau porte quatre nombres premiers gravés :
+        \[
+        \begin{pmatrix}11 & 7\\ 29 & 7\end{pmatrix}.
+        \]
+        \begin{enumerate}[label=\alph*)]
+          \item Appliquer le rituel R1 (module 7) pour obtenir la matrice
+                chiffrée $Y$.\Epx{0,5}
+          \item Calculer $X = K_1^{-1}Y \pmod 7$.\Epx{1}
+          \item Chaque colonne $(a,b)$ de $X$ porte une lettre de rang $a+7b$
+                (rituel R3). \textbf{Décrypter} le premier fragment du message.\Epx{1}
+        \end{enumerate}
+\end{enumerate}
+
+% =====================================================================
+\subsection*{\textcolor{emeraude}{Acte III : Le Sceau d'émeraude (épreuve 2, premier affrontement)} \normalsize\textcolor{emeraude}{(niveau 2 : matrices $3\times 3$, rituel modulo 13, 15 min)} : 4 XP}
+
+L'écho de la Porte d'argent s'éteint derrière toi. Au fond du couloir,
+une lueur verte pulse : le Sceau d'émeraude. Il fut scellé par deux
+frères : l'un gravait les lignes du haut, l'autre celles du bas :
+\[
+M=\begin{pmatrix}1&2&0\\0&1&3\\0&0&1\end{pmatrix}\qquad
+N=\begin{pmatrix}1&0&0\\4&1&0\\0&5&1\end{pmatrix}.
+\]
+
+\begin{enumerate}[label=\textbf{B.\arabic*.},leftmargin=10mm]
+  \item \textbf{Le sceau composé.} Calculer le produit $M\times N$, puis le
+        réduire modulo 13 : on obtient le sceau $K_2$.\Epx{2}
+  \item \textbf{Le parchemin du traître.} Un traître a laissé deux parchemins,
+        prétendant chacun contenir la clé de décryptage $K_2^{-1}$.
+        Les archives de l'Ordre fournissent les matrices
+        \[
+        M'=\begin{pmatrix}1&11&6\\0&1&10\\0&0&1\end{pmatrix}\quad\text{et}\quad
+        N'=\begin{pmatrix}1&0&0\\9&1&0\\7&8&1\end{pmatrix},
+        \]
+        et l'on sait que $M M' = I_3$ et $N N' = I_3$ modulo 13
+        (à vérifier si tu doutes de l'Ordre !).
+        \begin{enumerate}[label=\alph*)]
+          \item Calculer les deux produits $P_1 = M'N'$ et $P_2 = N'M'$
+                modulo 13. Sont-ils égaux ?\Epx{1}
+          \item \textbf{Comparer} : calculer $K_2 P_1$ et $K_2 P_2$ modulo 13.
+                Lequel des deux parchemins est le faux ? Quel est le vrai
+                $K_2^{-1}$ ?\Epx{1}
+        \end{enumerate}
+\end{enumerate}
+
+\begin{piege}
+\textbf{Avertissement du Gardien :} le traître croyait que l'ordre des
+facteurs ne comptait pas. Mais l'inverse d'un produit renverse l'ordre :
+$(MN)^{-1} = N^{-1}M^{-1}$, et non $M^{-1}N^{-1}$. Les deux parchemins ne
+pouvaient être vrais à la fois... et pourtant, l'un des deux l'est bel et
+bien !
+\end{piege}
+
+% ---------------------------------------------------------------------
+\begin{missive}{La crypte se referme... (fin de l'épisode 1)}
+\itshape
+Le Gardien lève sa torche : le temps de la première plongée est écoulé.
+Derrière toi, la Porte d'argent s'est refermée à jamais ; devant toi, le
+Sceau d'émeraude reste \textbf{muet}. Tu ne possèdes qu'un fragment du
+message : \textbf{« LA »}. La quoi ? La lumière défaille... En sortant,
+tu remarques une inscription gravée au sol :
+\upshape
+\begin{center}
+« \textbf{La clé que tu cherches porte un nom de pierre.} »
+\end{center}
+\itshape
+Avant que la crypte ne se referme, vérifie ton carnet : il doit contenir
+$K_1$, $K_1^{-1}$, $K_2$ et surtout le vrai parchemin $K_2^{-1}$.
+Le Gardien ne les redonnera pas : ils te serviront à la prochaine lune.
+\upshape
+
+\textbf{Prochain épisode :} un mot de trois lettres gravé dans
+l'émeraude, trois gardiens menteurs au fond du sanctuaire, et un coffre
+qui ne s'ouvre qu'avec le code des nombres premiers...
+\end{missive}
+
+\begin{center}
+\itshape (Fin de l'épisode 1. L'épisode 2, à la prochaine lune...)
+\end{center}
+
+	% =====================================================================
+\newpage
+\section*{Annexes de la Crypte}
+
+\subsection*{Annexe A : La Table de l'Ordre (nombres premiers)}
+\begin{center}
+	\begin{tabular}{*{13}{c}}
+		\toprule
+		A & B & C & D & E & F & G & H & I & J & K & L & M\\
+		\midrule
+		2 & 3 & 5 & 7 & 11 & 13 & 17 & 19 & 23 & 29 & 31 & 37 & 41\\
+		\midrule
+		N & O & P & Q & R & S & T & U & V & W & X & Y & Z\\
+		\midrule
+		43 & 47 & 53 & 59 & 61 & 67 & 71 & 73 & 79 & 83 & 89 & 97 & 101\\
+		\bottomrule
+	\end{tabular}
+\end{center}
+
+\subsection*{Annexe B : Alphabet réduit (sceaux modulo 13)}
+Chaque nombre $x$ de $0$ à $12$ code une lettre :
+\begin{center}
+	\begin{tabular}{l|*{13}{c}}
+		& x=0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12\\
+		\hline
+		Lettre & A & B & C & D & E & F & G & H & I & J & K & L & M\\
+	\end{tabular}
+\end{center}
+
+\subsection*{Annexe C : Alphabet complet par paires (sceau modulo 7)}
+Chaque lettre de rang $\ell$ ($\text{A}=0$, $\dots$, $\text{Z}=25$) est portée
+par le couple $(a,b)$ tel que $\ell = a + 7b$ :
+\begin{center}
+	\begin{tabular}{*{13}{c}}
+		\toprule
+		A & B & C & D & E & F & G & H & I & J & K & L & M\\
+		(0,0) & (1,0) & (2,0) & (3,0) & (4,0) & (5,0) & (6,0) & (0,1) & (1,1) & (2,1) & (3,1) & (4,1) & (5,1)\\
+		\midrule
+		N & O & P & Q & R & S & T & U & V & W & X & Y & Z\\
+		(6,1) & (0,2) & (1,2) & (2,2) & (3,2) & (4,2) & (5,2) & (6,2) & (0,3) & (1,3) & (2,3) & (3,3) & (4,3)\\
+		\bottomrule
+	\end{tabular}
+\end{center}
+
+\subsection*{Annexe D : Mémo du cryptographe}
+\begin{itemize}
+	\item \textbf{Produit :} si $M$ ($n$ lignes, $p$ colonnes) et $N$
+	($p$ lignes, $q$ colonnes), le coefficient $(i,j)$ de $MN$ est
+	$\sum_{k=1}^{p} m_{ik}\, n_{kj}$.
+	\item \textbf{Inverse $2\times 2$ :} si $D = \begin{pmatrix}a&b\\c&d\end{pmatrix}$
+	avec $\delta = ad-bc \neq 0$, alors
+	$D^{-1} = \dfrac{1}{\delta}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}$.
+	Modulo $n$ : remplacer $\frac{1}{\delta}$ par l'inverse de $\delta$
+	modulo $n$ (s'il existe).
+	\item \textbf{Le théorème des voleurs de clés :}
+	$(MN)^{-1} = N^{-1}M^{-1}$ : l'ordre s'inverse.
+	\item \textbf{Inversibles modulo $n$ :} $x$ est inversible modulo $n$
+	si et seulement si $x$ et $n$ sont premiers entre eux
+	(Bézout). C'est pourquoi l'Ordre chérit les modules
+	premiers : tout $x$ non nul y est inversible.
+\end{itemize}
+
+\end{document}

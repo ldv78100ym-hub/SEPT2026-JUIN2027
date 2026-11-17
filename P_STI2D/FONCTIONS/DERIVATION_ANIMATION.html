@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'oiseau stroboscopique — de la vitesse moyenne au nombre dérivé</title>
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+  :root{
+    --bg:#f8fafc;
+    --panel:#ffffff;
+    --line:#e2e8f0;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --accent:#0284c7;
+    --accent-soft:#eff6ff;
+    --pink:#db2777;
+    --violet:#7c3aed;
+    --cyan:#0891b2;
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{
+    margin:0;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 800px at 10% -10%, #e0f2fe 0%, transparent 55%),
+      radial-gradient(1000px 700px at 100% 0%, #ede9fe 0%, transparent 50%),
+      var(--bg);
+  }
+  .wrap{max-width:1440px;margin:0 auto;padding:22px 22px 56px}
+  header h1{margin:0 0 4px;font-size:1.32rem;letter-spacing:.2px;color:#0f172a}
+  header p{margin:0 0 18px;color:var(--muted);font-size:.93rem}
+
+  .top-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .top-tabs .tab{
+    flex:0 0 auto;padding:9px 16px;border-radius:10px;cursor:pointer;
+    border:1px solid #cbd5e1;background:#f8fafc;color:#64748b;
+    font-size:.82rem;font-weight:600;transition:.15s;font-family:inherit;
+  }
+  .top-tabs .tab:hover{color:#0f172a;border-color:#94a3b8;background:#fff}
+  .top-tabs .tab.active{
+    background:linear-gradient(180deg,#0284c7,#0369a1);color:#fff;border-color:#0369a1;
+    box-shadow:0 6px 16px -8px #0284c7;
+  }
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;align-items:start}
+  @media (max-width:1080px){.layout{grid-template-columns:1fr}}
+
+  .left-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  .traj-bar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: #ffffff; border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 4px 12px -8px rgba(15,23,42,.15); font-size: .85rem; flex-wrap: wrap;
+  }
+  .traj-bar > label { font-weight: 700; color: #334155; font-size: .82rem; white-space: nowrap; }
+  .traj-select {
+    padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px;
+    background: #fff; font-family: inherit; font-size: .82rem; color: #0f172a;
+    cursor: pointer; outline: none; transition: .15s;
+  }
+  .traj-select:hover { border-color: #3b82f6; }
+  .traj-select:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,.15); }
+  .traj-hint { font-size: .76rem; color: #64748b; font-style: italic; flex: 1 1 100%; line-height: 1.4; }
+  @media (min-width: 620px) { .traj-hint { flex: 1 1 auto; } }
+
+  .stage{
+    position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    background:#ffffff;
+    box-shadow:0 12px 40px -18px rgba(15,23,42,.18), 0 2px 6px rgba(15,23,42,.04);
+  }
+  canvas{display:block;width:100%;height:clamp(340px,58vh,620px);cursor:crosshair}
+
+  .fullscreen-btn{
+    position:absolute;top:12px;right:12px;width:38px;height:38px;
+    border-radius:9px;border:1px solid #cbd5e1;background:rgba(255,255,255,.94);
+    color:#334155;font-size:17px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:.15s;box-shadow:0 2px 8px rgba(15,23,42,.08);
+    backdrop-filter:blur(4px);
+  }
+  .fullscreen-btn:hover{background:#fff;border-color:#3b82f6;color:#2563eb;
+    box-shadow:0 4px 14px rgba(59,130,246,.25);transform:translateY(-1px)}
+
+  .below-canvas{
+    border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:15px;
+    box-shadow:0 12px 40px -18px rgba(15,23,42,.15), 0 2px 6px rgba(15,23,42,.04);
+  }
+
+  .panel{
+    border:1px solid var(--line);border-radius:16px;background:var(--panel);
+    padding:15px;display:flex;flex-direction:column;gap:13px;
+    box-shadow:0 12px 40px -18px rgba(15,23,42,.15), 0 2px 6px rgba(15,23,42,.04);
+  }
+  #content{display:flex;flex-direction:column;gap:13px}
+  h3{margin:0;font-size:.97rem;color:#0f172a}
+  .lead{margin:0;font-size:.85rem;color:var(--muted);line-height:1.55}
+
+  .math{
+    background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+    padding:8px 10px;text-align:center;font-size:.96rem;overflow-x:auto;color:#0f172a;
+  }
+  .subst{
+    background:#f0f9ff;border:1px solid #bae6fd;border-left:3px solid #0891b2;
+    border-radius:10px;padding:9px 12px;font-size:.82rem;overflow-x:auto;color:#0c4a6e;
+  }
+  .subst .mjx-container{font-size:100%!important}
+
+  .compare-card{
+    display:grid;grid-template-columns:1fr 1fr;
+    border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;
+  }
+  .cmp-cell{background:#f8fafc;padding:9px 10px;text-align:center}
+  .cmp-cell + .cmp-cell{border-left:1px solid #e2e8f0}
+  .cmp-label{font-size:.72rem;color:#64748b;font-weight:600;margin-bottom:2px}
+  .cmp-val{font-size:1.22rem;font-weight:700;color:#0891b2;line-height:1.2;font-variant-numeric:tabular-nums}
+  .cmp-val.inst{color:#db2777}
+  .cmp-unit{font-size:.66rem;color:#94a3b8}
+  .cmp-diff{
+    grid-column:1/-1;background:#fff7ed;padding:6px 10px;text-align:center;
+    font-size:.78rem;color:#9a3412;border-top:1px solid #e2e8f0;
+  }
+  .cmp-diff b{color:#c2410c}
+
+  table{width:100%;border-collapse:collapse;font-size:.8rem;font-variant-numeric:tabular-nums}
+  th,td{padding:5px 6px;text-align:right;border-bottom:1px solid #eef2f8;color:#334155}
+  th{color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0}
+  td:first-child,th:first-child{text-align:left}
+  tbody tr{cursor:pointer;transition:.12s}
+  tbody tr:hover{background:#f1f5f9}
+  tbody tr.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+  tbody tr.sel td{color:#0369a1;font-weight:600}
+  tr.limit-row{background:#fef2f2;border-top:2px dashed #fca5a5}
+  tr.limit-row td{color:#b91c1c;font-weight:700;font-style:italic}
+
+  .result{
+    background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--accent);
+    border-radius:10px;padding:9px 11px;font-size:.85rem;line-height:1.65;color:#1e293b;
+  }
+  .result b{color:#0f172a}
+
+  .btn{
+    align-self:flex-start;padding:8px 14px;border-radius:10px;cursor:pointer;
+    border:1px solid #cbd5e1;background:#fff;color:#334155;font-weight:600;font-size:.83rem;
+    transition:.15s;font-family:inherit;
+  }
+  .btn:hover{background:#eff6ff;border-color:#3b82f6;color:#1d4ed8;
+    box-shadow:0 4px 12px -4px rgba(59,130,246,.3)}
+  .btn-primary{background:linear-gradient(180deg,#0284c7,#0369a1);color:#fff;border-color:#0369a1;}
+  .btn-primary:hover{background:linear-gradient(180deg,#0369a1,#075985);color:#fff;border-color:#075985;
+    box-shadow:0 4px 12px -4px rgba(3,105,161,.4);}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+  .slider-row{display:flex;flex-direction:column;gap:8px}
+  .slider-row label{font-size:.83rem;color:var(--muted)}
+  .slider-row b{color:#0f172a;font-size:.95rem}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+    background:linear-gradient(90deg,#0284c7,#7c3aed);outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:#fff;border:3px solid #0284c7;cursor:pointer;
+    box-shadow:0 0 10px rgba(2,132,199,.5);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:3px solid #0284c7;cursor:pointer;
+  }
+  .hint{font-size:.78rem;color:#94a3b8;line-height:1.5;margin:0}
+  .legend-inline{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:#475569}
+  .legend-inline span{display:inline-flex;align-items:center;gap:5px}
+  .legend-inline i{display:inline-block;width:14px;height:3px;border-radius:2px}
+
+  /* ============ PYTHON VIEW ============ */
+  .python-view { display: none; }
+  .python-view.active { display: block; }
+
+  .py-toolbar {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 14px;
+    flex-wrap: wrap; background: #fff; padding: 10px 14px;
+    border: 1px solid #e2e8f0; border-radius: 12px;
+    box-shadow: 0 4px 12px -8px rgba(15,23,42,.15);
+  }
+  .py-toolbar label { font-weight: 700; color: #334155; font-size: .85rem; }
+  .py-toolbar select {
+    padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px;
+    font-family: inherit; font-size: .85rem; background: #fff; cursor: pointer;
+  }
+  .py-toolbar button {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #fff; font-weight: 600; cursor: pointer; font-family: inherit;
+    font-size: .85rem; transition: .15s;
+  }
+  .py-toolbar button:hover { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+  .py-toolbar button.primary {
+    background: linear-gradient(180deg, #0284c7, #0369a1); color: #fff; border-color: #0369a1;
+  }
+  .py-toolbar button.primary:hover {
+    background: linear-gradient(180deg, #0369a1, #075985);
+    box-shadow: 0 4px 12px -4px rgba(3,105,161,.4);
+  }
+
+  .py-grid {
+    display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 1200px) { .py-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 800px) { .py-grid { grid-template-columns: 1fr; } }
+
+  .py-panel {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 12px 14px; box-shadow: 0 8px 24px -14px rgba(15,23,42,.15);
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 420px;
+  }
+  .py-panel h3 { margin: 0; font-size: .95rem; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+
+  .py-editor-wrap {
+    display: grid; grid-template-columns: 42px 1fr;
+    height: 340px; border: 1px solid #e2e8f0; border-radius: 8px;
+    overflow: hidden; background: #fff;
+  }
+  .py-gutter {
+    margin: 0; padding: 10px 4px; overflow: hidden;
+    font: 13px/1.55 'Consolas', 'Menlo', 'Courier New', monospace;
+    color: #94a3b8; text-align: right; background: #f8fafc;
+    border-right: 1px solid #e2e8f0; user-select: none; position: relative;
+  }
+  .py-gutter-inner { position: absolute; top: 10px; left: 0; right: 4px; }
+  .py-gutter .ln { display: block; padding-right: 4px; transition: .15s; }
+  .py-gutter .ln.hl { color: #b45309; font-weight: 700; background: #fef3c7; border-radius: 3px; }
+  #pyEditor {
+    padding: 10px; font: 13px/1.55 'Consolas', 'Menlo', 'Courier New', monospace;
+    border: none; outline: none; resize: none; background: #fff; color: #0f172a;
+    width: 100%; height: 100%; tab-size: 4;
+  }
+
+  .py-msg { padding: 8px 10px; border-radius: 8px; font-size: .82rem; line-height: 1.5; }
+  .py-msg.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  .py-msg.err  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .py-msg.ok   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+  .py-controls { display: flex; gap: 6px; align-items: center; }
+  .py-controls button {
+    padding: 5px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+    background: #fff; cursor: pointer; font-family: inherit; font-weight: 600;
+    font-size: .8rem;
+  }
+  .py-controls button:hover:not(:disabled) { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+  .py-controls button:disabled { opacity: .4; cursor: not-allowed; background: #f8fafc; }
+  #pyStepLabel {
+    margin-left: auto; font-size: .8rem; color: #64748b;
+    font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+
+  .py-trace {
+    flex: 1; overflow-y: auto; max-height: 340px; min-height: 200px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    background: #fafbfc; padding: 6px;
+  }
+  .py-trace-step {
+    padding: 5px 8px; margin: 2px 0; border-radius: 6px;
+    font-size: .78rem; cursor: pointer; display: flex; gap: 8px; align-items: flex-start;
+    transition: .12s;
+  }
+  .py-trace-step:hover { background: #f1f5f9; }
+  .py-trace-step.current {
+    background: #eff6ff; box-shadow: inset 3px 0 0 #0284c7; font-weight: 600;
+  }
+  .py-trace-step .st-num {
+    color: #94a3b8; font-variant-numeric: tabular-nums;
+    min-width: 28px; flex-shrink: 0; font-weight: 600;
+  }
+  .py-trace-step .st-body { flex: 1; }
+  .py-trace-step .st-line { font-family: monospace; color: #64748b; font-size: .7rem; }
+  .py-trace-step .st-desc { color: #0f172a; }
+
+  .py-vars {
+    flex: 1; overflow-y: auto; max-height: 240px; min-height: 120px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 8px; background: #fafbfc;
+  }
+  .py-var {
+    display: flex; justify-content: space-between; gap: 10px;
+    padding: 4px 6px; font-size: .82rem; border-bottom: 1px solid #f1f5f9;
+  }
+  .py-var:last-child { border-bottom: none; }
+  .py-var .v-name { font-family: 'Consolas', monospace; color: #0369a1; font-weight: 600; }
+  .py-var .v-val { font-family: 'Consolas', monospace; color: #0f172a; text-align: right; word-break: break-all; }
+  .py-vars .empty { color: #94a3b8; font-size: .8rem; text-align: center; padding: 20px; font-style: italic; }
+
+  .py-cond {
+    padding: 10px 12px; border-radius: 8px; font-size: .85rem;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .py-cond.true { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+  .py-cond.false { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .py-cond.none { background: #f8fafc; border: 1px solid #e2e8f0; color: #94a3b8; font-style: italic; }
+  .py-cond .c-text { font-family: 'Consolas', monospace; font-weight: 600; }
+  .py-cond .c-badge {
+    padding: 2px 8px; border-radius: 999px; font-size: .7rem;
+    font-weight: 700; letter-spacing: .3px;
+  }
+  .py-cond.true .c-badge { background: #166534; color: #fff; }
+  .py-cond.false .c-badge { background: #991b1b; color: #fff; }
+
+  .py-trace-empty { color:#94a3b8; font-style:italic; text-align:center; padding:20px; font-size:.8rem; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>🕊️ L'oiseau stroboscopique</h1>
+    <p>De la vitesse moyenne au nombre dérivé — positions échantillonnées dans un repère orthogonal.</p>
+  </header>
+
+  <div class="top-tabs">
+    <button class="tab active" data-mode="s1">Situation 1</button>
+    <button class="tab" data-mode="s2">Situation 2</button>
+    <button class="tab" data-mode="s3">Situation 3</button>
+    <button class="tab" data-mode="deriv">Vers la dérivée</button>
+    <button class="tab" data-mode="python">🐍 Python</button>
+  </div>
+
+  <div class="layout" id="mainLayout">
+    <div class="left-col">
+      <div class="traj-bar">
+        <label for="trajSelect">🕊️ Trajectoire :</label>
+        <select id="trajSelect" class="traj-select">
+          <option value="droite">Ligne droite — vitesse constante</option>
+          <option value="projectile">Projectile — parabole</option>
+          <option value="sinusoide" selected>Sinusoïde modulée — arrêts</option>
+          <option value="cycloide">Cycloïde — arrêts</option>
+          <option value="cercle">Cercle — vitesse constante en norme</option>
+        </select>
+        <label for="viewSelect">📈 Graphique :</label>
+        <select id="viewSelect" class="traj-select">
+          <option value="traj" selected>Trajectoire — y en fonction de x</option>
+          <option value="yt">Hauteur — y en fonction du temps</option>
+          <option value="xt">Distance horizontale — x en fonction du temps</option>
+        </select>
+        <span class="traj-hint" id="trajHint"></span>
+      </div>
+      <section class="stage">
+        <canvas id="cv"></canvas>
+        <button class="fullscreen-btn" id="fsBtn" title="Ouvrir le graphique en plein écran">⛶</button>
+      </section>
+      <div id="belowCanvas" class="below-canvas" style="display:none;"></div>
+    </div>
+
+    <aside class="panel">
+      <div id="content"></div>
+    </aside>
+  </div>
+
+  <div class="python-view" id="pythonView">
+    <div class="py-toolbar">
+      <label for="pyExercise">Exercice Python :</label>
+      <select id="pyExercise">
+        <option value="analyse">1. Analyser un programme</option>
+        <option value="convert">2. Convertir for ↔ while</option>
+        <option value="complete">3. Compléter un programme (Bac)</option>
+        <option value="write">4. Écrire un programme</option>
+      </select>
+      <button id="pyLoadBtn">📥 Charger</button>
+      <button id="pyRunBtn" class="primary">▶ Exécuter</button>
+      <button id="pyResetBtn">↺ Réinitialiser</button>
+    </div>
+
+    <div class="py-grid">
+      <div class="py-panel">
+        <h3>📝 Éditeur de code</h3>
+        <div class="py-editor-wrap">
+          <pre class="py-gutter"><div class="py-gutter-inner" id="pyGutterInner"></div></pre>
+          <textarea id="pyEditor" spellcheck="false"></textarea>
+        </div>
+        <div class="py-msg info" id="pyMessage"></div>
+      </div>
+
+      <div class="py-panel">
+        <h3>🔍 Déroulement ligne par ligne</h3>
+        <div class="py-controls">
+          <button id="pyFirst" title="Première étape">⏮</button>
+          <button id="pyPrev" title="Étape précédente">◀</button>
+          <button id="pyNext" title="Étape suivante">▶</button>
+          <button id="pyLast" title="Dernière étape">⏭</button>
+          <span id="pyStepLabel">0 / 0</span>
+        </div>
+        <div class="py-trace" id="pyTrace">
+          <div class="py-trace-empty">Cliquez sur « Exécuter » pour lancer le programme.</div>
+        </div>
+      </div>
+
+      <div class="py-panel">
+        <h3>📊 Variables et conditions</h3>
+        <div class="py-vars" id="pyVars">
+          <div class="empty">Aucune variable</div>
+        </div>
+        <div class="py-cond none" id="pyCond">Aucune condition évaluée.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   MODÈLE DE VOL & DONNÉES
+   ============================================================ */
+const T_MAX = 6;
+const WX = 11.5;
+const WY = 7.0;
+const H_VALUES = [2, 1.5, 1, 0.75, 0.5, 0.3, 0.2, 0.1, 0.05, 0.02, 0.01];
+
+const TRAJECTORIES = {
+  droite: {
+    label: 'Ligne droite — vitesse constante',
+    hint: 'Mouvement rectiligne uniforme : la vitesse moyenne sur tout intervalle est égale à la vitesse instantanée (1,7 m/s partout).',
+    pos: t => ({ x: 0.5 + 1.7 * t, y: 3.5 }),
+    vel: t => ({ x: 1.7, y: 0 })
+  },
+  projectile: {
+    label: 'Projectile — parabole',
+    hint: 'La tangente est horizontale au sommet (v_y = 0). Mais la vitesse n\'est pas nulle : le vecteur vitesse est horizontal, sa norme vaut v_x = 1,8 m/s (la vitesse horizontale reste constante).',
+    pos: t => ({ x: 0.5 + 1.8 * t, y: 1.2 + 2.8 * t - 0.35 * t * t }),
+    vel: t => ({ x: 1.8, y: 2.8 - 0.7 * t })
+  },
+  sinusoide: {
+    label: 'Sinusoïde modulée — arrêts',
+    hint: 'La vitesse s\'annule presque aux extrema : la tangente est horizontale ET le vecteur vitesse tend vers zéro.',
+    pos: t => ({
+      x: 1 + 1.6 * t + 0.6 * Math.sin(2.4 * t - 0.6),
+      y: 3.8 + 2.6 * Math.sin(1.2 * t - 0.3)
+    }),
+    vel: t => ({
+      x: 1.6 + 1.44 * Math.cos(2.4 * t - 0.6),
+      y: 3.12 * Math.cos(1.2 * t - 0.3)
+    })
+  },
+  cycloide: {
+    label: 'Cycloïde — arrêts',
+    hint: 'Aux points de rebroussement, la tangente est horizontale ET la vitesse s\'annule complètement : la norme du vecteur vitesse est nulle.',
+    pos: t => ({ x: 1.5 + 2.5 * (1 - Math.cos(t)), y: 1.5 + 2.5 * (t - Math.sin(t)) }),
+    vel: t => ({ x: 2.5 * Math.sin(t), y: 2.5 * (1 - Math.cos(t)) })
+  },
+  cercle: {
+    label: 'Cercle — vitesse constante en norme',
+    hint: 'Vitesse toujours égale à 2,8 m/s, mais le vecteur vitesse change de direction. La tangente est parfois horizontale, parfois verticale.',
+    pos: t => ({ x: 5.5 + 2.8 * Math.cos(t), y: 3.5 + 2.8 * Math.sin(t) }),
+    vel: t => ({ x: -2.8 * Math.sin(t), y: 2.8 * Math.cos(t) })
+  }
+};
+
+let currentTraj = TRAJECTORIES.sinusoide;
+let currentTrajKey = 'sinusoide';
+let basePos = currentTraj.pos;
+let baseVel = currentTraj.vel;
+let pos = basePos;
+let vel = baseVel;
+let VIEW = null;
+let viewKey = 'traj';
+
+function speedAt(t){ const v = vel(t); return Math.hypot(v.x, v.y); }
+
+function niceCeil(x){
+  if (!(x > 0)) return 1;
+  const steps = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+  const pow = Math.pow(10, Math.floor(Math.log10(x)));
+  for (let i = 0; i < steps.length; i++){
+    if (x <= steps[i] * pow + 1e-9) return steps[i] * pow;
+  }
+  return 10 * pow;
+}
+function niceStep(raw){
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / pow;
+  let m;
+  if (n <= 1) m = 1; else if (n <= 2) m = 2; else if (n <= 5) m = 5; else m = 10;
+  return m * pow;
+}
+function fmtTick(v){
+  const r = Math.round(v * 1000) / 1000;
+  if (Math.abs(r - Math.round(r)) < 1e-9) return String(Math.round(r));
+  return String(r);
+}
+function fmtSmall(x){
+  if (x === 0) return '0.000';
+  if (Math.abs(x) < 1e-3) return x.toExponential(2).replace('e-','e−');
+  return x.toFixed(3);
+}
+function fmtHValue(h){
+  if (h >= 0.01) return h.toFixed(2);
+  const exp = Math.round(Math.log10(h));
+  const sup = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+  return '10' + String(exp).split('').map(ch => sup[ch] || ch).join('');
+}
+
+function buildView(key){
+  if (key === 'traj'){
+    return {
+      key: 'traj', metric: 'norm',
+      uMax: WX, vMax: WY, uStep: 1, vStep: 1,
+      uName: 'x', vName: 'y', uUnit: 'm', vUnit: 'm',
+      deltaLabel: 'Δd (m)',
+      deltaSym: '\\Delta d'
+    };
+  }
+  const isY = (key === 'yt');
+  const k = isY ? 'y' : 'x';
+  let vmax = 0;
+  for (let i = 0; i <= 240; i++){
+    const p = basePos(T_MAX * i / 240);
+    vmax = Math.max(vmax, Math.abs(p[k]));
+  }
+  const top = niceCeil(Math.max(vmax, 1));
+  const step = niceStep(top / 6);
+  return {
+    key: key, metric: 'signed',
+    uMax: T_MAX, vMax: top, uStep: 1, vStep: step,
+    uName: 't', vName: k, uUnit: 's', vUnit: 'm',
+    deltaLabel: (isY ? 'Δy (m)' : 'Δx (m)'),
+    deltaSym: (isY ? '\\Delta y' : '\\Delta x')
+  };
+}
+
+function applyView(){
+  VIEW = buildView(viewKey);
+  if (viewKey === 'traj'){
+    pos = basePos;
+    vel = baseVel;
+  } else {
+    const k = (viewKey === 'yt') ? 'y' : 'x';
+    pos = function(t){ return { x: t, y: basePos(t)[k] }; };
+    vel = function(t){ return { x: 1, y: baseVel(t)[k] }; };
+  }
+}
+
+applyView();
+
+function instValue(t){
+  const v = baseVel(t);
+  if (viewKey === 'traj') return Math.hypot(v.x, v.y);
+  return (viewKey === 'yt') ? Math.abs(v.y) : Math.abs(v.x);
+}
+function segmentValue(a, b){
+  if (viewKey === 'traj') return Math.hypot(b.x - a.x, b.y - a.y);
+  return b.y - a.y;
+}
+
+function measurePinkText(c, t0) {
+  const bv = baseVel(t0);
+  let w = 0;
+  if (viewKey === 'traj') {
+    c.font = 'italic 11px ui-sans-serif, system-ui, sans-serif'; w += c.measureText('v').width;
+    c.font = '700 8px ui-sans-serif, system-ui, sans-serif'; w += c.measureText('x').width + 1;
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif'; w += c.measureText(' = ' + bv.x.toFixed(2) + ' m/s, ').width;
+    c.font = 'italic 11px ui-sans-serif, system-ui, sans-serif'; w += c.measureText('v').width;
+    c.font = '700 8px ui-sans-serif, system-ui, sans-serif'; w += c.measureText('y').width + 1;
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif'; w += c.measureText(' = ' + bv.y.toFixed(2) + ' m/s').width;
+  } else {
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    const t5 = (viewKey === 'yt' ? 'Δy / h = ' : 'Δx / h = ') + (viewKey === 'yt' ? bv.y.toFixed(2) : bv.x.toFixed(2)) + ' m/s';
+    w = c.measureText(t5).width;
+  }
+  return w;
+}
+
+function drawPinkText(c, startX, startY, t0) {
+  const bv = baseVel(t0);
+  let cx = startX;
+  c.fillStyle = '#db2777';
+  c.textAlign = 'left';
+  c.textBaseline = 'middle';
+  if (viewKey === 'traj') {
+    c.font = 'italic 11px ui-sans-serif, system-ui, sans-serif';
+    c.fillText('v', cx, startY);
+    cx += c.measureText('v').width;
+    c.font = '700 8px ui-sans-serif, system-ui, sans-serif';
+    c.fillText('x', cx + 1, startY + 4);
+    cx += c.measureText('x').width + 1;
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    let rest = ' = ' + bv.x.toFixed(2) + ' m/s, ';
+    c.fillText(rest, cx, startY);
+    cx += c.measureText(rest).width;
+    c.font = 'italic 11px ui-sans-serif, system-ui, sans-serif';
+    c.fillText('v', cx, startY);
+    cx += c.measureText('v').width;
+    c.font = '700 8px ui-sans-serif, system-ui, sans-serif';
+    c.fillText('y', cx + 1, startY + 4);
+    cx += c.measureText('y').width + 1;
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    rest = ' = ' + bv.y.toFixed(2) + ' m/s';
+    c.fillText(rest, cx, startY);
+  } else {
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    const t5 = (viewKey === 'yt' ? 'Δy / h = ' : 'Δx / h = ') + (viewKey === 'yt' ? bv.y.toFixed(2) : bv.x.toFixed(2)) + ' m/s';
+    c.fillText(t5, cx, startY);
+  }
+}
+
+function buildPoints(dt){
+  const n = Math.round(T_MAX / dt);
+  const out = [];
+  for (let k = 0; k <= n; k++){
+    const t = k * dt;
+    const p = pos(t);
+    out.push({ t, x: p.x, y: p.y });
+  }
+  return out;
+}
+
+let strobePoints = buildPoints(0.25);
+
+const state = {
+  mode: 's1', dt: 1, points: [], revealed: 0, animT: 0, playing: true,
+  sel: 0, t0: 2.5, h: 0.5, hIdx: 4, flapPhase: 0, flash: null, mousePx: null
+};
+
+let dragTarget = null;
+let renderInfo = { X: null, Y: null, cw: 0, ch: 0 };
+let hTimer = null;
+let fsWindow = null;
+let hudRect = { x: 16, y: 16, w: 260, h: 140 };
+
+function updateState(s, dt){
+  s.flapPhase += dt * 8.5;
+  if (s.playing && s.mode !== 'deriv'){
+    s.animT += dt * 0.72;
+    if (s.animT >= T_MAX){ s.animT = T_MAX; s.playing = false; }
+  }
+  if (s.flash){
+    s.flash.age += dt / 0.75;
+    if (s.flash.age >= 1) s.flash = null;
+  }
+  if (s.mode !== 'deriv'){
+    let rev = 0;
+    while (rev < s.points.length && s.points[rev].t <= s.animT + 1e-9) rev++;
+    if (rev > s.revealed){
+      const np = s.points[rev - 1];
+      s.flash = { x: np.x, y: np.y, age: 0 };
+    }
+    s.revealed = rev;
+  }
+}
+
+function cloneState(s){
+  return {
+    mode: s.mode, dt: s.dt, points: s.points, revealed: s.revealed,
+    animT: s.animT, playing: s.playing, sel: s.sel, t0: s.t0, h: s.h,
+    flapPhase: s.flapPhase,
+    flash: s.flash ? { x: s.flash.x, y: s.flash.y, age: s.flash.age } : null,
+    mousePx: null
+  };
+}
+
+function roundRect(c, x, y, w, h, r){
+  c.beginPath();
+  c.moveTo(x + r, y); c.lineTo(x + w - r, y);
+  c.arcTo(x + w, y, x + w, y + r, r); c.lineTo(x + w, y + h - r);
+  c.arcTo(x + w, y + h, x + w - r, y + h, r); c.lineTo(x + r, y + h);
+  c.arcTo(x, y + h, x, y + h - r, r); c.lineTo(x, y + r);
+  c.arcTo(x, y, x + r, y, r); c.closePath();
+}
+
+function getInsetRect(cw, ch){
+  const iw = 280, ih = 200;
+  return { x: 16, y: ch - ih - 16, w: iw, h: ih };
+}
+
+function drawGrid(c, X, Y){
+  const V = VIEW;
+  c.save();
+  const uSteps = [V.uStep / 4, V.uStep / 2, V.uStep];
+  const vSteps = [V.vStep / 4, V.vStep / 2, V.vStep];
+  const colors = ['#eef3fa', '#dbe4f0', '#c2cfe0'];
+  const widths = [1, 1, 1.15];
+  for (let p = 0; p < 3; p++){
+    c.strokeStyle = colors[p]; c.lineWidth = widths[p];
+    const su = uSteps[p];
+    const nu = Math.floor(V.uMax / su + 1e-9);
+    for (let i = 1; i <= nu; i++){
+      const u = i * su;
+      c.beginPath(); c.moveTo(X(u), Y(0)); c.lineTo(X(u), Y(V.vMax)); c.stroke();
+    }
+    const sv = vSteps[p];
+    const nv = Math.floor(V.vMax / sv + 1e-9);
+    for (let i = 1; i <= nv; i++){
+      const v = i * sv;
+      c.beginPath(); c.moveTo(X(0), Y(v)); c.lineTo(X(V.uMax), Y(v)); c.stroke();
+    }
+  }
+  c.restore();
+}
+
+function drawAxes(c, X, Y){
+  const V = VIEW;
+  c.save();
+  const axColor = '#475569';
+  c.strokeStyle = axColor; c.fillStyle = axColor; c.lineWidth = 1.8;
+  c.beginPath(); c.moveTo(X(0), Y(0)); c.lineTo(X(V.uMax) + 4, Y(0)); c.stroke();
+  c.beginPath();
+  c.moveTo(X(V.uMax) + 18, Y(0));
+  c.lineTo(X(V.uMax) + 6,  Y(0) - 6);
+  c.lineTo(X(V.uMax) + 6,  Y(0) + 6);
+  c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(X(0), Y(0)); c.lineTo(X(0), Y(V.vMax) - 4); c.stroke();
+  c.beginPath();
+  c.moveTo(X(0),           Y(V.vMax) - 18);
+  c.lineTo(X(0) - 6,       Y(V.vMax) - 6);
+  c.lineTo(X(0) + 6,       Y(V.vMax) - 6);
+  c.closePath(); c.fill();
+  c.lineWidth = 1;
+  const nu = Math.floor(V.uMax / V.uStep + 1e-9);
+  for (let i = 0; i <= nu; i++){
+    const u = i * V.uStep;
+    c.beginPath(); c.moveTo(X(u), Y(0)); c.lineTo(X(u), Y(0) + 6); c.stroke();
+  }
+  const nuh = Math.floor(V.uMax / (V.uStep / 2) + 1e-9);
+  for (let i = 1; i <= nuh; i++){
+    const u = i * V.uStep / 2;
+    if (Math.abs(u / V.uStep - Math.round(u / V.uStep)) < 1e-9) continue;
+    c.beginPath(); c.moveTo(X(u), Y(0)); c.lineTo(X(u), Y(0) + 3); c.stroke();
+  }
+  const nv = Math.floor(V.vMax / V.vStep + 1e-9);
+  for (let i = 0; i <= nv; i++){
+    const v = i * V.vStep;
+    c.beginPath(); c.moveTo(X(0), Y(v)); c.lineTo(X(0) - 6, Y(v)); c.stroke();
+  }
+  const nvh = Math.floor(V.vMax / (V.vStep / 2) + 1e-9);
+  for (let i = 1; i <= nvh; i++){
+    const v = i * V.vStep / 2;
+    if (Math.abs(v / V.vStep - Math.round(v / V.vStep)) < 1e-9) continue;
+    c.beginPath(); c.moveTo(X(0), Y(v)); c.lineTo(X(0) - 3, Y(v)); c.stroke();
+  }
+  c.fillStyle = '#334155';
+  c.font = '600 12px ui-sans-serif, system-ui, sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let i = 0; i <= nu; i++) c.fillText(fmtTick(i * V.uStep), X(i * V.uStep), Y(0) + 10);
+  c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (let i = 0; i <= nv; i++) c.fillText(fmtTick(i * V.vStep), X(0) - 11, Y(i * V.vStep));
+  c.font = 'italic 700 13px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = '#0f172a';
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText(V.uName + ' (' + V.uUnit + ')', X(V.uMax) + 24, Y(0) + 16);
+  c.textAlign = 'center';
+  c.fillText(V.vName + ' (' + V.vUnit + ')', X(0), Y(V.vMax) - 34);
+  c.restore();
+}
+
+function drawTrajectory(c, X, Y){
+  c.save();
+  c.beginPath();
+  const N = 300;
+  for (let i = 0; i <= N; i++){
+    const p = pos(T_MAX * i / N);
+    if (i === 0) c.moveTo(X(p.x), Y(p.y));
+    else         c.lineTo(X(p.x), Y(p.y));
+  }
+  c.strokeStyle = 'rgba(100,116,139,0.30)';
+  c.lineWidth = 1.4;
+  c.setLineDash([5, 6]);
+  c.stroke();
+  c.restore();
+}
+
+function drawPoint(c, X, Y, p, label, color, r){
+  r = r || 6;
+  const px = X(p.x), py = Y(p.y);
+  c.save();
+  c.globalAlpha = 0.18;
+  c.beginPath(); c.arc(px, py, r + 8, 0, Math.PI * 2);
+  c.fillStyle = color; c.fill();
+  c.restore();
+  c.beginPath(); c.arc(px, py, r, 0, Math.PI * 2);
+  c.fillStyle = color; c.fill();
+  c.lineWidth = 2; c.strokeStyle = '#ffffff'; c.stroke();
+  if (label){
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    c.fillStyle = '#1e293b';
+    c.textAlign = 'center'; c.textBaseline = 'bottom';
+    c.fillText(label, px, py - r - 5);
+  }
+}
+
+function drawBird(c, px, py, ang, flapPhase, sc){
+  c.save();
+  c.translate(px, py); c.rotate(ang); c.scale(sc, sc);
+  const f = 0.35 + 0.65 * Math.abs(Math.sin(flapPhase));
+  c.strokeStyle = '#0f172a'; c.lineWidth = 2.8; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.beginPath();
+  c.moveTo(-13, 4);
+  c.quadraticCurveTo(-6, 4 - 15 * f, 0, 3);
+  c.quadraticCurveTo( 6, 4 - 15 * f, 13, 4);
+  c.stroke();
+  c.beginPath();
+  c.ellipse(0, 3.5, 5, 2.4, 0, 0, Math.PI * 2);
+  c.fillStyle = '#0f172a'; c.fill();
+  c.restore();
+}
+
+function drawArrow(c, x1, y1, x2, y2, color, lw){
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  const head = 10;
+  c.save();
+  c.strokeStyle = color; c.fillStyle = color; c.lineWidth = lw; c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(x1, y1);
+  c.lineTo(x2 - Math.cos(a) * head * 0.7, y2 - Math.sin(a) * head * 0.7);
+  c.stroke();
+  c.beginPath();
+  c.moveTo(x2, y2);
+  c.lineTo(x2 - Math.cos(a - 0.42) * head, y2 - Math.sin(a - 0.42) * head);
+  c.lineTo(x2 - Math.cos(a + 0.42) * head, y2 - Math.sin(a + 0.42) * head);
+  c.closePath(); c.fill();
+  c.restore();
+}
+
+function drawStrobe(c, X, Y, s){
+  drawTrajectory(c, X, Y);
+  const pts = s.points;
+  const n = s.revealed;
+  for (let i = 0; i < n - 1; i++){
+    const a = pts[i], b = pts[i + 1];
+    const isSel = (i === s.sel);
+    c.beginPath();
+    c.moveTo(X(a.x), Y(a.y)); c.lineTo(X(b.x), Y(b.y));
+    c.strokeStyle = isSel ? 'rgba(2,132,199,0.95)' : 'rgba(100,140,200,0.28)';
+    c.lineWidth = isSel ? 2.8 : 1.4;
+    c.setLineDash(isSel ? [] : [4, 6]);
+    c.stroke(); c.setLineDash([]);
+  }
+  for (let i = 0; i < n; i++){
+    const p = pts[i];
+    const isSel = (i === s.sel || i === s.sel + 1);
+    drawPoint(c, X, Y, p, 'M' + i, isSel ? '#0369a1' : '#0284c7', isSel ? 7.5 : 5.5);
+  }
+  if (s.flash && s.flash.age < 1){
+    const age = s.flash.age;
+    c.beginPath();
+    c.arc(X(s.flash.x), Y(s.flash.y), 7 + 34 * age, 0, Math.PI * 2);
+    c.strokeStyle = 'rgba(2,132,199,' + (1 - age) * 0.75 + ')';
+    c.lineWidth = 2.5; c.stroke();
+  }
+  const tb = Math.min(s.animT, T_MAX);
+  const pb = pos(tb);
+  const vb = vel(tb);
+  const ang = Math.atan2(-vb.y, vb.x) * 0.6;
+  drawBird(c, X(pb.x), Y(pb.y), ang, s.flapPhase, 1);
+}
+
+function drawDeriv(c, X, Y, s, cw, ch){
+  drawTrajectory(c, X, Y);
+  const h = s.h;
+  const T0 = s.t0;
+  const A = pos(T0);
+  const v = vel(T0);
+  const tinyH = h < 1e-7;
+  let B, dx, dy;
+  if (tinyH){
+    dx = v.x * h; dy = v.y * h;
+    B = { x: A.x + dx, y: A.y + dy };
+  } else {
+    B = pos(T0 + h); dx = B.x - A.x; dy = B.y - A.y;
+  }
+  const vnorm = speedAt(T0);
+  const ux = v.x / vnorm, uy = v.y / vnorm;
+  const L = 1.9;
+  const dM = Math.hypot(dx, dy);
+  const numer = (viewKey === 'traj') ? dM : dy;
+  const vm = numer / h;
+  c.save();
+  c.beginPath();
+  c.moveTo(X(A.x - ux * L), Y(A.y - uy * L));
+  c.lineTo(X(A.x + ux * L), Y(A.y + uy * L));
+  c.strokeStyle = 'rgba(219,39,119,0.45)';
+  c.lineWidth = 2; c.setLineDash([7, 5]); c.stroke(); c.restore();
+  c.save();
+  c.font = 'italic 700 12px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = 'rgba(219,39,119,0.9)';
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText('tangente', X(A.x + ux * L) + 8, Y(A.y + uy * L));
+  c.restore();
+  c.beginPath();
+  c.moveTo(X(A.x), Y(A.y)); c.lineTo(X(B.x), Y(B.y));
+  c.strokeStyle = 'rgba(2,132,199,0.95)'; c.lineWidth = 2.8; c.stroke();
+  if (h > 0.15){
+    const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    c.save();
+    c.font = 'italic 700 12px ui-sans-serif, system-ui, sans-serif';
+    c.fillStyle = 'rgba(2,132,199,0.95)';
+    c.textAlign = 'center'; c.textBaseline = 'bottom';
+    c.fillText('corde M₀M', X(mx), Y(my) - 10); c.restore();
+  }
+  c.save();
+  c.strokeStyle = 'rgba(100,116,139,0.55)';
+  c.lineWidth = 1.4; c.setLineDash([4, 4]);
+  c.beginPath(); c.moveTo(X(A.x), Y(A.y)); c.lineTo(X(B.x), Y(A.y)); c.stroke();
+  c.beginPath(); c.moveTo(X(B.x), Y(A.y)); c.lineTo(X(B.x), Y(B.y)); c.stroke();
+  c.restore();
+  if (h > 0.15){
+    c.save();
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    c.fillStyle = '#475569';
+    c.textAlign = 'center'; c.textBaseline = 'top';
+    c.fillText('Δ' + VIEW.uName + ' = ' + fmtSmall(dx) + ' ' + VIEW.uUnit,
+               X((A.x + B.x) / 2), Y(A.y) + 5);
+    c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.fillText('Δ' + VIEW.vName + ' = ' + fmtSmall(dy) + ' ' + VIEW.vUnit,
+               X(B.x) + 8, Y((A.y + B.y) / 2));
+    c.restore();
+  }
+  const sVM = 0.42;
+  const vmag = Math.hypot(dx / h, dy / h);
+  const scaleArrow = vmag > 5 ? 5 / vmag : 1;
+  const endVmX = A.x + (dx / h) * sVM * scaleArrow;
+  const endVmY = A.y + (dy / h) * sVM * scaleArrow;
+  drawArrow(c, X(A.x), Y(A.y), X(endVmX), Y(endVmY), '#0891b2', 3);
+  c.save();
+  c.font = '700 12px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = '#0891b2';
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText('v_m(h)', X(endVmX) + 6, Y(endVmY) - 9); c.restore();
+  const endVX = A.x + v.x * sVM;
+  const endVY = A.y + v.y * sVM;
+  drawArrow(c, X(A.x), Y(A.y), X(endVX), Y(endVY), '#db2777', 3);
+  c.save();
+  c.font = '700 12px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = '#db2777';
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText('v(t₀)', X(endVX) + 6, Y(endVY) + 11); c.restore();
+  drawPoint(c, X, Y, A, 'M₀', '#0369a1', 8);
+  if (h > 0.015){
+    drawPoint(c, X, Y, B, '', '#7c3aed', h < 0.1 ? 5 : 6.5);
+    c.save();
+    c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+    c.fillStyle = '#1e293b';
+    if (h >= 0.05 && h < 0.15){
+      c.textAlign = 'left'; c.textBaseline = 'middle';
+      c.fillText('M', X(B.x) + 10, Y(B.y));
+    } else if (h >= 0.15){
+      c.textAlign = 'center'; c.textBaseline = 'bottom';
+      c.fillText('M', X(B.x), Y(B.y) - 13);
+    }
+    c.restore();
+  }
+  const vb = vel(T0 + h);
+  const ang = Math.atan2(-vb.y, vb.x) * 0.6;
+  drawBird(c, X(B.x), Y(B.y), ang, s.flapPhase, 0.95);
+  drawZoomInset(c, X, Y, s, A, B, ux, uy, v, h, cw, ch);
+  drawHud(c, s, numer, vm, h);
+}
+
+function drawHud(c, s, numer, vm, h){
+  const pad = 14;
+  const boxH = 138;
+  const numLabel = (viewKey === 'traj') ? 'M₀M' : (viewKey === 'yt' ? 'Δy' : 'Δx');
+  c.font = 'italic 13px ui-sans-serif, system-ui, sans-serif';
+  const wv = c.measureText('v').width;
+  c.font = '700 9px ui-sans-serif, system-ui, sans-serif';
+  const wm = c.measureText('m').width;
+  c.font = '700 13px ui-sans-serif, system-ui, sans-serif';
+  const wh = c.measureText('(h)').width;
+  const wVmH = wv + wm + 2 + wh;
+  const t1 = ' =';
+  const w1 = c.measureText(t1).width;
+  const wNum = c.measureText(numLabel).width;
+  const wDen = c.measureText('h').width;
+  const wFrac = Math.max(wNum, wDen, 22);
+  c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+  const t2 = 'h = Δt = ' + fmtHValue(h) + ' s';
+  const w2 = c.measureText(t2).width;
+  c.font = '600 12px ui-sans-serif, system-ui, sans-serif';
+  const t3Rest = ' = ' + fmtSmall(numer) + ' m / ' + fmtHValue(h) + ' s';
+  const w3 = wFrac + 6 + c.measureText(t3Rest).width;
+  const vmAbs = Math.abs(vm);
+  c.font = 'italic 22px ui-sans-serif, system-ui, sans-serif';
+  const wv4 = c.measureText('v').width;
+  c.font = '700 14px ui-sans-serif, system-ui, sans-serif';
+  const wm4 = c.measureText('m').width;
+  c.font = '800 22px ui-sans-serif, system-ui, sans-serif';
+  const weq4 = c.measureText(' = ').width;
+  const w_vm_eq = wv4 + wm4 + 3 + weq4;
+  const t4_val = (vm < 0 ? '| ' + vm.toFixed(2) + ' | = ' : '') + vmAbs.toFixed(2);
+  const w4_val = c.measureText(t4_val).width;
+  c.font = '600 13px ui-sans-serif, system-ui, sans-serif';
+  const w4b = c.measureText(' m/s').width;
+  const w5 = measurePinkText(c, s.t0);
+  const innerW = Math.max(wVmH + w1 + 6 + wFrac, w2, w3, w_vm_eq + w4_val + w4b, w5);
+  const boxW = innerW + pad * 2 + 12;
+  const bx = 16, by = 16;
+  hudRect = { x: bx, y: by, w: boxW, h: boxH };
+  c.save();
+  c.shadowColor = 'rgba(8, 145, 178, 0.25)';
+  c.shadowBlur = 14; c.shadowOffsetY = 4;
+  c.fillStyle = 'rgba(255, 255, 255, 0.97)';
+  roundRect(c, bx, by, boxW, boxH, 10); c.fill();
+  c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+  c.strokeStyle = '#0891b2'; c.lineWidth = 1.5;
+  roundRect(c, bx, by, boxW, boxH, 10); c.stroke();
+  c.beginPath(); c.arc(bx + 11, by + 14, 4, 0, Math.PI * 2);
+  c.fillStyle = '#0891b2'; c.fill();
+  const fx = bx + pad + 8;
+  const fy = by + 22;
+  c.fillStyle = '#0c4a6e';
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.font = 'italic 13px ui-sans-serif, system-ui, sans-serif';
+  c.fillText('v', fx, fy);
+  c.font = '700 9px ui-sans-serif, system-ui, sans-serif';
+  c.fillText('m', fx + wv + 1, fy + 5);
+  c.font = '700 13px ui-sans-serif, system-ui, sans-serif';
+  c.fillText('(h) =', fx + wv + wm + 2, fy);
+  const fracX = fx + wVmH + w1 + 6;
+  const fracY = fy;
+  c.font = '700 13px ui-sans-serif, system-ui, sans-serif';
+  c.textAlign = 'center';
+  c.fillText(numLabel, fracX + wFrac / 2, fracY - 9);
+  c.beginPath(); c.moveTo(fracX, fracY); c.lineTo(fracX + wFrac, fracY);
+  c.strokeStyle = '#0c4a6e'; c.lineWidth = 1.5; c.stroke();
+  c.fillText('h', fracX + wFrac / 2, fracY + 9);
+  c.textAlign = 'left'; c.fillStyle = '#64748b';
+  c.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+  c.fillText(t2, fx, fy + 30);
+  c.font = '700 12px ui-sans-serif, system-ui, sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'bottom';
+  c.fillText(numLabel, fx + wFrac / 2, fy + 52 - 1);
+  c.beginPath(); c.moveTo(fx, fy + 52); c.lineTo(fx + wFrac, fy + 52);
+  c.strokeStyle = '#64748b'; c.lineWidth = 1.2; c.stroke();
+  c.textBaseline = 'top';
+  c.fillText('h', fx + wFrac / 2, fy + 52 + 1);
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.font = '600 12px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = '#64748b';
+  c.fillText(t3Rest, fx + wFrac + 6, fy + 52);
+  drawPinkText(c, fx, fy + 74, s.t0);
+  const y4 = by + boxH - 14;
+  c.fillStyle = '#0891b2'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.font = 'italic 22px ui-sans-serif, system-ui, sans-serif';
+  c.fillText('v', fx, y4);
+  c.font = '700 14px ui-sans-serif, system-ui, sans-serif';
+  c.fillText('m', fx + wv4 + 1, y4 + 6);
+  c.font = '800 22px ui-sans-serif, system-ui, sans-serif';
+  c.fillText(' = ', fx + wv4 + wm4 + 3, y4);
+  c.fillText(t4_val, fx + w_vm_eq, y4);
+  c.fillStyle = '#475569';
+  c.font = '600 13px ui-sans-serif, system-ui, sans-serif';
+  c.fillText(' m/s', fx + w_vm_eq + w4_val, y4);
+  c.restore();
+}
+
+function drawZoomInset(c, X, Y, s, A, B, ux, uy, v, h, cw, ch){
+  const ir = getInsetRect(cw, ch);
+  const ix = ir.x, iy = ir.y, iw = ir.w, ih = ir.h;
+  c.save();
+  c.shadowColor = 'rgba(15,23,42,0.18)'; c.shadowBlur = 14; c.shadowOffsetY = 4;
+  c.fillStyle = 'rgba(255,255,255,0.97)';
+  roundRect(c, ix, iy, iw, ih, 10); c.fill();
+  c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+  c.strokeStyle = '#cbd5e1'; c.lineWidth = 1;
+  roundRect(c, ix, iy, iw, ih, 10); c.stroke();
+  c.save();
+  roundRect(c, ix, iy, iw, ih, 10); c.clip();
+  const Wz = 1.6, Hz = 1.14;
+  const scale_z = Math.min(iw / Wz, ih / Hz);
+  const icx = ix + iw / 2, icy = iy + ih / 2;
+  const Xz = x => icx + (x - A.x) * scale_z;
+  const Yz = y => icy - (y - A.y) * scale_z;
+  c.strokeStyle = '#f1f5f9'; c.lineWidth = 0.8;
+  const gstep = 0.25;
+  const xMinW = A.x - iw / (2 * scale_z), xMaxW = A.x + iw / (2 * scale_z);
+  const yMinW = A.y - ih / (2 * scale_z), yMaxW = A.y + ih / (2 * scale_z);
+  for (let gx = Math.ceil(xMinW / gstep) * gstep; gx <= xMaxW; gx += gstep){
+    c.beginPath(); c.moveTo(Xz(gx), iy); c.lineTo(Xz(gx), iy + ih); c.stroke();
+  }
+  for (let gy = Math.ceil(yMinW / gstep) * gstep; gy <= yMaxW; gy += gstep){
+    c.beginPath(); c.moveTo(ix, Yz(gy)); c.lineTo(ix + iw, Yz(gy)); c.stroke();
+  }
+  c.beginPath();
+  const N = 160;
+  const tMin = Math.max(0, s.t0 - 0.8);
+  const tMax = Math.min(T_MAX, s.t0 + Math.max(h + 0.3, 0.8));
+  for (let i = 0; i <= N; i++){
+    const t = tMin + (tMax - tMin) * i / N;
+    const p = pos(t);
+    if (i === 0) c.moveTo(Xz(p.x), Yz(p.y));
+    else c.lineTo(Xz(p.x), Yz(p.y));
+  }
+  c.strokeStyle = 'rgba(100,116,139,0.55)'; c.lineWidth = 1.8; c.stroke();
+  const Lz = 1.2;
+  c.beginPath();
+  c.moveTo(Xz(A.x - ux * Lz), Yz(A.y - uy * Lz));
+  c.lineTo(Xz(A.x + ux * Lz), Yz(A.y + uy * Lz));
+  c.strokeStyle = 'rgba(219,39,119,0.8)';
+  c.lineWidth = 2; c.setLineDash([6, 4]); c.stroke(); c.setLineDash([]);
+  c.beginPath();
+  c.moveTo(Xz(A.x), Yz(A.y)); c.lineTo(Xz(B.x), Yz(B.y));
+  c.strokeStyle = 'rgba(2,132,199,0.95)'; c.lineWidth = 2.6; c.stroke();
+  c.beginPath(); c.arc(Xz(A.x), Yz(A.y), 6.5, 0, Math.PI * 2);
+  c.fillStyle = '#0369a1'; c.fill();
+  c.lineWidth = 2.5; c.strokeStyle = '#fff'; c.stroke();
+  const mIn = B.x > xMinW && B.x < xMaxW && B.y > yMinW && B.y < yMaxW;
+  if (mIn && h > 0.015){
+    c.beginPath(); c.arc(Xz(B.x), Yz(B.y), 5.5, 0, Math.PI * 2);
+    c.fillStyle = '#7c3aed'; c.fill();
+    c.lineWidth = 2.5; c.strokeStyle = '#fff'; c.stroke();
+  }
+  c.restore();
+  c.font = '700 11px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = '#475569'; c.textAlign = 'left'; c.textBaseline = 'top';
+  c.fillText('Zoom sur M₀', ix + 11, iy + 9);
+  const mainScale = X(1) - X(0);
+  const zf = (scale_z / mainScale).toFixed(1);
+  c.font = '600 10px ui-sans-serif, system-ui, sans-serif';
+  c.fillStyle = '#94a3b8'; c.textAlign = 'right'; c.textBaseline = 'top';
+  c.fillText('×' + zf, ix + iw - 11, iy + 9);
+  c.font = '600 9.5px ui-sans-serif, system-ui, sans-serif';
+  c.textAlign = 'left'; c.textBaseline = 'bottom';
+  const ly = iy + ih - 9;
+  c.fillStyle = '#0891b2'; c.fillRect(ix + 11, ly - 6, 12, 3);
+  c.fillStyle = '#64748b'; c.fillText('corde', ix + 27, ly);
+  c.fillStyle = '#db2777'; c.fillRect(ix + 72, ly - 6, 12, 3);
+  c.fillStyle = '#64748b'; c.fillText('tangente', ix + 88, ly);
+  c.restore();
+}
+
+function drawCursor(c, X, Y, s, cw, ch){
+  if (!s.mousePx) return;
+  const ir = getInsetRect(cw, ch);
+  if (s.mousePx.x >= ir.x && s.mousePx.x <= ir.x + ir.w &&
+      s.mousePx.y >= ir.y && s.mousePx.y <= ir.y + ir.h) return;
+  if (s.mousePx.x >= hudRect.x && s.mousePx.x <= hudRect.x + hudRect.w &&
+      s.mousePx.y >= hudRect.y && s.mousePx.y <= hudRect.y + hudRect.h) return;
+  const V = VIEW;
+  const ox = X(0), oy = Y(0);
+  const scale = X(1) - X(0);
+  const wx = (s.mousePx.x - ox) / scale;
+  const wy = (oy - s.mousePx.y) / scale;
+  if (wx < 0 || wx > V.uMax || wy < 0 || wy > V.vMax) return;
+  const px = s.mousePx.x, py = s.mousePx.y;
+  c.save();
+  c.strokeStyle = 'rgba(2,132,199,0.30)'; c.lineWidth = 1; c.setLineDash([3, 4]);
+  c.beginPath();
+  c.moveTo(X(0), py); c.lineTo(X(V.uMax), py);
+  c.moveTo(px, Y(0)); c.lineTo(px, Y(V.vMax));
+  c.stroke(); c.setLineDash([]);
+  const label = (viewKey === 'traj')
+    ? '(' + wx.toFixed(2) + ' ; ' + wy.toFixed(2) + ') m'
+    : '(' + wx.toFixed(2) + ' s ; ' + wy.toFixed(2) + ' m)';
+  c.font = '600 12px ui-sans-serif, system-ui, sans-serif';
+  const tw = c.measureText(label).width;
+  const lx = Math.min(px + 12, cw - tw - 22);
+  const ly = Math.max(py - 14, 24);
+  c.fillStyle = 'rgba(255,255,255,0.97)';
+  c.strokeStyle = '#cbd5e1'; c.lineWidth = 1;
+  roundRect(c, lx - 7, ly - 12, tw + 14, 22, 5);
+  c.fill(); c.stroke();
+  c.fillStyle = '#0f172a'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText(label, lx, ly - 1);
+  c.beginPath(); c.arc(px, py, 3.2, 0, Math.PI * 2);
+  c.fillStyle = '#0284c7'; c.fill();
+  c.restore();
+}
+
+function renderScene(c, cw, ch, s, margins){
+  const ml = (margins && margins.ml) || 66;
+  const mr = (margins && margins.mr) || 62;
+  const mt = (margins && margins.mt) || 52;
+  const mb = (margins && margins.mb) || 60;
+  const aw = cw - ml - mr;
+  const ah = ch - mt - mb;
+  const scale = Math.min(aw / VIEW.uMax, ah / VIEW.vMax);
+  const ox = ml + (aw - VIEW.uMax * scale) / 2;
+  const oy = mt + (ah - VIEW.vMax * scale) / 2 + VIEW.vMax * scale;
+  const X = x => ox + x * scale;
+  const Y = y => oy - y * scale;
+  const localRenderInfo = { X, Y, cw, ch };
+  const grad = c.createLinearGradient(0, 0, 0, ch);
+  grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#f4f7fb');
+  c.fillStyle = grad; c.fillRect(0, 0, cw, ch);
+  drawGrid(c, X, Y);
+  drawAxes(c, X, Y);
+  if (s.mode === 'deriv') drawDeriv(c, X, Y, s, cw, ch);
+  else                    drawStrobe(c, X, Y, s);
+  drawCursor(c, X, Y, s, cw, ch);
+  return localRenderInfo;
+}
+
+function getWorldCoords(e, canvas, rInfo) {
+  const r = canvas.getBoundingClientRect();
+  const mx = e.clientX - r.left;
+  const my = e.clientY - r.top;
+  if (!rInfo || !rInfo.X) return { wx: 0, wy: 0 };
+  const scale = rInfo.X(1) - rInfo.X(0);
+  const wx = (mx - rInfo.X(0)) / scale;
+  const wy = (rInfo.Y(0) - my) / scale;
+  return { wx, wy };
+}
+
+function snapToStrobe(wx, wy) {
+  let best = null, bestDist = Infinity;
+  for (const p of strobePoints) {
+    const d = Math.hypot(p.x - wx, p.y - wy);
+    if (d < bestDist) { bestDist = d; best = p; }
+  }
+  return { point: best, dist: bestDist };
+}
+
+function closestT(wx, wy) {
+  let bestT = 0, bestDist = Infinity;
+  for (let t = 0; t <= T_MAX; t += 0.02) {
+    const p = pos(t);
+    const d = Math.hypot(p.x - wx, p.y - wy);
+    if (d < bestDist) { bestDist = d; bestT = t; }
+  }
+  return { t: bestT, dist: bestDist };
+}
+
+const canvas = document.getElementById('cv');
+const ctx = canvas.getContext('2d');
+
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const r = canvas.getBoundingClientRect();
+  canvas.width  = Math.round(Math.max(240, r.width)  * dpr);
+  canvas.height = Math.round(Math.max(180, r.height) * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+canvas.addEventListener('mousedown', function(e) {
+  if (state.mode !== 'deriv') return;
+  const { wx, wy } = getWorldCoords(e, canvas, renderInfo);
+  const pM = pos(state.t0 + state.h);
+  const pM0 = pos(state.t0);
+  if (Math.hypot(pM.x - wx, pM.y - wy) < 0.6) { dragTarget = 'M'; canvas.style.cursor = 'grabbing'; return; }
+  if (Math.hypot(pM0.x - wx, pM0.y - wy) < 0.6) { dragTarget = 'M0'; canvas.style.cursor = 'grabbing'; return; }
+  const snap = snapToStrobe(wx, wy);
+  if (snap.dist < 0.8) {
+    state.t0 = snap.point.t;
+    if (state.t0 + state.h > T_MAX) state.h = T_MAX - state.t0;
+    if (state.h < 0.1) state.h = 0.5;
+    dragTarget = 'M0';
+    canvas.style.cursor = 'grabbing';
+    renderDerivPanel();
+  }
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  const r = canvas.getBoundingClientRect();
+  state.mousePx = { x: e.clientX - r.left, y: e.clientY - r.top };
+  if (state.mode !== 'deriv') return;
+  if (!dragTarget) {
+    const { wx, wy } = getWorldCoords(e, canvas, renderInfo);
+    const pM = pos(state.t0 + state.h);
+    const pM0 = pos(state.t0);
+    if (Math.hypot(pM.x - wx, pM.y - wy) < 0.6 || Math.hypot(pM0.x - wx, pM0.y - wy) < 0.6) {
+      canvas.style.cursor = 'grab';
+    } else {
+      canvas.style.cursor = 'crosshair';
+    }
+    return;
+  }
+  const { wx, wy } = getWorldCoords(e, canvas, renderInfo);
+  const closest = closestT(wx, wy);
+  if (dragTarget === 'M0') {
+    state.t0 = closest.t;
+    if (state.t0 + state.h > T_MAX) state.h = T_MAX - state.t0;
+    if (state.h < 0.01) state.h = 0.01;
+    updateDerivValues();
+  } else if (dragTarget === 'M') {
+    let newH = closest.t - state.t0;
+    if (newH < 0.01) newH = 0.01;
+    if (newH > T_MAX - state.t0) newH = T_MAX - state.t0;
+    state.h = newH;
+    updateDerivValues();
+  }
+});
+
+canvas.addEventListener('mouseup', function() {
+  if (dragTarget) { dragTarget = null; canvas.style.cursor = 'crosshair'; }
+});
+canvas.addEventListener('mouseleave', function(){
+  state.mousePx = null;
+  if (dragTarget) { dragTarget = null; canvas.style.cursor = 'crosshair'; }
+});
+
+let lastTime = performance.now();
+function tick(now){
+  const dt = Math.min(0.06, (now - lastTime) / 1000);
+  lastTime = now;
+  updateState(state, dt);
+  renderInfo = renderScene(ctx, canvas.clientWidth, canvas.clientHeight, state);
+  requestAnimationFrame(tick);
+}
+
+const content = document.getElementById('content');
+const belowCanvas = document.getElementById('belowCanvas');
+let typesetTimer = null;
+
+function typeset(){
+  if (typesetTimer) clearTimeout(typesetTimer);
+  typesetTimer = setTimeout(function(){
+    typesetTimer = null;
+    if (window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise([content, belowCanvas]).catch(function(){});
+    }
+  }, 40);
+}
+
+function renderStrobePanel(){
+  const dt = state.dt;
+  const pts = state.points;
+  const nInt = pts.length - 1;
+  if (state.sel > nInt - 1) state.sel = 0;
+  const sel = state.sel;
+  const A = pts[sel], B = pts[sel + 1];
+  const d = segmentValue(A, B);
+  const vm = d / dt;
+  const vmAbs = Math.abs(vm);
+  let rows = '';
+  for (let i = 0; i < nInt; i++){
+    const dd = segmentValue(pts[i], pts[i + 1]);
+    rows += '<tr data-i="' + i + '" class="' + (i === sel ? 'sel' : '') + '">'
+         +  '<td>M<sub>' + i + '</sub>M<sub>' + (i + 1) + '</sub></td>'
+         +  '<td>' + dd.toFixed(2) + '</td>'
+         +  '<td>' + Math.abs(dd / dt).toFixed(2) + '</td>'
+         +  '</tr>';
+  }
+  const situationLabel = state.mode === 's1' ? 'Situation 1' : state.mode === 's2' ? 'Situation 2' : 'Situation 3';
+  const formula = (viewKey === 'traj')
+    ? '$v_m=\\dfrac{M_iM_{i+1}}{t_{i+1}-t_i}=\\dfrac{\\Delta d}{\\Delta t}$'
+    : '$v_m=\\dfrac{' + VIEW.deltaSym + '}{\\Delta t}=\\dfrac{'
+        + VIEW.vName + '(t_{i+1})-' + VIEW.vName + '(t_i)}{t_{i+1}-t_i}$';
+  const grandName = (viewKey === 'traj') ? 'la vitesse moyenne'
+                   : (viewKey === 'yt' ? 'la vitesse verticale moyenne' : 'la vitesse horizontale moyenne');
+  content.innerHTML =
+    '<h3>' + situationLabel + ' · vitesse moyenne</h3>' +
+    '<p class="lead">Un flash stroboscopique toutes les <b>Δt = ' + dt + ' s</b> : ' +
+      "l'oiseau est repéré en <b>" + pts.length + ' positions</b>.</p>' +
+    '<div class="math">' + formula + '</div>' +
+    '<table><thead><tr><th>Intervalle</th><th>' + VIEW.deltaLabel + '</th><th>v<sub>m</sub> (m/s)</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<div class="result">Entre <b>M<sub>' + sel + '</sub></b> et <b>M<sub>' + (sel + 1) + '</sub></b> : ' +
+      '$v_m=\\left|\\dfrac{' + d.toFixed(2) + '}{' + dt + '}\\right| \\approx$ <b>' + vmAbs.toFixed(2) + '</b> m/s</div>' +
+    '<button class="btn" id="replay">↻ Rejouer le vol</button>' +
+    '<p class="hint">Clique sur une ligne du tableau (ou sur un point du graphique) pour changer d\'intervalle.</p>';
+  content.querySelectorAll('tbody tr').forEach(function(tr){
+    tr.addEventListener('click', function(){ state.sel = parseInt(tr.dataset.i, 10); renderStrobePanel(); });
+  });
+  const rp = document.getElementById('replay');
+  if (rp) rp.addEventListener('click', function(){
+    state.animT = 0; state.revealed = 0; state.playing = true; state.flash = null;
+  });
+  typeset();
+}
+
+function getClosestHIdx(h) {
+  let best = 0, minDiff = Infinity;
+  H_VALUES.forEach((val, i) => {
+    const diff = Math.abs(val - h);
+    if (diff < minDiff) { minDiff = diff; best = i; }
+  });
+  return best;
+}
+
+function renderDerivPanel(){
+  const h = state.h;
+  const T0 = state.t0;
+  const A = pos(T0), B = pos(T0 + h);
+  const dx = B.x - A.x, dy = B.y - A.y;
+  const dM = Math.hypot(dx, dy);
+  const numer = (viewKey === 'traj') ? dM : dy;
+  const vm = numer / h;
+  const vmAbs = Math.abs(vm);
+  const vinst = instValue(T0);
+  let rows = '';
+  H_VALUES.forEach(function(hh, i){
+    const dd = segmentValue(pos(T0), pos(T0 + hh));
+    const isSel = Math.abs(hh - h) < 0.02;
+    rows += '<tr data-h="' + i + '" class="' + (isSel ? 'sel' : '') + '">'
+         +  '<td>' + hh + '</td><td>' + dd.toFixed(3) + '</td>'
+         +  '<td>' + Math.abs(dd / hh).toFixed(3) + '</td></tr>';
+  });
+  rows += '<tr class="limit-row"><td>h → 0</td><td>—</td><td>' + vinst.toFixed(2) + '</td></tr>';
+  const vmTitle = (viewKey === 'traj') ? 'Vitesse moyenne $v_m(h)$'
+                : (viewKey === 'yt' ? 'Vitesse verticale moyenne $v_{m,y}(h)$' : 'Vitesse horizontale moyenne $v_{m,x}(h)$');
+  const instTitle = (viewKey === 'traj') ? 'Vitesse instantanée $v(t_0)$'
+                  : (viewKey === 'yt' ? 'Vitesse verticale instantanée $v_y(t_0)$' : 'Vitesse horizontale instantanée $v_x(t_0)$');
+  const mainFormula = (viewKey === 'traj')
+    ? '$v_m(h)=\\dfrac{M_0M}{h}=\\dfrac{\\lVert\\overrightarrow{M_0M}\\rVert}{h}$'
+    : '$v_m(h)=\\dfrac{' + VIEW.deltaSym + '}{h}=\\dfrac{' + VIEW.vName + '(t_0+h)-' + VIEW.vName + '(t_0)}{h}$';
+  content.innerHTML =
+    '<h3>Objectif 2 · vers le nombre dérivé</h3>' +
+    '<p class="lead" id="leadDeriv">Le point <b>M₀</b> est à l\'instant <b>t₀ = ' + T0.toFixed(2) + ' s</b>.</p>' +
+    '<div class="math">' + mainFormula + '</div>' +
+    '<div class="slider-row">' +
+      '<label>Intervalle de temps : $h = \\Delta t =$ <b id="hVal">' + h.toFixed(2) + '</b> s</label>' +
+      '<input type="range" id="hSlider" min="0" max="' + (H_VALUES.length - 1) + '" step="1" value="' + getClosestHIdx(h) + '">' +
+    '</div>' +
+    '<div class="subst" id="substBox"></div>' +
+    '<div class="compare-card">' +
+      '<div class="cmp-cell"><div class="cmp-label">' + vmTitle + '</div>' +
+        '<div class="cmp-val" id="cmpVm">' + vmAbs.toFixed(2) + '</div><div class="cmp-unit">m/s</div></div>' +
+      '<div class="cmp-cell"><div class="cmp-label">' + instTitle + '</div>' +
+        '<div class="cmp-val inst">' + vinst.toFixed(2) + '</div><div class="cmp-unit">m/s</div></div>' +
+      '<div class="cmp-diff" id="cmpDiff"></div>' +
+    '</div>' +
+    '<table><thead><tr><th>h = Δt (s)</th><th>' + VIEW.deltaLabel + '</th><th>v<sub>m</sub> (m/s)</th></tr></thead>' +
+    '<tbody id="hBody">' + rows + '</tbody></table>';
+  belowCanvas.innerHTML =
+    '<div class="result" id="belowResult"></div>' +
+    '<div class="btn-row" style="margin-top:12px">' +
+      '<button class="btn btn-primary" id="animH">▶ Faire tendre $h = \\Delta t$ vers $0$</button>' +
+      '<button class="btn" id="resetH">↺ Réinitialiser</button>' +
+    '</div>' +
+    '<p class="hint">Cliquez sur la trajectoire pour déplacer $M_0$, ou glissez l\'oiseau pour modifier $h = \\Delta t$.</p>';
+  updateBelowCanvas();
+  const slider = document.getElementById('hSlider');
+  if (slider) slider.addEventListener('input', function(e){
+    state.hIdx = parseInt(e.target.value, 10);
+    state.h = H_VALUES[state.hIdx];
+    updateDerivValues();
+  });
+  const btnAnim = document.getElementById('animH');
+  if (btnAnim) btnAnim.addEventListener('click', animateH);
+  const btnReset = document.getElementById('resetH');
+  if (btnReset) btnReset.addEventListener('click', function(){
+    if (hTimer){ clearTimeout(hTimer); hTimer = null; }
+    state.t0 = 2.5; state.h = 0.5; state.hIdx = getClosestHIdx(0.5);
+    renderDerivPanel();
+  });
+  updateDerivValues();
+  typeset();
+}
+
+function updateBelowCanvas() {
+  const resultDiv = document.getElementById('belowResult');
+  if (resultDiv) {
+    const vinst = instValue(state.t0);
+    const what = (viewKey === 'traj')
+      ? 'La vitesse moyenne $v_m(h)$ tend vers la <b>vitesse instantanée</b> '
+      : (viewKey === 'yt'
+          ? 'La pente de la corde tend vers la pente de la tangente, c\'est-à-dire la <b>vitesse verticale instantanée</b> '
+          : 'La pente de la corde tend vers la pente de la tangente, c\'est-à-dire la <b>vitesse horizontale instantanée</b> ');
+    resultDiv.innerHTML =
+      '<b>Quand $h = \\Delta t \\to 0$ :</b><br>' +
+      '• La corde $(M_0M)$ tend vers la <b>tangente</b> en $M_0$.<br>' +
+      '• Le vecteur $\\dfrac{\\overrightarrow{M_0M}}{h}$ tend vers $\\overrightarrow{v}(t_0)$.<br>' +
+      '• ' + what + '$\\approx ' + vinst.toFixed(2) + '\\ \\text{m/s}$.<br>' +
+      'Ce nombre limite est le <b>nombre dérivé</b> de la fonction représentée à l\'instant $t_0$.';
+  }
+}
+
+function updateDerivValues() {
+  const h = state.h;
+  const t0 = state.t0;
+  const A = pos(t0), B = pos(t0 + h);
+  const dx = B.x - A.x, dy = B.y - A.y;
+  const dM = Math.hypot(dx, dy);
+  const numer = (viewKey === 'traj') ? dM : dy;
+  const vm = numer / h;
+  const vmAbs = Math.abs(vm);
+  const vinst = instValue(t0);
+  const hVal = document.getElementById('hVal');
+  if (hVal) hVal.textContent = h.toFixed(2);
+  const slider = document.getElementById('hSlider');
+  if (slider) slider.value = getClosestHIdx(h);
+  const subst = document.getElementById('substBox');
+  if (subst) {
+    if (viewKey === 'traj'){
+      const sign = dy >= 0 ? '+' : '';
+      subst.innerHTML =
+        '$$h = \\Delta t = ' + h.toFixed(2) + '\\ \\text{s}$$' +
+        '$$v_m(h) = \\dfrac{M_0M}{h} = \\dfrac{\\sqrt{(\\Delta x)^2+(\\Delta y)^2}}{h}' +
+        ' = \\dfrac{\\sqrt{(' + dx.toFixed(2) + ')^2+(' + sign + dy.toFixed(2) + ')^2}}{' + h.toFixed(2) + '}' +
+        ' = \\dfrac{' + dM.toFixed(3) + '}{' + h.toFixed(2) + '} = ' + vmAbs.toFixed(2) + '\\ \\text{m/s}$$';
+    } else {
+      const vn = VIEW.vName;
+      subst.innerHTML =
+        '$$h = \\Delta t = ' + h.toFixed(2) + '\\ \\text{s}$$' +
+        '$$v_m(h) = \\left| \\dfrac{\\Delta ' + vn + '}{h} \\right| = \\left| \\dfrac{' + vn + '(t_0+h)-' + vn + '(t_0)}{h} \\right|' +
+        ' = \\left| \\dfrac{' + dy.toFixed(3) + '}{' + h.toFixed(2) + '} \\right|' +
+        ' = ' + vmAbs.toFixed(2) + '\\ \\text{m/s}$$';
+    }
+  }
+  const cmpVm = document.getElementById('cmpVm');
+  if (cmpVm) cmpVm.textContent = vmAbs.toFixed(2);
+  const cmpDiff = document.getElementById('cmpDiff');
+  if (cmpDiff) {
+    const diff = Math.abs(vmAbs - vinst);
+    cmpDiff.innerHTML = 'Écart : $|v_m(h)-v(t_0)| = ' + diff.toFixed(2) + '\\ \\text{m/s}$' +
+      ' &nbsp;—&nbsp; cet écart tend vers 0 quand $h = \\Delta t \\to 0$.';
+  }
+  const body = document.getElementById('hBody');
+  if (body) {
+    const closestIdx = getClosestHIdx(h);
+    const minDiff = Math.abs(H_VALUES[closestIdx] - h);
+    Array.prototype.forEach.call(body.children, function(tr, i) {
+      if (tr.classList.contains('limit-row')) return;
+      tr.classList.toggle('sel', i === closestIdx && minDiff < 0.05);
+    });
+  }
+  const lead = document.getElementById('leadDeriv');
+  if (lead) {
+    lead.innerHTML = 'Le point <b>M₀</b> est à l\'instant <b>t₀ = ' + t0.toFixed(2) + ' s</b>. ' +
+      'On rapproche le point <b>M</b> de <b>M₀</b> en faisant tendre <b>h = Δt</b> vers 0.';
+  }
+  updateBelowCanvas();
+  typeset();
+}
+
+function animateH() {
+  if (hTimer) return;
+  state.hIdx = 0;
+  state.h = H_VALUES[0];
+  updateDerivValues();
+  const step = () => {
+    state.hIdx++;
+    if (state.hIdx >= H_VALUES.length) { hTimer = null; return; }
+    state.h = H_VALUES[state.hIdx];
+    updateDerivValues();
+    hTimer = setTimeout(step, 450);
+  };
+  hTimer = setTimeout(step, 550);
+}
+
+function renderPanel(){
+  if (state.mode === 'deriv') {
+    document.getElementById('belowCanvas').style.display = 'block';
+    renderDerivPanel();
+  } else {
+    document.getElementById('belowCanvas').style.display = 'none';
+    renderStrobePanel();
+  }
+}
+
+function setMode(m){
+  state.mode = m;
+  document.querySelectorAll('.tab').forEach(function(b){
+    b.classList.toggle('active', b.dataset.mode === m);
+  });
+  if (hTimer){ clearTimeout(hTimer); hTimer = null; }
+  dragTarget = null;
+  canvas.style.cursor = 'crosshair';
+
+  const mainLayout = document.getElementById('mainLayout');
+  const pythonView = document.getElementById('pythonView');
+  if (m === 'python') {
+    mainLayout.style.display = 'none';
+    pythonView.style.display = 'block';
+    initPythonView();
+    return;
+  } else {
+    mainLayout.style.display = '';
+    pythonView.style.display = 'none';
+  }
+
+  if (m === 'deriv'){
+    state.playing = false;
+    renderPanel();
+  } else {
+    state.dt = (m === 's1') ? 1 : (m === 's2') ? 0.5 : 0.25;
+    state.points = buildPoints(state.dt);
+    state.sel = 0;
+    state.animT = 0;
+    state.revealed = 0;
+    state.playing = true;
+    state.flash = null;
+    renderPanel();
+  }
+}
+
+document.querySelectorAll('.tab').forEach(function(b){
+  b.addEventListener('click', function(){ setMode(b.dataset.mode); });
+});
+
+function setTrajectory(key){
+  currentTrajKey = key;
+  if (fsWindow && !fsWindow.closed) { fsWindow.close(); fsWindow = null; }
+  if (hTimer){ clearTimeout(hTimer); hTimer = null; }
+  currentTraj = TRAJECTORIES[key];
+  basePos = currentTraj.pos;
+  baseVel = currentTraj.vel;
+  applyView();
+  strobePoints = buildPoints(0.25);
+  state.t0 = 2.5; state.h = 0.5; state.hIdx = getClosestHIdx(0.5);
+  state.sel = 0; state.animT = 0; state.revealed = 0;
+  state.playing = true; state.flash = null;
+  state.points = buildPoints(state.dt);
+  dragTarget = null;
+  canvas.style.cursor = 'crosshair';
+  updateHints();
+  renderPanel();
+}
+
+function setView(key){
+  if (key === viewKey) return;
+  viewKey = key;
+  if (fsWindow && !fsWindow.closed) { fsWindow.close(); fsWindow = null; }
+  if (hTimer){ clearTimeout(hTimer); hTimer = null; }
+  applyView();
+  strobePoints = buildPoints(0.25);
+  state.points = buildPoints(state.dt);
+  state.sel = 0; state.animT = 0; state.revealed = 0;
+  state.playing = true; state.flash = null;
+  dragTarget = null;
+  canvas.style.cursor = 'crosshair';
+  updateHints();
+  renderPanel();
+}
+
+function updateHints(){
+  const hint = document.getElementById('trajHint');
+  if (!hint) return;
+  let extra = '';
+  if (viewKey === 'yt'){
+    extra = ' — Graphe de la hauteur y en fonction du temps t : la pente de la corde est la vitesse verticale moyenne, celle de la tangente la vitesse verticale instantanée.';
+  } else if (viewKey === 'xt'){
+    extra = ' — Graphe de la distance horizontale x en fonction du temps t : la pente de la corde est la vitesse horizontale moyenne, celle de la tangente la vitesse horizontale instantanée.';
+  }
+  hint.textContent = currentTraj.hint + extra;
+}
+
+document.getElementById('trajSelect').addEventListener('change', function(e){
+  setTrajectory(e.target.value);
+});
+document.getElementById('viewSelect').addEventListener('change', function(e){
+  setView(e.target.value);
+});
+
+/* ============================================================
+   PLEIN ÉCRAN
+   ============================================================ */
+function openFullscreen(){
+  if (fsWindow && !fsWindow.closed) { fsWindow.focus(); return; }
+  const w = window.open('', '_blank');
+  if (!w){ alert("Veuillez autoriser les fenêtres pop-up."); return; }
+  fsWindow = w;
+  w.document.title = 'Oiseau stroboscopique — graphique plein écran';
+
+  const style = w.document.createElement('style');
+  style.textContent = `
+    html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+      background:#f8fafc;font-family:ui-sans-serif,system-ui,sans-serif}
+    #fsCanvas{display:block;width:100vw;height:100vh}
+    #fsClose{position:fixed;top:14px;right:14px;padding:8px 14px;
+      background:rgba(255,255,255,.96);border:1px solid #cbd5e1;border-radius:8px;
+      color:#334155;font-size:13px;font-family:inherit;font-weight:600;
+      cursor:pointer;transition:.15s;box-shadow:0 2px 8px rgba(15,23,42,.08);
+      backdrop-filter:blur(4px);z-index:20}
+    #fsClose:hover{background:#fff;border-color:#3b82f6;color:#2563eb;
+      transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,130,246,.25)}
+    #fsHint{position:fixed;bottom:14px;right:14px;font-size:12px;color:#64748b;
+      background:rgba(255,255,255,.92);padding:6px 14px;border-radius:6px;
+      border:1px solid #e2e8f0;pointer-events:none;font-family:inherit;z-index:5}
+
+    @keyframes fsPanelIn{
+      from{opacity:0;transform:translateY(-12px) scale(.96)}
+      to{opacity:1;transform:none}
+    }
+    #fsPanel{
+      position:fixed;top:64px;right:14px;width:min(352px,40vw);
+      max-height:calc(100vh - 96px);overflow-y:auto;overflow-x:hidden;
+      padding:12px 14px 10px;background:rgba(255,255,255,.97);
+      border:1px solid #e2e8f0;border-radius:14px;
+      box-shadow:0 20px 50px -20px rgba(15,23,42,.45), 0 2px 8px rgba(15,23,42,.06);
+      font-family:ui-sans-serif,system-ui,sans-serif;
+      color:#0f172a;font-size:12px;z-index:10;
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      animation:fsPanelIn .38s cubic-bezier(.2,.9,.3,1.2) both;
+      scrollbar-width:thin;
+    }
+    #fsPanel.hidden{display:none}
+    #fsPanel::-webkit-scrollbar{width:7px}
+    #fsPanel::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+    #fsPanel .fs-cmp{display:grid;grid-template-columns:1fr 1fr;
+      border:1px solid #e2e8f0;border-radius:10px;overflow:visible;background:#f8fafc;}
+    #fsPanel .fs-cell{padding:8px 6px 6px;text-align:center;
+      transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+      transform-origin:center;position:relative;border-radius:9px;}
+    #fsPanel .fs-cell + .fs-cell{border-left:1px solid #e2e8f0}
+    #fsPanel .fs-cell:hover{transform:scale(1.08);background:#fff;z-index:3;
+      box-shadow:0 10px 24px -12px rgba(15,23,42,.45);}
+    #fsPanel .fs-label{font-size:10px;line-height:1.25;color:#64748b;font-weight:600}
+    #fsPanel .fs-label sub{font-size:.8em}
+    #fsPanel .fs-val{font-size:1.42rem;font-weight:800;line-height:1.15;color:#0891b2;
+      font-variant-numeric:tabular-nums;transition:color .18s ease;}
+    #fsPanel .fs-val.inst{color:#db2777}
+    #fsPanel .fs-cell:hover .fs-val{text-shadow:0 2px 10px rgba(8,145,178,.25)}
+    #fsPanel .fs-cell:hover .fs-val.inst{text-shadow:0 2px 10px rgba(219,39,119,.25)}
+    #fsPanel .fs-unit{font-size:9px;color:#94a3b8;letter-spacing:.3px}
+    #fsPanel .fs-diff{grid-column:1/-1;background:#fff7ed;border-top:1px solid #e2e8f0;
+      padding:6px 9px;text-align:center;font-size:10.5px;line-height:1.45;color:#9a3412;
+      transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+      border-radius:0 0 9px 9px;}
+    #fsPanel .fs-diff:hover{transform:scale(1.05);background:#ffedd5;z-index:3;
+      position:relative;box-shadow:0 10px 24px -12px rgba(154,52,18,.45);}
+    #fsPanel .fs-diff b{color:#c2410c;font-size:1.05em}
+    #fsPanel .fs-legend{display:flex;flex-wrap:wrap;gap:2px 4px;margin:9px 0 2px;
+      font-size:10px;color:#475569;}
+    #fsPanel .fs-lg{display:inline-flex;align-items:center;gap:4px;padding:2px 5px;border-radius:6px;
+      transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+      transform-origin:center;cursor:default;}
+    #fsPanel .fs-lg:hover{transform:scale(1.16);background:#e0f2fe;z-index:3;
+      position:relative;box-shadow:0 6px 16px -10px rgba(15,23,42,.5);}
+    #fsPanel .sw{display:inline-block;width:13px;height:3px;border-radius:2px;flex:none}
+    #fsPanel .fs-frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1;
+      font-style:italic;font-size:9.5px;}
+    #fsPanel .fs-frac .n{border-bottom:1px solid currentColor;padding:0 2px 1px}
+    #fsPanel .fs-frac .d{padding-top:1px}
+    #fsPanel .c-cyan{color:#0891b2}
+    #fsPanel .fs-tbl{display:block;margin-top:4px}
+    #fsPanel .fs-th,#fsPanel .fs-tr{display:grid;grid-template-columns:1.15fr 1fr 1fr;
+      align-items:center;padding:2px 5px;border-radius:6px;}
+    #fsPanel .fs-th{font-size:10px;font-weight:600;color:#64748b;
+      border-bottom:1px solid #e2e8f0;border-radius:0;padding-bottom:4px;}
+    #fsPanel .fs-th span{text-align:right}
+    #fsPanel .fs-th span:first-child{text-align:left}
+    #fsPanel .fs-tr{font-size:10.5px;color:#334155;font-variant-numeric:tabular-nums;
+      transition:transform .16s ease,background .16s ease,box-shadow .16s ease;
+      transform-origin:center;}
+    #fsPanel .fs-tr span{text-align:right}
+    #fsPanel .fs-tr span:first-child{text-align:left}
+    #fsPanel .fs-tr:hover{transform:scale(1.045);background:#eff6ff;z-index:3;
+      position:relative;box-shadow:0 8px 18px -12px rgba(15,23,42,.6);}
+    #fsPanel .fs-tr.sel{background:#eff6ff;box-shadow:inset 3px 0 0 #0284c7}
+    #fsPanel .fs-tr.sel span{color:#0369a1;font-weight:700}
+    #fsPanel .fs-tr.limit{background:#fef2f2;border-top:2px dashed #fca5a5;margin-top:2px;
+      border-radius:0 0 6px 6px;}
+    #fsPanel .fs-tr.limit span{color:#b91c1c;font-weight:700;font-style:italic}
+    #fsPanel .fs-actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px;}
+    #fsPanel .fs-btn{flex:1 1 auto;padding:7px 8px;border-radius:8px;cursor:pointer;
+      border:1px solid #cbd5e1;background:#fff;color:#334155;
+      font-family:inherit;font-size:11px;font-weight:700;
+      transition:transform .18s ease,background .18s ease,box-shadow .18s ease,color .18s ease;
+      transform-origin:center;white-space:nowrap;}
+    #fsPanel .fs-btn:hover{transform:scale(1.08);background:#eff6ff;border-color:#3b82f6;
+      color:#1d4ed8;box-shadow:0 8px 18px -12px rgba(59,130,246,.55);}
+    #fsPanel .fs-btn-primary{background:linear-gradient(180deg,#0284c7,#0369a1);
+      color:#fff;border-color:#0369a1;}
+    #fsPanel .fs-btn-primary:hover{background:linear-gradient(180deg,#0369a1,#075985);
+      color:#fff;border-color:#075985;box-shadow:0 8px 18px -12px rgba(3,105,161,.6);}
+    #fsPanel .fs-hint{margin:4px 0 0;padding:6px 7px;border-radius:8px;
+      font-size:10.5px;line-height:1.45;color:#64748b;background:#f8fafc;
+      transition:transform .18s ease,background .18s ease,color .18s ease;
+      transform-origin:left center;}
+    #fsPanel .fs-hint:hover{transform:scale(1.025);background:#f1f5f9;color:#475569;}
+  `;
+  w.document.head.appendChild(style);
+
+  const nc = w.document.createElement('canvas');
+  nc.id = 'fsCanvas';
+  w.document.body.appendChild(nc);
+
+  const closeBtn = w.document.createElement('button');
+  closeBtn.id = 'fsClose';
+  closeBtn.textContent = '✕ Fermer';
+  w.document.body.appendChild(closeBtn);
+
+  const hint = w.document.createElement('div');
+  hint.id = 'fsHint';
+  hint.textContent = 'Appuyez sur Échap pour fermer · glissez M₀ ou M pour interagir';
+  w.document.body.appendChild(hint);
+
+  const panel = w.document.createElement('div');
+  panel.id = 'fsPanel';
+  panel.innerHTML =
+    '<div class="fs-cmp">' +
+      '<div class="fs-cell"><div class="fs-label">Vitesse moyenne v<sub>m</sub>(h)</div>' +
+        '<div class="fs-val" id="fsVm">—</div><div class="fs-unit">m/s</div></div>' +
+      '<div class="fs-cell"><div class="fs-label">Vitesse instantanée v(t₀)</div>' +
+        '<div class="fs-val inst" id="fsVi">—</div><div class="fs-unit">m/s</div></div>' +
+      '<div class="fs-diff" id="fsDiff">Écart : —</div>' +
+    '</div>' +
+    '<div class="fs-legend">' +
+      '<span class="fs-lg"><i class="sw" style="background:#0891b2"></i>' +
+        '<span class="fs-frac c-cyan"><span class="n">M₀M⃗</span><span class="d">h</span></span></span>' +
+      '<span class="fs-lg"><i class="sw" style="background:#db2777"></i>v⃗(t₀)</span>' +
+      '<span class="fs-lg"><i class="sw" style="background:#0284c7"></i>corde M₀M</span>' +
+      '<span class="fs-lg"><i class="sw" style="background:#db2777;opacity:.55"></i>tangente</span>' +
+    '</div>' +
+    '<div class="fs-tbl">' +
+      '<div class="fs-th"><span>h = Δt (s)</span><span id="fsColDelta">Δd (m)</span>' +
+        '<span>v<sub>m</sub> (m/s)</span></div>' +
+      '<div id="fsTbody"></div>' +
+    '</div>' +
+    '<div class="fs-actions">' +
+      '<button class="fs-btn fs-btn-primary" id="fsAnimH">▶ Faire tendre h = Δt vers 0</button>' +
+      '<button class="fs-btn" id="fsResetH">↻ Réinitialiser</button>' +
+    '</div>' +
+    '<p class="fs-hint">Cliquez sur la trajectoire pour déplacer M₀, ou glissez l\'oiseau pour modifier h = Δt.</p>';
+  w.document.body.appendChild(panel);
+
+  window.__fs = {
+    state: cloneState(state),
+    update: updateState, render: renderScene,
+    pos, vel, strobePoints, closestT, snapToStrobe, getWorldCoords,
+    T_MAX, H_VALUES, instValue, segmentValue,
+    getView: function(){ return VIEW; },
+    trajKey: currentTrajKey
+  };
+
+  const script = w.document.createElement('script');
+  script.textContent = '(' + fullscreenScript.toString() + ')();';
+  w.document.body.appendChild(script);
+
+  closeBtn.addEventListener('click', function(){ w.close(); });
+  w.addEventListener('keydown', function(e){ if (e.key === 'Escape') w.close(); });
+  w.addEventListener('beforeunload', function(){ if (fsWindow === w) fsWindow = null; });
+
+  setTimeout(function(){
+    try { w.resizeTo(screen.availWidth, screen.availHeight); w.moveTo(0, 0); } catch(e){}
+    try { w.document.documentElement.requestFullscreen().catch(function(){}); } catch(e){}
+  }, 80);
+}
+
+function fullscreenScript(){
+  const nc = document.getElementById('fsCanvas');
+  const nctx = nc.getContext('2d');
+  const fs = window.opener && window.opener.__fs;
+  if (!fs){
+    document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#b91c1c">Erreur de communication.</div>';
+    return;
+  }
+  const fState = fs.state;
+  let fRenderInfo = null;
+  let dragTarget = null;
+
+  const FS_H_VALUES = fs.H_VALUES.slice();
+  FS_H_VALUES.push(1e-5, 1e-10);
+  if (fs.trajKey === 'droite' || fs.trajKey === 'cercle') FS_H_VALUES.push(1e-15);
+
+  function fmtH(hh){
+    if (hh >= 0.01) return String(hh);
+    const exp = Math.round(Math.log10(hh));
+    const sup = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+    return '10' + String(exp).split('').map(ch => sup[ch] || ch).join('');
+  }
+  function fmtDD(x){
+    if (x === 0) return '0.000';
+    if (Math.abs(x) < 1e-3) return x.toExponential(3).replace('e-','e−');
+    return x.toFixed(3);
+  }
+  function segmentValueForH(t0, hh){
+    if (hh >= 1e-7) return fs.segmentValue(fs.pos(t0), fs.pos(t0 + hh));
+    const v = fs.vel(t0);
+    const V = fs.getView();
+    return V.key === 'traj' ? Math.hypot(v.x, v.y) * hh : v.y * hh;
+  }
+
+  const panel = document.getElementById('fsPanel');
+  const vmEl = document.getElementById('fsVm');
+  const viEl = document.getElementById('fsVi');
+  const diffEl = document.getElementById('fsDiff');
+  const tbodyEl = document.getElementById('fsTbody');
+  const colDeltaEl = document.getElementById('fsColDelta');
+  colDeltaEl.textContent = fs.getView().deltaLabel;
+
+  const rowEls = [];
+  FS_H_VALUES.forEach(function(hh){
+    const r = document.createElement('div');
+    r.className = 'fs-tr';
+    r.innerHTML = '<span>' + fmtH(hh) + '</span><span class="dd">—</span><span class="vv">—</span>';
+    tbodyEl.appendChild(r);
+    rowEls.push(r);
+  });
+  const limitRow = document.createElement('div');
+  limitRow.className = 'fs-tr limit';
+  limitRow.innerHTML = '<span>h → 0</span><span>—</span><span class="vv">—</span>';
+  tbodyEl.appendChild(limitRow);
+  const limitValEl = limitRow.querySelector('.vv');
+  panel.addEventListener('mouseenter', function(){ fState.mousePx = null; });
+
+  let lastSig = '';
+  let fsHTimer = null;
+  const btnAnimH = document.getElementById('fsAnimH');
+  if (btnAnimH) btnAnimH.addEventListener('click', function(){
+    if (fsHTimer) return;
+    let idx = 0;
+    fState.h = FS_H_VALUES[0];
+    lastSig = '';
+    const step = function(){
+      idx++;
+      if (idx >= FS_H_VALUES.length){ fsHTimer = null; return; }
+      fState.h = FS_H_VALUES[idx]; lastSig = '';
+      fsHTimer = setTimeout(step, 450);
+    };
+    fsHTimer = setTimeout(step, 550);
+  });
+  const btnResetH = document.getElementById('fsResetH');
+  if (btnResetH) btnResetH.addEventListener('click', function(){
+    if (fsHTimer){ clearTimeout(fsHTimer); fsHTimer = null; }
+    fState.t0 = 2.5; fState.h = 0.5; lastSig = '';
+  });
+
+  function updatePanel(){
+    if (fState.mode !== 'deriv'){ panel.classList.add('hidden'); return; }
+    panel.classList.remove('hidden');
+    const t0 = fState.t0, h = fState.h;
+    const sig = t0.toFixed(4) + '|' + h.toFixed(4);
+    if (sig === lastSig) return;
+    lastSig = sig;
+    const numer = segmentValueForH(t0, h);
+    const vm = Math.abs(numer / h);
+    const vi = fs.instValue(t0);
+    vmEl.textContent = vm.toFixed(2);
+    viEl.textContent = vi.toFixed(2);
+    diffEl.innerHTML = 'Écart : |v<sub>m</sub>(h) − v(t₀)| = <b>' +
+      Math.abs(vm - vi).toFixed(2) + '</b> m/s — tend vers 0 quand h = Δt → 0.';
+    let bestI = 0, bestD = Infinity;
+    rowEls.forEach(function(r, i){
+      const hh = FS_H_VALUES[i];
+      const dd = segmentValueForH(t0, hh);
+      r.children[1].textContent = fmtDD(dd);
+      r.children[2].textContent = Math.abs(dd / hh).toFixed(3);
+      const d = Math.abs(hh - h);
+      if (d < bestD){ bestD = d; bestI = i; }
+    });
+    rowEls.forEach(function(r, i){
+      r.classList.toggle('sel', i === bestI && bestD < 0.02);
+    });
+    limitValEl.textContent = vi.toFixed(2);
+  }
+
+  function size(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    nc.width = Math.round(window.innerWidth * dpr);
+    nc.height = Math.round(window.innerHeight * dpr);
+    nctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', size);
+  size();
+
+  function computeMargins(cw, ch){
+    const isDeriv = fState.mode === 'deriv';
+    const panelVisible = isDeriv && !panel.classList.contains('hidden');
+    let mr = 62;
+    if (panelVisible){
+      const panelW = panel.getBoundingClientRect().width;
+      mr = panelW + 24;
+    }
+    const hudW = 320, hudH = 170, zoomH = 230;
+    let ml = Math.min(hudW, cw * 0.3);
+    let mt = Math.min(hudH, ch * 0.2);
+    let mb = Math.min(zoomH, ch * 0.25);
+    mr = Math.min(mr, cw * 0.45);
+    const maxHoriz = cw * 0.8, maxVert = ch * 0.8;
+    if (ml + mr > maxHoriz) { const s = maxHoriz / (ml + mr); ml *= s; mr *= s; }
+    if (mt + mb > maxVert) { const s = maxVert / (mt + mb); mt *= s; mb *= s; }
+    return { ml, mr, mt, mb };
+  }
+
+  nc.addEventListener('mousedown', function(e) {
+    if (fState.mode !== 'deriv') return;
+    const { wx, wy } = fs.getWorldCoords(e, nc, fRenderInfo);
+    const pM = fs.pos(fState.t0 + fState.h);
+    const pM0 = fs.pos(fState.t0);
+    if (Math.hypot(pM.x - wx, pM.y - wy) < 0.6) { dragTarget = 'M'; nc.style.cursor = 'grabbing'; return; }
+    if (Math.hypot(pM0.x - wx, pM0.y - wy) < 0.6) { dragTarget = 'M0'; nc.style.cursor = 'grabbing'; return; }
+    const snap = fs.snapToStrobe(wx, wy);
+    if (snap.dist < 0.8) {
+      fState.t0 = snap.point.t;
+      if (fState.t0 + fState.h > fs.T_MAX) fState.h = fs.T_MAX - fState.t0;
+      if (fState.h < 0.1) fState.h = 0.5;
+      dragTarget = 'M0';
+      nc.style.cursor = 'grabbing';
+    }
+  });
+
+  nc.addEventListener('mousemove', function(e) {
+    const r = nc.getBoundingClientRect();
+    fState.mousePx = { x: e.clientX - r.left, y: e.clientY - r.top };
+    if (fState.mode !== 'deriv') return;
+    if (!dragTarget) {
+      const { wx, wy } = fs.getWorldCoords(e, nc, fRenderInfo);
+      const pM = fs.pos(fState.t0 + fState.h);
+      const pM0 = fs.pos(fState.t0);
+      nc.style.cursor = (Math.hypot(pM.x - wx, pM.y - wy) < 0.6 || Math.hypot(pM0.x - wx, pM0.y - wy) < 0.6) ? 'grab' : 'crosshair';
+      return;
+    }
+    const { wx, wy } = fs.getWorldCoords(e, nc, fRenderInfo);
+    const closest = fs.closestT(wx, wy);
+    if (dragTarget === 'M0') {
+      fState.t0 = closest.t;
+      if (fState.t0 + fState.h > fs.T_MAX) fState.h = fs.T_MAX - fState.t0;
+      if (fState.h < 0.01) fState.h = 0.01;
+    } else if (dragTarget === 'M') {
+      let newH = closest.t - fState.t0;
+      if (newH < 0.01) newH = 0.01;
+      if (newH > fs.T_MAX - fState.t0) newH = fs.T_MAX - fState.t0;
+      fState.h = newH;
+    }
+  });
+
+  nc.addEventListener('mouseup', function() { if (dragTarget) { dragTarget = null; nc.style.cursor = 'crosshair'; } });
+  nc.addEventListener('mouseleave', function() { fState.mousePx = null; if (dragTarget) { dragTarget = null; nc.style.cursor = 'crosshair'; } });
+
+  let last = performance.now();
+  function loop(t){
+    const dt = Math.min(0.06, (t - last) / 1000);
+    last = t;
+    fs.update(fState, dt);
+    const cw = window.innerWidth, ch = window.innerHeight;
+    const margins = computeMargins(cw, ch);
+    fRenderInfo = fs.render(nctx, cw, ch, fState, margins);
+    updatePanel();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('fsBtn').addEventListener('click', openFullscreen);
+
+/* ============================================================
+   PYTHON — EXERCICES
+   ============================================================ */
+const PY_EXERCISES = {
+  analyse: {
+    title: 'Analyser un programme',
+    hint: "Que calcule ce programme ? Combien de fois la boucle s'exécute-t-elle ? Observez l'évolution de i, distance et vitesse à chaque étape. Est-ce cohérent avec une vitesse constante de 1,7 m/s ?",
+    code:
+`positions = [0, 1.7, 3.4, 5.1, 6.8]
+temps = [0, 1, 2, 3, 4]
+
+i = 0
+while i < 4:
+    distance = positions[i + 1] - positions[i]
+    duree = temps[i + 1] - temps[i]
+    vitesse = distance / duree
+    i = i + 1
+
+moyenne = (positions[4] - positions[0]) / (temps[4] - temps[0])`
+  },
+  convert: {
+    title: 'Convertir for ↔ while',
+    hint: "Le programme utilise une boucle for. Transformez-la en boucle while équivalente : initialisez i = 0 avant la boucle, remplacez 'for i in range(4):' par 'while i < 4:', et incrémentez i à la fin du corps. Vérifiez que la trace est la même.",
+    code:
+`positions = [0, 0.8, 1.7, 2.4, 3.3]
+temps = [0, 0.5, 1.0, 1.5, 2.0]
+
+total = 0
+for i in range(4):
+    distance = positions[i + 1] - positions[i]
+    duree = temps[i + 1] - temps[i]
+    total = total + distance / duree
+
+moyenne = total / 4`
+  },
+  complete: {
+    title: 'Compléter un programme (Bac)',
+    hint: "Complétez les lignes marquées # À compléter. Objectif : calculer la distance M₀M avec sqrt((x1-x0)**2 + (y1-y0)**2), puis v_m = distance / h, et stocker le résultat dans derniere_vitesse. Vérifiez que derniere_vitesse se rapproche de ≈ 3,78 m/s.",
+    code:
+`t0 = 2.5
+h = 1
+derniere_vitesse = 0
+
+while h > 0.01:
+    t1 = t0 + h
+    x0 = 1 + 1.6 * t0 + 0.6 * sin(2.4 * t0 - 0.6)
+    y0 = 3.8 + 2.6 * sin(1.2 * t0 - 0.3)
+    x1 = 1 + 1.6 * t1 + 0.6 * sin(2.4 * t1 - 0.6)
+    y1 = 3.8 + 2.6 * sin(1.2 * t1 - 0.3)
+    # À compléter : calculer la distance M₀M
+    # À compléter : calculer v_m = distance / h
+    # À compléter : stocker v_m dans derniere_vitesse
+    h = h / 2`
+  },
+  write: {
+    title: 'Écrire un programme',
+    hint: "Écrivez un programme qui, pour chaque h de la liste [1, 0.5, 0.25, 0.1, 0.05, 0.01], calcule v_m(h) pour la trajectoire de l'oiseau (t₀ = 2,5) et ajoute cette valeur à la liste vitesses (utilisez vitesses = vitesses + [v_m]). Calculez ensuite la moyenne de ces vitesses dans la variable moyenne.",
+    code:
+`t0 = 2.5
+liste_h = [1, 0.5, 0.25, 0.1, 0.05, 0.01]
+vitesses = []
+
+# À vous d'écrire la boucle qui parcourt liste_h
+# et ajoute v_m(h) dans vitesses.
+# Rappel : x(t) = 1 + 1.6*t + 0.6*sin(2.4*t - 0.6)
+#          y(t) = 3.8 + 2.6*sin(1.2*t - 0.3)
+
+moyenne = 0`
+  }
+};
+
+const PY_HELPER = {
+  sin: Math.sin, cos: Math.cos, tan: Math.tan,
+  sqrt: Math.sqrt, abs: Math.abs,
+  min: function(){ const a = arguments; return a.length === 1 && Array.isArray(a[0]) ? Math.min(...a[0]) : Math.min(...a); },
+  max: function(){ const a = arguments; return a.length === 1 && Array.isArray(a[0]) ? Math.max(...a[0]) : Math.max(...a); },
+  len: x => x.length,
+  range: function(){
+    let start = 0, stop = 0, step = 1;
+    if (arguments.length === 1) { stop = arguments[0]; }
+    else if (arguments.length === 2) { start = arguments[0]; stop = arguments[1]; }
+    else { start = arguments[0]; stop = arguments[1]; step = arguments[2]; }
+    const out = [];
+    if (step > 0) for (let i = start; i < stop; i += step) out.push(i);
+    else if (step < 0) for (let i = start; i > stop; i += step) out.push(i);
+    return out;
+  },
+  round: function(x, n){ if (n === undefined) return Math.round(x); const f = Math.pow(10, n); return Math.round(x * f) / f; },
+  pi: Math.PI,
+  __append__: function(lst, x){ lst.push(x); return lst; }
+};
+
+function pyPreprocess(s){
+  return s
+    .replace(/\band\b/g, '&&')
+    .replace(/\bor\b/g, '||')
+    .replace(/\bTrue\b/g, 'true')
+    .replace(/\bFalse\b/g, 'false')
+    .replace(/\bNone\b/g, 'null')
+    .replace(/(\w+)\.append\(/g, '__append__($1, ');
+}
+
+function pyEval(text, env){
+  const js = pyPreprocess(text);
+  const fn = new Function('env', 'H', 'with(H){ with(env){ return (' + js + '); } }');
+  return fn(env, PY_HELPER);
+}
+
+function pySerialize(v, maxDec){
+  if (v === null || v === undefined) return 'None';
+  if (typeof v === 'boolean') return v ? 'True' : 'False';
+  if (typeof v === 'number'){
+    if (Number.isInteger(v)) return String(v);
+    const d = maxDec === undefined ? 6 : maxDec;
+    return parseFloat(v.toFixed(d)).toString();
+  }
+  if (typeof v === 'string') return JSON.stringify(v);
+  if (Array.isArray(v)){
+    const items = v.length > 15 ? v.slice(0, 15) : v;
+    return '[' + items.map(x => pySerialize(x, maxDec)).join(', ') + (v.length > 15 ? ', …' : '') + ']';
+  }
+  return String(v);
+}
+
+function pyParse(source){
+  const rawLines = source.split('\n');
+  const tokens = [];
+  for (let i = 0; i < rawLines.length; i++){
+    const line = rawLines[i];
+    const noComment = line.split('#')[0];
+    if (noComment.trim() === '') continue;
+    const indent = line.match(/^\s*/)[0].length;
+    tokens.push({ indent, text: noComment.trim(), lineNo: i + 1 });
+  }
+  let pos = 0;
+
+  function parseBlock(parentIndent){
+    const stmts = [];
+    while (pos < tokens.length && tokens[pos].indent > parentIndent){
+      stmts.push(parseStatement());
+    }
+    return stmts;
+  }
+
+  function parseStatement(){
+    const tok = tokens[pos];
+    const text = tok.text;
+    const lineIndent = tok.indent;
+    let m;
+
+    if (text.startsWith('while ') && text.endsWith(':')){
+      const condText = text.slice(6, -1).trim();
+      pos++;
+      const body = parseBlock(lineIndent);
+      return { type: 'while', condText, body, lineNo: tok.lineNo };
+    }
+    if (text.startsWith('for ') && text.endsWith(':')){
+      m = text.match(/^for\s+(\w+)\s+in\s+(.+):$/);
+      if (m){
+        pos++;
+        const body = parseBlock(lineIndent);
+        return { type: 'for', varName: m[1], iterableText: m[2], body, lineNo: tok.lineNo };
+      }
+    }
+    if (text.startsWith('if ') && text.endsWith(':')){
+      const condText = text.slice(3, -1).trim();
+      pos++;
+      const body = parseBlock(lineIndent);
+      const stmt = { type: 'if', condText, body, lineNo: tok.lineNo, elifs: [], elseBody: null, elseLineNo: -1 };
+      while (pos < tokens.length && tokens[pos].indent === lineIndent &&
+             (tokens[pos].text.startsWith('elif ') || tokens[pos].text === 'else:')){
+        const t2 = tokens[pos];
+        if (t2.text === 'else:'){
+          pos++;
+          stmt.elseBody = parseBlock(lineIndent);
+          stmt.elseLineNo = t2.lineNo;
+          break;
+        } else {
+          const c2 = t2.text.slice(5, -1).trim();
+          pos++;
+          stmt.elifs.push({ condText: c2, body: parseBlock(lineIndent), lineNo: t2.lineNo });
+        }
+      }
+      return stmt;
+    }
+    m = text.match(/^(\w+)\s*=\s*(.+)$/);
+    if (m){
+      pos++;
+      return { type: 'assign', name: m[1], exprText: m[2], lineNo: tok.lineNo };
+    }
+    pos++;
+    return { type: 'expr', exprText: text, lineNo: tok.lineNo };
+  }
+  return parseBlock(-1);
+}
+
+function pyRun(statements){
+  const trace = [];
+  const env = Object.create(null);
+  const MAX_STEPS = 2000;
+  let stepCount = 0;
+  let error = null;
+
+  function snap(){ const o = {}; for (const k in env) o[k] = env[k]; return o; }
+
+  function record(lineNo, description, cond){
+    if (stepCount >= MAX_STEPS) throw new Error('Limite de ' + MAX_STEPS + ' étapes (boucle infinie ?)');
+    trace.push({ step: stepCount++, lineNo, description, condition: cond || null, env: snap() });
+  }
+
+  function execBlock(block){ for (const s of block) { if (error) return; execStmt(s); } }
+
+  function execStmt(stmt){
+    try {
+      if (stmt.type === 'assign'){
+        const val = pyEval(stmt.exprText, env);
+        env[stmt.name] = val;
+        record(stmt.lineNo, stmt.name + ' = ' + pySerialize(val));
+      } else if (stmt.type === 'expr'){
+        pyEval(stmt.exprText, env);
+        record(stmt.lineNo, stmt.exprText);
+      } else if (stmt.type === 'while'){
+        let cond = pyEval(stmt.condText, env);
+        record(stmt.lineNo, 'while ' + stmt.condText, { text: stmt.condText, result: cond });
+        while (cond){
+          execBlock(stmt.body);
+          if (error) return;
+          cond = pyEval(stmt.condText, env);
+          record(stmt.lineNo, 'while ' + stmt.condText, { text: stmt.condText, result: cond });
+        }
+      } else if (stmt.type === 'for'){
+        const iterable = pyEval(stmt.iterableText, env);
+        if (!Array.isArray(iterable)) throw new Error('for attend une liste');
+        record(stmt.lineNo, 'for ' + stmt.varName + ' in ' + stmt.iterableText);
+        for (const item of iterable){
+          env[stmt.varName] = item;
+          record(stmt.lineNo, stmt.varName + ' = ' + pySerialize(item));
+          execBlock(stmt.body);
+          if (error) return;
+        }
+      } else if (stmt.type === 'if'){
+        let matched = false;
+        const c0 = pyEval(stmt.condText, env);
+        record(stmt.lineNo, 'if ' + stmt.condText, { text: stmt.condText, result: c0 });
+        if (c0){ execBlock(stmt.body); matched = true; }
+        else {
+          for (const el of stmt.elifs){
+            const c = pyEval(el.condText, env);
+            record(el.lineNo, 'elif ' + el.condText, { text: el.condText, result: c });
+            if (c){ execBlock(el.body); matched = true; break; }
+          }
+          if (!matched && stmt.elseBody){
+            record(stmt.elseLineNo, 'else');
+            execBlock(stmt.elseBody);
+          }
+        }
+      }
+    } catch (e){
+      error = { lineNo: stmt.lineNo, message: e.message };
+      trace.push({ step: stepCount++, lineNo: stmt.lineNo, description: '❌ ' + e.message,
+                   condition: null, env: snap(), isError: true });
+    }
+  }
+
+  try { execBlock(statements); }
+  catch (e){
+    trace.push({ step: stepCount++, lineNo: -1, description: '❌ ' + e.message,
+                 condition: null, env: snap(), isError: true });
+  }
+  return trace;
+}
+
+/* ============================================================
+   PYTHON — UI
+   ============================================================ */
+const pyState = {
+  initialized: false, trace: [], currentStep: 0,
+  editorEl: null, gutterEl: null, traceEl: null,
+  varsEl: null, condEl: null, msgEl: null, exerciseSelect: null
+};
+
+function initPythonView(){
+  if (pyState.initialized) return;
+  pyState.initialized = true;
+
+  pyState.editorEl = document.getElementById('pyEditor');
+  pyState.gutterEl = document.getElementById('pyGutterInner');
+  pyState.traceEl = document.getElementById('pyTrace');
+  pyState.varsEl = document.getElementById('pyVars');
+  pyState.condEl = document.getElementById('pyCond');
+  pyState.msgEl = document.getElementById('pyMessage');
+  pyState.exerciseSelect = document.getElementById('pyExercise');
+
+  pyState.editorEl.addEventListener('scroll', function(){
+    pyState.gutterEl.style.transform = 'translateY(' + (-pyState.editorEl.scrollTop) + 'px)';
+  });
+  pyState.editorEl.addEventListener('input', updateGutter);
+
+  document.getElementById('pyExercise').addEventListener('change', function(){
+    loadExercise(this.value);
+  });
+  document.getElementById('pyLoadBtn').addEventListener('click', function(){
+    loadExercise(pyState.exerciseSelect.value);
+  });
+  document.getElementById('pyRunBtn').addEventListener('click', runPython);
+  document.getElementById('pyResetBtn').addEventListener('click', function(){
+    loadExercise(pyState.exerciseSelect.value);
+  });
+  document.getElementById('pyFirst').addEventListener('click', function(){ goToStep(0); });
+  document.getElementById('pyPrev').addEventListener('click', function(){ goToStep(pyState.currentStep - 1); });
+  document.getElementById('pyNext').addEventListener('click', function(){ goToStep(pyState.currentStep + 1); });
+  document.getElementById('pyLast').addEventListener('click', function(){ goToStep(pyState.trace.length - 1); });
+
+  loadExercise('analyse');
+}
+
+function updateGutter(){
+  const lines = pyState.editorEl.value.split('\n').length;
+  let html = '';
+  for (let i = 1; i <= lines; i++) html += '<span class="ln" data-line="' + i + '">' + i + '</span>';
+  pyState.gutterEl.innerHTML = html;
+  pyState.gutterEl.style.transform = 'translateY(' + (-pyState.editorEl.scrollTop) + 'px)';
+}
+
+function highlightGutterLine(lineNo){
+  pyState.gutterEl.querySelectorAll('.ln').forEach(el => {
+    el.classList.toggle('hl', parseInt(el.dataset.line) === lineNo);
+  });
+}
+
+function loadExercise(key){
+  const ex = PY_EXERCISES[key];
+  if (!ex) return;
+  pyState.editorEl.value = ex.code;
+  pyState.msgEl.className = 'py-msg info';
+  pyState.msgEl.textContent = ex.hint;
+  pyState.trace = [];
+  pyState.currentStep = 0;
+  updateGutter();
+  pyState.traceEl.innerHTML = '<div class="py-trace-empty">Cliquez sur « Exécuter » pour lancer le programme.</div>';
+  pyState.varsEl.innerHTML = '<div class="empty">Aucune variable</div>';
+  pyState.condEl.className = 'py-cond none';
+  pyState.condEl.innerHTML = 'Aucune condition évaluée.';
+  document.getElementById('pyStepLabel').textContent = '0 / 0';
+}
+
+function runPython(){
+  const source = pyState.editorEl.value;
+  pyState.msgEl.className = 'py-msg info';
+  pyState.msgEl.textContent = 'Analyse du code…';
+  try {
+    const statements = pyParse(source);
+    pyState.trace = pyRun(statements);
+    pyState.currentStep = 0;
+    renderTraceList();
+    if (pyState.trace.length === 0){
+      pyState.msgEl.className = 'py-msg err';
+      pyState.msgEl.textContent = 'Aucune instruction exécutée.';
+      return;
+    }
+    const hasError = pyState.trace.some(s => s.isError);
+    pyState.msgEl.className = hasError ? 'py-msg err' : 'py-msg ok';
+    pyState.msgEl.textContent = (hasError ? '⚠ Erreur — ' : '✔ Exécution terminée — ') +
+      pyState.trace.length + ' étapes. Utilisez ◀ ▶ pour naviguer.';
+    goToStep(0);
+  } catch (e){
+    pyState.msgEl.className = 'py-msg err';
+    pyState.msgEl.textContent = '⚠ ' + e.message;
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+function renderTraceList(){
+  let html = '';
+  for (let i = 0; i < pyState.trace.length; i++){
+    const s = pyState.trace[i];
+    html += '<div class="py-trace-step" data-step="' + i + '">' +
+            '<span class="st-num">' + (i + 1) + '</span>' +
+            '<span class="st-body">' +
+              '<span class="st-line">Ligne ' + s.lineNo + '</span><br>' +
+              '<span class="st-desc">' + escapeHtml(s.description) + '</span>' +
+            '</span></div>';
+  }
+  pyState.traceEl.innerHTML = html;
+  pyState.traceEl.querySelectorAll('.py-trace-step').forEach(el => {
+    el.addEventListener('click', function(){
+      goToStep(parseInt(this.dataset.step, 10));
+    });
+  });
+}
+
+function goToStep(idx){
+  if (pyState.trace.length === 0) return;
+  idx = Math.max(0, Math.min(pyState.trace.length - 1, idx));
+  pyState.currentStep = idx;
+  const step = pyState.trace[idx];
+
+  document.getElementById('pyStepLabel').textContent = (idx + 1) + ' / ' + pyState.trace.length;
+
+  pyState.traceEl.querySelectorAll('.py-trace-step').forEach((el, i) => {
+    el.classList.toggle('current', i === idx);
+  });
+  const cur = pyState.traceEl.querySelector('.py-trace-step.current');
+  if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  highlightGutterLine(step.lineNo);
+
+  const env = step.env;
+  const keys = Object.keys(env).sort();
+  if (keys.length === 0){
+    pyState.varsEl.innerHTML = '<div class="empty">Aucune variable définie</div>';
+  } else {
+    let html = '';
+    keys.forEach(k => {
+      html += '<div class="py-var"><span class="v-name">' + escapeHtml(k) +
+              '</span><span class="v-val">' + escapeHtml(pySerialize(env[k])) + '</span></div>';
+    });
+    pyState.varsEl.innerHTML = html;
+  }
+
+  if (step.condition){
+    const ok = step.condition.result;
+    pyState.condEl.className = 'py-cond ' + (ok ? 'true' : 'false');
+    pyState.condEl.innerHTML =
+      '<span class="c-text">' + escapeHtml(step.condition.text) + '</span>' +
+      '<span class="c-badge">' + (ok ? 'VRAI' : 'FAUX') + '</span>';
+  } else if (step.isError){
+    pyState.condEl.className = 'py-cond false';
+    pyState.condEl.innerHTML = '<span class="c-text">Erreur d\'exécution</span>';
+  } else {
+    pyState.condEl.className = 'py-cond none';
+    pyState.condEl.innerHTML = 'Aucune condition évaluée à cette étape.';
+  }
+}
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+window.addEventListener('resize', resize);
+resize();
+state.points = buildPoints(state.dt);
+state.playing = true;
+state.animT = 0;
+state.revealed = 0;
+updateHints();
+renderPanel();
+requestAnimationFrame(tick);
+
+})();
+</script>
+</body>
+</html>

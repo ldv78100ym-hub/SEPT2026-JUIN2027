@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Déchiffreur de traces — Simulateur de sondage</title>
+<style>
+  :root {
+    --bg: #f2f5f8; --ink: #1c3049; --mut: #5b7590; --line: #d7e2ea;
+    --acc: #15528f; --ok: #127a3d; --ko: #b3261e; --warn: #9a6700; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.55; }
+  main { max-width: 1000px; margin: 0 auto; padding: 22px 16px 60px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 26px 0 10px; color: var(--acc); }
+  .sub { color: var(--mut); font-size: .92rem; margin: 0 0 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; margin: 12px 0; }
+  label { font-weight: 600; font-size: .85rem; }
+  textarea { width: 100%; min-height: 110px; font-family: Consolas, monospace; font-size: .72rem;
+    border: 1px solid #c4d3de; border-radius: 8px; padding: 8px; color: #24425f; word-break: break-all; }
+  .dropzone { border: 2px dashed #9fb8cc; border-radius: 12px; padding: 26px 16px; text-align: center;
+    color: var(--mut); background: #fbfdff; cursor: pointer; }
+  .dropzone.hover { border-color: var(--acc); background: #eef4fa; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  button { font: inherit; padding: 9px 16px; border-radius: 9px; border: 1px solid #c4d3de;
+    background: #fff; color: var(--ink); cursor: pointer; font-weight: 600; }
+  button.primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+  .res { border: 1px solid var(--line); border-radius: 12px; background: #fff; margin: 12px 0; overflow: hidden; }
+  .res > header { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: #eef4f8; border-bottom: 1px solid var(--line); }
+  .res.ok > header { background: #e5f5ec; }
+  .res.ko > header { background: #fbe9e7; }
+  .res h3 { margin: 0; font-size: .95rem; }
+  .meta { color: var(--mut); font-size: .78rem; }
+  .resbody { padding: 10px 14px; }
+  .kpis { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+  .kpi { background: #f4f8fb; border: 1px solid var(--line); border-radius: 8px;
+    padding: 5px 10px; font-size: .78rem; }
+  .kpi b { display: block; font-size: 1.05rem; color: var(--acc); }
+  .kpi.err b { color: var(--ko); }
+  table { border-collapse: collapse; width: 100%; font-size: .8rem; }
+  th, td { border: 1px solid var(--line); padding: 4px 7px; text-align: left; vertical-align: top; }
+  th { background: #f0f5f9; font-size: .72rem; text-transform: uppercase; letter-spacing: .4px; }
+  td.t { white-space: nowrap; color: var(--mut); font-size: .72rem; }
+  .tag { display: inline-block; border-radius: 6px; padding: 1px 7px; font-size: .7rem; font-weight: 700; }
+  .tag.ok { background: #e5f5ec; color: var(--ok); }
+  .tag.ko { background: #fbe9e7; color: var(--ko); }
+  .tag.n { background: #eef4f8; color: var(--acc); }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; color: var(--acc); font-size: .85rem; }
+  pre { background: #f4f8fb; border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+    overflow: auto; font-size: .72rem; max-height: 300px; }
+  .note { font-size: .82rem; color: var(--mut); }
+  .flash { padding: 10px 14px; border-radius: 9px; margin: 10px 0; font-size: .88rem; display: none; }
+  .flash.ok { background: #e5f5ec; color: var(--ok); display: block; }
+  .flash.ko { background: #fbe9e7; color: var(--ko); display: block; }
+  footer { margin-top: 34px; padding-top: 12px; border-top: 1px solid var(--line);
+    color: var(--mut); font-size: .78rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔐 Déchiffreur de traces — Simulateur de sondage</h1>
+  <p class="sub">Outil du professeur : décrypte <strong>en lot</strong> les fichiers .json produits par le
+    simulateur de sondage. Si un élève ferme puis rouvre le navigateur, sa trace <strong>continue</strong> : chaque fichier
+    .json contient l'intégralité de son travail cumulé (anciens + nouveaux événements, avec les reprises marquées). (onglets « Mes résultats ») chiffrés avec la clé publique, et reconstitue
+    l'intégralité du travail de chaque élève : enquêtes traitées, réponses, essais, erreurs, temps passé.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">1 · Clé privée</h2>
+    <p class="note">La clé privée ci-dessous correspond à la clé publique en dur dans le simulateur.
+      Si tu as généré une nouvelle paire de clés (bouton en bas de page), colle ici la clé privée
+      <em>au format base64 PKCS#8</em>.</p>
+    <textarea id="privKey" spellcheck="false">MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDwVogVHsdSMxNy+vqHymtXJS4zMc2uoRBV9ib7uYRVlWRQSOLxWI4QsuQxv3WzHTyGZQz1eDfJg9FbRJOHmzNLuzEGd25ixBBiMN/Oif9ZrxAB3EahWgVUw3u/1HtQDOQ7Gm/ltIPP7DlgfbBav3nLaYLNiac10Pp+xaBrmPLiPyL1xhOLGfWY6T3iYYFBQxF20qlrl6agQ3spxGSBn1OVVcv59eKBBgKLIX82P+5qqb1Kz+YlaLbQyvQvFbOoesQhMRixAk2moqZ9hmTMWy1PQF7ZX2ZyS+atulxzKmbmCVhTuAVdNBE1gNVxsmf5N7fqCVOhu0yHDVL0zHxHf+7PAgMBAAECggEAaw+A6zecvsc14MBgneDT1Cwh2nhTEXl6F3DhiLzpcF5uIz10quIx1sp50JdjTPi3H38gOLDm2QO5XRi9R2khfpjSi/jj2WdRjQwMhqr+busHDG0doX7CZTH3jEqQ6+XyPUnXktHI7fRi0tLqnmIxVSWZOQoazGRdUd+jSIsHlzR/xGjzwNJfQ4y+1zcP0V+aEKn12/iSpsBKqVEqnUNT8jf0d9BkbbNooxwhIyhCc+PyrijfCn6JengSSZ99+LkuA6xsKigW6yrnIG47FGeNn75YCGuDYT33yfis42eZNte4EtHtLe/Y1rKFa47vIFt8PE5y3M7oZ2akM8XNzHM/cQKBgQD+aWyfTJnpRcYcSUdzqFvKubYnCyP1fCeZ4VrS8+ASQMw3MmCux7rpMjY9F3DszOdZICwVetbUmkY5ZUOAo0rdCdDA2ID19LZWi/lE05hsISzF2PU6DofWD/R+XyvkSOZRD2qJgZOZZHjIr5Pz1kTbCBqOaPSQs2eQ819bOh5N3QKBgQDx1p2sxUcIJsQyCAePJUOQvwFWrEyhNH+fd3xINOad+BimIGeMhGISFQXy34CUmYL8qD/6qE+pNMTFb7+l1rOj++iCKNOM8knfxv4XKYKryjvd1LtgGipNMUwYO6AdtvY/CE5BZ8xA1KHfkAKddj+D/CnPYfmHvJN4Jmne7q5SmwKBgHkf9Ek7jSOUxqd88/nKtDkmheS81xfvTmNi+XzqA0ptc0zsPT+5c/HGqDAZ0vfK7nJucM6hN1rtQHXfEm5SUDhAjhTifzOamJ1H8xujqjQA73Iaw1YqyN1Pp1XrNdhwJMd/EXf6Ky2iuibCASzcXNfzWcFnkti5sZs/Y6zpVLg5AoGAaJW9vpfaLiZFtrVOP5OH8rMHqyn8QcLoZlhQARIPocVHM6DT5yrhFpzM48nQW3M/+G/yqz3apXxSlGfNY7TEH2izloZ9ZnjphcMS44VqI0zkMvzqw5bNMHDfTaOLjQ4w0/WNki+HX4oVLw+iceJPeY61rh/av97Hj7BdHLHv5X0CgYEApxyKFeB1KhflPbybiNHUCwFd54rNqI3eLg8WOwUJwgp1l/cYpOrKZzSJq/4HZk2CBB2zPFL3/My/GyZM2FnHgySkI84zmpGFK1+kC99ijfdzY37ksPIhsvcaIAyCeKIDMVEANMN769YjJZloec+LJaUBtBkwu+2tshawkkq0kKU=</textarea>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">2 · Fichiers .json des élèves</h2>
+    <div id="dropzone" class="dropzone">
+      📂 Glisse ici les fichiers .json des élèves (ou clique pour choisir) — plusieurs fichiers acceptés
+      <input type="file" id="fileInput" multiple accept=".json,application/json" style="display:none;" />
+    </div>
+    <div class="row">
+      <button class="primary" id="btnDecrypt" type="button">🔓 Décrypter le lot</button>
+      <button id="btnClear" type="button">Vider la liste</button>
+      <span id="fileCount" class="meta"></span>
+    </div>
+    <div id="flash" class="flash"></div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2 style="margin-top:0">⬇️ Exports</h2>
+      <p class="note">Une fois le lot décrypté :</p>
+      <div class="row">
+        <button id="btnExportJson" type="button" disabled>JSON clair combiné</button>
+        <button id="btnExportCsv" type="button" disabled>CSV (une ligne par élève)</button>
+        <button id="btnExportEvents" type="button" disabled>CSV (une ligne par événement)</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">🔑 Générer une nouvelle paire de clés</h2>
+      <p class="note">Pour changer de clé : génère une paire, colle la <strong>clé publique</strong> obtenue
+        dans la constante <code>CLE_PUBLIQUE</code> du simulateur, et garde la clé privée ici.
+        Les anciens fichiers ne seront plus lisibles qu'avec leur clé d'origine.</p>
+      <div class="row">
+        <button id="btnGenKeys" type="button">⚙️ Générer une paire (RSA 2048)</button>
+      </div>
+      <div id="keygenOut" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <footer>© 2026 Yann Merdy · Outil pédagogique. Les fichiers chiffrés ne sont lisibles qu'avec la clé privée :
+    ne la communique jamais aux élèves.</footer>
+</main>
+
+<script>
+"use strict";
+
+/* ---------- Base64 ---------- */
+function b64d(s) {
+  const bin = atob(s), u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+function b64e(u8) {
+  let s = "";
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+const wc = () => (globalThis.crypto && globalThis.crypto.subtle) ? globalThis.crypto : null;
+const td = () => new TextDecoder();
+
+/* ---------- État ---------- */
+let FILES = [];        /* fichiers sélectionnés */
+let TRACES = [];       /* {fichier, payload} décryptées */
+const TYPES = {
+  session: "Ouverture de session", identification: "Identification validée", identite: "Identité saisie", enquete: "Nouvelle enquête tirée",
+  qcm: "Essai — conditions (QCM)", conditions: "Réponse — vérification des conditions",
+  intervalle: "Essai — bornes de l'intervalle", frequence: "Essai — fréquence",
+  risque: "Essai — échantillons à risque", solution_vue: "Solution affichée",
+  enquete_resolue: "Enquête résolue", verif_feuille: "Vérification de la feuille de calcul",
+  mission_cond: "Mission — conditions", mission_intervalle: "Mission — intervalle",
+  mission_frequence: "Mission — fréquence", mission_verdict: "Mission — verdict",
+  mission_actions: "Mission — actions validées", mission_suivante: "Mission suivante",
+  epreuve_tableur: "Épreuve finale tableur", fichier_genere: "Fichier .json généré",
+  enregistrement_auto: "Enregistrement auto activé/désactivé"
+};
+
+/* ---------- Chargement des fichiers ---------- */
+const dz = document.getElementById("dropzone");
+const fi = document.getElementById("fileInput");
+dz.addEventListener("click", () => fi.click());
+dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("hover"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("hover"));
+dz.addEventListener("drop", e => {
+  e.preventDefault(); dz.classList.remove("hover");
+  addFiles(e.dataTransfer.files);
+});
+fi.addEventListener("change", () => addFiles(fi.files));
+
+function addFiles(list) {
+  for (const f of list) FILES.push({ name: f.name, read: f.text() });
+  document.getElementById("fileCount").textContent =
+    FILES.length + " fichier" + (FILES.length > 1 ? "s" : "") + " en attente";
+}
+
+/* ---------- Décryptage ---------- */
+async function decryptOne(txt, nom, priv) {
+  let fichier;
+  try { fichier = JSON.parse(txt); }
+  catch (e) { return { erreur: "ce fichier n'est pas un JSON valide" }; }
+  if (!fichier.format || fichier.format !== "trace-simulateur-sondage")
+    return { erreur: "format inconnu (pas une trace du simulateur)" };
+  let payload;
+  if (fichier.chiffre && fichier.chiffre.cle) {
+    try {
+      const env = b64d(fichier.chiffre.cle), iv = b64d(fichier.chiffre.iv), ct = b64d(fichier.chiffre.donnees);
+      const aes = await wc().subtle.decrypt({ name: "RSA-OAEP" }, priv, env);
+      const key = await wc().subtle.importKey("raw", aes, { name: "AES-GCM" }, false, ["decrypt"]);
+      const clair = await wc().subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+      payload = JSON.parse(td().decode(clair));
+    } catch (e) {
+      return { erreur: "décryptage impossible (clé privée ne correspond pas à la clé publique du fichier)", fichier };
+    }
+  } else if (fichier.clair) {
+    try { payload = JSON.parse(fichier.clair); }
+    catch (e) { return { erreur: "contenu clair illisible" }; }
+  } else {
+    return { erreur: "aucune donnée dans ce fichier", fichier };
+  }
+  return { payload, fichier, nom };
+}
+
+async function decryptLot() {
+  const flash = document.getElementById("flash");
+  const res = document.getElementById("results");
+  if (!FILES.length) { flash.className = "flash ko"; flash.textContent = "Ajoute d'abord des fichiers .json."; return; }
+  if (!wc()) { flash.className = "flash ko"; flash.textContent = "Web Crypto indisponible : ouvre cette page dans un navigateur récent."; return; }
+  const ktxt = document.getElementById("privKey").value.trim();
+  if (!ktxt) { flash.className = "flash ko"; flash.textContent = "Colle la clé privée."; return; }
+  let priv;
+  try {
+    priv = await wc().subtle.importKey("pkcs8", b64d(ktxt), { name: "RSA-OAEP", hash: "SHA-256" }, false, ["decrypt"]);
+  } catch (e) { flash.className = "flash ko"; flash.textContent = "Clé privée illisible (format base64 PKCS#8 attendu)."; return; }
+  res.innerHTML = ""; TRACES = [];
+  let ok = 0, ko = 0;
+  for (const f of FILES) {
+    const txt = await f.read;
+    const r = await decryptOne(txt, f.name, priv);
+    if (r.erreur) { ko++; renderErreur(r, f.name); }
+    else { ok++; TRACES.push(r); renderTrace(r); }
+  }
+  flash.className = "flash " + (ok ? "ok" : "ko");
+  flash.textContent = ok + " fichier" + (ok > 1 ? "s" : "") + " décrypté" + (ok > 1 ? "s" : "")
+    + (ko ? ", " + ko + " en échec" : "") + ".";
+  const ex = ["btnExportJson", "btnExportCsv", "btnExportEvents"];
+  ex.forEach(id => { document.getElementById(id).disabled = !TRACES.length; });
+}
+
+document.getElementById("btnDecrypt").addEventListener("click", decryptLot);
+document.getElementById("btnClear").addEventListener("click", () => {
+  FILES = []; TRACES = [];
+  document.getElementById("fileCount").textContent = "";
+  document.getElementById("results").innerHTML = "";
+  document.getElementById("flash").className = "flash";
+  ["btnExportJson", "btnExportCsv", "btnExportEvents"].forEach(id => { document.getElementById(id).disabled = true; });
+});
+
+/* ---------- Rendu ---------- */
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function hm(ms) {
+  if (ms == null) return "—";
+  if (ms < 60000) return Math.round(ms / 1000) + " s";
+  const m = Math.floor(ms / 60000), s = Math.round((ms % 60000) / 1000);
+  return m + " min " + (s ? s + " s" : "");
+}
+function fmtT(iso) { return iso ? iso.replace("T", " ").slice(0, 19) : "—"; }
+
+function renderErreur(r, nom) {
+  const d = document.createElement("div");
+  d.className = "res ko";
+  d.innerHTML = `<header><h3>❌ ${esc(nom)}</h3><span class="meta">${esc(r.erreur)}</span></header>`;
+  document.getElementById("results").appendChild(d);
+}
+
+function renderTrace(r) {
+  const p = r.payload, e = p.eleve;
+  const nom = (e.prenoms ? e.prenoms + " " : "") + (e.nom || "ANONYME");
+  const ev = p.evenements || [];
+  const erreurs = ev.filter(x => x.erreur === true).length;
+  const durs = ev.filter(x => typeof x.dureeMs === "number").map(x => x.dureeMs);
+  const tempsQ = durs.length ? durs.reduce((a, b) => a + b, 0) : 0;
+  const d = document.createElement("div");
+  d.className = "res ok";
+  d.innerHTML = `
+    <header>
+      <h3>👤 ${esc(nom)}</h3>
+      <span class="meta">${esc(e.classe)} · ${esc(r.nom)} · ${ev.length} événements · session ${fmtT(p.session.debut)}</span>
+    </header>
+    <div class="resbody">
+      <div class="kpis">
+        <div class="kpi"><b>${p.resume.enquetes_traitees}</b>enquêtes</div>
+        <div class="kpi"><b>${p.resume.enquetes_resolues}</b>résolues</div>
+        <div class="kpi"><b>${p.resume.missions_repondues}</b>missions</div>
+        <div class="kpi"><b>${p.resume.missions_parfaites}</b>parfaites</div>
+        <div class="kpi"><b>${p.resume.epreuves_tableur}</b>épreuve(s)</div>
+        <div class="kpi err"><b>${erreurs}</b>erreurs</div>
+        <div class="kpi"><b>${hm(tempsQ)}</b>temps réfléchi</div>
+        <div class="kpi"><b>${p.resume.reprises || 0}</b>reprise(s)</div>
+        <div class="kpi"><b>${hm(p.resume.temps_session_ms)}</b>travail cumulé</div>
+      </div>
+      <details>
+        <summary>Chronologie détaillée (${ev.length} événements horodatés)</summary>
+        <table>
+          <thead><tr><th>Date / heure</th><th>Étape</th><th>Résultat</th><th>Détails</th><th>Temps</th></tr></thead>
+          <tbody>
+          ${ev.map(x => `<tr>
+            <td class="t">${fmtT(x.t)}<br />+${hm(x.ms)}</td>
+            <td>${esc(TYPES[x.type] || x.type)}</td>
+            <td>${x.correct === true ? '<span class="tag ok">✓ juste</span>'
+                 : x.erreur === true ? '<span class="tag ko">✗ erreur</span>'
+                 : x.invalide ? '<span class="tag ko">saisie invalide</span>'
+                 : x.correct === false ? '<span class="tag ko">✗ faux</span>'
+                 : '<span class="tag n">·</span>'}</td>
+            <td>${esc(resumeEvent(x))}</td>
+            <td class="t">${x.dureeMs != null ? hm(x.dureeMs) : ""}</td>
+          </tr>`).join("")}
+          </tbody>
+        </table>
+      </details>
+      <details>
+        <summary>Fichier .json brut (décrypté)</summary>
+        <pre>${esc(JSON.stringify(p, null, 1))}</pre>
+      </details>
+    </div>`;
+  document.getElementById("results").appendChild(d);
+}
+
+function resumeEvent(x) {
+  const parts = [];
+  if (x.mission) parts.push("« " + x.mission.titre + " »");
+  if (x.question) parts.push(x.question);
+  if (x.choisi) parts.push("choix : " + x.choisi.join(", "));
+  if (x.reponse) parts.push("réponse : " + (typeof x.reponse === "object" ? JSON.stringify(x.reponse) : x.reponse));
+  if (x.saisies) parts.push("saisies : " + JSON.stringify(x.saisies));
+  if (x.saisie != null) parts.push("saisie : " + x.saisie);
+  if (x.selection) parts.push("sélection : " + JSON.stringify(x.selection));
+  if (x.manquantes) parts.push(x.manquantes + " manquante(s), " + x.enTrop + " en trop");
+  if (x.attendu) parts.push("attendu : " + (typeof x.attendu === "object" ? JSON.stringify(x.attendu) : x.attendu));
+  if (x.aRisque != null) parts.push(x.aRisque + " échantillon(s) à risque");
+  if (x.fichier) parts.push("fichier " + x.fichier + (x.automatique ? " (auto)" : ""));
+  if (x.eleve) parts.push(JSON.stringify(x.eleve));
+  if (x.okCount != null) parts.push(x.okCount + " étape(s) correcte(s)");
+  return parts.join(" · ");
+}
+
+/* ---------- Exports ---------- */
+function dl(nom, contenu, mime) {
+  const blob = new Blob([contenu], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nom;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+document.getElementById("btnExportJson").addEventListener("click", () => {
+  dl("traces_claires_" + new Date().toISOString().slice(0, 10) + ".json",
+    JSON.stringify(TRACES.map(r => r.payload), null, 2), "application/json");
+});
+function csvEsc(v) {
+  const s = String(v == null ? "" : v).replace(/"/g, '""');
+  return /[;"\n]/.test(s) ? '"' + s + '"' : s;
+}
+document.getElementById("btnExportCsv").addEventListener("click", () => {
+  const entetes = ["Nom", "Prénoms", "Classe", "Session (début)", "Enquêtes traitées", "Enquêtes résolues",
+    "Essais QCM", "QCM réussis", "Missions répondues", "Missions parfaites", "Épreuves tableur", "Reprises",
+    "Erreurs", "Temps de réflexion (s)", "Travail cumulé (s)", "Fichier"];
+  const lignes = [entetes.join(";")];
+  for (const r of TRACES) {
+    const p = r.payload, e = p.eleve, ev = p.evenements;
+    const durs = ev.filter(x => typeof x.dureeMs === "number").map(x => x.dureeMs);
+    const tref = Math.round(durs.reduce((a, b) => a + b, 0) / 1000);
+    lignes.push([e.nom, e.prenoms, e.classe, p.session.debut, p.resume.enquetes_traitees,
+      p.resume.enquetes_resolues, p.resume.essais_qcm, p.resume.qcm_reussis,
+      p.resume.missions_repondues, p.resume.missions_parfaites, p.resume.epreuves_tableur,
+      p.resume.reprises || 0, p.resume.erreurs, tref, Math.round((p.resume.temps_session_ms || 0) / 1000), r.nom]
+      .map(csvEsc).join(";"));
+  }
+  dl("synthese_eleves_" + new Date().toISOString().slice(0, 10) + ".csv", "\ufeff" + lignes.join("\n"), "text/csv");
+});
+document.getElementById("btnExportEvents").addEventListener("click", () => {
+  const entetes = ["Élève", "Classe", "Date", "Type", "Étape", "Correct", "Durée (s)", "Détails"];
+  const lignes = [entetes.join(";")];
+  for (const r of TRACES) {
+    const p = r.payload, e = p.eleve;
+    for (const x of p.evenements) {
+      lignes.push([(e.prenoms || "") + " " + (e.nom || "ANONYME"), e.classe, x.t || "",
+        x.type || "", TYPES[x.type] || "", x.correct === true ? "oui" : (x.erreur === true ? "non" : ""),
+        x.dureeMs != null ? Math.round(x.dureeMs / 1000) : "", resumeEvent(x)].map(csvEsc).join(";"));
+    }
+  }
+  dl("evenements_eleves_" + new Date().toISOString().slice(0, 10) + ".csv", "\ufeff" + lignes.join("\n"), "text/csv");
+});
+
+/* ---------- Générateur de paire de clés ---------- */
+document.getElementById("btnGenKeys").addEventListener("click", async () => {
+  const out = document.getElementById("keygenOut");
+  if (!wc()) { out.innerHTML = '<p class="flash ko">Web Crypto indisponible.</p>'; return; }
+  const pair = await wc().subtle.generateKey({ name: "RSA-OAEP", modulusLength: 2048,
+    publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["encrypt", "decrypt"]);
+  const pub = b64e(new Uint8Array(await wc().subtle.exportKey("spki", pair.publicKey)));
+  const priv = b64e(new Uint8Array(await wc().subtle.exportKey("pkcs8", pair.privateKey)));
+  out.innerHTML = `
+    <p class="note">① Dans le simulateur : remplace la valeur de la constante <code>CLE_PUBLIQUE</code> par la clé publique ci-dessous.</p>
+    <p class="note"><strong>Clé publique (base64 SPKI) :</strong></p>
+    <pre id="newPub">${pub}</pre>
+    <p class="note"><strong>Clé privée (base64 PKCS#8)</strong> — à coller en haut de cette page :</p>
+    <pre id="newPriv">${priv}</pre>
+    <div class="row">
+      <button id="btnUsePriv" type="button">Utiliser cette clé privée ci-dessus</button>
+    </div>`;
+  document.getElementById("btnUsePriv").addEventListener("click", () => {
+    document.getElementById("privKey").value = priv;
+    document.getElementById("privKey").scrollIntoView({ behavior: "smooth" });
+  });
+});
+</script>
+</body>
+</html>
